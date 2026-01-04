@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -18,10 +19,10 @@ import java.math.BigInteger
 class ThorchainSwapHelper {
     private fun getTicker(coin: Coin): String {
         return  if(coin.ticker.startsWith("x/",true)) {
-                coin.ticker.drop(2)
-            } else {
-                coin.ticker
-            }
+            coin.ticker.drop(2)
+        } else {
+            coin.ticker
+        }
     }
     fun getSwapPreSignedInputData(
         keysignPayload: KeysignPayload
@@ -38,13 +39,19 @@ class ThorchainSwapHelper {
             ?: throw Exception("Invalid swap payload for THORChain")
 
         val fromAddress = AnyAddress(thorChainSwapPayload.srcToken.address, CoinType.THORCHAIN).data()
+        val isSecured = keysignPayload.coin.isSecuredAsset()
+        val chainName = if (isSecured) {
+            keysignPayload.coin.ticker
+        } else
+            keysignPayload.coin.getChainName()
+
         val coin = Cosmos.THORChainCoin.newBuilder()
             .setAsset(
                 Cosmos.THORChainAsset.newBuilder()
-                    .setChain("THOR")
+                    .setChain(chainName)
                     .setSymbol(getTicker(keysignPayload.coin))
                     .setTicker(getTicker(keysignPayload.coin))
-                    .setSecured(keysignPayload.coin.isSecuredAsset())
+                    .setSecured(isSecured)
                     .setSynth(false)
                     .build()
             )

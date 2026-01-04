@@ -409,6 +409,7 @@ internal sealed class Route {
     @Serializable
     data class AddChainAccount(
         val vaultId: String,
+        val routeFromInitVault: Boolean = false,
     )
 
     @Serializable

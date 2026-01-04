@@ -42,7 +42,6 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -56,7 +55,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @Immutable
 internal data class VaultAccountsUiModel(
@@ -93,7 +91,7 @@ internal data class VaultAccountsUiModel(
 internal data class AccountUiModel(
     val model: Address,
     val chainName: String,
-    @DrawableRes val logo: Int,
+    @param:DrawableRes val logo: Int,
     val address: String,
     val nativeTokenAmount: String?,
     val fiatAmount: String?,
@@ -366,7 +364,7 @@ internal class VaultAccountsViewModel @Inject constructor(
             combine(
                 accountsRepository
                     .loadAddresses(vaultId, isRefresh)
-                    .map { it ->
+                    .map {
                         it.sortByAccountsTotalFiatValue()
                     }
                     .catch {
@@ -581,21 +579,6 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-    fun handleScanQrError(error: String) {
-        viewModelScope.launch {
-            uiState.update {
-                it.copy(
-                    scanQrUiModel = ScanQrUiModel(error = error)
-                )
-            }
-            delay(2.seconds)
-            uiState.update {
-                it.copy(
-                    scanQrUiModel = ScanQrUiModel(error = null)
-                )
-            }
-        }
-    }
 
     companion object {
          internal const val REFRESH_CHAIN_DATA  = "refresh_chain_data"
