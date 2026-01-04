@@ -41,6 +41,7 @@ import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.payload.parseCosmosMessage
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -896,8 +897,9 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                     val normalizedSignAmino = json.encodeToString(normalizedSignAminoJson)
                         .takeIf { !normalizedSignAminoJson.isEmpty() } ?: ""
-                    val signDirectString = json.encodeToString(payload.signDirect)
-                        .takeIf { payload.signDirect != null } ?: ""
+                    val signDirect = payload.signDirect?.let {
+                        json.encodeToString(parseCosmosMessage(it))
+                    } ?: ""
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = payload.vaultPublicKeyECDSA,
@@ -917,7 +919,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         blockChainSpecific = payload.blockChainSpecific,
                         totalGas = totalGasAndFee.formattedTokenValue,
                         signAmino = normalizedSignAmino,
-                        signDirect = signDirectString,
+                        signDirect = signDirect,
                     )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
