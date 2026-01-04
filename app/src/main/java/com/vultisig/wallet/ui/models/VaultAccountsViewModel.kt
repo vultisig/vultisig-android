@@ -29,7 +29,6 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
-import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
@@ -42,7 +41,6 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -93,7 +91,7 @@ internal data class VaultAccountsUiModel(
 internal data class AccountUiModel(
     val model: Address,
     val chainName: String,
-    @DrawableRes val logo: Int,
+    @param:DrawableRes val logo: Int,
     val address: String,
     val nativeTokenAmount: String?,
     val fiatAmount: String?,
@@ -119,7 +117,6 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val vaultMetadataRepo: VaultMetadataRepo,
     private val isGlobalBackupReminderRequired: IsGlobalBackupReminderRequiredUseCase,
     private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
-    private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
     private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
@@ -348,7 +345,7 @@ internal class VaultAccountsViewModel @Inject constructor(
             combine(
                 accountsRepository
                     .loadAddresses(vaultId, isRefresh)
-                    .map { it ->
+                    .map {
                         it.sortByAccountsTotalFiatValue()
                     }
                     .catch {
@@ -563,21 +560,6 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-    fun handleScanQrError(error: String) {
-        viewModelScope.launch {
-            uiState.update {
-                it.copy(
-                    scanQrUiModel = ScanQrUiModel(error = error)
-                )
-            }
-            delay(2.seconds)
-            uiState.update {
-                it.copy(
-                    scanQrUiModel = ScanQrUiModel(error = null)
-                )
-            }
-        }
-    }
 
     companion object {
          internal const val REFRESH_CHAIN_DATA  = "refresh_chain_data"

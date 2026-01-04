@@ -562,6 +562,7 @@
     <string name="vault_settings_migrate_gg20">Esegui la migrazione del vault DKLS GG20</string>
     <string name="vault_settings_reshare_change">Ricondividi, modifica TSS o firma messaggi.</string>
     <string name="vault_backup_summary_start_using_vault">Inizia a usare la tua cassaforte</string>
+    <string name="vault_backup_summary_choose_chains">Scegli le catene</string>
     <string name="transaction_done_form_approve">Approva</string>
     <string name="vault_settings_migration_title">Migrare</string>
     <string name="transaction_buy">Acquista</string>
@@ -873,4 +874,8 @@
     <string name="circle_msca_account_created_failed">Impossibile creare l\'account Circle MSCA. Si prega di riprovare.</string>
     <string name="circle_usdc_account">Account Circle USDC</string>
     <string name="withdraw">Prelevare</string>
+    <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
+    <string name="swap_form_referral_discount_bps">Referral (-%1$d bps)</string>
+    <string name="amino_sign">Amino Sign</string>
+    <string name="amino_direct">Firma diretta</string>
 </resources>

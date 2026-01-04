@@ -1,6 +1,8 @@
 package com.vultisig.wallet.ui.models
 
 import android.content.Context
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -20,9 +22,12 @@ import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 internal data class TokenAddressQr(
@@ -60,15 +65,35 @@ internal class TokenAddressQrViewModel @Inject constructor(
         }
     }
 
-    fun shareQRCode(context: Context) {
+    fun shareQRCode(
+        graphicsLayer: GraphicsLayer,
+        context: Context,
+    ) {
         viewModelScope.launch {
-            context.share(
-                qrBitmapData.bitmap ?: return@launch,
-                shareFileName(
-                    requireNotNull(vaultRepository.get(args.vaultId)),
-                    ShareType.TOKENADDRESS
+            try {
+                val bitmap = withContext(Dispatchers.Default) {
+                    graphicsLayer.toImageBitmap().asAndroidBitmap()
+                }
+                try {
+                    withContext(Dispatchers.Main) {
+                        context.share(
+                            bitmap = bitmap,
+                            fileName = shareFileName(
+                                requireNotNull(vaultRepository.get(args.vaultId)),
+                                ShareType.TOKENADDRESS
+                            )
+                        )
+                    }
+                } finally {
+                    bitmap.recycle()
+                }
+            } catch (e: Exception) {
+                Timber.e(
+                    e,
+                    "Failed to capture and share qr address screenshot"
                 )
-            )
+            }
+
             back()
         }
     }

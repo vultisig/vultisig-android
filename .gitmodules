@@ -1,3 +1,4 @@
 [submodule "commondata"]
 	path = commondata
 	url = https://github.com/vultisig/commondata
+	branch = main

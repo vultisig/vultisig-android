@@ -1,3 +1,4 @@
+import com.vultisig.wallet.data.models.payload.SignDirect
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 
@@ -19,6 +20,8 @@ data class KeysignPayload(
     val toAmount: String,
     @SerialName("BlockchainSpecific")
     val blockchainSpecific: BlockchainSpecific,
+    @SerialName("sign_data")
+    val signData: SignData? = null,
     @SerialName("utxo_info")
     val utxoInfo: List<UtxoInfo>? = null,
     @SerialName("vault_public_key_ecdsa")
@@ -272,6 +275,49 @@ data class UtxoInfo(
 )
 
 @Serializable
+data class SignData(
+    @SerialName("sign_direct")
+    val signDirect: SignDirect? = null,
+    @SerialName("sign_amino")
+    val signAmino: SignAmino? = null,
+)
+
+
+@Serializable
+data class SignAmino(
+    @SerialName("fee")
+    val fee: Fee? = null,
+    @SerialName("msgs")
+    val msgs: List<Msgs> = emptyList(),
+)
+
+@Serializable
+data class Fee(
+    @SerialName("amount")
+    val amount: List<WasmExecuteContractPayload.CosmosCoin> = emptyList(),
+    @SerialName("gas")
+    val gas: String = "",
+)
+
+@Serializable
+data class Msgs(
+    @SerialName("type")
+    val type: String = "",
+    @SerialName("value")
+    val value: Value,
+)
+
+@Serializable
+data class Value(
+    @SerialName("amount")
+    val amount: List<WasmExecuteContractPayload.CosmosCoin?> = emptyList(),
+    @SerialName("from_address")
+    val fromAddress: String = "",
+    @SerialName("to_address")
+    val toAddress: String = "",
+)
+
+@Serializable
 data class SuiCoin(
     @SerialName("coin_type")
     val coinType: String,
@@ -318,6 +364,7 @@ data class TronSpecific(
     @SerialName("gas_estimation")
     val gasFeeEstimation: Long
 )
+
 @Serializable
 data class OneinchSwapPayload(
     @SerialName("from_coin")
@@ -335,6 +382,7 @@ data class OneinchSwapPayload(
     @SerialName("provider")
     val provider: String = "",
 )
+
 @Serializable
 data class OneinchQuote(
     @SerialName("dst_amount")
@@ -342,6 +390,7 @@ data class OneinchQuote(
     @SerialName("tx")
     val tx: OneinchTransaction
 )
+
 @Serializable
 data class OneinchTransaction(
     @SerialName("data")
@@ -357,3 +406,4 @@ data class OneinchTransaction(
     @SerialName("value")
     val value: String,
 )
+
