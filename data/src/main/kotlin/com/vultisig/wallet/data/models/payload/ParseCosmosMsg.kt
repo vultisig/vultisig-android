@@ -1,9 +1,12 @@
+@file:OptIn(ExperimentalEncodingApi::class)
+
 package com.vultisig.wallet.data.models.payload
 
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import wallet.core.jni.Base64
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 
 private enum class WireType(val value: Int) {
@@ -15,24 +18,24 @@ private enum class WireType(val value: Int) {
 
 
 private data class TxBody(
-    val messages: MutableList<Any> = mutableListOf(),
+    val messages: MutableList<ProtobufAny> = mutableListOf(),
     var memo: String = "",
     var timeoutHeight: Long = 0L,
     var unordered: Boolean = false,
     var timeoutTimestamp: Timestamp? = null,
-    val extensionOptions: MutableList<Any> = mutableListOf(),
-    val nonCriticalExtensionOptions: MutableList<Any> = mutableListOf()
+    val extensionOptions: MutableList<ProtobufAny> = mutableListOf(),
+    val nonCriticalExtensionOptions: MutableList<ProtobufAny> = mutableListOf(),
 )
 
 
-private data class Any(
+private data class ProtobufAny(
     var typeUrl: String = "",
-    var value: ByteArray = ByteArray(0)
+    var value: ByteArray = ByteArray(0),
 ) {
     companion object {
-        fun decode(reader: BinaryReader, length: Int): Any {
+        fun decode(reader: BinaryReader, length: Int): ProtobufAny {
             val end = reader.pos + length
-            val message = Any()
+            val message = ProtobufAny()
 
             while (reader.pos < end) {
                 val tag = reader.uint32()
@@ -47,10 +50,10 @@ private data class Any(
         }
     }
 
-    override fun equals(other: kotlin.Any?): Boolean {
+    override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-        other as Any
+        other as ProtobufAny
         if (typeUrl != other.typeUrl) return false
         if (!value.contentEquals(other.value)) return false
         return true
@@ -66,7 +69,7 @@ private data class Any(
 
 private data class Timestamp(
     var seconds: Long = 0L,
-    var nanos: Int = 0
+    var nanos: Int = 0,
 ) {
     companion object {
         fun decode(reader: BinaryReader, length: Int): Timestamp {
@@ -87,8 +90,8 @@ private data class Timestamp(
     }
 }
 
-// BinaryReader class
-private class BinaryReader(input: kotlin.Any) {
+
+internal class BinaryReader(input: Any) {
     val buf: ByteArray
     var pos: Int = 0
     val len: Int
@@ -97,30 +100,40 @@ private class BinaryReader(input: kotlin.Any) {
         buf = when (input) {
             is ByteArray -> input
             is BinaryReader -> input.buf
-            is List<*> -> (input as List<Number>).map { it.toByte() }.toByteArray()
-            else -> throw IllegalArgumentException("Invalid input type")
+            is List<*> -> {
+                input.mapNotNull { element ->
+                    when (element) {
+                        is Number -> element.toByte()
+                        else -> throw IllegalArgumentException(
+                            "List contains non-numeric element at index ${input.indexOf(element)}: $element"
+                        )
+                    }
+                }.toByteArray()
+            }
+
+            else -> throw IllegalArgumentException("Invalid input type: ${input::class.simpleName}")
         }
         len = buf.size
     }
 
-    private fun assertBounds() {
-        if (pos > len) {
-            throw IndexOutOfBoundsException("premature EOF")
+    private fun ensureAvailable(bytes: Int) {
+        if (pos + bytes > len) {
+            throw IndexOutOfBoundsException(
+                "Attempting to read $bytes bytes at position $pos, but only ${len - pos} bytes available"
+            )
         }
     }
 
     fun skip(length: Int? = null) {
         if (length != null) {
-            if (pos + length > len) {
-                throw IndexOutOfBoundsException("index out of range: $pos + $length > $len")
-            }
+            ensureAvailable(length)
             pos += length
         } else {
-            do {
-                if (pos >= len) {
-                    throw IndexOutOfBoundsException("index out of range: $pos")
-                }
-            } while ((buf[pos++].toInt() and 128) != 0)
+            var hasMore = true
+            while (hasMore) {
+                ensureAvailable(1)
+                hasMore = (buf[pos++].toInt() and 128) != 0
+            }
         }
     }
 
@@ -128,7 +141,11 @@ private class BinaryReader(input: kotlin.Any) {
         when (wireType) {
             WireType.VARINT.value -> skip()
             WireType.FIXED64.value -> skip(8)
-            WireType.BYTES.value -> skip(uint32())
+            WireType.BYTES.value -> {
+                val length = uint32()
+                skip(length)
+            }
+
             3 -> {
                 var wt = uint32() and 7
                 while (wt != 4) {
@@ -137,7 +154,7 @@ private class BinaryReader(input: kotlin.Any) {
                 }
             }
             WireType.FIXED32.value -> skip(4)
-            else -> throw IllegalStateException("invalid wire type $wireType at offset $pos")
+            else -> throw IllegalStateException("Invalid wire type $wireType at offset $pos")
         }
     }
 
@@ -146,6 +163,7 @@ private class BinaryReader(input: kotlin.Any) {
         var shift = 0
 
         while (shift < 32) {
+            ensureAvailable(1)
             val b = buf[pos++].toInt() and 0xFF
             value = value or ((b and 0x7F) shl shift)
 
@@ -156,13 +174,12 @@ private class BinaryReader(input: kotlin.Any) {
             shift += 7
         }
 
-        throw IllegalStateException("invalid var_int encoding")
+        throw IllegalStateException("Invalid varint encoding: overflow in uint32 at position ${pos - 1}")
     }
 
     fun int32(): Int {
         return uint32()
     }
-
 
 
     fun int64(): Long {
@@ -174,6 +191,7 @@ private class BinaryReader(input: kotlin.Any) {
         val (lo, hi) = varint64Read()
         return uint64FromParts(lo, hi)
     }
+
     fun bool(): Boolean {
         val (lo, hi) = varint64Read()
         return lo != 0 || hi != 0
@@ -181,24 +199,32 @@ private class BinaryReader(input: kotlin.Any) {
 
     fun bytes(): ByteArray {
         val length = uint32()
+
+        ensureAvailable(length)
         val start = pos
         pos += length
-        assertBounds()
         return buf.copyOfRange(start, start + length)
     }
 
     fun string(): String {
         val bytes = bytes()
-        return bytes.toString(Charsets.UTF_8)
+        return try {
+            bytes.toString(Charsets.UTF_8)
+        } catch (e: Exception) {
+            throw IllegalStateException("Invalid UTF-8 encoding in string at position $pos", e)
+        }
     }
 
     private fun varint64Read(): Pair<Int, Int> {
         var lo = 0
         var hi = 0
         var shift = 0
+        var bytesRead = 0
 
         while (shift < 28) {
+            ensureAvailable(1)
             val b = buf[pos++].toInt() and 0xFF
+            bytesRead++
             lo = lo or ((b and 0x7F) shl shift)
 
             if ((b and 0x80) == 0) {
@@ -208,8 +234,9 @@ private class BinaryReader(input: kotlin.Any) {
             shift += 7
         }
 
-
+        ensureAvailable(1)
         var b = buf[pos++].toInt() and 0xFF
+        bytesRead++
         lo = lo or ((b and 0x0F) shl 28)
         hi = (b and 0x70) ushr 4
 
@@ -220,7 +247,14 @@ private class BinaryReader(input: kotlin.Any) {
 
         shift = 3
         while (shift < 32) {
+            ensureAvailable(1)
             b = buf[pos++].toInt() and 0xFF
+            bytesRead++
+
+            if (bytesRead > 10) {
+                throw IllegalStateException("Invalid varint encoding: more than 10 bytes at position ${pos - 1}")
+            }
+
             hi = hi or ((b and 0x7F) shl shift)
 
             if ((b and 0x80) == 0) {
@@ -230,9 +264,8 @@ private class BinaryReader(input: kotlin.Any) {
             shift += 7
         }
 
-        throw IllegalStateException("invalid var_int encoding")
+        throw IllegalStateException("Invalid varint encoding: overflow in varint64 at position ${pos - 1}")
     }
-
 
     private fun int64FromParts(lo: Int, hi: Int): Long {
         return (lo.toLong() and 0xFFFFFFFFL) or (hi.toLong() shl 32)
@@ -241,10 +274,7 @@ private class BinaryReader(input: kotlin.Any) {
     private fun uint64FromParts(lo: Int, hi: Int): Long {
         return (lo.toLong() and 0xFFFFFFFFL) or (hi.toLong() shl 32)
     }
-
-
 }
-
 
 private fun createBaseTxBody(): TxBody {
     return TxBody(
@@ -261,7 +291,7 @@ private fun createBaseTxBody(): TxBody {
 
 private data class Coin(
     var denom: String = "",
-    var amount: String = ""
+    var amount: String = "",
 ) {
     companion object {
         fun decode(reader: BinaryReader, length: Int): Coin {
@@ -282,7 +312,6 @@ private data class Coin(
     }
 }
 
-// SignMode enum
 private enum class SignMode(val value: Int) {
     SIGN_MODE_UNSPECIFIED(0),
     SIGN_MODE_DIRECT(1),
@@ -298,10 +327,9 @@ private enum class SignMode(val value: Int) {
     }
 }
 
-// CompactBitArray data class
 private data class CompactBitArray(
     var extraBitsStored: Int = 0,
-    var elems: ByteArray = ByteArray(0)
+    var elems: ByteArray = ByteArray(0),
 ) {
     companion object {
         fun decode(reader: BinaryReader, length: Int): CompactBitArray {
@@ -321,7 +349,7 @@ private data class CompactBitArray(
         }
     }
 
-    override fun equals(other: kotlin.Any?): Boolean {
+    override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         other as CompactBitArray
@@ -337,9 +365,8 @@ private data class CompactBitArray(
     }
 }
 
-// ModeInfo_Single data class
 private data class ModeInfoSingle(
-    var mode: SignMode = SignMode.SIGN_MODE_UNSPECIFIED
+    var mode: SignMode = SignMode.SIGN_MODE_UNSPECIFIED,
 ) {
     companion object {
         fun decode(reader: BinaryReader, length: Int): ModeInfoSingle {
@@ -359,10 +386,9 @@ private data class ModeInfoSingle(
     }
 }
 
-// ModeInfo_Multi data class
 private data class ModeInfoMulti(
     var bitarray: CompactBitArray? = null,
-    val modeInfos: MutableList<ModeInfo> = mutableListOf()
+    val modeInfos: MutableList<ModeInfo> = mutableListOf(),
 ) {
     companion object {
         fun decode(reader: BinaryReader, length: Int): ModeInfoMulti {
@@ -383,10 +409,9 @@ private data class ModeInfoMulti(
     }
 }
 
-// ModeInfo data class
 private data class ModeInfo(
     var single: ModeInfoSingle? = null,
-    var multi: ModeInfoMulti? = null
+    var multi: ModeInfoMulti? = null,
 ) {
     companion object {
         fun decode(reader: BinaryReader, length: Int): ModeInfo {
@@ -407,11 +432,10 @@ private data class ModeInfo(
     }
 }
 
-// SignerInfo data class
 private data class SignerInfo(
-    var publicKey: Any? = null,
+    var publicKey: ProtobufAny? = null,
     var modeInfo: ModeInfo? = null,
-    var sequence: Long = 0L
+    var sequence: Long = 0L,
 ) {
     companion object {
         fun decode(reader: BinaryReader, length: Int): SignerInfo {
@@ -421,7 +445,7 @@ private data class SignerInfo(
             while (reader.pos < end) {
                 val tag = reader.uint32()
                 when (tag ushr 3) {
-                    1 -> message.publicKey = Any.decode(reader, reader.uint32())
+                    1 -> message.publicKey = ProtobufAny.decode(reader, reader.uint32())
                     2 -> message.modeInfo = ModeInfo.decode(reader, reader.uint32())
                     3 -> message.sequence = reader.uint64()
                     else -> reader.skipType(tag and 7)
@@ -433,12 +457,11 @@ private data class SignerInfo(
     }
 }
 
-// Fee data class
 private data class AuthInfoFee(
     val amount: MutableList<Coin> = mutableListOf(),
     var gasLimit: Long = 0L,
     var payer: String = "",
-    var granter: String = ""
+    var granter: String = "",
 ) {
     companion object {
         fun decode(reader: BinaryReader, length: Int): AuthInfoFee {
@@ -461,10 +484,9 @@ private data class AuthInfoFee(
     }
 }
 
-// Tip data class
 private data class Tip(
     val amount: MutableList<Coin> = mutableListOf(),
-    var tipper: String = ""
+    var tipper: String = "",
 ) {
     companion object {
         fun decode(reader: BinaryReader, length: Int): Tip {
@@ -485,14 +507,12 @@ private data class Tip(
     }
 }
 
-// AuthInfo data class
 private data class AuthInfo(
     val signerInfos: MutableList<SignerInfo> = mutableListOf(),
     var authInfoFee: AuthInfoFee? = null,
-    var tip: Tip? = null
+    var tip: Tip? = null,
 )
 
-// Factory function for AuthInfo
 private fun createBaseAuthInfo(): AuthInfo {
     return AuthInfo(
         signerInfos = mutableListOf(),
@@ -501,62 +521,115 @@ private fun createBaseAuthInfo(): AuthInfo {
     )
 }
 
-// Main decode function for AuthInfo
-private fun decodeAuthInfo(input: String, length: Int? = null): AuthInfo {
-    val decodedBytes = Base64.decode(input)
-    val reader =  BinaryReader(decodedBytes as ByteArray)
-    val end = length?.let { reader.pos + it } ?: reader.len
-    val message = createBaseAuthInfo()
 
-    while (reader.pos < end) {
-        val tag = reader.uint32()
-        when (tag ushr 3) {
-            1 -> message.signerInfos.add(SignerInfo.decode(reader, reader.uint32()))
-            2 -> message.authInfoFee = AuthInfoFee.decode(reader, reader.uint32())
-            3 -> message.tip = Tip.decode(reader, reader.uint32())
-            else -> reader.skipType(tag and 7)
-        }
+private fun ProtobufAny.toMessage() = Message(
+    typeUrl = typeUrl,
+    value = Base64.encode(value)
+)
+
+
+private fun AuthInfoFee.toFee() = Fee(
+    amount = amount.map { Amount(denom = it.denom, amount = it.amount) }
+)
+
+fun parseCosmosMessage(signDirect: SignDirectProto): CosmosMessage {
+    require(signDirect.chainId.isNotBlank()) { "Chain ID cannot be blank" }
+    require(signDirect.accountNumber.isNotBlank()) { "Account number cannot be blank" }
+    require(signDirect.bodyBytes.isNotBlank()) { "Body bytes cannot be blank" }
+    require(signDirect.authInfoBytes.isNotBlank()) { "Auth info bytes cannot be blank" }
+
+    return try {
+        val decodedTxBody = decodeTxBodySafe(signDirect.bodyBytes)
+        val decodedAuthInfo = decodeAuthInfoSafe(signDirect.authInfoBytes)
+
+        CosmosMessage(
+            chainId = signDirect.chainId,
+            accountNumber = signDirect.accountNumber,
+            sequence = decodedAuthInfo.signerInfos.firstOrNull()?.sequence?.toString() ?: "0",
+            memo = decodedTxBody.memo,
+            messages = decodedTxBody.messages.map { it.toMessage() },
+            authInfoFee = decodedAuthInfo.authInfoFee?.toFee() ?: Fee(amount = emptyList())
+        )
+    } catch (e: IndexOutOfBoundsException) {
+        throw IllegalArgumentException("Invalid protobuf encoding: premature end of buffer", e)
+    } catch (e: IllegalStateException) {
+        throw IllegalArgumentException("Invalid protobuf encoding: ${e.message}", e)
+    } catch (e: Exception) {
+        throw IllegalArgumentException("Failed to parse cosmos message: ${e.message}", e)
     }
-
-    return message
 }
 
-// Main decode function for TxBody
-private fun decodeTxBody(input: String, length: Int? = null): TxBody {
-    val decodedBytes = Base64.decode(input)
-    val reader = BinaryReader(decodedBytes as ByteArray)
-    val end = length?.let { reader.pos + it } ?: reader.len
+private fun decodeTxBodySafe(input: String): TxBody {
+    require(input.isNotBlank()) { "TxBody input cannot be blank" }
+
+    val decodedBytes = try {
+        Base64.decode(input)
+    } catch (e: Exception) {
+        throw IllegalArgumentException("Invalid base64 encoding in TxBody", e)
+    }
+
+    val reader = BinaryReader(decodedBytes)
     val message = createBaseTxBody()
 
-    while (reader.pos < end) {
-        val tag = reader.uint32()
-        when (tag ushr 3) {
-            1 -> message.messages.add(Any.decode(reader, reader.uint32()))
-            2 -> message.memo = reader.string()
-            3 -> message.timeoutHeight = reader.uint64()
-            4 -> message.unordered = reader.bool()
-            5 -> message.timeoutTimestamp = Timestamp.decode(reader, reader.uint32())
-            1023 -> message.extensionOptions.add(Any.decode(reader, reader.uint32()))
-            2047 -> message.nonCriticalExtensionOptions.add(Any.decode(reader, reader.uint32()))
-            else -> reader.skipType(tag and 7)
+    try {
+        while (reader.pos < reader.len) {
+            val tag = reader.uint32()
+            when (tag ushr 3) {
+                1 -> message.messages.add(ProtobufAny.decode(reader, reader.uint32()))
+                2 -> {
+                    message.memo = reader.string()
+                }
+
+                3 -> message.timeoutHeight = reader.uint64()
+                4 -> message.unordered = reader.bool()
+                5 -> message.timeoutTimestamp = Timestamp.decode(reader, reader.uint32())
+                1023 -> message.extensionOptions.add(ProtobufAny.decode(reader, reader.uint32()))
+                2047 -> message.nonCriticalExtensionOptions.add(
+                    ProtobufAny.decode(
+                        reader,
+                        reader.uint32()
+                    )
+                )
+
+                else -> reader.skipType(tag and 7)
+            }
         }
+    } catch (e: Exception) {
+        throw IllegalArgumentException("Failed to decode TxBody: ${e.message}", e)
     }
+
+    require(message.messages.isNotEmpty()) { "TxBody must contain at least one message" }
 
     return message
 }
 
-fun parseCosmosMessage(signDirect: SignDirectProto): CosmosMessage{
-    val decodeTxBody = decodeTxBody(signDirect.bodyBytes)
-    val decodeAuthInfo = decodeAuthInfo(signDirect.authInfoBytes)
+private fun decodeAuthInfoSafe(input: String): AuthInfo {
+    require(input.isNotBlank()) { "AuthInfo input cannot be blank" }
 
-    return CosmosMessage(
-        chainId = signDirect.chainId,
-        accountNumber = signDirect.accountNumber,
-        sequence = decodeAuthInfo.signerInfos.firstOrNull()?.sequence?.toString() ?: "0",
-        memo = decodeTxBody.memo,
-        messages = decodeTxBody.messages.map { it.toMessage() },
-        authInfoFee = decodeAuthInfo.authInfoFee?.toFee() ?: Fee(amount = emptyList())
-     )
+    val decodedBytes = try {
+        Base64.decode(input)
+    } catch (e: Exception) {
+        throw IllegalArgumentException("Invalid base64 encoding in AuthInfo", e)
+    }
+
+    val reader = BinaryReader(decodedBytes)
+    val message = createBaseAuthInfo()
+
+    try {
+        while (reader.pos < reader.len) {
+            val tag = reader.uint32()
+            when (tag ushr 3) {
+                1 -> message.signerInfos.add(SignerInfo.decode(reader, reader.uint32()))
+                2 -> message.authInfoFee = AuthInfoFee.decode(reader, reader.uint32())
+                3 -> message.tip = Tip.decode(reader, reader.uint32())
+                else -> reader.skipType(tag and 7)
+            }
+        }
+    } catch (e: Exception) {
+        throw IllegalArgumentException("Failed to decode AuthInfo: ${e.message}", e)
+    }
+
+    return message
 }
 
 @Serializable
@@ -585,14 +658,4 @@ data class Fee(
 data class Amount(
     val denom: String,
     val amount: String,
-)
-
-private fun Any.toMessage() = Message(
-    typeUrl = typeUrl,
-    value = Base64.encode(value)
-)
-
-
-private fun AuthInfoFee.toFee() = Fee(
-    amount = amount.map { Amount(denom = it.denom, amount = it.amount) }
 )
