@@ -3,6 +3,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -37,7 +38,7 @@ class TronHelper(
         }
     }
 
-    private fun buildTronTransferContractPayload(
+    private fun buildTronTransferAssetSmartContractPayload(
         keysignPayload: KeysignPayload,
         tronSpecific: BlockChainSpecific.Tron
     ): ByteArray {
@@ -49,15 +50,59 @@ class TronHelper(
         tronSpecific: BlockChainSpecific.Tron
     ): ByteArray {
         val keySignTronContact = keysignPayload.tronTriggerSmartContractPayload
-        val contract = Tron.TriggerSmartContract.newBuilder()
-            .setContractAddress(keysignPayload.)
-    }
+        require(keySignTronContact != null) {
+            "Empty payload for tronTriggerSmartContractPayload"
+        }
+        val contract = Tron.TriggerSmartContract.newBuilder().apply {
+            this.contractAddress = keySignTronContact.contractAddress
+            this.ownerAddress = keySignTronContact.ownerAddress
+            keySignTronContact.data?.let { data = keySignTronContact.data.toByteStringOrHex() }
+            keySignTronContact.tokenId?.let { tokenId = keySignTronContact.tokenId.toLong() }
+            keySignTronContact.callValue?.let { callValue = keySignTronContact.callValue.toLong() }
+            keySignTronContact.callTokenValue?.let { callTokenValue = keySignTronContact.callTokenValue.toLong()   }
+        }.build()
 
-    private fun buildTronTransferAssetSmartContractPayload(
-        keysignPayload: KeysignPayload,
-        tronSpecific: BlockChainSpecific.Tron
-    ): ByteArray {
-        error("")
+        val txBuild = Tron.Transaction.newBuilder()
+            .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
+            .setTriggerSmartContract(contract)
+            .setTimestamp(tronSpecific.timestamp.toLong())
+            .setBlockHeader(
+                BlockHeader.newBuilder()
+                    .setTimestamp(tronSpecific.blockHeaderTimestamp.toLong())
+                    .setNumber(tronSpecific.blockHeaderNumber.toLong())
+                    .setVersion(tronSpecific.blockHeaderVersion.toInt())
+                    .setTxTrieRoot(
+                        ByteString.copyFrom(
+                            Numeric.hexStringToByteArray(
+                                tronSpecific.blockHeaderTxTrieRoot
+                            )
+                        )
+                    )
+                    .setParentHash(
+                        ByteString.copyFrom(
+                            Numeric.hexStringToByteArray(
+                                tronSpecific.blockHeaderParentHash
+                            )
+                        )
+                    )
+                    .setWitnessAddress(
+                        ByteString.copyFrom(
+                            Numeric.hexStringToByteArray(
+                                tronSpecific.blockHeaderWitnessAddress
+                            )
+                        )
+                    )
+                    .build()
+            )
+            .setExpiration(tronSpecific.expiration.toLong())
+        keysignPayload.memo?.let { memo ->
+            txBuild.setMemo(memo)
+        }
+
+        val input = Tron.SigningInput.newBuilder()
+            .setTransaction(txBuild.build())
+            .build()
+        return input.toByteArray()
     }
 
     private fun buildTokenTransfer(
@@ -110,6 +155,13 @@ class TronHelper(
             .setTransaction(txBuild.build())
             .build()
         return input.toByteArray()
+    }
+
+    private fun buildTronTransferContractPayload(
+        keysignPayload: KeysignPayload,
+        tronSpecific: BlockChainSpecific.Tron
+    ): ByteArray {
+        error("")
     }
 
     private fun buildCoinTransfer(
