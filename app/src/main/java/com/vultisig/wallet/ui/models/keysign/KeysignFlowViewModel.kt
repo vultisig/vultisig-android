@@ -195,7 +195,8 @@ internal class KeysignFlowViewModel @Inject constructor(
         vault: Vault,
         context: Context,
         keysignPayload: KeysignPayload?,
-        customMessagePayload: CustomMessagePayload?
+        customMessagePayload: CustomMessagePayload?,
+        txType: Route.Keysign.Keysign.TxType,
     ) {
         try {
             _currentVault = vault
@@ -220,7 +221,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             this.selection.value = listOf(vault.localPartyID)
             _serverAddress = Endpoints.VULTISIG_RELAY_URL
             updateKeysignPayload(context)
-            updateTransactionUiModel(keysignPayload, customMessagePayload)
+            updateTransactionUiModel(keysignPayload, customMessagePayload,txType)
         } catch (e: Exception) {
             Timber.e(e)
             moveToState(KeysignFlowState.Error(e.message.toString()))
@@ -316,9 +317,10 @@ internal class KeysignFlowViewModel @Inject constructor(
     private fun updateTransactionUiModel(
         keysignPayload: KeysignPayload?,
         customMessagePayload: CustomMessagePayload?,
+        txType: Route.Keysign.Keysign.TxType,
     ) {
         if (keysignPayload != null) {
-            transactionId?.let {
+            transactionId.let {
                 val isSwap = keysignPayload.swapPayload != null
                 viewModelScope.launch {
                     val isDeposit = when (val specific = keysignPayload.blockChainSpecific) {
@@ -335,7 +337,8 @@ internal class KeysignFlowViewModel @Inject constructor(
                                         false
                                     }
 
-                        else -> false
+                        else ->
+                            txType == Route.Keysign.Keysign.TxType.Deposit
                     }
 
                     transactionTypeUiModel = when {
