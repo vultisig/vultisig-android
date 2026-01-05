@@ -13,6 +13,7 @@ import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
@@ -64,18 +65,33 @@ internal fun KeysignView(
                             transactionTypeUiModel = transactionTypeUiModel.swapTransactionUiModel,
                         )
                     }
-                    else -> {
+                    is TransactionTypeUiModel.Deposit,
+                    is TransactionTypeUiModel.Send -> {
                         SendTxOverviewScreen(
                             transactionHash = txHash,
                             transactionLink = transactionLink,
                             onComplete = onComplete,
                             onBack = onBack,
-                            tx = transactionTypeUiModel?.toUiTransactionInfo() ?: return,
+                            tx = transactionTypeUiModel.toUiTransactionInfo(),
                             showToolbar = showToolbar,
                             onAddToAddressBook = onAddToAddressBook,
                             showSaveToAddressBook = showSaveToAddressBook,
                         )
+                    }
+                    else -> {
 
+                        val uriHandler = VsUriHandler()
+                        TransactionDoneView(
+                            transactionHash = txHash,
+                            approveTransactionHash = approveTransactionHash,
+                            transactionLink = transactionLink,
+                            approveTransactionLink = approveTransactionLink,
+                            onComplete = onComplete,
+                            onBack = onBack,
+                            transactionTypeUiModel = transactionTypeUiModel,
+                            showToolbar = showToolbar,
+                            onUriClick = uriHandler::openUri
+                        )
                     }
                 }
             }

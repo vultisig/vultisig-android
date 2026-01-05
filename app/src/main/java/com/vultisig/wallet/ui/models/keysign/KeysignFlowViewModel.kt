@@ -321,7 +321,9 @@ internal class KeysignFlowViewModel @Inject constructor(
     ) {
         if (keysignPayload != null) {
             transactionId.let {
-                val isSwap = keysignPayload.swapPayload != null
+                val isSwap =
+                    keysignPayload.swapPayload != null || txType == Route.Keysign.Keysign.TxType.Swap
+
                 viewModelScope.launch {
                     val isDeposit = when (val specific = keysignPayload.blockChainSpecific) {
                         is BlockChainSpecific.MayaChain -> specific.isDeposit

@@ -747,7 +747,6 @@ internal class JoinKeysignViewModel @Inject constructor(
             }
 
             else -> {
-
                 val isDeposit = when (val specific = payload.blockChainSpecific) {
                     is BlockChainSpecific.MayaChain -> specific.isDeposit
                     is BlockChainSpecific.THORChain -> specific.isDeposit
