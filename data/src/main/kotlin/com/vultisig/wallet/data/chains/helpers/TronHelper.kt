@@ -42,7 +42,59 @@ class TronHelper(
         keysignPayload: KeysignPayload,
         tronSpecific: BlockChainSpecific.Tron
     ): ByteArray {
-        error("")
+        val keySignTronContact = keysignPayload.tronTransferAssetContractPayload
+        require(keySignTronContact != null) {
+            "Empty payload for tronTriggerSmartContractPayload"
+        }
+
+        val contract = Tron.TransferAssetContract.newBuilder().apply {
+            toAddress = keySignTronContact.toAddress
+            ownerAddress = keySignTronContact.ownerAddress
+            amount = keySignTronContact.amount.toLong()
+            assetName = keySignTronContact.assetName
+        }.build()
+
+        val txBuild = Tron.Transaction.newBuilder()
+            .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
+            .setTransferAsset(contract)
+            .setTimestamp(tronSpecific.timestamp.toLong())
+            .setBlockHeader(
+                BlockHeader.newBuilder()
+                    .setTimestamp(tronSpecific.blockHeaderTimestamp.toLong())
+                    .setNumber(tronSpecific.blockHeaderNumber.toLong())
+                    .setVersion(tronSpecific.blockHeaderVersion.toInt())
+                    .setTxTrieRoot(
+                        ByteString.copyFrom(
+                            Numeric.hexStringToByteArray(
+                                tronSpecific.blockHeaderTxTrieRoot
+                            )
+                        )
+                    )
+                    .setParentHash(
+                        ByteString.copyFrom(
+                            Numeric.hexStringToByteArray(
+                                tronSpecific.blockHeaderParentHash
+                            )
+                        )
+                    )
+                    .setWitnessAddress(
+                        ByteString.copyFrom(
+                            Numeric.hexStringToByteArray(
+                                tronSpecific.blockHeaderWitnessAddress
+                            )
+                        )
+                    )
+                    .build()
+            )
+            .setExpiration(tronSpecific.expiration.toLong())
+        keysignPayload.memo?.let { memo ->
+            txBuild.setMemo(memo)
+        }
+
+        val input = Tron.SigningInput.newBuilder()
+            .setTransaction(txBuild.build())
+            .build()
+        return input.toByteArray()
     }
 
     private fun buildTronSmartContractPayload(
@@ -161,9 +213,61 @@ class TronHelper(
         keysignPayload: KeysignPayload,
         tronSpecific: BlockChainSpecific.Tron
     ): ByteArray {
-        error("")
+        val keySignTronContact = keysignPayload.tronTransferContractPayload
+        require(keySignTronContact != null) {
+            "Empty payload for tronTriggerSmartContractPayload"
+        }
+
+        val contract = Tron.TransferContract
+            .newBuilder()
+            .setOwnerAddress(keySignTronContact.ownerAddress)
+            .setToAddress(keySignTronContact.toAddress)
+            .setAmount(keySignTronContact.amount.toLong())
+            .build()
+
+        val txBuild = Tron.Transaction.newBuilder()
+            .setTransfer(contract)
+            .setTimestamp(tronSpecific.timestamp.toLong())
+            .setBlockHeader(
+                BlockHeader.newBuilder()
+                    .setTimestamp(tronSpecific.blockHeaderTimestamp.toLong())
+                    .setNumber(tronSpecific.blockHeaderNumber.toLong())
+                    .setVersion(tronSpecific.blockHeaderVersion.toInt())
+                    .setTxTrieRoot(
+                        ByteString.copyFrom(
+                            Numeric.hexStringToByteArray(
+                                tronSpecific.blockHeaderTxTrieRoot
+                            ),
+                        )
+                    )
+                    .setParentHash(
+                        ByteString.copyFrom(
+                            Numeric.hexStringToByteArray(
+                                tronSpecific.blockHeaderParentHash
+                            )
+                        )
+                    )
+                    .setWitnessAddress(
+                        ByteString.copyFrom(
+                            Numeric.hexStringToByteArray(
+                                tronSpecific.blockHeaderWitnessAddress
+                            )
+                        )
+                    )
+                    .build()
+            )
+            .setExpiration(tronSpecific.expiration.toLong())
+        keysignPayload.memo?.let { memo ->
+            txBuild.setMemo(memo)
+        }
+        val input = Tron.SigningInput.newBuilder()
+            .setTransaction(txBuild.build())
+            .build()
+        return input.toByteArray()
     }
 
+    // Kept uniquely for backwards compatibility with iOS
+    // and other platforms/versions (since we have new payload)
     private fun buildCoinTransfer(
         keysignPayload: KeysignPayload,
         tronSpecific: BlockChainSpecific.Tron
