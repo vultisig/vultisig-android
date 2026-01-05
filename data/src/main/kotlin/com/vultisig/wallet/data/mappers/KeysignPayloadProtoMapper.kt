@@ -1,7 +1,5 @@
 package com.vultisig.wallet.data.mappers
 
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteData
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
@@ -13,7 +11,6 @@ import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
@@ -218,6 +215,9 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
 
                 else -> error("No supported BlockChainSpecific in proto $from")
             },
+            tronTransferContractPayload = from.tronTransferContractPayload,
+            tronTransferAssetContractPayload = from.tronTransferAssetContractPayload,
+            tronTriggerSmartContractPayload = from.tronTriggerSmartContractPayload,
         )
     }
 
