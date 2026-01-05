@@ -62,6 +62,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -203,6 +204,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val securityScannerService: SecurityScannerContract,
     private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
+    private val parseCosmosMessage: ParseCosmosMessageUseCase,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -898,8 +900,9 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                     val normalizedSignAmino = json.encodeToString(normalizedSignAminoJson)
                         .takeIf { !normalizedSignAminoJson.isEmpty() } ?: ""
-                    val signDirectString = json.encodeToString(payload.signDirect)
-                        .takeIf { payload.signDirect != null } ?: ""
+                    val signDirect = payload.signDirect?.let {
+                        json.encodeToString(parseCosmosMessage(it))
+                    } ?: ""
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = payload.vaultPublicKeyECDSA,
@@ -919,7 +922,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         blockChainSpecific = payload.blockChainSpecific,
                         totalGas = totalGasAndFee.formattedTokenValue,
                         signAmino = normalizedSignAmino,
-                        signDirect = signDirectString,
+                        signDirect = signDirect,
                     )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)

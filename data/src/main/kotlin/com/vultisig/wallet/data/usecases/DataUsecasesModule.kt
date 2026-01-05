@@ -215,4 +215,10 @@ internal interface DataUsecasesModule {
         impl: ValidateMayaTransactionHeightUseCaseImpl,
     ): ValidateMayaTransactionHeightUseCase
 
+    @Binds
+    @Singleton
+    fun bindParseCosmosMessageUseCase(
+        impl: ParseCosmosMessageUseCaseImpl,
+    ): ParseCosmosMessageUseCase
+
 }
