@@ -58,6 +58,7 @@ import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
+import com.vultisig.wallet.ui.screens.ChainDashboardScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
 import com.vultisig.wallet.ui.screens.backup.VaultsToBackupScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
@@ -113,11 +114,8 @@ import com.vultisig.wallet.ui.screens.swap.swapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
-import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
-import com.vultisig.wallet.ui.screens.v2.defi.circle.CircleDeFiPositionsScreen
-import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBottomSheet
 import com.vultisig.wallet.ui.screens.v2.receive.ReceiveBottomSheet
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
@@ -146,6 +144,12 @@ internal fun SetupNavGraph(
         popEnterTransition = slideInFromStartEnterTransition(),
         popExitTransition = slideOutToEndExitTransition(),
     ) {
+        composable<Route.ChainDashboard>(
+            typeMap = mapOf(typeOf<ChainDashboardRoute>() to ChainDashboardRouteNavType)
+        ) {
+            ChainDashboardScreen()
+        }
+
         composable<Route.Home> {
             VaultAccountsScreen()
         }
@@ -160,7 +164,7 @@ internal fun SetupNavGraph(
         dialog<Route.AddDeFiChainAccount> {
             DeFiChainSelectionScreen()
         }
-        composable<Route.VaultSettings>{
+        composable<Route.VaultSettings> {
             VaultSettingsScreen()
         }
         composable<Route.Details> {
@@ -174,17 +178,6 @@ internal fun SetupNavGraph(
         composable<Route.AddVault> {
             StartScreen()
         }
-        composable<Route.ChainTokens> {
-            ChainTokensScreen(navController)
-        }
-
-        composable<Route.PositionTokens> {
-            ThorchainDefiPositionsScreen()
-        }
-
-        composable<Route.PositionCircle> {
-            CircleDeFiPositionsScreen()
-        }
 
         dialog<TokenDetail> {
             TokenDetailScreen()
@@ -193,7 +186,7 @@ internal fun SetupNavGraph(
             TokenSelectionScreen()
         }
 
-        composable<Route.SignMessage>{ entry ->
+        composable<Route.SignMessage> { entry ->
             val args = entry.toRoute<Route.SignMessage>()
 
             SignMessageScreen(
@@ -228,7 +221,7 @@ internal fun SetupNavGraph(
             SettingsScreen()
         }
 
-        composable<Route.DefaultChainSetting>{
+        composable<Route.DefaultChainSetting> {
             DefaultChainSetting(navController = navController)
         }
 
@@ -237,7 +230,7 @@ internal fun SetupNavGraph(
         }
 
 
-        composable<Route.DiscountTiers>{
+        composable<Route.DiscountTiers> {
             val vaultId = it.toRoute<Route.DiscountTiers>().vaultId
             DiscountTiersScreen(
                 navController = navController,
@@ -245,7 +238,7 @@ internal fun SetupNavGraph(
             )
         }
 
-        composable<Route.LanguageSetting>{
+        composable<Route.LanguageSetting> {
             LanguageSettingScreen(navController = navController)
         }
 
@@ -257,29 +250,29 @@ internal fun SetupNavGraph(
             QrAddressScreen(navController = navController)
         }
 
-        composable<Route.ConfirmDelete>{
+        composable<Route.ConfirmDelete> {
             ConfirmDeleteScreen(navController)
         }
 
-        composable<Route.ShareVaultQr>{
+        composable<Route.ShareVaultQr> {
             ShareVaultQrScreen(
                 navController = navController
             )
         }
 
-        dialog<Route.CustomToken>{
+        dialog<Route.CustomToken> {
             CustomTokenScreen()
         }
 
-        composable<Route.ReshareStartScreen>{
+        composable<Route.ReshareStartScreen> {
             ReshareStartScreen(navController)
         }
 
-        composable<Route.BiometricsEnable>{
+        composable<Route.BiometricsEnable> {
             BiometricsEnableScreen(navController)
         }
 
-        composable<Route.OnChainSecurity>{
+        composable<Route.OnChainSecurity> {
             SecurityScannerEnableScreen(navController)
         }
 
@@ -488,11 +481,11 @@ internal fun SetupNavGraph(
             )
         }
 
-        composable<Route.ReferralOnboarding>{
+        composable<Route.ReferralOnboarding> {
             ReferralOnboardingScreen()
         }
 
-        composable<Route.ReferralListVault>{
+        composable<Route.ReferralListVault> {
             ReferralVaultListScreen(
                 navController = navController,
             )
@@ -504,7 +497,7 @@ internal fun SetupNavGraph(
             )
         }
 
-        composable<Route.ReferralCreation>{
+        composable<Route.ReferralCreation> {
             ReferralCreateScreen(
                 navController = navController,
             )
@@ -526,13 +519,13 @@ internal fun SetupNavGraph(
             )
         }
 
-        composable<Route.ReferralVaultEdition>{
+        composable<Route.ReferralVaultEdition> {
             ReferralEditVaultScreen(
                 navController = navController,
             )
         }
 
-        composable<Route.CheckForUpdateSetting>{
+        composable<Route.CheckForUpdateSetting> {
             CheckForUpdateScreen()
         }
 
@@ -545,7 +538,7 @@ internal fun SetupNavGraph(
 
         dialog<VaultList>(
             typeMap = mapOf(
-                typeOf<VaultList.OpenType>() to  VaultListOpenTypeNavType
+                typeOf<VaultList.OpenType>() to VaultListOpenTypeNavType
             )
         ) { backStackEntry ->
             VaultListBottomSheet(
