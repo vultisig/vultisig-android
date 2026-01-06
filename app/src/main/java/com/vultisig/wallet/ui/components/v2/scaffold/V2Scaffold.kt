@@ -47,7 +47,7 @@ internal fun V2Scaffold(
     title: String? = null,
     applyDefaultPaddings: Boolean = true,
     applyScaffoldPaddings: Boolean = true,
-    onBackClick: () -> Unit,
+    onBackClick: (() -> Unit)?,
     actions: @Composable RowScope.() -> Unit,
     bottomBar: @Composable () -> Unit = {},
     content: @Composable () -> Unit,
@@ -74,9 +74,9 @@ internal fun V2Scaffold(
     title: String? = null,
     applyDefaultPaddings: Boolean = true,
     applyScaffoldPaddings: Boolean = true,
-    onBackClick: () -> Unit,
-    @DrawableRes rightIcon: Int,
-    onRightIconClick: () -> Unit,
+    onBackClick: (() -> Unit)?,
+    @DrawableRes rightIcon: Int?,
+    onRightIconClick: (() -> Unit)?,
     bottomBar: @Composable () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
@@ -90,18 +90,31 @@ internal fun V2Scaffold(
             V2Topbar(
                 title = title,
                 onBackClick = onBackClick,
-                actions = {
-                    VsCircleButton(
-                        icon = rightIcon,
-                        onClick = onRightIconClick,
-                        type = VsCircleButtonType.Secondary,
-                        designType = DesignType.Shined,
-                        size = VsCircleButtonSize.Small,
-                        hasBorder = false,
-                    )
-                },
+                actions = rightIcon?.let {
+                    {
+                        V2TopbarButton(
+                            icon = rightIcon,
+                            onClick = onRightIconClick ?: {}
+                        )
+                    }
+                } ?: {},
             )
         }
+    )
+}
+
+@Composable
+internal fun V2TopbarButton(
+    icon: Int,
+    onClick: () -> Unit
+) {
+    VsCircleButton(
+        icon = icon,
+        onClick = onClick,
+        type = VsCircleButtonType.Secondary,
+        designType = DesignType.Shined,
+        size = VsCircleButtonSize.Small,
+        hasBorder = false,
     )
 }
 
