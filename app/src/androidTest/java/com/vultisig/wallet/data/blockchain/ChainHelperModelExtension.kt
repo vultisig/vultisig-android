@@ -8,6 +8,7 @@ import OneinchSwapPayload
 import OneinchTransaction
 import SwapPayload
 import ThorchainSwapPayload
+import TriggerSmartContractPayload
 import WasmExecuteContractPayload
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
@@ -19,6 +20,7 @@ import com.vultisig.wallet.data.models.payload.UtxoInfo
 import vultisig.keysign.v1.CosmosCoin
 import vultisig.keysign.v1.CosmosIbcDenomTrace
 import vultisig.keysign.v1.TransactionType
+import vultisig.keysign.v1.TronTriggerSmartContractPayload
 import java.math.BigInteger
 
 fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.payload.KeysignPayload {
@@ -48,7 +50,18 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
                 amount = it.amount.toBigInteger(),
             )
         },
+        tronTriggerSmartContractPayload = this.triggerSmartContractPayload?.toTriggerSmartContractPayload(),
         skipBroadcast = false // Not present in source, handled as default
+    )
+}
+
+internal fun TriggerSmartContractPayload.toTriggerSmartContractPayload(): TronTriggerSmartContractPayload {
+    return TronTriggerSmartContractPayload(
+        ownerAddress = this.ownerAddress,
+        contractAddress = this.contractAddress,
+        callValue = this.callValue,
+        callTokenValue = this.callDataValue,
+        data = this.data,
     )
 }
 
