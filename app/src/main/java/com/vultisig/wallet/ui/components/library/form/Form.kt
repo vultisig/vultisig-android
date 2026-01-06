@@ -620,6 +620,28 @@ internal fun FormDetails2(
 
 @Composable
 internal fun FormDetails2(
+    title: String,
+    modifier: Modifier = Modifier,
+    valueComposable:  @Composable (() -> Unit),
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = title,
+            color = Theme.v2.colors.text.extraLight,
+            style = Theme.brockmann.supplementary.caption,
+            textAlign = TextAlign.Start,
+        )
+
+        valueComposable()
+    }
+}
+
+@Composable
+internal fun FormDetails2(
     title: AnnotatedString,
     value: AnnotatedString,
     modifier: Modifier = Modifier,

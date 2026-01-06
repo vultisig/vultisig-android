@@ -188,7 +188,7 @@ internal fun VerifyDepositScreen(
                         )
                         VerifyCardDivider(0.dp)
                     }
-                    
+
 
                     if (tx.memo.isNotEmpty()) {
                         if (tx.dstAddress.isNotEmpty())

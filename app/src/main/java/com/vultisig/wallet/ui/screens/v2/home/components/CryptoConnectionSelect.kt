@@ -36,11 +36,24 @@ import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.theme.Theme
 
+val BOTH_CRYPTO_CONNECTION_TYPES = listOf(
+    CryptoConnectionType.Wallet,
+    CryptoConnectionType.Defi,
+)
+
+val ONLY_WALLET = listOf(
+    CryptoConnectionType.Wallet,
+)
+
+val ONLY_DEFI = listOf(
+    CryptoConnectionType.Defi,
+)
 
 @Composable
 internal fun CryptoConnectionSelect(
     modifier: Modifier = Modifier,
     activeType: CryptoConnectionType,
+    availableCryptoTypes: List<CryptoConnectionType> = BOTH_CRYPTO_CONNECTION_TYPES,
     onTypeClick: (CryptoConnectionType) -> Unit,
 ) {
     val isWalletSelected = activeType == CryptoConnectionType.Wallet
@@ -63,7 +76,7 @@ internal fun CryptoConnectionSelect(
             Box(
                 modifier = modifier
                     .height(64.dp)
-                    .width(184.dp)
+                    .width(92.dp * availableCryptoTypes.size)
                     .clip(
                         CircleShape
                     )
@@ -85,12 +98,11 @@ internal fun CryptoConnectionSelect(
                             clip = true,
                         )
                         .fillMaxHeight()
-                        .fillMaxWidth(0.5f)
+                        .fillMaxWidth(1f / availableCryptoTypes.size)
                         .align(
                             if (isWalletSelected)
                                 Alignment.CenterStart else
-                                if (IS_DEFI_ENABLED) Alignment.CenterEnd
-                                else Alignment.CenterStart
+                                Alignment.CenterEnd
                         ),
                 )
 
@@ -101,29 +113,57 @@ internal fun CryptoConnectionSelect(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
 
-                    WalletEarnOption(
-                        modifier = Modifier
-                            .weight(1f),
-                        onClick = {
-                            onTypeClick(CryptoConnectionType.Wallet)
-                        },
-                        text = stringResource(R.string.wallet),
-                        icon = R.drawable.wallet,
-                        enabled = isWalletSelected
-                    )
+                    when(availableCryptoTypes){
+                        BOTH_CRYPTO_CONNECTION_TYPES -> {
+                            WalletEarnOption(
+                                modifier = Modifier
+                                    .weight(1f),
+                                onClick = {
+                                    onTypeClick(CryptoConnectionType.Wallet)
+                                },
+                                text = stringResource(R.string.wallet),
+                                icon = R.drawable.wallet,
+                                enabled = isWalletSelected
+                            )
 
 
-                    WalletEarnOption(
-                        modifier = Modifier
-                            .weight(1f),
-                        onClick = {
-                            onTypeClick(CryptoConnectionType.Defi)
-                        },
-                        text = stringResource(R.string.defi),
-                        icon = R.drawable.coins_add,
-                        enabled = !isWalletSelected,
-                        isClickable = IS_DEFI_ENABLED,
-                    )
+                            WalletEarnOption(
+                                modifier = Modifier
+                                    .weight(1f),
+                                onClick = {
+                                    onTypeClick(CryptoConnectionType.Defi)
+                                },
+                                text = stringResource(R.string.defi),
+                                icon = R.drawable.coins_add,
+                                enabled = !isWalletSelected,
+                            )
+                        }
+                        ONLY_DEFI -> {
+
+                            WalletEarnOption(
+                                modifier = Modifier
+                                    .weight(1f),
+                                onClick = {
+                                    onTypeClick(CryptoConnectionType.Defi)
+                                },
+                                text = stringResource(R.string.defi),
+                                icon = R.drawable.coins_add,
+                                enabled = true,
+                            )
+                        }
+                        ONLY_WALLET -> {
+                            WalletEarnOption(
+                                modifier = Modifier
+                                    .weight(1f),
+                                onClick = {
+                                    onTypeClick(CryptoConnectionType.Wallet)
+                                },
+                                text = stringResource(R.string.wallet),
+                                icon = R.drawable.wallet,
+                                enabled = true
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -172,8 +212,7 @@ private fun WalletEarnOption(
 private fun PreviewWalletEarnSelect() {
     CryptoConnectionSelect(
         activeType = CryptoConnectionType.Defi,
-        onTypeClick = {}
+        onTypeClick = {},
+        availableCryptoTypes = BOTH_CRYPTO_CONNECTION_TYPES
     )
 }
-
-private const val IS_DEFI_ENABLED = true
