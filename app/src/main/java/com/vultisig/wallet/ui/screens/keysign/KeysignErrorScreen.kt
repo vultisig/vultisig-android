@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorView
 
 
 @Composable
@@ -34,9 +34,9 @@ internal fun KeysignErrorScreen(
     }
 
     ErrorView(
-        errorLabel = errorLabel,
+        title = errorLabel,
         buttonText = stringResource(R.string.try_again),
-        infoText = infoText,
+        description = infoText,
         onButtonClick = tryAgain,
     )
 }
@@ -47,9 +47,9 @@ internal fun KeysignErrorScreen(
 @Composable
 private fun PreviewKeysignError() {
     ErrorView(
-        errorLabel = stringResource(R.string.signing_error_please_try_again_s, ""),
+        title = stringResource(R.string.signing_error_please_try_again_s, "some errors"),
         buttonText = stringResource(R.string.try_again),
-        infoText = null,
+        description = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
         onButtonClick = {},
     )
 }

@@ -18,9 +18,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.ErrorView
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenUiModel
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenViewModel
@@ -39,7 +39,7 @@ internal fun JoinKeygenScreen(
         JoinKeygenScreen(state = state)
     } else {
         ErrorView(
-            errorLabel = error.message.asString(),
+            title = error.message.asString(),
             buttonText = stringResource(R.string.scan_qr_code_error_button),
             onButtonClick = model::navigateBack
         )

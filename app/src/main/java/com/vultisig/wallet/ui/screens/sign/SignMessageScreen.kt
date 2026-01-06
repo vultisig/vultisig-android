@@ -16,7 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.ui.components.ProgressScreen
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.send.SendViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -60,7 +60,7 @@ internal fun SignMessageScreen(
     }
 
     val progress: Float
-    val title : String
+    val title: String
 
     when (route) {
         SendDst.Send.route -> {
@@ -80,42 +80,40 @@ internal fun SignMessageScreen(
     val qrAddress by viewModel.addressProvider.address.collectAsState()
     val qr = qrAddress.takeIf { it.isNotEmpty() }
 
-    ProgressScreen(
-        navController = progressNav,
+    V2Scaffold(
         title = title,
-        progress = progress,
-        showStartIcon = !isKeysignFinished,
-        endIcon = qr?.let { R.drawable.qr_share },
-        onEndIconClick = qr?.let {
+        onBackClick = { viewModel.navigateToHome(useMainNavigator) }.takeIf { !isKeysignFinished },
+        rightIcon = qr?.let { R.drawable.qr_share },
+        onRightIconClick = qr?.let {
             {
                 keysignShareViewModel.shareQRCode(context)
             }
-        } ?: {},
-        onStartIconClick = { viewModel.navigateToHome(useMainNavigator) },
-    ) {
-        NavHost(
-            navController = sendNav,
-            startDestination = SendDst.Send.route,
-            enterTransition = slideInFromEndEnterTransition(),
-            exitTransition = slideOutToStartExitTransition(),
-            popEnterTransition = slideInFromStartEnterTransition(),
-            popExitTransition = slideOutToEndExitTransition(),
-        ) {
-            composable(
-                route = SendDst.Send.route,
+        },
+        content = {
+            NavHost(
+                navController = sendNav,
+                startDestination = SendDst.Send.route,
+                enterTransition = slideInFromEndEnterTransition(),
+                exitTransition = slideOutToStartExitTransition(),
+                popEnterTransition = slideInFromStartEnterTransition(),
+                popExitTransition = slideOutToEndExitTransition(),
             ) {
-                SignMessageFormScreen(
-                    vaultId = vaultId,
-                )
-            }
-            composable(
-                route = SendDst.VerifyTransaction.staticRoute,
-                arguments = SendDst.transactionArgs,
-            ) {
-                VerifySignMessageScreen()
+                composable(
+                    route = SendDst.Send.route,
+                ) {
+                    SignMessageFormScreen(
+                        vaultId = vaultId,
+                    )
+                }
+                composable(
+                    route = SendDst.VerifyTransaction.staticRoute,
+                    arguments = SendDst.transactionArgs,
+                ) {
+                    VerifySignMessageScreen()
+                }
             }
         }
-    }
+    )
 }
 
 @Preview

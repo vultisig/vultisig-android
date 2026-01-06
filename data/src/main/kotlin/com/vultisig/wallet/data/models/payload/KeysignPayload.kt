@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.models.payload
 
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
+import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.TronTransferAssetContractPayload
 import vultisig.keysign.v1.TronTransferContractPayload
 import vultisig.keysign.v1.TronTriggerSmartContractPayload
@@ -21,6 +23,8 @@ data class KeysignPayload(
     val vaultLocalPartyID: String,
     val libType: SigningLibType?,
     val wasmExecuteContractPayload: WasmExecuteContractPayload?,
+    val signAmino: SignAmino? = null,
+    val signDirect: SignDirectProto? = null,
     val tronTransferContractPayload: TronTransferContractPayload? = null,
     val tronTriggerSmartContractPayload: TronTriggerSmartContractPayload? = null,
     val tronTransferAssetContractPayload: TronTransferAssetContractPayload? = null,

@@ -2,12 +2,14 @@ package com.vultisig.wallet.ui.screens.v2.defi.circle
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.screens.v2.defi.BaseDeFiPositionsScreenContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiWarningBanner
@@ -17,9 +19,14 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun CircleDeFiPositionsScreen(
+    vaultId: VaultId,
     viewModel: CircleDeFiPositionsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.setData(vaultId)
+    }
 
     CircleDefiPositionScreenContent(
         state = state,
