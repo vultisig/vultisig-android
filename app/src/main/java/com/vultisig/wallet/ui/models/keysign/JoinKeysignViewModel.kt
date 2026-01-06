@@ -753,11 +753,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                     is BlockChainSpecific.MayaChain -> specific.isDeposit
                     is BlockChainSpecific.THORChain -> specific.isDeposit
                     else -> {
-                        val memo = payload.memo
+                        val memoUpper = payload.memo?.uppercase()
                         payload.coin.isSecuredAsset() &&
-                                (memo?.uppercase()
-                                    ?.contains("SECURE+:") == true || memo?.uppercase()
-                                    ?.contains("SECURE-:") == true)
+                                (memoUpper?.contains("SECURE+:") == true)
                     }
                 }
 
