@@ -38,6 +38,7 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getPubKeyByChain
+import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -751,7 +752,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val isDeposit = when (val specific = payload.blockChainSpecific) {
                     is BlockChainSpecific.MayaChain -> specific.isDeposit
                     is BlockChainSpecific.THORChain -> specific.isDeposit
-                    else -> false
+                    else -> {
+                        val memoUpper = payload.memo?.uppercase()
+                        payload.coin.isSecuredAsset() &&
+                                (memoUpper?.contains("SECURE+:") == true)
+                    }
                 }
 
                 if (isDeposit) {

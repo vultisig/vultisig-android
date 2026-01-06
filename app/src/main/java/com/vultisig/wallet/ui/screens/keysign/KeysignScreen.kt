@@ -44,14 +44,15 @@ internal fun KeysignScreen(
         Timber.e(e, "Error loading transaction for keysign")
     }
 
-    KeysignScreen()
+    KeysignFlowScreen(txType = txType)
 }
 
 @Composable
-private fun KeysignScreen(
+private fun KeysignFlowScreen(
     viewModel: KeysignFlowViewModel = hiltViewModel(),
     sharedViewModel: KeysignShareViewModel =
         hiltViewModel(LocalActivity.current as MainActivity),
+    txType: Route.Keysign.Keysign.TxType,
 ) {
     val keysignFlowState by viewModel.currentState.collectAsState()
 
@@ -64,6 +65,7 @@ private fun KeysignScreen(
         is KeysignFlowState.PeerDiscovery -> {
             KeysignPeerDiscovery(
                 viewModel = viewModel,
+                txType = txType
             )
         }
 
