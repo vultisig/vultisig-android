@@ -81,7 +81,7 @@ data class SwapInfoJson(
     @SerialName("outAmount")
     val outAmount: String,
     @SerialName("feeAmount")
-    val feeAmount: String,
+    val feeAmount: String? = null,
     @SerialName("feeMint")
-    val feeMint: String
+    val feeMint: String? = null
 )
