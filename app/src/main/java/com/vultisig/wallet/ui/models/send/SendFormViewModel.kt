@@ -940,17 +940,19 @@ internal class SendFormViewModel @Inject constructor(
                         )
                 }
 
+                val nativeCoin = nonDeFiAccount.token
+
                 val depositTx = DepositTransaction(
                     id = UUID.randomUUID().toString(),
                     vaultId = vaultId,
-                    srcToken = selectedToken,
+                    srcToken = nativeCoin,
                     srcAddress = srcAddress,
                     dstAddress = mscaAddress
                         ?: throw InvalidTransactionDataException(UiText.DynamicString("MSCA account not deployed yet, please try again")),
                     memo = memo,
                     srcTokenValue = TokenValue(
-                        value = tokenAmountInt,
-                        token = selectedToken,
+                        value = BigInteger.ZERO,
+                        token = nativeCoin,
                     ),
                     estimatedFees = gasFee,
                     estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
