@@ -58,34 +58,7 @@ class TronHelper(
             .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
             .setTransferAsset(contract)
             .setTimestamp(tronSpecific.timestamp.toLong())
-            .setBlockHeader(
-                BlockHeader.newBuilder()
-                    .setTimestamp(tronSpecific.blockHeaderTimestamp.toLong())
-                    .setNumber(tronSpecific.blockHeaderNumber.toLong())
-                    .setVersion(tronSpecific.blockHeaderVersion.toInt())
-                    .setTxTrieRoot(
-                        ByteString.copyFrom(
-                            Numeric.hexStringToByteArray(
-                                tronSpecific.blockHeaderTxTrieRoot
-                            )
-                        )
-                    )
-                    .setParentHash(
-                        ByteString.copyFrom(
-                            Numeric.hexStringToByteArray(
-                                tronSpecific.blockHeaderParentHash
-                            )
-                        )
-                    )
-                    .setWitnessAddress(
-                        ByteString.copyFrom(
-                            Numeric.hexStringToByteArray(
-                                tronSpecific.blockHeaderWitnessAddress
-                            )
-                        )
-                    )
-                    .build()
-            )
+            .setBlockHeader(buildBlockHeader(tronSpecific))
             .setExpiration(tronSpecific.expiration.toLong())
         keysignPayload.memo?.let { memo ->
             txBuild.setMemo(memo)
@@ -118,34 +91,7 @@ class TronHelper(
             .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
             .setTriggerSmartContract(contract)
             .setTimestamp(tronSpecific.timestamp.toLong())
-            .setBlockHeader(
-                BlockHeader.newBuilder()
-                    .setTimestamp(tronSpecific.blockHeaderTimestamp.toLong())
-                    .setNumber(tronSpecific.blockHeaderNumber.toLong())
-                    .setVersion(tronSpecific.blockHeaderVersion.toInt())
-                    .setTxTrieRoot(
-                        ByteString.copyFrom(
-                            Numeric.hexStringToByteArray(
-                                tronSpecific.blockHeaderTxTrieRoot
-                            )
-                        )
-                    )
-                    .setParentHash(
-                        ByteString.copyFrom(
-                            Numeric.hexStringToByteArray(
-                                tronSpecific.blockHeaderParentHash
-                            )
-                        )
-                    )
-                    .setWitnessAddress(
-                        ByteString.copyFrom(
-                            Numeric.hexStringToByteArray(
-                                tronSpecific.blockHeaderWitnessAddress
-                            )
-                        )
-                    )
-                    .build()
-            )
+            .setBlockHeader(buildBlockHeader(tronSpecific))
             .setExpiration(tronSpecific.expiration.toLong())
         keysignPayload.memo?.let { memo ->
             txBuild.setMemo(memo)
@@ -228,34 +174,7 @@ class TronHelper(
         val txBuild = Tron.Transaction.newBuilder()
             .setTransfer(contract)
             .setTimestamp(tronSpecific.timestamp.toLong())
-            .setBlockHeader(
-                BlockHeader.newBuilder()
-                    .setTimestamp(tronSpecific.blockHeaderTimestamp.toLong())
-                    .setNumber(tronSpecific.blockHeaderNumber.toLong())
-                    .setVersion(tronSpecific.blockHeaderVersion.toInt())
-                    .setTxTrieRoot(
-                        ByteString.copyFrom(
-                            Numeric.hexStringToByteArray(
-                                tronSpecific.blockHeaderTxTrieRoot
-                            ),
-                        )
-                    )
-                    .setParentHash(
-                        ByteString.copyFrom(
-                            Numeric.hexStringToByteArray(
-                                tronSpecific.blockHeaderParentHash
-                            )
-                        )
-                    )
-                    .setWitnessAddress(
-                        ByteString.copyFrom(
-                            Numeric.hexStringToByteArray(
-                                tronSpecific.blockHeaderWitnessAddress
-                            )
-                        )
-                    )
-                    .build()
-            )
+            .setBlockHeader(buildBlockHeader(tronSpecific))
             .setExpiration(tronSpecific.expiration.toLong())
         keysignPayload.memo?.let { memo ->
             txBuild.setMemo(memo)
@@ -366,6 +285,35 @@ class TronHelper(
             rawTransaction = output.json,
             transactionHash = Numeric.toHexStringNoPrefix(output.id.toByteArray())
         )
+    }
+
+    private fun buildBlockHeader(tronSpecific: BlockChainSpecific.Tron): BlockHeader {
+        return BlockHeader.newBuilder()
+            .setTimestamp(tronSpecific.blockHeaderTimestamp.toLong())
+            .setNumber(tronSpecific.blockHeaderNumber.toLong())
+            .setVersion(tronSpecific.blockHeaderVersion.toInt())
+            .setTxTrieRoot(
+                ByteString.copyFrom(
+                    Numeric.hexStringToByteArray(
+                        tronSpecific.blockHeaderTxTrieRoot
+                    )
+                )
+            )
+            .setParentHash(
+                ByteString.copyFrom(
+                    Numeric.hexStringToByteArray(
+                        tronSpecific.blockHeaderParentHash
+                    )
+                )
+            )
+            .setWitnessAddress(
+                ByteString.copyFrom(
+                    Numeric.hexStringToByteArray(
+                        tronSpecific.blockHeaderWitnessAddress
+                    )
+                )
+            )
+            .build()
     }
 
     companion object {
