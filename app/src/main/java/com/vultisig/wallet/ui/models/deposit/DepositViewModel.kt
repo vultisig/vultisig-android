@@ -23,10 +23,6 @@ internal class DepositViewModel @Inject constructor(
 
     val isKeysignFinished = MutableStateFlow(false)
 
-    fun finishKeysign() {
-        isKeysignFinished.value = true
-    }
-
     fun navigateToHome(useMainNavigator: Boolean) {
         viewModelScope.launch {
             if (isKeysignFinished.value) {

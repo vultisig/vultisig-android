@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel.Companion.REFRESH_CHAIN_DATA
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
@@ -44,7 +45,9 @@ internal class ChainSelectionViewModel @Inject constructor(
     private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
-    private val vaultId: String = savedStateHandle.toRoute<Route.AddChainAccount>().vaultId
+    val args = savedStateHandle.toRoute<Route.AddChainAccount>()
+    private val vaultId: String = args.vaultId
+    private val routeFromInitVault: Boolean = args.routeFromInitVault
     val uiState = MutableStateFlow(ChainSelectionUiModel())
 
     val searchTextFieldState = TextFieldState()
@@ -81,7 +84,7 @@ internal class ChainSelectionViewModel @Inject constructor(
 
     fun onCommitChanges() {
         val toEnableAccounts = uiState.value.chains.filter { it.isEnabled }
-        val toDisableAccounts = uiState.value.chains - toEnableAccounts
+        val toDisableAccounts = uiState.value.chains - toEnableAccounts.toSet()
 
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
@@ -93,18 +96,21 @@ internal class ChainSelectionViewModel @Inject constructor(
             toDisableAccounts.forEach {
                 disableAccount(it.coin)
             }
-            requestResultRepository.respond(REFRESH_CHAIN_DATA, Unit)
-            navigator.back()
+            if (routeFromInitVault) {
+                navigator.route(
+                    route = Route.Home(),
+                    opts = NavigationOptions(
+                        clearBackStack = true,
+                    ),
+                )
+            } else {
+                requestResultRepository.respond(REFRESH_CHAIN_DATA, Unit)
+                navigator.back()
+            }
         }
     }
 
     fun onBackClick() {
-        viewModelScope.launch {
-            navigator.back()
-        }
-    }
-    
-    fun cancelChanges(){
         viewModelScope.launch {
             navigator.back()
         }

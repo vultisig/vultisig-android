@@ -26,6 +26,7 @@ import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.peer.ConnectingToServer
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.theme.Theme
@@ -35,6 +36,7 @@ import timber.log.Timber
 @Composable
 internal fun KeysignPeerDiscovery(
     viewModel: KeysignFlowViewModel,
+    txType: Route.Keysign.Keysign.TxType,
 ) {
     KeepScreenOn()
 
@@ -98,7 +100,7 @@ internal fun KeysignPeerDiscovery(
     }
     LaunchedEffect(Unit) {
         // start mediator server
-        viewModel.setData(vault, context, keysignPayload, customMessagePayload)
+        viewModel.setData(vault, context, keysignPayload, customMessagePayload, txType = txType)
     }
 
     LaunchedEffect(viewModel.keysignMessage.value) {

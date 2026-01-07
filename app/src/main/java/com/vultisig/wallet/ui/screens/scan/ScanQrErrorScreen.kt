@@ -5,7 +5,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorView
 
 @Composable
 internal fun ScanQrErrorScreen(
@@ -18,7 +18,7 @@ internal fun ScanQrErrorScreen(
 private fun ScanQrErrorScreen(back: () -> Unit) {
 
         ErrorView(
-            errorLabel = stringResource(R.string.scan_qr_code_error_text),
+            title = stringResource(R.string.scan_qr_code_error_text),
             buttonText = stringResource(R.string.scan_qr_code_error_button),
             onButtonClick = back,
         )

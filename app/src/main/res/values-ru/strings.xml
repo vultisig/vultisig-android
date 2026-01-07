@@ -560,6 +560,7 @@
     <string name="vault_settings_migrate_gg20">Миграция хранилища GG20 DKLS</string>
     <string name="vault_settings_reshare_change">Повторный доступ, изменение TSS или подпись сообщений.</string>
     <string name="vault_backup_summary_start_using_vault">Начать использовать хранилище</string>
+    <string name="vault_backup_summary_choose_chains">Выберите цепочки</string>
     <string name="transaction_done_form_approve">Одобрить</string>
     <string name="vault_settings_migration_title">Мигрировать</string>
     <string name="transaction_buy">Купить</string>
@@ -870,4 +871,8 @@
     <string name="circle_usdc_account">Учетная запись Circle USDC</string>
     <string name="withdraw">Вывести</string>
     <string name="send_form_network_fee">Сетевая комиссия (автоматически)</string>
+    <string name="swap_form_vult_discount_bps">VULT (%1$s - %2$d bps)</string>
+    <string name="swap_form_referral_discount_bps">Реферальная программа (-%1$d бит/с)</string>
+    <string name="amino_sign">Амино-подпись</string>
+    <string name="amino_direct">Прямая подпись</string>
 </resources>

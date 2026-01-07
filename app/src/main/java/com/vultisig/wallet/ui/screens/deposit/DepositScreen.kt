@@ -15,7 +15,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.ui.components.ProgressScreen
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.deposit.DepositViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -78,20 +78,16 @@ internal fun DepositScreen(
     val qrAddress by viewModel.addressProvider.address.collectAsState()
     val qr = qrAddress.takeIf { it.isNotEmpty() }
     DepositScreen(
-        keysignShareViewModel = keysignShareViewModel,
-        topBarNavController = topBarNavController,
         navHostController = depositNavHostController,
         vaultId = vaultId,
         chainId = chainId,
         title = title,
-        progress = progress,
         showStartIcon = !isKeysignFinished,
         endIcon = qr?.let { R.drawable.qr_share },
         endIconClick = qr?.let {
             { keysignShareViewModel.shareQRCode(context) }
         } ?: {},
         onKeysignFinished = { viewModel.navigateToHome(shouldUseMainNavigator) },
-        finishKeysign = viewModel::finishKeysign,
         depositType = depositType,
         bondAddress = bondAddress,
     )
@@ -100,30 +96,24 @@ internal fun DepositScreen(
 @Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
 private fun DepositScreen(
-    keysignShareViewModel: KeysignShareViewModel,
-    topBarNavController: NavController,
     navHostController: NavHostController,
     title: String,
-    progress: Float,
     vaultId: String,
     chainId: String,
     showStartIcon: Boolean,
     endIcon: Int? = null,
     endIconClick: () -> Unit = {},
     onKeysignFinished: () -> Unit = {},
-    finishKeysign:() -> Unit = {},
     depositType: String? = null,
     bondAddress: String? = null,
 ) {
 
-    ProgressScreen(
-        navController = topBarNavController,
+
+    V2Scaffold(
         title = title,
-        progress = progress,
-        showStartIcon = showStartIcon,
-        onStartIconClick = onKeysignFinished,
-        endIcon = endIcon,
-        onEndIconClick = endIconClick,
+        onBackClick = onKeysignFinished.takeIf { showStartIcon },
+        rightIcon = endIcon,
+        onRightIconClick = endIconClick,
     ) {
         NavHost(
             navController = navHostController,

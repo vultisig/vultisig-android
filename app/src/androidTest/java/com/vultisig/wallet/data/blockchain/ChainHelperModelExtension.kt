@@ -8,7 +8,9 @@ import OneinchSwapPayload
 import OneinchTransaction
 import SwapPayload
 import ThorchainSwapPayload
+import TriggerSmartContractPayload
 import WasmExecuteContractPayload
+import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
@@ -16,9 +18,14 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import kotlinx.serialization.json.Json
 import vultisig.keysign.v1.CosmosCoin
+import vultisig.keysign.v1.CosmosFee
 import vultisig.keysign.v1.CosmosIbcDenomTrace
+import vultisig.keysign.v1.CosmosMsg
+import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.TransactionType
+import vultisig.keysign.v1.TronTriggerSmartContractPayload
 import java.math.BigInteger
 
 fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.payload.KeysignPayload {
@@ -28,7 +35,10 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
         coin = coin,
         toAddress = this.toAddress,
         toAmount = this.toAmount.toBigInteger(),
-        blockChainSpecific = this.blockchainSpecific.toBlockChainSpecific(coin, this.toAddress),
+        blockChainSpecific = this.blockchainSpecific.toBlockChainSpecific(
+            coin,
+            this.toAddress
+        ),
         utxos = this.utxoInfo?.map {
             UtxoInfo(
                 hash = it.hash,
@@ -36,6 +46,36 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
                 index = it.index.toUInt(),
             )
         } ?: emptyList(),
+        signAmino = this.signData?.signAmino?.let {
+            SignAmino(
+                fee = it.fee?.let { fee ->
+                    CosmosFee(
+                        amount = fee.amount.map { cosmosCoin ->
+                            CosmosCoin(
+                                denom = cosmosCoin.denom,
+                                amount = cosmosCoin.amount,
+                            )
+
+                        },
+                    )
+                },
+                msgs = this.signData.signAmino.msgs.map { msg ->
+
+                    CosmosMsg(
+                        type = msg.type,
+                        value = Json.encodeToString(msg.value)
+                    )
+                }
+            )
+        },
+        signDirect = this.signData?.signDirect?.let {  signDirect ->
+            SignDirectProto(
+                bodyBytes = signDirect.bodyBytes,
+                authInfoBytes = signDirect.authInfoBytes,
+                chainId = signDirect.chainId,
+                accountNumber = signDirect.accountNumber,
+            )
+        },
         memo = this.memo,
         vaultPublicKeyECDSA = this.vaultPublicKeyEcdsa,
         vaultLocalPartyID = "",
@@ -48,7 +88,18 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
                 amount = it.amount.toBigInteger(),
             )
         },
+        tronTriggerSmartContractPayload = this.triggerSmartContractPayload?.toTriggerSmartContractPayload(),
         skipBroadcast = false // Not present in source, handled as default
+    )
+}
+
+internal fun TriggerSmartContractPayload.toTriggerSmartContractPayload(): TronTriggerSmartContractPayload {
+    return TronTriggerSmartContractPayload(
+        ownerAddress = this.ownerAddress,
+        contractAddress = this.contractAddress,
+        callValue = this.callValue,
+        callTokenValue = this.callDataValue,
+        data = this.data,
     )
 }
 
@@ -68,7 +119,12 @@ internal fun WasmExecuteContractPayload.toWasmPayload(): vultisig.keysign.v1.Was
 
 internal fun Coin.toInternalCoinPayload(): com.vultisig.wallet.data.models.Coin {
     return com.vultisig.wallet.data.models.Coin(
-        chain = Chain.entries.find { it.raw.equals(this.chain, true) } ?: Chain.Ethereum,
+        chain = Chain.entries.find {
+            it.raw.equals(
+                this.chain,
+                true
+            )
+        } ?: error("Unrecognized chain: ${this.chain}"),
         ticker = this.ticker,
         logo = this.logo,
         address = this.address,
@@ -230,7 +286,7 @@ fun SwapPayload.toInternalSwapPayload(): com.vultisig.wallet.data.models.payload
     this.mayachainSwapPayload?.let {
         return com.vultisig.wallet.data.models.payload.SwapPayload.MayaChain(it.toInternalThorChainSwapPayload())
     }
-    this.oneinchSwapPayload?.let{
+    this.oneinchSwapPayload?.let {
         return com.vultisig.wallet.data.models.payload.SwapPayload.EVM(it.toInternalOneInchSwapPayload())
     }
     error("SwapPayload is nil")
@@ -252,6 +308,7 @@ fun ThorchainSwapPayload.toInternalThorChainSwapPayload(): com.vultisig.wallet.d
         isAffiliate = this.isAffiliate,
     )
 }
+
 fun OneinchSwapPayload.toInternalOneInchSwapPayload(): com.vultisig.wallet.data.models.EVMSwapPayloadJson {
     return com.vultisig.wallet.data.models.EVMSwapPayloadJson(
         fromCoin = this.fromCoin.toInternalCoinPayload(),
@@ -262,12 +319,14 @@ fun OneinchSwapPayload.toInternalOneInchSwapPayload(): com.vultisig.wallet.data.
         provider = this.provider,
     )
 }
+
 fun OneinchQuote.toInternalOneInchQuote(): EVMSwapQuoteJson {
     return EVMSwapQuoteJson(
         dstAmount = this.dstAmount,
         tx = this.tx.toInternalOneInchTransaction()
     )
 }
+
 fun OneinchTransaction.toInternalOneInchTransaction(): OneInchSwapTxJson {
     return OneInchSwapTxJson(
         from = this.from,
@@ -278,6 +337,7 @@ fun OneinchTransaction.toInternalOneInchTransaction(): OneInchSwapTxJson {
         gasPrice = this.gasPrice,
     )
 }
+
 fun getTransactionType(txType: Int): TransactionType {
     return when (txType) {
         0 -> TransactionType.TRANSACTION_TYPE_UNSPECIFIED

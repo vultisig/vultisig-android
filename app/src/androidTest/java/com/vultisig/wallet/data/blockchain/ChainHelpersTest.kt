@@ -175,7 +175,6 @@ class ChainHelpersTest {
     fun sendTHORchain() {
         val transactions: List<TransactionData> = loadTransactionData(THORCHAIN_JSON_FILE)
         val helper = ThorChainHelper.thor(HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
-
         transactions.forEach { transaction ->
             val preImageHashes =
                 helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
