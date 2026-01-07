@@ -298,7 +298,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
 
             val tokenIdToPrices = thorTokens.asSequence()
                 .mapNotNull {
-                    val tokenAsset = "thor.${it.ticker}".lowercase()
+                    val tokenAsset = mapThorPoolAsset(it.contractAddress)
                     val priceUsd = poolAssetToPriceMap[tokenAsset]
                         ?.toBigDecimal(scale = 8)
                         ?: return@mapNotNull null
@@ -393,5 +393,52 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
 
     companion object {
         private const val TETHER_PRICE_PROVIDER_ID = "tether"
+    }
+
+    private fun mapThorPoolAsset(contractAddress: String): String {
+        val addr = contractAddress.lowercase()
+
+        return when {
+            // simple alphanumeric -> thor.<addr>
+            addr.matches(Regex("^[a-z0-9]+$")) ->
+                "thor.$addr"
+
+            // single hyphen pair -> replace hyphen with dot (e.g. bcs-bnb -> bcs.bnb)
+            addr.matches(Regex("^[a-z0-9]+-[a-z0-9]+$")) ->
+                addr.replace("-", ".")
+
+            // special x/… pattern: take the third-from-last segment as the prefix
+            // and join the last two segments with '-' to preserve things like `usdc-0x...`
+            addr.startsWith("x/") && addr.contains("-") ->
+                {
+                val after = addr.substringAfter("x/")
+                val parts = after.split("-").filter { it.isNotEmpty() }
+                if (parts.size >= 3) {
+                    val prefix = parts[parts.size - 3]
+                    val tail = parts.subList(parts.size - 2, parts.size).joinToString("-")
+                    "$prefix.$tail"
+                } else if (parts.size == 2) {
+                    // fallback: a.b -> parts[0].parts[1]
+                    "${parts[0]}.${parts[1]}"
+                } else {
+                    // fallback to replacing hyphens with dots
+                    after.replace("-", ".")
+                }
+            }
+
+            addr.matches(Regex("^[a-z0-9]+-[a-z0-9]+-0x[0-9a-f]+$")) -> {
+                val i = addr.indexOf('-')
+                addr.substring(
+                    0,
+                    i
+                ) + "." + addr.substring(i + 1)
+            }
+
+
+            // fallback: replace hyphens with dots
+            else -> addr.replace("-", ".")
+        }
+
+
     }
 }
