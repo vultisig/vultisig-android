@@ -65,9 +65,11 @@ interface MayaChainApi {
 
     suspend fun getMayaConstants(): Map<String, Long>
 
-    suspend fun getAllNodes(): MayaBondedNodesResponse
+    suspend fun getAllNodes(): List<MayaNodeResponse>
 
     suspend fun getNodeDetails(address: String): MayaNodeResponse
+
+    suspend fun getNetworkInfo(): MayaNetworkInfo
 }
 
 internal class MayaChainApiImp @Inject constructor(
@@ -218,15 +220,14 @@ internal class MayaChainApiImp @Inject constructor(
         }
     }
 
-
-    override suspend fun getAllNodes(): MayaBondedNodesResponse {
+    override suspend fun getAllNodes(): List<MayaNodeResponse> {
         return httpClient.get(MAYA_URL_INFO) {
             header(xClientID, xClientIDValue)
             contentType(ContentType.Application.Json)
             url {
                 appendPathSegments("/mayachain/nodes")
             }
-        }.bodyOrThrow<MayaBondedNodesResponse>()
+        }.bodyOrThrow<List<MayaNodeResponse>>()
     }
 
     override suspend fun getNodeDetails(address: String): MayaNodeResponse {

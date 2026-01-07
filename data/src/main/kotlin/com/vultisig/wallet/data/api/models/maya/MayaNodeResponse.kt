@@ -28,10 +28,12 @@ data class MayaNodeResponse(
     data class BondProvider(
         @SerialName("bond_address")
         val bondAddress: String,
-        @SerialName("bond")
-        val bond: String,
+        @SerialName("bonded")
+        val bonded: Boolean,
+        @SerialName("reward")
+        val reward: String,
         @SerialName("pools")
-        val pools: Map<String, String>
+        val pools: Map<String, String> = emptyMap()
     )
 }
 
