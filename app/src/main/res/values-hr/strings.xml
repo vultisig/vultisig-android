@@ -563,6 +563,7 @@
     <string name="vault_settings_migrate_gg20">Migracija DKLS-a trezora GG20</string>
     <string name="vault_settings_reshare_change">Ponovno dijeljenje, promjena TSS-a ili potpisivanje poruka.</string>
     <string name="vault_backup_summary_start_using_vault">Počnite koristiti svoj trezor</string>
+    <string name="vault_backup_summary_choose_chains">Odaberite lance</string>
     <string name="transaction_done_form_approve">Odobri</string>
     <string name="vault_settings_migration_title">Migrirati</string>
     <string name="transaction_buy">Kupi</string>
@@ -866,10 +867,16 @@
     <string name="operation">Operacija</string>
     <string name="thorchain_address_not_found_in_vault">THORChain adresa nije pronađena u trezoru. Molimo provjerite imate li RUNE u svom trezoru.</string>
     <string name="deposit_error_not_secured_asset">Odabrana imovina nije osigurana imovina i ne može se obraditi.</string>
+    <string name="keysign_password_hide_hint">Sakrij savjet</string>
+    <string name="keysign_password_show_hint">Prikaži savjet</string>
 
     <!-- Circle MSCA Account -->
     <string name="circle_msca_account_created_success">Circle MSCA račun uspješno stvoren</string>
     <string name="circle_msca_account_created_failed">Neuspješno stvaranje Circle MSCA računa. Molimo pokušajte ponovno.</string>
     <string name="circle_usdc_account">Circle USDC račun</string>
     <string name="withdraw">Povući</string>
+    <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
+    <string name="swap_form_referral_discount_bps">Preporuka (-%1$d bps)</string>
+    <string name="amino_sign">Amino potpis</string>
+    <string name="amino_direct">Izravni potpis</string>
 </resources>

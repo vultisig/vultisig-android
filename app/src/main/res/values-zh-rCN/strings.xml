@@ -626,6 +626,7 @@
 
     <!-- Vault Settings Migration -->
     <string name="vault_backup_summary_start_using_vault">开始使用您的金库</string>
+    <string name="vault_backup_summary_choose_chains">选择链条</string>
     <string name="transaction_done_form_approve">批准</string>
     <string name="vault_settings_migration_title">迁移</string>
 
@@ -1207,6 +1208,8 @@
     <string name="operation">操作</string>
     <string name="thorchain_address_not_found_in_vault">您的金库中未找到 THORChain 地址。请确保您的金库中拥有 RUNE。</string>
     <string name="deposit_error_not_secured_asset">所选资产并非安全资产，因此无法处理。</string>
+    <string name="keysign_password_hide_hint">隐藏提示</string>
+    <string name="keysign_password_show_hint">显示提示</string>
 
     <!-- Circle MSCA Account -->
     <string name="circle_msca_account_created_success">Circle MSCA 账户创建成功</string>
@@ -1215,4 +1218,8 @@
     <string name="withdraw">提取</string>
 
     <string name="send_form_network_fee">网络费用（自动）</string>
+    <string name="swap_form_vult_discount_bps">VULT（%1$s -%2$d bps）</string>
+    <string name="swap_form_referral_discount_bps">推荐人（-%1$d bps）</string>
+    <string name="amino_sign">Amino 签名</string>
+    <string name="amino_direct">直接签名</string>
 </resources>

@@ -7,7 +7,14 @@ import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TiersNFTRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.BRONZE_DISCOUNT_BPS
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.DIAMOND_DISCOUNT_BPS
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOLD_DISCOUNT_BPS
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.PLATINUM_DISCOUNT_BPS
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_DISCOUNT_BPS
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.ULTIMATE_DISCOUNT_BPS
 import com.vultisig.wallet.data.utils.toUnit
+import com.vultisig.wallet.ui.screens.settings.TierType
 import timber.log.Timber
 import wallet.core.jni.CoinType
 import java.math.BigInteger
@@ -119,4 +126,14 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
             SwapProvider.LIFI,
         )
     }
+}
+
+internal fun Int.getTierType() = when (this) {
+    BRONZE_DISCOUNT_BPS -> TierType.BRONZE
+    SILVER_DISCOUNT_BPS -> TierType.SILVER
+    GOLD_DISCOUNT_BPS -> TierType.GOLD
+    PLATINUM_DISCOUNT_BPS -> TierType.PLATINUM
+    DIAMOND_DISCOUNT_BPS -> TierType.DIAMOND
+    ULTIMATE_DISCOUNT_BPS -> TierType.ULTIMATE
+    else -> null
 }

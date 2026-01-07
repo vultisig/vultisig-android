@@ -1,18 +1,26 @@
 package com.vultisig.wallet.ui.screens.keysign
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -21,12 +29,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -49,6 +59,7 @@ internal fun KeysignPasswordScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun InputPasswordScreen(
     state: KeysignPasswordUiModel,
@@ -58,74 +69,122 @@ internal fun InputPasswordScreen(
     onContinueClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                onBackClick = onBackClick,
+
+    V2BottomSheet(
+        onDismissRequest = onBackClick,
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 12.dp,
+                ),
+        ) {
+            UiSpacer(
+                size = 32.dp
             )
-        },
-        content = { contentPadding ->
-            Column(
+
+            UiIcon(
+                drawableResId = R.drawable.focus_lock,
+                size = 24.dp,
                 modifier = Modifier
-                    .padding(contentPadding)
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 12.dp,
-                    ),
-            ) {
+                    .align(alignment = Alignment.CenterHorizontally),
+                tint = Theme.v2.colors.alerts.success,
+            )
+
+            UiSpacer(
+                size = 20.dp
+            )
+
+            Text(
+                text = stringResource(R.string.keysign_password_enter_your_password),
+                color = Theme.v2.colors.text.primary,
+                style = Theme.brockmann.headings.title3,
+            )
+
+            UiSpacer(20.dp)
+
+            if (subtitle != null) {
                 Text(
-                    text = stringResource(R.string.keysign_password_enter_your_password),
-                    color = Theme.v2.colors.text.primary,
-                    style = Theme.brockmann.headings.largeTitle,
+                    text = subtitle,
+                    color = Theme.v2.colors.text.extraLight,
+                    style = Theme.brockmann.body.s.medium,
                 )
-
                 UiSpacer(16.dp)
+            }
 
-                if (subtitle != null) {
+            val focusRequester = remember { FocusRequester() }
+
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+
+            VsTextInputField(
+                textFieldState = passwordFieldState,
+                hint = stringResource(R.string.backup_password_screen_enter_password),
+                type = VsTextInputFieldType.Password(
+                    isVisible = state.isPasswordVisible,
+                    onVisibilityClick = onPasswordVisibilityToggle,
+                ),
+                focusRequester = focusRequester,
+                imeAction = ImeAction.Go,
+                onKeyboardAction = {
+                    onContinueClick()
+                },
+                innerState = if (state.passwordError != null)
+                    VsTextInputFieldInnerState.Error
+                else VsTextInputFieldInnerState.Default,
+                footNote = state.passwordError?.asString(),
+                modifier = Modifier
+                    .testTag("InputPasswordScreen.password")
+            )
+
+            UiSpacer(size = 10.dp)
+
+            if (state.passwordHint != null) {
+
+                var isHintVisible by remember {
+                    mutableStateOf(false)
+                }
+
+
+                val caretRotationDegree by animateFloatAsState(if (isHintVisible) -90f else 90f)
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = {
+                            isHintVisible = !isHintVisible
+                        })
+                        .wrapContentWidth(align = Alignment.Start),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
-                        text = subtitle,
-                        color = Theme.v2.colors.text.extraLight,
-                        style = Theme.brockmann.body.s.medium,
+                        text = if (isHintVisible) stringResource(R.string.keysign_password_hide_hint) else stringResource(
+                            R.string.keysign_password_show_hint
+                        ),
+                        color = Theme.v2.colors.text.light,
+                        style = Theme.brockmann.supplementary.footnote,
+                    )
+
+                    UiSpacer(
+                        size = 4.dp
+                    )
+
+                    UiIcon(
+                        drawableResId = R.drawable.ic_small_caret_right,
+                        modifier = Modifier
+                            .rotate(degrees = caretRotationDegree),
+                        size = 12.dp,
+                        tint = Theme.v2.colors.text.light,
                     )
                 }
 
-                UiSpacer(16.dp)
-
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .weight(1f),
-                ) {
-                    val focusRequester = remember { FocusRequester() }
-
-                    LaunchedEffect(Unit) {
-                        focusRequester.requestFocus()
-                    }
-
-                    VsTextInputField(
-                        textFieldState = passwordFieldState,
-                        hint = stringResource(R.string.backup_password_screen_enter_password),
-                        type = VsTextInputFieldType.Password(
-                            isVisible = state.isPasswordVisible,
-                            onVisibilityClick = onPasswordVisibilityToggle,
-                        ),
-                        focusRequester = focusRequester,
-                        imeAction = ImeAction.Go,
-                        onKeyboardAction = {
-                            onContinueClick()
-                        },
-                        innerState = if (state.passwordError != null)
-                            VsTextInputFieldInnerState.Error
-                        else VsTextInputFieldInnerState.Default,
-                        footNote = state.passwordError?.asString(),
-                        modifier = Modifier
-                            .testTag("InputPasswordScreen.password")
-                    )
-
-                    UiSpacer(size = 12.dp)
-
-                    if (state.passwordHint != null) {
+                AnimatedVisibility(visible = isHintVisible) {
+                    Column {
+                        UiSpacer(
+                            size = 8.dp
+                        )
                         Text(
                             text = state.passwordHint.asString(),
                             color = Theme.v2.colors.text.light,
@@ -134,21 +193,20 @@ internal fun InputPasswordScreen(
                         )
                     }
                 }
+
+                UiSpacer(size = 12.dp)
             }
-        },
-        bottomBar = {
             VsButton(
                 label = stringResource(R.string.keygen_email_continue_button),
                 onClick = onContinueClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        all = 24.dp,
-                    )
                     .testTag("InputPasswordScreen.next")
             )
-        },
-    )
+
+
+        }
+    }
 }
 
 @Preview

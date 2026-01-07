@@ -3,15 +3,12 @@ package com.vultisig.wallet.ui.models
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
@@ -23,7 +20,9 @@ import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.ChainDashboardBottomBarVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -34,14 +33,11 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.data.repositories.BalanceRepository
-import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
-import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -55,11 +51,11 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @Immutable
 internal data class ChainTokensUiModel(
     val isRefreshing: Boolean = false,
+    val isSearchMode: Boolean = false,
     val chainName: String = "",
     val chainAddress: String = "",
     @DrawableRes val chainLogo: Int? = null,
@@ -71,11 +67,9 @@ internal data class ChainTokensUiModel(
     val canBuy: Boolean = false,
     val canSelectTokens: Boolean = false,
     val isBalanceVisible: Boolean = true,
-    val showCameraBottomSheet: Boolean = false,
     val searchTextFieldState: TextFieldState = TextFieldState(),
     val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
     val tronResourceStats: ResourceUsage? = null,
-    val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
 )
 
 @Immutable
@@ -94,34 +88,31 @@ internal data class ChainTokenUiModel(
 
 @HiltViewModel
 internal class ChainTokensViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToStringWithUnitMapper: TokenValueToStringWithUnitMapper,
     private val discoverTokenUseCase: DiscoverTokenUseCase,
-    private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
 
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val bottomBarVisibility: ChainDashboardBottomBarVisibilityRepository,
     private val vaultRepository: VaultRepository,
     private val requestResultRepository: RequestResultRepository,
     private val balanceRepository: BalanceRepository,
 
-    private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
-) : ViewModel() {
+    ) : ViewModel() {
     private val tokens = MutableStateFlow(emptyList<Coin>())
 
-    val args = savedStateHandle.toRoute<Route.ChainTokens>()
-    private val chainRaw: String = args.chainId
-    private val vaultId: String = args.vaultId
+    private lateinit var  chainRaw: String
+    private lateinit var vaultId: String
     private var currentVault: Vault? = null
 
     val uiState = MutableStateFlow(ChainTokensUiModel())
 
     private var loadDataJob: Job? = null
 
-    init {
+    private fun updateBalanceVisibility() {
         viewModelScope.launch {
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
             uiState.update {
@@ -130,7 +121,17 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
+    fun initData(
+        vaultId: String,
+        chainId: String
+    ){
+        this.vaultId = vaultId
+        this.chainRaw = chainId
+        refresh()
+    }
+
     fun refresh() {
+        updateBalanceVisibility()
         loadData()
     }
 
@@ -344,53 +345,19 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
-    fun setCryptoConnectionType(type: CryptoConnectionType) {
+    fun hideSearchBar(){
+        uiState.update { it.copy(isSearchMode = false) }
+        bottomBarVisibility.showBottomBar()
+    }
+
+    fun showSearchBar(){
+        uiState.update { it.copy(isSearchMode = true) }
+        bottomBarVisibility.hideBottomBar()
+    }
+
+    fun back(){
         viewModelScope.launch {
-            val chainSupportDefi = cryptoConnectionTypeRepository.isDefi(Chain.fromRaw(chainRaw))
-            if (type == CryptoConnectionType.Defi && chainSupportDefi) {
-                navigator.route(Route.PositionTokens(vaultId))
-            }
-        }
-    }
-
-    fun openCamera(){
-        uiState.update { it.copy(showCameraBottomSheet = true) }
-    }
-
-    fun handleScanQrError(error: String) {
-        viewModelScope.launch {
-            uiState.update {
-                it.copy(
-                    scanQrUiModel = ScanQrUiModel(error = error)
-                )
-            }
-            delay(2.seconds)
-            uiState.update {
-                it.copy(
-                    scanQrUiModel = ScanQrUiModel(error = null)
-                )
-            }
-        }
-    }
-
-    fun dismissCameraBottomSheet() {
-        uiState.update { it.copy(showCameraBottomSheet = false) }
-    }
-
-    fun onScanSuccess(qr: String) = viewModelScope.launch {
-        try {
-            val dst = getDirectionByQrCodeUseCase(
-                qr,
-                vaultId
-            )
-            navigator.route(dst)
-            uiState.update { it.copy(showCameraBottomSheet = false) }
-        } catch (e: Exception) {
-            Timber.e(
-                e,
-                "Failed to process QR code"
-            )
-            handleScanQrError(e.message ?: "Invalid QR code")
+            navigator.back()
         }
     }
 

@@ -1,10 +1,8 @@
 package com.vultisig.wallet.ui.screens.v2.defi.circle
 
 import android.content.Context
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.CircleApi
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -27,6 +25,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText.StringResource
@@ -51,7 +50,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class CircleDeFiPositionsViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val scaCircleAccountRepository: ScaCircleAccountRepository,
     private val circleApi: CircleApi,
@@ -66,7 +64,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
-    private var vaultId: String = savedStateHandle.toRoute<Route.PositionCircle>().vaultId
+    private lateinit var vaultId: String
     private var mscaAddress: String? = null
 
     private val _state = MutableStateFlow(
@@ -82,7 +80,8 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
 
     val state: StateFlow<DefiUiModel> = _state.asStateFlow()
 
-    init {
+    fun setData(vaultId: String) {
+        this.vaultId = vaultId
         loadBalanceVisibility()
         loadAccountStatus()
         loadCirclePositions()
@@ -157,7 +156,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                 }
                 val cachePosition =
                     withContext(Dispatchers.IO) {
-                        stakingDetailsRepository.getStakingDetails(vaultId, Coins.Ethereum.USDC.id)
+                        stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Ethereum.USDC.id)
                     }
                 if (cachePosition != null) {
                     showUSDCPosition(cachePosition.stakeAmount, cachePosition.coin)
@@ -239,6 +238,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                         chainId = Chain.Ethereum.id,
                         tokenId = tokenId,
                         address = mscaAddress,
+                        type = DeFiNavActions.DEPOSIT_USDC_CIRCLE.type,
                     )
                 )
             }
@@ -247,7 +247,20 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
 
     fun onWithdrawAccount() {
         viewModelScope.launch {
-
+            val usdc = Coins.Ethereum.USDC
+            val tokenId = usdc.id
+            if (!mscaAddress.isNullOrBlank()) {
+                navigator.route(
+                    Route.Send(
+                        vaultId = vaultId,
+                        chainId = Chain.Ethereum.id,
+                        type = DeFiNavActions.WITHDRAW_USDC_CIRCLE.type,
+                        tokenId = tokenId,
+                        address = usdc.contractAddress,
+                        mscaAddress = mscaAddress,
+                    )
+                )
+            }
         }
     }
 

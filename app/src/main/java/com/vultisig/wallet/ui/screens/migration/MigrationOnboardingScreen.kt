@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,10 +24,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -40,35 +39,42 @@ internal fun MigrationOnboardingScreen(
     var currentPage by remember { mutableIntStateOf(0) }
     val pages = getPages(state.vaultType)
 
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.migration_onboarding_upgrade_your_vault),
-                onBackClick = {
-                    if (currentPage <= 0) {
-                        model.back()
-                    } else {
-                        currentPage--
-                    }
-                },
-            )
+    MigrationOnboardingScreen(
+        currentPage = currentPage,
+        pages = pages,
+        onBackClick = {
+            if (currentPage <= 0) {
+                model.back()
+            } else {
+                currentPage--
+            }
         },
-        content = { contentPadding ->
+        onNext = {
+            if (currentPage >= pages.size - 1) {
+                model.upgrade()
+            } else {
+                currentPage++
+            }
+        })
+}
+
+@Composable
+private fun MigrationOnboardingScreen(
+    currentPage: Int,
+    pages: List<MigrationOnboardingPage>,
+    onBackClick: () -> Unit,
+    onNext: () -> Unit,
+) {
+    V2Scaffold(
+        title = stringResource(R.string.migration_onboarding_upgrade_your_vault),
+        onBackClick = onBackClick,
+        content = {
             val page = pages[currentPage]
             MigrationOnboardingContent(
-                onNext = {
-                    if (currentPage >= pages.size - 1) {
-                        model.upgrade()
-                    } else {
-                        currentPage++
-                    }
-                },
+                onNext = onNext,
                 animation = page.animation,
                 text = page.text,
                 buttonText = page.buttonText,
-                modifier = Modifier
-                    .padding(contentPadding),
             )
         }
     )
@@ -194,7 +200,12 @@ internal fun MigrationOnboardingContent(
 @Preview
 @Composable
 private fun MigrationOnboardingScreenPreview() {
-    MigrationOnboardingScreen()
+    MigrationOnboardingScreen(
+        currentPage = 0,
+        pages = getPages(Route.VaultInfo.VaultType.Secure),
+        onBackClick = {},
+        onNext = {}
+    )
 }
 
 object MigrationOnboardingScreenTags {

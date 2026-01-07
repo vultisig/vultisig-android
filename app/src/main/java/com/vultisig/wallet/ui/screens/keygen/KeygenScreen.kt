@@ -123,7 +123,7 @@ private fun KeygenScreen(
                     ErrorView(
                         title = error.title.asString(),
                         description = error.description.asString(),
-                        onTryAgainClick = onTryAgainClick,
+                        onButtonClick = onTryAgainClick,
                         modifier = Modifier
                             .fillMaxWidth()
                     )

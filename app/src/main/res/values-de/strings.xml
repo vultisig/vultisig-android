@@ -563,6 +563,7 @@
     <string name="vault_settings_migrate_gg20">GG20‑Vault auf DKLS migrieren</string>
     <string name="vault_settings_reshare_change">Erneut teilen, TSS ändern oder Nachrichten signieren.</string>
     <string name="vault_backup_summary_start_using_vault">Jetzt Ihren Tresor nutzen.</string>
+    <string name="vault_backup_summary_choose_chains">Wählen Sie Ketten</string>
     <string name="transaction_done_form_approve">Genehmigen</string>
     <string name="vault_settings_migration_title">Migrieren</string>
     <string name="transaction_buy">Kaufen</string>
@@ -866,6 +867,8 @@
     <string name="operation">Operation</string>
     <string name="thorchain_address_not_found_in_vault">Die THORChain-Adresse wurde im Tresor nicht gefunden. Bitte stellen Sie sicher, dass sich RUNE in Ihrem Tresor befindet.</string>
     <string name="deposit_error_not_secured_asset">Das ausgewählte Asset ist nicht gesichert und kann nicht verarbeitet werden.</string>
+    <string name="keysign_password_hide_hint">Hinweis ausblenden</string>
+    <string name="keysign_password_show_hint">Hinweis anzeigen</string>
 
     <!-- Circle MSCA Account -->
     <string name="circle_msca_account_created_success">Circle MSCA-Konto erfolgreich erstellt</string>
@@ -873,4 +876,8 @@
     <string name="circle_usdc_account">Circle USDC-Konto</string>
     <string name="withdraw">Abheben</string>
     <string name="send_form_network_fee">Netzwerkgebühr (automatisch)</string>
+    <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
+    <string name="swap_form_referral_discount_bps">Empfehlung (-%1$d bps)</string>
+    <string name="amino_sign">Amino-Signatur</string>
+    <string name="amino_direct">Direkte Signatur</string>
 </resources>

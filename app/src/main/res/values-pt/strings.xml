@@ -560,6 +560,7 @@
     <string name="vault_settings_migrate_gg20">Migrar DKLS do cofre GG20</string>
     <string name="vault_settings_reshare_change">Partilhar novamente, alterar o TSS ou subscrever mensagens.</string>
     <string name="vault_backup_summary_start_using_vault">Comece a utilizar o seu Cofre</string>
+    <string name="vault_backup_summary_choose_chains">Escolha Correntes</string>
     <string name="transaction_done_form_approve">Aprovar</string>
     <string name="vault_settings_migration_title">Migrar</string>
     <string name="transaction_buy">Comprar</string>
@@ -863,6 +864,8 @@
     <string name="operation">Operação</string>
     <string name="thorchain_address_not_found_in_vault">Endereço THORChain não encontrado no cofre. Certifique-se de que tem RUNE no seu cofre.</string>
     <string name="deposit_error_not_secured_asset">O ativo selecionado não é um ativo garantido e não pode ser processado.</string>
+    <string name="keysign_password_hide_hint">Ocultar dica</string>
+    <string name="keysign_password_show_hint">Mostrar dica</string>
 
     <!-- Circle MSCA Account -->
     <string name="circle_msca_account_created_success">Conta Circle MSCA criada com sucesso</string>
@@ -870,4 +873,8 @@
     <string name="circle_usdc_account">Conta Circle USDC</string>
     <string name="withdraw">Retirar</string>
     <string name="send_form_network_fee">Taxa de rede (automática)</string>
+    <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
+    <string name="swap_form_referral_discount_bps">Indicação (-%1$d bps)</string>
+    <string name="amino_sign">Assinatura Amino</string>
+    <string name="amino_direct">Assinatura Direta</string>
 </resources>

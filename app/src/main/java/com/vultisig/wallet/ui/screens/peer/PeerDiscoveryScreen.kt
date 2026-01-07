@@ -73,9 +73,8 @@ import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.components.errors.ErrorView
-import com.vultisig.wallet.ui.components.errors.WarningView
+import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
@@ -114,10 +113,10 @@ internal fun KeygenPeerDiscoveryScreen(
         }
 
         warning != null -> {
-            WarningView(
+            ErrorView(
                 title = warning.title.asString(),
                 description = warning.description.asString(),
-                onTryAgainClick = model::tryAgain,
+                onButtonClick = model::tryAgain,
             )
         }
 
@@ -787,7 +786,7 @@ private fun Error(
         ErrorView(
             title = state.title.asString(),
             description = state.description.asString(),
-            onTryAgainClick = onTryAgainClick,
+            onButtonClick = onTryAgainClick,
             modifier = Modifier.fillMaxWidth()
         )
     }

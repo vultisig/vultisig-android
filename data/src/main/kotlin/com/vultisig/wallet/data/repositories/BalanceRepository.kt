@@ -58,6 +58,7 @@ import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenBalanceAndPrice
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
 import com.vultisig.wallet.data.utils.SimpleCache
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -88,6 +89,7 @@ interface BalanceRepository {
 
     suspend fun getDeFiCachedTokeBalanceAndPrice(
         address: String,
+        coin: Coin,
         vaultId: String,
     ):  List<TokenBalanceAndPrice>
 
@@ -138,6 +140,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val cardanoApi: CardanoApi,
     private val tokenValueDao: TokenValueDao,
     private val thorchainDeFiBalanceService: ThorchainDeFiBalanceService,
+    private val circleDeFiBalanceService: CircleDeFiBalanceService,
 ) : BalanceRepository {
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
@@ -167,7 +170,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
             FiatValue(
                 tokenValue.decimal
                     .multiply(price)
-                    .setScale(2, RoundingMode.HALF_UP),
+                    .setScale(2, RoundingMode.DOWN),
                 currency.ticker
             )
         } else {
@@ -180,7 +183,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 fiatValue = fiatValue,
             ),
             price = if (price != null) FiatValue(
-                price.setScale(2, RoundingMode.HALF_UP),
+                price.setScale(2, RoundingMode.DOWN),
                 currency.ticker
             ) else null
         )
@@ -188,12 +191,16 @@ internal class BalanceRepositoryImpl @Inject constructor(
 
     override suspend fun getDeFiCachedTokeBalanceAndPrice(
         address: String,
+        coin: Coin,
         vaultId: String,
     ): List<TokenBalanceAndPrice> {
         val currency = appCurrencyRepository.currency.first()
 
-        val defiCachedBalances =
-            thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+        val defiCachedBalances = when (coin.chain) {
+            ThorChain -> thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+            Ethereum -> circleDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+            else -> error("Not Supported ${coin.chain}")
+        }
 
         val allBalances = defiCachedBalances.flatMap { it.balances }
         
@@ -210,7 +217,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 FiatValue(
                     value = tokenValue.decimal
                         .multiply(price)
-                        .setScale(2, RoundingMode.HALF_UP),
+                        .setScale(2, RoundingMode.DOWN),
                     currency = currency.ticker
                 )
             } else {
@@ -227,7 +234,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 ),
                 price = if (price != null) {
                     FiatValue(
-                        price.setScale(2, RoundingMode.HALF_UP),
+                        price.setScale(2, RoundingMode.DOWN),
                         currency.ticker
                     )
                 } else {
@@ -259,7 +266,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 FiatValue(
                     tokenValue.decimal
                         .multiply(price)
-                        .setScale(2, RoundingMode.HALF_UP),
+                        .setScale(2, RoundingMode.DOWN),
                     currency.ticker
                 )
             } else {
@@ -292,17 +299,17 @@ internal class BalanceRepositoryImpl @Inject constructor(
                     .getPrice(coin, currency)
                     .zip(getTokenValue(address, coin)) { price, balance ->
                         TokenBalanceAndPrice(
-                            tokenBalance =TokenBalance(
+                            tokenBalance = TokenBalance(
                                 tokenValue = balance,
                                 fiatValue = FiatValue(
                                     value = balance.decimal
                                         .multiply(price)
-                                        .setScale(2, RoundingMode.HALF_UP),
+                                        .setScale(2, RoundingMode.DOWN),
                                     currency = currency.ticker,
                                 )
                             ),
                             price = FiatValue(
-                                value = price.setScale(2, RoundingMode.HALF_UP),
+                                value = price.setScale(2, RoundingMode.DOWN),
                                 currency = currency.ticker,
                             )
                         )
@@ -342,7 +349,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
         val fiatValue = FiatValue(
             value = tokenValue.decimal
                 .multiply(price)
-                .setScale(2, RoundingMode.HALF_UP),
+                .setScale(2, RoundingMode.DOWN),
             currency = currency.ticker,
         )
         
@@ -352,7 +359,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 fiatValue = fiatValue
             ),
             price = FiatValue(
-                value = price.setScale(2, RoundingMode.HALF_UP),
+                value = price.setScale(2, RoundingMode.DOWN),
                 currency = currency.ticker,
             )
         ))
@@ -379,6 +386,16 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 mutex.withLock {
                     defiBalanceCache.get(address) ?: run {
                         val remote = thorchainDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
+                        defiBalanceCache.put(address, remote)
+                        remote
+                    }
+                }
+            }
+            Ethereum -> {
+                val mutex = lockFor(address)
+                mutex.withLock {
+                    defiBalanceCache.get(address) ?: run {
+                        val remote = circleDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
                         defiBalanceCache.put(address, remote)
                         remote
                     }

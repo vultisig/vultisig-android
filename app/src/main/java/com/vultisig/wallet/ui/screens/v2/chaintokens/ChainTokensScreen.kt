@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,10 +28,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.data.models.ChainId
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
@@ -48,15 +47,12 @@ import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
-import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
-import com.vultisig.wallet.ui.screens.scan.ScanQrBottomSheet
+import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainTokensTabMenuAndSearchBar
-import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
-import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.theme.Theme
@@ -66,23 +62,20 @@ import com.vultisig.wallet.ui.utils.showReviewPopUp
 
 @Composable
 internal fun ChainTokensScreen(
-    navController: NavHostController,
+    vaultId: VaultId,
+    chainId: ChainId,
     viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val reviewManager = remember { ReviewManagerFactory.create(context) }
 
-    LaunchedEffect(Unit) {
-        viewModel.refresh()
-    }
 
-    if (uiModel.showCameraBottomSheet) {
-        ScanQrBottomSheet (
-            uiModel = uiModel.scanQrUiModel,
-            onError = viewModel::handleScanQrError,
-            onDismiss = viewModel::dismissCameraBottomSheet,
-            onScanSuccess = viewModel::onScanSuccess,
+
+    LaunchedEffect(Unit) {
+        viewModel.initData(
+            vaultId = vaultId,
+            chainId = chainId
         )
     }
 
@@ -96,9 +89,9 @@ internal fun ChainTokensScreen(
         onReceive = viewModel::openAddressQr,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
-        onBackClick = { navController.popBackStack() },
-        onCryptoConnectionTypeClick = viewModel::setCryptoConnectionType,
-        openCamera = viewModel::openCamera,
+        onBackClick = viewModel::back,
+        onHideSearchBar = viewModel::hideSearchBar,
+        onShowSearchBar = viewModel::showSearchBar,
         onShowReviewPopUp = {
             reviewManager.showReviewPopUp(context)
         }
@@ -109,29 +102,22 @@ internal fun ChainTokensScreen(
 @Composable
 internal fun ChainTokensScreen(
     uiModel: ChainTokensUiModel,
-    openCamera: () -> Unit = {},
-    onRefresh: () -> Unit = {},
-    onSend: () -> Unit = {},
-    onSwap: () -> Unit = {},
-    onBuy: () -> Unit = {},
-    onDeposit: () -> Unit = {},
-    onReceive: () -> Unit = {},
-    onSelectTokens: () -> Unit = {},
-    onTokenClick: (ChainTokenUiModel) -> Unit = {},
-    onBackClick: () -> Unit = {},
-    onShowReviewPopUp: () -> Unit = {},
-    onCryptoConnectionTypeClick: (CryptoConnectionType) -> Unit = {},
+    onRefresh: () -> Unit,
+    onShowSearchBar: () -> Unit,
+    onHideSearchBar: () -> Unit,
+    onSend: () -> Unit,
+    onSwap: () -> Unit,
+    onBuy: () -> Unit,
+    onDeposit: () -> Unit,
+    onReceive: () -> Unit,
+    onSelectTokens: () -> Unit,
+    onTokenClick: (ChainTokenUiModel) -> Unit,
+    onBackClick: () -> Unit,
+    onShowReviewPopUp: () -> Unit,
 ) {
     val snackbarState = rememberVsSnackbarState()
     val uriHandler = VsUriHandler()
     val context = LocalContext.current
-    var isTabMenu by remember {
-        mutableStateOf(true)
-    }
-
-    val isBottomBarVisible = remember {
-        derivedStateOf { isTabMenu }
-    }
 
     var isAddressBottomSheetVisible by remember {
         mutableStateOf(false)
@@ -301,32 +287,6 @@ internal fun ChainTokensScreen(
                 }
             }
         },
-        bottomBarContent = if (isBottomBarVisible.value) {
-            {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .align(Alignment.BottomCenter),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        CryptoConnectionSelect(
-                            onTypeClick = onCryptoConnectionTypeClick,
-                            activeType = uiModel.cryptoConnectionType
-                        )
-                        CameraButton(
-                            onClick = openCamera
-                        )
-                    }
-                }
-            }
-        } else {
-            {}
-        },
         content = { paddingValues ->
             Box(
                 modifier = Modifier
@@ -343,14 +303,10 @@ internal fun ChainTokensScreen(
                             horizontal = 16.dp,
                         ),
                         onEditClick = onSelectTokens,
-                        onSearchClick = {
-                            isTabMenu = false
-                        },
+                        onSearchClick = onShowSearchBar,
                         onTokensClick = {},
-                        isTabMenu = isTabMenu,
-                        onCancelSearchClick = {
-                            isTabMenu = true
-                        },
+                        isTabMenu = uiModel.isSearchMode.not(),
+                        onCancelSearchClick = onHideSearchBar,
                         searchTextFieldState = uiModel.searchTextFieldState
                     )
 
@@ -422,7 +378,19 @@ private fun PreviewChainCoinScreen1() {
                     chainLogo = R.drawable.ethereum
                 ),
             )
-        )
+        ),
+        onRefresh = {},
+        onShowSearchBar = {},
+        onHideSearchBar = {},
+        onSend = {},
+        onSwap = {},
+        onBuy = {},
+        onDeposit = {},
+        onReceive = {},
+        onSelectTokens = {},
+        onTokenClick = {},
+        onBackClick = {},
+        onShowReviewPopUp = {},
     )
 }
 

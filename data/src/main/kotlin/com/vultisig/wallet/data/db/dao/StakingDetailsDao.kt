@@ -24,7 +24,10 @@ interface StakingDetailsDao {
     
     @Query("SELECT * FROM staking_details WHERE vault_id = :vaultId AND coin_id = :coinId")
     suspend fun getByVaultIdAndCoinId(vaultId: String, coinId: String): StakingDetailsEntity?
-    
+
+    @Query("SELECT * FROM staking_details WHERE vault_id = :vaultId AND id = :id")
+    suspend fun getByVaultIdAndId(vaultId: String, id: String): StakingDetailsEntity?
+
     @Query("DELETE FROM staking_details WHERE vault_id = :vaultId")
     suspend fun deleteAllByVaultId(vaultId: String)
 

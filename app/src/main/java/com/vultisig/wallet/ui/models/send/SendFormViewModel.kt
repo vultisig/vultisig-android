@@ -14,9 +14,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
-import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
+import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
+import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
@@ -35,6 +37,7 @@ import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.OPERATION_CIRCLE_WITHDRAW
 import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -259,6 +262,8 @@ internal class SendFormViewModel @Inject constructor(
 
     private var defiType: DeFiNavActions? = null // Default is send, no defi form
 
+    private var mscaAddress: String? = null
+
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
     private val selectedTokenValue: Coin?
@@ -314,6 +319,7 @@ internal class SendFormViewModel @Inject constructor(
             amount = args.amount,
             memo = args.memo,
             type = args.type,
+            mscaAddress = args.mscaAddress,
         )
         loadSelectedCurrency()
         collectSelectedAccount()
@@ -361,13 +367,18 @@ internal class SendFormViewModel @Inject constructor(
         address: String?,
         amount: String?,
         memo: String?,
-        type: String?
+        type: String?,
+        mscaAddress: String?,
     ) {
         memoFieldState.clearText()
         this.defiType = if (type == null) {
             null
         } else {
             parseDepositType(type)
+        }
+
+        if (this.mscaAddress != mscaAddress) {
+            this.mscaAddress = mscaAddress
         }
 
         if (this.vaultId != vaultId) {
@@ -740,13 +751,10 @@ internal class SendFormViewModel @Inject constructor(
             when (addressType) {
                 AddressBookType.OUTPUT -> {
                     val selectedNewChain = address.chain
-                    if (selectedChain != selectedNewChain) {
-                        preSelectToken(
-                            preSelectedChainIds = listOf(selectedNewChain.id),
-                            preSelectedTokenId = null,
-                            forcePreselection = true
-                        )
-                    }
+                    checkIfTokenSelectionRequired(
+                        currentChain = selectedChain,
+                        newChain = selectedNewChain
+                    )
                     setOutputAddress(address.address)
                 }
 
@@ -754,6 +762,21 @@ internal class SendFormViewModel @Inject constructor(
                     setProviderAddress(address.address)
                 }
             }
+        }
+    }
+
+    private fun checkIfTokenSelectionRequired(
+        currentChain: Chain,
+        newChain: Chain,
+    ) {
+        val newChainSelected = currentChain != newChain
+        val isNotEvm = newChain.standard != TokenStandard.EVM
+        if (newChainSelected && isNotEvm) {
+            preSelectToken(
+                preSelectedChainIds = listOf(newChain.id),
+                preSelectedTokenId = null,
+                forcePreselection = true
+            )
         }
     }
 
@@ -827,10 +850,131 @@ internal class SendFormViewModel @Inject constructor(
             DeFiNavActions.BOND -> bond()
             DeFiNavActions.UNBOND -> unbond()
             DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stake()
-            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.WITHDRAW_RUJI  -> unstake()
+            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.WITHDRAW_RUJI -> unstake()
             DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> mint()
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> redeem()
+            DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withDrawUSDCCircle()
             else -> send()
+        }
+    }
+
+    private fun withDrawUSDCCircle() {
+        viewModelScope.launch {
+            showLoading()
+            try {
+                val accountValidation = accountValidation()
+                val vaultId = accountValidation.vaultId
+                val chain = accountValidation.chain
+                val dstAddress = accountValidation.dstAddress
+                val selectedAccount = accountValidation.selectedAccount
+                val gasFee = accountValidation.gasFee
+
+                if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+                }
+
+                val tokenAmount = tokenAmountFieldState.text
+                    .toString()
+                    .toBigDecimalOrNull()
+
+                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_amount)
+                    )
+                }
+                val nonDeFiAccount = accountsRepository.loadAddresses(vaultId).firstOrNull()
+                    ?.flatMap {
+                        it.accounts
+                    }
+                    ?.find {
+                        it.token.id.equals(Coins.Ethereum.ETH.id, true)
+                    }
+
+                val nonDeFiBalance = nonDeFiAccount?.tokenValue?.value ?: BigInteger.ZERO
+
+                if (nonDeFiBalance < gasFee.value) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_insufficient_balance)
+                    )
+                }
+
+                val selectedToken = selectedAccount.token
+                val srcAddress = selectedToken.address
+                val tokenAmountInt =
+                    tokenAmount
+                        .movePointRight(selectedToken.decimal)
+                        .toBigInteger()
+
+                val availableTokenBalance = getAvailableTokenBalance(
+                    selectedAccount,
+                    gasFee.value,
+                )?.value ?: BigInteger.ZERO
+
+                if (tokenAmountInt > availableTokenBalance) {
+                    throw InvalidTransactionDataException(
+                        UiText.FormattedText(
+                            R.string.send_error_insufficient_native_balance_with_fees,
+                            listOf(selectedToken.ticker)
+                        )
+                    )
+                }
+
+                val memo = EthereumFunction.withdrawCircleMSCA(
+                    vaultAddress = nonDeFiAccount?.token?.address ?: error("Vault Address Empty"),
+                    tokenAddress = Coins.Ethereum.USDC.contractAddress,
+                    amount = tokenAmountInt,
+                )
+
+                val specific = withContext(Dispatchers.IO) {
+                    blockChainSpecificRepository
+                        .getSpecific(
+                            chain,
+                            srcAddress,
+                            selectedToken,
+                            gasFee,
+                            isSwap = false,
+                            isMaxAmountEnabled = false,
+                            isDeposit = true,
+                        )
+                }
+
+                val nativeCoin = nonDeFiAccount.token
+
+                val depositTx = DepositTransaction(
+                    id = UUID.randomUUID().toString(),
+                    vaultId = vaultId,
+                    srcToken = nativeCoin,
+                    srcAddress = srcAddress,
+                    dstAddress = mscaAddress
+                        ?: throw InvalidTransactionDataException(UiText.DynamicString("MSCA account not deployed yet, please try again")),
+                    memo = memo,
+                    srcTokenValue = TokenValue(
+                        value = BigInteger.ZERO,
+                        token = nativeCoin,
+                    ),
+                    estimatedFees = gasFee,
+                    estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
+                    blockChainSpecific = specific.blockChainSpecific,
+                    operation = OPERATION_CIRCLE_WITHDRAW,
+                )
+
+                depositTransactionRepository.addTransaction(depositTx)
+
+                navigator.route(
+                    Route.VerifyDeposit(
+                        transactionId = depositTx.id,
+                        vaultId = vaultId,
+                    )
+                )
+            } catch (e: InvalidTransactionDataException) {
+                showError(e.text)
+            } catch (e: Exception) {
+                showError(e.message?.asUiText() ?: UiText.Empty)
+            } finally {
+                hideLoading()
+            }
         }
     }
 
@@ -1853,7 +1997,7 @@ internal class SendFormViewModel @Inject constructor(
         val divider = "100".toBigDecimal()
         return try {
             this.toBigDecimal()
-                .setScale(2, RoundingMode.HALF_UP)
+                .setScale(2, RoundingMode.DOWN)
                 .divide(divider)
                 .toPlainString()
         } catch (t: Throwable) {
@@ -2002,6 +2146,7 @@ internal class SendFormViewModel @Inject constructor(
             || this.defiType == DeFiNavActions.MINT_YTCY
             || this.defiType == DeFiNavActions.REDEEM_YRUNE
             || this.defiType == DeFiNavActions.REDEEM_YTCY
+            || this.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE
         ) {
             viewModelScope.launch {
                 accountsRepository.loadAddresses(vaultId)
@@ -2012,12 +2157,62 @@ internal class SendFormViewModel @Inject constructor(
             viewModelScope.launch {
                 loadRewardsAccount(vaultId)
             }
+        } else if (this.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE) {
+            viewModelScope.launch {
+                loadCircleUSDCAccount(vaultId)
+            }
         } else {
             viewModelScope.launch {
                 accountsRepository.loadDeFiAddresses(vaultId, false)
                     .map { addrs -> addrs.flatMap { it.accounts } }
                     .collect(accounts)
             }
+        }
+    }
+
+    private suspend fun loadCircleUSDCAccount(vaultId: VaultId) {
+        val accountsLoaded =
+            accountsRepository.loadAddresses(vaultId).firstOrNull()
+                ?.flatMap {
+                    it.accounts
+                }
+        val ethereumAccount = accountsLoaded?.find {
+            it.token.id.equals(Coins.Ethereum.ETH.id, true)
+        } ?: Account(
+            token = Coins.Ethereum.ETH,
+            tokenValue = TokenValue(BigInteger.ZERO, Coins.Ethereum.ETH),
+            fiatValue = null,
+            price = null,
+        )
+
+        val usdc = Coins.Ethereum.USDC.copy(address = ethereumAccount.token.address)
+
+        if (mscaAddress != null) {
+            val id = usdc.generateId(mscaAddress!!)
+            val cachedDetails = stakingDetailsRepository.getStakingDetailsById(vaultId, id)
+            val usdcCircleAccount = Account(
+                token = usdc,
+                tokenValue = TokenValue(
+                    value = cachedDetails?.stakeAmount ?: BigInteger.ZERO,
+                    token = usdc,
+                ),
+                fiatValue = null,
+                price = null
+            )
+            accounts.value = listOf(ethereumAccount, usdcCircleAccount)
+        } else {
+            Timber.e("MSCA address not available for Circle USDC withdrawal")
+            accounts.value = listOf(
+                ethereumAccount, Account(
+                    token = usdc,
+                    tokenValue = TokenValue(
+                        value = BigInteger.ZERO,
+                        token = usdc,
+                    ),
+                    fiatValue = null,
+                    price = null
+                )
+            )
         }
     }
 
@@ -2036,14 +2231,14 @@ internal class SendFormViewModel @Inject constructor(
         } ?: return
 
         val cachedDetails =
-            stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
+            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
 
         if (cachedDetails != null) {
             val rewardsAccount = Account(
-                token = RujiStakingService.RUJI_REWARDS_COIN.copy(address = thorchainAccount.token.address),
+                token = RUJI_REWARDS_COIN.copy(address = thorchainAccount.token.address),
                 tokenValue = TokenValue(
                     value = cachedDetails.rewards?.toBigInteger() ?: BigInteger.ZERO,
-                    token = RujiStakingService.RUJI_REWARDS_COIN
+                    token = RUJI_REWARDS_COIN
                 ),
                 fiatValue = null,
                 price = null
@@ -2064,9 +2259,15 @@ internal class SendFormViewModel @Inject constructor(
         preSelectTokenJob?.cancel()
         preSelectTokenJob = viewModelScope.launch {
             accounts.collect { accounts ->
-                val preSelectedToken = findPreselectedToken(
-                    accounts, preSelectedChainIds, preSelectedTokenId,
-                )
+                val preSelectedToken = if (defiType == null) {
+                    findPreselectedToken(
+                        accounts, preSelectedChainIds, preSelectedTokenId,
+                    )
+                } else {
+                    findDeFiPreselectedToken(
+                        accounts, preSelectedChainIds, preSelectedTokenId,
+                    )
+                }
 
                 Timber.d("Found a new token to pre select $preSelectedToken")
 
@@ -2100,9 +2301,43 @@ internal class SendFormViewModel @Inject constructor(
                 searchByChainResult = accountToken
             }
         }
+
         // if user selected none, or nothing was found, select the first token
         return searchByChainResult
             ?: accounts.firstOrNull()?.token
+    }
+
+    private fun findDeFiPreselectedToken(
+        accounts: List<Account>,
+        preSelectedChainIds: List<ChainId?>,
+        preSelectedTokenId: TokenId?,
+    ): Coin? {
+        for (account in accounts) {
+            val accountToken = account.token
+            if (accountToken.id.equals(preSelectedTokenId, ignoreCase = true)) {
+                return accountToken
+            }
+        }
+
+        // default coins, in case the account does not exist
+        val defaultCoin = when (defiType) {
+            DeFiNavActions.STAKE_RUJI, DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI
+            DeFiNavActions.STAKE_TCY, DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY
+            DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE
+            DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY
+            DeFiNavActions.BOND -> Coins.ThorChain.RUNE
+            DeFiNavActions.UNBOND -> Coins.ThorChain.RUNE
+            DeFiNavActions.WITHDRAW_RUJI -> RUJI_REWARDS_COIN
+            DeFiNavActions.REDEEM_YRUNE -> Coins.ThorChain.yRUNE
+            DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY
+            DeFiNavActions.DEPOSIT_USDC_CIRCLE -> Coins.Ethereum.USDC
+            DeFiNavActions.WITHDRAW_USDC_CIRCLE -> Coins.Ethereum.USDC
+            null -> findPreselectedToken(
+                accounts, preSelectedChainIds, preSelectedTokenId,
+            )
+        }
+
+        return defaultCoin
     }
 
     private fun calculateGasTokenBalance() {
@@ -2443,7 +2678,7 @@ internal class SendFormViewModel @Inject constructor(
                     val fiatValue =
                         convertValue(tokenString, selectedToken) { value, price, token ->
                             // this is the fiat value , we should not keep too much decimal places
-                            value.multiply(price).setScale(3, RoundingMode.HALF_UP)
+                            value.multiply(price).setScale(3, RoundingMode.DOWN)
                                 .stripTrailingZeros()
                         } ?: return@combine
 
@@ -2454,7 +2689,7 @@ internal class SendFormViewModel @Inject constructor(
                 } else if (lastFiatValueUserInput != fiatString) {
                     val tokenValue =
                         convertValue(fiatString, selectedToken) { value, price, token ->
-                            value.divide(price, token.decimal, RoundingMode.HALF_UP)
+                            value.divide(price, token.decimal, RoundingMode.DOWN)
                         } ?: return@combine
 
                     val tokenDecimal = tokenValue.toBigDecimalOrNull()

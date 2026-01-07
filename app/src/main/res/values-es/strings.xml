@@ -563,6 +563,7 @@
     <string name="vault_settings_migrate_gg20">Migrar bóveda GG20 a DKLS</string>
     <string name="vault_settings_reshare_change">Recompartir, cambiar TSS o firmar mensajes</string>
     <string name="vault_backup_summary_start_using_vault">Comienza a usar tu bóveda</string>
+    <string name="vault_backup_summary_choose_chains">Elegir cadenas</string>
     <string name="transaction_done_form_approve">Aprobar</string>
     <string name="vault_settings_migration_title">Migrar</string>
     <string name="transaction_buy">Comprar</string>
@@ -864,6 +865,8 @@
     <string name="operation">Operación</string>
     <string name="thorchain_address_not_found_in_vault">No se encontró la dirección de THORChain en la bóveda. Asegúrate de tener RUNE en tu bóveda.</string>
     <string name="deposit_error_not_secured_asset">El activo seleccionado no está protegido y no se puede procesar.</string>
+    <string name="keysign_password_hide_hint">Ocultar pista</string>
+    <string name="keysign_password_show_hint">Mostrar pista</string>
 
     <!-- Circle MSCA Account -->
     <string name="circle_msca_account_created_success">Cuenta Circle MSCA creada exitosamente</string>
@@ -871,4 +874,8 @@
     <string name="circle_usdc_account">Cuenta Circle USDC</string>
     <string name="withdraw">Retirar</string>
     <string name="send_form_network_fee">Tarifa de red (automática)</string>
+    <string name="swap_form_vult_discount_bps">VULT (%1$s - %2$d bps)</string>
+    <string name="swap_form_referral_discount_bps">Referencia (-%1$d bps)</string>
+    <string name="amino_sign">Firma Amino</string>
+    <string name="amino_direct">Firma directa</string>
 </resources>

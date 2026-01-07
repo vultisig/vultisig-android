@@ -47,12 +47,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -71,6 +73,7 @@ import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
@@ -229,6 +232,7 @@ private fun SendFormScreen(
             DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
             DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
             DeFiNavActions.WITHDRAW_RUJI -> stringResource(R.string.rewards_screen_title)
+            DeFiNavActions.WITHDRAW_USDC_CIRCLE -> stringResource(R.string.withdraw)
             else -> stringResource(R.string.send_screen_title)
         },
         onBackClick = onBackClick,
@@ -369,7 +373,7 @@ private fun SendFormContent(
     onAutoCompoundCheckedChange: (Boolean) -> Unit
 ) {
     // send asset
-    if (state.defiType == null) {
+    if (state.defiType == null || state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE) {
         FoldableAssetWidget(
             state = state,
             onExpandSection = onExpandSection,
@@ -491,6 +495,7 @@ private fun SendFormContent(
         || state.defiType == DeFiNavActions.REDEEM_YRUNE
         || state.defiType == DeFiNavActions.REDEEM_YTCY
         || state.defiType == DeFiNavActions.WITHDRAW_RUJI
+        || state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
     ) {
         FoldableAmountWidget(
             state = state,
@@ -720,9 +725,9 @@ private fun FoldableAmountWidget(
                 )
 
                 val ticker = state.selectedCoin?.title?.let { " $it" } ?: ""
-                
+
                 Text(
-                    text = (state.selectedCoin?.balance ?: "") + ticker,
+                    text = (state.selectedCoin?.balance ?: "0") + ticker,
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.light,
                     textAlign = TextAlign.End,
@@ -1452,35 +1457,59 @@ private fun TokenFiatToggle(
     onTokenSelected: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+    Box(
         modifier = modifier
+            .height(IntrinsicSize.Min)
             .background(
                 color = Theme.v2.colors.backgrounds.secondary,
-                shape = RoundedCornerShape(99.dp)
-            )
-            .padding(
-                all = 4.dp,
+                shape = CircleShape
             )
     ) {
-        ToggleButton(
-            drawableResId = R.drawable.ic_coins,
-            isSelected = isTokenSelected,
-            onClick = { onTokenSelected(true) },
-        )
+        LookaheadScope {
+            Box(
+                Modifier
+                    .animatePlacementInScope(
+                        lookaheadScope = this@LookaheadScope
+                    )
+                    .padding(
+                        all = 4.dp,
+                    )
+                    .background(
+                        color = Theme.v2.colors.primary.accent3,
+                        shape = CircleShape,
+                    )
+                    .padding(all = 8.dp)
+                    .size(16.dp)
+                    .align(
+                        if (isTokenSelected)
+                            Alignment.TopCenter
+                        else Alignment.BottomCenter
+                    )
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier
+                    .padding(
+                        all = 4.dp,
+                    )
+            ) {
+                ToggleButton(
+                    drawableResId = R.drawable.ic_coins,
+                    onClick = { onTokenSelected(true) },
+                )
 
-        ToggleButton(
-            drawableResId = R.drawable.ic_dollar_sign,
-            isSelected = !isTokenSelected,
-            onClick = { onTokenSelected(false) },
-        )
+                ToggleButton(
+                    drawableResId = R.drawable.ic_dollar_sign,
+                    onClick = { onTokenSelected(false) },
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun ToggleButton(
     @DrawableRes drawableResId: Int,
-    isSelected: Boolean,
     onClick: () -> Unit,
 ) {
     UiIcon(
@@ -1488,15 +1517,8 @@ private fun ToggleButton(
         size = 16.dp,
         tint = Theme.v2.colors.text.light,
         modifier = Modifier
+            .clip(CircleShape)
             .clickable(onClick = onClick)
-            .then(
-                if (isSelected)
-                    Modifier.background(
-                        color = Theme.v2.colors.primary.accent3,
-                        shape = CircleShape,
-                    )
-                else Modifier
-            )
             .padding(all = 8.dp)
     )
 }

@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -54,7 +54,8 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.ScanQrUiModel
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -70,17 +71,20 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ScanQrScreen(
     viewModel: ScanQrViewModel = hiltViewModel(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
-    ScanQrScreen(
-        uiModel = uiModel,
-        onDismiss = viewModel::back,
-        onScanSuccess = viewModel::process,
-        onError = viewModel::handleError
-    )
+    V2BottomSheet(onDismissRequest = viewModel::back) {
+        ScanQrScreen(
+            uiModel = uiModel,
+            onDismiss = viewModel::back,
+            onScanSuccess = viewModel::process,
+            onError = viewModel::handleError
+        )
+    }
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -166,53 +170,11 @@ internal fun ScanQrScreen(
         }
     }
 
-    Scaffold(
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 16.dp,
-                    ),
-            ) {
-                if (cameraPermissionState.status.isGranted.not()) {
-                    VsButton(
-                        label = stringResource(id = R.string.scan_qr_screen_return_vault),
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .fillMaxWidth()
-
-                    )
-                    UiSpacer(
-                        size = 12.dp
-                    )
-                }
-
-                VsButton(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    onClick = {
-                        pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-                    },
-                    label = stringResource(id = R.string.scan_qr_upload_from_gallery),
-                    iconLeft = R.drawable.ic_qr_upload
-                )
-            }
-
-        },
-        topBar = {
-            VsTopAppBar(
-                onBackClick = onDismiss,
-                title = stringResource(R.string.scan_qr_screen_title)
-            )
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .padding(paddingValues)
-        ) {
+    V2Scaffold(
+        onBackClick = onDismiss,
+        title = stringResource(R.string.scan_qr_screen_title)
+    ) {
+        Box {
             if (cameraPermissionState.status.isGranted) {
                 QrCameraScreen(
                     onSuccess = onSuccess,
@@ -278,6 +240,37 @@ internal fun ScanQrScreen(
                         )
                     }
                 }
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(
+                        vertical = 16.dp
+                    )
+            ) {
+                if (cameraPermissionState.status.isGranted.not()) {
+                    VsButton(
+                        label = stringResource(id = R.string.scan_qr_screen_return_vault),
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .fillMaxWidth()
+
+                    )
+                    UiSpacer(
+                        size = 12.dp
+                    )
+                }
+
+                VsButton(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    onClick = {
+                        pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                    },
+                    label = stringResource(id = R.string.scan_qr_upload_from_gallery),
+                    iconLeft = R.drawable.ic_qr_upload
+                )
             }
         }
     }

@@ -2,12 +2,12 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import java.math.BigDecimal
-import java.math.BigInteger
 
 data class Address(
     val chain: Chain,
     val address: String,
-    val accounts: List<Account>
+    val accounts: List<Account>,
+    val isDefiProvider: Boolean = false,
 )
 
 data class Account(
@@ -15,7 +15,6 @@ data class Account(
     val tokenValue: TokenValue?,
     val fiatValue: FiatValue?,
     val price: FiatValue?,
-
 ){
     companion object {
         val EMPTY = Account(

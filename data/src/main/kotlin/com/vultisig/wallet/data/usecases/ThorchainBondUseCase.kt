@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.api.ChurnEntry
 import com.vultisig.wallet.data.api.MidgardNetworkData
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
-import com.vultisig.wallet.data.blockchain.model.BondedNodePosition.Companion.generateId
+import com.vultisig.wallet.data.blockchain.model.BondedNodePosition.Companion.generateBondedId
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.ThorchainBondRepository
@@ -94,7 +94,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
                     )
 
                     val activeNode = BondedNodePosition(
-                        id = Coins.ThorChain.RUNE.generateId(node.address),
+                        id = Coins.ThorChain.RUNE.generateBondedId(node.address),
                         coin = Coins.ThorChain.RUNE,
                         node = bondNode,
                         amount = myBondMetrics.myBond,
@@ -200,14 +200,14 @@ class ThorchainBondUseCaseImpl @Inject constructor(
 
         // 3. Calculate ownership percentage
         val myBondOwnershipPercentage = if (totalBond > BigInteger.ZERO) {
-            myBond.toBigDecimal().divide(totalBond.toBigDecimal(), 8, RoundingMode.HALF_UP)
+            myBond.toBigDecimal().divide(totalBond.toBigDecimal(), 8, RoundingMode.DOWN)
         } else {
             BigDecimal.ZERO
         }
 
         // 4. Calculate node operator fee
         val nodeOperatorFee = (nodeData.bondProviders.nodeOperatorFee.toBigDecimalOrNull()
-            ?: BigDecimal.ZERO).divide(BigDecimal(10_000), 8, RoundingMode.HALF_UP)
+            ?: BigDecimal.ZERO).divide(BigDecimal(10_000), 8, RoundingMode.DOWN)
 
         // 5. Calculate current award after node operator fee
         val currentAward =
@@ -231,8 +231,8 @@ class ThorchainBondUseCaseImpl @Inject constructor(
 
         // 9. Calculate APR & APY
         val apr = if (myBond > BigInteger.ZERO && timeDiffInYears > 0) {
-            (myAward.divide(myBond.toBigDecimal(), 18, RoundingMode.HALF_UP))
-                .divide(BigDecimal.valueOf(timeDiffInYears), 18, RoundingMode.HALF_UP)
+            (myAward.divide(myBond.toBigDecimal(), 18, RoundingMode.DOWN))
+                .divide(BigDecimal.valueOf(timeDiffInYears), 18, RoundingMode.DOWN)
         } else {
             BigDecimal.ZERO
         }

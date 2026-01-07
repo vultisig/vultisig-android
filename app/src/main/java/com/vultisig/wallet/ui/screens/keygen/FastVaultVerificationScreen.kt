@@ -18,7 +18,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -46,7 +45,7 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.inputs.VsCodeInputField
 import com.vultisig.wallet.ui.components.inputs.VsCodeInputFieldState
 import com.vultisig.wallet.ui.components.rememberClipboardText
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.FastVaultVerificationViewModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultVerificationViewModel.Companion.FAST_VAULT_VERIFICATION_CODE_LENGTH
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
@@ -82,17 +81,13 @@ private fun FastVaultVerificationScreen(
 ) {
     val textToPaste by rememberClipboardText {
         // isDigitsOnly return true for empty string! ("".isDigitsOnly == true)
-        it?.isNotEmpty() == true && it.isDigitsOnly() == true
+        it?.isNotEmpty() == true && it.isDigitsOnly()
     }
     val hasClipContent = textToPaste != null
 
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                onBackClick = onBackClick
-            )
-        },
+    V2Scaffold(
+        title = null,
+        onBackClick = onBackClick,
         bottomBar = {
             AnimatedContent(
                 targetState = state.verifyPinState,
@@ -103,7 +98,7 @@ private fun FastVaultVerificationScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(24.dp),
+                                .padding(horizontal = 16.dp, vertical = 24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
@@ -152,7 +147,7 @@ private fun FastVaultVerificationScreen(
                             color = Theme.v2.colors.text.extraLight,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(24.dp)
+                                .padding(horizontal = 16.dp, vertical = 24.dp)
                                 .clickable(onClick = onChangeEmailClick),
                             textAlign = TextAlign.Center
                         )
@@ -160,7 +155,7 @@ private fun FastVaultVerificationScreen(
                 }
             }
         },
-        content = { contentPadding ->
+        content = {
             val scrollState = rememberScrollState()
             val coroutineScope = rememberCoroutineScope()
 
@@ -174,8 +169,6 @@ private fun FastVaultVerificationScreen(
 
             Column(
                 Modifier
-                    .padding(contentPadding)
-                    .padding(all = 24.dp)
                     .imePadding()
                     .fillMaxHeight()
                     .verticalScroll(scrollState)

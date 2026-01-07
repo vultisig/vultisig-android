@@ -9,15 +9,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
 import com.vultisig.wallet.data.models.Address
-import com.vultisig.wallet.data.models.isSwapSupported
-import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.models.isFastVault
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
@@ -29,11 +29,12 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
-import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.USDC_CIRCLE
+import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -41,7 +42,6 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -49,12 +49,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @Immutable
 internal data class VaultAccountsUiModel(
@@ -67,7 +67,6 @@ internal data class VaultAccountsUiModel(
     val totalFiatValue: String? = null,
     val totalDeFiValue: String? = null,
     val isBalanceValueVisible: Boolean = true,
-    val showCameraBottomSheet: Boolean = false,
     val accounts: List<AccountUiModel> = emptyList(),
     val defiAccounts: List<AccountUiModel> = emptyList(),
     val searchTextFieldState: TextFieldState = TextFieldState(),
@@ -92,12 +91,13 @@ internal data class VaultAccountsUiModel(
 internal data class AccountUiModel(
     val model: Address,
     val chainName: String,
-    @DrawableRes val logo: Int,
+    @param:DrawableRes val logo: Int,
     val address: String,
     val nativeTokenAmount: String?,
     val fiatAmount: String?,
     val assetsSize: Int = 0,
     val nativeTokenTicker: String = "",
+    val isDeFiProvider: Boolean = false,
 )
 
 @HiltViewModel
@@ -117,7 +117,6 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val vaultMetadataRepo: VaultMetadataRepo,
     private val isGlobalBackupReminderRequired: IsGlobalBackupReminderRequiredUseCase,
     private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
-    private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
     private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
@@ -136,7 +135,21 @@ internal class VaultAccountsViewModel @Inject constructor(
     private var loadDeFiBalancesJob: Job? = null
 
     init {
+        collectCryptoConnectionType()
         collectLastOpenedVault()
+    }
+
+    private fun collectCryptoConnectionType() {
+        cryptoConnectionTypeRepository
+            .activeCryptoConnectionFlow
+            .onEach { connectionType ->
+                uiState.update { state ->
+                    state.copy(
+                        cryptoConnectionType = connectionType
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private suspend fun updateLastOpenedVault() {
@@ -282,7 +295,9 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     fun openCamera() {
-        uiState.update { it.copy(showCameraBottomSheet = true) }
+        viewModelScope.launch {
+            navigator.route(Route.ScanQr(vaultId = vaultId))
+        }
     }
 
     fun openAccount(account: AccountUiModel) {
@@ -293,18 +308,33 @@ internal class VaultAccountsViewModel @Inject constructor(
             when (uiState.value.cryptoConnectionType) {
                 CryptoConnectionType.Wallet -> {
                     navigator.route(
-                        Route.ChainTokens(
-                            vaultId = vaultId,
-                            chainId = chainId,
+                        Route.ChainDashboard(
+                            route = ChainDashboardRoute.Wallet(
+                                vaultId = vaultId,
+                                chainId = chainId,
+                            )
                         )
                     )
                 }
                 CryptoConnectionType.Defi -> {
-                    navigator.route(
-                        Route.PositionTokens(
-                            vaultId = vaultId,
+                    // Exception for DeFi providers on home screen
+                    if (account.chainName.equals(USDC_CIRCLE, true)) {
+                        navigator.route(
+                            Route.ChainDashboard(
+                                route = ChainDashboardRoute.PositionCircle(
+                                    vaultId = vaultId,
+                                )
+                            )
                         )
-                    )
+                    } else {
+                        navigator.route(
+                            Route.ChainDashboard(
+                                route = ChainDashboardRoute.PositionTokens(
+                                    vaultId = vaultId,
+                                )
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -334,7 +364,7 @@ internal class VaultAccountsViewModel @Inject constructor(
             combine(
                 accountsRepository
                     .loadAddresses(vaultId, isRefresh)
-                    .map { it ->
+                    .map {
                         it.sortByAccountsTotalFiatValue()
                     }
                     .catch {
@@ -483,18 +513,6 @@ internal class VaultAccountsViewModel @Inject constructor(
         uiState.update { it.copy(showMonthlyBackupReminder = false) }
     }
 
-    fun dismissCameraBottomSheet() {
-        uiState.update { it.copy(showCameraBottomSheet = false) }
-    }
-
-    fun onScanSuccess(qr: String) = viewModelScope.launch {
-        val dst = getDirectionByQrCodeUseCase(qr, vaultId)
-
-        navigator.route(dst)
-
-        uiState.update { it.copy(showCameraBottomSheet = false) }
-    }
-
     fun doNotRemindBackup() = viewModelScope.launch {
         setNeverShowGlobalBackupReminder()
         dismissBackupReminder()
@@ -561,21 +579,6 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-    fun handleScanQrError(error: String) {
-        viewModelScope.launch {
-            uiState.update {
-                it.copy(
-                    scanQrUiModel = ScanQrUiModel(error = error)
-                )
-            }
-            delay(2.seconds)
-            uiState.update {
-                it.copy(
-                    scanQrUiModel = ScanQrUiModel(error = null)
-                )
-            }
-        }
-    }
 
     companion object {
          internal const val REFRESH_CHAIN_DATA  = "refresh_chain_data"

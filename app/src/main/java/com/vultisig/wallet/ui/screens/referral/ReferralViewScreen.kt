@@ -27,7 +27,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,7 +58,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel.Companion.VAULT_ID_SELECTED
 import com.vultisig.wallet.ui.models.referral.ReferralViewUiState
 import com.vultisig.wallet.ui.models.referral.ViewReferralViewModel
@@ -133,23 +132,17 @@ internal fun ReferralViewScreen(
         )
     }
 
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.referral_view_title),
-                onBackClick = {
-                    onBackPressed()
-                },
-            )
+    V2Scaffold(
+        title = stringResource(R.string.referral_view_title),
+        onBackClick = onBackPressed,
+        bottomBar = {
+            UiSpacer(32.dp)
         },
-        content = { contentPadding ->
+        content = {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
                     .imePadding()
                     .navigationBarsPadding(),
             ) {
@@ -215,9 +208,6 @@ internal fun ReferralViewScreen(
                     }
                 }
             }
-        },
-        bottomBar = {
-            UiSpacer(32.dp)
         },
     )
 }

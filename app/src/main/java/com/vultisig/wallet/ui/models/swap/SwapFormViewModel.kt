@@ -11,17 +11,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
-import com.vultisig.wallet.data.models.isSwapSupported
-import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
@@ -31,8 +30,8 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.getSwapProviderId
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -45,12 +44,14 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.usecases.ConvertBpsToFiatUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
+import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.utils.TextFieldUtils
@@ -64,6 +65,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.select.AssetSelected
+import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -95,7 +97,6 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.minus
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.ExperimentalUuidApi
@@ -117,7 +118,13 @@ internal data class SwapFormUiModel(
     val isSwapDisabled: Boolean = false,
     val isLoading: Boolean = false,
     val isLoadingNextScreen: Boolean = false,
+    val enableMaxAmount: Boolean = false,
     val expiredAt: Instant? = null,
+    val tierType: TierType? = null,
+    val vultBpsDiscount: Int? = null,
+    val vultBpsDiscountFiatValue: String? = null,
+    val referralBpsDiscount: Int? = null,
+    val referralBpsDiscountFiatValue: String? = null,
 )
 
 
@@ -146,6 +153,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val referralRepository: ReferralCodeSettingsRepository,
     private val convertTokenToTokenUseCase: ConvertTokenToToken,
     private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
+    private val convertBpsToFiat: ConvertBpsToFiatUseCase,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -712,8 +720,8 @@ internal class SwapFormViewModel @Inject constructor(
     private fun updateAccountInAddresses(
         loadedAccount: Account
     ) {
-        addresses.update { listOfAddreses ->
-            listOfAddreses.map { address ->
+        addresses.update { listOfAddresses ->
+            listOfAddresses.map { address ->
                 if (address.chain == loadedAccount.token.chain) {
                     address.copy(accounts = address.accounts + listOf(loadedAccount))
                 } else {
@@ -748,8 +756,14 @@ internal class SwapFormViewModel @Inject constructor(
             return
         }
 
-        val amount = TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
-            .multiply(percentage.toBigDecimal()).setScale(6, RoundingMode.DOWN)
+        val amount = TokenValue.createDecimal(
+            maxUsableTokenAmount,
+            srcTokenValue.decimals
+        )
+            .multiply(percentage.toBigDecimal()).setScale(
+                6,
+                RoundingMode.DOWN
+            )
 
         srcAmountState.setTextAndPlaceCursorAtEnd(amount.toString())
     }
@@ -786,11 +800,11 @@ internal class SwapFormViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             accountsRepository.loadAddresses(vaultId).map { addresses ->
-                    addresses.filter { it.chain.isSwapSupported }
-                }.catch {
-                    Timber.e(it)
-                    emit(emptyList())
-                }.collect(addresses)
+                addresses.filter { it.chain.isSwapSupported }
+            }.catch {
+                Timber.e(it)
+                emit(emptyList())
+            }.collect(addresses)
         }
     }
 
@@ -803,8 +817,16 @@ internal class SwapFormViewModel @Inject constructor(
                 selectedDstId,
             ) { addresses, srcTokenId, dstTokenId ->
                 val chain = chain
-                selectedSrc.updateSrc(srcTokenId, addresses, chain)
-                selectedDst.updateSrc(dstTokenId, addresses, chain)
+                selectedSrc.updateSrc(
+                    srcTokenId,
+                    addresses,
+                    chain
+                )
+                selectedDst.updateSrc(
+                    dstTokenId,
+                    addresses,
+                    chain
+                )
             }.collect()
         }
     }
@@ -817,11 +839,13 @@ internal class SwapFormViewModel @Inject constructor(
             ) { src, dst ->
                 val srcUiModel = src?.let { accountToTokenBalanceUiModelMapper(it) }
                 val dstUiModel = dst?.let { accountToTokenBalanceUiModelMapper(it) }
-
+                val isSrcNative = src?.account?.token?.isNativeToken ?: false
+                val isDstNative = dst?.account?.token?.isNativeToken ?: false
                 uiState.update {
                     it.copy(
                         selectedSrcToken = srcUiModel,
                         selectedDstToken = dstUiModel,
+                        enableMaxAmount = (isSrcNative && isDstNative).not()
                     )
                 }
             }.collect()
@@ -831,44 +855,52 @@ internal class SwapFormViewModel @Inject constructor(
     private fun calculateGas() {
         viewModelScope.launch {
             selectedSrc.filterNotNull().map {
-                    it to gasFeeRepository.getGasFee(it.address.chain, it.address.address, true)
-                }.catch {
-                    Timber.e(it)
-                }.collect { (selectedSrc, gasFee) ->
-                    this@SwapFormViewModel.gasFee.value = gasFee
-                    val selectedAccount = selectedSrc.account
-                    val chain = selectedAccount.token.chain
-                    val selectedToken = selectedAccount.token
-                    val srcAddress = selectedAccount.token.address
-                    try {
-                        val spec = getSpecificAndUtxo(selectedToken, srcAddress, gasFee)
+                it to gasFeeRepository.getGasFee(
+                    it.address.chain,
+                    it.address.address,
+                    true
+                )
+            }.catch {
+                Timber.e(it)
+            }.collect { (selectedSrc, gasFee) ->
+                this@SwapFormViewModel.gasFee.value = gasFee
+                val selectedAccount = selectedSrc.account
+                val chain = selectedAccount.token.chain
+                val selectedToken = selectedAccount.token
+                val srcAddress = selectedAccount.token.address
+                try {
+                    val spec = getSpecificAndUtxo(
+                        selectedToken,
+                        srcAddress,
+                        gasFee
+                    )
 
-                        val estimatedNetworkFee = gasFeeToEstimatedFee(
-                            GasFeeParams(
-                                gasLimit = if (chain.standard == TokenStandard.EVM) {
-                                    (spec.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                                } else {
-                                    BigInteger.valueOf(1)
-                                },
-                                gasFee = gasFee,
-                                selectedToken = selectedToken,
-                            )
+                    val estimatedNetworkFee = gasFeeToEstimatedFee(
+                        GasFeeParams(
+                            gasLimit = if (chain.standard == TokenStandard.EVM) {
+                                (spec.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                            } else {
+                                BigInteger.valueOf(1)
+                            },
+                            gasFee = gasFee,
+                            selectedToken = selectedToken,
                         )
+                    )
 
-                        estimatedNetworkFeeFiatValue.value = estimatedNetworkFee.fiatValue
-                        estimatedNetworkFeeTokenValue.value = estimatedNetworkFee.tokenValue
+                    estimatedNetworkFeeFiatValue.value = estimatedNetworkFee.fiatValue
+                    estimatedNetworkFeeTokenValue.value = estimatedNetworkFee.tokenValue
 
-                        uiState.update {
-                            it.copy(
-                                networkFee = estimatedNetworkFee.formattedTokenValue,
-                                networkFeeFiat = estimatedNetworkFee.formattedFiatValue,
-                            )
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        showError(UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation))
+                    uiState.update {
+                        it.copy(
+                            networkFee = estimatedNetworkFee.formattedTokenValue,
+                            networkFeeFiat = estimatedNetworkFee.formattedFiatValue,
+                        )
                     }
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    showError(UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation))
                 }
+            }
         }
     }
 
@@ -890,9 +922,9 @@ internal class SwapFormViewModel @Inject constructor(
                 selectedSrc.filterNotNull(),
                 selectedDst.filterNotNull(),
             ) { src, dst -> src to dst }.distinctUntilChanged().combine(
-                    srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, amount ->
-                    address to srcAmount
-                }.combine(refreshQuoteState) { it, _ -> it }.debounce(450L)
+                srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, amount ->
+                address to srcAmount
+            }.combine(refreshQuoteState) { it, _ -> it }.debounce(450L)
                 .collect { (address, amount) ->
                     isLoading = true
                     val (src, dst) = address
@@ -928,10 +960,13 @@ internal class SwapFormViewModel @Inject constructor(
 
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
                         val vultBPSDiscount = if (vaultId != null) {
-                            getDiscountBpsUseCase.invoke(vaultId!!, provider)
+                            getDiscountBpsUseCase.invoke(vaultId!!, provider).takeIf { it != 0 }
                         } else {
-                            0
+                            null
                         }
+
+
+                        checkVultBpsDiscount(srcToken, tokenValue, vultBPSDiscount)
 
                         when (provider) {
                             SwapProvider.MAYA, SwapProvider.THORCHAIN -> {
@@ -949,7 +984,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
                                         isAffiliate = isAffiliate,
-                                        bpsDiscount = vultBPSDiscount,
+                                        bpsDiscount = vultBPSDiscount ?: 0,
                                     )
                                     mayaSwapQuote as SwapQuote.MayaChain to mayaSwapQuote.recommendedMinTokenValue
                                 } else {
@@ -957,7 +992,10 @@ internal class SwapFormViewModel @Inject constructor(
                                         ?: vaultId?.takeIf { srcToken.chain.id == Chain.ThorChain.id }
                                             ?.let { referralRepository.getExternalReferralBy(it) }
 
-                                    referral?.let { code -> referralCode.update { code } }
+                                    referral?.let { code ->
+                                        val tierType = vultBPSDiscount?.getTierType()
+                                        checkReferralBpsDiscount(tierType, srcToken, tokenValue, code)
+                                    }
 
                                     val thorSwapQuote = swapQuoteRepository.getSwapQuote(
                                         dstAddress = dst.address.address,
@@ -965,7 +1003,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
                                         referralCode = referral.orEmpty(),
-                                        bpsDiscount = vultBPSDiscount,
+                                        bpsDiscount = vultBPSDiscount ?: 0,
                                     )
                                     thorSwapQuote as SwapQuote.ThorChain to thorSwapQuote.recommendedMinTokenValue
                                 }
@@ -1083,7 +1121,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
                                     isAffiliate = isAffiliate,
-                                    bpsDiscount = vultBPSDiscount,
+                                    bpsDiscount = vultBPSDiscount ?: 0,
                                 )
 
                                 val expectedDstValue = TokenValue(
@@ -1140,7 +1178,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         srcToken = srcToken,
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
-                                        bpsDiscount = vultBPSDiscount,
+                                        bpsDiscount = vultBPSDiscount ?: 0,
                                     ) else swapQuoteRepository.getJupiterSwapQuote(
                                         srcAddress = src.address.address,
                                         srcToken = srcToken,
@@ -1273,6 +1311,61 @@ internal class SwapFormViewModel @Inject constructor(
                         launchRefreshQuoteTimer(it)
                     }
                 }
+        }
+    }
+
+    private suspend fun checkVultBpsDiscount(
+        srcToken: Coin,
+        tokenValue: TokenValue,
+        vultBPSDiscount: Int?,
+    ) {
+        vultBPSDiscount?.let {
+            val vultBpsDiscountFiat = convertBpsToFiat(
+                token = srcToken,
+                tokenValue = tokenValue,
+                bps = vultBPSDiscount,
+            )
+            val vultBpsDiscountFiatValue = fiatValueToString(vultBpsDiscountFiat)
+            val tierType = vultBPSDiscount.getTierType()
+            uiState.update {
+                it.copy(
+                    vultBpsDiscount = vultBPSDiscount,
+                    vultBpsDiscountFiatValue = vultBpsDiscountFiatValue,
+                    tierType = tierType
+                )
+            }
+        } ?: uiState.update {
+            it.copy(
+                vultBpsDiscount = null,
+                vultBpsDiscountFiatValue = null,
+                tierType = null
+            )
+        }
+    }
+
+    private suspend fun checkReferralBpsDiscount(
+        tierType: TierType?,
+        srcToken: Coin,
+        tokenValue: TokenValue,
+        code: String,
+    ) {
+        val referralBpsDiscount =
+            THORChainSwaps.REFERRED_USER_FEE_RATE_BP.takeUnless { tierType == TierType.ULTIMATE }
+        referralBpsDiscount?.let {
+            val referralBpsDiscountFiatValue = convertBpsToFiat(
+                token = srcToken,
+                tokenValue = tokenValue,
+                bps = referralBpsDiscount,
+            )
+            val referralBpsDiscountFiat =
+                fiatValueToString(referralBpsDiscountFiatValue)
+            referralCode.update { code }
+            uiState.update {
+                it.copy(
+                    referralBpsDiscount = referralBpsDiscount,
+                    referralBpsDiscountFiatValue = referralBpsDiscountFiat
+                )
+            }
         }
     }
 

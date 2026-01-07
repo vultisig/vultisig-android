@@ -5,17 +5,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,9 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -45,7 +41,8 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.utils.roundToPx
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordUiModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordViewModel
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
@@ -87,25 +84,13 @@ internal fun FastVaultPasswordScreen(
     onToggleConfirmPasswordVisibilityClick: () -> Unit,
 ) {
     var hintBoxOffset by remember { mutableIntStateOf(0) }
-    val statusBarHeight = WindowInsets.statusBars.getTop(LocalDensity.current)
-
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                onBackClick = onBackClick
-            )
-        },
+    val defaultVerticalPadding = 12.dp.roundToPx()
+    val topbarHeight = 64.dp.roundToPx()
+    V2Scaffold(
+        title = null,
+        onBackClick = onBackClick,
         content = {
-            Column(
-                modifier = Modifier
-                    .padding(it)
-                    .padding(
-                        top = 12.dp,
-                        start = 24.dp,
-                        end = 24.dp,
-                    )
-            ) {
+            Column {
                 Text(
                     text = title,
                     style = Theme.brockmann.headings.largeTitle,
@@ -120,7 +105,7 @@ internal fun FastVaultPasswordScreen(
                         onShowMoreInfo = onShowMoreInfo,
                         modifier = Modifier
                             .onGloballyPositioned { position ->
-                                hintBoxOffset = position.boundsInRoot().bottom.toInt()
+                                hintBoxOffset = position.boundsInParent().bottom.toInt() + topbarHeight - defaultVerticalPadding
                             }
                     )
 
@@ -183,12 +168,12 @@ internal fun FastVaultPasswordScreen(
                 message = stringResource(R.string.fast_vault_password_screen_hint),
                 offset = IntOffset(
                     x = 0,
-                    y = hintBoxOffset - statusBarHeight
+                    y = hintBoxOffset
                 ),
                 pointerAlignment = Alignment.End,
                 onDismissClick = onHideMoreInfo,
                 modifier = Modifier
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 16.dp),
                 isVisible = state.isMoreInfoVisible
             )
 
@@ -200,12 +185,13 @@ internal fun FastVaultPasswordScreen(
                     VsButtonState.Enabled else VsButtonState.Disabled,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp)
+                    .padding(horizontal = 16.dp, vertical = 24.dp)
                     .testTag("FastVaultPasswordScreen.next"),
                 onClick = onNextClick,
             )
         }
     )
+
 }
 
 @Composable

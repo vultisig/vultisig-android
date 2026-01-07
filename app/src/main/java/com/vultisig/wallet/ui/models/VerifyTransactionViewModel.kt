@@ -43,6 +43,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import vultisig.keysign.v1.SignAmino
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -57,6 +58,8 @@ internal data class SendTxUiModel(
     val dstAddress: String = "",
 
     val memo: String? = null,
+    val signAmino: String? = null,
+    val signDirect: String? = null,
 )
 
 @Immutable
@@ -138,6 +141,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
             amount = tx.tokenValue.value,
             to = tx.dstAddress,
             memo = tx.memo,
+
             isMax = false,
         )
 

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,13 +26,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.onboarding.OnboardingContent
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
 import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.onboarding.OnboardingViewModel
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -97,17 +97,22 @@ private fun OnboardingScreen(
     onSkipClick: () -> Unit,
     onNextClick: () -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
+    V2Scaffold(
+        applyDefaultPaddings = true,
+        applyScaffoldPaddings = true,
         topBar = {
             VsTopAppProgressBar(
                 navigationContent = {
                     Row(
                         Modifier.clickable(onClick = onBackClick),
                     ) {
-                        VsTopAppBarAction(
-                            icon = R.drawable.ic_caret_left,
+                        UiSpacer(
+                            size = 12.dp
+                        )
+                        UiIcon(
+                            drawableResId = R.drawable.ic_caret_left,
                             onClick = onBackClick,
+                            size = 24.dp
                         )
                         UiSpacer(
                             size = 8.dp
@@ -135,18 +140,17 @@ private fun OnboardingScreen(
                 },
             )
         },
-    ) { paddingValues ->
-
-        OnboardingContent(
-            state = state,
-            paddingValues = paddingValues,
-            riveAnimation = R.raw.riv_onboarding,
-            nextClick = onNextClick,
-            textDescription = { index ->
-                Description(index = index)
-            },
-        )
-    }
+        content = {
+            OnboardingContent(
+                state = state,
+                riveAnimation = R.raw.riv_onboarding,
+                nextClick = onNextClick,
+                textDescription = { index ->
+                    Description(index = index)
+                },
+            )
+        }
+    )
 }
 
 @Composable
