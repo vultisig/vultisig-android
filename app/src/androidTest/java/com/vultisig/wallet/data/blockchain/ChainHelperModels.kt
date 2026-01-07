@@ -36,6 +36,17 @@ data class KeysignPayload(
     val swapPayload: SwapPayload? = null,
     @SerialName("erc20_approve_payload")
     var approvePayload: ERC20ApprovePayload? = null,
+    @SerialName("trigger_smart_contract_payload")
+    var triggerSmartContractPayload: TriggerSmartContractPayload? = null,
+)
+
+@Serializable
+data class TriggerSmartContractPayload(
+    val ownerAddress: String,
+    val contractAddress: String,
+    val callValue: String? = null,
+    val callDataValue: String? = null,
+    val data: String,
 )
 
 @Serializable
