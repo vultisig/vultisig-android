@@ -4,11 +4,13 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.models.maya.MayaBondNode
 import com.vultisig.wallet.data.api.models.maya.MayaBondedNodesResponse
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
+import com.vultisig.wallet.data.blockchain.model.BondedNodePosition.Companion.generateBondedId
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.MayaBondRepository
-import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.Date
 import javax.inject.Inject
@@ -23,49 +25,50 @@ class MayaBondUseCaseImpl @Inject constructor(
     private val mayaChainApi: MayaChainApi,
     private val mayaBondRepository: MayaBondRepository,
 ) : MayaBondUseCase {
-    override suspend fun getActiveNodesRemote(address: String): List<BondedNodePosition> {
+    override suspend fun getActiveNodesRemote(address: String): List<BondedNodePosition> =
         supervisorScope {
             val activeNodes = mutableListOf<BondedNodePosition>()
-            val networkInfo = async { mayaBondRepository.getNetworkInfo() }
-            val bondedNodes = getBondedNodes(address)
-
             val bondedNodeAddresses = mutableSetOf<String>()
-            for (node in bondedNodes.nodes) {
-                bondedNodeAddresses += node.address
-                try {
-                    val myBondMetrics = calculateBondMetrics(
-                        nodeAddress = node.address,
-                        myBondAddress = address
-                    )
 
-                    //val nodeState = BondNodeState
-                    //    .fromAPIStatus(myBondMetrics.nodeStatus)
-                    //    ?: BondNodeState.STANDBY
+            try {
+                val bondedNodes = getBondedNodes(address)
+                val nextChurn = estimateNextChurnETA()
 
-                    val bondNode = BondedNodePosition.BondedNode(
-                        address = node.address,
-                        state = node.status, // Check Status
-                    )
+                for (node in bondedNodes.nodes) {
+                    bondedNodeAddresses += node.address
+                    try {
+                        val myBondMetrics = calculateBondMetrics(
+                            nodeAddress = node.address,
+                            myBondAddress = address
+                        )
 
-                    val activeNode = BondedNodePosition(
-                        node = bondNode,
-                        amount = myBondMetrics.myBond,
-                        apy = myBondMetrics.apr,
-                        nextReward = myBondMetrics.myAward,
-                        nextChurn = networkInfo.nextChurnDate,
-                        vault = vault
-                    )
+                        val bondNode = BondedNodePosition.BondedNode(
+                            address = node.address,
+                            state = node.status,
+                        )
 
-                    activeNodes += activeNode
-                } catch (e: Exception) {
-                    println(
-                        "Error calculating metrics for node ${node.address}: $e"
-                    )
-                    // Continue processing remaining nodes
+                        val activeNode = BondedNodePosition(
+                            id = Coins.MayaChain.MAYA.generateBondedId(node.address),
+                            coin = Coins.MayaChain.MAYA,
+                            node = bondNode,
+                            amount = myBondMetrics.myBond,
+                            apy = myBondMetrics.apr,
+                            nextReward = myBondMetrics.myAward.toDouble(), // TODO: Check rewards decimals
+                            nextChurn = nextChurn,
+                        )
+
+                        activeNodes += activeNode
+                    } catch (e: Exception) {
+                        Timber.e(e, "Error calculating metrics for node ${node.address}")
+                    }
                 }
+            } catch (t: Throwable) {
+                Timber.e(t, "Error fetching bonded nodes for address: $address")
+                throw t
             }
+
+            return@supervisorScope activeNodes.toList()
         }
-    }
 
     private suspend fun getBondedNodes(address: String): MayaBondedNodesResponse {
         return try {
@@ -101,26 +104,31 @@ class MayaBondUseCaseImpl @Inject constructor(
     }
 
     private suspend fun estimateNextChurnETA(): Date? {
-        val health = mayaBondRepository.getHealth()
-        val network = mayaBondRepository.getNetworkInfo()
+        return try {
+            val health = mayaBondRepository.getHealth()
+            val network = mayaBondRepository.getNetworkInfo()
 
-        val nextChurnHeight = network.nextChurnHeight
-            ?.toLongOrNull()
-            ?: return null
+            val nextChurnHeight = network.nextChurnHeight
+                ?.toLongOrNull()
+                ?: return null
 
-        val currentHeight = health.lastMayaNode.height
-        val currentTimestamp = health.lastMayaNode.timestamp.toDouble()
+            val currentHeight = health.lastMayaNode.height
+            val currentTimestamp = health.lastMayaNode.timestamp.toDouble()
 
-        if (nextChurnHeight <= currentHeight) return null
+            if (nextChurnHeight <= currentHeight) return null
 
-        // Maya has approximately 5 seconds per block
-        val avgBlockTimeSeconds = 5.0
+            // Maya has approximately 5 seconds per block
+            val avgBlockTimeSeconds = 5.0
 
-        val remainingBlocks = nextChurnHeight - currentHeight
-        val etaSeconds = remainingBlocks * avgBlockTimeSeconds
+            val remainingBlocks = nextChurnHeight - currentHeight
+            val etaSeconds = remainingBlocks * avgBlockTimeSeconds
 
-        val currentDate = Date((currentTimestamp * 1000).toLong())
-        return Date(currentDate.time + (etaSeconds * 1000).toLong())
+            val currentDate = Date((currentTimestamp * 1000).toLong())
+            Date(currentDate.time + (etaSeconds * 1000).toLong())
+        } catch (t: Throwable) {
+            Timber.e(t)
+            null
+        }
     }
 
     suspend fun calculateBondMetrics(
@@ -131,13 +139,13 @@ class MayaBondUseCaseImpl @Inject constructor(
         val bondProviders = nodeData.bondProviders.providers
 
         // 2. Calculate my bond and total bond
-        var myBond = BigDecimal.ZERO
-        var totalBond = BigDecimal.ZERO
+        var myBond = BigInteger.ZERO
+        var totalBond = BigInteger.ZERO
 
         for (provider in bondProviders) {
             val providerBond = provider.bond
-                .toBigDecimalOrNull()
-                ?: BigDecimal.ZERO
+                .toBigIntegerOrNull()
+                ?: BigInteger.ZERO
 
             if (provider.bondAddress == myBondAddress) {
                 myBond = providerBond
@@ -147,8 +155,8 @@ class MayaBondUseCaseImpl @Inject constructor(
 
         // 3. Calculate ownership percentage
         val myBondOwnershipPercentage =
-            if (totalBond > BigDecimal.ZERO)
-                myBond.divide(totalBond, 18, RoundingMode.HALF_UP)
+            if (totalBond > BigInteger.ZERO)
+                myBond.toBigDecimal().divide(totalBond.toBigDecimal(), 18, RoundingMode.HALF_UP)
             else
                 BigDecimal.ZERO
 
@@ -182,7 +190,7 @@ class MayaBondUseCaseImpl @Inject constructor(
 }
 
 data class MayaBondMetrics(
-    val myBond: BigDecimal,
+    val myBond: BigInteger,
     val myAward: BigDecimal,
     val apr: Double,
     val nodeStatus: String
