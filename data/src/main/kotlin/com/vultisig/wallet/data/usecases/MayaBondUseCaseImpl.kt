@@ -6,7 +6,12 @@ import com.vultisig.wallet.data.api.models.maya.MayaBondedNodesResponse
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition.Companion.generateBondedId
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.MayaBondRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.math.BigDecimal
@@ -17,6 +22,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface MayaBondUseCase {
+    suspend fun getActiveNodes(vaultId: String, address: String): Flow<List<BondedNodePosition>>
     suspend fun getActiveNodesRemote(address: String): List<BondedNodePosition>
 }
 
@@ -24,7 +30,47 @@ interface MayaBondUseCase {
 class MayaBondUseCaseImpl @Inject constructor(
     private val mayaChainApi: MayaChainApi,
     private val mayaBondRepository: MayaBondRepository,
+    private val activeBondedNodeRepository: ActiveBondedNodeRepository,
 ) : MayaBondUseCase {
+
+    override suspend fun getActiveNodes(
+        vaultId: String,
+        address: String
+    ): Flow<List<BondedNodePosition>> =
+        flow {
+            try {
+                // First get cached nodes and emit
+                val cachedNodes = activeBondedNodeRepository.getBondedNodesByCoinId(
+                    vaultId = vaultId,
+                    coindId = Coins.MayaChain.MAYA.id
+                )
+                if (cachedNodes.isNotEmpty()) {
+                    Timber.d("MayaBondUseCase: Emitting ${cachedNodes.size} cached bonded nodes for vault $vaultId")
+                    emit(cachedNodes)
+                }
+
+                // Fetch remote and update cache if needed
+                val freshNodes = getActiveNodesRemote(address)
+
+                Timber.d("MayaBondUseCase: Emitting ${freshNodes.size} fresh bonded nodes for vault $vaultId")
+                emit(freshNodes)
+
+                activeBondedNodeRepository.saveBondedNodes(vaultId, freshNodes)
+            } catch (e: Exception) {
+                Timber.e(e, "MayaBondUseCase: Error fetching bonded nodes for vault $vaultId")
+
+                val cachedNodes = activeBondedNodeRepository.getBondedNodesByCoinId(
+                    vaultId = vaultId,
+                    coindId = Coins.MayaChain.MAYA.id
+                )
+                if (cachedNodes.isNotEmpty()) {
+                    emit(cachedNodes)
+                } else {
+                    throw e
+                }
+            }
+        }.flowOn(Dispatchers.IO)
+
     override suspend fun getActiveNodesRemote(address: String): List<BondedNodePosition> =
         supervisorScope {
             val activeNodes = mutableListOf<BondedNodePosition>()
