@@ -33,8 +33,8 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
-import com.vultisig.wallet.ui.models.defi.MayaDefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.MayaDefiPositionsUiModel
+import com.vultisig.wallet.ui.models.defi.MayaDefiPositionsViewModel
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
