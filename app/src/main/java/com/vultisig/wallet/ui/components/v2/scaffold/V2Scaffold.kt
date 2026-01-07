@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
@@ -131,7 +132,7 @@ internal fun V2Scaffold(
         topBar = topBar,
         bottomBar = bottomBar,
         modifier = modifier,
-        containerColor = Theme.v2.colors.backgrounds.primary,
+        containerColor = V2Scaffold.CONTAINER_COLOR,
     ) {
         Box(
             modifier = Modifier
@@ -146,8 +147,8 @@ internal fun V2Scaffold(
                     if (applyDefaultPaddings) {
                         Modifier
                             .padding(
-                                horizontal = 16.dp,
-                                vertical = 12.dp
+                                horizontal = V2Scaffold.PADDING_HORIZONTAL,
+                                vertical = V2Scaffold.PADDING_VERTICAL,
                             )
                     } else {
                         Modifier
@@ -158,3 +159,13 @@ internal fun V2Scaffold(
         }
     }
 }
+
+internal object V2Scaffold {
+    internal val PADDING_VERTICAL = 12.dp
+    internal val PADDING_HORIZONTAL = 16.dp
+    internal val CONTAINER_COLOR: Color
+        @Composable
+        get() = Theme.v2.colors.backgrounds.primary
+
+}
+
