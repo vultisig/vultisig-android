@@ -175,10 +175,12 @@ internal fun ThorchainDefiPositionScreenContent(
                     } else {
                         BondedTabContent(
                             bondToNodeOnClick = onClickBondToNode,
+                            icon = R.drawable.rune,
+                            tokenName = "RUNE",
                             state = state.bonded,
                             isVisible = state.isBalanceVisible,
-                            onClickUnbond = onClickUnbond,
                             onClickBond = onClickBond,
+                            onClickUnbond = onClickUnbond,
                         )
                     }
                 }

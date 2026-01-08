@@ -111,7 +111,6 @@ internal fun MayaDefiPositionScreenContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 VsTabGroup(
                     index = tabs.indexOf(state.selectedTab)
                 ) {
@@ -164,10 +163,12 @@ internal fun MayaDefiPositionScreenContent(
                     } else {
                         BondedTabContent(
                             bondToNodeOnClick = onClickBondToNode,
+                            icon = R.drawable.cacao,
+                            tokenName = "CACAO",
                             state = state.bonded,
                             isVisible = state.isBalanceVisible,
-                            onClickUnbond = onClickUnbond,
                             onClickBond = onClickBond,
+                            onClickUnbond = onClickUnbond,
                         )
                     }
                 }

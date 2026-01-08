@@ -35,6 +35,8 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun BondedTabContent(
     bondToNodeOnClick: () -> Unit,
+    icon: Int,
+    tokenName: String,
     state: BondedTabUiModel,
     isVisible: Boolean,
     onClickBond: (String) -> Unit,
@@ -47,8 +49,8 @@ internal fun BondedTabContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         HeaderDeFiWidget(
-            title = stringResource(R.string.total_bonded_rune),
-            iconRes = R.drawable.rune,
+            title = stringResource(R.string.total_bonded_token, tokenName),
+            iconRes = icon,
             buttonText = stringResource(R.string.bond_to_node),
             onClickAction = bondToNodeOnClick,
             totalAmount = state.totalBondedAmount,
@@ -315,6 +317,8 @@ private fun BondedTabContentPreview() {
             totalBondedAmount = "2600 RUNE",
             nodes = mockNodes
         ),
+        icon = R.drawable.rune,
+        tokenName = "RUNE",
         isVisible = true,
         bondToNodeOnClick = { },
         onClickBond = {},
@@ -331,6 +335,8 @@ private fun BondedTabContentLoadingPreview() {
             totalBondedAmount = "0 RUNE",
             nodes = emptyList()
         ),
+        icon = R.drawable.rune,
+        tokenName = "RUNE",
         isVisible = true,
         bondToNodeOnClick = { },
         onClickBond = {},
@@ -347,6 +353,8 @@ private fun BondedTabContentEmptyPreview() {
             totalBondedAmount = "0 RUNE",
             nodes = emptyList()
         ),
+        icon = R.drawable.rune,
+        tokenName = "RUNE",
         isVisible = true,
         bondToNodeOnClick = { },
         onClickBond = {},
