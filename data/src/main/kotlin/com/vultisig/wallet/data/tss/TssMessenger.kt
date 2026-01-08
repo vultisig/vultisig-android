@@ -46,12 +46,10 @@ class TssMessenger(
                 try {
                     sessionApi.sendTssMessage(serverUrl, messageID, message)
                     Timber.tag("TssMessenger").d("send message success")
-                    // when it reach to this point , it means the message was sent successfully
                     break
                 } catch (e: Exception) {
                     Timber.tag("TssMessenger")
                         .e("fail to send message: ${e.stackTraceToString()} , attempt: $i")
-
                 }
             }
         }

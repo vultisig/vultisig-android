@@ -37,11 +37,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -72,8 +72,6 @@ class SchnorrKeygen(
         isEncryptionGCM = true
     )
 
-    var keygenDoneIndicator = false
-    val keyGenLock = ReentrantLock()
     val cache = mutableMapOf<String, Any>()
     var keyshare: DKLSKeyshare? = null
 
@@ -92,18 +90,6 @@ class SchnorrKeygen(
             Pair(result, BufferUtilJNI.get_bytes_from_tss_buffer(buf))
         } finally {
             tss_buffer_free(buf)
-        }
-    }
-
-    fun isKeygenDone(): Boolean {
-        return keyGenLock.withLock {
-            keygenDoneIndicator
-        }
-    }
-
-    fun setKeygenDone(status: Boolean) {
-        keyGenLock.withLock {
-            keygenDoneIndicator = status
         }
     }
 
@@ -134,12 +120,10 @@ class SchnorrKeygen(
             val (result, outboundMessage) = getSchnorrOutboundMessage(handle)
             if (result != LIB_OK) {
                 Timber.d("fail to get outbound message")
+                return
             }
+
             if (outboundMessage.isEmpty()) {
-                if (isKeygenDone()) {
-                    Timber.d("Schnorr keygen finished")
-                    return
-                }
                 delay(100)
                 continue
             }
@@ -256,8 +240,7 @@ class SchnorrKeygen(
         }
     }
     suspend fun schnorrKeygenWithRetry(attempt: Int, additionalHeader: String = "") {
-        setKeygenDone(false)
-        var task: Job? = null
+        var isFinished = false
         try {
             val decodedSetupMsg = setupMessage.toGoSlice()
             var handler = Handle()
@@ -337,33 +320,33 @@ class SchnorrKeygen(
                 TssAction.ReShare -> error("This method shouldn't be used with $action")
             }
 
-            task = CoroutineScope(Dispatchers.IO).launch {
-                processSchnorrOutboundMessage(handler)
-            }
-            val isFinished = pullInboundMessages(handler)
-            if (isFinished) {
-                val keyshareHandler = Handle()
-                val keyShareResult = schnorr_keygen_session_finish(handler, keyshareHandler)
-                if (keyShareResult != LIB_OK) {
-                    error("Failed to get keyshare for $action, $keyShareResult")
+            coroutineScope {
+                launch { processSchnorrOutboundMessage(handler) }
+                isFinished = pullInboundMessages(handler)
+                if (isFinished) {
+                    val keyshareHandler = Handle()
+                    val keyShareResult = schnorr_keygen_session_finish(handler, keyshareHandler)
+                    if (keyShareResult != LIB_OK) {
+                        error("Failed to get keyshare for $action, $keyShareResult")
+                    }
+                    val keyshareBytes = getKeyshareBytes(keyshareHandler)
+                    val publicKeyEdDSA = getPublicKeyBytes(keyshareHandler)
+                    keyshare = DKLSKeyshare(
+                        pubKey = publicKeyEdDSA.toHexString(),
+                        keyshare = Base64.encode(keyshareBytes),
+                        chaincode = ""
+                    )
+                    Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
+                    delay(500)
+                    cancel()
                 }
-                val keyshareBytes = getKeyshareBytes(keyshareHandler)
-                val publicKeyEdDSA = getPublicKeyBytes(keyshareHandler)
-                keyshare = DKLSKeyshare(
-                    pubKey = publicKeyEdDSA.toHexString(),
-                    keyshare = Base64.encode(keyshareBytes),
-                    chaincode = ""
-                )
-                Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
-                // slightly delay to give local party time to process outbound messages
-                delay(500)
-                setKeygenDone(true)
-                task.cancel()
+            }
+        } catch (e: CancellationException) {
+            if (!isFinished) {
+                throw e
             }
         } catch (e: Exception) {
             Timber.d("Failed to generate key, error: ${e.localizedMessage}")
-            setKeygenDone(true)
-            task?.cancel()
             if (attempt < 3) {
                 Timber.d("Retry $action, attempt: $attempt")
                 schnorrKeygenWithRetry(attempt + 1,additionalHeader)
@@ -435,8 +418,7 @@ class SchnorrKeygen(
     }
 
     suspend fun schnorrReshareWithRetry(attempt: Int) {
-        setKeygenDone(false)
-        var task: Job? = null
+        var isFinished = false
         try {
             val keyshareHandle = Handle()
             if (vault.pubKeyEDDSA.isNotEmpty()) {
@@ -495,33 +477,34 @@ class SchnorrKeygen(
                 throw RuntimeException("fail to create session from reshare setup message, error: $result")
             }
 
-            task = CoroutineScope(Dispatchers.IO).launch {
-                processSchnorrOutboundMessage(handler)
-            }
-            val isFinished = pullInboundMessages(handler)
-            if (isFinished) {
-                val newKeyshareHandler = Handle()
-                val keyShareResult = schnorr_qc_session_finish(handler, newKeyshareHandler)
-                if (keyShareResult != LIB_OK) {
-                    throw RuntimeException("fail to get new keyshare, $keyShareResult")
-                }
+            coroutineScope {
+                launch { processSchnorrOutboundMessage(handler) }
+                isFinished = pullInboundMessages(handler)
+                if (isFinished) {
+                    val newKeyshareHandler = Handle()
+                    val keyShareResult = schnorr_qc_session_finish(handler, newKeyshareHandler)
+                    if (keyShareResult != LIB_OK) {
+                        throw RuntimeException("fail to get new keyshare, $keyShareResult")
+                    }
 
-                val keyshareBytes = getKeyshareBytes(newKeyshareHandler)
-                val publicKeyEdDSA = getPublicKeyBytes(newKeyshareHandler)
-                keyshare = DKLSKeyshare(
-                    pubKey = publicKeyEdDSA.toHexString(),
-                    keyshare = Base64.Default.encode(keyshareBytes),
-                    chaincode = ""
-                )
-                Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
-                delay(500) // slightly delay to give local party time to process outbound messages
-                setKeygenDone(true)
-                task.cancel()
+                    val keyshareBytes = getKeyshareBytes(newKeyshareHandler)
+                    val publicKeyEdDSA = getPublicKeyBytes(newKeyshareHandler)
+                    keyshare = DKLSKeyshare(
+                        pubKey = publicKeyEdDSA.toHexString(),
+                        keyshare = Base64.Default.encode(keyshareBytes),
+                        chaincode = ""
+                    )
+                    Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
+                    delay(500)
+                    cancel()
+                }
+            }
+        } catch (e: CancellationException) {
+            if (!isFinished) {
+                throw e
             }
         } catch (e: Exception) {
             Timber.d("Failed to reshare key, error: ${e.localizedMessage}")
-            setKeygenDone(true)
-            task?.cancel()
             if (attempt < 3) {
                 Timber.d("keygen/reshare retry, attempt: $attempt")
                 schnorrReshareWithRetry(attempt + 1)

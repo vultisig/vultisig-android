@@ -29,12 +29,12 @@ import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import tss.KeysignResponse
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -54,15 +54,9 @@ class SchnorrKeysign(
     val localPartyID: String = vault.localPartyID
     val publicKeyEdDSA: String = vault.pubKeyEDDSA
     var messenger: TssMessenger? = null
-    var keysignDoneIndicator = false
-    val keySignLock = ReentrantLock()
     val cache = mutableMapOf<String, Any>()
     val signatures = mutableMapOf<String, KeysignResponse>()
     var keyshare: ByteArray = byteArrayOf()
-
-    fun isKeysignDone(): Boolean = keySignLock.withLock { keysignDoneIndicator }
-
-    fun setKeysignDone(status: Boolean) = keySignLock.withLock { keysignDoneIndicator = status }
 
     fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
@@ -170,15 +164,14 @@ class SchnorrKeysign(
             val (result, outboundMessage) = getSchnorrOutboundMessage(handle)
             if (result != LIB_OK) {
                 println("fail to get outbound message")
+                return
             }
+
             if (outboundMessage.isEmpty()) {
-                if (isKeysignDone()) {
-                    println("EdDSA keysign finished")
-                    return
-                }
                 delay(100)
                 continue
             }
+
             val message = outboundMessage.toGoSlice()
             val encodedOutboundMessage = Base64.encode(outboundMessage)
             for (i in keysignCommittee.indices) {
@@ -263,7 +256,7 @@ class SchnorrKeysign(
     }
 
     suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
-        setKeysignDone(false)
+        var isFinished = false
         val msgHash = messageToSign.md5()
         val localMessenger = TssMessenger(
             mediatorURL, sessionID, encryptionKeyHex, sessionApi,
@@ -325,24 +318,29 @@ class SchnorrKeysign(
             if (sessionResult != LIB_OK) {
                 throw RuntimeException("fail to create sign session from setup message, error: $sessionResult")
             }
-            val h = handler
-            val task = CoroutineScope(Dispatchers.IO).launch {
-                processSchnorrOutboundMessage(h)
+
+            coroutineScope {
+                launch { processSchnorrOutboundMessage(handler) }
+                isFinished = pullInboundMessages(handler, msgHash)
+                if (isFinished) {
+                    val sig = signSessionFinish(handler)
+                    val resp = KeysignResponse()
+                    resp.msg = messageToSign
+                    val r = sig.copyOfRange(0, 32).reversedArray()
+                    val s = sig.copyOfRange(32, 64).reversedArray()
+                    resp.r = r.toHexString()
+                    resp.s = s.toHexString()
+                    resp.derSignature = DklsHelper.createDERSignature(r, s).toHexString()
+                    val keySignVerify = KeysignVerify(mediatorURL, sessionID, sessionApi)
+                    keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
+                    signatures[messageToSign] = resp
+                    delay(500)
+                    cancel()
+                }
             }
-            val isFinished = pullInboundMessages(h, msgHash)
-            if (isFinished) {
-                setKeysignDone(true)
-                val sig = signSessionFinish(h)
-                val resp = KeysignResponse()
-                resp.msg = messageToSign
-                val r = sig.copyOfRange(0, 32).reversedArray()
-                val s = sig.copyOfRange(32, 64).reversedArray()
-                resp.r = r.toHexString()
-                resp.s = s.toHexString()
-                resp.derSignature = DklsHelper.createDERSignature(r, s).toHexString()
-                val keySignVerify = KeysignVerify(mediatorURL, sessionID, sessionApi)
-                keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
-                signatures[messageToSign] = resp
+        } catch (e: CancellationException) {
+            if (!isFinished) {
+                throw e
             }
         } catch (e: Exception) {
             println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
