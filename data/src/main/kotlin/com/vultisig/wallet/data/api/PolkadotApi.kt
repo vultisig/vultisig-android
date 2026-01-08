@@ -19,6 +19,7 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface PolkadotApi {
     suspend fun getBalance(address: String): BigInteger
@@ -54,6 +55,7 @@ internal class PolkadotApiImp @Inject constructor(
             val balance = BigDecimal(rpcResp.data.account.balance)
             return balance.multiply(BigDecimal(10000000000)).toBigInteger()
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e("Error fetching Polkadot balance: ${e.message}")
             return BigInteger.ZERO
         }

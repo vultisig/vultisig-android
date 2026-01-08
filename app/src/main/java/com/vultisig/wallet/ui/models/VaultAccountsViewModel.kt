@@ -55,6 +55,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @Immutable
 internal data class VaultAccountsUiModel(
@@ -223,6 +224,7 @@ internal class VaultAccountsViewModel @Inject constructor(
                 }
 
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e, "Failed to auto-enable VULT token")
             }
         }

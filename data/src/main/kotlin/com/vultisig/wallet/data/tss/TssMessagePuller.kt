@@ -12,6 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 
 class TssMessagePuller(
@@ -79,6 +80,7 @@ class TssMessagePuller(
                 }
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.tag(TAG)
                 .e(e, "Failed to get messages from server")
         }

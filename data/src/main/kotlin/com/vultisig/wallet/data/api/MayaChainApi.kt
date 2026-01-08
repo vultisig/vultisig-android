@@ -29,6 +29,7 @@ import io.ktor.http.path
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface MayaChainApi {
 
@@ -93,6 +94,7 @@ internal class MayaChainApiImp @Inject constructor(
             }.body<List<MayaChainDepositCacaoResponse>>()
             request.firstOrNull()?.cacaoDeposit
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e, "Failed to fetch CACAO pool balance for address: $address")
             null
         }
@@ -134,6 +136,7 @@ internal class MayaChainApiImp @Inject constructor(
                 responseRawString
             )
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             return THORChainSwapQuoteDeserialized.Error(
                 THORChainSwapQuoteError(
                     e.message ?: "Unknown error"

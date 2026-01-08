@@ -39,6 +39,7 @@ import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface SolanaApi {
     suspend fun getBalance(address: String): BigInteger
@@ -92,6 +93,7 @@ internal class SolanaApiImp @Inject constructor(
             }
             rpcResp.result?.value ?: error("getBalance error")
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             BigInteger.ZERO
         }
     }
@@ -105,6 +107,7 @@ internal class SolanaApiImp @Inject constructor(
             },
         ).result
     } catch (e: Exception) {
+        if (e is CancellationException) throw e
         Timber.e("Error getting minimum balance for rent exemption: ${e.message}")
         BigInteger.ZERO
     }
@@ -162,6 +165,7 @@ internal class SolanaApiImp @Inject constructor(
                 rpcResp.result ?: error("getHighPriorityFee error")
             return fees.maxOf { it.prioritizationFee }.toString()
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.tag("SolanaApiImp").e("Error getting high priority fee: ${e.message}")
         }
         return "0"
@@ -214,6 +218,7 @@ internal class SolanaApiImp @Inject constructor(
                 is SplTokenDeserialized.Result -> return result.result.values.toList()
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.tag("SolanaApiImp").e("Error getting spl tokens: ${e.message}")
             return emptyList()
         }
@@ -227,6 +232,7 @@ internal class SolanaApiImp @Inject constructor(
                         parameter("query", token)
                     }.body<List<SplTokenInfo>>().firstOrNull()
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     Timber.tag("SolanaApiImp")
                         .e("Error getting spl token for $token message : ${e.message}")
                     null
@@ -267,6 +273,7 @@ internal class SolanaApiImp @Inject constructor(
                     .flatten()
 
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e)
                 null
             }
@@ -328,6 +335,7 @@ internal class SolanaApiImp @Inject constructor(
             }
             return value.value[0].account.data.parsed.info.tokenAmount.amount
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e)
             return null
         }
@@ -361,6 +369,7 @@ internal class SolanaApiImp @Inject constructor(
                 value.value[0].account.owner == TOKEN_PROGRAM_ID_2022
             )
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e)
             return Pair(null, false)
         }

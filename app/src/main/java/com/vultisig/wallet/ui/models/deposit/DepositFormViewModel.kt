@@ -111,6 +111,7 @@ import javax.inject.Inject
 import kotlin.collections.first
 import kotlin.collections.map
 import kotlin.let
+import kotlin.coroutines.cancellation.CancellationException
 
 internal enum class DepositOption {
     AddCacaoPool,
@@ -475,6 +476,7 @@ internal class DepositFormViewModel @Inject constructor(
                         this@DepositFormViewModel.address.value = address
                     }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e)
             }
         }
@@ -532,6 +534,7 @@ internal class DepositFormViewModel @Inject constructor(
                                     thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
                                 }
                         } catch (e: Exception) {
+                            if (e is CancellationException) throw e
                             Timber.e(e)
                         }
                     }
@@ -661,6 +664,7 @@ internal class DepositFormViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e, "Failed to fetch unstakable CACAO balance")
             state.update { state ->
                 state.copy(
@@ -854,6 +858,7 @@ internal class DepositFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e)
                 showError(UiText.StringResource(R.string.dialog_default_error_body))
                 // Error occurred during deposit operation

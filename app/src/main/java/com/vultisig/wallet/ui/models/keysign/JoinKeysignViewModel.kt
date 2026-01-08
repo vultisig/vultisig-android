@@ -109,6 +109,7 @@ import java.math.BigInteger
 import java.net.UnknownHostException
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -363,6 +364,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 )
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.d(
                     e,
                     "Failed to parse QR code"
@@ -973,6 +975,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     currentModel.copy(txScanStatus = TransactionScanStatus.Scanned(scanResult))
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 updateSendUiModel(verifyUiModel) { currentModel ->
                     currentModel.copy(
                         txScanStatus = TransactionScanStatus.Error(
@@ -1066,6 +1069,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     Timber.tag("JoinKeysignViewModel")
                         .e(
                             "Failed to join keysign: %s",
@@ -1139,10 +1143,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                 return true
             }
         } catch (e: Exception) {
-            Timber.e(
-                e,
-                "Failed to check keysign start"
-            )
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to check keysign start")
             currentState.value =
                 JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))
         }
