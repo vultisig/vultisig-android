@@ -254,7 +254,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                     localPartyId = localPartyId,
                     vaultName = vaultName,
                     hexChainCode = hexChainCode,
-                    keygenCommittee = state.value.selectedDevices + localPartyId,
+                    keygenCommittee = listOf(localPartyId) + state.value.selectedDevices,
                     encryptionKeyHex = encryptionKeyHex,
                     isInitiatingDevice = true,
                     libType = if (args.action == TssAction.Migrate)
