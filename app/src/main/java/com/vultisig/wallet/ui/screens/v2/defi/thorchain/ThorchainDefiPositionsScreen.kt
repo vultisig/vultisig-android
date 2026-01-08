@@ -175,7 +175,8 @@ internal fun ThorchainDefiPositionScreenContent(
                     } else {
                         BondedTabContent(
                             bondToNodeOnClick = onClickBondToNode,
-                            state = state,
+                            state = state.bonded,
+                            isVisible = state.isBalanceVisible,
                             onClickUnbond = onClickUnbond,
                             onClickBond = onClickBond,
                         )

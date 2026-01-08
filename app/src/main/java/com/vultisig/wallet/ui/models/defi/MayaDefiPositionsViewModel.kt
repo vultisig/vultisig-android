@@ -19,7 +19,6 @@ import timber.log.Timber
 import javax.inject.Inject
 
 internal data class MayaDefiPositionsUiModel(
-    // tabs info
     val totalAmountPrice: String = MayaDefiPositionsViewModel.DEFAULT_ZERO_BALANCE,
     val selectedTab: String = MayaDefiTab.BONDED.displayName,
     val bonded: BondedTabUiModel = BondedTabUiModel(

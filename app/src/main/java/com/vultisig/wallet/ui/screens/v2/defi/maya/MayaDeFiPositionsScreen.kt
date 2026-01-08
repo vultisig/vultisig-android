@@ -102,7 +102,7 @@ internal fun MayaDefiPositionScreenContent(
                 title = Chain.MayaChain.raw,
                 isLoading = state.isTotalAmountLoading,
                 totalValue = state.totalAmountPrice,
-                image = R.drawable.referral_data_banner,
+                image = R.drawable.maya_defi_banner,
                 isBalanceVisible = state.isBalanceVisible,
             )
 
@@ -164,7 +164,8 @@ internal fun MayaDefiPositionScreenContent(
                     } else {
                         BondedTabContent(
                             bondToNodeOnClick = onClickBondToNode,
-                            state = state,
+                            state = state.bonded,
+                            isVisible = state.isBalanceVisible,
                             onClickUnbond = onClickUnbond,
                             onClickBond = onClickBond,
                         )
