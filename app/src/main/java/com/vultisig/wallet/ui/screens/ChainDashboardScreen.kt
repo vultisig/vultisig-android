@@ -20,7 +20,7 @@ import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionTokens
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.Wallet
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.defi.circle.CircleDeFiPositionsScreen
-import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionsScreen
+import com.vultisig.wallet.ui.screens.v2.defi.maya.MayaDeFiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 
@@ -71,9 +71,12 @@ internal fun ChainDashboardScreen(
                     vaultId = (uiModel.route as PositionCircle).vaultId
                 )
 
-                is PositionTokens -> ThorchainDefiPositionsScreen(
+                is PositionTokens -> MayaDeFiPositionsScreen(
                     vaultId = (uiModel.route as PositionTokens).vaultId
                 )
+                //  ThorchainDefiPositionsScreen(
+                //      vaultId = (uiModel.route as PositionTokens).vaultId
+                //  )
 
                 is Wallet -> ChainTokensScreen(
                     vaultId = (uiModel.route as Wallet).vaultId,

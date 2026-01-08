@@ -345,6 +345,7 @@
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Total de Rune Vinculado</string>
+    <string name="total_bonded_token">Total de %s Vinculado</string>
     <string name="bonded_amount">Vinculado: %s</string>
     <string name="bond_to_node">Vincular al Nodo</string>
     <string name="node_address_formatted">Dirección: %s</string>

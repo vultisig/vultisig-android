@@ -346,6 +346,7 @@
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Ukupno vezanih Rune</string>
+    <string name="total_bonded_token">Ukupno vezanih %s</string>
     <string name="bonded_amount">Vezano: %s</string>
     <string name="bond_to_node">Veži na čvor</string>
     <string name="node_address_formatted">Adresa: %s</string>
