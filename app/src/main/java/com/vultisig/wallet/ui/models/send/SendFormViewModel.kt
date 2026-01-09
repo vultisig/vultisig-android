@@ -113,6 +113,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.proto.Bitcoin
@@ -810,7 +811,19 @@ internal class SendFormViewModel @Inject constructor(
 
     private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal {
         val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
-        val currentGasFee = gasFee.value ?: return BigDecimal.ZERO
+
+        val currentAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull() ?: BigDecimal.ZERO
+        val currentGasFee = gasFee.value
+
+        // Only subtract gas fee if:
+        // 1. Current amount is not 0 (so gas fee has been calculated for a real amount)
+        // 2. Gas fee exists
+        // Otherwise, show raw percentage and let gas fee calculate after
+        val gasFeeToSubtract = if (currentAmount > BigDecimal.ZERO && currentGasFee != null) {
+            currentGasFee.value
+        } else {
+            BigInteger.ZERO
+        }
 
         val availableTokenBalance = if (defiType == null
             || defiType == DeFiNavActions.BOND
@@ -823,7 +836,7 @@ internal class SendFormViewModel @Inject constructor(
         ) {
             getAvailableTokenBalance(
                 selectedAccount,
-                currentGasFee.value
+                gasFeeToSubtract
             )
         } else {
             getAvailableTokenBalance(
