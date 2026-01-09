@@ -298,10 +298,19 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
 
             val tokenIdToPrices = thorTokens.asSequence()
                 .mapNotNull {
-                    val tokenAsset = mapThorPoolAsset(it.contractAddress)
-                    val priceUsd = poolAssetToPriceMap[tokenAsset]
-                        ?.toBigDecimal(scale = 8)
-                        ?: return@mapNotNull null
+                    val mappedAsset = mapThorPoolAsset(it.contractAddress)
+                    var priceUsd = poolAssetToPriceMap[mappedAsset]?.toBigDecimal(scale = 8)
+
+                    // Fall back to ticker-based mapping for backwards compatibility
+                    if (priceUsd == null) {
+                        val tickerAsset = "thor.${it.ticker}".lowercase()
+                        priceUsd = poolAssetToPriceMap[tickerAsset]?.toBigDecimal(scale = 8)
+                    }
+
+                    // If still no price found, skip this token
+                    if (priceUsd == null) {
+                        return@mapNotNull null
+                    }
 
                     //Since ninerealms provides prices in USD, we use the USDT rate to convert them into the selected currency
                     it.id to mapOf(currency to priceUsd * tetherPrice)
