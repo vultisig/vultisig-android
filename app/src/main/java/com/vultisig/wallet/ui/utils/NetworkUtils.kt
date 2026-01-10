@@ -36,7 +36,11 @@ object NetworkUtils {
             }
 
             override fun onLost(network: Network) {
-                trySend(false)
+                // Check if there are any other active validated networks before sending false
+                val activeNetwork = connectivityManager.activeNetwork
+                val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+                val hasConnection = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+                trySend(hasConnection)
             }
 
             override fun onUnavailable() {
