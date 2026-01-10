@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
+import timber.log.Timber
 
 object NetworkUtils {
 
@@ -36,7 +37,20 @@ object NetworkUtils {
             }
 
             override fun onLost(network: Network) {
-                trySend(false)
+                // Check if there are any other active validated networks before sending false
+                try {
+                    val activeNetwork = connectivityManager.activeNetwork
+                    if (activeNetwork == null) {
+                        trySend(false)
+                        return
+                    }
+                    val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+                    val hasConnection = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+                    trySend(hasConnection)
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    trySend(false)
+                }
             }
 
             override fun onUnavailable() {
