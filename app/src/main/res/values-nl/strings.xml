@@ -273,7 +273,7 @@
     <string name="generating_key_screen_reshare_failed">Opnieuw delen mislukt</string>
     <string name="keygen_email_continue_button">Doorgaan</string>
     <string name="password_should_not_be_empty">Wachtwoord mag niet leeg zijn</string>
-    <string name="signing_error_insufficient_funds">Er is niet genoeg gas om de transactiekosten te dekken.\nSchakel geld in de portemonnee.</string>
+    <string name="signing_error_insufficient_funds">Er is niet genoeg gas om de transactiekosten te dekken.\nSchakel geld in de wallet.</string>
     <string name="signing_error_mixed_reshare">Gemengde Reshare-ondertekening.\nGebruik kluisshares van dezelfde Reshare-cyclus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
     <string name="keysign_sign_transaction">Transactie ondertekenen</string>
@@ -329,7 +329,7 @@
     <string name="swap_error_amount_too_low">Swapbedrag te laag</string>
     <string name="swap_error_insufficient_balance_and_fees">Onvoldoende %1$s saldo voor de swap en gaskosten. Vul %1$s aan of verlaag het swapbedrag</string>
     <string name="swap_error_insufficient_source_token">Onvoldoende %1$s saldo om te ruilen</string>
-    <string name="swap_error_insufficient_gas_fees">Er is niet genoeg %1$s om de gaskosten te dekken. Vul de portemonnee aan.</string>
+    <string name="swap_error_insufficient_gas_fees">Er is niet genoeg %1$s om de gaskosten te dekken. Vul de wallet aan.</string>
     <string name="swap_error_time_out">Swap-aanvraag is verlopen. Probeer het opnieuw.</string>
     <string name="swap_screen_invalid_no_vault">Geen kluis geselecteerd</string>
     <string name="swap_screen_invalid_no_src_error">Geen brontoken geselecteerd</string>
@@ -572,7 +572,7 @@
     <string name="upgrade_banner_upgrade_your">Upgrade nu uw kluis</string>
     <string name="upgrade_banner_upgrade_now">Upgrade nu</string>
     <string name="home_portfolio_balance">Portefeuillesaldo</string>
-    <string name="wallet">Portemonnee</string>
+    <string name="wallet">Wallet</string>
     <string name="hide_balance">Saldo verbergen</string>
     <string name="show_balance">Saldo weergeven</string>
     <string name="no_chains_found">Geen kettingen gevonden</string>
