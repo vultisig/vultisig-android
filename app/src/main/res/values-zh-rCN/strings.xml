@@ -34,6 +34,10 @@
     <string name="deposit_option_receive_ytcy">铸造 yTCY</string>
     <string name="deposit_option_sell_yrune">赎回 yRUNE</string>
     <string name="deposit_option_sell_ytcy">赎回 yTCY</string>
+    <string name="defi_tab_deposited">已存入</string>
+    <string name="defi_tab_staked">已质押</string>
+    <string name="defi_tab_bonded">已绑定</string>
+    <string name="defi_tab_lp">LP</string>
     <string name="deposit_option_add_cacao_pool">添加到 CACAO 池</string>
 
     <!-- Basic UI -->

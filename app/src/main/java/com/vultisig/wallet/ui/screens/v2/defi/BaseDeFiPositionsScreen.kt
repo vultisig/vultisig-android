@@ -28,11 +28,11 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 fun BaseDeFiPositionsScreenContent(
     state: DefiUiModel,
-    tabs: List<String>,
+    tabs: List<DeFiTab>,
     bannerTitle: String,
     bannerImage: Int = R.drawable.referral_data_banner,
     onBackClick: () -> Unit,
-    onTabSelected: (String) -> Unit = {},
+    onTabSelected: (DeFiTab) -> Unit = {},
     onEditChains: () -> Unit = {},
     tabContent: @Composable () -> Unit = {},
 ) {
@@ -61,12 +61,12 @@ fun BaseDeFiPositionsScreenContent(
             ) {
 
                 VsTabGroup(
-                    index = tabs.indexOf(state.selectedTab)
+                    index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }
                 ) {
                     tabs.forEach { tab ->
                         tab {
                             VsTab(
-                                label = tab,
+                                label = androidx.compose.ui.res.stringResource(tab.displayNameRes),
                                 onClick = {
                                     onTabSelected(tab)
                                 },
@@ -98,11 +98,11 @@ fun BaseDeFiPositionsScreenContent(
     }
 }
 
-enum class DeFiTab(val displayName: String) {
-    DEPOSITED("Deposited"),
-    STAKED("Staked"),
-    BONDED("Bonded"),
-    LP("LP"),
+enum class DeFiTab(@androidx.annotation.StringRes val displayNameRes: Int) {
+    DEPOSITED(R.string.defi_tab_deposited),
+    STAKED(R.string.defi_tab_staked),
+    BONDED(R.string.defi_tab_bonded),
+    LP(R.string.defi_tab_lp),
 }
 
 @Preview(showBackground = true)
@@ -114,9 +114,9 @@ private fun BaseDeFiPositionsScreenContentPreview() {
                 isTotalAmountLoading = false,
                 isBalanceVisible = true,
                 supportEditChains = true,
-                selectedTab = DeFiTab.DEPOSITED.displayName
+                selectedTab = DeFiTab.DEPOSITED.displayNameRes
             ),
-            tabs = listOf(DeFiTab.DEPOSITED.displayName, DeFiTab.STAKED.displayName),
+            tabs = listOf(DeFiTab.DEPOSITED, DeFiTab.STAKED),
             bannerTitle = "USDC Account",
             onBackClick = {},
             onTabSelected = {},
@@ -134,9 +134,9 @@ private fun BaseDeFiPositionsScreenContentLoadingPreview() {
                 isTotalAmountLoading = true,
                 isBalanceVisible = true,
                 supportEditChains = false,
-                selectedTab = DeFiTab.DEPOSITED.displayName
+                selectedTab = DeFiTab.DEPOSITED.displayNameRes
             ),
-            tabs = listOf(DeFiTab.DEPOSITED.displayName),
+            tabs = listOf(DeFiTab.DEPOSITED),
             bannerTitle = "USDC Account",
             onBackClick = {},
             onTabSelected = {},
@@ -154,9 +154,9 @@ private fun BaseDeFiPositionsScreenContentHiddenBalancePreview() {
                 isTotalAmountLoading = false,
                 isBalanceVisible = false,
                 supportEditChains = true,
-                selectedTab = DeFiTab.STAKED.displayName
+                selectedTab = DeFiTab.STAKED.displayNameRes
             ),
-            tabs = listOf(DeFiTab.DEPOSITED.displayName, DeFiTab.STAKED.displayName, DeFiTab.BONDED.displayName),
+            tabs = listOf(DeFiTab.DEPOSITED, DeFiTab.STAKED, DeFiTab.BONDED),
             bannerTitle = "USDC Account",
             onBackClick = {},
             onTabSelected = {},
