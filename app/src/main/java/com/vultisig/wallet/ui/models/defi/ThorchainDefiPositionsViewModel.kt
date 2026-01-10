@@ -25,7 +25,7 @@ import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiTab
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsBondDialog
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsStakingDialog
 import com.vultisig.wallet.ui.screens.v2.defi.defaultSelectedPositionsDialog
@@ -66,7 +66,7 @@ import javax.inject.Inject
 internal data class ThorchainDefiPositionsUiModel(
     // tabs info
     val totalAmountPrice: String = ThorchainDefiPositionsViewModel.DEFAULT_ZERO_BALANCE,
-    val selectedTab: String = ThorchainDefiTab.BONDED.displayName,
+    val selectedTab: Int = R.string.defi_tab_bonded,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel(),
     val lp: LpTabUiModel = LpTabUiModel(),
@@ -158,7 +158,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
 
     private val bondedNodesRefreshTrigger = MutableStateFlow(0)
 
-    private val loadedTabs = mutableSetOf<String>()
+    private val loadedTabs = mutableSetOf<Int>()
 
     private val _totalValueBond = MutableStateFlow(BigInteger.ZERO)
     private val _totalValueDefaultStake = MutableStateFlow(StakeDefaultValues())
@@ -312,7 +312,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadBondedNodes() {
-        loadedTabs.add(ThorchainDefiTab.BONDED.displayName)
+        loadedTabs.add(DeFiTab.BONDED.displayNameRes)
 
         viewModelScope.launch {
             if (!state.value.selectedPositions.hasBondPositions()) {
@@ -414,7 +414,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
     }
 
     private fun loadStakingPositions() {
-        loadedTabs.add(ThorchainDefiTab.STAKING.displayName)
+        loadedTabs.add(DeFiTab.STAKED.displayNameRes)
 
         viewModelScope.launch {
             val selectedPositions = state.value.selectedPositions
@@ -703,9 +703,9 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
         }
     }
 
-    fun onTabSelected(tab: String) {
+    fun onTabSelected(tab: DeFiTab) {
         state.update { currentState ->
-            currentState.copy(selectedTab = tab)
+            currentState.copy(selectedTab = tab.displayNameRes)
         }
     }
 

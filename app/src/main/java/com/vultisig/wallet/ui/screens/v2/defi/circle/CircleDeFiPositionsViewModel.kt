@@ -73,7 +73,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
             isTotalAmountLoading = true,
             isBalanceVisible = true,
             supportEditChains = false,
-            selectedTab = DeFiTab.DEPOSITED.displayName,
+            selectedTab = DeFiTab.DEPOSITED.displayNameRes,
             bannerImage = R.drawable.circle_defi_banner,
         )
     )
@@ -166,9 +166,9 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
         }
     }
 
-    fun onTabSelected(tab: String) {
+    fun onTabSelected(tab: DeFiTab) {
         _state.update { currentState ->
-            currentState.copy(selectedTab = tab)
+            currentState.copy(selectedTab = tab.displayNameRes)
         }
     }
 
