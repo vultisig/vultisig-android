@@ -11,7 +11,7 @@ data class DefiUiModel(
     val isBalanceVisible: Boolean = true,
     val supportEditChains: Boolean = false,
     val bannerImage: Int = R.drawable.circle_defi_banner,
-    val selectedTab: String = "Deposited",
+    val selectedTab: Int = R.string.defi_tab_deposited,
 
     // Specific data per screen
     val circleDefi: CircleDeFi = CircleDeFi(),
