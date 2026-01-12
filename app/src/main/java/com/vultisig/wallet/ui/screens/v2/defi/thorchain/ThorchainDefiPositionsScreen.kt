@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -86,7 +87,7 @@ internal fun ThorchainDefiPositionScreenContent(
     onCancelEditPositionClick: () -> Unit = {},
     onDonePositionClick: () -> Unit = {},
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
-    onTabSelected: (String) -> Unit = {},
+    onTabSelected: (DeFiTab) -> Unit = {},
     onClickWithdraw: (DeFiNavActions) -> Unit = {},
     onClickStake: (DeFiNavActions) -> Unit = {},
     onClickUnstake: (DeFiNavActions) -> Unit = {},
@@ -94,8 +95,8 @@ internal fun ThorchainDefiPositionScreenContent(
     val searchTextFieldState = remember { TextFieldState() }
 
     val tabs = listOf(
-        DeFiTab.BONDED.displayName,
-        DeFiTab.STAKED.displayName,
+        DeFiTab.BONDED,
+        DeFiTab.STAKED,
     )
 
     V2Scaffold(
@@ -123,12 +124,12 @@ internal fun ThorchainDefiPositionScreenContent(
             ) {
 
                 VsTabGroup(
-                    index = tabs.indexOf(state.selectedTab)
+                    index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }
                 ) {
                     tabs.forEach { tab ->
                         tab {
                             VsTab(
-                                label = tab,
+                                label = stringResource(tab.displayNameRes),
                                 onClick = {
                                     onTabSelected(tab)
                                 },
@@ -167,7 +168,7 @@ internal fun ThorchainDefiPositionScreenContent(
             }
 
             when (state.selectedTab) {
-                ThorchainDefiTab.BONDED.displayName -> {
+                DeFiTab.BONDED.displayNameRes -> {
                     if (!state.selectedPositions.hasBondPositions()) {
                         NoPositionsContainer(
                             onManagePositionsClick = onEditPositionClick
@@ -182,7 +183,7 @@ internal fun ThorchainDefiPositionScreenContent(
                     }
                 }
 
-                ThorchainDefiTab.STAKING.displayName -> {
+                DeFiTab.STAKED.displayNameRes -> {
                     if (!state.selectedPositions.hasStakingPositions()) {
                         NoPositionsContainer(
                             onManagePositionsClick = onEditPositionClick
@@ -198,7 +199,7 @@ internal fun ThorchainDefiPositionScreenContent(
                     }
                 }
 
-                ThorchainDefiTab.LPS.displayName -> {
+                DeFiTab.LP.displayNameRes -> {
                     NoPositionsContainer(
                         onManagePositionsClick = onEditPositionClick
                     )
@@ -260,7 +261,7 @@ private fun ThorchainDefiPositionsScreenPreviewWithData() {
         onBackClick = { },
         state = ThorchainDefiPositionsUiModel(
             totalAmountPrice = "$3,250.00",
-            selectedTab = ThorchainDefiTab.BONDED.displayName,
+            selectedTab = DeFiTab.BONDED.displayNameRes,
             bonded = BondedTabUiModel(
                 isLoading = false,
                 totalBondedAmount = "2250 RUNE",
@@ -291,8 +292,3 @@ private fun ThorchainDefiPositionsScreenPreviewLoading() {
     )
 }
 
-internal enum class ThorchainDefiTab(val displayName: String) {
-    BONDED("Bonded"),
-    STAKING("Staked"),
-    LPS("LPs");
-}
