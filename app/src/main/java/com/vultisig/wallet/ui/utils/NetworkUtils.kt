@@ -66,7 +66,7 @@ object NetworkUtils {
                 try {
                     updateAndEmit()
                 } catch (t: Throwable) {
-                    Timber.e("Error on onUnavailable")
+                    Timber.e(t,"Error on onUnavailable")
                 }
             }
 
