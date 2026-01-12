@@ -836,7 +836,6 @@ internal class SendFormViewModel @Inject constructor(
 
         val chain = token.chain
 
-        // avoid unnecesary recalculation
         if (gasFee.value != null && chain.standard == TokenStandard.EVM) {
             return amount
         }
