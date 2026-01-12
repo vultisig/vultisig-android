@@ -35,14 +35,19 @@ internal data class CreateFolderUiModel(
     val errorText: UiText? = null,
     val folderNames: List<String> = emptyList(),
     val checkedVaults: Map<VaultAndBalance, Boolean> = emptyMap(),
+    val currentName: String = "",
 
     val folder: Folder? = null,
     val vaults: List<VaultAndBalance> = emptyList(),
     val availableVaults: List<VaultAndBalance> = emptyList(),
     val error: UiText? = null,
 ) {
-    val isCreateButtonEnabled: Boolean =
-        errorText == null && checkedVaults.any { it.value }
+    val isCreateButtonEnabled: Boolean = when {
+        // Edit mode: need valid name AND name must be non-empty
+        folder != null -> errorText == null && currentName.isNotEmpty()
+        // Create mode: need valid name, non-empty name, AND at least one vault selected
+        else -> errorText == null && currentName.isNotEmpty() && checkedVaults.any { it.value }
+    }
 }
 
 @HiltViewModel
@@ -83,9 +88,7 @@ internal class CreateFolderViewModel @Inject constructor(
 
     private fun validateEachTextChange() = viewModelScope.launch {
         textFieldState.textAsFlow().collectLatest {
-            if (it.isNotEmpty()) {
-                validate()
-            }
+            validate()
         }
     }
 
@@ -101,10 +104,10 @@ internal class CreateFolderViewModel @Inject constructor(
 
     private fun validate() = viewModelScope.launch {
         val name = textFieldState.text.toString()
-        val errorMessage = if (!isNameLengthValid(name))
+        val errorMessage = if (name.isNotEmpty() && !isNameLengthValid(name))
             StringResource(R.string.naming_vault_screen_invalid_name)
         else null
-        state.update { it.copy(errorText = errorMessage) }
+        state.update { it.copy(errorText = errorMessage, currentName = name) }
     }
 
     fun checkVault(vault: VaultAndBalance, checked: Boolean) {
@@ -193,7 +196,7 @@ internal class CreateFolderViewModel @Inject constructor(
 
     private fun getFolder(folderId: String) = viewModelScope.launch {
         val folder = folderRepository.getFolder(folderId)
-        state.update { it.copy(folder = folder) }
+        state.update { it.copy(folder = folder, currentName = folder.name) }
         textFieldState.setTextAndPlaceCursorAtEnd(folder.name)
     }
 
