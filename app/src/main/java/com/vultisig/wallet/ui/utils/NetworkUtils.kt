@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 
 object NetworkUtils {
 
@@ -30,7 +31,8 @@ object NetworkUtils {
         val connectivityManager =
             getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-        val validatedNetworks = mutableSetOf<Network>()
+        // Thread-safe set for concurrent access from ConnectivityManager callbacks
+        val validatedNetworks = ConcurrentHashMap.newKeySet<Network>()
 
         fun updateAndEmit() {
             trySend(validatedNetworks.isNotEmpty())
