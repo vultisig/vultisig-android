@@ -3,9 +3,15 @@ package com.vultisig.wallet.ui.screens.onboarding
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -13,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -24,6 +31,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.util.BlockBackClick
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupSummaryUiModel
@@ -57,13 +65,14 @@ private fun VultBackupSummaryScreen(
     Column(
         modifier = Modifier
             .background(Theme.v2.colors.backgrounds.primary)
-            .fillMaxSize(),
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
     ) {
         Box(
             modifier = Modifier
                 .background(Theme.v2.colors.backgrounds.primary)
-                .weight(1f)
-                .fillMaxSize(),
+                .fillMaxWidth()
+                .aspectRatio(1f),
         ) {
             RiveAnimation(
                 modifier = Modifier
@@ -79,6 +88,8 @@ private fun VultBackupSummaryScreen(
                 }
             )
         }
+
+        UiSpacer(1f)
 
         VsCheckField(
             modifier = Modifier
@@ -101,13 +112,35 @@ private fun VultBackupSummaryScreen(
                 .testTag("SummaryScreen.continue")
         )
 
-        UiSpacer(
-            size = 16.dp
-        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            HorizontalDivider(
+                modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                color = Theme.v2.colors.border.light,
+            )
+
+            Text(
+                text = stringResource(R.string.referral_or),
+                modifier = Modifier.padding(16.dp),
+                color = Theme.v2.colors.text.primary,
+                style = Theme.brockmann.supplementary.caption,
+                textAlign = TextAlign.Center,
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                color = Theme.v2.colors.border.light,
+            )
+        }
+
 
         VsButton(
             onClick = onChooseChains,
             label = stringResource(id = string.vault_backup_summary_choose_chains),
+            variant = VsButtonVariant.Secondary,
             state = if (state.isConsentChecked)
                 VsButtonState.Enabled else
                 VsButtonState.Disabled,
