@@ -790,22 +790,92 @@ internal class SendFormViewModel @Inject constructor(
 
     fun chooseMaxTokenAmount() {
         viewModelScope.launch {
-            val max = fetchPercentageOfAvailableBalance(1f)
-
-            maxAmount = max
+            val amount = calculatePercentageWithAccurateFee(1f, isMax = true)
+            maxAmount = amount
             isMaxAmount.value = true
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                max.toPlainString()
-            )
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
         }
     }
 
     fun choosePercentageAmount(percentage: Float) {
         viewModelScope.launch {
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                fetchPercentageOfAvailableBalance(percentage).toPlainString()
-            )
+            val amount = calculatePercentageWithAccurateFee(percentage, isMax = false)
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
         }
+    }
+
+    private suspend fun calculatePercentageWithAccurateFee(
+        percentage: Float,
+        isMax: Boolean
+    ): BigDecimal {
+        val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
+        val token = selectedAccount.token
+
+        var amount = if (gasFee.value != null) {
+            fetchPercentageOfAvailableBalance(percentage)
+        } else {
+            getAvailableTokenBalance(selectedAccount, BigInteger.ZERO)?.decimal
+                ?.multiply(percentage.toBigDecimal())
+                ?: BigDecimal.ZERO
+        }
+
+        if (defiType != null &&
+            defiType != DeFiNavActions.BOND &&
+            defiType != DeFiNavActions.STAKE_RUJI &&
+            defiType != DeFiNavActions.UNSTAKE_RUJI &&
+            defiType != DeFiNavActions.STAKE_TCY &&
+            defiType != DeFiNavActions.UNSTAKE_TCY &&
+            defiType != DeFiNavActions.REDEEM_YRUNE &&
+            defiType != DeFiNavActions.MINT_YTCY &&
+            defiType != DeFiNavActions.REDEEM_YTCY &&
+            defiType != DeFiNavActions.DEPOSIT_USDC_CIRCLE &&
+            defiType != DeFiNavActions.WITHDRAW_USDC_CIRCLE
+        ) {
+            return amount
+        }
+
+        val chain = token.chain
+
+        if (gasFee.value != null && chain.standard == TokenStandard.EVM) {
+            return amount
+        }
+
+        try {
+            val tokenAmountInt = amount
+                .movePointRight(token.decimal)
+                .toBigInteger()
+            val blockchainTransaction = Transfer(
+                coin = token,
+                vault = VaultData(
+                    vaultHexChainCode = vault.hexChainCode,
+                    vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                ),
+                amount = tokenAmountInt,
+                to = addressFieldState.text.toString(),
+                memo = memoFieldState.text.toString(),
+                isMax = isMax,
+            )
+
+            val calculatedFee = withContext(Dispatchers.IO) {
+                feeServiceComposite.calculateFees(blockchainTransaction)
+            }
+
+            val nativeCoin = withContext(Dispatchers.IO) {
+                tokenRepository.getNativeToken(chain.id)
+            }
+
+            val newGasFee = TokenValue(
+                value = calculatedFee.amount,
+                token = nativeCoin,
+            )
+
+            gasFee.value = adjustGasFee(newGasFee, gasSettings.value, specific.value)
+            amount = fetchPercentageOfAvailableBalance(percentage)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to calculate gas fee for percentage amount")
+        }
+
+        return amount
     }
 
     private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal {
