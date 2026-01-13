@@ -24,6 +24,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.util.BlockBackClick
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupSummaryUiModel
@@ -111,6 +112,7 @@ private fun VultBackupSummaryScreen(
             state = if (state.isConsentChecked)
                 VsButtonState.Enabled else
                 VsButtonState.Disabled,
+            variant = VsButtonVariant.Secondary,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
