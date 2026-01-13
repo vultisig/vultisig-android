@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.api.swapAggregators
 
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper
 import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper.requireEthereumSpec
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
@@ -25,7 +25,7 @@ class OneInchSwap(
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): List<String> {
-        val inputData = getPreSignedInputData(swapPayload.quote.tx, keysignPayload, nonceIncrement)
+        val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload, nonceIncrement)
 
         val chain = swapPayload.fromCoin.chain
         val coinType = keysignPayload.coin.coinType
@@ -34,40 +34,40 @@ class OneInchSwap(
     }
 
     fun getSignedTransaction(
-        swapPayloadQuoteTx: OneInchSwapTxJson,
+        swapPayload: EVMSwapPayloadJson,
         keysignPayload: KeysignPayload,
         signatures: Map<String, KeysignResponse>,
         nonceIncrement: BigInteger,
     ): SignedTransactionResult {
-        val inputData = getPreSignedInputData(swapPayloadQuoteTx, keysignPayload, nonceIncrement)
+        val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload, nonceIncrement)
         val helper =
             EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
         return helper.getSignedTransaction(inputData, signatures)
     }
 
     private fun getPreSignedInputData(
-        swapQuoteTx: OneInchSwapTxJson,
+        quote: EVMSwapQuoteJson,
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): ByteArray {
         val input = SigningInput.newBuilder()
-            .setToAddress(swapQuoteTx.to)
+            .setToAddress(quote.tx.to)
             .setTransaction(
                 Transaction.newBuilder()
                     .setContractGeneric(
                         Transaction.ContractGeneric.newBuilder()
                             .setAmount(
-                                swapQuoteTx.value.toBigIntegerOrNull()?.toByteArray()?.toByteString()
+                                quote.tx.value.toBigIntegerOrNull()?.toByteArray()?.toByteString()
                                     ?: BigInteger.ZERO.toByteArray().toByteString()
                             )
-                            .setData(swapQuoteTx.data.removePrefix("0x").toHexBytesInByteString())
+                            .setData(quote.tx.data.removePrefix("0x").toHexBytesInByteString())
                     )
             )
 
-        val gasPrice = maxOf(swapQuoteTx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO,
+        val gasPrice = maxOf(quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO,
             requireEthereumSpec(keysignPayload.blockChainSpecific).maxFeePerGasWei)
         val gas = maxOf(
-            (swapQuoteTx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
+            (quote.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
             requireEthereumSpec(keysignPayload.blockChainSpecific).gasLimit
         )
         return EthereumGasHelper.setGasParameters(

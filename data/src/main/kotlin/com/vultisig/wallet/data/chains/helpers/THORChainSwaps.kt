@@ -32,11 +32,11 @@ class THORChainSwaps(
     }
 
     private fun getPreSignedInputData(
-        swapPayloadSourceChain:  Chain,
+        swapPayload: THORChainSwapPayload,
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): ByteArray {
-        when (swapPayloadSourceChain) {
+        when (swapPayload.fromCoin.chain) {
              Chain.ThorChain -> {
                 return ThorchainSwapHelper()
                     .getSwapPreSignedInputData(keysignPayload)
@@ -98,7 +98,7 @@ class THORChainSwaps(
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): List<String> {
-        val inputData = getPreSignedInputData(swapPayload.fromCoin.chain, keysignPayload, nonceIncrement)
+        val inputData = getPreSignedInputData(swapPayload, keysignPayload, nonceIncrement)
 
         val chain = swapPayload.fromCoin.chain
         val coinType = keysignPayload.coin.coinType
@@ -156,13 +156,13 @@ class THORChainSwaps(
     }
 
     fun getSignedTransaction(
-        swapPayloadSourceChain: Chain,
+        swapPayload: THORChainSwapPayload,
         keysignPayload: KeysignPayload,
         signatures: Map<String, KeysignResponse>,
         nonceIncrement: BigInteger,
     ): SignedTransactionResult {
-        val inputData = getPreSignedInputData(swapPayloadSourceChain, keysignPayload, nonceIncrement)
-        when (swapPayloadSourceChain) {
+        val inputData = getPreSignedInputData(swapPayload, keysignPayload, nonceIncrement)
+        when (swapPayload.fromCoin.chain) {
             Chain.ThorChain -> {
                 return ThorChainHelper.thor(vaultHexPublicKey, vaultHexChainCode)
                     .getSignedTransaction(
