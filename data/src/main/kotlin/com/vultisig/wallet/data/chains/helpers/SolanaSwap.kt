@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
@@ -19,29 +20,29 @@ class SolanaSwap(
 ) {
 
     fun getPreSignedImageHash(
-        swapPayloadData: EVMSwapPayloadJson,
+        swapPayload: EVMSwapPayloadJson,
         keysignPayload: KeysignPayload,
     ): List<String> {
-        val inputData = getPreSignedInputData(swapPayloadData.quote.tx.data, keysignPayload)
-        val chain = swapPayloadData.fromCoin.chain
+        val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload)
+        val chain = swapPayload.fromCoin.chain
         val coinType = keysignPayload.coin.coinType
         return Swaps.getPreSignedImageHash(inputData, coinType, chain)
     }
 
     fun getSignedTransaction(
-        swapQuoteTxData: String,
+        swapPayload: EVMSwapPayloadJson,
         keysignPayload: KeysignPayload,
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
 
         val inputData =
-            getPreSignedInputData(swapQuoteTxData, keysignPayload)
+            getPreSignedInputData(swapPayload.quote, keysignPayload)
         val helper = SolanaHelper(vaultHexPublicKey)
         return helper.getSwapSignedTransaction(inputData, signatures)
     }
 
     private fun getPreSignedInputData(
-        swapQuoteTxData: String,
+        quote: EVMSwapQuoteJson,
         keysignPayload: KeysignPayload,
     ): ByteArray {
         if (keysignPayload.coin.chain != Chain.Solana)
@@ -51,7 +52,7 @@ class SolanaSwap(
             ?: error("Invalid blockChainSpecific")
 
         val recentBlockHash = solanaSpecific.recentBlockHash
-        val updatedTxData = Base64.decode(swapQuoteTxData)
+        val updatedTxData = Base64.decode(quote.tx.data)
 
         val decodedData = TransactionDecoder.decode(SOLANA, updatedTxData)
         val decodedOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData).checkError()

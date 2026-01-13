@@ -188,7 +188,7 @@ object SigningHelper {
                 is SwapPayload.ThorChain -> {
                     return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                         .getSignedTransaction(
-                            swapPayload.data.fromCoin.chain,
+                            swapPayload.data,
                             keysignPayload,
                             signatures,
                             nonceAcc
@@ -199,11 +199,11 @@ object SigningHelper {
                     return if (keysignPayload.blockChainSpecific is BlockChainSpecific.Solana)
                         SolanaSwap(vault.pubKeyEDDSA)
                             .getSignedTransaction(
-                                swapPayload.data.quote.tx.data, keysignPayload, signatures
+                                swapPayload.data, keysignPayload, signatures
                             )
                     else OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
                         .getSignedTransaction(
-                            swapPayload.data.quote.tx,
+                            swapPayload.data,
                             keysignPayload,
                             signatures,
                             nonceAcc
@@ -215,7 +215,7 @@ object SigningHelper {
         } else if (swapPayload != null && swapPayload is SwapPayload.MayaChain && !swapPayload.srcToken.isNativeToken) {
             return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                 .getSignedTransaction(
-                    swapPayload.data.fromCoin.chain,
+                    swapPayload.data,
                     keysignPayload,
                     signatures,
                     nonceAcc
