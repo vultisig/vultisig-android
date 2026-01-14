@@ -30,11 +30,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import tss.KeysignResponse
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -54,15 +51,9 @@ class SchnorrKeysign(
     val localPartyID: String = vault.localPartyID
     val publicKeyEdDSA: String = vault.pubKeyEDDSA
     var messenger: TssMessenger? = null
-    var keysignDoneIndicator = false
-    val keySignLock = ReentrantLock()
     val cache = mutableMapOf<String, Any>()
     val signatures = mutableMapOf<String, KeysignResponse>()
     var keyshare: ByteArray = byteArrayOf()
-
-    fun isKeysignDone(): Boolean = keySignLock.withLock { keysignDoneIndicator }
-
-    fun setKeysignDone(status: Boolean) = keySignLock.withLock { keysignDoneIndicator = status }
 
     fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
@@ -165,19 +156,14 @@ class SchnorrKeysign(
         }
     }
 
-    suspend fun processSchnorrOutboundMessage(handle: Handle) {
+    fun processSchnorrOutboundMessage(handle: Handle) {
         while (true) {
             val (result, outboundMessage) = getSchnorrOutboundMessage(handle)
             if (result != LIB_OK) {
                 println("fail to get outbound message")
             }
             if (outboundMessage.isEmpty()) {
-                if (isKeysignDone()) {
-                    println("EdDSA keysign finished")
-                    return
-                }
-                delay(100)
-                continue
+                return
             }
             val message = outboundMessage.toGoSlice()
             val encodedOutboundMessage = Base64.encode(outboundMessage)
@@ -221,8 +207,6 @@ class SchnorrKeysign(
                 error("timeout: Schnorr keysign did not finish within 60 seconds")
             }
         }
-
-        return false
     }
 
     suspend fun processInboundMessage(
@@ -239,7 +223,7 @@ class SchnorrKeysign(
             }
             println("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
             val decryptedBody = encryption.decrypt(
-                Base64.Default.decode(msg.body),
+                Base64.decode(msg.body),
                 Numeric.hexStringToByteArray(encryptionKeyHex)
             ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
@@ -251,6 +235,7 @@ class SchnorrKeysign(
             }
             cache[key] = Any()
             deleteMessageFromServer(msg.hash, messageID)
+            processSchnorrOutboundMessage(handle)
             if (isFinished[0] != 0) {
                 return true
             }
@@ -263,7 +248,6 @@ class SchnorrKeysign(
     }
 
     suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
-        setKeysignDone(false)
         val msgHash = messageToSign.md5()
         val localMessenger = TssMessenger(
             mediatorURL, sessionID, encryptionKeyHex, sessionApi,
@@ -289,10 +273,10 @@ class SchnorrKeysign(
                     messageId = msgHash
                 )
             } else {
-                keysignSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID,msgHash)
+                keysignSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, msgHash)
                     .let {
                         encryption.decrypt(
-                            Base64.Default.decode(it),
+                            Base64.decode(it),
                             Numeric.hexStringToByteArray(encryptionKeyHex)
                         )!!
                     }.let {
@@ -304,8 +288,7 @@ class SchnorrKeysign(
             if (signingMsg != messageToSign) {
                 throw RuntimeException("message doesn't match ($messageToSign) vs ($signingMsg)")
             }
-            val finalSetupMsgArr = keysignSetupMsg
-            val decodedSetupMsg = finalSetupMsgArr.toGoSlice()
+            val decodedSetupMsg = keysignSetupMsg.toGoSlice()
             val handler = Handle()
             val localPartyIDArr = localPartyID.toByteArray()
             val localPartySlice = localPartyIDArr.toGoSlice()
@@ -325,14 +308,10 @@ class SchnorrKeysign(
             if (sessionResult != LIB_OK) {
                 throw RuntimeException("fail to create sign session from setup message, error: $sessionResult")
             }
-            val h = handler
-            val task = CoroutineScope(Dispatchers.IO).launch {
-                processSchnorrOutboundMessage(h)
-            }
-            val isFinished = pullInboundMessages(h, msgHash)
+            processSchnorrOutboundMessage(handler)
+            val isFinished = pullInboundMessages(handler, msgHash)
             if (isFinished) {
-                setKeysignDone(true)
-                val sig = signSessionFinish(h)
+                val sig = signSessionFinish(handler)
                 val resp = KeysignResponse()
                 resp.msg = messageToSign
                 val r = sig.copyOfRange(0, 32).reversedArray()
@@ -366,7 +345,7 @@ class SchnorrKeysign(
         }
     }
 
-    suspend fun keysignWithRetry(attempt: Int) {
+    suspend fun keysignWithRetry() {
         for (msg in messageToSign) {
             keysignOneMessageWithRetry(0, msg)
         }
