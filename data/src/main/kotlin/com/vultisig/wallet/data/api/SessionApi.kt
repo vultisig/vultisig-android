@@ -10,6 +10,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -202,11 +203,10 @@ internal class SessionApiImpl @Inject constructor(
             retry {
                 maxRetries = 10
                 retryOnExceptionIf { _, _ -> true }
-                retryIf { _, _ -> true }
+                retryIf { _, response -> !response.status.isSuccess() }
                 delayMillis { retry -> 1000L * retry }
             }
         }
-            .throwIfUnsuccessful()
             .body()
     }
 
