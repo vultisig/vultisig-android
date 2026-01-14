@@ -20,7 +20,6 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
-import com.vultisig.wallet.ui.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,26 +68,13 @@ internal class VaultRenameViewModel @Inject constructor(
     fun saveName() {
         viewModelScope.launch {
             val error = validateName(renameTextFieldState.text.toString())
-            if (error != null)
+            if (error != null) {
+                uiState.update { it.copy(errorMessage = error) }
                 return@launch
+            }
             vault.value?.let { vault ->
                 val newName = renameTextFieldState.text.toString()
-                if (newName.isEmpty() || newName.length > TextFieldUtils.VAULT_NAME_MAX_LENGTH) {
-                    snackbarFlow.showMessage(
-                        StringResource(R.string.rename_vault_invalid_name).asString(context)
-                    )
-                    return@launch
-                }
                 isLoading = true
-                val isNameAlreadyExist =
-                    vaultRepository.getAll().any { it.name == newName }
-                if (isNameAlreadyExist) {
-                    snackbarFlow.showMessage(
-                        StringResource(R.string.vault_edit_this_name_already_exist).asString(context)
-                    )
-                    isLoading = false
-                    return@launch
-                }
                 vaultRepository.setVaultName(vault.id, newName)
                 navigator.route(
                     Route.Home(),
