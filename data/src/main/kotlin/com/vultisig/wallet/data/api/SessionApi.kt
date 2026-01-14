@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import com.vultisig.wallet.data.mediator.Message
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.retry
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -196,6 +197,13 @@ internal class SessionApiImpl @Inject constructor(
             }
             if (!messageId2.isNullOrEmpty()) {
                 header(MESSAGE_ID_2_HEADER_TITLE, messageId2)
+            }
+
+            retry {
+                maxRetries = 10
+                retryOnExceptionIf { _, _ -> true }
+                retryIf { _, _ -> true }
+                delayMillis { retry -> 1000L * retry }
             }
         }
             .throwIfUnsuccessful()
