@@ -31,11 +31,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import tss.KeysignResponse
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -64,16 +61,8 @@ class DKLSKeysign(
             encryption = encryption,
             isEncryptionGCM = true
         )
-    private var keysignDoneIndicator = false
-    private val keySignLock = ReentrantLock()
     private val cache = mutableMapOf<String, Any>()
     val signatures = mutableMapOf<String, KeysignResponse>()
-
-    private fun isKeysignDone(): Boolean = keySignLock.withLock { keysignDoneIndicator }
-
-    private fun setKeysignDone(status: Boolean) =
-        keySignLock.withLock { keysignDoneIndicator = status }
-
     private fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
             if (ks.pubKey == publicKeyECDSA) {
@@ -119,16 +108,17 @@ class DKLSKeysign(
             val keyIdSlice = keyIdArr.toGoSlice()
             val byteArray = DklsHelper.arrayToBytes(keysignCommittee)
             val ids = byteArray.toGoSlice()
-            var chainPathSlice: go_slice? = null
-            when(vault.libType){
+            var chainPathSlice: go_slice?
+            when (vault.libType) {
                 SigningLibType.DKLS -> {
                     val chainPathArr = chainPath.replace("'", "").toByteArray(Charsets.UTF_8)
                     chainPathSlice = chainPathArr.toGoSlice()
                 }
 
-                SigningLibType.KeyImport-> {
+                SigningLibType.KeyImport -> {
                     chainPathSlice = null
                 }
+
                 else -> {
                     error("unsupported lib type for DKLS keysign: ${vault.libType}")
                 }
@@ -136,8 +126,7 @@ class DKLSKeysign(
 
 
             val decodedMsgData = message.hexToByteArray()
-            val msgArr = decodedMsgData
-            val msgSlice = msgArr.toGoSlice()
+            val msgSlice = decodedMsgData.toGoSlice()
             val err = dkls_sign_setupmsg_new(keyIdSlice, chainPathSlice, msgSlice, ids, buf)
             if (err != LIB_OK) {
                 error("fail to setup keysign message, dkls error: $err")
@@ -196,19 +185,14 @@ class DKLSKeysign(
         }
     }
 
-    private suspend fun processDKLSOutboundMessage(handle: Handle) {
+    private fun processDKLSOutboundMessage(handle: Handle) {
         while (true) {
             val (result, outboundMessage) = getDKLSOutboundMessage(handle)
             if (result != LIB_OK) {
                 println("fail to get outbound message, $result")
             }
             if (outboundMessage.isEmpty()) {
-                if (isKeysignDone()) {
-                    println("DKLS ECDSA keysign finished")
-                    return
-                }
-                delay(100)
-                continue
+                return
             }
             val message = outboundMessage.toGoSlice()
             val encodedOutboundMessage = Base64.encode(outboundMessage)
@@ -219,7 +203,7 @@ class DKLSKeysign(
                 }
                 val receiverString = String(receiverArray, Charsets.UTF_8)
                 println("sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}")
-                messenger?.send(localPartyID, receiverString, encodedOutboundMessage)
+                messenger.send(localPartyID, receiverString, encodedOutboundMessage)
             }
         }
     }
@@ -240,11 +224,9 @@ class DKLSKeysign(
                 } else {
                     delay(100)
                 }
-            }
-            catch (e: CancellationException) {
+            } catch (e: CancellationException) {
                 throw e
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")
             }
 
@@ -253,8 +235,6 @@ class DKLSKeysign(
                 error("timeout: failed to create vault within 60 seconds")
             }
         }
-
-        return false
     }
 
     private suspend fun processInboundMessage(
@@ -271,7 +251,7 @@ class DKLSKeysign(
             }
             println("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
             val decryptedBody = encryption.decrypt(
-                Base64.Default.decode(msg.body),
+                Base64.decode(msg.body),
                 Numeric.hexStringToByteArray(encryptionKeyHex)
             ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
@@ -283,6 +263,7 @@ class DKLSKeysign(
             }
             cache[key] = Any()
             deleteMessageFromServer(msg.hash, messageID)
+            processDKLSOutboundMessage(handle)
             if (isFinished[0] != 0) {
                 return true
             }
@@ -295,7 +276,6 @@ class DKLSKeysign(
     }
 
     private suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
-        setKeysignDone(false)
         val msgHash = messageToSign.md5()
         val localMessenger = TssMessenger(
             mediatorURL, sessionID, encryptionKeyHex,
@@ -324,7 +304,7 @@ class DKLSKeysign(
                 keysignSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, msgHash)
                     .let {
                         encryption.decrypt(
-                            Base64.Default.decode(it),
+                            Base64.decode(it),
                             Numeric.hexStringToByteArray(encryptionKeyHex)
                         )!!
                     }.let {
@@ -336,8 +316,7 @@ class DKLSKeysign(
             if (signingMsg != messageToSign) {
                 error("message doesn't match ($messageToSign) vs ($signingMsg)")
             }
-            val finalSetupMsgArr = keysignSetupMsg
-            val decodedSetupMsg = finalSetupMsgArr.toGoSlice()
+            val decodedSetupMsg = keysignSetupMsg.toGoSlice()
             val handler = Handle()
             val localPartyIDArr = localPartyID.toByteArray()
             val localPartySlice = localPartyIDArr.toGoSlice()
@@ -357,12 +336,9 @@ class DKLSKeysign(
             if (sessionResult != LIB_OK) {
                 error("fail to create sign session from setup message, error: $sessionResult")
             }
-            CoroutineScope(Dispatchers.IO).launch {
-                processDKLSOutboundMessage(handler)
-            }
+            processDKLSOutboundMessage(handler)
             val isFinished = pullInboundMessages(handler, msgHash)
             if (isFinished) {
-                setKeysignDone(true)
                 val sig = dklsSignSessionFinish(handler)
                 val resp = KeysignResponse()
                 resp.msg = messageToSign
@@ -398,7 +374,7 @@ class DKLSKeysign(
         }
     }
 
-    suspend fun keysignWithRetry(attempt: Int) {
+    suspend fun keysignWithRetry() {
         for (msg in messageToSign) {
             keysignOneMessageWithRetry(0, msg)
         }

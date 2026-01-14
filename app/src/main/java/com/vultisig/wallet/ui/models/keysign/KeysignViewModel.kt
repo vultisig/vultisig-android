@@ -105,7 +105,7 @@ internal class KeysignViewModel(
 
     private var pullTssMessagesJob: Job? = null
 
-    private val signatures: MutableMap<String, tss.KeysignResponse> = mutableMapOf()
+    private val signatures: MutableMap<String, KeysignResponse> = mutableMapOf()
     private var featureFlag: FeatureFlagJson? = null
 
     private var isNavigateToHome: Boolean = false
@@ -163,7 +163,7 @@ internal class KeysignViewModel(
                         encryption = encryption,
                     )
 
-                    dkls.keysignWithRetry(0)
+                    dkls.keysignWithRetry()
 
                     this.signatures += dkls.signatures
                     if (signatures.isEmpty()) {
@@ -187,7 +187,7 @@ internal class KeysignViewModel(
                         encryption = encryption,
                     )
 
-                    schnorr.keysignWithRetry(0)
+                    schnorr.keysignWithRetry()
 
                     this.signatures += schnorr.signatures
 
