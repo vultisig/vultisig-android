@@ -122,9 +122,10 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
             maxLines = 1,
             style = Theme.brockmann.body.m.medium,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
         )
 
-        UiSpacer(1f)
+        UiSpacer(8.dp)
 
         Row(
             modifier = Modifier
