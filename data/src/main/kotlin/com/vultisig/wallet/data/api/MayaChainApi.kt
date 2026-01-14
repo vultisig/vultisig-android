@@ -10,9 +10,13 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResp
 import com.vultisig.wallet.data.api.models.cosmos.MayaChainDepositCacaoResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
+import com.vultisig.wallet.data.api.models.maya.MayaHealth
+import com.vultisig.wallet.data.api.models.maya.MayaNetworkInfoResponse
+import com.vultisig.wallet.data.api.models.maya.MayaNodeResponse
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.MAYA_STREAMING_INTERVAL
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -23,6 +27,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.http.path
@@ -60,6 +65,14 @@ interface MayaChainApi {
     suspend fun getCacaoProvider(address: String): CacaoProviderResponse
 
     suspend fun getMayaConstants(): Map<String, Long>
+
+    suspend fun getAllNodes(): List<MayaNodeResponse>
+
+    suspend fun getNodeDetails(address: String): MayaNodeResponse
+
+    suspend fun getNetworkInfo(): MayaNetworkInfoResponse
+
+    suspend fun getHealth(): MayaHealth
 }
 
 internal class MayaChainApiImp @Inject constructor(
@@ -82,7 +95,7 @@ internal class MayaChainApiImp @Inject constructor(
 
     override suspend fun getUnStakeCacaoBalance(address: String): String? {
         return try {
-            val request = httpClient.get("https://midgard.mayachain.info") {
+            val request = httpClient.get(MAYA_NODE_URL_INFO) {
                 url {
                     path(
                         "v2",
@@ -144,7 +157,7 @@ internal class MayaChainApiImp @Inject constructor(
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response = httpClient
-            .get("https://mayanode.mayachain.info/auth/accounts/$address") {
+            .get("$MAYA_NODE_URL_INFO/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
             }
         val responseBody = response.body<THORChainAccountResultJson>()
@@ -155,7 +168,7 @@ internal class MayaChainApiImp @Inject constructor(
     override suspend fun broadcastTransaction(tx: String): String? {
         try {
             val response =
-                httpClient.post("https://mayanode.mayachain.info/cosmos/tx/v1beta1/txs") {
+                httpClient.post("$MAYA_NODE_URL_INFO/cosmos/tx/v1beta1/txs") {
                     contentType(ContentType.Application.Json)
                     header(xClientID, xClientIDValue)
                     setBody(tx)
@@ -174,7 +187,7 @@ internal class MayaChainApiImp @Inject constructor(
 
     override suspend fun getLatestBlock(): MayaLatestBlockInfoResponse {
         try {
-            val response = httpClient.get("https://mayanode.mayachain.info/blocks/latest")
+            val response = httpClient.get("$MAYA_NODE_URL_INFO/blocks/latest")
             val responseBody = response.body<MayaLatestBlockInfoResponse>()
             Timber.d("getLatestBlock: $responseBody")
             return responseBody
@@ -187,7 +200,7 @@ internal class MayaChainApiImp @Inject constructor(
     override suspend fun getCacaoProvider(address: String): CacaoProviderResponse {
         try {
             val response = httpClient
-                .get("https://mayanode.mayachain.info/mayachain/cacao_provider/$address")
+                .get("$MAYA_NODE_URL_INFO/mayachain/cacao_provider/$address")
 
             val body = response.body<CacaoProviderResponse>()
             Timber.d("getCacaoProvider: $body")
@@ -200,7 +213,7 @@ internal class MayaChainApiImp @Inject constructor(
 
     override suspend fun getMayaConstants(): Map<String, Long> {
         try {
-            val response = httpClient.get("https://mayanode.mayachain.info/mayachain/mimir")
+            val response = httpClient.get("$MAYA_NODE_URL_INFO/mayachain/mimir")
             val body = response.body<Map<String, Long>>()
             Timber.d("getMayaConstants: $body")
             return body
@@ -210,4 +223,48 @@ internal class MayaChainApiImp @Inject constructor(
         }
     }
 
+    override suspend fun getAllNodes(): List<MayaNodeResponse> {
+        return httpClient.get(MAYA_NODE_URL_INFO) {
+            header(xClientID, xClientIDValue)
+            contentType(ContentType.Application.Json)
+            url {
+                appendPathSegments("/mayachain/nodes")
+            }
+        }.bodyOrThrow<List<MayaNodeResponse>>()
+    }
+
+    override suspend fun getNodeDetails(address: String): MayaNodeResponse {
+        return httpClient.get(MAYA_NODE_URL_INFO) {
+            header(xClientID, xClientIDValue)
+            contentType(ContentType.Application.Json)
+            url {
+                appendPathSegments("/mayachain/node/$address")
+            }
+        }.bodyOrThrow<MayaNodeResponse>()
+    }
+
+    override suspend fun getNetworkInfo(): MayaNetworkInfoResponse {
+        return httpClient.get(MAYA_MIDGARD_URL_INFO) {
+            header(xClientID, xClientIDValue)
+            contentType(ContentType.Application.Json)
+            url {
+                appendPathSegments("/network")
+            }
+        }.bodyOrThrow<MayaNetworkInfoResponse>()
+    }
+
+    override suspend fun getHealth(): MayaHealth {
+        return httpClient.get(MAYA_MIDGARD_URL_INFO) {
+            header(xClientID, xClientIDValue)
+            contentType(ContentType.Application.Json)
+            url {
+                appendPathSegments("/health")
+            }
+        }.bodyOrThrow<MayaHealth>()
+    }
+
+    private companion object {
+        private const val MAYA_NODE_URL_INFO = "https://mayanode.mayachain.info"
+        private const val MAYA_MIDGARD_URL_INFO = "https://midgard.mayachain.info/v2"
+    }
 }

@@ -41,7 +41,8 @@ class ThorchainBondUseCaseImpl @Inject constructor(
         flow {
             try {
                 // First get cache nodes and emit
-                val cachedNodes = activeBondedNodeRepository.getBondedNodes(vaultId)
+                val coinId = Coins.ThorChain.RUNE.id
+                val cachedNodes = activeBondedNodeRepository.getBondedNodesByCoinId(vaultId, coinId)
                 if (cachedNodes.isNotEmpty()) {
                     Timber.d("ThorchainBondUseCase: Emitting ${cachedNodes.size} cached bonded nodes for vault $vaultId")
                     emit(cachedNodes)
@@ -49,19 +50,10 @@ class ThorchainBondUseCaseImpl @Inject constructor(
 
                 // Fetch remote and update cache if require
                 val freshNodes = getActiveNodesRemote(address)
-
                 Timber.d("ThorchainBondUseCase: Emitting ${freshNodes.size} fresh bonded nodes for vault $vaultId")
-
-                if (freshNodes.isEmpty()) {
-                    Timber.d("ThorchainBondUseCase: Clearing bonded nodes cache for vault $vaultId (remote is empty)")
-                    activeBondedNodeRepository.deleteBondedNodes(vaultId)
-                } else {
-                    // Replace cache with new data
-                    activeBondedNodeRepository.deleteBondedNodes(vaultId)
-                    activeBondedNodeRepository.saveBondedNodes(vaultId, freshNodes)
-                }
-
                 emit(freshNodes)
+
+                activeBondedNodeRepository.saveBondedNodes(vaultId, freshNodes)
             } catch (e: Exception) {
                 Timber.e(e, "ThorchainBondUseCase: Error fetching bonded nodes for vault $vaultId")
 

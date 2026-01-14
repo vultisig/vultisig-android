@@ -4,6 +4,7 @@
     <string name="deposit_option_bond">绑定</string>
     <string name="deposit_option_unbond">解绑</string>
     <string name="total_bonded_rune">总绑定 Rune</string>
+    <string name="total_bonded_token">总绑定 %s</string>
     <string name="bonded_amount">已绑定: %s</string>
     <string name="bond_to_node">绑定到节点</string>
     <string name="node_address_formatted">地址: %s</string>
