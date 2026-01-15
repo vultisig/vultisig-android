@@ -10,6 +10,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.isSuccess
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -206,12 +207,20 @@ internal class SessionApiImpl @Inject constructor(
                 }
                 if (response.status.isSuccess()) {
                     return response.body()
+                } else {
+                    lastException = Exception("HTTP ${response.status.value}: ${response.status.description}")
                 }
+            } catch (e: CancellationException) {
+                Timber.e("Retry setup-message cancelled exceptions")
+                throw e
             } catch (e: Exception) {
+                Timber.e("Retry setup-message request failed")
                 lastException = e
             }
-            delay(1000L * (attempt + 1))
-            Timber.e("Retry setup-message request attempt: $attempt")
+            if (attempt < MAX_RETRIES - 1) {
+                Timber.e("Retry setup-message request attempt: ${attempt + 1}")
+                delay(1000L * (attempt + 1))
+            }
         }
         throw lastException ?: Exception("Failed to get setup message after $MAX_RETRIES retries")
     }
