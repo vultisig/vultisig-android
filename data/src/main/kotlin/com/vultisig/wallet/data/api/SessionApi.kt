@@ -10,13 +10,13 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.isSuccess
-import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface SessionApi {
     suspend fun checkCommittee(serverUrl: String, sessionId: String): List<String>
@@ -219,7 +219,7 @@ internal class SessionApiImpl @Inject constructor(
             }
             if (attempt < MAX_RETRIES - 1) {
                 Timber.e("Retry setup-message request attempt: ${attempt + 1}")
-                delay(1000L * (attempt + 1))
+                delay(1000L)
             }
         }
         throw lastException ?: Exception("Failed to get setup message after $MAX_RETRIES retries")
