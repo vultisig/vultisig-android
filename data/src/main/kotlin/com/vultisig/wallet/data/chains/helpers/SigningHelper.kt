@@ -17,13 +17,20 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import vultisig.keysign.v1.CustomMessagePayload
+import wallet.core.jni.EthereumAbi
 import java.math.BigInteger
 
 object SigningHelper {
+    private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
+
     @OptIn(ExperimentalStdlibApi::class)
     fun getKeysignMessages(
         messagePayload: CustomMessagePayload
     ): List<String> {
+        if (messagePayload.method.equals(ETH_SIGN_TYPED_DATA_V4, ignoreCase = true)) {
+            return getKeysignMessagesForTypedData(messagePayload.message)
+        }
+
         val processedBytes = if (messagePayload.message.isHex()) {
             messagePayload.message.toHexBytes()
         } else {
@@ -34,6 +41,12 @@ object SigningHelper {
                 .toKeccak256ByteArray()
                 .toHexString()
         )
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    private fun getKeysignMessagesForTypedData(message: String): List<String> {
+        val hash = EthereumAbi.encodeTyped(message)
+        return listOf(hash.toHexString())
     }
 
     fun getKeysignMessages(
