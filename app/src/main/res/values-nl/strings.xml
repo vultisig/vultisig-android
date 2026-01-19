@@ -208,10 +208,11 @@
     <string name="swap_screen_provider_title">Leverancier</string>
     <string name="swap_form_minimum_amount">Wisselbedrag te klein. Aanbevolen bedrag: %1$s %2$s</string>
     <string name="backup_password_screen_title">Back-up</string>
-    <string name="import_file_screen_password_error">Wachtwoord is niet correct.</string>
+    <string name="import_file_screen_password_error">Onjuist wachtwoord, probeer het opnieuw.</string>
     <string name="add_vault_save">Opslaan</string>
     <string name="backup_password_screen_enter_password">Voer wachtwoord in</string>
-    <string name="import_file_screen_enter_password">Voer wachtwoord in</string>
+    <string name="import_file_screen_enter_password">Voer het wachtwoord voor de gedeelde kluis in.</string>
+    <string name="import_file_screen_enter_password_sub">Dit wachtwoord is ingesteld toen de kluis werd geëxporteerd.</string>
     <string name="import_file_screen_hint_password">Wachtwoord</string>
     <string name="import_file_screen_ok">OK</string>
     <string name="import_file_screen_cancel">Annuleren</string>

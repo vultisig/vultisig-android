@@ -253,10 +253,11 @@
     <string name="swap_for_provider_li_fi" translatable="false">LI.FI</string>
     <string name="swap_for_provider_jupiter" translatable="false">Jupiter</string>
     <string name="backup_password_screen_title">Backup</string>
-    <string name="import_file_screen_password_error">Password is not correct.</string>
+    <string name="import_file_screen_password_error">Incorrect password, try again</string>
     <string name="add_vault_save">Save</string>
     <string name="backup_password_screen_enter_password">Enter Password</string>
-    <string name="import_file_screen_enter_password">Enter Password</string>
+    <string name="import_file_screen_enter_password">Enter Vault Share Password</string>
+    <string name="import_file_screen_enter_password_sub">This password was set when the vault share was exported.</string>
     <string name="import_file_screen_hint_password">Password</string>
     <string name="import_file_screen_ok">OK</string>
     <string name="import_file_screen_cancel">Cancel</string>

@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal data class KeysignPasswordUiModel(
+data class KeysignPasswordUiModel(
     val isPasswordVisible: Boolean = false,
     val passwordError: UiText? = null,
     val passwordHint: UiText? = null,
