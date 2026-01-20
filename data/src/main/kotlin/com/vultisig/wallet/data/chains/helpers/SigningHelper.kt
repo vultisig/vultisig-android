@@ -46,6 +46,9 @@ object SigningHelper {
     @OptIn(ExperimentalStdlibApi::class)
     private fun getKeysignMessagesForTypedData(message: String): List<String> {
         val hash = EthereumAbi.encodeTyped(message)
+        if (hash == null || hash.isEmpty()) {
+            error("Invalid eth_signTypedData_v4 message")
+        }
         return listOf(hash.toHexString())
     }
 
