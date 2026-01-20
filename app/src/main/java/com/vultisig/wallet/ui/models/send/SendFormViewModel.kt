@@ -1064,6 +1064,12 @@ internal class SendFormViewModel @Inject constructor(
 
                 val chain = selectedAccount.token.chain
 
+                if (!chainAccountAddressRepository.isValid(chain, addressFieldState.text.toString())) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+                }
+
                 val gasFee = gasFee.value
                     ?: throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
