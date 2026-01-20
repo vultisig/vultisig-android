@@ -86,6 +86,7 @@ internal fun InputPasswordScreen(
 @Composable
 fun KeysignPasswordBottomSheet(
     state: KeysignPasswordUiModel,
+    title: String? = stringResource(R.string.keysign_password_enter_your_password),
     subtitle: String?,
     confirmButtonLabel: String = stringResource(R.string.keygen_email_continue_button),
     passwordFieldState: TextFieldState,
@@ -102,6 +103,7 @@ fun KeysignPasswordBottomSheet(
                     horizontal = 16.dp,
                     vertical = 12.dp,
                 ),
+            title = title,
             subtitle = subtitle,
             confirmButtonLabel = confirmButtonLabel,
             state = state,
@@ -118,7 +120,7 @@ fun KeysignPasswordBottomSheet(
 @Composable
 fun KeysignPasswordSheetContent(
     modifier: Modifier = Modifier,
-    title: String? = stringResource(R.string.keysign_password_enter_your_password),
+    title: String?,
     subtitle: String?,
     confirmButtonLabel: String = stringResource(R.string.keygen_email_continue_button),
     state: KeysignPasswordUiModel,
