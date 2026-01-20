@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.v2.defi.thorchain
+package com.vultisig.wallet.ui.screens.v2.defi.maya
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -34,24 +33,21 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
-import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
-import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
+import com.vultisig.wallet.ui.models.defi.MayaDefiPositionsUiModel
+import com.vultisig.wallet.ui.models.defi.MayaDefiPositionsViewModel
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
-import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
-import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
-import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun ThorchainDefiPositionsScreen(
+internal fun MayaDeFiPositionsScreen(
     vaultId: VaultId,
-    model: ThorchainDefiPositionsViewModel = hiltViewModel<ThorchainDefiPositionsViewModel>(),
+    model: MayaDefiPositionsViewModel = hiltViewModel<MayaDefiPositionsViewModel>(),
 ) {
     val state by model.state.collectAsState()
 
@@ -59,7 +55,7 @@ internal fun ThorchainDefiPositionsScreen(
         model.setData(vaultId = vaultId)
     }
 
-    ThorchainDefiPositionScreenContent(
+    MayaDefiPositionScreenContent(
         state = state,
         onBackClick = model::onBackClick,
         onClickBondToNode = model::bondToNode,
@@ -70,15 +66,12 @@ internal fun ThorchainDefiPositionsScreen(
         onCancelEditPositionClick = { model.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = model::onPositionSelectionDone,
         onPositionSelectionChange = model::onPositionSelectionChange,
-        onClickWithdraw = { model.onNavigateToFunctions(it) },
-        onClickStake = { model.onNavigateToFunctions(it) },
-        onClickUnstake = { model.onNavigateToFunctions(it) },
     )
 }
 
 @Composable
-internal fun ThorchainDefiPositionScreenContent(
-    state: ThorchainDefiPositionsUiModel = ThorchainDefiPositionsUiModel(),
+internal fun MayaDefiPositionScreenContent(
+    state: MayaDefiPositionsUiModel = MayaDefiPositionsUiModel(),
     onBackClick: () -> Unit,
     onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
@@ -87,16 +80,12 @@ internal fun ThorchainDefiPositionScreenContent(
     onCancelEditPositionClick: () -> Unit = {},
     onDonePositionClick: () -> Unit = {},
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
-    onTabSelected: (DeFiTab) -> Unit = {},
-    onClickWithdraw: (DeFiNavActions) -> Unit = {},
-    onClickStake: (DeFiNavActions) -> Unit = {},
-    onClickUnstake: (DeFiNavActions) -> Unit = {},
+    onTabSelected: (String) -> Unit = {},
 ) {
     val searchTextFieldState = remember { TextFieldState() }
 
     val tabs = listOf(
-        DeFiTab.BONDED,
-        DeFiTab.STAKED,
+        DeFiTab.BONDED.displayName,
     )
 
     V2Scaffold(
@@ -110,10 +99,10 @@ internal fun ThorchainDefiPositionScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BalanceBanner(
-                title = Chain.ThorChain.raw,
+                title = Chain.MayaChain.raw,
                 isLoading = state.isTotalAmountLoading,
                 totalValue = state.totalAmountPrice,
-                image = R.drawable.referral_data_banner,
+                image = R.drawable.maya_defi_banner,
                 isBalanceVisible = state.isBalanceVisible,
             )
 
@@ -122,14 +111,13 @@ internal fun ThorchainDefiPositionScreenContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 VsTabGroup(
-                    index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }
+                    index = tabs.indexOf(state.selectedTab)
                 ) {
                     tabs.forEach { tab ->
                         tab {
                             VsTab(
-                                label = stringResource(tab.displayNameRes),
+                                label = tab,
                                 onClick = {
                                     onTabSelected(tab)
                                 },
@@ -137,7 +125,6 @@ internal fun ThorchainDefiPositionScreenContent(
                         }
                     }
                 }
-
 
                 V2Container(
                     type = ContainerType.SECONDARY,
@@ -158,7 +145,7 @@ internal fun ThorchainDefiPositionScreenContent(
             if (state.showPositionSelectionDialog) {
                 PositionsSelectionDialog(
                     bondPositions = state.bondPositionsDialog,
-                    stakePositions = state.stakingPositionsDialog,
+                    stakePositions = emptyList(),
                     selectedPositions = state.tempSelectedPositions,
                     searchTextFieldState = searchTextFieldState,
                     onPositionSelectionChange = onPositionSelectionChange,
@@ -168,7 +155,7 @@ internal fun ThorchainDefiPositionScreenContent(
             }
 
             when (state.selectedTab) {
-                DeFiTab.BONDED.displayNameRes -> {
+                MayaDefiTab.BONDED.displayName -> {
                     if (!state.selectedPositions.hasBondPositions()) {
                         NoPositionsContainer(
                             onManagePositionsClick = onEditPositionClick
@@ -176,8 +163,8 @@ internal fun ThorchainDefiPositionScreenContent(
                     } else {
                         BondedTabContent(
                             bondToNodeOnClick = onClickBondToNode,
-                            icon = R.drawable.rune,
-                            tokenName = "RUNE",
+                            icon = R.drawable.cacao,
+                            tokenName = "CACAO",
                             state = state.bonded,
                             isVisible = state.isBalanceVisible,
                             onClickBond = onClickBond,
@@ -185,41 +172,19 @@ internal fun ThorchainDefiPositionScreenContent(
                         )
                     }
                 }
-
-                DeFiTab.STAKED.displayNameRes -> {
-                    if (!state.selectedPositions.hasStakingPositions()) {
-                        NoPositionsContainer(
-                            onManagePositionsClick = onEditPositionClick
-                        )
-                    } else {
-                        StakingTabContent(
-                            state = state.staking,
-                            onClickStake = onClickStake,
-                            onClickUnstake = onClickUnstake,
-                            onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) },
-                            isBalanceVisible = state.isBalanceVisible,
-                        )
-                    }
-                }
-
-                DeFiTab.LP.displayNameRes -> {
-                    NoPositionsContainer(
-                        onManagePositionsClick = onEditPositionClick
-                    )
-                }
             }
-            
+
             UiSpacer(size = 16.dp)
         }
     }
 }
 
 @Composable
-@Preview(showBackground = true, name = "DeFi Positions - Empty")
-private fun ThorchainDefiPositionsScreenPreviewEmpty() {
-    ThorchainDefiPositionScreenContent(
+@Preview(showBackground = true, name = "Maya DeFi Positions - Empty")
+private fun MayaDeFiPositionsScreenPreviewEmpty() {
+    MayaDefiPositionScreenContent(
         onBackClick = { },
-        state = ThorchainDefiPositionsUiModel(),
+        state = MayaDefiPositionsUiModel(),
         onClickBond = {},
         onClickUnbond = {},
         onClickBondToNode = {},
@@ -228,46 +193,46 @@ private fun ThorchainDefiPositionsScreenPreviewEmpty() {
 }
 
 @Composable
-@Preview(showBackground = true, name = "DeFi Positions - With Data")
-private fun ThorchainDefiPositionsScreenPreviewWithData() {
+@Preview(showBackground = true, name = "Maya DeFi Positions - With Data")
+private fun MayaDeFiPositionsScreenPreviewWithData() {
     val mockNodes = listOf(
         BondedNodeUiModel(
-            address = "thor1abcd...xyz",
+            address = "maya1abcd...xyz",
             fullAddress = "",
             status = BondNodeState.ACTIVE,
-            apy = "12.5%",
-            bondedAmount = "1000 RUNE",
-            nextAward = "20 RUNE",
-            nextChurn = "Oct 15, 25"
+            apy = "15.2%",
+            bondedAmount = "1500 MAYA",
+            nextAward = "30 MAYA",
+            nextChurn = "Nov 10, 25"
         ),
         BondedNodeUiModel(
-            address = "thor1efgh...123",
+            address = "maya1efgh...123",
             fullAddress = "",
             status = BondNodeState.STANDBY,
-            apy = "11.2%",
-            bondedAmount = "500 RUNE",
-            nextAward = "10 RUNE",
-            nextChurn = "Oct 16, 25"
+            apy = "14.5%",
+            bondedAmount = "800 MAYA",
+            nextAward = "18 MAYA",
+            nextChurn = "Nov 11, 25"
         ),
         BondedNodeUiModel(
-            address = "thor1ijkl...456",
+            address = "maya1ijkl...456",
             fullAddress = "",
             status = BondNodeState.READY,
-            apy = "10.8%",
-            bondedAmount = "750 RUNE",
-            nextAward = "15 RUNE",
-            nextChurn = "Oct 17, 25"
+            apy = "13.8%",
+            bondedAmount = "1200 MAYA",
+            nextAward = "25 MAYA",
+            nextChurn = "Nov 12, 25"
         )
     )
 
-    ThorchainDefiPositionScreenContent(
+    MayaDefiPositionScreenContent(
         onBackClick = { },
-        state = ThorchainDefiPositionsUiModel(
-            totalAmountPrice = "$3,250.00",
-            selectedTab = DeFiTab.BONDED.displayNameRes,
+        state = MayaDefiPositionsUiModel(
+            totalAmountPrice = "$4,850.00",
+            selectedTab = MayaDefiTab.BONDED.displayName,
             bonded = BondedTabUiModel(
                 isLoading = false,
-                totalBondedAmount = "2250 RUNE",
+                totalBondedAmount = "3500 MAYA",
                 nodes = mockNodes
             )
         ),
@@ -279,11 +244,11 @@ private fun ThorchainDefiPositionsScreenPreviewWithData() {
 }
 
 @Composable
-@Preview(showBackground = true, name = "DeFi Positions - Loading")
-private fun ThorchainDefiPositionsScreenPreviewLoading() {
-    ThorchainDefiPositionScreenContent(
+@Preview(showBackground = true, name = "Maya DeFi Positions - Loading")
+private fun MayaDeFiPositionsScreenPreviewLoading() {
+    MayaDefiPositionScreenContent(
         onBackClick = { },
-        state = ThorchainDefiPositionsUiModel(
+        state = MayaDefiPositionsUiModel(
             bonded = BondedTabUiModel(
                 isLoading = true
             )
@@ -295,3 +260,40 @@ private fun ThorchainDefiPositionsScreenPreviewLoading() {
     )
 }
 
+@Composable
+@Preview(showBackground = true, name = "Maya DeFi Positions - Hidden Balance")
+private fun MayaDeFiPositionsScreenPreviewHiddenBalance() {
+    val mockNodes = listOf(
+        BondedNodeUiModel(
+            address = "maya1abcd...xyz",
+            fullAddress = "",
+            status = BondNodeState.ACTIVE,
+            apy = "15.2%",
+            bondedAmount = "1500 MAYA",
+            nextAward = "30 MAYA",
+            nextChurn = "Nov 10, 25"
+        )
+    )
+
+    MayaDefiPositionScreenContent(
+        onBackClick = { },
+        state = MayaDefiPositionsUiModel(
+            totalAmountPrice = "$4,850.00",
+            isBalanceVisible = false,
+            selectedTab = MayaDefiTab.BONDED.displayName,
+            bonded = BondedTabUiModel(
+                isLoading = false,
+                totalBondedAmount = "3500 MAYA",
+                nodes = mockNodes
+            )
+        ),
+        onClickBond = {},
+        onClickUnbond = {},
+        onClickBondToNode = {},
+        onTabSelected = {}
+    )
+}
+
+internal enum class MayaDefiTab(val displayName: String) {
+    BONDED("Bonded");
+}

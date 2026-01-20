@@ -15,6 +15,8 @@ interface ActiveBondedNodeRepository {
 
     suspend fun getBondedNodes(vaultId: String): List<BondedNodePosition>
 
+    suspend fun getBondedNodesByCoinId(vaultId: String, coindId: String): List<BondedNodePosition>
+
     suspend fun saveBondedNode(vaultId: String, node: BondedNodePosition)
 
     suspend fun saveBondedNodes(vaultId: String, nodes: List<BondedNodePosition>)
@@ -36,6 +38,10 @@ internal class ActiveBondedNodeRepositoryImpl @Inject constructor(
 
     override suspend fun getBondedNodes(vaultId: String): List<BondedNodePosition> {
         return activeBondedNodeDao.getAllByVaultIdSuspend(vaultId).toDomainModels()
+    }
+
+    override suspend fun getBondedNodesByCoinId(vaultId: String, coindId: String): List<BondedNodePosition> {
+        return activeBondedNodeDao.getAllByVaultIdAndCoinId(vaultId, coindId).toDomainModels()
     }
 
     override suspend fun saveBondedNode(vaultId: String, node: BondedNodePosition) {

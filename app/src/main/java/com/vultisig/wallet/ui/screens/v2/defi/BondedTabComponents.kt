@@ -29,14 +29,16 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
-import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun BondedTabContent(
     bondToNodeOnClick: () -> Unit,
-    state: ThorchainDefiPositionsUiModel,
+    icon: Int,
+    tokenName: String,
+    state: BondedTabUiModel,
+    isVisible: Boolean,
     onClickBond: (String) -> Unit,
     onClickUnbond: (String) -> Unit,
 ) {
@@ -47,21 +49,21 @@ internal fun BondedTabContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         HeaderDeFiWidget(
-            title = stringResource(R.string.total_bonded_rune),
-            iconRes = R.drawable.rune,
+            title = stringResource(R.string.total_bonded_token, tokenName),
+            iconRes = icon,
             buttonText = stringResource(R.string.bond_to_node),
             onClickAction = bondToNodeOnClick,
-            totalAmount = state.bonded.totalBondedAmount,
-            isLoading = state.bonded.isLoading,
-            isBalanceVisible = state.isBalanceVisible,
+            totalAmount = state.totalBondedAmount,
+            isLoading = state.isLoading,
+            isBalanceVisible = isVisible,
         )
 
-        if (state.bonded.nodes.isNotEmpty()) {
+        if (state.nodes.isNotEmpty()) {
             ActiveNodesWidget(
-                nodes = state.bonded.nodes,
+                nodes = state.nodes,
                 onClickBond = onClickBond,
                 onClickUnbond = onClickUnbond,
-                isBalanceVisible = state.isBalanceVisible,
+                isBalanceVisible = isVisible,
             )
         }
     }
@@ -311,12 +313,13 @@ private fun BondedTabContentPreview() {
     )
     
     BondedTabContent(
-        state = ThorchainDefiPositionsUiModel(
-            bonded = BondedTabUiModel(
-                totalBondedAmount = "2600 RUNE",
-                nodes = mockNodes
-            )
+        state = BondedTabUiModel(
+            totalBondedAmount = "2600 RUNE",
+            nodes = mockNodes
         ),
+        icon = R.drawable.rune,
+        tokenName = "RUNE",
+        isVisible = true,
         bondToNodeOnClick = { },
         onClickBond = {},
         onClickUnbond = {}
@@ -327,13 +330,14 @@ private fun BondedTabContentPreview() {
 @Composable
 private fun BondedTabContentLoadingPreview() {
     BondedTabContent(
-        state = ThorchainDefiPositionsUiModel(
-            bonded = BondedTabUiModel(
-                isLoading = true,
-                totalBondedAmount = "0 RUNE",
-                nodes = emptyList()
-            )
+        state = BondedTabUiModel(
+            isLoading = true,
+            totalBondedAmount = "0 RUNE",
+            nodes = emptyList()
         ),
+        icon = R.drawable.rune,
+        tokenName = "RUNE",
+        isVisible = true,
         bondToNodeOnClick = { },
         onClickBond = {},
         onClickUnbond = {}
@@ -344,13 +348,14 @@ private fun BondedTabContentLoadingPreview() {
 @Composable
 private fun BondedTabContentEmptyPreview() {
     BondedTabContent(
-        state = ThorchainDefiPositionsUiModel(
-            bonded = BondedTabUiModel(
-                isLoading = false,
-                totalBondedAmount = "0 RUNE",
-                nodes = emptyList()
-            )
+        state = BondedTabUiModel(
+            isLoading = false,
+            totalBondedAmount = "0 RUNE",
+            nodes = emptyList()
         ),
+        icon = R.drawable.rune,
+        tokenName = "RUNE",
+        isVisible = true,
         bondToNodeOnClick = { },
         onClickBond = {},
         onClickUnbond = {}
