@@ -12,6 +12,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
@@ -32,6 +33,16 @@ internal fun NoChainFound(
         horizontalAlignment = Alignment.Companion.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+
+        UiIcon(
+            drawableResId = R.drawable.crypto,
+            size = 26.dp,
+            tint = Theme.v2.colors.primary.accent4,
+        )
+        UiSpacer(
+            size = 12.dp
+        )
+
         Text(
             text = stringResource(R.string.no_chains_found),
             style = Theme.brockmann.headings.title3,
