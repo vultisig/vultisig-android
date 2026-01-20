@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.mappers
 
+import androidx.compose.runtime.key
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
@@ -226,6 +227,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
             tronTransferContractPayload = keysignPayload.tronTransferContractPayload,
             tronTransferAssetContractPayload = keysignPayload.tronTransferAssetContractPayload,
             tronTriggerSmartContractPayload = keysignPayload.tronTriggerSmartContractPayload,
+            signSolana = keysignPayload.signSolana,
         )
     }
 

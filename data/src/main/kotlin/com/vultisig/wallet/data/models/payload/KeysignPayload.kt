@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import vultisig.keysign.v1.SignAmino
+import vultisig.keysign.v1.SignSolana
 import vultisig.keysign.v1.TronTransferAssetContractPayload
 import vultisig.keysign.v1.TronTransferContractPayload
 import vultisig.keysign.v1.TronTriggerSmartContractPayload
@@ -28,6 +29,7 @@ data class KeysignPayload(
     val tronTransferContractPayload: TronTransferContractPayload? = null,
     val tronTriggerSmartContractPayload: TronTriggerSmartContractPayload? = null,
     val tronTransferAssetContractPayload: TronTransferAssetContractPayload? = null,
+    val signSolana: SignSolana? = null,
     val skipBroadcast: Boolean = false,
     val defiAction: DeFiAction = DeFiAction.NONE,
 )
