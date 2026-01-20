@@ -114,81 +114,18 @@ private fun ImportFileScreen(
     snackBarHostState: VSSnackbarState = rememberVsSnackbarState()
 ) {
     if (uiModel.showPasswordPrompt) {
-//            KeysignPasswordSheetContent(
-//                modifier = Modifier
-//                    .padding(
-//                        horizontal = 16.dp,
-//                        vertical = 12.dp,
-//                    ),
-//                title = stringResource(R.string.keysign_password_enter_your_password),
-//                subtitle = subtitle,
-//                state = state,
-//                passwordFieldState = passwordFieldState,
-//                onPasswordVisibilityToggle = onPasswordVisibilityToggle,
-//                onContinueClick = onContinueClick,
-//                onBackClick = onBackClick,
-
-//            )
         KeysignPasswordBottomSheet(
-                subtitle = stringResource(R.string.import_file_screen_enter_password_sub),
-                confirmButtonLabel = stringResource(R.string.fast_vault_password_screen_next),
-                state = KeysignPasswordUiModel(
-                    isPasswordVisible = !uiModel.isPasswordObfuscated,
-                    passwordError = uiModel.passwordErrorHint
-                    )
-                ,
-                passwordFieldState = passwordTextFieldState,
-                onPasswordVisibilityToggle = onTogglePasswordVisibilityClick,
-                onContinueClick = onConfirmPasswordClick,
-                onBackClick = onHidePasswordPromptDialog,
-            )
-
-            //This password was set when the vault share was exported.
-//            Column(horizontalAlignment = CenterHorizontally) {
-////                Text(
-////                    text = stringResource(id = R.string.import_file_screen_enter_password),
-////                    style = Theme.menlo.subtitle1,
-////                    color = Theme.v2.colors.text.primary,
-////                )
-////                UiSpacer(size = 16.dp)
-//                FormBasicSecureTextField(
-//                    textFieldState = passwordTextFieldState,
-//                    hint = stringResource(R.string.import_file_screen_hint_password),
-//                    error = uiModel.passwordErrorHint,
-//                    onLostFocus = {},
-//                    isObfuscationMode = uiModel.isPasswordObfuscated,
-//                    content = {
-//                        IconButton(onClick = onTogglePasswordVisibilityClick) {
-//                            Icon(
-//                                modifier = Modifier.width(28.dp),
-//                                painter = painterResource(
-//                                    id = if (uiModel.isPasswordObfuscated)
-//                                        R.drawable.hidden else R.drawable.visible
-//                                ),
-//                                tint = Theme.v2.colors.neutrals.n50,
-//                                contentDescription = "change visibility button"
-//                            )
-//                        }
-//                    }
-//                )
-//
-//                TextButton(onClick = onConfirmPasswordClick) {
-//                    Text(
-//                        text = stringResource(R.string.import_file_screen_ok),
-//                        style = Theme.menlo.subtitle1,
-//                        color = Theme.v2.colors.neutrals.n50
-//                    )
-//                }
-//                HorizontalDivider()
-//                TextButton(onClick = onHidePasswordPromptDialog) {
-//                    Text(
-//                        text = stringResource(R.string.import_file_screen_cancel),
-//                        style = Theme.menlo.subtitle1,
-//                        color = Theme.v2.colors.neutrals.n50
-//                    )
-//                }
-//
-//            }
+            subtitle = stringResource(R.string.import_file_screen_enter_password_sub),
+            confirmButtonLabel = stringResource(R.string.fast_vault_password_screen_next),
+            state = KeysignPasswordUiModel(
+                isPasswordVisible = !uiModel.isPasswordObfuscated,
+                passwordError = uiModel.passwordErrorHint
+            ),
+            passwordFieldState = passwordTextFieldState,
+            onPasswordVisibilityToggle = onTogglePasswordVisibilityClick,
+            onContinueClick = onConfirmPasswordClick,
+            onBackClick = onHidePasswordPromptDialog,
+        )
     }
 
     V2Scaffold(
@@ -211,11 +148,11 @@ private fun ImportFileScreen(
                 )
         }
     ) {
-        Box{
+        Box {
             Column(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .fillMaxSize() ,
+                    .fillMaxSize(),
             ) {
 
                 Column(
@@ -363,6 +300,6 @@ private fun ImportFilePreview() {
 private fun ImportFilePasswordPromptPreview() {
     ImportFileScreen(
         uiModel = ImportFileState(showPasswordPrompt = true),
-        snackBarHostState =  rememberVsSnackbarState()
+        snackBarHostState = rememberVsSnackbarState()
     )
 }
