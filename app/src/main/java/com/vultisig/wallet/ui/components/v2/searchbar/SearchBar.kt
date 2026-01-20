@@ -156,32 +156,6 @@ internal fun SearchBar(
                 }
             )
         }
-
-
-        AnimatedContent(targetState = isFocusedState) { focused ->
-            if (focused)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    UiSpacer(
-                        size = 8.dp
-                    )
-                    Text(
-                        text = stringResource(R.string.search_bar_cancel),
-                        color = Theme.v2.colors.text.primary,
-                        style = Theme.brockmann.body.s.medium,
-                        modifier = Modifier
-                            .clickable(
-                                onClick = {
-                                    isFocusedState = false
-                                    state.clearText()
-                                    onCancelClick()
-                                }
-                            )
-                    )
-                }
-        }
-
     }
 }
 
