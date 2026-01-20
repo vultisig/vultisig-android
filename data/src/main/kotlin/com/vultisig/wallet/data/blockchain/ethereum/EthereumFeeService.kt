@@ -162,9 +162,11 @@ class EthereumFeeService @Inject constructor(
                 // Arb and Mantle requires no miner tip
                 Chain.Arbitrum, Chain.Mantle -> BigInteger.ZERO
 
+                // Blast is a dead chain, with empty blocks with 0 miner tips
+                Chain.Blast -> maxOf(rewardsFeeHistory.maxOrNull() ?: BigInteger.ZERO, DEFAULT_MAX_PRIORITY_FEE_BLAST)
+
                 // picked max from 10 previous blocks, then ensure inclusion. For l2 is quite low
                 Chain.Base,
-                Chain.Blast,
                 Chain.Optimism, -> rewardsFeeHistory.maxOrNull() ?: DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2
 
                 // polygon has min of 30 gwei, but some blocks comes with less rewards
@@ -205,6 +207,7 @@ class EthereumFeeService @Inject constructor(
 
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_POLYGON = "30".toBigInteger()
+        private val DEFAULT_MAX_PRIORITY_FEE_BLAST = BigInteger.TEN.pow(7) // 0.01 GWEI
 
         val DEFAULT_SWAP_LIMIT = "600000".toBigInteger()
         val DEFAULT_COIN_TRANSFER_LIMIT = "23000".toBigInteger()
