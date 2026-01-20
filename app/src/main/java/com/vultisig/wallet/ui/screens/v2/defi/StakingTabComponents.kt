@@ -204,19 +204,26 @@ internal fun StakingWidget(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ActionButton(
-                title = stringResource(
-                    if (!state.supportsMint) R.string.defi_action_unstake else R.string.defi_action_redeem
-                ),
-                icon = R.drawable.ic_circle_minus,
-                background = Color.Transparent,
-                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                contentColor = Theme.v2.colors.text.primary,
-                onClick = { onClickUnstake(state.coin.getUnstakeDeFiNavAction()) },
-                modifier = Modifier.weight(1f),
-                enabled = state.canUnstake,
-                iconCircleColor = Theme.v2.colors.text.extraLight
-            )
+            val stakeNumeric = state.stakeAmount.split("\\s+".toRegex()).firstOrNull()?.replace(",", "")?.toDoubleOrNull() ?: 0.0
+            if (stakeNumeric > 0.0) {
+                ActionButton(
+                    title = stringResource(
+                        if (!state.supportsMint) R.string.defi_action_unstake else R.string.defi_action_redeem
+                    ),
+                    icon = R.drawable.ic_circle_minus,
+                    background = Color.Transparent,
+                    border = BorderStroke(
+                        1.dp,
+                        Theme.v2.colors.primary.accent4
+                    ),
+                    contentColor = Theme.v2.colors.text.primary,
+                    onClick = { onClickUnstake(state.coin.getUnstakeDeFiNavAction()) },
+                    modifier = Modifier.weight(1f),
+                    enabled = state.canUnstake,
+                    iconCircleColor = Theme.v2.colors.text.extraLight
+
+                )
+            }
 
             ActionButton(
                 title = stringResource(
