@@ -336,10 +336,10 @@
 
     <!-- Backup Password Screen -->
     <string name="backup_password_screen_title">备份</string>
-    <string name="import_file_screen_password_error">密码不正确。</string>
+    <string name="import_file_screen_password_error">密码错误，请重试</string>
     <string name="add_vault_save">保存</string>
     <string name="backup_password_screen_enter_password">输入密码</string>
-    <string name="import_file_screen_enter_password">输入密码</string>
+    <string name="import_file_screen_enter_password_sub">此密码是在导出共享保险库时设置的。</string>
     <string name="import_file_screen_hint_password">密码</string>
     <string name="import_file_screen_ok">确定</string>
     <string name="import_file_screen_cancel">取消</string>
@@ -1226,4 +1226,5 @@
     <string name="swap_form_referral_discount_bps">推荐人（-%1$d bps）</string>
     <string name="amino_sign">Amino 签名</string>
     <string name="amino_direct">直接签名</string>
+    <string name="import_file_screen_enter_password">输入共享保险库密码</string>
 </resources>

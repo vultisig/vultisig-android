@@ -86,6 +86,7 @@ internal fun VsTextInputField(
     @DrawableRes trailingIcon2: Int? = null,
     onTrailingIcon2Click: (() -> Unit)? = null,
     @DrawableRes labelIcon: Int? = null,
+    @DrawableRes invisibleIcon: Int = R.drawable.hidden,
     onKeyboardAction: KeyboardActionHandler? = null,
     imeAction: ImeAction = ImeAction.Unspecified,
     keyboardType: KeyboardType = KeyboardType.Unspecified,
@@ -198,7 +199,8 @@ internal fun VsTextInputField(
                         Icon(
                             painter = painterResource(
                                 if (type.isVisible)
-                                    R.drawable.visible else R.drawable.hidden
+                                    R.drawable.visible else
+                                    invisibleIcon
                             ),
                             tint = Theme.v2.colors.text.button.light,
                             contentDescription = null,
