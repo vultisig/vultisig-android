@@ -42,6 +42,7 @@ enum class Chain(
     Mantle("Mantle", EVM, "Gwei"),
     Sei("Sei", EVM, "Gwei"),
     Hyperliquid("Hyperliquid", EVM, "Gwei"),
+    Rootstock("Rootstock", EVM, "Gwei"),
 
     // BITCOIN
     Bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
@@ -141,11 +142,12 @@ val Chain.coinType: CoinType
         Chain.Mantle -> CoinType.MANTLE
         Chain.Sei -> CoinType.SEI
         Chain.Hyperliquid -> CoinType.ETHEREUM
+        Chain.Rootstock -> CoinType.ROOTSTOCK
     }
 
 val Chain.supportsLegacyGas: Boolean
     get() = when (this) {
-        Chain.BscChain -> true
+        Chain.BscChain, Chain.Rootstock -> true
         else -> false
     }
 
@@ -183,7 +185,7 @@ val Chain.isSwapSupported: Boolean
 
         Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana, Chain.ZkSync, Chain.Zcash,
 
-        Chain.Tron, Chain.Hyperliquid
+        Chain.Tron, Chain.Hyperliquid, Chain.Rootstock
     )
 
 val Chain.isDepositSupported: Boolean
@@ -332,6 +334,7 @@ fun Chain.swapAssetName(): String {
         Chain.Mantle -> "MNT"
         Chain.Sei -> "SEI"
         Chain.Hyperliquid -> "HYPE"
+        Chain.Rootstock -> "RBTC"
     }
 }
 
@@ -373,6 +376,7 @@ fun Chain.ticker(): String {
         Chain.Mantle -> "MNT"
         Chain.Sei -> "SEI"
         Chain.Hyperliquid -> "HYPE"
+        Chain.Rootstock -> "RBTC"
     }
 }
 

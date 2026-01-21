@@ -135,6 +135,10 @@ class EvmApiFactoryImp @Inject constructor(
                 httpClient,
                 "https://api.vultisig.com/hyperevm/"
             )
+            Chain.Rootstock -> EvmApiImp(
+                httpClient,
+                "https://public-node.rsk.co"
+            )
 
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }

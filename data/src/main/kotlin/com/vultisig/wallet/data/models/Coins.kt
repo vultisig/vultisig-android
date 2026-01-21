@@ -2550,6 +2550,118 @@ object Coins {
         val all = listOf(HYPE, kHYPE, wstHYPE, WHYPE, UFART, USDT0, vkHYPE, UBTC, vHYPE, USDC)
     }
 
+    object Rootstock {
+        val RBTC = Coin(
+            chain = Chain.Rootstock,
+            ticker = "RBTC",
+            logo = "rbtc",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "rootstock",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+        val RIF = Coin(
+            chain = Chain.Rootstock,
+            ticker = "RIF",
+            logo = "rif",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "rif-token",
+            contractAddress = "0x2acc95758f8b5f583470ba265eb685a8f45fc9d5",
+            isNativeToken = false,
+        )
+
+        val USDRIF = Coin(
+            chain = Chain.Rootstock,
+            ticker = "USDRIF",
+            logo = "usdrif",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "rif-us-dollar",
+            contractAddress = "0x3a15461d8ae0f0fb5fa2629e9da7d66a794a6e37",
+            isNativeToken = false,
+        )
+
+        val USDCe = Coin(
+            chain = Chain.Rootstock,
+            ticker = "USDC.e",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x74c9f2b00581f1b11aa7ff05aa9f608b7389de67",
+            isNativeToken = false,
+        )
+
+        val WRBTC = Coin(
+            chain = Chain.Rootstock,
+            ticker = "WRBTC",
+            logo = "rbtc",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x542fda317318ebf1d3deaf76e0b632741a7e677d",
+            isNativeToken = false,
+        )
+
+        val XUSD = Coin(
+            chain = Chain.Rootstock,
+            ticker = "XUSD",
+            logo = "xusd",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xb5999795be0ebb5bab23144aa5fd6a02d080299f",
+            isNativeToken = false,
+        )
+
+        val SOV = Coin(
+            chain = Chain.Rootstock,
+            ticker = "SOV",
+            logo = "sov",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xefc78fc7d48b64958315949279ba181c2114abbd",
+            isNativeToken = false,
+        )
+
+        val USDT = Coin(
+            chain = Chain.Rootstock,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xaf368c91793cb22739386dfcbbb2f1a9e4bcbebf",
+            isNativeToken = false,
+        )
+
+        val USDT0 = Coin(
+            chain = Chain.Rootstock,
+            ticker = "USD₮0",
+            logo = "usdt0",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x779ded0c9e1022225f8e0630b35a9b54be713736",
+            isNativeToken = false,
+        )
+
+        val all = listOf(RBTC, RIF, USDRIF, USDCe, WRBTC, XUSD, SOV, USDT, USDT0)
+    }
+
     object Sui {
         val ETH = Coin(
 
@@ -2992,6 +3104,7 @@ object Coins {
         Chain.Ethereum to Ethereum.all,
         Chain.GaiaChain to GaiaChain.all,
         Chain.Hyperliquid to Hyperliquid.all,
+        Chain.Rootstock to Rootstock.all,
         Chain.Kujira to Kujira.all,
         Chain.Litecoin to Litecoin.all,
         Chain.MayaChain to MayaChain.all,

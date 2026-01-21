@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.models.Chain.Dydx
 import com.vultisig.wallet.data.models.Chain.Ethereum
 import com.vultisig.wallet.data.models.Chain.GaiaChain
 import com.vultisig.wallet.data.models.Chain.Hyperliquid
+import com.vultisig.wallet.data.models.Chain.Rootstock
 import com.vultisig.wallet.data.models.Chain.Kujira
 import com.vultisig.wallet.data.models.Chain.Litecoin
 import com.vultisig.wallet.data.models.Chain.MayaChain
@@ -448,7 +449,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
             }
 
             Ethereum, BscChain, Avalanche, Base, Arbitrum, Polygon, Optimism, Mantle,
-            Blast, CronosChain, ZkSync, Sei, Hyperliquid -> {
+            Blast, CronosChain, ZkSync, Sei, Hyperliquid, Rootstock -> {
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }
 
