@@ -526,20 +526,19 @@ internal class KeygenViewModel @Inject constructor(
 
 
     private fun updateStep(step: KeygenState) {
-        state.update {
-            it.copy(
+        state.update { uiModel ->
+            uiModel.copy(
                 isSuccess = step is KeygenState.Success,
                 progress = when (step) {
-                    is KeygenState.CreatingInstance -> 0.25f
-                    is KeygenState.KeygenECDSA -> 0.50f
-                    is KeygenState.KeygenEdDSA -> 0.75f
-                    is KeygenState.ReshareECDSA -> 0.5f
-                    is KeygenState.ReshareEdDSA -> 0.75f
+                    is KeygenState.CreatingInstance -> 0.0f
+                    is KeygenState.KeygenECDSA -> 0.33f
+                    is KeygenState.KeygenEdDSA -> 0.66f
+                    is KeygenState.ReshareECDSA -> 0.33f
+                    is KeygenState.ReshareEdDSA -> 0.66f
                     is KeygenState.Success -> 1f
-
-                    else -> 0.75f
+                    is KeygenState.Error -> 0f
                 },
-                steps = it.steps.map { it.copy(isLoading = false) } + listOfNotNull(
+                steps = uiModel.steps.map { it.copy(isLoading = false) } + listOfNotNull(
                     when (step) {
                         is KeygenState.CreatingInstance -> KeygenStepUiModel(
                             UiText.StringResource(R.string.keygen_step_preparing_vault),

@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
@@ -111,6 +112,16 @@ private fun KeygenScreen(
 
                     LaunchedEffect(Unit) {
                         vmi.setBoolean("Connected", true)
+                    }
+
+                    val animatedValue by animateFloatAsState(
+                        targetValue = state.progress.times(100),
+                        animationSpec = tween(durationMillis = 300),
+                        label = "riv_progress_animation"
+                    )
+
+                    LaunchedEffect(animatedValue) {
+                        vmi.setNumber("progessPercentage", animatedValue)
                     }
 
                     RiveAnimation(
