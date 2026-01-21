@@ -210,10 +210,10 @@
     <string name="swap_form_minimum_amount">Valor de swap muito pequeno. Quantidade recomendada %1$s %2$s</string>
     <string name="backup_password_screen_title">Backup</string>
     <string name="import_file_not_supported">O tipo de ficheiro não é compatível</string>
-    <string name="import_file_screen_password_error">A palavra-passe não está correta.</string>
+    <string name="import_file_screen_password_error">Palavra-passe incorreta, tente novamente.</string>
     <string name="add_vault_save">Guardar</string>
     <string name="backup_password_screen_enter_password">Introduza a senha</string>
-    <string name="import_file_screen_enter_password">Introduza a senha</string>
+    <string name="import_file_screen_enter_password_sub">Esta palavra-passe foi definida quando a partilha do cofre foi exportada.</string>
     <string name="import_file_screen_hint_password">Palavra-passe</string>
     <string name="import_file_screen_ok">OK</string>
     <string name="import_file_screen_cancel">Cancelar</string>
@@ -881,4 +881,5 @@
     <string name="swap_form_referral_discount_bps">Indicação (-%1$d bps)</string>
     <string name="amino_sign">Assinatura Amino</string>
     <string name="amino_direct">Assinatura Direta</string>
+    <string name="import_file_screen_enter_password">Introduza a palavra‑passe da partilha do cofre.</string>
 </resources>

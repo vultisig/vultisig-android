@@ -210,10 +210,10 @@
     <string name="swap_form_minimum_amount">El monto de intercambio es demasiado pequeño. El monto recomendado es %1$s %2$s</string>
     <string name="backup_password_screen_title">Respaldo</string>
     <string name="import_file_not_supported">El tipo de archivo no es compatible</string>
-    <string name="import_file_screen_password_error">La contraseña no es correcta.</string>
+    <string name="import_file_screen_password_error">Contraseña incorrecta, inténtelo de nuevo.</string>
     <string name="add_vault_save">Guardar</string>
     <string name="backup_password_screen_enter_password">Introducir contraseña</string>
-    <string name="import_file_screen_enter_password">Introducir contraseña</string>
+    <string name="import_file_screen_enter_password_sub">Esta contraseña se estableció al exportar el recurso compartido de la bóveda.</string>
     <string name="import_file_screen_hint_password">Contraseña</string>
     <string name="import_file_screen_ok">DE ACUERDO</string>
     <string name="import_file_screen_cancel">Cancelar</string>
@@ -882,4 +882,5 @@
     <string name="swap_form_referral_discount_bps">Referencia (-%1$d bps)</string>
     <string name="amino_sign">Firma Amino</string>
     <string name="amino_direct">Firma directa</string>
+    <string name="import_file_screen_enter_password">Introduzca la contraseña del recurso compartido de la bóveda.</string>
 </resources>
