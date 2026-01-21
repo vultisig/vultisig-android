@@ -40,6 +40,7 @@ internal val Chain.logo: Int
         Chain.Mantle -> R.drawable.mantle
         Chain.Sei -> R.drawable.sei
         Chain.Hyperliquid -> R.drawable.hyperliquid
+        Chain.Rootstock -> R.drawable.rootstock
     }
 
 internal val Chain.monoToneLogo: Int
@@ -80,4 +81,5 @@ internal val Chain.monoToneLogo: Int
         Chain.Mantle -> R.drawable.mantl_mono
         Chain.Sei -> R.drawable.sei_mono
         Chain.Hyperliquid -> R.drawable.hyperliquid_mono
+        Chain.Rootstock -> R.drawable.rootstock_mono
     }

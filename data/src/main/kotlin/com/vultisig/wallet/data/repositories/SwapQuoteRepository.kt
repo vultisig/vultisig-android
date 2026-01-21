@@ -606,6 +606,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             Chain.Tron -> setOf(SwapProvider.THORCHAIN)
 
             Chain.Hyperliquid -> setOf(SwapProvider.LIFI)
+            Chain.Rootstock -> setOf(SwapProvider.LIFI)
 
             Chain.Polkadot, Chain.Dydx, Chain.Sui, Chain.Ton, Chain.Osmosis,
             Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Akash, Chain.Cardano, Chain.Sei,
