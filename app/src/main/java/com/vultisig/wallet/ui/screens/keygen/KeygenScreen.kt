@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -56,6 +57,7 @@ import com.vultisig.wallet.ui.models.keygen.KeygenViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.performHaptic
 
 @Composable
 internal fun KeygenScreen(
@@ -188,6 +190,12 @@ private fun LoadingStageItem(
 
 @Composable
 private fun Success() {
+    val view = LocalView.current
+
+    LaunchedEffect(Unit) {
+        view.performHaptic()
+    }
+
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
