@@ -44,7 +44,8 @@ internal fun TokenSelectionScreen(
         onDisableToken = viewModel::disableTokenTemp,
         onDoneClick = viewModel::onCommitChanges,
         onAddCustomToken = viewModel::navigateToCustomTokenScreen,
-        onCancelClick = viewModel::back
+        onCancelClick = viewModel::back,
+        onSetSearchText = viewModel::setSearchText
     )
 }
 
@@ -59,6 +60,7 @@ internal fun TokenSelectionScreen(
     onAddCustomToken: () -> Unit = {},
     onDoneClick: () -> Unit = {},
     onCancelClick: () -> Unit = {},
+    onSetSearchText: (String) -> Unit = {},
 ) {
 
     TokenSelectionList(
@@ -109,7 +111,8 @@ internal fun TokenSelectionScreen(
             Column {
 
             }
-        }
+        },
+        onSetSearchText = onSetSearchText
     )
 }
 
