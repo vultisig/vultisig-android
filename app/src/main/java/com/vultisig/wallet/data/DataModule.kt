@@ -27,6 +27,7 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendIfNameAbsent
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -74,6 +75,13 @@ internal interface DataModule {
             }
 
             install(HttpRequestRetry) {
+                retryIf { request, _ ->
+                    request.method in listOf(
+                        HttpMethod.Get,
+                        HttpMethod.Head,
+                        HttpMethod.Options,
+                    )
+                }
                 retryOnServerErrors(
                     maxRetries = 3,
                 )
