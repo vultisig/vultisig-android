@@ -48,7 +48,13 @@ data class TxStatusConfiguration(
                     pollIntervalMs = 2000,
                     maxWaitMs = 300000
                 )
-                else -> error("Unknown chain: $chain")
+
+                else -> {
+                    TxStatusConfiguration(
+                        pollIntervalMs = 5000,
+                        maxWaitMs = 600000
+                    )
+                }
             }
         }
     }
