@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
+import com.vultisig.wallet.data.api.txstatus.TransactionStatusRepository
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.md5
@@ -67,6 +68,14 @@ internal sealed interface TransactionTypeUiModel {
     data class SignMessage(val model: SignMessageTransactionUiModel) : TransactionTypeUiModel
 }
 
+enum class TransactionStatus {
+    BROADCASTED,
+    PENDING,
+    CONFIRMED,
+    FAILED
+}
+
+
 internal class KeysignViewModel(
     val vault: Vault,
     private val keysignCommittee: List<String>,
@@ -89,6 +98,7 @@ internal class KeysignViewModel(
     private val pullTssMessages: PullTssMessagesUseCase,
     private val isInitiatingDevice: Boolean,
     private val addressBookRepository: AddressBookRepository,
+    private val transactionStatusRepository: TransactionStatusRepository,
 ) : ViewModel() {
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
@@ -104,7 +114,6 @@ internal class KeysignViewModel(
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
 
     private var pullTssMessagesJob: Job? = null
-
     private val signatures: MutableMap<String, KeysignResponse> = mutableMapOf()
     private var featureFlag: FeatureFlagJson? = null
 
@@ -203,7 +212,7 @@ internal class KeysignViewModel(
                 checkThorChainTxResult()
             }
 
-            currentState.value = KeysignState.KeysignFinished
+            currentState.value = KeysignState.KeysignFinished//
             isNavigateToHome = true
         } catch (e: Exception) {
             Timber.e(e)
@@ -247,7 +256,7 @@ internal class KeysignViewModel(
             broadcastTransaction()
             checkThorChainTxResult()
 
-            currentState.value = KeysignState.KeysignFinished
+            currentState.value = KeysignState.KeysignFinished //
             isNavigateToHome = true
 
             pullTssMessagesJob?.cancel()

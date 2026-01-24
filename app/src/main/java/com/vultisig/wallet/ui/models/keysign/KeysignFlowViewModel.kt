@@ -24,13 +24,13 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
+import com.vultisig.wallet.data.api.txstatus.TransactionStatusRepository
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mappers.PayloadToProtoMapper
 import com.vultisig.wallet.data.mediator.MediatorService
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
@@ -114,6 +114,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val payloadToProtoMapper: PayloadToProtoMapper,
     private val discoverParticipantsUseCase: DiscoverParticipantsUseCase,
     private val addressBookRepository: AddressBookRepository,
+    private val transactionStatusRepository: TransactionStatusRepository,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -179,6 +180,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             pullTssMessages = pullTssMessages,
             isInitiatingDevice = true,
             addressBookRepository = addressBookRepository,
+            transactionStatusRepository = transactionStatusRepository,
         )
 
     init {
