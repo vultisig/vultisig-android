@@ -8,13 +8,16 @@ import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
+import com.vultisig.wallet.data.api.txstatus.TransactionResult
 import com.vultisig.wallet.data.api.txstatus.TransactionStatusRepository
+import com.vultisig.wallet.data.api.txstatus.TxStatusConfiguration
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
@@ -37,6 +40,8 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asUiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -50,6 +55,7 @@ import tss.ServiceImpl
 import tss.Tss
 import vultisig.keysign.v1.CustomMessagePayload
 import java.math.BigInteger
+import java.time.Instant
 import java.util.Base64
 import kotlin.time.Duration.Companion.seconds
 
@@ -57,22 +63,24 @@ internal sealed class KeysignState {
     data object CreatingInstance : KeysignState()
     data object KeysignECDSA : KeysignState()
     data object KeysignEdDSA : KeysignState()
-    data object KeysignFinished : KeysignState()
+    data class KeysignFinished(val status: TransactionStatus) : KeysignState()
     data class Error(val errorMessage: String) : KeysignState()
 }
 
 internal sealed interface TransactionTypeUiModel {
     data class Send(val tx: SendTxUiModel) : TransactionTypeUiModel
     data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransactionTypeUiModel
-    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) : TransactionTypeUiModel
+    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) :
+        TransactionTypeUiModel
+
     data class SignMessage(val model: SignMessageTransactionUiModel) : TransactionTypeUiModel
 }
 
-enum class TransactionStatus {
-    BROADCASTED,
-    PENDING,
-    CONFIRMED,
-    FAILED
+sealed interface TransactionStatus {
+    data object Broadcasted : TransactionStatus
+    data object Pending : TransactionStatus
+    data object Confirmed : TransactionStatus
+    data class Failed(val cause: UiText) : TransactionStatus
 }
 
 
@@ -119,6 +127,9 @@ internal class KeysignViewModel(
 
     private var isNavigateToHome: Boolean = false
 
+
+    private var pollingTxStatusJob: Job? = null
+
     init {
         val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
         sendTx?.tx?.let { tx ->
@@ -142,6 +153,7 @@ internal class KeysignViewModel(
 
                     SigningLibType.DKLS ->
                         startKeysignDkls()
+
                     SigningLibType.KeyImport ->
                         TODO("Add KeyImport Signing logic")
                 }
@@ -211,8 +223,6 @@ internal class KeysignViewModel(
                 broadcastTransaction()
                 checkThorChainTxResult()
             }
-
-            currentState.value = KeysignState.KeysignFinished//
             isNavigateToHome = true
         } catch (e: Exception) {
             Timber.e(e)
@@ -256,7 +266,6 @@ internal class KeysignViewModel(
             broadcastTransaction()
             checkThorChainTxResult()
 
-            currentState.value = KeysignState.KeysignFinished //
             isNavigateToHome = true
 
             pullTssMessagesJob?.cancel()
@@ -360,6 +369,7 @@ internal class KeysignViewModel(
         var nonceAcc = BigInteger.ZERO
 
         val approvePayload = payload.approvePayload
+        val chain = payload.coin.chain
         if (approvePayload != null) {
             val signedApproveTransaction = THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                 .getSignedApproveTransaction(
@@ -368,7 +378,7 @@ internal class KeysignViewModel(
                     signatures
                 )
 
-            val evmApi = evmApiFactory.createEvmApi(payload.coin.chain)
+            val evmApi = evmApiFactory.createEvmApi(chain)
             approveTxHash.value = evmApi.sendTransaction(signedApproveTransaction.rawTransaction)
 
             nonceAcc++
@@ -382,21 +392,90 @@ internal class KeysignViewModel(
         )
 
         val txHash = broadcastTx(
-            chain = payload.coin.chain,
+            chain = chain,
             tx = signedTx,
         )
 
         Timber.d("transaction hash: $txHash")
         if (txHash != null) {
             this.txHash.value = txHash
-            txLink.value = explorerLinkRepository.getTransactionLink(payload.coin.chain, txHash)
+            txLink.value = explorerLinkRepository.getTransactionLink(chain, txHash)
             swapProgressLink.value =
                 explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
+
+            updateTransactionStatus(txHash, chain)
         }
         if (approveTxHash.value.isNotEmpty()) {
             approveTxLink.value =
-                explorerLinkRepository.getTransactionLink(payload.coin.chain, approveTxHash.value)
+                explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
         }
+    }
+
+    fun updateTransactionStatus(txHash: String, chain: Chain) {
+        val txStatusConfiguration = TxStatusConfiguration.getConfig(chain)
+        if (pollingTxStatusJob?.isActive == false)
+            return
+
+        pollingTxStatusJob = viewModelScope.launch {
+            currentState.value =
+                KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+            val startTime = Instant.now()
+            while (true) {
+                try {
+                    val result = transactionStatusRepository.checkTransactionStatus(txHash, chain)
+
+                    when (result) {
+                        is TransactionResult.Confirmed -> {
+                            currentState.value =
+                                KeysignState.KeysignFinished(TransactionStatus.Confirmed)
+                            break
+                        }
+
+                        is TransactionResult.Failed -> {
+                            currentState.value =
+                                KeysignState.KeysignFinished(
+                                    TransactionStatus.Failed(
+                                        cause = result.reason.asUiText()
+                                    )
+                                )
+                            break
+                        }
+
+                        is TransactionResult.Pending -> {
+                            currentState.value =
+                                KeysignState.KeysignFinished(TransactionStatus.Pending)
+                        }
+
+                        is TransactionResult.NotFound -> {
+                            val elapsed = java.time.Duration.between(
+                                startTime,
+                                Instant.now()
+                            ).toMillis()
+
+                            if (elapsed > txStatusConfiguration.maxWaitMs) {
+                                currentState.value =
+                                    KeysignState.KeysignFinished(
+                                        status = TransactionStatus.Failed(
+                                            cause = "Confirmation taking longer than expected".asUiText()
+                                        )
+                                    )
+                                break
+                            }
+                        }
+                    }
+
+                    delay(txStatusConfiguration.pollIntervalMs)
+
+                } catch (_: Exception) {
+                    delay(txStatusConfiguration.pollIntervalMs)
+                }
+            }
+        }
+    }
+
+    fun stopPolling() {
+        pollingTxStatusJob?.cancel()
+        pollingTxStatusJob = null
     }
 
     fun navigateToHome() {
@@ -427,5 +506,10 @@ internal class KeysignViewModel(
                 )
             }
         }
+    }
+
+    override fun onCleared() {
+        stopPolling()
+        super.onCleared()
     }
 }
