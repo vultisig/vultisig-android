@@ -144,7 +144,7 @@ internal data class TokenBalanceUiModel(
     @DrawableRes val chainLogo: Int,
 )
 
-sealed class AmountFraction(val title: UiText, val value: Float){
+sealed class AmountFraction(val title: UiText, val value: Float) {
     data object F25 : AmountFraction(
         title = "25%".asUiText(),
         value = 0.25f
@@ -154,11 +154,13 @@ sealed class AmountFraction(val title: UiText, val value: Float){
         title = "50%".asUiText(),
         value = 0.5f
     )
-    data object F75: AmountFraction(
+
+    data object F75 : AmountFraction(
         title = "75%".asUiText(),
         value = 0.75f
     )
-    data object F100: AmountFraction(
+
+    data object F100 : AmountFraction(
         title = string.send_screen_max.asUiText(),
         value = 1f
     )
@@ -833,11 +835,14 @@ internal class SendFormViewModel @Inject constructor(
                     isAmountSelectionLoading = true,
                 )
             }
-            val amount = calculatePercentageWithAccurateFee(1f)
-            uiState.update {
-                it.copy(
-                    isAmountSelectionLoading = false,
-                )
+            val amount = try {
+                calculatePercentageWithAccurateFee(1f)
+            } finally {
+                uiState.update {
+                    it.copy(
+                        isAmountSelectionLoading = false,
+                    )
+                }
             }
             maxAmount = amount
             isMaxAmount.value = true
@@ -854,11 +859,14 @@ internal class SendFormViewModel @Inject constructor(
                     isAmountSelectionLoading = true,
                 )
             }
-            val amount = calculatePercentageWithAccurateFee(amountFraction.value)
-            uiState.update {
-                it.copy(
-                    isAmountSelectionLoading = false,
-                )
+            val amount = try {
+                calculatePercentageWithAccurateFee(amountFraction.value)
+            } finally {
+                uiState.update {
+                    it.copy(
+                        isAmountSelectionLoading = false,
+                    )
+                }
             }
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
         }
