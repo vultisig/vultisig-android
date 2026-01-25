@@ -1,10 +1,10 @@
 package com.vultisig.wallet.ui.models.mappers
 
-import com.vultisig.wallet.R
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.toDefi
 import com.vultisig.wallet.ui.models.AccountUiModel
 import javax.inject.Inject
 
@@ -21,8 +21,8 @@ internal class AddressToUiModelMapperImpl @Inject constructor(
         val isDefiProvider = from.isDefiProvider
         return AccountUiModel(
             model = from,
-            chainName = if (isDefiProvider) USDC_CIRCLE else from.chain.raw,
-            logo = if (isDefiProvider) R.drawable.circle_defi else from.chain.logo,
+            chainName = if (isDefiProvider) from.chain.toDefi.ticker else from.chain.raw,
+            logo = if (isDefiProvider) from.chain.toDefi.logo else from.chain.logo,
             address = from.address,
             nativeTokenAmount = nativeAccount
                 .tokenValue?.let(mapTokenValueToStringWithUnitMapper),
@@ -33,5 +33,3 @@ internal class AddressToUiModelMapperImpl @Inject constructor(
         )
     }
 }
-
-internal const val USDC_CIRCLE = "Circle"

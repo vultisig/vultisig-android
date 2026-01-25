@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.models.isSwapSupported
+import com.vultisig.wallet.data.models.toDefi
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
@@ -33,7 +34,6 @@ import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
-import com.vultisig.wallet.ui.models.mappers.USDC_CIRCLE
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -318,7 +318,7 @@ internal class VaultAccountsViewModel @Inject constructor(
                 }
                 CryptoConnectionType.Defi -> {
                     // Exception for DeFi providers on home screen
-                    if (account.chainName.equals(USDC_CIRCLE, true)) {
+                    if (account.chainName.equals(Chain.Ethereum.toDefi.ticker, true)) {
                         navigator.route(
                             Route.ChainDashboard(
                                 route = ChainDashboardRoute.PositionCircle(

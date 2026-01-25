@@ -85,6 +85,24 @@ enum class Chain(
     }
 }
 
+data class DefiChain(
+    val ticker: String,
+    val chain: Chain,
+)
+
+val Chain.toDefi: DefiChain
+    get() = when (this) {
+        Chain.Ethereum -> DefiChain(
+            ticker =  "Circle",
+            chain = this
+        )
+        else -> DefiChain(
+            ticker = raw,
+            chain = this,
+        )
+    }
+
+
 val Chain.coinType: CoinType
     get() = when (this) {
         Chain.Bitcoin -> CoinType.BITCOIN
@@ -247,7 +265,8 @@ val Chain.banxaAssetName: String?
 
 val Chain.isDeFiSupported: Boolean
     get() = when (this) {
-        Chain.ThorChain -> true
+        Chain.ThorChain,
+        Chain.Ethereum -> true
         else -> false
     }
 
