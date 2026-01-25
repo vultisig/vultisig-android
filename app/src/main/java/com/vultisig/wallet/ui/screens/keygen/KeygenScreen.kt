@@ -52,6 +52,7 @@ import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.models.keygen.KeygenState
 import com.vultisig.wallet.ui.models.keygen.KeygenStepUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenViewModel
@@ -67,6 +68,18 @@ internal fun KeygenScreen(
     KeepScreenOn()
 
     val state by model.state.collectAsState()
+    val view = LocalView.current
+
+    LaunchedEffect(state.keygenState) {
+        when(state.keygenState) {
+            KeygenState.KeygenECDSA,
+            KeygenState.KeygenEdDSA,
+            KeygenState.Success,-> {
+                view.performHaptic()
+            }
+            else -> Unit
+        }
+    }
 
     if (state.isSuccess) {
         Success()
@@ -201,11 +214,6 @@ private fun LoadingStageItem(
 
 @Composable
 private fun Success() {
-    val view = LocalView.current
-
-    LaunchedEffect(Unit) {
-        view.performHaptic()
-    }
 
     Box(
         contentAlignment = Alignment.Center,
