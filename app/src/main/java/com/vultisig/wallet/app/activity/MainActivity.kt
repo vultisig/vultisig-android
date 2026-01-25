@@ -22,6 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateOptions
@@ -31,13 +34,14 @@ import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
-import com.vultisig.wallet.ui.theme.v2.V2.colors
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -57,14 +61,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         if (savedInstanceState == null) {
-            mainViewModel.checkUpdates { appUpdateInfo ->
-                appUpdateManager.startUpdateFlowForResult(
-                    appUpdateInfo,
-                    this@MainActivity,
-                    AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE)
-                        .setAllowAssetPackDeletion(true)
-                        .build(), 0
-                )
+            mainViewModel.checkUpdates()
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.startUpdateEvent.collect {
+                    startImmediateUpdate()
+                }
             }
         }
 
@@ -75,7 +79,7 @@ class MainActivity : AppCompatActivity() {
 
         val systemBarStyle = SystemBarStyle.auto(
             colors.backgrounds.primary.toArgb(),
-           colors.backgrounds.primary.toArgb(),
+            colors.backgrounds.primary.toArgb(),
         ) { true }
 
         enableEdgeToEdge(
@@ -134,6 +138,23 @@ class MainActivity : AppCompatActivity() {
                         snackbarState = mainViewModel.snakeBarHostState
                     )
                 }
+            }
+        }
+    }
+
+    private suspend fun startImmediateUpdate() {
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
+            try {
+                appUpdateManager.startUpdateFlowForResult(
+                    info,
+                    this,
+                    AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE)
+                        .setAllowAssetPackDeletion(true)
+                        .build(),
+                    0
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to start update flow")
             }
         }
     }
