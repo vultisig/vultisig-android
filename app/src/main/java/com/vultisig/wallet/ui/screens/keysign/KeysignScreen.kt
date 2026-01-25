@@ -112,6 +112,11 @@ private fun Keysign(
         when (state) {
 
             is KeysignState.Error -> onError(state.errorMessage)
+            is KeysignState.KeysignECDSA,
+            is KeysignState.KeysignEdDSA -> {
+                view.performHaptic()
+            }
+
             is KeysignState.KeysignFinished -> {
                 view.performHaptic()
                 onKeysignFinished?.invoke()
@@ -130,9 +135,7 @@ private fun Keysign(
         onComplete = onComplete,
         progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
         showToolbar = true,
-        onBack = {
-            viewModel.navigateToHome()
-        },
+        onBack = viewModel::navigateToHome,
         onAddToAddressBook = keysignViewModel::navigateToAddressBook,
         showSaveToAddressBook = keysignViewModel.showSaveToAddressBook.collectAsState().value,
     )
