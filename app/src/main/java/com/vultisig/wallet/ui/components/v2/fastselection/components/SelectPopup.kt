@@ -13,14 +13,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.vultisig.wallet.ui.components.v2.fastselection.SelectPopupUiModel
+import com.vultisig.wallet.ui.utils.performHaptic
 import kotlin.math.min
 
 @SuppressLint("ConfigurationScreenWidthHeight")
@@ -35,7 +35,7 @@ internal fun <T> SelectPopup(
     var accumulatedDragY by remember { mutableFloatStateOf(0f) }
     var measuredItemHeight by remember { mutableIntStateOf(0) }
     var lastKnownY by remember { mutableStateOf<Float?>(null) }
-    val haptic = LocalHapticFeedback.current
+    val view = LocalView.current
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
 
@@ -100,7 +100,7 @@ internal fun <T> SelectPopup(
 
             if (target != currentSelectionIndex) {
                 currentSelectionIndex = target
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                view.performHaptic()
             }
 
             // reset delta anchors
@@ -127,7 +127,7 @@ internal fun <T> SelectPopup(
                     )
                     if (newIndex != currentSelectionIndex) {
                         currentSelectionIndex = newIndex
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        view.performHaptic()
                     }
                     accumulatedDragY %= sensitivityPx
                 }

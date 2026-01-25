@@ -81,8 +81,10 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
+import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.send.AddressBookType
+import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
@@ -175,7 +177,7 @@ private fun SendFormScreen(
     onSelectTokenRequest: () -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
     onChooseMaxTokenAmount: () -> Unit = {},
-    onChoosePercentageAmount: (Float) -> Unit = {},
+    onChoosePercentageAmount: (AmountFraction) -> Unit = {},
     onAddressBookClick: () -> Unit = {},
     onScanDstAddressRequest: () -> Unit = {},
     onSend: () -> Unit = {},
@@ -355,7 +357,7 @@ private fun SendFormContent(
     focusManager: FocusManager,
     onSend: () -> Unit,
     onToogleAmountInputType: (Boolean) -> Unit,
-    onChoosePercentageAmount: (Float) -> Unit,
+    onChoosePercentageAmount: (AmountFraction) -> Unit,
     onChooseMaxTokenAmount: () -> Unit,
     memoFieldState: TextFieldState,
 
@@ -528,7 +530,7 @@ private fun FoldableAmountWidget(
     focusManager: FocusManager,
     onSend: () -> Unit,
     onToogleAmountInputType: (Boolean) -> Unit,
-    onChoosePercentageAmount: (Float) -> Unit,
+    onChoosePercentageAmount: (AmountFraction) -> Unit,
     onChooseMaxTokenAmount: () -> Unit,
     onAutoCompoundCheckedChange: (Boolean) -> Unit,
     memoFieldState: TextFieldState,
@@ -672,37 +674,22 @@ private fun FoldableAmountWidget(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                PercentageChip(
-                    title = "25%",
-                    isSelected = false,
-                    onClick = { onChoosePercentageAmount(0.25f) },
-                    modifier = Modifier
-                        .weight(1f),
-                )
-
-                PercentageChip(
-                    title = "50%",
-                    isSelected = false,
-                    onClick = { onChoosePercentageAmount(0.5f) },
-                    modifier = Modifier
-                        .weight(1f),
-                )
-
-                PercentageChip(
-                    title = "75%",
-                    isSelected = false,
-                    onClick = { onChoosePercentageAmount(0.75f) },
-                    modifier = Modifier
-                        .weight(1f),
-                )
-
-                PercentageChip(
-                    title = stringResource(R.string.send_screen_max),
-                    isSelected = false,
-                    onClick = onChooseMaxTokenAmount,
-                    modifier = Modifier
-                        .weight(1f),
-                )
+                state.amountFractionEntries.forEach { fraction ->
+                    PercentageChip(
+                        title = fraction.title.asString(),
+                        isSelected = fraction == state.selectedAmountFraction,
+                        onClick = {
+                            if (fraction == AmountFraction.F100) {
+                                onChooseMaxTokenAmount()
+                            } else {
+                                onChoosePercentageAmount(fraction)
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f),
+                        isLoading = state.isAmountSelectionLoading
+                    )
+                }
             }
 
             UiSpacer(12.dp)
@@ -1422,33 +1409,47 @@ private fun Modifier.vsClickableBackground() =
 private fun PercentageChip(
     title: String,
     isSelected: Boolean,
+    isLoading: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Text(
-        text = title,
-        style = Theme.brockmann.supplementary.caption,
-        color = Theme.v2.colors.text.light,
-        textAlign = TextAlign.Center,
+
+    Box(
         modifier = modifier
             .clickable(onClick = onClick)
             .then(
                 if (isSelected)
                     Modifier.background(
                         color = Theme.v2.colors.primary.accent3,
-                        shape = RoundedCornerShape(99.dp),
+                        shape = CircleShape,
                     )
                 else
                     Modifier.border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
-                        shape = RoundedCornerShape(99.dp),
+                        shape = CircleShape,
                     )
             )
             .padding(
                 all = 4.dp,
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isLoading && isSelected) {
+            V2Loading(
+                modifier = Modifier
+                    .size(16.dp)
             )
-    )
+        } else {
+            Text(
+                text = title,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.light,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+
 }
 
 @Composable
