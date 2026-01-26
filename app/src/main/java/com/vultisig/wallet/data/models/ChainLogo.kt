@@ -81,3 +81,9 @@ internal val Chain.monoToneLogo: Int
         Chain.Sei -> R.drawable.sei_mono
         Chain.Hyperliquid -> R.drawable.hyperliquid_mono
     }
+
+internal val DefiChain.logo: Int
+    get() = when (chain) {
+        Chain.Ethereum -> R.drawable.circle_defi
+        else -> chain.logo
+    }
