@@ -110,7 +110,7 @@ object SigningHelper {
 
                 Chain.Ethereum, Chain.Avalanche, Chain.Base, Chain.Blast, Chain.Arbitrum, Chain.Mantle,
                 Chain.Polygon, Chain.Optimism, Chain.BscChain, Chain.CronosChain, Chain.ZkSync, Chain.Sei,
-                Chain.Hyperliquid
+                Chain.Hyperliquid, Chain.Rootstock
                     -> {
                     if (payload.coin.isNativeToken) {
                         EvmHelper(
@@ -273,7 +273,7 @@ object SigningHelper {
             }
 
             Chain.Ethereum, Chain.Avalanche, Chain.BscChain, Chain.CronosChain, Chain.Blast,Chain.Mantle,
-            Chain.Arbitrum, Chain.Optimism,Chain.Sei, Chain.Polygon, Chain.Base, Chain.ZkSync, Chain.Hyperliquid -> {
+            Chain.Arbitrum, Chain.Optimism,Chain.Sei, Chain.Polygon, Chain.Base, Chain.ZkSync, Chain.Hyperliquid, Chain.Rootstock -> {
                 if (keysignPayload.coin.isNativeToken) {
                     val evmHelper = EvmHelper(
                         keysignPayload.coin.coinType,
