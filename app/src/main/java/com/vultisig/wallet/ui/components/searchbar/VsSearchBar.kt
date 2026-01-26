@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.components.searchbar
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -134,9 +135,13 @@ internal fun VsSearchBar(
                                 PasteIcon(onPaste = onPasteClick)
                             }
                         } else {
-                            input()
+                            Box(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                input()
+                            }
                             UiSpacer(
-                                weight = 1f
+                                size = 8.dp
                             )
                             UiIcon(
                                 drawableResId = R.drawable.close_circle,
@@ -151,32 +156,6 @@ internal fun VsSearchBar(
                 }
             )
         }
-
-
-        AnimatedContent(targetState = isFocusedState) { focused ->
-            if (focused)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    UiSpacer(
-                        size = 8.dp
-                    )
-                    Text(
-                        text = stringResource(R.string.search_bar_cancel),
-                        color = Theme.colors.text.primary,
-                        style = Theme.brockmann.body.s.medium,
-                        modifier = Modifier
-                            .clickable(
-                                onClick = {
-                                    isFocusedState = false
-                                    state.clearText()
-                                    onCancelClick()
-                                }
-                            )
-                    )
-                }
-        }
-
     }
 }
 

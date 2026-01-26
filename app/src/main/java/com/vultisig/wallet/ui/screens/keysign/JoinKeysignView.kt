@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.screens.keysign
 import android.content.Context
 import android.net.nsd.NsdManager
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -15,13 +14,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.ErrorView
-import com.vultisig.wallet.ui.components.ProgressScreen
+import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignError
-import com.vultisig.wallet.ui.models.keysign.JoinKeysignState
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.DiscoverService
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.DiscoveringSessionID
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.Error
@@ -49,12 +46,12 @@ internal fun JoinKeysignView(
     if (keysignState is KeysignState.KeysignFinished) {
         viewModel.enableNavigationToHome()
     }
+    val state = viewModel.currentState.value
     JoinKeysignScreen(
-        navController = navController,
-        state = viewModel.currentState.value,
-        keysignState = keysignState,
-        onBack = viewModel::navigateToHome
-    ) { state ->
+        isKeySignFinished = keysignState is KeysignState.KeysignFinished,
+        onBack = viewModel::navigateToHome,
+        isError = state is Error
+    ) {
         when (state) {
             DiscoveringSessionID,
             WaitingForKeysignStart,
@@ -171,9 +168,9 @@ internal fun JoinKeysignView(
                     }
                 }
                 ErrorView(
-                    errorLabel = errorLabel,
+                    title = errorLabel,
                     buttonText = buttonText,
-                    infoText = infoText,
+                    description = infoText,
                     onButtonClick = viewModel::tryAgain,
                 )
             }
@@ -183,33 +180,21 @@ internal fun JoinKeysignView(
 
 @Composable
 private fun JoinKeysignScreen(
-    navController: NavHostController,
-    state: JoinKeysignState,
-    keysignState: KeysignState,
+    isKeySignFinished: Boolean,
+    isError: Boolean,
     onBack: () -> Unit = {},
-    content: @Composable BoxScope.(JoinKeysignState) -> Unit = {},
+    content: @Composable () -> Unit = {},
 ) {
-    val progress = when {
-        state is DiscoveringSessionID -> 0.1f
-        state is DiscoverService -> 0.25f
-        state is JoinKeysign -> 0.5f
-        state is WaitingForKeysignStart -> 0.625f
-        state is Keysign && keysignState is KeysignState.KeysignFinished -> 1f
-        state is Keysign -> 0.75f
-        state is Error -> 0.0f
-        else -> 0.0f
-    }
     BackHandler(onBack = onBack)
-    ProgressScreen(
-        navController = navController,
-        showStartIcon = keysignState !is KeysignState.KeysignFinished,
-        title = stringResource(
-            id = if (keysignState !is KeysignState.KeysignFinished) R.string.keysign
+    V2Scaffold(
+        onBackClick = onBack.takeIf { isKeySignFinished.not() && isError.not()},
+        rightIcon = R.drawable.big_close.takeIf { isError },
+        onRightIconClick = onBack.takeIf { isError },
+        title =  stringResource(
+            id = if (isKeySignFinished.not()) R.string.keysign
             else R.string.transaction_complete_screen_title
         ),
-        onStartIconClick = onBack,
-        progress = progress,
-        content = { content(state) }
+        content = content,
     )
 }
 
@@ -217,8 +202,14 @@ private fun JoinKeysignScreen(
 @Composable
 private fun JoinKeysignViewPreview() {
     JoinKeysignScreen(
-        navController = rememberNavController(),
-        state = Error(errorType = JoinKeysignError.MissingRequiredVault),
-        keysignState = KeysignState.CreatingInstance,
+        isKeySignFinished = false,
+        isError = true,
+        content = {
+            ErrorView(
+                title = stringResource(R.string.signing_error_please_try_again_s, ""),
+                buttonText = stringResource(R.string.try_again),
+                onButtonClick = {},
+            )
+        }
     )
 }

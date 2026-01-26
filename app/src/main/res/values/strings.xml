@@ -38,6 +38,10 @@
     <string name="deposit_option_receive_ytcy">Mint yTCY</string>
     <string name="deposit_option_sell_yrune">Redeem yRUNE</string>
     <string name="deposit_option_sell_ytcy">Redeem yTCY</string>
+    <string name="defi_tab_deposited">Deposited</string>
+    <string name="defi_tab_staked">Staked</string>
+    <string name="defi_tab_bonded">Bonded</string>
+    <string name="defi_tab_lp">LP</string>
     <string name="circle_defi_description">Deposit your USDC into a Circle account and earn yield. Securely within your Vultisig vault.</string>
     <string name="circle_defi_control_info">Funds remain fully under your vault\'s control. Circle accounts are self-custodial and yield is generated through secure off-chain treasuries.</string>
     <string name="usdc_deposit_title">USDC Deposit</string>
@@ -249,10 +253,11 @@
     <string name="swap_for_provider_li_fi" translatable="false">LI.FI</string>
     <string name="swap_for_provider_jupiter" translatable="false">Jupiter</string>
     <string name="backup_password_screen_title">Backup</string>
-    <string name="import_file_screen_password_error">Password is not correct.</string>
+    <string name="import_file_screen_password_error">Incorrect password, try again</string>
     <string name="add_vault_save">Save</string>
     <string name="backup_password_screen_enter_password">Enter Password</string>
-    <string name="import_file_screen_enter_password">Enter Password</string>
+    <string name="import_file_screen_enter_password">Enter Vault Share Password</string>
+    <string name="import_file_screen_enter_password_sub">This password was set when the vault share was exported.</string>
     <string name="import_file_screen_hint_password">Password</string>
     <string name="import_file_screen_ok">OK</string>
     <string name="import_file_screen_cancel">Cancel</string>
@@ -558,6 +563,7 @@
     <string name="vault_backup_screen_donot_recieve_email">Didn’t receive an email?</string>
     <string name="vault_backup_screen_restart_keygen">Restart keygen</string>
     <string name="vault_backup_summary_start_using_vault">Start using your Vault</string>
+    <string name="vault_backup_summary_choose_chains">Choose Chains</string>
     <string name="transaction_done_form_approve">Approve</string>
     <string name="vault_settings_migration_title">Migrate</string>
     <string name="swap_swap_button">Swap</string>
@@ -922,5 +928,9 @@
     <string name="circle_msca_account_created_failed">Failed to create Circle MSCA account. Please try again.</string>
     <string name="circle_usdc_account">Circle USDC Account</string>
     <string name="withdraw">Withdraw</string>
+    <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
+    <string name="swap_form_referral_discount_bps">Referral (-%1$d bps)</string>
+    <string name="amino_sign">Amino Sign</string>
+    <string name="amino_direct">Direct Sign</string>
 
 </resources>

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -212,6 +213,9 @@ internal class TokenSelectionViewModel @Inject constructor(
         viewModelScope.launch {
             navigator.back()
         }
+    }
+    fun setSearchText(searchText: String) {
+        searchTextFieldState.setTextAndPlaceCursorAtEnd(text = searchText)
     }
 
     companion object {

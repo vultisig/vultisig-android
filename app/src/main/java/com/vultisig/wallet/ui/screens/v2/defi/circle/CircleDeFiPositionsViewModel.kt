@@ -1,10 +1,8 @@
 package com.vultisig.wallet.ui.screens.v2.defi.circle
 
 import android.content.Context
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.CircleApi
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -52,7 +50,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class CircleDeFiPositionsViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val scaCircleAccountRepository: ScaCircleAccountRepository,
     private val circleApi: CircleApi,
@@ -67,7 +64,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
-    private var vaultId: String = savedStateHandle.toRoute<Route.PositionCircle>().vaultId
+    private lateinit var vaultId: String
     private var mscaAddress: String? = null
 
     private val _state = MutableStateFlow(
@@ -76,14 +73,15 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
             isTotalAmountLoading = true,
             isBalanceVisible = true,
             supportEditChains = false,
-            selectedTab = DeFiTab.DEPOSITED.displayName,
+            selectedTab = DeFiTab.DEPOSITED.displayNameRes,
             bannerImage = R.drawable.circle_defi_banner,
         )
     )
 
     val state: StateFlow<DefiUiModel> = _state.asStateFlow()
 
-    init {
+    fun setData(vaultId: String) {
+        this.vaultId = vaultId
         loadBalanceVisibility()
         loadAccountStatus()
         loadCirclePositions()
@@ -168,9 +166,9 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
         }
     }
 
-    fun onTabSelected(tab: String) {
+    fun onTabSelected(tab: DeFiTab) {
         _state.update { currentState ->
-            currentState.copy(selectedTab = tab)
+            currentState.copy(selectedTab = tab.displayNameRes)
         }
     }
 

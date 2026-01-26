@@ -210,10 +210,10 @@
     <string name="swap_form_minimum_amount">Valor de swap muito pequeno. Quantidade recomendada %1$s %2$s</string>
     <string name="backup_password_screen_title">Backup</string>
     <string name="import_file_not_supported">O tipo de ficheiro não é compatível</string>
-    <string name="import_file_screen_password_error">A palavra-passe não está correta.</string>
+    <string name="import_file_screen_password_error">Palavra-passe incorreta, tente novamente.</string>
     <string name="add_vault_save">Guardar</string>
     <string name="backup_password_screen_enter_password">Introduza a senha</string>
-    <string name="import_file_screen_enter_password">Introduza a senha</string>
+    <string name="import_file_screen_enter_password_sub">Esta palavra-passe foi definida quando a partilha do cofre foi exportada.</string>
     <string name="import_file_screen_hint_password">Palavra-passe</string>
     <string name="import_file_screen_ok">OK</string>
     <string name="import_file_screen_cancel">Cancelar</string>
@@ -413,6 +413,10 @@
     <string name="deposit_option_receive_ytcy">Receber yTCY</string>
     <string name="deposit_option_sell_yrune">Vender yRUNE</string>
     <string name="deposit_option_sell_ytcy">Vender yTCY</string>
+    <string name="defi_tab_deposited">Depositado</string>
+    <string name="defi_tab_staked">Staking</string>
+    <string name="defi_tab_bonded">Vinculado</string>
+    <string name="defi_tab_lp">LP</string>
     <string name="deposit_form_operator_slippage_title">Derrapagem</string>
     <string name="slippage_required_error">A derrapagem é obrigatória</string>
     <string name="slippage_invalid_error">A derrapagem deve estar entre 1 e 100</string>
@@ -560,6 +564,7 @@
     <string name="vault_settings_migrate_gg20">Migrar DKLS do cofre GG20</string>
     <string name="vault_settings_reshare_change">Partilhar novamente, alterar o TSS ou subscrever mensagens.</string>
     <string name="vault_backup_summary_start_using_vault">Comece a utilizar o seu Cofre</string>
+    <string name="vault_backup_summary_choose_chains">Escolha Correntes</string>
     <string name="transaction_done_form_approve">Aprovar</string>
     <string name="vault_settings_migration_title">Migrar</string>
     <string name="transaction_buy">Comprar</string>
@@ -872,4 +877,9 @@
     <string name="circle_usdc_account">Conta Circle USDC</string>
     <string name="withdraw">Retirar</string>
     <string name="send_form_network_fee">Taxa de rede (automática)</string>
+    <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
+    <string name="swap_form_referral_discount_bps">Indicação (-%1$d bps)</string>
+    <string name="amino_sign">Assinatura Amino</string>
+    <string name="amino_direct">Assinatura Direta</string>
+    <string name="import_file_screen_enter_password">Introduza a palavra‑passe da partilha do cofre.</string>
 </resources>

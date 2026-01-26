@@ -209,10 +209,10 @@
     <string name="swap_screen_provider_title">Anbieter</string>
     <string name="swap_form_minimum_amount">Swap-Betrag zu klein. Empfohlener Betrag %1$s %2$s</string>
     <string name="backup_password_screen_title">Sicherung</string>
-    <string name="import_file_screen_password_error">Das Passwort ist nicht korrekt.</string>
+    <string name="import_file_screen_password_error">Falsches Passwort, bitte versuchen Sie es erneut.</string>
     <string name="add_vault_save">Speichern</string>
     <string name="backup_password_screen_enter_password">Passwort eingeben</string>
-    <string name="import_file_screen_enter_password">Passwort eingeben</string>
+    <string name="import_file_screen_enter_password_sub">Dieses Passwort wurde beim Export der Tresorfreigabe festgelegt.</string>
     <string name="import_file_screen_hint_password">Passwort</string>
     <string name="import_file_screen_ok">OK</string>
     <string name="import_file_screen_cancel">Stornieren</string>
@@ -415,6 +415,10 @@
     <string name="deposit_option_receive_ytcy">yTCY erhalten</string>
     <string name="deposit_option_sell_yrune">yRUNE verkaufen</string>
     <string name="deposit_option_sell_ytcy">yTCY verkaufen</string>
+    <string name="defi_tab_deposited">Eingezahlt</string>
+    <string name="defi_tab_staked">Gestaked</string>
+    <string name="defi_tab_bonded">Gebondet</string>
+    <string name="defi_tab_lp">LP</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Slippage ist erforderlich</string>
     <string name="slippage_invalid_error">Slippage muss zwischen 1 und 100 liegen</string>
@@ -563,6 +567,7 @@
     <string name="vault_settings_migrate_gg20">GG20‑Vault auf DKLS migrieren</string>
     <string name="vault_settings_reshare_change">Erneut teilen, TSS ändern oder Nachrichten signieren.</string>
     <string name="vault_backup_summary_start_using_vault">Jetzt Ihren Tresor nutzen.</string>
+    <string name="vault_backup_summary_choose_chains">Wählen Sie Ketten</string>
     <string name="transaction_done_form_approve">Genehmigen</string>
     <string name="vault_settings_migration_title">Migrieren</string>
     <string name="transaction_buy">Kaufen</string>
@@ -875,4 +880,9 @@
     <string name="circle_usdc_account">Circle USDC-Konto</string>
     <string name="withdraw">Abheben</string>
     <string name="send_form_network_fee">Netzwerkgebühr (automatisch)</string>
+    <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
+    <string name="swap_form_referral_discount_bps">Empfehlung (-%1$d bps)</string>
+    <string name="amino_sign">Amino-Signatur</string>
+    <string name="amino_direct">Direkte Signatur</string>
+    <string name="import_file_screen_enter_password">Geben Sie das Passwort für die Tresorfreigabe ein.</string>
 </resources>

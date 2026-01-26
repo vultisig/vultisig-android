@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
+import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 
 object NetworkUtils {
 
@@ -29,24 +31,59 @@ object NetworkUtils {
         val connectivityManager =
             getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
+        // Thread-safe set for concurrent access from ConnectivityManager callbacks
+        val validatedNetworks = ConcurrentHashMap.newKeySet<Network>()
+
+        fun updateAndEmit() {
+            trySend(validatedNetworks.isNotEmpty())
+        }
+
         val networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                val caps = connectivityManager.getNetworkCapabilities(network)
-                trySend(caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true)
+                try {
+                    val caps = connectivityManager.getNetworkCapabilities(network)
+                    if (caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true) {
+                        validatedNetworks.add(network)
+                        updateAndEmit()
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Error in onAvailable")
+                }
             }
 
             override fun onLost(network: Network) {
-                trySend(false)
+                try {
+                    validatedNetworks.remove(network)
+                    updateAndEmit()
+                } catch (e: Exception) {
+                    Timber.e(e, "Error in onLost")
+                }
             }
 
             override fun onUnavailable() {
-                trySend(false)
+                // Network request could not be fulfilled
+                // Don't modify state, just emit current state
+                try {
+                    updateAndEmit()
+                } catch (t: Throwable) {
+                    Timber.e(t,"Error on onUnavailable")
+                }
             }
 
             override fun onCapabilitiesChanged(
                 network: Network, networkCapabilities: NetworkCapabilities
             ) {
-                trySend(networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED))
+                try {
+                    val isValidated = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    if (isValidated) {
+                        validatedNetworks.add(network)
+                    } else {
+                        validatedNetworks.remove(network)
+                    }
+                    updateAndEmit()
+                } catch (e: Exception) {
+                    Timber.e(e, "Error in onCapabilitiesChanged")
+                }
             }
         }
 
@@ -59,11 +96,20 @@ object NetworkUtils {
             networkCallback
         )
 
-        val currentNetwork = connectivityManager.activeNetwork
-        val capabilities = connectivityManager.getNetworkCapabilities(currentNetwork)
-        val isConnected =
-            capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
-        trySend(isConnected)
+        // Send initial connectivity state by checking current active network
+        try {
+            val currentNetwork = connectivityManager.activeNetwork
+            if (currentNetwork != null) {
+                val capabilities = connectivityManager.getNetworkCapabilities(currentNetwork)
+                if (capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true) {
+                    validatedNetworks.add(currentNetwork)
+                }
+            }
+            updateAndEmit()
+        } catch (e: Exception) {
+            Timber.e(e, "Error checking initial connectivity")
+            trySend(false)
+        }
 
         awaitClose {
             connectivityManager.unregisterNetworkCallback(networkCallback)

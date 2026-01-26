@@ -41,7 +41,6 @@ class SolanaSwap(
         return helper.getSwapSignedTransaction(inputData, signatures)
     }
 
-    // TODO: Refactor Quote for SOL
     private fun getPreSignedInputData(
         quote: EVMSwapQuoteJson,
         keysignPayload: KeysignPayload,

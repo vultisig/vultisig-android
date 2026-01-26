@@ -7,6 +7,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.app.activity.MainActivity
@@ -22,6 +23,7 @@ import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Deposit
 import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Send
 import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Sign
 import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Swap
+import com.vultisig.wallet.ui.utils.performHaptic
 import com.vultisig.wallet.ui.utils.showReviewPopUp
 import timber.log.Timber
 
@@ -44,14 +46,15 @@ internal fun KeysignScreen(
         Timber.e(e, "Error loading transaction for keysign")
     }
 
-    KeysignScreen()
+    KeysignFlowScreen(txType = txType)
 }
 
 @Composable
-private fun KeysignScreen(
+private fun KeysignFlowScreen(
     viewModel: KeysignFlowViewModel = hiltViewModel(),
     sharedViewModel: KeysignShareViewModel =
         hiltViewModel(LocalActivity.current as MainActivity),
+    txType: Route.Keysign.Keysign.TxType,
 ) {
     val keysignFlowState by viewModel.currentState.collectAsState()
 
@@ -64,6 +67,7 @@ private fun KeysignScreen(
         is KeysignFlowState.PeerDiscovery -> {
             KeysignPeerDiscovery(
                 viewModel = viewModel,
+                txType = txType
             )
         }
 
@@ -93,6 +97,7 @@ private fun Keysign(
 ) {
     val context = LocalContext.current
     val reviewManager = remember { ReviewManagerFactory.create(context) }
+    val view = LocalView.current
 
     val wrapperViewModel = hiltViewModel(
         creationCallback = { factory: KeySignWrapperViewModel.Factory ->
@@ -107,7 +112,13 @@ private fun Keysign(
         when (state) {
 
             is KeysignState.Error -> onError(state.errorMessage)
+            is KeysignState.KeysignECDSA,
+            is KeysignState.KeysignEdDSA -> {
+                view.performHaptic()
+            }
+
             is KeysignState.KeysignFinished -> {
+                view.performHaptic()
                 onKeysignFinished?.invoke()
                 reviewManager.showReviewPopUp(context)
             }
@@ -124,9 +135,7 @@ private fun Keysign(
         onComplete = onComplete,
         progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
         showToolbar = true,
-        onBack = {
-            viewModel.navigateToHome()
-        },
+        onBack = viewModel::navigateToHome,
         onAddToAddressBook = keysignViewModel::navigateToAddressBook,
         showSaveToAddressBook = keysignViewModel.showSaveToAddressBook.collectAsState().value,
     )

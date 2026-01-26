@@ -3,9 +3,12 @@ package com.vultisig.wallet.ui.screens.v2.defi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -17,18 +20,19 @@ import com.vultisig.wallet.ui.components.containers.VsContainerType
 import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
 import com.vultisig.wallet.ui.components.containers.VsContainer
 import com.vultisig.wallet.ui.components.scaffold.VsScaffold
+import com.vultisig.wallet.ui.components.v2.tab.VsTab
+import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
-import com.vultisig.wallet.ui.screens.v2.home.components.VsTabs
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 fun BaseDeFiPositionsScreenContent(
     state: DefiUiModel,
-    tabs: List<String>,
+    tabs: List<DeFiTab>,
     bannerTitle: String,
     bannerImage: Int = R.drawable.referral_data_banner,
     onBackClick: () -> Unit,
-    onTabSelected: (String) -> Unit = {},
+    onTabSelected: (DeFiTab) -> Unit = {},
     onEditChains: () -> Unit = {},
     tabContent: @Composable () -> Unit = {},
 ) {
@@ -50,40 +54,55 @@ fun BaseDeFiPositionsScreenContent(
                 isBalanceVisible = state.isBalanceVisible,
             )
 
-            VsTabs(
-                tabs = tabs,
-                onTabSelected = onTabSelected,
-                selectedTab = state.selectedTab,
-                content = {
-                    if (state.supportEditChains) {
-                        VsContainer(
-                            type = VsContainerType.SECONDARY,
-                            vsContainerCornerType = VsContainerCornerType.Circular,
-                            modifier = Modifier
-                                .clickOnce(onClick = {})
-                        ) {
-                            UiIcon(
-                                drawableResId = R.drawable.edit_chain,
-                                size = 16.dp,
-                                modifier = Modifier.padding(all = 12.dp),
-                                tint = Theme.colors.primary.accent4,
-                                onClick = onEditChains,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                VsTabGroup(
+                    index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }
+                ) {
+                    tabs.forEach { tab ->
+                        tab {
+                            VsTab(
+                                label = stringResource(tab.displayNameRes),
+                                onClick = {
+                                    onTabSelected(tab)
+                                },
                             )
                         }
                     }
                 }
-            )
+
+                if (state.supportEditChains) {
+                    V2Container(
+                        type = ContainerType.SECONDARY,
+                        cornerType = CornerType.Circular,
+                        modifier = Modifier
+                            .clickOnce(onClick = {})
+                    ) {
+                        UiIcon(
+                            drawableResId = R.drawable.edit_chain,
+                            size = 16.dp,
+                            modifier = Modifier.padding(all = 12.dp),
+                            tint = Theme.v2.colors.primary.accent4,
+                            onClick = onEditChains,
+                        )
+                    }
+                }
+            }
 
             tabContent()
         }
     }
 }
 
-enum class DeFiTab(val displayName: String) {
-    DEPOSITED("Deposited"),
-    STAKED("Staked"),
-    BONDED("Bonded"),
-    LP("LP"),
+enum class DeFiTab(@androidx.annotation.StringRes val displayNameRes: Int) {
+    DEPOSITED(R.string.defi_tab_deposited),
+    STAKED(R.string.defi_tab_staked),
+    BONDED(R.string.defi_tab_bonded),
+    LP(R.string.defi_tab_lp),
 }
 
 @Preview(showBackground = true)
@@ -95,9 +114,9 @@ private fun BaseDeFiPositionsScreenContentPreview() {
                 isTotalAmountLoading = false,
                 isBalanceVisible = true,
                 supportEditChains = true,
-                selectedTab = DeFiTab.DEPOSITED.displayName
+                selectedTab = DeFiTab.DEPOSITED.displayNameRes
             ),
-            tabs = listOf(DeFiTab.DEPOSITED.displayName, DeFiTab.STAKED.displayName),
+            tabs = listOf(DeFiTab.DEPOSITED, DeFiTab.STAKED),
             bannerTitle = "USDC Account",
             onBackClick = {},
             onTabSelected = {},
@@ -115,9 +134,9 @@ private fun BaseDeFiPositionsScreenContentLoadingPreview() {
                 isTotalAmountLoading = true,
                 isBalanceVisible = true,
                 supportEditChains = false,
-                selectedTab = DeFiTab.DEPOSITED.displayName
+                selectedTab = DeFiTab.DEPOSITED.displayNameRes
             ),
-            tabs = listOf(DeFiTab.DEPOSITED.displayName),
+            tabs = listOf(DeFiTab.DEPOSITED),
             bannerTitle = "USDC Account",
             onBackClick = {},
             onTabSelected = {},
@@ -135,9 +154,9 @@ private fun BaseDeFiPositionsScreenContentHiddenBalancePreview() {
                 isTotalAmountLoading = false,
                 isBalanceVisible = false,
                 supportEditChains = true,
-                selectedTab = DeFiTab.STAKED.displayName
+                selectedTab = DeFiTab.STAKED.displayNameRes
             ),
-            tabs = listOf(DeFiTab.DEPOSITED.displayName, DeFiTab.STAKED.displayName, DeFiTab.BONDED.displayName),
+            tabs = listOf(DeFiTab.DEPOSITED, DeFiTab.STAKED, DeFiTab.BONDED),
             bannerTitle = "USDC Account",
             onBackClick = {},
             onTabSelected = {},

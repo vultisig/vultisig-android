@@ -9,10 +9,14 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface SessionApi {
     suspend fun checkCommittee(serverUrl: String, sessionId: String): List<String>
@@ -190,16 +194,35 @@ internal class SessionApiImpl @Inject constructor(
         messageId: String?,
         messageId2: String?
     ): String {
-        return httpClient.get("$serverUrl/setup-message/$sessionId") {
-            if (!messageId.isNullOrEmpty()) {
-                header(MESSAGE_ID_HEADER_TITLE, messageId)
+        var lastException: Exception? = null
+        repeat(MAX_RETRIES) { attempt ->
+            try {
+                val response = httpClient.get("$serverUrl/setup-message/$sessionId") {
+                    if (!messageId.isNullOrEmpty()) {
+                        header(MESSAGE_ID_HEADER_TITLE, messageId)
+                    }
+                    if (!messageId2.isNullOrEmpty()) {
+                        header(MESSAGE_ID_2_HEADER_TITLE, messageId2)
+                    }
+                }
+                if (response.status.isSuccess()) {
+                    return response.body()
+                } else {
+                    lastException = Exception("HTTP ${response.status.value}: ${response.status.description}")
+                }
+            } catch (e: CancellationException) {
+                Timber.e("Retry setup-message cancelled exceptions")
+                throw e
+            } catch (e: Exception) {
+                Timber.e("Retry setup-message request failed")
+                lastException = e
             }
-            if (!messageId2.isNullOrEmpty()) {
-                header(MESSAGE_ID_2_HEADER_TITLE, messageId2)
+            if (attempt < MAX_RETRIES - 1) {
+                Timber.e("Retry setup-message request attempt: ${attempt + 1}")
+                delay(1000L)
             }
         }
-            .throwIfUnsuccessful()
-            .body()
+        throw lastException ?: Exception("Failed to get setup message after $MAX_RETRIES retries")
     }
 
     override suspend fun uploadSetupMessage(
@@ -223,5 +246,6 @@ internal class SessionApiImpl @Inject constructor(
     companion object {
         private const val MESSAGE_ID_HEADER_TITLE = "message_id"
         private const val MESSAGE_ID_2_HEADER_TITLE = "message-id"
+        private const val MAX_RETRIES = 10
     }
 }

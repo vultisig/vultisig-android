@@ -47,12 +47,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -71,6 +73,7 @@ import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
@@ -79,7 +82,9 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.components.scaffold.VsScaffold
+import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.models.send.AddressBookType
+import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
@@ -172,7 +177,7 @@ private fun SendFormScreen(
     onSelectTokenRequest: () -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
     onChooseMaxTokenAmount: () -> Unit = {},
-    onChoosePercentageAmount: (Float) -> Unit = {},
+    onChoosePercentageAmount: (AmountFraction) -> Unit = {},
     onAddressBookClick: () -> Unit = {},
     onScanDstAddressRequest: () -> Unit = {},
     onSend: () -> Unit = {},
@@ -352,7 +357,7 @@ private fun SendFormContent(
     focusManager: FocusManager,
     onSend: () -> Unit,
     onToogleAmountInputType: (Boolean) -> Unit,
-    onChoosePercentageAmount: (Float) -> Unit,
+    onChoosePercentageAmount: (AmountFraction) -> Unit,
     onChooseMaxTokenAmount: () -> Unit,
     memoFieldState: TextFieldState,
 
@@ -525,7 +530,7 @@ private fun FoldableAmountWidget(
     focusManager: FocusManager,
     onSend: () -> Unit,
     onToogleAmountInputType: (Boolean) -> Unit,
-    onChoosePercentageAmount: (Float) -> Unit,
+    onChoosePercentageAmount: (AmountFraction) -> Unit,
     onChooseMaxTokenAmount: () -> Unit,
     onAutoCompoundCheckedChange: (Boolean) -> Unit,
     memoFieldState: TextFieldState,
@@ -669,37 +674,22 @@ private fun FoldableAmountWidget(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                PercentageChip(
-                    title = "25%",
-                    isSelected = false,
-                    onClick = { onChoosePercentageAmount(0.25f) },
-                    modifier = Modifier
-                        .weight(1f),
-                )
-
-                PercentageChip(
-                    title = "50%",
-                    isSelected = false,
-                    onClick = { onChoosePercentageAmount(0.5f) },
-                    modifier = Modifier
-                        .weight(1f),
-                )
-
-                PercentageChip(
-                    title = "75%",
-                    isSelected = false,
-                    onClick = { onChoosePercentageAmount(0.75f) },
-                    modifier = Modifier
-                        .weight(1f),
-                )
-
-                PercentageChip(
-                    title = stringResource(R.string.send_screen_max),
-                    isSelected = false,
-                    onClick = onChooseMaxTokenAmount,
-                    modifier = Modifier
-                        .weight(1f),
-                )
+                state.amountFractionEntries.forEach { fraction ->
+                    PercentageChip(
+                        title = fraction.title.asString(),
+                        isSelected = fraction == state.selectedAmountFraction,
+                        onClick = {
+                            if (fraction == AmountFraction.F100) {
+                                onChooseMaxTokenAmount()
+                            } else {
+                                onChoosePercentageAmount(fraction)
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f),
+                        isLoading = state.isAmountSelectionLoading
+                    )
+                }
             }
 
             UiSpacer(12.dp)
@@ -722,7 +712,7 @@ private fun FoldableAmountWidget(
                 )
 
                 val ticker = state.selectedCoin?.title?.let { " $it" } ?: ""
-                
+
                 Text(
                     text = (state.selectedCoin?.balance ?: "0") + ticker,
                     style = Theme.brockmann.body.s.medium,
@@ -1419,33 +1409,47 @@ private fun Modifier.vsClickableBackground() =
 private fun PercentageChip(
     title: String,
     isSelected: Boolean,
+    isLoading: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Text(
-        text = title,
-        style = Theme.brockmann.supplementary.caption,
-        color = Theme.colors.text.light,
-        textAlign = TextAlign.Center,
+
+    Box(
         modifier = modifier
             .clickable(onClick = onClick)
             .then(
                 if (isSelected)
                     Modifier.background(
-                        color = Theme.colors.primary.accent3,
-                        shape = RoundedCornerShape(99.dp),
+                        color = Theme.primary.accent3,
+                        shape = CircleShape,
                     )
                 else
                     Modifier.border(
                         width = 1.dp,
-                        color = Theme.colors.border.light,
-                        shape = RoundedCornerShape(99.dp),
+                        color = Theme.border.light,
+                        shape = CircleShape,
                     )
             )
             .padding(
                 all = 4.dp,
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isLoading && isSelected) {
+            V2Loading(
+                modifier = Modifier
+                    .size(16.dp)
             )
-    )
+        } else {
+            Text(
+                text = title,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.text.light,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+
 }
 
 @Composable
@@ -1454,35 +1458,59 @@ private fun TokenFiatToggle(
     onTokenSelected: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+    Box(
         modifier = modifier
+            .height(IntrinsicSize.Min)
             .background(
-                color = Theme.colors.backgrounds.secondary,
-                shape = RoundedCornerShape(99.dp)
-            )
-            .padding(
-                all = 4.dp,
+                color = Theme.backgrounds.secondary,
+                shape = CircleShape
             )
     ) {
-        ToggleButton(
-            drawableResId = R.drawable.ic_coins,
-            isSelected = isTokenSelected,
-            onClick = { onTokenSelected(true) },
-        )
+        LookaheadScope {
+            Box(
+                Modifier
+                    .animatePlacementInScope(
+                        lookaheadScope = this@LookaheadScope
+                    )
+                    .padding(
+                        all = 4.dp,
+                    )
+                    .background(
+                        color = Theme.primary.accent3,
+                        shape = CircleShape,
+                    )
+                    .padding(all = 8.dp)
+                    .size(16.dp)
+                    .align(
+                        if (isTokenSelected)
+                            Alignment.TopCenter
+                        else Alignment.BottomCenter
+                    )
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier
+                    .padding(
+                        all = 4.dp,
+                    )
+            ) {
+                ToggleButton(
+                    drawableResId = R.drawable.ic_coins,
+                    onClick = { onTokenSelected(true) },
+                )
 
-        ToggleButton(
-            drawableResId = R.drawable.ic_dollar_sign,
-            isSelected = !isTokenSelected,
-            onClick = { onTokenSelected(false) },
-        )
+                ToggleButton(
+                    drawableResId = R.drawable.ic_dollar_sign,
+                    onClick = { onTokenSelected(false) },
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun ToggleButton(
     @DrawableRes drawableResId: Int,
-    isSelected: Boolean,
     onClick: () -> Unit,
 ) {
     UiIcon(
@@ -1490,15 +1518,8 @@ private fun ToggleButton(
         size = 16.dp,
         tint = Theme.colors.text.light,
         modifier = Modifier
+            .clip(CircleShape)
             .clickable(onClick = onClick)
-            .then(
-                if (isSelected)
-                    Modifier.background(
-                        color = Theme.colors.primary.accent3,
-                        shape = CircleShape,
-                    )
-                else Modifier
-            )
             .padding(all = 8.dp)
     )
 }

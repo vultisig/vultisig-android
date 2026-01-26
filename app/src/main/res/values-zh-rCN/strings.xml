@@ -34,6 +34,10 @@
     <string name="deposit_option_receive_ytcy">铸造 yTCY</string>
     <string name="deposit_option_sell_yrune">赎回 yRUNE</string>
     <string name="deposit_option_sell_ytcy">赎回 yTCY</string>
+    <string name="defi_tab_deposited">已存入</string>
+    <string name="defi_tab_staked">已质押</string>
+    <string name="defi_tab_bonded">已绑定</string>
+    <string name="defi_tab_lp">LP</string>
     <string name="deposit_option_add_cacao_pool">添加到 CACAO 池</string>
 
     <!-- Basic UI -->
@@ -332,10 +336,10 @@
 
     <!-- Backup Password Screen -->
     <string name="backup_password_screen_title">备份</string>
-    <string name="import_file_screen_password_error">密码不正确。</string>
+    <string name="import_file_screen_password_error">密码错误，请重试</string>
     <string name="add_vault_save">保存</string>
     <string name="backup_password_screen_enter_password">输入密码</string>
-    <string name="import_file_screen_enter_password">输入密码</string>
+    <string name="import_file_screen_enter_password_sub">此密码是在导出共享保险库时设置的。</string>
     <string name="import_file_screen_hint_password">密码</string>
     <string name="import_file_screen_ok">确定</string>
     <string name="import_file_screen_cancel">取消</string>
@@ -626,6 +630,7 @@
 
     <!-- Vault Settings Migration -->
     <string name="vault_backup_summary_start_using_vault">开始使用您的金库</string>
+    <string name="vault_backup_summary_choose_chains">选择链条</string>
     <string name="transaction_done_form_approve">批准</string>
     <string name="vault_settings_migration_title">迁移</string>
 
@@ -1217,4 +1222,9 @@
     <string name="withdraw">提取</string>
 
     <string name="send_form_network_fee">网络费用（自动）</string>
+    <string name="swap_form_vult_discount_bps">VULT（%1$s -%2$d bps）</string>
+    <string name="swap_form_referral_discount_bps">推荐人（-%1$d bps）</string>
+    <string name="amino_sign">Amino 签名</string>
+    <string name="amino_direct">直接签名</string>
+    <string name="import_file_screen_enter_password">输入共享保险库密码</string>
 </resources>

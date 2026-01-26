@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -50,12 +52,14 @@ import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.components.scaffold.VsScaffold
+import com.vultisig.wallet.ui.models.keygen.KeygenState
 import com.vultisig.wallet.ui.models.keygen.KeygenStepUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.performHaptic
 
 @Composable
 internal fun KeygenScreen(
@@ -64,6 +68,18 @@ internal fun KeygenScreen(
     KeepScreenOn()
 
     val state by model.state.collectAsState()
+    val view = LocalView.current
+
+    LaunchedEffect(state.keygenState) {
+        when(state.keygenState) {
+            KeygenState.KeygenECDSA,
+            KeygenState.KeygenEdDSA,
+            KeygenState.Success,-> {
+                view.performHaptic()
+            }
+            else -> Unit
+        }
+    }
 
     if (state.isSuccess) {
         Success()
@@ -113,6 +129,16 @@ private fun KeygenScreen(
                         vmi.setBoolean("Connected", true)
                     }
 
+                    val animatedValue by animateFloatAsState(
+                        targetValue = state.progress.times(100),
+                        animationSpec = tween(durationMillis = 300),
+                        label = "riv_progress_animation"
+                    )
+
+                    LaunchedEffect(animatedValue) {
+                        vmi.setNumber("progessPercentage", animatedValue)
+                    }
+
                     RiveAnimation(
                         file = riveFile,
                         viewModelInstance = vmi,
@@ -123,7 +149,7 @@ private fun KeygenScreen(
                     ErrorView(
                         title = error.title.asString(),
                         description = error.description.asString(),
-                        onTryAgainClick = onTryAgainClick,
+                        onButtonClick = onTryAgainClick,
                         modifier = Modifier
                             .fillMaxWidth()
                     )
@@ -188,6 +214,7 @@ private fun LoadingStageItem(
 
 @Composable
 private fun Success() {
+
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier

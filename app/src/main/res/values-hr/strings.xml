@@ -210,10 +210,10 @@
     <string name="swap_screen_provider_title">Davatelj</string>
     <string name="swap_form_minimum_amount">Iznos zamjene premali. Preporučena količina %1$s %2$s</string>
     <string name="backup_password_screen_title">Sigurnosna kopija</string>
-    <string name="import_file_screen_password_error">Lozinka nije ispravna.</string>
+    <string name="import_file_screen_password_error">Netočna lozinka, pokušajte ponovno</string>
     <string name="add_vault_save">Spremi</string>
     <string name="backup_password_screen_enter_password">Unesite lozinku</string>
-    <string name="import_file_screen_enter_password">Unesite lozinku</string>
+    <string name="import_file_screen_enter_password_sub">Ova lozinka je postavljena prilikom izvoza dijeljenja trezora.</string>
     <string name="import_file_screen_hint_password">Lozinka</string>
     <string name="import_file_screen_ok">OK</string>
     <string name="import_file_screen_cancel">Otkazati</string>
@@ -416,6 +416,10 @@
     <string name="deposit_option_receive_ytcy">Primi yTCY</string>
     <string name="deposit_option_sell_yrune">Prodaj yRUNE</string>
     <string name="deposit_option_sell_ytcy">Prodaj yTCY</string>
+    <string name="defi_tab_deposited">Deponirano</string>
+    <string name="defi_tab_staked">Uloženo</string>
+    <string name="defi_tab_bonded">Vezano</string>
+    <string name="defi_tab_lp">LP</string>
     <string name="deposit_form_operator_slippage_title">Proklizavanje</string>
     <string name="slippage_required_error">Proklizavanje je obavezno</string>
     <string name="slippage_invalid_error">Proklizavanje mora biti između 1 i 100</string>
@@ -563,6 +567,7 @@
     <string name="vault_settings_migrate_gg20">Migracija DKLS-a trezora GG20</string>
     <string name="vault_settings_reshare_change">Ponovno dijeljenje, promjena TSS-a ili potpisivanje poruka.</string>
     <string name="vault_backup_summary_start_using_vault">Počnite koristiti svoj trezor</string>
+    <string name="vault_backup_summary_choose_chains">Odaberite lance</string>
     <string name="transaction_done_form_approve">Odobri</string>
     <string name="vault_settings_migration_title">Migrirati</string>
     <string name="transaction_buy">Kupi</string>
@@ -874,4 +879,9 @@
     <string name="circle_msca_account_created_failed">Neuspješno stvaranje Circle MSCA računa. Molimo pokušajte ponovno.</string>
     <string name="circle_usdc_account">Circle USDC račun</string>
     <string name="withdraw">Povući</string>
+    <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
+    <string name="swap_form_referral_discount_bps">Preporuka (-%1$d bps)</string>
+    <string name="amino_sign">Amino potpis</string>
+    <string name="amino_direct">Izravni potpis</string>
+    <string name="import_file_screen_enter_password">Unesite lozinku za dijeljenje trezora</string>
 </resources>

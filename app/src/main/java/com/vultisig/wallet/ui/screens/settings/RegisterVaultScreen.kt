@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,11 +39,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.settings.RegisterVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.Theme.montserrat
@@ -86,18 +84,23 @@ internal fun RegisterVaultScreen(
         }
     }
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.backgrounds.primary),
-        topBar = {
-            TopBar(
-                navController = navController,
-                centerText = stringResource(R.string.register_vault_screen_title),
-                startIcon = R.drawable.ic_caret_left,
+    V2Scaffold(
+        onBackClick = { navController.popBackStack() },
+        title = stringResource(R.string.register_vault_screen_title),
+        applyDefaultPaddings = false,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colors.backgrounds.primary)
+        ) {
+            RegisterVaultScreen(
+                onVultisigLinkClick = {
+                    uriHandler.openUri(VsAuxiliaryLinks.AIRDROP)
+                },
+                modifier = Modifier.weight(1f)
             )
-        },
-        bottomBar = {
+
             VsButton(
                 onClick = viewModel::saveBitmap,
                 label = stringResource(R.string.register_vault_screen_save_qr_code),
@@ -109,13 +112,6 @@ internal fun RegisterVaultScreen(
                         bottom = 16.dp,
                     ),
             )
-        }
-    ) {
-        Box(modifier = Modifier.padding(it)) {
-            RegisterVaultScreen {
-                uriHandler.openUri(VsAuxiliaryLinks.AIRDROP)
-            }
-
         }
     }
 }
@@ -142,9 +138,10 @@ internal fun FormRegister(
 @Composable
 private fun RegisterVaultScreen(
     onVultisigLinkClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
             .fillMaxSize(),
@@ -274,6 +271,8 @@ private fun RegisterVaultScreen(
 @Preview
 @Composable
 private fun RegisterVaultScreenPreview() {
-    RegisterVaultScreen {}
+    RegisterVaultScreen(
+        onVultisigLinkClick = {}
+    )
 }
 

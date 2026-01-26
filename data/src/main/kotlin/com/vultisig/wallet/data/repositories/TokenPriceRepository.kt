@@ -298,10 +298,19 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
 
             val tokenIdToPrices = thorTokens.asSequence()
                 .mapNotNull {
-                    val tokenAsset = "thor.${it.ticker}".lowercase()
-                    val priceUsd = poolAssetToPriceMap[tokenAsset]
-                        ?.toBigDecimal(scale = 8)
-                        ?: return@mapNotNull null
+                    val mappedAsset = mapThorPoolAsset(it.contractAddress)
+                    var priceUsd = poolAssetToPriceMap[mappedAsset]?.toBigDecimal(scale = 8)
+
+                    // Fall back to ticker-based mapping for backwards compatibility
+                    if (priceUsd == null) {
+                        val tickerAsset = "thor.${it.ticker}".lowercase()
+                        priceUsd = poolAssetToPriceMap[tickerAsset]?.toBigDecimal(scale = 8)
+                    }
+
+                    // If still no price found, skip this token
+                    if (priceUsd == null) {
+                        return@mapNotNull null
+                    }
 
                     //Since ninerealms provides prices in USD, we use the USDT rate to convert them into the selected currency
                     it.id to mapOf(currency to priceUsd * tetherPrice)
@@ -321,9 +330,9 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
     ) = supervisorScope {
         try {
             val thorTokens =
-                Coins.coins[Chain.ThorChain]?.filter { 
-                    it.contractAddress.startsWith("x/nami") || 
-                    it.contractAddress == "x/staking-tcy"
+                Coins.coins[Chain.ThorChain]?.filter {
+                    it.contractAddress.startsWith("x/nami") ||
+                            it.contractAddress == "x/staking-tcy"
                 } ?: emptyList()
 
             val matchingTokens = tokenList.filter { token ->
@@ -334,7 +343,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
 
             val contracts = matchingTokens.map {
                 when {
-                    it.contractAddress.startsWith("x/nami") -> 
+                    it.contractAddress.startsWith("x/nami") ->
                         it.contractAddress.substringAfter("nav-").substringBefore("-rcpt")
                     it.contractAddress == "x/staking-tcy" -> 
                         "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
@@ -358,7 +367,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                             val token = matchingTokens[index]
 
                             val vaultData = thorApi.getThorchainTokenPriceByContract(contract)
-                            
+
                             val priceUsd = if (token.contractAddress == "x/staking-tcy") {
                                 val tcyPriceUSD = getCachedPrice("tcy", AppCurrency.USD)
                                     ?: getPriceByPriceProviderId("tcy")
@@ -375,7 +384,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                                 // For NAMI tokens, use navPerShare
                                 vaultData.data.navPerShare.toBigDecimalOrNull() ?: BigDecimal.ZERO
                             }
-                            
+
                             tokenId to mapOf(currency to priceUsd * tetherPrice)
                         } catch (e: Exception) {
                             Timber.e(e, "Failed to fetch price for contract: $contract")
@@ -393,5 +402,64 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
 
     companion object {
         private const val TETHER_PRICE_PROVIDER_ID = "tether"
+    }
+
+    private fun mapThorPoolAsset(contractAddress: String): String {
+        val addr = contractAddress.lowercase()
+
+        return try {
+            when {
+                // simple alphanumeric -> thor.<addr>
+                addr.matches(Regex("^[a-z0-9]+$")) ->
+                    "thor.$addr"
+
+                // single hyphen pair -> replace hyphen with dot (e.g. bcs-bnb -> bcs.bnb)
+                addr.matches(Regex("^[a-z0-9]+-[a-z0-9]+$")) ->
+                    addr.replace(
+                        "-",
+                        "."
+                    )
+
+                // special x/… pattern: take the third-from-last segment as the prefix
+                // and join the last two segments with '-' to preserve things like `usdc-0x...`
+                addr.startsWith("x/") && addr.contains("-") -> {
+                    val after = addr.substringAfter("x/")
+                    val parts = after.split("-").filter { it.isNotEmpty() }
+                    if (parts.size >= 3) {
+                        val prefix = parts[parts.size - 3]
+                        val tail = parts.subList(
+                            parts.size - 2,
+                            parts.size
+                        ).joinToString("-")
+                        "$prefix.$tail"
+                    } else if (parts.size == 2) {
+                        // fallback: a.b -> parts[0].parts[1]
+                        "${parts[0]}.${parts[1]}"
+                    } else {
+                        // fallback to replacing hyphens with dots
+                        after.replace(
+                            "-",
+                            "."
+                        )
+                    }
+                }
+
+                addr.matches(Regex("^[a-z0-9]+-[a-z0-9]+-0x[0-9a-f]+$")) -> {
+                    val i = addr.indexOf('-')
+                    addr.substring(
+                        0,
+                        i
+                    ) + "." + addr.substring(i + 1)
+                }
+
+                // fallback: replace hyphens with dots
+                else -> addr.replace(
+                    "-",
+                    "."
+                )
+            }
+        } catch (t: Throwable) {
+            "thor.$addr"
+        }
     }
 }

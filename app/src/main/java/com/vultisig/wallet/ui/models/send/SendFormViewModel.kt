@@ -1,4 +1,4 @@
-@file:kotlin.OptIn(kotlin.uuid.ExperimentalUuidApi::class, kotlin.ExperimentalStdlibApi::class)
+@file:OptIn(kotlin.uuid.ExperimentalUuidApi::class, ExperimentalStdlibApi::class)
 
 package com.vultisig.wallet.ui.models.send
 
@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.R.string
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.blockchain.model.Transfer
@@ -75,6 +76,10 @@ import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
+import com.vultisig.wallet.ui.models.send.AmountFraction.F100
+import com.vultisig.wallet.ui.models.send.AmountFraction.F25
+import com.vultisig.wallet.ui.models.send.AmountFraction.F50
+import com.vultisig.wallet.ui.models.send.AmountFraction.F75
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -139,6 +144,28 @@ internal data class TokenBalanceUiModel(
     @DrawableRes val chainLogo: Int,
 )
 
+sealed class AmountFraction(val title: UiText, val value: Float) {
+    data object F25 : AmountFraction(
+        title = "25%".asUiText(),
+        value = 0.25f
+    )
+
+    data object F50 : AmountFraction(
+        title = "50%".asUiText(),
+        value = 0.5f
+    )
+
+    data object F75 : AmountFraction(
+        title = "75%".asUiText(),
+        value = 0.75f
+    )
+
+    data object F100 : AmountFraction(
+        title = string.send_screen_max.asUiText(),
+        value = 1f
+    )
+}
+
 @Immutable
 internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
@@ -179,6 +206,15 @@ internal data class SendFormUiModel(
     val usingTokenAmountInput: Boolean = true,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
+
+    val isAmountSelectionLoading: Boolean = false,
+    val selectedAmountFraction: AmountFraction? = null,
+    val amountFractionEntries: List<AmountFraction> = listOf(
+        F25,
+        F50,
+        F75,
+        F100
+    )
 )
 
 internal data class SendSrc(
@@ -285,6 +321,8 @@ internal class SendFormViewModel @Inject constructor(
 
     private var preSelectTokenJob: Job? = null
     private var loadAccountsJob: Job? = null
+
+    private var chooseAmountFractionJob: Job? = null
 
     private val appCurrency = appCurrencyRepository
         .currency
@@ -789,23 +827,123 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun chooseMaxTokenAmount() {
-        viewModelScope.launch {
-            val max = fetchPercentageOfAvailableBalance(1f)
-
-            maxAmount = max
+        chooseAmountFractionJob?.cancel()
+        chooseAmountFractionJob = viewModelScope.launch {
+            uiState.update {
+                it.copy(
+                    selectedAmountFraction = F100,
+                    isAmountSelectionLoading = true,
+                )
+            }
+            val amount = try {
+                calculatePercentageWithAccurateFee(1f)
+            } finally {
+                uiState.update {
+                    it.copy(
+                        isAmountSelectionLoading = false,
+                    )
+                }
+            }
+            maxAmount = amount
             isMaxAmount.value = true
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                max.toPlainString()
-            )
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
         }
     }
 
-    fun choosePercentageAmount(percentage: Float) {
-        viewModelScope.launch {
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                fetchPercentageOfAvailableBalance(percentage).toPlainString()
-            )
+    fun choosePercentageAmount(amountFraction: AmountFraction) {
+        chooseAmountFractionJob?.cancel()
+        chooseAmountFractionJob = viewModelScope.launch {
+            uiState.update {
+                it.copy(
+                    selectedAmountFraction = amountFraction,
+                    isAmountSelectionLoading = true,
+                )
+            }
+            val amount = try {
+                calculatePercentageWithAccurateFee(amountFraction.value)
+            } finally {
+                uiState.update {
+                    it.copy(
+                        isAmountSelectionLoading = false,
+                    )
+                }
+            }
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
         }
+    }
+
+    private suspend fun calculatePercentageWithAccurateFee(
+        percentage: Float,
+    ): BigDecimal {
+        val isMax = percentage == 1f
+        val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
+        val token = selectedAccount.token
+
+        var amount = if (gasFee.value != null) {
+            fetchPercentageOfAvailableBalance(percentage)
+        } else {
+            getAvailableTokenBalance(selectedAccount, BigInteger.ZERO)?.decimal
+                ?.multiply(percentage.toBigDecimal())
+                ?: BigDecimal.ZERO
+        }
+
+        if (defiType != null &&
+            defiType != DeFiNavActions.BOND &&
+            defiType != DeFiNavActions.STAKE_RUJI &&
+            defiType != DeFiNavActions.UNSTAKE_RUJI &&
+            defiType != DeFiNavActions.STAKE_TCY &&
+            defiType != DeFiNavActions.UNSTAKE_TCY &&
+            defiType != DeFiNavActions.REDEEM_YRUNE &&
+            defiType != DeFiNavActions.MINT_YTCY &&
+            defiType != DeFiNavActions.REDEEM_YTCY &&
+            defiType != DeFiNavActions.DEPOSIT_USDC_CIRCLE &&
+            defiType != DeFiNavActions.WITHDRAW_USDC_CIRCLE
+        ) {
+            return amount
+        }
+
+        val chain = token.chain
+
+        if (gasFee.value != null && chain.standard == TokenStandard.EVM) {
+            return amount
+        }
+
+        try {
+            val tokenAmountInt = amount
+                .movePointRight(token.decimal)
+                .toBigInteger()
+            val blockchainTransaction = Transfer(
+                coin = token,
+                vault = VaultData(
+                    vaultHexChainCode = vault.hexChainCode,
+                    vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                ),
+                amount = tokenAmountInt,
+                to = addressFieldState.text.toString(),
+                memo = memoFieldState.text.toString(),
+                isMax = isMax,
+            )
+
+            val calculatedFee = withContext(Dispatchers.IO) {
+                feeServiceComposite.calculateFees(blockchainTransaction)
+            }
+
+            val nativeCoin = withContext(Dispatchers.IO) {
+                tokenRepository.getNativeToken(chain.id)
+            }
+
+            val newGasFee = TokenValue(
+                value = calculatedFee.amount,
+                token = nativeCoin,
+            )
+
+            gasFee.value = adjustGasFee(newGasFee, gasSettings.value, specific.value)
+            amount = fetchPercentageOfAvailableBalance(percentage)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to calculate gas fee for percentage amount")
+        }
+
+        return amount
     }
 
     private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal {
@@ -940,17 +1078,19 @@ internal class SendFormViewModel @Inject constructor(
                         )
                 }
 
+                val nativeCoin = nonDeFiAccount.token
+
                 val depositTx = DepositTransaction(
                     id = UUID.randomUUID().toString(),
                     vaultId = vaultId,
-                    srcToken = selectedToken,
+                    srcToken = nativeCoin,
                     srcAddress = srcAddress,
                     dstAddress = mscaAddress
                         ?: throw InvalidTransactionDataException(UiText.DynamicString("MSCA account not deployed yet, please try again")),
                     memo = memo,
                     srcTokenValue = TokenValue(
-                        value = tokenAmountInt,
-                        token = selectedToken,
+                        value = BigInteger.ZERO,
+                        token = nativeCoin,
                     ),
                     estimatedFees = gasFee,
                     estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
@@ -991,6 +1131,12 @@ internal class SendFormViewModel @Inject constructor(
                     )
 
                 val chain = selectedAccount.token.chain
+
+                if (!chainAccountAddressRepository.isValid(chain, addressFieldState.text.toString())) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+                }
 
                 val gasFee = gasFee.value
                     ?: throw InvalidTransactionDataException(

@@ -8,27 +8,31 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -37,7 +41,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.ColorGenerator
 
@@ -65,70 +71,36 @@ private fun AddressBookContent(
 ) {
     var isShowingAddresses by remember { mutableStateOf(true) }
 
-    Scaffold(
-        topBar = {
-            Column {
-                Text(
-                    text = stringResource(R.string.address_book_toolbar_title),
-                    style = Theme.brockmann.headings.title3,
-                    color = Theme.colors.text.primary,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .padding(all = 10.dp)
-                        .fillMaxWidth(),
+    V2Scaffold(
+        title = stringResource(R.string.address_book_toolbar_title),
+        applyDefaultPaddings = false,
+        content = {
+            Column(
+                modifier = Modifier.padding(
+                    horizontal = V2Scaffold.PADDING_HORIZONTAL
                 )
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier
-                        .padding(
-                            vertical = 8.dp,
-                            horizontal = 16.dp
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = Theme.colors.border.light,
-                            shape = RoundedCornerShape(99.dp),
-                        )
-                        .fillMaxWidth(),
-                ) {
-                    PickerItem(
-                        title = stringResource(R.string.address_book_saved_addresses),
-                        isSelected = isShowingAddresses,
-                        onClick = {
-                            isShowingAddresses = true
-                        }
-                    )
-
-                    PickerItem(
-                        title = stringResource(R.string.address_book_my_vaults),
-                        isSelected = !isShowingAddresses,
-                        onClick = {
-                            isShowingAddresses = false
-                        }
-                    )
-                }
-            }
-        },
-        content = { contentPadding ->
-            LazyColumn(
-                modifier = Modifier
-                    .padding(contentPadding),
-                contentPadding = PaddingValues(
-                    vertical = 8.dp,
-                    horizontal = 16.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(if (isShowingAddresses) state.addresses else state.vaults) {
-                    EntryItem(
-                        title = it.title,
-                        subtitle = it.subtitle,
-                        image = it.image,
-                        onClick = {
-                            onAddressClick(it)
-                        }
-                    )
+                AddressToggle(
+                    isShowingAddresses = isShowingAddresses,
+                    onAddressClick = { isShowingAddresses = true },
+                    onVaultClick = { isShowingAddresses = false },
+                )
+                LazyColumn(
+                    contentPadding = PaddingValues(
+                        vertical = V2Scaffold.PADDING_VERTICAL,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(if (isShowingAddresses) state.addresses else state.vaults) {
+                        EntryItem(
+                            title = it.title,
+                            subtitle = it.subtitle,
+                            image = it.image,
+                            onClick = {
+                                onAddressClick(it)
+                            }
+                        )
+                    }
                 }
             }
         },
@@ -136,9 +108,57 @@ private fun AddressBookContent(
 }
 
 @Composable
+private fun AddressToggle(
+    isShowingAddresses: Boolean,
+    onAddressClick: () -> Unit,
+    onVaultClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .height(intrinsicSize = IntrinsicSize.Min)
+    ) {
+        LookaheadScope {
+            Box(
+                modifier = Modifier
+                    .animatePlacementInScope(this)
+                    .background(
+                        color = Theme.colors.primary.accent3,
+                        shape = CircleShape
+                    )
+                    .fillMaxWidth(0.5f)
+                    .fillMaxHeight()
+                    .align(
+                        if (isShowingAddresses) Alignment.CenterStart
+                        else Alignment.CenterEnd
+                    )
+            )
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .border(
+                        width = 1.dp,
+                        color = Theme.colors.primary.accent3,
+                        shape = CircleShape,
+                    )
+                    .fillMaxWidth(),
+            ) {
+                PickerItem(
+                    title = stringResource(R.string.address_book_saved_addresses),
+                    onClick = onAddressClick
+                )
+
+                PickerItem(
+                    title = stringResource(R.string.address_book_my_vaults),
+                    onClick = onVaultClick
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun RowScope.PickerItem(
     title: String,
-    isSelected: Boolean,
     onClick: () -> Unit,
 ) {
     Text(
@@ -149,15 +169,8 @@ private fun RowScope.PickerItem(
         overflow = TextOverflow.MiddleEllipsis,
         maxLines = 1,
         modifier = Modifier
+            .clip(CircleShape)
             .clickable(onClick = onClick)
-            .then(
-                if (isSelected)
-                    Modifier.background(
-                        color = Theme.colors.primary.accent3,
-                        shape = RoundedCornerShape(99.dp),
-                    )
-                else Modifier
-            )
             .padding(all = 12.dp)
             .weight(1f)
     )

@@ -209,10 +209,10 @@
     <string name="swap_form_minimum_amount">Сумма обмена слишком мала. Рекомендуемая сумма %1$s %2$s</string>
     <string name="backup_password_screen_title">Резервное копирование</string>
     <string name="import_file_not_supported">Тип файла не поддерживается.</string>
-    <string name="import_file_screen_password_error">Пароль неверный.</string>
+    <string name="import_file_screen_password_error">Неверный пароль, попробуйте еще раз.</string>
     <string name="add_vault_save">Сохранять</string>
     <string name="backup_password_screen_enter_password">Введите пароль</string>
-    <string name="import_file_screen_enter_password">Введите пароль</string>
+    <string name="import_file_screen_enter_password_sub">Этот пароль был установлен при экспорте общего доступа к хранилищу.</string>
     <string name="import_file_screen_hint_password">Пароль</string>
     <string name="import_file_screen_ok">ХОРОШО</string>
     <string name="import_file_screen_cancel">Отмена</string>
@@ -412,6 +412,10 @@
     <string name="deposit_option_receive_ytcy">Получить yTCY</string>
     <string name="deposit_option_sell_yrune">Продать yRUNE</string>
     <string name="deposit_option_sell_ytcy">Продать yTCY</string>
+    <string name="defi_tab_deposited">Депонировано</string>
+    <string name="defi_tab_staked">стейкинге</string>
+    <string name="defi_tab_bonded">Забондено</string>
+    <string name="defi_tab_lp">LP</string>
     <string name="deposit_form_operator_slippage_title">Проскальзывание</string>
     <string name="slippage_required_error">Проскальзывание обязательно</string>
     <string name="slippage_invalid_error">Проскальзывание должно быть от 1 до 100</string>
@@ -560,6 +564,7 @@
     <string name="vault_settings_migrate_gg20">Миграция хранилища GG20 DKLS</string>
     <string name="vault_settings_reshare_change">Повторный доступ, изменение TSS или подпись сообщений.</string>
     <string name="vault_backup_summary_start_using_vault">Начать использовать хранилище</string>
+    <string name="vault_backup_summary_choose_chains">Выберите цепочки</string>
     <string name="transaction_done_form_approve">Одобрить</string>
     <string name="vault_settings_migration_title">Мигрировать</string>
     <string name="transaction_buy">Купить</string>
@@ -870,4 +875,9 @@
     <string name="circle_usdc_account">Учетная запись Circle USDC</string>
     <string name="withdraw">Вывести</string>
     <string name="send_form_network_fee">Сетевая комиссия (автоматически)</string>
+    <string name="swap_form_vult_discount_bps">VULT (%1$s - %2$d bps)</string>
+    <string name="swap_form_referral_discount_bps">Реферальная программа (-%1$d бит/с)</string>
+    <string name="amino_sign">Амино-подпись</string>
+    <string name="amino_direct">Прямая подпись</string>
+    <string name="import_file_screen_enter_password">Введите пароль для общего доступа к хранилищу.</string>
 </resources>

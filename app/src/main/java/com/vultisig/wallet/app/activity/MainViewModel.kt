@@ -7,7 +7,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.vultisig.wallet.data.common.DeepLinkHelper
@@ -27,6 +26,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -45,13 +47,19 @@ internal class MainViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val appUpdateManager: AppUpdateManager,
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
     val isLoading: State<Boolean> = _isLoading
     private val _isOffline: MutableState<Boolean> = mutableStateOf(false)
     val isOffline: State<Boolean> = _isOffline
+
+    private val _startUpdateEvent = MutableSharedFlow<Unit>(
+        replay = 0,
+        extraBufferCapacity = 1
+    )
+    val startUpdateEvent = _startUpdateEvent.asSharedFlow()
 
     private val _startDestination: MutableState<Any> = mutableStateOf(Route.Home())
     val startDestination: State<Any> = _startDestination
@@ -132,19 +140,10 @@ internal class MainViewModel @Inject constructor(
         }
     }
 
-    fun checkUpdates(onUpdateAvailable: (AppUpdateInfo) -> Unit) {
-        try {
-            appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
-                when (appUpdateInfo.updateAvailability()) {
-                    UpdateAvailability.UPDATE_AVAILABLE -> {
-                        onUpdateAvailable(appUpdateInfo)
-                    }
-
-                    else -> Unit
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e)
+    fun checkUpdates() {
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
+            if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE)
+                _startUpdateEvent.tryEmit(Unit)
         }
     }
 }

@@ -143,7 +143,7 @@ internal fun ShareVaultQrScreen(
         containerColor = Theme.colors.backgrounds.primary,
         bottomBar = {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = CenterHorizontally,
                 modifier = Modifier
                     .padding(
                         vertical = 16.dp,

@@ -113,13 +113,14 @@ internal fun CustomTokenSearchBar(
                     size = 8.dp
                 )
 
-                AnimatedContent(targetState = initialDisplay) {
+                AnimatedContent( state.text.isEmpty()) {
 
                     UiIcon(
                         drawableResId = if (it)
                             R.drawable.paste_v2 else
-                            R.drawable.big_close,
-                        size = 16.dp,
+                            R.drawable.close_2,
+                        size = if (it) 16.dp else
+                            10.dp,
                         tint = Theme.colors.text.light,
                         onClick = if (it) onPasteClick else onCloseClick,
                     )
