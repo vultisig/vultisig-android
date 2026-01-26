@@ -30,8 +30,8 @@ import com.vultisig.wallet.ui.components.containers.VsContainerType
 import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
 import com.vultisig.wallet.ui.components.containers.VsContainer
 import com.vultisig.wallet.ui.components.scaffold.VsScaffold
-import com.vultisig.wallet.ui.components.v2.tab.VsTab
-import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
+import com.vultisig.wallet.ui.components.tab.VsTab
+import com.vultisig.wallet.ui.components.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
@@ -139,9 +139,9 @@ internal fun ThorchainDefiPositionScreenContent(
                 }
 
 
-                V2Container(
-                    type = ContainerType.SECONDARY,
-                    cornerType = CornerType.Circular,
+                VsContainer(
+                    type = VsContainerType.SECONDARY,
+                    vsContainerCornerType = VsContainerCornerType.Circular,
                     modifier = Modifier
                         .clickOnce(onClick = {})
                 ) {
@@ -149,7 +149,7 @@ internal fun ThorchainDefiPositionScreenContent(
                         drawableResId = R.drawable.edit_chain,
                         size = 16.dp,
                         modifier = Modifier.padding(all = 12.dp),
-                        tint = Theme.primary.accent4,
+                        tint = Theme.colors.primary.accent4,
                         onClick = onEditPositionClick,
                     )
                 }

@@ -198,7 +198,7 @@ internal fun SwapScreen(
         label = "caretRotation"
     )
 
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.chain_account_view_swap),
         onBackClick = onBackClick,
         actions = {
@@ -415,7 +415,7 @@ internal fun SwapScreen(
                                     Row {
                                         Text(
                                             text = state.totalFee,
-                                            color = Theme.text.light,
+                                            color = Theme.colors.text.light,
                                             style = Theme.brockmann.supplementary.caption,
                                             textAlign = TextAlign.End,
                                         )
@@ -423,7 +423,7 @@ internal fun SwapScreen(
                                         UiSpacer(size = 8.dp)
                                         UiIcon(
                                             drawableResId = R.drawable.ic_caret_down,
-                                            tint = Theme.text.primary,
+                                            tint = Theme.colors.text.primary,
                                             size = 16.dp,
                                             modifier = Modifier
                                                 .rotate(rotationAngle)
@@ -444,7 +444,7 @@ internal fun SwapScreen(
                                         .width(1.5.dp)
                                         .fillMaxHeight()
                                         .background(
-                                            color = Theme.border.primaryAccent4,
+                                            color = Theme.colors.border.primaryAccent4,
                                             shape = CircleShape
                                         )
                                 )
@@ -465,7 +465,7 @@ internal fun SwapScreen(
                                         value = buildAnnotatedString {
                                             withStyle(
                                                 style = SpanStyle(
-                                                    color = Theme.neutrals.n100,
+                                                    color = Theme.colors.neutrals.n100,
                                                 )
                                             ) {
                                                 append(state.networkFee)
@@ -473,7 +473,7 @@ internal fun SwapScreen(
                                             append(" ")
                                             withStyle(
                                                 style = SpanStyle(
-                                                    color = Theme.neutrals.n400,
+                                                    color = Theme.colors.neutrals.n400,
                                                 )
                                             ) {
                                                 append(
@@ -509,7 +509,7 @@ internal fun SwapScreen(
 
                                             Text(
                                                 text = "-${state.vultBpsDiscountFiatValue}",
-                                                color = Theme.text.light,
+                                                color = Theme.colors.text.light,
                                                 style = Theme.brockmann.supplementary.caption,
                                             )
                                         }
@@ -525,7 +525,7 @@ internal fun SwapScreen(
                                             UiIcon(
                                                 drawableResId = R.drawable.referral_code,
                                                 size = 16.dp,
-                                                tint = Theme.border.primaryAccent4,
+                                                tint = Theme.colors.border.primaryAccent4,
                                             )
                                             UiSpacer(
                                                 size = 4.dp
@@ -536,7 +536,7 @@ internal fun SwapScreen(
                                                     R.string.swap_form_referral_discount_bps,
                                                     state.referralBpsDiscount
                                                 ),
-                                                color = Theme.text.extraLight,
+                                                color = Theme.colors.text.extraLight,
                                                 style = Theme.brockmann.supplementary.caption,
                                             )
 
@@ -546,7 +546,7 @@ internal fun SwapScreen(
 
                                             Text(
                                                 text = "-${state.referralBpsDiscountFiatValue}",
-                                                color = Theme.text.light,
+                                                color = Theme.colors.text.light,
                                                 style = Theme.brockmann.supplementary.caption,
                                             )
                                         }
@@ -735,7 +735,7 @@ private fun VultDiscountTier(vultBpsDiscount: Int, tierType: TierType?) {
                 stringResource(title),
                 vultBpsDiscount,
             ),
-            color = Theme.text.extraLight,
+            color = Theme.colors.text.extraLight,
             style = Theme.brockmann.supplementary.caption,
         )
     }

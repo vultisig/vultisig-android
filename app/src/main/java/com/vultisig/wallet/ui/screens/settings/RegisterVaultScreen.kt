@@ -40,9 +40,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.settings.RegisterVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.Theme.montserrat
@@ -84,7 +84,7 @@ internal fun RegisterVaultScreen(
         }
     }
 
-    V2Scaffold(
+    VsScaffold(
         onBackClick = { navController.popBackStack() },
         title = stringResource(R.string.register_vault_screen_title),
         applyDefaultPaddings = false,

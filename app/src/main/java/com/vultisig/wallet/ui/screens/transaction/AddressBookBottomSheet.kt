@@ -43,7 +43,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.ColorGenerator
 
@@ -71,7 +72,7 @@ private fun AddressBookContent(
 ) {
     var isShowingAddresses by remember { mutableStateOf(true) }
 
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.address_book_toolbar_title),
         applyDefaultPaddings = false,
         content = {

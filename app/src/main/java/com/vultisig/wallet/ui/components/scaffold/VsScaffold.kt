@@ -165,7 +165,7 @@ internal object V2Scaffold {
     internal val PADDING_HORIZONTAL = 16.dp
     internal val CONTAINER_COLOR: Color
         @Composable
-        get() = Theme.v2.colors.backgrounds.primary
+        get() = Theme.colors.backgrounds.primary
 
 }
 

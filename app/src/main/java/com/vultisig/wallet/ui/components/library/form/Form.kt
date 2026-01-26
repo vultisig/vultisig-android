@@ -631,7 +631,7 @@ internal fun FormDetails2(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             style = Theme.brockmann.supplementary.caption,
             textAlign = TextAlign.Start,
         )

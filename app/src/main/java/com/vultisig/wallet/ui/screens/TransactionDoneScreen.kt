@@ -57,6 +57,7 @@ internal fun TransactionDoneView(
             if (showToolbar) {
                 VsTopbar(
                     title = "Overview",
+                    onBackClick = {},
                 )
             }
         },

@@ -81,8 +81,8 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.fastselection.contentWithFastSelection
+import com.vultisig.wallet.ui.components.loader.V2Loading
 import com.vultisig.wallet.ui.components.scaffold.VsScaffold
-import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.models.send.AddressBookType
 import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
@@ -1420,13 +1420,13 @@ private fun PercentageChip(
             .then(
                 if (isSelected)
                     Modifier.background(
-                        color = Theme.primary.accent3,
+                        color = Theme.colors.primary.accent3,
                         shape = CircleShape,
                     )
                 else
                     Modifier.border(
                         width = 1.dp,
-                        color = Theme.border.light,
+                        color = Theme.colors.border.light,
                         shape = CircleShape,
                     )
             )
@@ -1444,7 +1444,7 @@ private fun PercentageChip(
             Text(
                 text = title,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.text.light,
+                color = Theme.colors.text.light,
                 textAlign = TextAlign.Center,
             )
         }
@@ -1462,7 +1462,7 @@ private fun TokenFiatToggle(
         modifier = modifier
             .height(IntrinsicSize.Min)
             .background(
-                color = Theme.backgrounds.secondary,
+                color = Theme.colors.backgrounds.secondary,
                 shape = CircleShape
             )
     ) {
@@ -1476,7 +1476,7 @@ private fun TokenFiatToggle(
                         all = 4.dp,
                     )
                     .background(
-                        color = Theme.primary.accent3,
+                        color = Theme.colors.primary.accent3,
                         shape = CircleShape,
                     )
                     .padding(all = 8.dp)

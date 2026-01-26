@@ -37,7 +37,7 @@ internal fun NoChainFound(
         UiIcon(
             drawableResId = R.drawable.crypto,
             size = 26.dp,
-            tint = Theme.v2.colors.primary.accent4,
+            tint = Theme.colors.primary.accent4,
         )
         UiSpacer(
             size = 12.dp

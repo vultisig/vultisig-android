@@ -87,7 +87,7 @@ private fun PreviewV2Topbar2() {
 @Preview
 @Composable
 private fun PreviewV2Topbar3() {
-    V2Topbar(
+    VsTopbar(
         title = "Title",
         onBackClick = {},
         actions = {
@@ -105,7 +105,7 @@ private fun PreviewV2Topbar3() {
 @Preview
 @Composable
 private fun PreviewV2Topbar4() {
-    V2Topbar(
+    VsTopbar(
         title = null,
         onBackClick = null,
         actions = {
@@ -123,7 +123,7 @@ private fun PreviewV2Topbar4() {
 @Preview
 @Composable
 private fun PreviewV2Topbar5() {
-    V2Topbar(
+    VsTopbar(
         title = "title",
         onBackClick = null,
         actions = {
@@ -141,7 +141,7 @@ private fun PreviewV2Topbar5() {
 @Preview
 @Composable
 private fun PreviewV2Topbar6() {
-    V2Topbar(
+    VsTopbar(
         title = "title",
         onBackClick = null,
         actions = null
@@ -151,7 +151,7 @@ private fun PreviewV2Topbar6() {
 @Preview
 @Composable
 private fun PreviewV2Topbar7() {
-    V2Topbar(
+    VsTopbar(
         title = "title",
         onBackClick = null,
         actions = { }
