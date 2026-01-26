@@ -15,20 +15,31 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
@@ -53,11 +64,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var appUpdateManager: AppUpdateManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
-            .setKeepOnScreenCondition {
-                mainViewModel.isLoading.value
-            }
-
         super.onCreate(savedInstanceState)
 
         if (savedInstanceState == null) {
@@ -93,56 +99,29 @@ class MainActivity : AppCompatActivity() {
 
                 val navController = rememberNavController()
 
-                Box(
-                    modifier = Modifier
-                        .background(color = Theme.v2.colors.backgrounds.primary)
-                        .safeDrawingPadding()
-                ) {
+                val isLoading by mainViewModel.isLoading
+                var showSplash by remember { mutableStateOf(true) }
 
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        OfflineBanner(mainViewModel.isOffline.value)
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        ) {
-                            SetupNavGraph(
-                                navController = navController,
-                                startDestination = screen,
-                            )
-                        }
-                    }
-
-                    LaunchedEffect(navController) {
-                        snapshotFlow { navController.currentBackStackEntry }
-                            .filterNotNull()
-                            .first()
-
-                        launch {
-                            mainViewModel.destination.collect {
-                                navController.route(it.dst.route, it.opts)
-                            }
-                        }
-
-                        launch {
-                            mainViewModel.route.collect {
-                                navController.route(it)
-                            }
-                        }
-                    }
-
-                    BiometryAuthScreen()
-
-                    VsSnackBar(
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        snackbarState = mainViewModel.snakeBarHostState
+                if (showSplash) {
+                    AnimatedSplash(
+                        isLoading = isLoading,
+                        onSplashComplete = {
+                            showSplash = false
+                        },
+                    )
+                } else {
+                    MainContent(
+                        navController = navController,
+                        mainViewModel = mainViewModel,
+                        startDestination = screen,
                     )
                 }
             }
         }
+
     }
 
-    private suspend fun startImmediateUpdate() {
+    private fun startImmediateUpdate() {
         appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
             try {
                 appUpdateManager.startUpdateFlowForResult(
@@ -158,5 +137,90 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+}
 
+@Composable
+private fun MainContent(
+    navController: NavHostController,
+    mainViewModel: MainViewModel,
+    startDestination: Any,
+) {
+    Box(
+        modifier = Modifier
+            .background(color = Theme.v2.colors.backgrounds.primary)
+            .safeDrawingPadding()
+    ) {
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            OfflineBanner(mainViewModel.isOffline.value)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                SetupNavGraph(
+                    navController = navController,
+                    startDestination = startDestination,
+                )
+            }
+        }
+
+        LaunchedEffect(navController) {
+            snapshotFlow { navController.currentBackStackEntry }
+                .filterNotNull()
+                .first()
+
+            launch {
+                mainViewModel.destination.collect {
+                    navController.route(it.dst.route, it.opts)
+                }
+            }
+
+            launch {
+                mainViewModel.route.collect {
+                    navController.route(it)
+                }
+            }
+        }
+
+        BiometryAuthScreen()
+
+        VsSnackBar(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            snackbarState = mainViewModel.snakeBarHostState
+        )
+    }
+}
+
+@Composable
+private fun AnimatedSplash(
+    isLoading: Boolean,
+    onSplashComplete: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.splash_screen_logo)
+    )
+
+    val lottieState = animateLottieCompositionAsState(
+        composition = composition,
+    )
+
+    LaunchedEffect(lottieState.isAtEnd, isLoading) {
+        if (lottieState.progress == 1f && !isLoading) {
+            onSplashComplete()
+        }
+    }
+
+    LottieAnimation(
+        composition = composition,
+        progress = {
+            lottieState.progress
+        },
+        modifier = modifier
+            .fillMaxSize()
+            .background(Theme.v2.colors.backgrounds.primary)
+            .wrapContentSize(),
+        contentScale = ContentScale.Fit
+    )
 }
