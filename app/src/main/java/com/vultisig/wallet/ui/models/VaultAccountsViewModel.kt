@@ -318,7 +318,7 @@ internal class VaultAccountsViewModel @Inject constructor(
                 }
                 CryptoConnectionType.Defi -> {
                     // Exception for DeFi providers on home screen
-                    if (account.chainName.equals(Chain.Ethereum.toDefi.ticker, true)) {
+                    if (account.chainName.equals(Chain.Ethereum.toDefi.raw, true)) {
                         navigator.route(
                             Route.ChainDashboard(
                                 route = ChainDashboardRoute.PositionCircle(

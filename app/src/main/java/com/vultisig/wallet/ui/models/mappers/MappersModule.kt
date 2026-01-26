@@ -84,4 +84,11 @@ internal interface MappersModule {
         impl: SwapTransactionToUiModelMapperImpl
     ): SwapTransactionToUiModelMapper
 
+
+    @Binds
+    @Singleton
+    fun bindChainToDefiChainUiMapper(
+        impl: ChainToDefiChainUiMapperImpl
+    ): ChainToDefiChainUiMapper
+
 }

@@ -86,18 +86,18 @@ enum class Chain(
 }
 
 data class DefiChain(
-    val ticker: String,
+    val raw: String,
     val chain: Chain,
 )
 
 val Chain.toDefi: DefiChain
     get() = when (this) {
         Chain.Ethereum -> DefiChain(
-            ticker =  "Circle",
+            raw =  "Circle",
             chain = this
         )
         else -> DefiChain(
-            ticker = raw,
+            raw = raw,
             chain = this,
         )
     }
