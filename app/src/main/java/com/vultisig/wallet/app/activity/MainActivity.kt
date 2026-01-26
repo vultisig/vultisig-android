@@ -9,38 +9,26 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
-import com.vultisig.wallet.ui.components.BiometryAuthScreen
-import com.vultisig.wallet.ui.components.banners.OfflineBanner
-import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
-import com.vultisig.wallet.ui.navigation.SetupNavGraph
-import com.vultisig.wallet.ui.navigation.route
+import com.vultisig.wallet.app.activity.components.AnimatedSplash
+import com.vultisig.wallet.app.activity.components.CheckDeeplink
+import com.vultisig.wallet.app.activity.components.MainActivityContent
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
-import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -53,29 +41,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var appUpdateManager: AppUpdateManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
-            .setKeepOnScreenCondition {
-                mainViewModel.isLoading.value
-            }
-
         super.onCreate(savedInstanceState)
-
-        if (savedInstanceState == null) {
-            mainViewModel.checkUpdates()
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainViewModel.startUpdateEvent.collect {
-                    startImmediateUpdate()
-                }
-            }
-        }
-
-        val uri = intent.data
-        if (uri != null) {
-            mainViewModel.openUri(uri)
-        }
 
         val systemBarStyle = SystemBarStyle.auto(
             colors.backgrounds.primary.toArgb(),
@@ -93,56 +59,46 @@ class MainActivity : AppCompatActivity() {
 
                 val navController = rememberNavController()
 
-                Box(
-                    modifier = Modifier
-                        .background(color = Theme.v2.colors.backgrounds.primary)
-                        .safeDrawingPadding()
-                ) {
+                val isLoading by mainViewModel.isLoading
+                var showSplash by remember { mutableStateOf(true) }
 
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        OfflineBanner(mainViewModel.isOffline.value)
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        ) {
-                            SetupNavGraph(
-                                navController = navController,
-                                startDestination = screen,
-                            )
-                        }
-                    }
-
-                    LaunchedEffect(navController) {
-                        snapshotFlow { navController.currentBackStackEntry }
-                            .filterNotNull()
-                            .first()
-
-                        launch {
-                            mainViewModel.destination.collect {
-                                navController.route(it.dst.route, it.opts)
-                            }
-                        }
-
-                        launch {
-                            mainViewModel.route.collect {
-                                navController.route(it)
-                            }
-                        }
-                    }
-
-                    BiometryAuthScreen()
-
-                    VsSnackBar(
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        snackbarState = mainViewModel.snakeBarHostState
+                if (showSplash) {
+                    AnimatedSplash(
+                        isLoading = isLoading,
+                        onSplashComplete = {
+                            showSplash = false
+                        },
                     )
+                } else {
+
+                    CheckUpdates()
+
+                    CheckDeeplink(mainViewModel::openUri)
+
+                    MainActivityContent(
+                        navController = navController,
+                        mainViewModel = mainViewModel,
+                        startDestination = screen,
+                    )
+                }
+            }
+        }
+
+    }
+    @Composable
+    private fun CheckUpdates() {
+        val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+        LaunchedEffect(Unit) {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.startUpdateEvent.collect {
+                    startImmediateUpdate()
                 }
             }
         }
     }
 
-    private suspend fun startImmediateUpdate() {
+    private fun startImmediateUpdate() {
         appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
             try {
                 appUpdateManager.startUpdateFlowForResult(
@@ -158,5 +114,4 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 }
