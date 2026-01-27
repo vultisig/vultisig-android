@@ -85,6 +85,7 @@ internal data class ThorchainDefiPositionsUiModel(
 internal data class BondedTabUiModel(
     val isLoading: Boolean = false,
     val totalBondedAmount: String = "0 ${Chain.ThorChain.coinType.symbol}",
+    val totalBondedPrice: String = "",
     val nodes: List<BondedNodeUiModel> = emptyList(),
 )
 
@@ -368,22 +369,25 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                         val nodeUiModels = activeNodes.map { it.toUiModel() }
                         val totalBonded = calculateTotalBonded(activeNodes)
 
+                        val totalBondedRaw = activeNodes.fold(BigInteger.ZERO) { acc, node ->
+                            acc + node.amount
+                        }
+
+                        val bondedPrice = calculateBondedFiatPrice(totalBondedRaw)
+
                         state.update {
                             it.copy(
                                 isTotalAmountLoading = false,
                                 bonded = BondedTabUiModel(
                                     isLoading = false,
                                     totalBondedAmount = totalBonded,
+                                    totalBondedPrice = bondedPrice,
                                     nodes = nodeUiModels
                                 )
                             )
                         }
 
-                        activeNodes.fold(BigInteger.ZERO) { acc, node ->
-                            acc + node.amount
-                        }.let {
-                            updateTotalValueStatus(it, false)
-                        }
+                        updateTotalValueStatus(totalBondedRaw, false)
                     }
             } catch (t: Throwable) {
                 Timber.e(t)
@@ -411,6 +415,21 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
             acc + node.amount
         }
         return total.formatAmount(CoinType.THORCHAIN)
+    }
+
+    private suspend fun calculateBondedFiatPrice(totalBondedRaw: BigInteger): String {
+        return try {
+            val totalInRune = CoinType.THORCHAIN.toValue(totalBondedRaw)
+            val currency = appCurrencyRepository.currency.first()
+            val fiatValue = createFiatValue(totalInRune, Coins.ThorChain.RUNE, currency)
+            val currencyFormat = withContext(Dispatchers.IO) {
+                appCurrencyRepository.getCurrencyFormat()
+            }
+            currencyFormat.format(fiatValue.value)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to calculate bonded fiat price")
+            ""
+        }
     }
 
     private fun loadStakingPositions() {

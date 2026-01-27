@@ -338,15 +338,18 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
             coin = usdc,
         )
 
+        val formattedPrice = currencyFormat.await().format(usdcTokenPrice.value)
+
         _state.update { currentState ->
             currentState.copy(
-                totalAmountPrice = currencyFormat.await().format(usdcTokenPrice.value),
+                totalAmountPrice = formattedPrice,
                 isTotalAmountLoading = false,
                 supportEditChains = false,
                 circleDefi = currentState.circleDefi.copy(
                     isLoading = false,
                     isAccountOpen = true,
                     totalDeposit = "$usdcFormattedBalance USDC",
+                    totalDepositCurrency = formattedPrice,
                 )
             )
         }
