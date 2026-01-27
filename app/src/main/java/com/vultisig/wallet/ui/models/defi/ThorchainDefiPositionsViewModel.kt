@@ -114,6 +114,7 @@ internal data class StakePositionUiModel(
     val isLoading: Boolean = false,
     val supportsMint: Boolean = false,
     val canWithdraw: Boolean = false,
+    val canTransfer: Boolean = false,
     val canStake: Boolean = true,
     val canUnstake: Boolean = false,
     val rewards: String? = null,
@@ -629,7 +630,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                                 positions = it.staking.positions.map { position ->
                                     if (position.coin.id == Coins.ThorChain.yRUNE.id
                                         || position.coin.id == Coins.ThorChain.yTCY.id
-                                    ) {
+                                        || position.coin.id == Coins.ThorChain.sTCY.id) {
                                         position.copy(isLoading = false)
                                     } else {
                                         position
@@ -650,9 +651,14 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                             val supportsMint = coin.ticker.contains("yrune", ignoreCase = true) ||
                                     coin.ticker.contains("ytcy", ignoreCase = true)
 
+                            val canTransfer = coin.ticker.contains("stcy", ignoreCase = true)
+
                             val header = if (supportsMint) {
                                 "Minted"
-                            } else {
+                            } else if (defaultPosition.coin.id.equals(Coins.ThorChain.sTCY.id, true)) {
+                                "Compounded"
+                            }
+                            else {
                                 "Staked"
                             }
                             val position = StakePositionUiModel(
@@ -663,6 +669,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                                 supportsMint = supportsMint,
                                 canWithdraw = false, // TCY auto-distributes rewards
                                 canStake = true,
+                                canTransfer = canTransfer,
                                 canUnstake = stakeAmount > BigDecimal.ZERO,
                                 rewards = null,
                                 nextReward = null,
@@ -925,6 +932,8 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI.id
                 DeFiNavActions.STAKE_TCY -> Coins.ThorChain.TCY.id
                 DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY.id
+                DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY.id
+                DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY.id
                 DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY.id
                 DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY.id
                 DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE.id
@@ -960,6 +969,18 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
         }
     }
 
+    fun onClickTransfer() {
+        viewModelScope.launch {
+            navigator.route(
+                Route.Send(
+                    vaultId = vaultId,
+                    chainId = Chain.ThorChain.id,
+                    tokenId = Coins.ThorChain.sTCY.id,
+                )
+            )
+        }
+    }
+
     companion object {
         internal const val DEFAULT_ZERO_BALANCE = "$0.00"
         private const val RUJI_SYMBOL = "RUJI"
@@ -968,6 +989,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
         private fun loadDefaultStakingPositions(): List<StakePositionUiModel> {
             val rujiCoin = Coins.ThorChain.RUJI
             val tcy = Coins.ThorChain.TCY
+            val stcy = Coins.ThorChain.sTCY
             val ytcy = Coins.ThorChain.yTCY
             val yrune = Coins.ThorChain.yRUNE
 
@@ -988,6 +1010,18 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                     coin = tcy,
                     stakeAssetHeader = "Staked ${tcy.ticker}",
                     stakeAmount = tcy.ticker,
+                    apy = null,
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null
+                ),
+                StakePositionUiModel(
+                    coin = stcy,
+                    stakeAssetHeader = "Compounded TCY",
+                    stakeAmount = stcy.ticker,
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
