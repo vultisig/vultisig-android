@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.isDeFiSupported
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -327,8 +328,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
                             )
                         }
                     }
-                    val canBeDeFiProvider =
-                        address.chain.id.equals(Chain.Ethereum.id, true)
+                    val canBeDeFiProvider = address.chain.isDeFiSupported
 
                     address.copy(accounts = updatedAccounts, isDefiProvider = canBeDeFiProvider)
                 }
@@ -363,8 +363,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
                                 it.applyBalance(balance.tokenBalance, balance.price)
                             }
                         }.awaitAll()
-                    val canBeDeFiProvider =
-                        account.chain.id.equals(Chain.Ethereum.id, true)
+                    val canBeDeFiProvider = account.chain.isDeFiSupported
 
                     account.copy(accounts = newAccounts, isDefiProvider = canBeDeFiProvider)
                 } catch (e: Exception) {

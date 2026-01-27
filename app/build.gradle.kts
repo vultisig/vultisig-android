@@ -131,11 +131,15 @@ dependencies {
     implementation(libs.wallet.core)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.coil)
-    implementation(libs.rive)
     implementation(libs.play.update)
     implementation(libs.play.review)
     implementation(libs.androidx.work.ktx)
     implementation(libs.bcprov.jdk15on)
+
+    // animation
+    implementation(libs.lottie.compose)
+    implementation(libs.rive)
+
 
     // test
     testImplementation(libs.junit)

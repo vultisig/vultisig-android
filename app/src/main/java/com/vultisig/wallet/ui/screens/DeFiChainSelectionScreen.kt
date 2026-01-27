@@ -1,17 +1,20 @@
 package com.vultisig.wallet.ui.screens
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
-import com.vultisig.wallet.ui.models.ChainSelectionUiModel
-import com.vultisig.wallet.ui.models.ChainUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel.SingleToken
+import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel.TokenUiSingle
 import com.vultisig.wallet.ui.models.DeFiChainSelectionViewModel
+import com.vultisig.wallet.ui.models.SelectableDefiChainUiModel
+import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun DeFiChainSelectionScreen(
@@ -19,51 +22,37 @@ internal fun DeFiChainSelectionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    val chainUiModels = uiState.chains.map { chain ->
-        ChainUiModel(
-            coin = createDummyCoinForChain(chain),
-            isEnabled = chain in uiState.selectedChains
-        )
-    }
-
-    ChainSelectionScreen(
-        title = stringResource(R.string.chain_selection_select_defi_chains),
-        state = ChainSelectionUiModel(
-            chains = chainUiModels,
-        ),
+    TokenSelectionList(
+        titleContent = {
+            Text(
+                text = stringResource(R.string.chain_selection_select_defi_chains),
+                style = Theme.brockmann.headings.title2,
+                color = Theme.v2.colors.neutrals.n100,
+            )
+        },
+        items = uiState.defiChains.map {
+            SingleToken(
+                data = it
+            )
+        },
+        mapper = { it: SingleToken<SelectableDefiChainUiModel> ->
+            TokenSelectionGridUiModel(
+                tokenSelectionUiModel = TokenUiSingle(
+                    name = it.data.defiChain.raw,
+                    logo = it.data.defiChain.logo,
+                ),
+                isChecked = it.data.isSelected
+            )
+        },
         searchTextFieldState = viewModel.searchTextFieldState,
-        onEnableAccount = { coin ->
-            viewModel.toggleChain(coin.chain)
+        onDoneClick = viewModel::saveSelection,
+        onCancelClick = viewModel::navigateBack,
+        onCheckChange = viewModel::toggleChain,
+        onSetSearchText = viewModel::onSearch,
+        notFoundContent = {
+            NoFoundContent(
+                message = stringResource(R.string.chain_selection_no_chains_found)
+            )
         },
-        onDisableAccount = { coin ->
-            viewModel.toggleChain(coin.chain)
-        },
-        onCommitChanges = {
-            viewModel.saveSelection()
-        },
-        onBackClick = {
-            viewModel.navigateBack()
-        },
-        onSetSearchText = {
-            viewModel.onSearch(it)
-        }
-    )
-}
-
-private fun createDummyCoinForChain(chain: Chain): Coin {
-    val nativeCoin = Coins.all.firstOrNull { coin ->
-        coin.chain == chain && coin.isNativeToken
-    }
-    
-    return nativeCoin ?: Coin(
-        chain = chain,
-        ticker = chain.raw,
-        logo = chain.raw.lowercase().replace("-", "_"),
-        address = "",
-        hexPublicKey = "",
-        isNativeToken = true,
-        priceProviderID = "",
-        contractAddress = "",
-        decimal = 18, // Default decimals for most chains
     )
 }
