@@ -73,6 +73,7 @@ internal fun ThorchainDefiPositionsScreen(
         onClickWithdraw = { model.onNavigateToFunctions(it) },
         onClickStake = { model.onNavigateToFunctions(it) },
         onClickUnstake = { model.onNavigateToFunctions(it) },
+        onClickTransfer = { model.onClickTransfer() }
     )
 }
 
@@ -91,6 +92,7 @@ internal fun ThorchainDefiPositionScreenContent(
     onClickWithdraw: (DeFiNavActions) -> Unit = {},
     onClickStake: (DeFiNavActions) -> Unit = {},
     onClickUnstake: (DeFiNavActions) -> Unit = {},
+    onClickTransfer: () -> Unit = {},
 ) {
     val searchTextFieldState = remember { TextFieldState() }
 
@@ -194,6 +196,7 @@ internal fun ThorchainDefiPositionScreenContent(
                             onClickStake = onClickStake,
                             onClickUnstake = onClickUnstake,
                             onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) },
+                            onClickTransfer = onClickTransfer,
                             isBalanceVisible = state.isBalanceVisible,
                         )
                     }

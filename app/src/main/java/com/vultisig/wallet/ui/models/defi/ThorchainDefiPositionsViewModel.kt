@@ -113,6 +113,7 @@ internal data class StakePositionUiModel(
     val isLoading: Boolean = false,
     val supportsMint: Boolean = false,
     val canWithdraw: Boolean = false,
+    val canTransfer: Boolean = false,
     val canStake: Boolean = true,
     val canUnstake: Boolean = false,
     val rewards: String? = null,
@@ -944,6 +945,10 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
+    }
+
+    fun onClickTransfer() {
+
     }
 
     companion object {
