@@ -632,9 +632,11 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                             val supportsMint = coin.ticker.contains("yrune", ignoreCase = true) ||
                                     coin.ticker.contains("ytcy", ignoreCase = true)
 
+                            val canTransfer = coin.ticker.contains("stcy", ignoreCase = true)
+
                             val header = if (supportsMint) {
                                 "Minted"
-                            } else if(defaultPosition.coin.id.equals(Coins.ThorChain.sTCY.id, true)) {
+                            } else if (defaultPosition.coin.id.equals(Coins.ThorChain.sTCY.id, true)) {
                                 "Compounded"
                             }
                             else {
@@ -648,6 +650,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                                 supportsMint = supportsMint,
                                 canWithdraw = false, // TCY auto-distributes rewards
                                 canStake = true,
+                                canTransfer = canTransfer,
                                 canUnstake = stakeAmount > BigDecimal.ZERO,
                                 rewards = null,
                                 nextReward = null,
@@ -948,7 +951,15 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
     }
 
     fun onClickTransfer() {
-
+        viewModelScope.launch {
+            navigator.route(
+                Route.Send(
+                    vaultId = vaultId,
+                    chainId = Chain.ThorChain.id,
+                    tokenId = Coins.ThorChain.sTCY.id,
+                )
+            )
+        }
     }
 
     companion object {
