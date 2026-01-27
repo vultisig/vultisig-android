@@ -219,7 +219,7 @@ private fun AnimatedSplash(
         },
         modifier = modifier
             .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .wrapContentSize(),
         contentScale = ContentScale.Fit
     )
