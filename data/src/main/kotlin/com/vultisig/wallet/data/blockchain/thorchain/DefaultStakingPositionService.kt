@@ -19,6 +19,7 @@ class DefaultStakingPositionService @Inject constructor(
 ) {
 
     val supportedStakingCoins = listOf(
+        Coins.ThorChain.sTCY,
         Coins.ThorChain.yRUNE,
         Coins.ThorChain.yTCY,
     )

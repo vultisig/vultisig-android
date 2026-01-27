@@ -227,8 +227,8 @@ private fun SendFormScreen(
 
     V2Scaffold(
         title = when (state.defiType) {
-            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stringResource(R.string.stake_screen_title)
-            DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.UNSTAKE_RUJI -> stringResource(R.string.unstake_screen_title)
+            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY, DeFiNavActions.STAKE_STCY -> stringResource(R.string.stake_screen_title)
+            DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_STCY -> stringResource(R.string.unstake_screen_title)
             DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> stringResource(R.string.mint_screen_title)
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> stringResource(R.string.redeem_screen_title)
             DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
@@ -491,6 +491,8 @@ private fun SendFormContent(
     } else if (state.defiType == DeFiNavActions.STAKE_RUJI
         || state.defiType == DeFiNavActions.UNSTAKE_RUJI
         || state.defiType == DeFiNavActions.STAKE_TCY
+        || state.defiType == DeFiNavActions.UNSTAKE_STCY
+        || state.defiType == DeFiNavActions.STAKE_STCY
         || state.defiType == DeFiNavActions.UNSTAKE_TCY
         || state.defiType == DeFiNavActions.MINT_YRUNE
         || state.defiType == DeFiNavActions.MINT_YTCY
@@ -840,7 +842,7 @@ private fun FoldableAmountWidget(
                 }
             }
 
-            if (state.defiType == DeFiNavActions.STAKE_TCY) {
+            if (state.defiType == DeFiNavActions.STAKE_TCY || state.defiType == DeFiNavActions.STAKE_STCY) {
                 AutoCompoundToggle(
                     title = stringResource(R.string.tcy_auto_compound_enable_title),
                     subtitle = stringResource(R.string.tcy_auto_compound_enable_subtitle),
@@ -849,7 +851,7 @@ private fun FoldableAmountWidget(
                 )
             }
 
-            if (state.defiType == DeFiNavActions.UNSTAKE_TCY) {
+            if (state.defiType == DeFiNavActions.UNSTAKE_TCY || state.defiType == DeFiNavActions.UNSTAKE_STCY) {
                 AutoCompoundToggle(
                     title = stringResource(R.string.tcy_auto_compound_unstake_title),
                     subtitle = stringResource(R.string.tcy_auto_compound_unstake_subtitle),

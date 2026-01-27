@@ -610,7 +610,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                                 positions = it.staking.positions.map { position ->
                                     if (position.coin.id == Coins.ThorChain.yRUNE.id
                                         || position.coin.id == Coins.ThorChain.yTCY.id
-                                    ) {
+                                        || position.coin.id == Coins.ThorChain.sTCY.id) {
                                         position.copy(isLoading = false)
                                     } else {
                                         position
@@ -633,7 +633,10 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
 
                             val header = if (supportsMint) {
                                 "Minted"
-                            } else {
+                            } else if(defaultPosition.coin.id.equals(Coins.ThorChain.sTCY.id, true)) {
+                                "Compounded"
+                            }
+                            else {
                                 "Staked"
                             }
                             val position = StakePositionUiModel(
@@ -906,6 +909,8 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI.id
                 DeFiNavActions.STAKE_TCY -> Coins.ThorChain.TCY.id
                 DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY.id
+                DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY.id
+                DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY.id
                 DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY.id
                 DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY.id
                 DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE.id
@@ -949,6 +954,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
         private fun loadDefaultStakingPositions(): List<StakePositionUiModel> {
             val rujiCoin = Coins.ThorChain.RUJI
             val tcy = Coins.ThorChain.TCY
+            val stcy = Coins.ThorChain.sTCY
             val ytcy = Coins.ThorChain.yTCY
             val yrune = Coins.ThorChain.yRUNE
 
@@ -969,6 +975,18 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                     coin = tcy,
                     stakeAssetHeader = "Staked ${tcy.ticker}",
                     stakeAmount = tcy.ticker,
+                    apy = null,
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null
+                ),
+                StakePositionUiModel(
+                    coin = stcy,
+                    stakeAssetHeader = "Compounded TCY",
+                    stakeAmount = stcy.ticker,
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
