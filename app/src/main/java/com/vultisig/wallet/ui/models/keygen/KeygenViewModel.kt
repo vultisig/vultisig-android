@@ -75,6 +75,7 @@ internal data class KeygenUiModel(
     val progress: Float = 0f,
     val isSuccess: Boolean = false,
     val steps: List<KeygenStepUiModel> = emptyList(),
+    val keygenState: KeygenState? = null,
     val error: ErrorUiModel? = null,
     val action: TssAction = TssAction.KEYGEN,
 )
@@ -529,6 +530,7 @@ internal class KeygenViewModel @Inject constructor(
         state.update { uiModel ->
             uiModel.copy(
                 isSuccess = step is KeygenState.Success,
+                keygenState = step,
                 progress = when (step) {
                     is KeygenState.CreatingInstance -> 0.0f
                     is KeygenState.KeygenECDSA -> 0.33f
