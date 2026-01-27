@@ -99,7 +99,7 @@ private fun BiometricsEnableScreen(
             Text(
                 text = stringResource(id = R.string.vault_settings_biometrics_screen_description),
                 style = Theme.montserrat.body1,
-                color = Theme.v2.colors.neutrals.n50,
+                color = Theme.colors.neutrals.n50,
             )
             UiSpacer(8.dp)
             FormBasicSecureTextField(
@@ -126,7 +126,7 @@ private fun BiometricsEnableScreen(
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = uiModel.passwordHint.asString(),
-                    color = Theme.v2.colors.neutrals.n50,
+                    color = Theme.colors.neutrals.n50,
                     style = Theme.menlo.body2,
                 )
             }

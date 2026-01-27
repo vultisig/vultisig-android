@@ -89,7 +89,7 @@ private fun CircleContentDepositTab(
     Text(
         text = stringResource(R.string.circle_defi_description),
         style = Theme.brockmann.supplementary.caption,
-        color = Theme.v2.colors.text.light,
+        color = Theme.colors.text.light,
     )
 
     if (!state.closeWarning) {

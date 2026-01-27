@@ -36,13 +36,13 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.animation.slideAndFadeSpec
-import com.vultisig.wallet.ui.components.v2.containers.ExpandedTopbarContainer
-import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
-import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
-import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
-import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
-import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
+import com.vultisig.wallet.ui.components.animation.slideAndFadeSpec
+import com.vultisig.wallet.ui.components.bottomsheet.utils.BottomFadeEffect
+import com.vultisig.wallet.ui.components.containers.ExpandedTopbarContainer
+import com.vultisig.wallet.ui.components.containers.TopShineContainer
+import com.vultisig.wallet.ui.components.scaffold.ScaffoldWithExpandableTopBar
+import com.vultisig.wallet.ui.components.snackbar.rememberVsSnackbarState
+import com.vultisig.wallet.ui.components.texts.LoadableValue
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
@@ -143,7 +143,7 @@ internal fun VaultAccountsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Theme.v2.colors.backgrounds.primary)
+                        .background(Theme.colors.backgrounds.primary)
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -159,7 +159,7 @@ internal fun VaultAccountsScreen(
                     ) {
                         Text(
                             text = stringResource(R.string.home_portfolio_balance),
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.colors.text.extraLight,
                             style = Theme.brockmann.body.s.medium
                         )
                         UiSpacer(
@@ -170,7 +170,7 @@ internal fun VaultAccountsScreen(
                             value = state.totalFiatValue,
                             isVisible = state.isBalanceValueVisible,
                             style = Theme.satoshi.price.bodyS,
-                            color = Theme.v2.colors.text.primary,
+                            color = Theme.colors.text.primary,
                         )
                     }
                 }
@@ -180,7 +180,7 @@ internal fun VaultAccountsScreen(
                 )
 
                 UiHorizontalDivider(
-                    color = Theme.v2.colors.border.light,
+                    color = Theme.colors.border.light,
                 )
 
                 UiSpacer(
@@ -261,7 +261,7 @@ internal fun VaultAccountsScreen(
             ) {
                 LazyColumn(
                     modifier = Modifier
-                        .background(Theme.v2.colors.backgrounds.primary)
+                        .background(Theme.colors.backgrounds.primary)
                         .fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 30.dp)
                 ) {

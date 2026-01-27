@@ -40,7 +40,7 @@ internal fun ReferralCodeBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        containerColor = Theme.v2.colors.backgrounds.secondary,
+        containerColor = Theme.colors.backgrounds.secondary,
         shape = RoundedCornerShape(24.dp),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = null,
@@ -83,15 +83,15 @@ internal fun ReferralCodeBottomSheetContent(
             listTextItems = listOf(
                 PartiallyGradientTextItem(
                     resId = R.string.referral_invite_onboarding_1,
-                    coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                    coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                 ),
                 PartiallyGradientTextItem(
                     resId = R.string.referral_invite_onboarding_2,
-                    coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                    coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                 ),
                 PartiallyGradientTextItem(
                     resId = R.string.referral_invite_onboarding_3,
-                    coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                    coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                 ),
             ),
             style = Theme.brockmann.headings.title2,
@@ -103,7 +103,7 @@ internal fun ReferralCodeBottomSheetContent(
             text = stringResource(R.string.referral_invite_sheet_description),
             style = Theme.brockmann.body.s.medium,
             textAlign = TextAlign.Center,
-            color = Theme.v2.colors.text.light,
+            color = Theme.colors.text.light,
             modifier = Modifier
                 .padding(horizontal = 32.dp)
                 .fillMaxWidth()

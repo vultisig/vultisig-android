@@ -41,7 +41,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.topbar.VsTopbar
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositViewModel
@@ -107,14 +107,14 @@ internal fun VerifyDepositScreen(
     Scaffold(
         topBar = {
             if (hasToolbar) {
-                VsTopAppBar(
+                VsTopbar(
                     title = stringResource(R.string.verify_deposit_function_overview),
                     onBackClick = onBackClick,
                 )
             }
         },
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .fillMaxSize(),
         content = { contentPadding ->
             Column(
@@ -133,7 +133,7 @@ internal fun VerifyDepositScreen(
                 Column(
                     modifier = Modifier
                         .background(
-                            color = Theme.v2.colors.backgrounds.secondary,
+                            color = Theme.colors.backgrounds.secondary,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .padding(
@@ -143,7 +143,7 @@ internal fun VerifyDepositScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_sending),
                         style = Theme.brockmann.headings.subtitle,
-                        color = Theme.v2.colors.text.light,
+                        color = Theme.colors.text.light,
                     )
 
                     UiSpacer(24.dp)
@@ -234,7 +234,7 @@ internal fun VerifyDepositScreen(
                         Text(
                             text = stringResource(R.string.verify_deposit_network),
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.colors.text.extraLight,
                             maxLines = 1,
                         )
 
@@ -262,7 +262,7 @@ internal fun VerifyDepositScreen(
                                 Text(
                                     text = chain.raw,
                                     style = Theme.brockmann.supplementary.footnote,
-                                    color = Theme.v2.colors.text.primary,
+                                    color = Theme.colors.text.primary,
                                     textAlign = TextAlign.End,
                                     maxLines = 1,
                                     overflow = TextOverflow.MiddleEllipsis,
@@ -299,7 +299,7 @@ internal fun VerifyDepositScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.colors.text.extraLight,
                         textAlign = TextAlign.Center,
                     )
                     VsHoldableButton(

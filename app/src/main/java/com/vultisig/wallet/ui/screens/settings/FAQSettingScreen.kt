@@ -31,9 +31,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.settings.FAQSettingUiModel
 import com.vultisig.wallet.ui.models.settings.FAQSettingViewModel
 import com.vultisig.wallet.ui.models.settings.Faq
@@ -58,13 +58,13 @@ private fun FaqSettingScreen(
     state: FAQSettingUiModel
 ) {
 
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.faq_setting_screen_title),
         onBackClick = onBackClick
     ) {
 
-        V2Container(
-            type = ContainerType.SECONDARY
+        VsContainer(
+            type = VsContainerType.SECONDARY
         ) {
             LazyColumn(
                 contentPadding = PaddingValues(
@@ -88,7 +88,7 @@ private fun FaqSettingScreen(
 
 @Composable
 private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
-    val colors = Theme.v2.colors
+    val colors = Theme.colors
     var isExpanded by remember {
         mutableStateOf(false)
     }
@@ -111,7 +111,7 @@ private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
 
             Text(
                 text = faq.question,
-                color = Theme.v2.colors.text.light,
+                color = Theme.colors.text.light,
                 style = Theme.brockmann.body.s.medium,
                 lineHeight = 20.sp,
                 modifier = Modifier.weight(1f)

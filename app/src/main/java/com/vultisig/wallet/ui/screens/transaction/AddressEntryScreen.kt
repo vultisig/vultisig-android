@@ -33,7 +33,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.transaction.AddAddressEntryUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressEntryViewModel
 import com.vultisig.wallet.ui.models.NetworkUiModel
@@ -85,7 +85,7 @@ internal fun AddAddressEntryScreen(
     onBackClick: () -> Unit = {},
 ) {
 
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(state.titleRes),
         onBackClick = onBackClick,
         bottomBar = {
@@ -168,7 +168,7 @@ internal fun SelectChain(
     ) {
         Text(
             text = stringResource(R.string.select_chain_chain_title),
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             style = Theme.brockmann.body.s.medium,
         )
 
@@ -181,11 +181,11 @@ internal fun SelectChain(
                 .fillMaxWidth()
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.light,
+                    color = Theme.colors.border.light,
                     shape = RoundedCornerShape(size = 12.dp)
                 )
                 .background(
-                    color = Theme.v2.colors.backgrounds.secondary,
+                    color = Theme.colors.backgrounds.secondary,
                     shape = RoundedCornerShape(size = 12.dp)
                 )
                 .padding(
@@ -198,7 +198,7 @@ internal fun SelectChain(
                 Text(
                     text = stringResource(R.string.address_entry_select),
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                 )
             } else {
                 TokenLogo(
@@ -213,7 +213,7 @@ internal fun SelectChain(
                 Text(
                     text = selectedChain.title,
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                 )
             }
 

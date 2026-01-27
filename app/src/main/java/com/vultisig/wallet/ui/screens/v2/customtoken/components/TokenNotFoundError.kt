@@ -18,18 +18,18 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun TokenNotFoundError(
     onRetryClick: () -> Unit,
 ) {
-    V2Container(
-        type = ContainerType.SECONDARY,
-        cornerType = CornerType.RoundedCornerShape(size = 12.dp),
+    VsContainer(
+        type = VsContainerType.SECONDARY,
+        vsContainerCornerType = VsContainerCornerType.RoundedVsContainerCornerShape(size = 12.dp),
     ) {
         Column(
             modifier = Modifier
@@ -46,13 +46,13 @@ internal fun TokenNotFoundError(
             UiSpacer(size = 12.dp)
             Text(
                 text = stringResource(R.string.custom_token_token_not_found),
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.headings.title3
             )
             UiSpacer(size = 8.dp)
             Text(
                 text = stringResource(R.string.custom_token_not_found_desc),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.supplementary.footnote,
                 textAlign = TextAlign.Center,
                 modifier = Modifier

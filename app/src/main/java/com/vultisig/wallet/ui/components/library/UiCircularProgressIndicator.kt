@@ -40,14 +40,14 @@ internal fun UiCircularProgressIndicator(
     strokeWidth: Dp = ProgressIndicatorDefaults.CircularStrokeWidth,
     indicatorBrush: Brush = Brush.linearGradient(
         colorStops = arrayOf(
-            0.0f to Theme.v2.colors.primary.accent2,
-            1.0f to Theme.v2.colors.buttons.primary,
+            0.0f to Theme.colors.primary.accent2,
+            1.0f to Theme.colors.buttons.primary,
         ),
     ),
 ) {
     val coercedProgress = { progress().coerceIn(0f, 1f) }
 
-    val trackColor = Theme.v2.colors.backgrounds.tertiary_2
+    val trackColor = Theme.colors.backgrounds.tertiary_2
 
     val stroke = with(LocalDensity.current) {
         Stroke(
@@ -80,7 +80,7 @@ internal fun UiCircularProgressIndicator(
         ).toFloat()
     else 0f
 
-    val tickCircleColor = Theme.v2.colors.buttons.primary.copy(
+    val tickCircleColor = Theme.colors.buttons.primary.copy(
         alpha = if (coercedProgress() > progressToStartScaling)
             (coercedProgress() - progressToStartScaling).div(1.0f - progressToStartScaling)
         else 0.5f
@@ -91,7 +91,7 @@ internal fun UiCircularProgressIndicator(
     val doneTextMeasurer = rememberTextMeasurer()
     val doneText = stringResource(R.string.circular_progress_indicator_done)
     val doneTextStyle =
-        Theme.menlo.heading5.copy(color = Theme.v2.colors.neutrals.n50.copy(alpha = doneOpacity))
+        Theme.menlo.heading5.copy(color = Theme.colors.neutrals.n50.copy(alpha = doneOpacity))
     val fullCircle = 360f
 
     Canvas(

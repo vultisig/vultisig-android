@@ -33,7 +33,7 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.vultiGradient
 import com.vultisig.wallet.ui.models.reshare.ReshareStartViewModel
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.theme.Theme.colors
 
 @Composable
 internal fun ReshareStartScreen(

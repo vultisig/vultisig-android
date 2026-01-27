@@ -17,7 +17,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
+import com.vultisig.wallet.ui.components.texts.LoadableValue
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -35,7 +35,7 @@ internal fun BalanceBanner(
         LoadableValue(
             value = balance,
             isVisible = isVisible,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             style = Theme.satoshi.price.largeTitle,
         )
 
@@ -64,7 +64,7 @@ internal fun ToggleBalanceVisibilityButton(
                     shape = CircleShape,
                 )
                 .background(
-                    color = Theme.v2.colors.text.button.dim.copy(alpha = 0.12f),
+                    color = Theme.colors.text.button.dim.copy(alpha = 0.12f),
                 )
                 .padding(
                     horizontal = 6.dp,
@@ -79,7 +79,7 @@ internal fun ToggleBalanceVisibilityButton(
             UiIcon(
                 drawableResId = if (isVisible) com.vultisig.wallet.R.drawable.eye_closed else com.vultisig.wallet.R.drawable.eye_open,
                 size = 16.dp,
-                tint = Theme.v2.colors.text.button.dim
+                tint = Theme.colors.text.button.dim
             )
 
             UiSpacer(
@@ -88,7 +88,7 @@ internal fun ToggleBalanceVisibilityButton(
 
             Text(
                 text = if (isVisible) stringResource(R.string.hide_balance) else  stringResource(R.string.show_balance),
-                color = Theme.v2.colors.text.button.dim,
+                color = Theme.colors.text.button.dim,
                 style = Theme.brockmann.button.medium.medium
             )
         }

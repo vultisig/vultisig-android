@@ -57,12 +57,12 @@ private fun VultBackupSummaryScreen(
 ) {
     Column(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .fillMaxSize(),
     ) {
         Box(
             modifier = Modifier
-                .background(Theme.v2.colors.backgrounds.primary)
+                .background(Theme.colors.backgrounds.primary)
                 .weight(1f)
                 .fillMaxSize(),
         ) {

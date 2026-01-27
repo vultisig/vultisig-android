@@ -16,7 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.send.SendViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -80,7 +80,7 @@ internal fun SignMessageScreen(
     val qrAddress by viewModel.addressProvider.address.collectAsState()
     val qr = qrAddress.takeIf { it.isNotEmpty() }
 
-    V2Scaffold(
+    VsScaffold(
         title = title,
         onBackClick = { viewModel.navigateToHome(useMainNavigator) }.takeIf { !isKeysignFinished },
         rightIcon = qr?.let { R.drawable.qr_share },

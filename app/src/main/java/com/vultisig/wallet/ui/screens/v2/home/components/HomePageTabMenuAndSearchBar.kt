@@ -6,7 +6,7 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.vultisig.wallet.ui.components.v2.tab.TabMenuAndSearchBar
+import com.vultisig.wallet.ui.components.tab.TabMenuAndSearchBar
 
 
 @OptIn(ExperimentalAnimationApi::class)

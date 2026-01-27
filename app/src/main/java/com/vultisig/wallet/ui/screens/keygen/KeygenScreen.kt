@@ -51,7 +51,7 @@ import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.keygen.KeygenState
 import com.vultisig.wallet.ui.models.keygen.KeygenStepUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenUiModel
@@ -106,7 +106,7 @@ private fun KeygenScreen(
     state: KeygenUiModel,
     onTryAgainClick: () -> Unit,
 ) {
-    V2Scaffold(
+    VsScaffold(
         applyDefaultPaddings = false,
         applyScaffoldPaddings = false,
         topBar = {},
@@ -188,7 +188,7 @@ private fun LoadingStageItem(
         if (isLoading) {
             CircularProgressIndicator(
                 strokeWidth = 2.dp,
-                color = Theme.v2.colors.alerts.success,
+                color = Theme.colors.alerts.success,
                 modifier = Modifier
                     .size(20.dp)
             )
@@ -196,7 +196,7 @@ private fun LoadingStageItem(
             UiIcon(
                 drawableResId = R.drawable.check,
                 size = 20.dp,
-                tint = Theme.v2.colors.alerts.success,
+                tint = Theme.colors.alerts.success,
             )
         }
 
@@ -205,8 +205,8 @@ private fun LoadingStageItem(
         Text(
             text = text,
             style = Theme.brockmann.body.m.medium,
-            color = if (isLoading) Theme.v2.colors.text.primary
-            else Theme.v2.colors.text.extraLight,
+            color = if (isLoading) Theme.colors.text.primary
+            else Theme.colors.text.extraLight,
             textAlign = TextAlign.Center,
         )
     }
@@ -219,7 +219,7 @@ private fun Success() {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.primary),
+            .background(Theme.colors.backgrounds.primary),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -253,7 +253,7 @@ private fun Success() {
                         append(stringResource(R.string.keygen_vault_created_success_part_1))
                         appendLine(" ")
                         withStyle(
-                            SpanStyle(brush = Theme.v2.colors.gradients.primary)
+                            SpanStyle(brush = Theme.colors.gradients.primary)
                         ) {
                             append(stringResource(R.string.vault_created_success_part_2))
                         }
@@ -262,7 +262,7 @@ private fun Success() {
                     Text(
                         text = successText,
                         style = Theme.brockmann.headings.title1,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                         textAlign = TextAlign.Center,
                     )
 

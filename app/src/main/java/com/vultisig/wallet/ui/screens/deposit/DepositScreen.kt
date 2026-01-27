@@ -15,7 +15,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.deposit.DepositViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -109,7 +109,7 @@ private fun DepositScreen(
 ) {
 
 
-    V2Scaffold(
+    VsScaffold(
         title = title,
         onBackClick = onKeysignFinished.takeIf { showStartIcon },
         rightIcon = endIcon,

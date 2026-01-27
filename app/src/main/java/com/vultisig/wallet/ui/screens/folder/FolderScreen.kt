@@ -22,11 +22,11 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultCeil
 import com.vultisig.wallet.ui.components.VaultCeilUiModel
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
-import com.vultisig.wallet.ui.components.v2.bottomsheets.navhost.VsBottomSheetNavController
-import com.vultisig.wallet.ui.components.v2.buttons.DesignType
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.bottomsheet.navhost.VsBottomSheetNavController
+import com.vultisig.wallet.ui.components.buttons.DesignType
+import com.vultisig.wallet.ui.components.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.models.folder.FolderUiModel
 import com.vultisig.wallet.ui.models.folder.FolderViewModel
 import com.vultisig.wallet.ui.navigation.Route

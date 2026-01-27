@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens.v2.customtoken
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -19,11 +18,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
+import com.vultisig.wallet.ui.components.bottomsheet.VsBottomSheet
+import com.vultisig.wallet.ui.components.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.containers.TopShineContainer
 import com.vultisig.wallet.ui.models.CustomTokenUiModel
 import com.vultisig.wallet.ui.models.CustomTokenViewModel
 import com.vultisig.wallet.ui.screens.v2.customtoken.components.CustomTokenSearchBar
@@ -61,7 +60,7 @@ private fun CustomTokenScreen(
     onAddTokenClick: () -> Unit,
     onCloseClick: () -> Unit,
 ) {
-    V2BottomSheet(
+    VsBottomSheet(
         onDismissRequest = onBackClick,
         leftAction = {
             VsCircleButton(
@@ -83,7 +82,7 @@ private fun CustomTokenScreen(
             )
             Text(
                 text = stringResource(R.string.custom_token_screen_title),
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.headings.title2,
             )
 

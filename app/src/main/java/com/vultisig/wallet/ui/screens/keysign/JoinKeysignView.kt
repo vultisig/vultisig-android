@@ -16,7 +16,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.errors.ErrorView
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignError
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.DiscoverService
@@ -186,7 +187,7 @@ private fun JoinKeysignScreen(
     content: @Composable () -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
-    V2Scaffold(
+    VsScaffold(
         onBackClick = onBack.takeIf { isKeySignFinished.not() && isError.not()},
         rightIcon = R.drawable.big_close.takeIf { isError },
         onRightIconClick = onBack.takeIf { isError },

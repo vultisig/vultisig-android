@@ -54,8 +54,8 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.bottomsheet.VsBottomSheet
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.ScanQrUiModel
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -77,7 +77,7 @@ internal fun ScanQrScreen(
     viewModel: ScanQrViewModel = hiltViewModel(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
-    V2BottomSheet(onDismissRequest = viewModel::back) {
+    VsBottomSheet(onDismissRequest = viewModel::back) {
         ScanQrScreen(
             uiModel = uiModel,
             onDismiss = viewModel::back,
@@ -170,7 +170,7 @@ internal fun ScanQrScreen(
         }
     }
 
-    V2Scaffold(
+    VsScaffold(
         onBackClick = onDismiss,
         title = stringResource(R.string.scan_qr_screen_title)
     ) {
@@ -234,7 +234,7 @@ internal fun ScanQrScreen(
                         Text(
                             text = stringResource(R.string.camera_permission_denied),
                             textAlign = TextAlign.Center,
-                            color = Theme.v2.colors.neutrals.n100,
+                            color = Theme.colors.neutrals.n100,
                             style = Theme.montserrat.subtitle1,
                             modifier = Modifier.fillMaxWidth(0.5f)
                         )

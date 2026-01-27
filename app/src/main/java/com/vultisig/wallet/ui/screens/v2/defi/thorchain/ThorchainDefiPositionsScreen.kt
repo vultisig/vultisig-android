@@ -26,12 +26,12 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.components.v2.tab.VsTab
-import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
+import com.vultisig.wallet.ui.components.tab.VsTab
+import com.vultisig.wallet.ui.components.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
@@ -99,13 +99,13 @@ internal fun ThorchainDefiPositionScreenContent(
         DeFiTab.STAKED,
     )
 
-    V2Scaffold(
+    VsScaffold(
         onBackClick = onBackClick,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Theme.v2.colors.backgrounds.primary),
+                .background(Theme.colors.backgrounds.primary),
             horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -139,9 +139,9 @@ internal fun ThorchainDefiPositionScreenContent(
                 }
 
 
-                V2Container(
-                    type = ContainerType.SECONDARY,
-                    cornerType = CornerType.Circular,
+                VsContainer(
+                    type = VsContainerType.SECONDARY,
+                    vsContainerCornerType = VsContainerCornerType.Circular,
                     modifier = Modifier
                         .clickOnce(onClick = {})
                 ) {
@@ -149,7 +149,7 @@ internal fun ThorchainDefiPositionScreenContent(
                         drawableResId = R.drawable.edit_chain,
                         size = 16.dp,
                         modifier = Modifier.padding(all = 12.dp),
-                        tint = Theme.v2.colors.primary.accent4,
+                        tint = Theme.colors.primary.accent4,
                         onClick = onEditPositionClick,
                     )
                 }

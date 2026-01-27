@@ -26,7 +26,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.keygen.NameVaultUiModel
 import com.vultisig.wallet.ui.models.keygen.NameVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -56,7 +56,7 @@ private fun NameVaultScreen(
     onBackClick: () -> Unit,
 ) {
 
-    V2Scaffold(
+    VsScaffold(
         title = null,
         onBackClick = onBackClick,
         bottomBar = {
@@ -82,13 +82,13 @@ private fun NameVaultScreen(
             Text(
                 text = stringResource(R.string.fast_vault_name_screen_title),
                 style = Theme.brockmann.headings.largeTitle,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
             )
             UiSpacer(16.dp)
             Text(
                 text = stringResource(R.string.fast_vault_name_screen_desc),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight
+                color = Theme.colors.text.extraLight
             )
             VsTextInputField(
                 textFieldState = textFieldState,

@@ -43,7 +43,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.ColorGenerator
 
@@ -71,7 +72,7 @@ private fun AddressBookContent(
 ) {
     var isShowingAddresses by remember { mutableStateOf(true) }
 
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.address_book_toolbar_title),
         applyDefaultPaddings = false,
         content = {
@@ -122,7 +123,7 @@ private fun AddressToggle(
                 modifier = Modifier
                     .animatePlacementInScope(this)
                     .background(
-                        color = Theme.v2.colors.primary.accent3,
+                        color = Theme.colors.primary.accent3,
                         shape = CircleShape
                     )
                     .fillMaxWidth(0.5f)
@@ -137,7 +138,7 @@ private fun AddressToggle(
                 modifier = Modifier
                     .border(
                         width = 1.dp,
-                        color = Theme.v2.colors.primary.accent3,
+                        color = Theme.colors.primary.accent3,
                         shape = CircleShape,
                     )
                     .fillMaxWidth(),
@@ -164,7 +165,7 @@ private fun RowScope.PickerItem(
     Text(
         text = title,
         style = Theme.brockmann.supplementary.footnote,
-        color = Theme.v2.colors.text.light,
+        color = Theme.colors.text.light,
         textAlign = TextAlign.Center,
         overflow = TextOverflow.MiddleEllipsis,
         maxLines = 1,
@@ -190,7 +191,7 @@ private fun EntryItem(
             .clickable(onClick = onClick)
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.light,
+                color = Theme.colors.border.light,
                 shape = RoundedCornerShape(12.dp),
             )
             .padding(
@@ -222,7 +223,7 @@ private fun EntryItem(
                         .uppercase()
                         .toString(),
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                     textAlign = TextAlign.Center,
                 )
             }
@@ -235,7 +236,7 @@ private fun EntryItem(
             Text(
                 text = title,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
             )
@@ -243,7 +244,7 @@ private fun EntryItem(
             Text(
                 text = subtitle,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.light,
+                color = Theme.colors.text.light,
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
             )

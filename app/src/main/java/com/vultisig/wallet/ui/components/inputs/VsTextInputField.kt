@@ -110,14 +110,14 @@ internal fun VsTextInputField(
                 if (!label.isNullOrBlank()) {
                     Text(
                         text = label,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                         style = Theme.brockmann.body.s.medium,
                     )
                 }
                 if (labelIcon != null) {
                     Icon(
                         painter = painterResource(labelIcon),
-                        tint = Theme.v2.colors.text.extraLight,
+                        tint = Theme.colors.text.extraLight,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
@@ -133,23 +133,23 @@ internal fun VsTextInputField(
                     border = BorderStroke(
                         width = 1.dp,
                         color = when (innerState) {
-                            VsTextInputFieldInnerState.Success -> Theme.v2.colors.alerts.success
-                            VsTextInputFieldInnerState.Error -> Theme.v2.colors.alerts.error
+                            VsTextInputFieldInnerState.Success -> Theme.colors.alerts.success
+                            VsTextInputFieldInnerState.Error -> Theme.colors.alerts.error
                             VsTextInputFieldInnerState.Default ->
-                                if (focused) Theme.v2.colors.border.normal
-                                else Theme.v2.colors.border.light
+                                if (focused) Theme.colors.border.normal
+                                else Theme.colors.border.light
                         }
                     ),
                     shape = textFieldBackgroundShape,
                 )
                 .clip(textFieldBackgroundShape)
-                .background(Theme.v2.colors.backgrounds.secondary)
+                .background(Theme.colors.backgrounds.secondary)
                 .padding(all = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
         ) {
             val inputTextStyle = Theme.brockmann.body.m.medium.copy(
-                color = Theme.v2.colors.text.primary
+                color = Theme.colors.text.primary
             )
 
             when (type) {
@@ -202,7 +202,7 @@ internal fun VsTextInputField(
                                     R.drawable.visible else
                                     invisibleIcon
                             ),
-                            tint = Theme.v2.colors.text.button.light,
+                            tint = Theme.colors.text.button.light,
                             contentDescription = null,
                             modifier = Modifier
                                 .size(20.dp)
@@ -260,7 +260,7 @@ internal fun VsTextInputField(
                         if (trailingText != null) {
                             Text(
                                 text = trailingText,
-                                color = Theme.v2.colors.text.light,
+                                color = Theme.colors.text.light,
                                 style = Theme.brockmann.body.s.medium,
                             )
                         }
@@ -269,7 +269,7 @@ internal fun VsTextInputField(
                             UiSpacer(8.dp)
                             Icon(
                                 painter = painterResource(trailingIcon),
-                                tint = Theme.v2.colors.text.button.light,
+                                tint = Theme.colors.text.button.light,
                                 contentDescription = null,
                                 modifier = Modifier
                                     .width(20.dp)
@@ -284,7 +284,7 @@ internal fun VsTextInputField(
                             UiSpacer(8.dp)
                             Icon(
                                 painter = painterResource(trailingIcon2),
-                                tint = Theme.v2.colors.text.button.light,
+                                tint = Theme.colors.text.button.light,
                                 contentDescription = null,
                                 modifier = Modifier
                                     .size(20.dp)
@@ -303,9 +303,9 @@ internal fun VsTextInputField(
             Text(
                 text = footNote,
                 color = when (innerState) {
-                    VsTextInputFieldInnerState.Success -> Theme.v2.colors.alerts.success
-                    VsTextInputFieldInnerState.Error -> Theme.v2.colors.alerts.error
-                    VsTextInputFieldInnerState.Default -> Theme.v2.colors.text.primary
+                    VsTextInputFieldInnerState.Success -> Theme.colors.alerts.success
+                    VsTextInputFieldInnerState.Error -> Theme.colors.alerts.error
+                    VsTextInputFieldInnerState.Default -> Theme.colors.text.primary
                 },
                 style = Theme.brockmann.supplementary.footnote
             )
@@ -322,7 +322,7 @@ private fun TextInputFieldHint(
     if (textFieldState.text.isEmpty() && hint != null) {
         Text(
             text = hint,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             style = Theme.brockmann.body.m.medium,
             modifier = modifier,
         )

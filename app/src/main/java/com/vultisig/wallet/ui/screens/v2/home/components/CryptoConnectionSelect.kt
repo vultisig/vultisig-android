@@ -60,7 +60,7 @@ internal fun CryptoConnectionSelect(
 
     LookaheadScope {
         val c1 = Color(0xFF284570)
-        val c2 = Theme.v2.colors.backgrounds.secondary
+        val c2 = Theme.colors.backgrounds.secondary
         Box(
             modifier = Modifier
                 .clip(
@@ -94,7 +94,7 @@ internal fun CryptoConnectionSelect(
                         .shadow(
                             elevation = 1.dp,
                             shape = CircleShape,
-                            spotColor = Theme.v2.colors.neutrals.n100.copy(alpha = 0.2f),
+                            spotColor = Theme.colors.neutrals.n100.copy(alpha = 0.2f),
                             clip = true,
                         )
                         .fillMaxHeight()
@@ -192,7 +192,7 @@ private fun WalletEarnOption(
         verticalArrangement = Arrangement.Center
     ) {
 
-        val contentColor= if (enabled) Theme.v2.colors.text.primary else Theme.v2.colors.text.extraLight
+        val contentColor= if (enabled) Theme.colors.text.primary else Theme.colors.text.extraLight
         val contentColorAnimated by animateColorAsState(contentColor)
         UiIcon(
             drawableResId = icon,

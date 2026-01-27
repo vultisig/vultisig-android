@@ -15,7 +15,7 @@ import com.vultisig.wallet.ui.components.util.BlockBackClick
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingUiModel
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingViewModel
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
@@ -42,7 +42,7 @@ private fun VaultBackupOnboardingScreen(
     onNextClick: () -> Unit,
 ) {
 
-    V2Scaffold(
+    VsScaffold(
         topBar = {
             if (state.pageTotal != 1) {
                 VsTopAppProgressBar(
@@ -110,29 +110,29 @@ private fun buildOnboardingPagesText(
             PartiallyGradientTextItem(
                 resId = R.string.onboarding_security_backup_desc_page_1_part_1,
                 formatArgs = vaultShares,
-                coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
             ),
             PartiallyGradientTextItem(
                 resId = R.string.onboarding_security_backup_desc_page_1_part_2,
-                coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
             ),
         ),
         listOf(
             PartiallyGradientTextItem(
                 resId = R.string.onboarding_security_backup_desc_page_2_part_1,
-                coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
             ),
             PartiallyGradientTextItem(
                 resId = R.string.onboarding_security_backup_desc_page_2_part_2,
-                coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
             ),
             PartiallyGradientTextItem(
                 resId = R.string.onboarding_security_backup_desc_page_2_part_3,
-                coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
             ),
             PartiallyGradientTextItem(
                 resId = R.string.onboarding_security_backup_desc_page_2_part_4,
-                coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
             ),
         )
     )
@@ -144,11 +144,11 @@ private fun buildOnboardingPagesText(
                     listOf(
                         PartiallyGradientTextItem(
                             resId = R.string.onboarding_fast_backup_migration_desc_page_1_part_1,
-                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                            coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                         ),
                         PartiallyGradientTextItem(
                             resId = R.string.onboarding_fast_backup_migration_desc_page_1_part_2,
-                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                            coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                         ),
                     ),
                 )
@@ -158,31 +158,31 @@ private fun buildOnboardingPagesText(
                 listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_fast_backup_desc_page_1_part_1,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_fast_backup_desc_page_1_part_2,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                 ),
                 listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_fast_backup_desc_page_2_part_1,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_fast_backup_desc_page_2_part_2,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                 ),
                 listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_fast_backup_desc_page_3_part_1,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_fast_backup_desc_page_3_part_2,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                 )
             )

@@ -37,7 +37,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
-import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
+import com.vultisig.wallet.ui.components.bottomsheet.VsBottomSheet
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordViewModel
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
@@ -94,7 +94,7 @@ fun KeysignPasswordBottomSheet(
     onContinueClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    V2BottomSheet(
+    VsBottomSheet(
         onDismissRequest = onBackClick,
     ) {
         KeysignPasswordSheetContent(
@@ -139,7 +139,7 @@ fun KeysignPasswordSheetContent(
             size = 24.dp,
             modifier = Modifier
                 .align(alignment = Alignment.CenterHorizontally),
-            tint = Theme.v2.colors.primary.accent4,
+            tint = Theme.colors.primary.accent4,
         )
 
         UiSpacer(
@@ -149,7 +149,7 @@ fun KeysignPasswordSheetContent(
         if (title != null) {
             Text(
                 text = title,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.headings.title3,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
@@ -164,7 +164,7 @@ fun KeysignPasswordSheetContent(
         if (subtitle != null) {
             Text(
                 text = subtitle,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.supplementary.caption,
                 modifier = Modifier
                     .width(211.dp)
@@ -224,7 +224,7 @@ fun KeysignPasswordSheetContent(
                     text = if (isHintVisible) stringResource(R.string.keysign_password_hide_hint) else stringResource(
                         R.string.keysign_password_show_hint
                     ),
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.colors.text.light,
                     style = Theme.brockmann.supplementary.footnote,
                 )
 
@@ -237,7 +237,7 @@ fun KeysignPasswordSheetContent(
                     modifier = Modifier
                         .rotate(degrees = caretRotationDegree),
                     size = 12.dp,
-                    tint = Theme.v2.colors.text.light,
+                    tint = Theme.colors.text.light,
                 )
             }
 
@@ -248,7 +248,7 @@ fun KeysignPasswordSheetContent(
                     )
                     Text(
                         text = state.passwordHint.asString(),
-                        color = Theme.v2.colors.text.light,
+                        color = Theme.colors.text.light,
                         style = Theme.brockmann.supplementary.footnote,
                         modifier = Modifier.fillMaxWidth(),
                     )

@@ -37,7 +37,7 @@ internal fun NoChainFound(
         UiIcon(
             drawableResId = R.drawable.crypto,
             size = 26.dp,
-            tint = Theme.v2.colors.primary.accent4,
+            tint = Theme.colors.primary.accent4,
         )
         UiSpacer(
             size = 12.dp
@@ -46,7 +46,7 @@ internal fun NoChainFound(
         Text(
             text = stringResource(R.string.no_chains_found),
             style = Theme.brockmann.headings.title3,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             textAlign = TextAlign.Center,
         )
 
@@ -57,7 +57,7 @@ internal fun NoChainFound(
         Text(
             text = stringResource(R.string.no_chain_make_sure_that),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             textAlign = TextAlign.Center,
         )
 

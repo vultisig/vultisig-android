@@ -79,7 +79,7 @@ import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
 import com.vultisig.wallet.ui.components.util.dashedBorder
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.peer.KeygenPeerDiscoveryViewModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
@@ -178,7 +178,7 @@ internal fun PeerDiscoveryScreen(
     val ordinalFormatter = remember { MessageFormat("{0,ordinal}") }
 
     var isExpanded by remember { mutableStateOf(false) }
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.peer_discovery_topbar_title),
         onBackClick = onBackClick,
         actions = {
@@ -224,7 +224,7 @@ internal fun PeerDiscoveryScreen(
                         network = state.network,
                         onSwitchModeClick = onSwitchModeClick
                     ),
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                     style = Theme.brockmann.supplementary.caption,
                     textAlign = TextAlign.Center
                 )
@@ -294,7 +294,7 @@ internal fun PeerDiscoveryScreen(
                             ),
                             textAlign = TextAlign.Center,
                             style = Theme.brockmann.headings.title2,
-                            color = Theme.v2.colors.text.primary,
+                            color = Theme.colors.text.primary,
                         )
 
                         UiSpacer(size = 12.dp)
@@ -304,12 +304,12 @@ internal fun PeerDiscoveryScreen(
                                 modifier = Modifier
                                     .clickable { isExpanded = true }
                                     .background(
-                                        Theme.v2.colors.backgrounds.secondary,
+                                        Theme.colors.backgrounds.secondary,
                                         shape = RoundedCornerShape(8.dp)
                                     )
                                     .border(
                                         width = 1.dp,
-                                        color = Theme.v2.colors.border.normal,
+                                        color = Theme.colors.border.normal,
                                         shape = RoundedCornerShape(8.dp)
                                     )
                                     .padding(horizontal = 12.dp, vertical = 6.dp)
@@ -317,7 +317,7 @@ internal fun PeerDiscoveryScreen(
                                 UiIcon(
                                     drawableResId = R.drawable.enlarge,
                                     size = 20.dp,
-                                    tint = Theme.v2.colors.text.primary,
+                                    tint = Theme.colors.text.primary,
                                     contentDescription = "Enlarge QR code"
                                 )
                             }
@@ -435,7 +435,7 @@ private fun buildNetworkModeText(
                     },
                     styles = TextLinkStyles(
                         style = SpanStyle(
-                            color = Theme.v2.colors.text.primary,
+                            color = Theme.colors.text.primary,
                             textDecoration = TextDecoration.Underline,
                         )
                     )
@@ -567,12 +567,12 @@ private fun LocalModeHint() {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = Theme.v2.colors.backgrounds.secondary,
+                color = Theme.colors.backgrounds.secondary,
                 shape = shape,
             )
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.primary.accent4,
+                color = Theme.colors.primary.accent4,
                 shape = shape,
             )
             .padding(
@@ -582,13 +582,13 @@ private fun LocalModeHint() {
         UiIcon(
             drawableResId = R.drawable.ic_cloud_off,
             size = 16.dp,
-            tint = Theme.v2.colors.primary.accent4,
+            tint = Theme.colors.primary.accent4,
         )
 
         Text(
             text = stringResource(R.string.peer_discovery_local_mode_hint),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.light,
+            color = Theme.colors.text.light,
         )
     }
 }
@@ -618,10 +618,10 @@ private fun PeerDeviceItem(
             .background(
                 color = when (state) {
                     PeerDeviceState.Selected, PeerDeviceState.ThisDevice ->
-                        Theme.v2.colors.backgrounds.success
+                        Theme.colors.backgrounds.success
 
-                    PeerDeviceState.NotSelected -> Theme.v2.colors.backgrounds.secondary
-                    PeerDeviceState.Waiting -> Theme.v2.colors.backgrounds.primary
+                    PeerDeviceState.NotSelected -> Theme.colors.backgrounds.secondary
+                    PeerDeviceState.Waiting -> Theme.colors.backgrounds.primary
                 },
                 shape = shape,
             )
@@ -629,7 +629,7 @@ private fun PeerDeviceItem(
                 when (state) {
                     PeerDeviceState.Selected -> Modifier.border(
                         width = 1.dp,
-                        color = Theme.v2.colors.alerts.success,
+                        color = Theme.colors.alerts.success,
                         shape = shape,
                     )
 
@@ -641,7 +641,7 @@ private fun PeerDeviceItem(
 
                     PeerDeviceState.Waiting -> Modifier.dashedBorder(
                         width = 1.dp,
-                        color = Theme.v2.colors.border.normal,
+                        color = Theme.colors.border.normal,
                         cornerRadius = 16.dp,
                         dashLength = 4.dp,
                         intervalLength = 4.dp,
@@ -649,7 +649,7 @@ private fun PeerDeviceItem(
 
                     PeerDeviceState.NotSelected -> Modifier.border(
                         width = 1.dp,
-                        color = Theme.v2.colors.border.light,
+                        color = Theme.colors.border.light,
                         shape = shape,
                     )
                 }
@@ -677,7 +677,7 @@ private fun PeerDeviceItem(
             Text(
                 text = title,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = titleLines,
                 minLines = titleLines,
@@ -689,7 +689,7 @@ private fun PeerDeviceItem(
                 Text(
                     text = caption,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.colors.text.light,
                     maxLines = 1,
                 )
             }
@@ -703,7 +703,7 @@ private fun PeerDeviceItem(
                     modifier = Modifier
                         .size(24.dp)
                         .background(
-                            color = Theme.v2.colors.alerts.success,
+                            color = Theme.colors.alerts.success,
                             shape = CircleShape,
                         )
                         .padding(4.dp)
@@ -716,7 +716,7 @@ private fun PeerDeviceItem(
                         .size(24.dp)
                         .border(
                             width = 1.dp,
-                            color = Theme.v2.colors.border.light,
+                            color = Theme.colors.border.light,
                             shape = CircleShape,
                         )
                 )
@@ -736,7 +736,7 @@ internal fun ConnectingToServer(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(all = 24.dp),
     ) {
         RiveAnimation(
@@ -755,7 +755,7 @@ internal fun ConnectingToServer(
         Text(
             text = stringResource(R.string.keygen_connecting_with_server),
             style = Theme.brockmann.headings.title2,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             textAlign = TextAlign.Center,
         )
 
@@ -764,7 +764,7 @@ internal fun ConnectingToServer(
         Text(
             text = stringResource(R.string.keygen_connecting_with_server_take_a_second),
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.light,
+            color = Theme.colors.text.light,
             textAlign = TextAlign.Center,
         )
     }
@@ -780,7 +780,7 @@ private fun Error(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(all = 24.dp),
     ) {
         ErrorView(

@@ -27,7 +27,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Default
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.*
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.theme.Theme.colors
 
 enum class VsButtonVariant {
     Primary, Secondary, Error, Tertiary,

@@ -15,7 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
+import com.vultisig.wallet.ui.components.containers.TopShineContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -43,7 +43,7 @@ internal fun NotEnabledContainer(
             Text(
                 text = title,
                 style = Theme.brockmann.headings.title3,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
             )
 
             UiSpacer(8.dp)
@@ -51,7 +51,7 @@ internal fun NotEnabledContainer(
             Text(
                 text = content,
                 style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 textAlign = TextAlign.Center
             )
 

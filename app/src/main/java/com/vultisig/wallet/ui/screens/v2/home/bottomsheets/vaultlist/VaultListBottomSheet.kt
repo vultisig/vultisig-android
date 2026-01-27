@@ -5,9 +5,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
-import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
-import com.vultisig.wallet.ui.components.v2.bottomsheets.navhost.VsBottomSheetNavHost
-import com.vultisig.wallet.ui.components.v2.bottomsheets.navhost.rememberVsBottomSheetNavController
+import com.vultisig.wallet.ui.components.bottomsheet.VsBottomSheet
+import com.vultisig.wallet.ui.components.bottomsheet.navhost.VsBottomSheetNavHost
+import com.vultisig.wallet.ui.components.bottomsheet.navhost.rememberVsBottomSheetNavController
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.FolderScreen
@@ -24,7 +24,7 @@ internal fun VaultListBottomSheet(
         skipHiddenState = false
     )
 
-    V2BottomSheet(
+    VsBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
     ) {

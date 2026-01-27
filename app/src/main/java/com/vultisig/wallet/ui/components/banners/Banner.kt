@@ -45,11 +45,11 @@ internal fun Banner(
         Icon(
             painter = painterResource(R.drawable.x),
             contentDescription = null,
-            tint = Theme.v2.colors.text.primary,
+            tint = Theme.colors.text.primary,
             modifier = Modifier
                 .size(24.dp)
                 .background(
-                    color = Theme.v2.colors.backgrounds.tertiary_2,
+                    color = Theme.colors.backgrounds.tertiary_2,
                     shape = CircleShape,
                 )
                 .padding(8.dp)
@@ -74,10 +74,10 @@ internal fun Banner(
         modifier = modifier
             .background(
                 color = when (variant) {
-                    BannerVariant.Warning -> Theme.v2.colors.backgrounds.alert
-                    BannerVariant.Info -> Theme.v2.colors.backgrounds.secondary
-                    BannerVariant.Error -> Theme.v2.colors.backgrounds.error
-                    BannerVariant.Success -> Theme.v2.colors.backgrounds.success
+                    BannerVariant.Warning -> Theme.colors.backgrounds.alert
+                    BannerVariant.Info -> Theme.colors.backgrounds.secondary
+                    BannerVariant.Error -> Theme.colors.backgrounds.error
+                    BannerVariant.Success -> Theme.colors.backgrounds.success
                 },
                 shape = shape,
             )
@@ -85,7 +85,7 @@ internal fun Banner(
                 width = 1.dp,
                 color = when (variant) {
                     BannerVariant.Warning -> Color(0x40FFC25C)
-                    BannerVariant.Info -> Theme.v2.colors.border.light
+                    BannerVariant.Info -> Theme.colors.border.light
                     BannerVariant.Error -> Color(0x40FF5C5C)
                     BannerVariant.Success -> Color(0x4013C89D)
                 },
@@ -96,10 +96,10 @@ internal fun Banner(
             )
     ) {
         val contentColor = when (variant) {
-            BannerVariant.Warning -> Theme.v2.colors.alerts.warning
-            BannerVariant.Info -> Theme.v2.colors.text.light
-            BannerVariant.Error -> Theme.v2.colors.alerts.error
-            BannerVariant.Success -> Theme.v2.colors.alerts.success
+            BannerVariant.Warning -> Theme.colors.alerts.warning
+            BannerVariant.Info -> Theme.colors.text.light
+            BannerVariant.Error -> Theme.colors.alerts.error
+            BannerVariant.Success -> Theme.colors.alerts.success
         }
 
         UiIcon(
