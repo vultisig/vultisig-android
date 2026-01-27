@@ -52,6 +52,7 @@ internal fun BondedTabContent(
             buttonText = stringResource(R.string.bond_to_node),
             onClickAction = bondToNodeOnClick,
             totalAmount = state.bonded.totalBondedAmount,
+            totalPrice = state.bonded.totalBondedPrice,
             isLoading = state.bonded.isLoading,
             isBalanceVisible = state.isBalanceVisible,
         )

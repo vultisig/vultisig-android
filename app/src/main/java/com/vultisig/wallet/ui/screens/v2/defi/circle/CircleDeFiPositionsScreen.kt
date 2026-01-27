@@ -108,6 +108,7 @@ private fun CircleContentDepositTab(
             onClickFirstAction = onClickWithdraw,
             onClickSecondAction = onClickDepositOrCreateAccount,
             totalAmount = state.totalDeposit,
+            totalPrice = state.totalDepositCurrency,
             isLoading = state.isLoading,
             isBalanceVisible = isBalanceVisible,
         )
@@ -122,6 +123,7 @@ private fun CircleContentDepositTab(
             },
             onClickAction = onClickDepositOrCreateAccount,
             totalAmount = state.totalDeposit,
+            totalPrice = state.totalDepositCurrency,
             isLoading = state.isLoading,
             isBalanceVisible = isBalanceVisible,
         )
