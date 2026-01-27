@@ -31,6 +31,7 @@ internal fun MainActivityContent(
     navController: NavHostController,
     mainViewModel: MainViewModel,
     startDestination: Any,
+    onNavigationReady: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -56,6 +57,8 @@ internal fun MainActivityContent(
             snapshotFlow { navController.currentBackStackEntry }
                 .filterNotNull()
                 .first()
+
+            onNavigationReady()
 
             launch {
                 mainViewModel.destination.collect {

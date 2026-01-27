@@ -70,15 +70,23 @@ class MainActivity : AppCompatActivity() {
                         },
                     )
                 } else {
+                    var isNavigationReady by remember {
+                        mutableStateOf(false)
+                    }
+
+                    if (isNavigationReady) {
+                        CheckDeeplink(mainViewModel::openUri)
+                    }
 
                     CheckUpdates()
-
-                    CheckDeeplink(mainViewModel::openUri)
 
                     MainActivityContent(
                         navController = navController,
                         mainViewModel = mainViewModel,
                         startDestination = screen,
+                        onNavigationReady = {
+                            isNavigationReady = true
+                        },
                     )
                 }
             }
