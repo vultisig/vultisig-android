@@ -109,7 +109,8 @@ internal data class LpPositionUiModel(
 internal data class StakePositionUiModel(
     val coin: Coin,
     val stakeAssetHeader: String,
-    val stakeAmount: String,
+    val stakeAmount: BigDecimal = BigDecimal.ZERO,
+    val stakedAmountDisplay: String,
     val apy: String?,
     val isLoading: Boolean = false,
     val supportsMint: Boolean = false,
@@ -454,7 +455,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 return@launch
             }
             val defaultLoadingPositions = loadDefaultStakingPositions().filter { coin ->
-                selectedPositions.contains(coin.stakeAmount)
+                selectedPositions.contains(coin.stakedAmountDisplay)
             }.map { positionUiModel ->
                 positionUiModel.copy(isLoading = true)
             }
@@ -551,7 +552,8 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                     val stakePosition = StakePositionUiModel(
                         coin = details.coin,
                         stakeAssetHeader = "Staked $RUJI_SYMBOL",
-                        stakeAmount = formattedAmount,
+                        stakeAmount = stakedAmount ,
+                        stakedAmountDisplay = formattedAmount,
                         apy = details.apr?.formatPercentage(),
                         canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
                         canStake = true,
@@ -597,7 +599,8 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 val stakePosition = StakePositionUiModel(
                     coin = position.coin,
                     stakeAssetHeader = "Staked TCY",
-                    stakeAmount = formattedAmount,
+                    stakedAmountDisplay = formattedAmount,
+                    stakeAmount = stakedAmount,
                     apy = position.apr?.formatPercentage(),
                     canWithdraw = false, // TCY auto-distributes rewards
                     canStake = true,
@@ -664,7 +667,8 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                             val position = StakePositionUiModel(
                                 coin = defaultPosition.coin,
                                 stakeAssetHeader = "$header ${coin.ticker}",
-                                stakeAmount = "${stakeAmount.toPlainString()} ${coin.ticker}",
+                                stakedAmountDisplay = "${stakeAmount.toPlainString()} ${coin.ticker}",
+                                stakeAmount = stakeAmount,
                                 apy = null,
                                 supportsMint = supportsMint,
                                 canWithdraw = false, // TCY auto-distributes rewards
@@ -997,7 +1001,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 StakePositionUiModel(
                     coin = rujiCoin,
                     stakeAssetHeader = "Staked ${rujiCoin.ticker}",
-                    stakeAmount = rujiCoin.ticker,
+                    stakedAmountDisplay = rujiCoin.ticker,
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
@@ -1009,7 +1013,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 StakePositionUiModel(
                     coin = tcy,
                     stakeAssetHeader = "Staked ${tcy.ticker}",
-                    stakeAmount = tcy.ticker,
+                    stakedAmountDisplay = tcy.ticker,
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
@@ -1021,7 +1025,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 StakePositionUiModel(
                     coin = stcy,
                     stakeAssetHeader = "Compounded TCY",
-                    stakeAmount = stcy.ticker,
+                    stakedAmountDisplay = stcy.ticker,
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
@@ -1033,7 +1037,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 StakePositionUiModel(
                     coin = ytcy,
                     stakeAssetHeader = "Staked ${ytcy.ticker}",
-                    stakeAmount = ytcy.ticker,
+                    stakedAmountDisplay = ytcy.ticker,
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
@@ -1045,7 +1049,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 StakePositionUiModel(
                     coin = yrune,
                     stakeAssetHeader = "Staked ${yrune.ticker}",
-                    stakeAmount = yrune.ticker,
+                    stakedAmountDisplay = yrune.ticker,
                     apy = null,
                     canWithdraw = false,
                     canStake = true,
