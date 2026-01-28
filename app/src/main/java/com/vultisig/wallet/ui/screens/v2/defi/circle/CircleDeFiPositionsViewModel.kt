@@ -89,79 +89,99 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
 
     private fun loadAccountStatus() {
         viewModelScope.launch {
-            val hideWarning = withContext(Dispatchers.IO) {
-                scaCircleAccountRepository.getCloseWarning()
-            }
-            _state.update { currentState ->
-                currentState.copy(
-                    circleDefi = currentState.circleDefi.copy(
-                        closeWarning = hideWarning
+            try {
+                val hideWarning = withContext(Dispatchers.IO) {
+                    scaCircleAccountRepository.getCloseWarning()
+                }
+                _state.update { currentState ->
+                    currentState.copy(
+                        circleDefi = currentState.circleDefi.copy(
+                            closeWarning = hideWarning
+                        )
                     )
-                )
+                }
+            } catch (t: Throwable) {
+                Timber.e(t)
             }
         }
     }
 
     private fun loadBalanceVisibility() {
         viewModelScope.launch {
-            val isVisible = withContext(Dispatchers.IO) {
-                balanceVisibilityRepository.getVisibility(vaultId)
+            try {
+                val isVisible = withContext(Dispatchers.IO) {
+                    balanceVisibilityRepository.getVisibility(vaultId)
+                }
+                _state.update { it.copy(isBalanceVisible = isVisible) }
+            } catch (t: Throwable) {
+                Timber.e(t)
             }
-            _state.update { it.copy(isBalanceVisible = isVisible) }
         }
     }
 
     private fun loadCirclePositions() {
         viewModelScope.launch {
-            // Initial UI
-            _state.update { currentState ->
-                currentState.copy(
-                    isTotalAmountLoading = true,
-                    circleDefi = currentState.circleDefi.copy(
-                        isLoading = true
+            try {
+                // Initial UI
+                _state.update { currentState ->
+                    currentState.copy(
+                        isTotalAmountLoading = true,
+                        circleDefi = currentState.circleDefi.copy(
+                            isLoading = true
+                        )
                     )
-                )
-            }
+                }
 
-            // Check account exists
-            val addressSca = withContext(Dispatchers.IO) {
-                scaCircleAccountRepository.getAccount(vaultId)
-            }
+                // Check account exists
+                val addressSca = withContext(Dispatchers.IO) {
+                    scaCircleAccountRepository.getAccount(vaultId)
+                }
 
-            // If not cache or don't exists, check network for MSCA and fetch balance
-            if (addressSca == null) {
-                val fetchedAddress = fetchAssociatedMscaAccount()
-                if (fetchedAddress != null) {
-                    mscaAddress = fetchedAddress
-                    fetchUSDCBalanceFromNetwork(fetchedAddress)
-                } else {
+                // If not cache or don't exists, check network for MSCA and fetch balance
+                if (addressSca == null) {
+                    val fetchedAddress = fetchAssociatedMscaAccount()
+                    if (fetchedAddress != null) {
+                        mscaAddress = fetchedAddress
+                        fetchUSDCBalanceFromNetwork(fetchedAddress)
+                    } else {
+                        _state.update { currentState ->
+                            currentState.copy(
+                                isTotalAmountLoading = false,
+                                circleDefi = currentState.circleDefi.copy(
+                                    isLoading = false,
+                                    isAccountOpen = false,
+                                )
+                            )
+                        }
+                    }
+                } else { // If account exists, show cache, then fetch and update from network
+                    mscaAddress = addressSca
                     _state.update { currentState ->
                         currentState.copy(
-                            isTotalAmountLoading = false,
                             circleDefi = currentState.circleDefi.copy(
-                                isLoading = false,
-                                isAccountOpen = false,
+                                isAccountOpen = true,
                             )
                         )
                     }
+                    val cachePosition =
+                        withContext(Dispatchers.IO) {
+                            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Ethereum.USDC.id)
+                        }
+                    if (cachePosition != null) {
+                        showUSDCPosition(cachePosition.stakeAmount, cachePosition.coin)
+                    }
+                    fetchUSDCBalanceFromNetwork(addressSca)
                 }
-            } else { // If account exists, show cache, then fetch and update from network
-                mscaAddress = addressSca
+            } catch (t: Throwable) {
+                Timber.e(t)
                 _state.update { currentState ->
                     currentState.copy(
+                        isTotalAmountLoading = false,
                         circleDefi = currentState.circleDefi.copy(
-                            isAccountOpen = true,
+                            isLoading = false,
                         )
                     )
                 }
-                val cachePosition =
-                    withContext(Dispatchers.IO) {
-                        stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Ethereum.USDC.id)
-                    }
-                if (cachePosition != null) {
-                    showUSDCPosition(cachePosition.stakeAmount, cachePosition.coin)
-                }
-                fetchUSDCBalanceFromNetwork(addressSca)
             }
         }
     }
@@ -180,15 +200,19 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
 
     fun onClickCloseWarning() {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                scaCircleAccountRepository.saveCloseWarning()
-            }
-            _state.update { currentState ->
-                currentState.copy(
-                    circleDefi = currentState.circleDefi.copy(
-                        closeWarning = true,
+            try {
+                withContext(Dispatchers.IO) {
+                    scaCircleAccountRepository.saveCloseWarning()
+                }
+                _state.update { currentState ->
+                    currentState.copy(
+                        circleDefi = currentState.circleDefi.copy(
+                            closeWarning = true,
+                        )
                     )
-                )
+                }
+            } catch (t: Throwable) {
+                Timber.e(t)
             }
         }
     }
@@ -230,36 +254,44 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
 
     fun onDepositAccount() {
         viewModelScope.launch {
-            val tokenId = Coins.Ethereum.USDC.id
-            if (!mscaAddress.isNullOrBlank()) {
-                navigator.route(
-                    Route.Send(
-                        vaultId = vaultId,
-                        chainId = Chain.Ethereum.id,
-                        tokenId = tokenId,
-                        address = mscaAddress,
-                        type = DeFiNavActions.DEPOSIT_USDC_CIRCLE.type,
+            try {
+                val tokenId = Coins.Ethereum.USDC.id
+                if (!mscaAddress.isNullOrBlank()) {
+                    navigator.route(
+                        Route.Send(
+                            vaultId = vaultId,
+                            chainId = Chain.Ethereum.id,
+                            tokenId = tokenId,
+                            address = mscaAddress,
+                            type = DeFiNavActions.DEPOSIT_USDC_CIRCLE.type,
+                        )
                     )
-                )
+                }
+            } catch (t: Throwable) {
+                Timber.e(t)
             }
         }
     }
 
     fun onWithdrawAccount() {
         viewModelScope.launch {
-            val usdc = Coins.Ethereum.USDC
-            val tokenId = usdc.id
-            if (!mscaAddress.isNullOrBlank()) {
-                navigator.route(
-                    Route.Send(
-                        vaultId = vaultId,
-                        chainId = Chain.Ethereum.id,
-                        type = DeFiNavActions.WITHDRAW_USDC_CIRCLE.type,
-                        tokenId = tokenId,
-                        address = usdc.contractAddress,
-                        mscaAddress = mscaAddress,
+            try {
+                val usdc = Coins.Ethereum.USDC
+                val tokenId = usdc.id
+                if (!mscaAddress.isNullOrBlank()) {
+                    navigator.route(
+                        Route.Send(
+                            vaultId = vaultId,
+                            chainId = Chain.Ethereum.id,
+                            type = DeFiNavActions.WITHDRAW_USDC_CIRCLE.type,
+                            tokenId = tokenId,
+                            address = usdc.contractAddress,
+                            mscaAddress = mscaAddress,
+                        )
                     )
-                )
+                }
+            } catch (t: Throwable) {
+                Timber.e(t)
             }
         }
     }
@@ -295,28 +327,40 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     }
 
     private suspend fun fetchUSDCBalanceFromNetwork(mscaAddress: String) {
-        val api = evmApi.createEvmApi(Chain.Ethereum)
-        val usdc = Coins.Ethereum.USDC.copy(address = mscaAddress)
-        val usdcDepositedBalance = withContext(Dispatchers.IO) {
-            api.getBalance(usdc)
-        }
+        try {
+            val api = evmApi.createEvmApi(Chain.Ethereum)
+            val usdc = Coins.Ethereum.USDC.copy(address = mscaAddress)
+            val usdcDepositedBalance = withContext(Dispatchers.IO) {
+                api.getBalance(usdc)
+            }
 
-        showUSDCPosition(usdcDepositedBalance, usdc)
+            showUSDCPosition(usdcDepositedBalance, usdc)
 
-        val usdcCircleStakingDetails = StakingDetails(
-            id = usdc.generateId(mscaAddress),
-            coin = usdc,
-            stakeAmount = usdcDepositedBalance,
-            apr = null,
-            estimatedRewards = null,
-            nextPayoutDate = null,
-            rewards = null,
-            rewardsCoin = usdc,
-        )
+            val usdcCircleStakingDetails = StakingDetails(
+                id = usdc.generateId(mscaAddress),
+                coin = usdc,
+                stakeAmount = usdcDepositedBalance,
+                apr = null,
+                estimatedRewards = null,
+                nextPayoutDate = null,
+                rewards = null,
+                rewardsCoin = usdc,
+            )
 
-        // Save position in  cache
-        withContext(Dispatchers.IO) {
-            stakingDetailsRepository.saveStakingDetails(vaultId, usdcCircleStakingDetails)
+            // Save position in  cache
+            withContext(Dispatchers.IO) {
+                stakingDetailsRepository.saveStakingDetails(vaultId, usdcCircleStakingDetails)
+            }
+        } catch (t: Throwable) {
+            Timber.e(t)
+            _state.update { currentState ->
+                currentState.copy(
+                    isTotalAmountLoading = false,
+                    circleDefi = currentState.circleDefi.copy(
+                        isLoading = false,
+                    )
+                )
+            }
         }
     }
 
