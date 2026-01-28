@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.getStakeDeFiNavAction
 import com.vultisig.wallet.ui.screens.v2.defi.model.getUnstakeDeFiNavAction
 import com.vultisig.wallet.ui.theme.Theme
+import java.math.BigDecimal
 
 @Composable
 internal fun StakingTabContent(
@@ -93,7 +94,7 @@ internal fun StakingWidget(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
-                painter = painterResource(id = getHeaderIcon(state.stakeAmount)),
+                painter = painterResource(id = getHeaderIcon(state.stakedAmountDisplay)),
                 contentDescription = null,
                 modifier = Modifier.size(46.dp)
             )
@@ -117,7 +118,7 @@ internal fun StakingWidget(
                     )
                 } else {
                     Text(
-                        text = if (isBalanceVisible) state.stakeAmount else HIDE_BALANCE_CHARS,
+                        text = if (isBalanceVisible) state.stakedAmountDisplay else HIDE_BALANCE_CHARS,
                         style = Theme.brockmann.headings.title1,
                         color = Theme.v2.colors.text.primary,
                     )
@@ -218,8 +219,7 @@ internal fun StakingWidget(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val stakeNumeric = state.stakeAmount.split("\\s+".toRegex()).firstOrNull()?.replace(",", "")?.toDoubleOrNull() ?: 0.0
-            if (stakeNumeric > 0.0) {
+            if (state.stakeAmount > BigDecimal.ZERO) {
                 ActionButton(
                     title = stringResource(
                         if (!state.supportsMint) R.string.defi_action_unstake else R.string.defi_action_redeem
@@ -343,7 +343,7 @@ private fun StakingWidgetFullActionsPreview() {
             state = StakePositionUiModel(
                 coin = Coins.ThorChain.RUJI,
                 stakeAssetHeader = "Staked RUJI",
-                stakeAmount = "1000 RUJI",
+                stakedAmountDisplay = "1000 RUJI",
                 apy = "18.5%",
                 canWithdraw = true,
                 canStake = true,
@@ -372,7 +372,7 @@ private fun StakingWidgetLoadingPreview() {
             state = StakePositionUiModel(
                 coin = Coins.ThorChain.RUJI,
                 stakeAssetHeader = "Staked RUJI",
-                stakeAmount = "0 RUJI",
+                stakedAmountDisplay = "0 RUJI",
                 apy = "0%",
                 canWithdraw = false,
                 canStake = false,
