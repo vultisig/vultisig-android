@@ -50,7 +50,7 @@ internal fun KeysignView(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         when (state) {
-            KeysignState.KeysignFinished -> {
+            is KeysignState.KeysignFinished -> {
                 when (transactionTypeUiModel) {
                     is TransactionTypeUiModel.Swap -> {
                         SwapTransactionOverviewScreen(
