@@ -46,6 +46,7 @@ internal fun StakingTabContent(
     onClickStake: (DeFiNavActions) -> Unit,
     onClickUnstake: (DeFiNavActions) -> Unit,
     onClickWithdraw: () -> Unit,
+    onClickTransfer: () -> Unit,
     isBalanceVisible: Boolean = true,
 ) {
     Column(
@@ -61,6 +62,7 @@ internal fun StakingTabContent(
                 onClickStake = onClickStake,
                 onClickUnstake = onClickUnstake,
                 onClickWithdraw = onClickWithdraw,
+                onClickTransfer = onClickTransfer,
                 isBalanceVisible = isBalanceVisible,
             )
         }
@@ -74,6 +76,7 @@ internal fun StakingWidget(
     onClickStake: (DeFiNavActions) -> Unit,
     onClickUnstake: (DeFiNavActions) -> Unit,
     onClickWithdraw: () -> Unit,
+    onClickTransfer: () -> Unit,
     isBalanceVisible: Boolean = true,
 ) {
     Column(
@@ -200,6 +203,17 @@ internal fun StakingWidget(
             UiSpacer(16.dp)
         }
 
+        if (state.canTransfer) {
+            VsButton(
+                label = "Transfer",
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onClickTransfer,
+                state = VsButtonState.Enabled,
+            )
+
+            UiSpacer(16.dp)
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -232,7 +246,7 @@ internal fun StakingWidget(
                 icon = R.drawable.ic_circle_plus,
                 background = Theme.v2.colors.primary.accent3,
                 contentColor = Theme.v2.colors.text.primary,
-                onClick = { onClickUnstake(state.coin.getStakeDeFiNavAction()) },
+                onClick = { onClickStake(state.coin.getStakeDeFiNavAction()) },
                 modifier = Modifier.weight(1f),
                 enabled = state.canStake,
                 iconCircleColor = Theme.v2.colors.primary.accent4
@@ -340,7 +354,8 @@ private fun StakingWidgetFullActionsPreview() {
             ),
             onClickStake = {},
             onClickUnstake = {},
-            onClickWithdraw = {}
+            onClickWithdraw = {},
+            onClickTransfer = {},
         )
     }
 }
@@ -369,7 +384,8 @@ private fun StakingWidgetLoadingPreview() {
             isLoading = true,
             onClickStake = {},
             onClickUnstake = {},
-            onClickWithdraw = {}
+            onClickWithdraw = {},
+            onClickTransfer = {},
         )
     }
 }

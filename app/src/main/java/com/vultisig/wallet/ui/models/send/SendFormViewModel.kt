@@ -461,7 +461,9 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     private fun initFormType() {
-        uiState.update { it.copy(defiType = this.defiType) }
+        val autoCompound = defiType == DeFiNavActions.STAKE_STCY
+                || defiType == DeFiNavActions.UNSTAKE_STCY
+        uiState.update { it.copy(defiType = this.defiType, isAutocompound = autoCompound) }
     }
 
     private fun loadVaultName() {
@@ -728,7 +730,7 @@ internal class SendFormViewModel @Inject constructor(
 
             uiState.update { it.copy(isAutocompound = checked) }
 
-            if (defiType == DeFiNavActions.UNSTAKE_TCY && vaultId != null) {
+            if ((defiType == DeFiNavActions.UNSTAKE_TCY || defiType == DeFiNavActions.UNSTAKE_STCY) && vaultId != null) {
                 selectedToken.value = null
 
                 if (checked) {
@@ -893,6 +895,8 @@ internal class SendFormViewModel @Inject constructor(
             defiType != DeFiNavActions.UNSTAKE_RUJI &&
             defiType != DeFiNavActions.STAKE_TCY &&
             defiType != DeFiNavActions.UNSTAKE_TCY &&
+            defiType != DeFiNavActions.STAKE_STCY &&
+            defiType != DeFiNavActions.UNSTAKE_STCY &&
             defiType != DeFiNavActions.REDEEM_YRUNE &&
             defiType != DeFiNavActions.MINT_YTCY &&
             defiType != DeFiNavActions.REDEEM_YTCY &&
@@ -954,6 +958,7 @@ internal class SendFormViewModel @Inject constructor(
             || defiType == DeFiNavActions.BOND
             || defiType == DeFiNavActions.STAKE_RUJI
             || defiType == DeFiNavActions.STAKE_TCY
+            || defiType == DeFiNavActions.STAKE_STCY
             || defiType == DeFiNavActions.MINT_YRUNE
             || defiType == DeFiNavActions.REDEEM_YRUNE
             || defiType == DeFiNavActions.MINT_YTCY
@@ -987,8 +992,8 @@ internal class SendFormViewModel @Inject constructor(
         when (uiState.value.defiType) {
             DeFiNavActions.BOND -> bond()
             DeFiNavActions.UNBOND -> unbond()
-            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stake()
-            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.WITHDRAW_RUJI -> unstake()
+            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY, DeFiNavActions.STAKE_STCY -> stake()
+            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.UNSTAKE_STCY, DeFiNavActions.WITHDRAW_RUJI -> unstake()
             DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> mint()
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> redeem()
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withDrawUSDCCircle()
@@ -1705,7 +1710,7 @@ internal class SendFormViewModel @Inject constructor(
                         chain = chain
                     )
 
-                    DeFiNavActions.STAKE_TCY -> createTCYStakeDepositTransaction(
+                    DeFiNavActions.STAKE_TCY, DeFiNavActions.STAKE_STCY -> createTCYStakeDepositTransaction(
                         vaultId = vaultId,
                         selectedToken = selectedToken,
                         srcAddress = srcAddress,
@@ -1811,7 +1816,7 @@ internal class SendFormViewModel @Inject constructor(
                         chain = chain
                     )
 
-                    DeFiNavActions.UNSTAKE_TCY -> createYTCUnstakeDepositTransaction(
+                    DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.UNSTAKE_STCY -> createYTCUnstakeDepositTransaction(
                         vaultId = vaultId,
                         selectedToken = selectedToken,
                         srcAddress = srcAddress,
@@ -2286,6 +2291,8 @@ internal class SendFormViewModel @Inject constructor(
             || this.defiType == DeFiNavActions.BOND
             || this.defiType == DeFiNavActions.STAKE_RUJI
             || this.defiType == DeFiNavActions.STAKE_TCY
+            || this.defiType == DeFiNavActions.STAKE_STCY
+            || this.defiType == DeFiNavActions.UNSTAKE_STCY
             || this.defiType == DeFiNavActions.MINT_YRUNE
             || this.defiType == DeFiNavActions.MINT_YTCY
             || this.defiType == DeFiNavActions.REDEEM_YRUNE
@@ -2466,7 +2473,8 @@ internal class SendFormViewModel @Inject constructor(
         // default coins, in case the account does not exist
         val defaultCoin = when (defiType) {
             DeFiNavActions.STAKE_RUJI, DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI
-            DeFiNavActions.STAKE_TCY, DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY
+            DeFiNavActions.STAKE_TCY, DeFiNavActions.UNSTAKE_TCY
+                -> Coins.ThorChain.TCY
             DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE
             DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY
             DeFiNavActions.BOND -> Coins.ThorChain.RUNE
@@ -2476,6 +2484,8 @@ internal class SendFormViewModel @Inject constructor(
             DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY
             DeFiNavActions.DEPOSIT_USDC_CIRCLE -> Coins.Ethereum.USDC
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> Coins.Ethereum.USDC
+            DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY
+            DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY
             null -> findPreselectedToken(
                 accounts, preSelectedChainIds, preSelectedTokenId,
             )
