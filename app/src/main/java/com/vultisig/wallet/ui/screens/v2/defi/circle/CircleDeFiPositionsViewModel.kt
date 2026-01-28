@@ -165,7 +165,10 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                     }
                     val cachePosition =
                         withContext(Dispatchers.IO) {
-                            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Ethereum.USDC.id)
+                            stakingDetailsRepository.getStakingDetailsByCoindId(
+                                vaultId,
+                                Coins.Ethereum.USDC.id
+                            )
                         }
                     if (cachePosition != null) {
                         showUSDCPosition(cachePosition.stakeAmount, cachePosition.coin)
@@ -327,40 +330,28 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     }
 
     private suspend fun fetchUSDCBalanceFromNetwork(mscaAddress: String) {
-        try {
-            val api = evmApi.createEvmApi(Chain.Ethereum)
-            val usdc = Coins.Ethereum.USDC.copy(address = mscaAddress)
-            val usdcDepositedBalance = withContext(Dispatchers.IO) {
-                api.getBalance(usdc)
-            }
+        val api = evmApi.createEvmApi(Chain.Ethereum)
+        val usdc = Coins.Ethereum.USDC.copy(address = mscaAddress)
+        val usdcDepositedBalance = withContext(Dispatchers.IO) {
+            api.getBalance(usdc)
+        }
 
-            showUSDCPosition(usdcDepositedBalance, usdc)
+        showUSDCPosition(usdcDepositedBalance, usdc)
 
-            val usdcCircleStakingDetails = StakingDetails(
-                id = usdc.generateId(mscaAddress),
-                coin = usdc,
-                stakeAmount = usdcDepositedBalance,
-                apr = null,
-                estimatedRewards = null,
-                nextPayoutDate = null,
-                rewards = null,
-                rewardsCoin = usdc,
-            )
+        val usdcCircleStakingDetails = StakingDetails(
+            id = usdc.generateId(mscaAddress),
+            coin = usdc,
+            stakeAmount = usdcDepositedBalance,
+            apr = null,
+            estimatedRewards = null,
+            nextPayoutDate = null,
+            rewards = null,
+            rewardsCoin = usdc,
+        )
 
-            // Save position in  cache
-            withContext(Dispatchers.IO) {
-                stakingDetailsRepository.saveStakingDetails(vaultId, usdcCircleStakingDetails)
-            }
-        } catch (t: Throwable) {
-            Timber.e(t)
-            _state.update { currentState ->
-                currentState.copy(
-                    isTotalAmountLoading = false,
-                    circleDefi = currentState.circleDefi.copy(
-                        isLoading = false,
-                    )
-                )
-            }
+        // Save position in  cache
+        withContext(Dispatchers.IO) {
+            stakingDetailsRepository.saveStakingDetails(vaultId, usdcCircleStakingDetails)
         }
     }
 
