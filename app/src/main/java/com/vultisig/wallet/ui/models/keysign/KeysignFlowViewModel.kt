@@ -24,7 +24,6 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
-import com.vultisig.wallet.data.api.txstatus.TransactionStatusRepository
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
@@ -43,12 +42,14 @@ import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
+import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
@@ -114,7 +115,8 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val payloadToProtoMapper: PayloadToProtoMapper,
     private val discoverParticipantsUseCase: DiscoverParticipantsUseCase,
     private val addressBookRepository: AddressBookRepository,
-    private val transactionStatusRepository: TransactionStatusRepository,
+    private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
+    private val transactionStatusServiceManager: TransactionStatusServiceManager,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -180,7 +182,8 @@ internal class KeysignFlowViewModel @Inject constructor(
             pullTssMessages = pullTssMessages,
             isInitiatingDevice = true,
             addressBookRepository = addressBookRepository,
-            transactionStatusRepository = transactionStatusRepository,
+            transactionStatusServiceManager = transactionStatusServiceManager,
+            txStatusConfigurationProvider = txStatusConfigurationProvider,
         )
 
     init {

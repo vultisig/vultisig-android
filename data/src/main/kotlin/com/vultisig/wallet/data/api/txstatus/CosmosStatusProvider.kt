@@ -1,11 +1,14 @@
 package com.vultisig.wallet.data.api.txstatus
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import javax.inject.Inject
 
-class CosmosStatusProvider @Inject constructor(private val httpClient: HttpClient) : TransactionStatusProvider {
+class CosmosStatusProvider @Inject constructor(private val httpClient: HttpClient) :
+    TransactionStatusProvider {
 
     private val apiUrls = mapOf(
         Chain.GaiaChain to "https://rest.cosmos.directory/cosmoshub/cosmos/tx/v1beta1/txs",

@@ -18,7 +18,6 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.txstatus.TransactionStatusRepository
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
@@ -59,6 +58,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.isChainSupported
+import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
@@ -66,6 +66,7 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
+import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
@@ -207,7 +208,8 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
-    private val transactionStatusRepository: TransactionStatusRepository,
+    private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
+    private val transactionStatusServiceManager: TransactionStatusServiceManager,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -269,7 +271,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             customMessagePayload = customMessagePayload,
             isInitiatingDevice = false,
             addressBookRepository = addressBookRepository,
-            transactionStatusRepository = transactionStatusRepository,
+            transactionStatusServiceManager = transactionStatusServiceManager,
+            txStatusConfigurationProvider = txStatusConfigurationProvider,
         )
 
     val verifyUiModel =

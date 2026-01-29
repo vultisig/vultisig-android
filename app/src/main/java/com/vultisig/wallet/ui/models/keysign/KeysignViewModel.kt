@@ -8,9 +8,8 @@ import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
-import com.vultisig.wallet.data.api.txstatus.TransactionResult
-import com.vultisig.wallet.data.api.txstatus.TransactionStatusRepository
-import com.vultisig.wallet.data.api.txstatus.TxStatusConfiguration
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.md5
@@ -25,12 +24,14 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
+import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfiguration
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
@@ -46,6 +47,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,8 +58,10 @@ import tss.ServiceImpl
 import tss.Tss
 import vultisig.keysign.v1.CustomMessagePayload
 import java.math.BigInteger
+import java.time.Duration
 import java.time.Instant
 import java.util.Base64
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 internal sealed class KeysignState {
@@ -106,10 +111,14 @@ internal class KeysignViewModel(
     private val pullTssMessages: PullTssMessagesUseCase,
     private val isInitiatingDevice: Boolean,
     private val addressBookRepository: AddressBookRepository,
-    private val transactionStatusRepository: TransactionStatusRepository,
+    private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
+    private val transactionStatusServiceManager: TransactionStatusServiceManager,
 ) : ViewModel() {
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
+
+    private val _isPollingInBackground = MutableStateFlow(false)
+
     val txHash = MutableStateFlow("")
     val approveTxHash = MutableStateFlow("")
     val txLink = MutableStateFlow("")
@@ -403,7 +412,7 @@ internal class KeysignViewModel(
             swapProgressLink.value =
                 explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
 
-            updateTransactionStatus(txHash, chain)
+            startForegroundPolling(txHash, chain)
         }
         if (approveTxHash.value.isNotEmpty()) {
             approveTxLink.value =
@@ -411,72 +420,88 @@ internal class KeysignViewModel(
         }
     }
 
-    fun updateTransactionStatus(txHash: String, chain: Chain) {
-        val txStatusConfiguration = TxStatusConfiguration.getConfig(chain)
-        if (pollingTxStatusJob?.isActive == false)
-            return
+    private fun startForegroundPolling(txHash: String, chain: Chain) {
+        val txStatusConfiguration = txStatusConfigurationProvider.getConfigurationForChain(chain)
+        pollingTxStatusJob?.cancel()
+
+        // Start service
+        transactionStatusServiceManager.startPolling(txHash, chain)
+        _isPollingInBackground.value = true
 
         pollingTxStatusJob = viewModelScope.launch {
+
             currentState.value =
                 KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+
             val startTime = Instant.now()
-            while (true) {
-                try {
-                    val result = transactionStatusRepository.checkTransactionStatus(txHash, chain)
 
-                    when (result) {
-                        is TransactionResult.Confirmed -> {
-                            currentState.value =
-                                KeysignState.KeysignFinished(TransactionStatus.Confirmed)
-                            break
-                        }
-
-                        is TransactionResult.Failed -> {
-                            currentState.value =
-                                KeysignState.KeysignFinished(
-                                    TransactionStatus.Failed(
-                                        cause = result.reason.asUiText()
-                                    )
-                                )
-                            break
-                        }
-
-                        is TransactionResult.Pending -> {
-                            currentState.value =
-                                KeysignState.KeysignFinished(TransactionStatus.Pending)
-                        }
-
-                        is TransactionResult.NotFound -> {
-                            val elapsed = java.time.Duration.between(
-                                startTime,
-                                Instant.now()
-                            ).toMillis()
-
-                            if (elapsed > txStatusConfiguration.maxWaitMs) {
-                                currentState.value =
-                                    KeysignState.KeysignFinished(
-                                        status = TransactionStatus.Failed(
-                                            cause = "Confirmation taking longer than expected".asUiText()
-                                        )
-                                    )
-                                break
-                            }
-                        }
-                    }
-
-                    delay(txStatusConfiguration.pollIntervalMs)
-
-                } catch (_: Exception) {
-                    delay(txStatusConfiguration.pollIntervalMs)
+            transactionStatusServiceManager.getStatusFlow()
+                ?.collect { statusResult ->
+                    handleStatusResult(statusResult.result, startTime, txStatusConfiguration)
                 }
+        }
+    }
+
+    private fun handleStatusResult(
+        statusResult: TransactionResult,
+        startTime: Instant?,
+        txStatusConfiguration: TxStatusConfiguration
+    ) {
+        when (statusResult) {
+            TransactionResult.NotFound -> {
+                val elapsed = Duration.between(
+                    startTime,
+                    Instant.now()
+                ).toMillis()
+
+                if (elapsed > txStatusConfiguration.maxWaitMinutes.minutes.inWholeMilliseconds) {
+                    currentState.value =
+                        KeysignState.KeysignFinished(
+                            status = statusResult.toTransactionStatus()
+                        )
+                }
+                transactionStatusServiceManager.stopPolling()
+                pollingTxStatusJob?.cancel()
+            }
+
+            is TransactionResult.Failed -> {
+                currentState.value =
+                    KeysignState.KeysignFinished(
+                        status = statusResult.toTransactionStatus()
+                    )
+
+                transactionStatusServiceManager.stopPolling()
+                pollingTxStatusJob?.cancel()
+            }
+            TransactionResult.Confirmed -> {
+                transactionStatusServiceManager.stopPolling()
+                pollingTxStatusJob?.cancel()
+            }
+
+            else -> {
+                currentState.value =
+                    KeysignState.KeysignFinished(statusResult.toTransactionStatus())
             }
         }
     }
 
+    fun resumeForegroundPolling(txHash: String, chain: Chain) {
+        if (_isPollingInBackground.value) {
+            transactionStatusServiceManager.stopPolling()
+            _isPollingInBackground.value = false
+            startForegroundPolling(txHash, chain)
+        }
+    }
+
+
     fun stopPolling() {
         pollingTxStatusJob?.cancel()
-        pollingTxStatusJob = null
+        if (_isPollingInBackground.value) {
+            transactionStatusServiceManager.stopPolling()
+            _isPollingInBackground.value = false
+        }
     }
+
 
     fun navigateToHome() {
         viewModelScope.launch {
@@ -508,8 +533,16 @@ internal class KeysignViewModel(
         }
     }
 
+    private fun TransactionResult.toTransactionStatus() = when (this) {
+        TransactionResult.Confirmed -> TransactionStatus.Confirmed
+        is TransactionResult.Failed -> TransactionStatus.Failed(this.reason.asUiText())
+        TransactionResult.NotFound -> TransactionStatus.Failed("Confirmation taking longer than expected".asUiText())
+        TransactionResult.Pending -> TransactionStatus.Pending
+    }
+
     override fun onCleared() {
         stopPolling()
+        transactionStatusServiceManager.cleanup()
         super.onCleared()
     }
 }

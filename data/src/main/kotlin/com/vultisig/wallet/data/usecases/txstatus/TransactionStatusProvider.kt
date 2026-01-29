@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.api.txstatus
+package com.vultisig.wallet.data.usecases.txstatus
 
 
 import com.vultisig.wallet.data.models.Chain
@@ -16,7 +16,25 @@ interface TransactionStatusRepository {
     suspend fun checkTransactionStatus(txHash: String, chain: Chain): TransactionResult
 }
 
-class TransactionStatusRepositoryImpl @Inject constructor(
+
+internal class TransactionStatusRepositoryFakeImpl @Inject constructor() : TransactionStatusRepository {
+    override suspend fun checkTransactionStatus(
+        txHash: String,
+        chain: Chain
+    ): TransactionResult {
+        return listOf(
+            TransactionResult.Confirmed,
+            TransactionResult.Pending,
+            TransactionResult.NotFound,
+            TransactionResult.Failed("Network error"),
+            TransactionResult.Failed("Insufficient funds"),
+            TransactionResult.Failed("Transaction reverted")
+        ).random()
+    }
+}
+
+
+internal class TransactionStatusRepositoryImpl @Inject constructor(
     @param:EvmTxStatus private val evmProvider: TransactionStatusProvider,
     @param:UtxoTxStatus private val utxoProvider: TransactionStatusProvider,
     @param:CosmosTxStatus private val cosmosProvider: TransactionStatusProvider,
@@ -25,12 +43,19 @@ class TransactionStatusRepositoryImpl @Inject constructor(
     @param:SuiTxStatus private val suiProvider: TransactionStatusProvider,
     @param:TonTxStatus private val tonProvider: TransactionStatusProvider,
     @param:PolkadotTxStatus private val polkadotProvider: TransactionStatusProvider,
+    @param:CardanoTxStatus private val cardanoProvider: TransactionStatusProvider,
     @param:RippleTxStatus private val rippleProvider: TransactionStatusProvider,
     @param:TronTxStatus private val tronProvider: TransactionStatusProvider,
 ) : TransactionStatusRepository {
     private fun getProvider(chain: Chain) = when (chain.standard) {
         TokenStandard.EVM -> evmProvider
-        TokenStandard.UTXO -> utxoProvider
+        TokenStandard.UTXO -> {
+            if (chain == Chain.Cardano)
+                cardanoProvider
+            else
+                utxoProvider
+        }
+
         TokenStandard.COSMOS -> cosmosProvider
         TokenStandard.THORCHAIN -> thorChainProvider
         TokenStandard.SOL -> solanaProvider
@@ -45,7 +70,7 @@ class TransactionStatusRepositoryImpl @Inject constructor(
         txHash: String,
         chain: Chain
     ): TransactionResult {
-        val provider =  getProvider(chain)
+        val provider = getProvider(chain)
         return provider.checkStatus(
             txHash = txHash,
             chain = chain
@@ -54,7 +79,7 @@ class TransactionStatusRepositoryImpl @Inject constructor(
 }
 
 interface TransactionStatusProvider {
-     suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult
+    suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult
 }
 
 

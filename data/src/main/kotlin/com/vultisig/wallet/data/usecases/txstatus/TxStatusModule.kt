@@ -1,5 +1,16 @@
-package com.vultisig.wallet.data.api.txstatus
+package com.vultisig.wallet.data.usecases.txstatus
 
+import com.vultisig.wallet.data.api.txstatus.CardanoStatusProvider
+import com.vultisig.wallet.data.api.txstatus.CosmosStatusProvider
+import com.vultisig.wallet.data.api.txstatus.EvmStatusProvider
+import com.vultisig.wallet.data.api.txstatus.PolkadotStatusProvider
+import com.vultisig.wallet.data.api.txstatus.RippleStatusProvider
+import com.vultisig.wallet.data.api.txstatus.SolanaStatusProvider
+import com.vultisig.wallet.data.api.txstatus.SuiStatusProvider
+import com.vultisig.wallet.data.api.txstatus.ThorMayaChainStatusProvider
+import com.vultisig.wallet.data.api.txstatus.TonStatusProvider
+import com.vultisig.wallet.data.api.txstatus.TronStatusProvider
+import com.vultisig.wallet.data.api.txstatus.UtxoStatusProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,7 +26,7 @@ internal interface TxStatusModule {
     @Binds
     @Singleton
     fun bindTransactionStatusRepository(
-        impl: TransactionStatusRepositoryImpl
+        impl: TransactionStatusRepositoryFakeImpl
     ): TransactionStatusRepository
 
     @EvmTxStatus
@@ -94,6 +105,18 @@ internal interface TxStatusModule {
     fun bindTronStatusProvider(
         impl: TronStatusProvider
     ): TransactionStatusProvider
+
+    @Binds
+    @Singleton
+    fun bindTxStatusConfigurationProvider(
+        impl: TxStatusConfigurationProviderFakeImpl
+    ): TxStatusConfigurationProvider
+
+    @Binds
+    @Singleton
+    fun bindPollingTxStatusUseCase(
+        impl: PollingTxStatusUseCaseImpl
+    ): PollingTxStatusUseCase
 }
 
 

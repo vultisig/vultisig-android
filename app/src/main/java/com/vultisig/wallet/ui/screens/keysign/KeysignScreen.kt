@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.keysign
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -9,6 +10,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.models.TransactionId
@@ -98,6 +102,7 @@ private fun Keysign(
     val context = LocalContext.current
     val reviewManager = remember { ReviewManagerFactory.create(context) }
     val view = LocalView.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     val wrapperViewModel = hiltViewModel(
         creationCallback = { factory: KeySignWrapperViewModel.Factory ->

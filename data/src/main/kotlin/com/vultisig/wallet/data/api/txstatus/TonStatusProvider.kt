@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.api.txstatus
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
