@@ -81,8 +81,10 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
+import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.send.AddressBookType
+import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
@@ -175,7 +177,7 @@ private fun SendFormScreen(
     onSelectTokenRequest: () -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
     onChooseMaxTokenAmount: () -> Unit = {},
-    onChoosePercentageAmount: (Float) -> Unit = {},
+    onChoosePercentageAmount: (AmountFraction) -> Unit = {},
     onAddressBookClick: () -> Unit = {},
     onScanDstAddressRequest: () -> Unit = {},
     onSend: () -> Unit = {},
@@ -225,8 +227,8 @@ private fun SendFormScreen(
 
     V2Scaffold(
         title = when (state.defiType) {
-            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stringResource(R.string.stake_screen_title)
-            DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.UNSTAKE_RUJI -> stringResource(R.string.unstake_screen_title)
+            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY, DeFiNavActions.STAKE_STCY -> stringResource(R.string.stake_screen_title)
+            DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_STCY -> stringResource(R.string.unstake_screen_title)
             DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> stringResource(R.string.mint_screen_title)
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> stringResource(R.string.redeem_screen_title)
             DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
@@ -355,7 +357,7 @@ private fun SendFormContent(
     focusManager: FocusManager,
     onSend: () -> Unit,
     onToogleAmountInputType: (Boolean) -> Unit,
-    onChoosePercentageAmount: (Float) -> Unit,
+    onChoosePercentageAmount: (AmountFraction) -> Unit,
     onChooseMaxTokenAmount: () -> Unit,
     memoFieldState: TextFieldState,
 
@@ -489,6 +491,8 @@ private fun SendFormContent(
     } else if (state.defiType == DeFiNavActions.STAKE_RUJI
         || state.defiType == DeFiNavActions.UNSTAKE_RUJI
         || state.defiType == DeFiNavActions.STAKE_TCY
+        || state.defiType == DeFiNavActions.UNSTAKE_STCY
+        || state.defiType == DeFiNavActions.STAKE_STCY
         || state.defiType == DeFiNavActions.UNSTAKE_TCY
         || state.defiType == DeFiNavActions.MINT_YRUNE
         || state.defiType == DeFiNavActions.MINT_YTCY
@@ -528,7 +532,7 @@ private fun FoldableAmountWidget(
     focusManager: FocusManager,
     onSend: () -> Unit,
     onToogleAmountInputType: (Boolean) -> Unit,
-    onChoosePercentageAmount: (Float) -> Unit,
+    onChoosePercentageAmount: (AmountFraction) -> Unit,
     onChooseMaxTokenAmount: () -> Unit,
     onAutoCompoundCheckedChange: (Boolean) -> Unit,
     memoFieldState: TextFieldState,
@@ -672,37 +676,22 @@ private fun FoldableAmountWidget(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                PercentageChip(
-                    title = "25%",
-                    isSelected = false,
-                    onClick = { onChoosePercentageAmount(0.25f) },
-                    modifier = Modifier
-                        .weight(1f),
-                )
-
-                PercentageChip(
-                    title = "50%",
-                    isSelected = false,
-                    onClick = { onChoosePercentageAmount(0.5f) },
-                    modifier = Modifier
-                        .weight(1f),
-                )
-
-                PercentageChip(
-                    title = "75%",
-                    isSelected = false,
-                    onClick = { onChoosePercentageAmount(0.75f) },
-                    modifier = Modifier
-                        .weight(1f),
-                )
-
-                PercentageChip(
-                    title = stringResource(R.string.send_screen_max),
-                    isSelected = false,
-                    onClick = onChooseMaxTokenAmount,
-                    modifier = Modifier
-                        .weight(1f),
-                )
+                state.amountFractionEntries.forEach { fraction ->
+                    PercentageChip(
+                        title = fraction.title.asString(),
+                        isSelected = fraction == state.selectedAmountFraction,
+                        onClick = {
+                            if (fraction == AmountFraction.F100) {
+                                onChooseMaxTokenAmount()
+                            } else {
+                                onChoosePercentageAmount(fraction)
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f),
+                        isLoading = state.isAmountSelectionLoading
+                    )
+                }
             }
 
             UiSpacer(12.dp)
@@ -853,7 +842,7 @@ private fun FoldableAmountWidget(
                 }
             }
 
-            if (state.defiType == DeFiNavActions.STAKE_TCY) {
+            if (state.defiType == DeFiNavActions.STAKE_TCY || state.defiType == DeFiNavActions.STAKE_STCY) {
                 AutoCompoundToggle(
                     title = stringResource(R.string.tcy_auto_compound_enable_title),
                     subtitle = stringResource(R.string.tcy_auto_compound_enable_subtitle),
@@ -862,7 +851,7 @@ private fun FoldableAmountWidget(
                 )
             }
 
-            if (state.defiType == DeFiNavActions.UNSTAKE_TCY) {
+            if (state.defiType == DeFiNavActions.UNSTAKE_TCY || state.defiType == DeFiNavActions.UNSTAKE_STCY) {
                 AutoCompoundToggle(
                     title = stringResource(R.string.tcy_auto_compound_unstake_title),
                     subtitle = stringResource(R.string.tcy_auto_compound_unstake_subtitle),
@@ -1422,33 +1411,47 @@ private fun Modifier.vsClickableBackground() =
 private fun PercentageChip(
     title: String,
     isSelected: Boolean,
+    isLoading: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Text(
-        text = title,
-        style = Theme.brockmann.supplementary.caption,
-        color = Theme.v2.colors.text.light,
-        textAlign = TextAlign.Center,
+
+    Box(
         modifier = modifier
             .clickable(onClick = onClick)
             .then(
                 if (isSelected)
                     Modifier.background(
                         color = Theme.v2.colors.primary.accent3,
-                        shape = RoundedCornerShape(99.dp),
+                        shape = CircleShape,
                     )
                 else
                     Modifier.border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
-                        shape = RoundedCornerShape(99.dp),
+                        shape = CircleShape,
                     )
             )
             .padding(
                 all = 4.dp,
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isLoading && isSelected) {
+            V2Loading(
+                modifier = Modifier
+                    .size(16.dp)
             )
-    )
+        } else {
+            Text(
+                text = title,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.light,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+
 }
 
 @Composable

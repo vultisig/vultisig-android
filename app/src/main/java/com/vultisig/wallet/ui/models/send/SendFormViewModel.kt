@@ -1,4 +1,4 @@
-@file:kotlin.OptIn(kotlin.uuid.ExperimentalUuidApi::class, kotlin.ExperimentalStdlibApi::class)
+@file:OptIn(kotlin.uuid.ExperimentalUuidApi::class, ExperimentalStdlibApi::class)
 
 package com.vultisig.wallet.ui.models.send
 
@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.R.string
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.blockchain.model.Transfer
@@ -75,6 +76,10 @@ import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
+import com.vultisig.wallet.ui.models.send.AmountFraction.F100
+import com.vultisig.wallet.ui.models.send.AmountFraction.F25
+import com.vultisig.wallet.ui.models.send.AmountFraction.F50
+import com.vultisig.wallet.ui.models.send.AmountFraction.F75
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -139,6 +144,28 @@ internal data class TokenBalanceUiModel(
     @DrawableRes val chainLogo: Int,
 )
 
+sealed class AmountFraction(val title: UiText, val value: Float) {
+    data object F25 : AmountFraction(
+        title = "25%".asUiText(),
+        value = 0.25f
+    )
+
+    data object F50 : AmountFraction(
+        title = "50%".asUiText(),
+        value = 0.5f
+    )
+
+    data object F75 : AmountFraction(
+        title = "75%".asUiText(),
+        value = 0.75f
+    )
+
+    data object F100 : AmountFraction(
+        title = string.send_screen_max.asUiText(),
+        value = 1f
+    )
+}
+
 @Immutable
 internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
@@ -179,6 +206,15 @@ internal data class SendFormUiModel(
     val usingTokenAmountInput: Boolean = true,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
+
+    val isAmountSelectionLoading: Boolean = false,
+    val selectedAmountFraction: AmountFraction? = null,
+    val amountFractionEntries: List<AmountFraction> = listOf(
+        F25,
+        F50,
+        F75,
+        F100
+    )
 )
 
 internal data class SendSrc(
@@ -285,6 +321,8 @@ internal class SendFormViewModel @Inject constructor(
 
     private var preSelectTokenJob: Job? = null
     private var loadAccountsJob: Job? = null
+
+    private var chooseAmountFractionJob: Job? = null
 
     private val appCurrency = appCurrencyRepository
         .currency
@@ -423,7 +461,9 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     private fun initFormType() {
-        uiState.update { it.copy(defiType = this.defiType) }
+        val autoCompound = defiType == DeFiNavActions.STAKE_STCY
+                || defiType == DeFiNavActions.UNSTAKE_STCY
+        uiState.update { it.copy(defiType = this.defiType, isAutocompound = autoCompound) }
     }
 
     private fun loadVaultName() {
@@ -690,7 +730,7 @@ internal class SendFormViewModel @Inject constructor(
 
             uiState.update { it.copy(isAutocompound = checked) }
 
-            if (defiType == DeFiNavActions.UNSTAKE_TCY && vaultId != null) {
+            if ((defiType == DeFiNavActions.UNSTAKE_TCY || defiType == DeFiNavActions.UNSTAKE_STCY) && vaultId != null) {
                 selectedToken.value = null
 
                 if (checked) {
@@ -789,25 +829,55 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun chooseMaxTokenAmount() {
-        viewModelScope.launch {
-            val amount = calculatePercentageWithAccurateFee(1f, isMax = true)
+        chooseAmountFractionJob?.cancel()
+        chooseAmountFractionJob = viewModelScope.launch {
+            uiState.update {
+                it.copy(
+                    selectedAmountFraction = F100,
+                    isAmountSelectionLoading = true,
+                )
+            }
+            val amount = try {
+                calculatePercentageWithAccurateFee(1f)
+            } finally {
+                uiState.update {
+                    it.copy(
+                        isAmountSelectionLoading = false,
+                    )
+                }
+            }
             maxAmount = amount
             isMaxAmount.value = true
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
         }
     }
 
-    fun choosePercentageAmount(percentage: Float) {
-        viewModelScope.launch {
-            val amount = calculatePercentageWithAccurateFee(percentage, isMax = false)
+    fun choosePercentageAmount(amountFraction: AmountFraction) {
+        chooseAmountFractionJob?.cancel()
+        chooseAmountFractionJob = viewModelScope.launch {
+            uiState.update {
+                it.copy(
+                    selectedAmountFraction = amountFraction,
+                    isAmountSelectionLoading = true,
+                )
+            }
+            val amount = try {
+                calculatePercentageWithAccurateFee(amountFraction.value)
+            } finally {
+                uiState.update {
+                    it.copy(
+                        isAmountSelectionLoading = false,
+                    )
+                }
+            }
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
         }
     }
 
     private suspend fun calculatePercentageWithAccurateFee(
         percentage: Float,
-        isMax: Boolean
     ): BigDecimal {
+        val isMax = percentage == 1f
         val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
         val token = selectedAccount.token
 
@@ -825,6 +895,8 @@ internal class SendFormViewModel @Inject constructor(
             defiType != DeFiNavActions.UNSTAKE_RUJI &&
             defiType != DeFiNavActions.STAKE_TCY &&
             defiType != DeFiNavActions.UNSTAKE_TCY &&
+            defiType != DeFiNavActions.STAKE_STCY &&
+            defiType != DeFiNavActions.UNSTAKE_STCY &&
             defiType != DeFiNavActions.REDEEM_YRUNE &&
             defiType != DeFiNavActions.MINT_YTCY &&
             defiType != DeFiNavActions.REDEEM_YTCY &&
@@ -886,6 +958,7 @@ internal class SendFormViewModel @Inject constructor(
             || defiType == DeFiNavActions.BOND
             || defiType == DeFiNavActions.STAKE_RUJI
             || defiType == DeFiNavActions.STAKE_TCY
+            || defiType == DeFiNavActions.STAKE_STCY
             || defiType == DeFiNavActions.MINT_YRUNE
             || defiType == DeFiNavActions.REDEEM_YRUNE
             || defiType == DeFiNavActions.MINT_YTCY
@@ -919,8 +992,8 @@ internal class SendFormViewModel @Inject constructor(
         when (uiState.value.defiType) {
             DeFiNavActions.BOND -> bond()
             DeFiNavActions.UNBOND -> unbond()
-            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stake()
-            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.WITHDRAW_RUJI -> unstake()
+            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY, DeFiNavActions.STAKE_STCY -> stake()
+            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.UNSTAKE_STCY, DeFiNavActions.WITHDRAW_RUJI -> unstake()
             DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> mint()
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> redeem()
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withDrawUSDCCircle()
@@ -1637,7 +1710,7 @@ internal class SendFormViewModel @Inject constructor(
                         chain = chain
                     )
 
-                    DeFiNavActions.STAKE_TCY -> createTCYStakeDepositTransaction(
+                    DeFiNavActions.STAKE_TCY, DeFiNavActions.STAKE_STCY -> createTCYStakeDepositTransaction(
                         vaultId = vaultId,
                         selectedToken = selectedToken,
                         srcAddress = srcAddress,
@@ -1743,7 +1816,7 @@ internal class SendFormViewModel @Inject constructor(
                         chain = chain
                     )
 
-                    DeFiNavActions.UNSTAKE_TCY -> createYTCUnstakeDepositTransaction(
+                    DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.UNSTAKE_STCY -> createYTCUnstakeDepositTransaction(
                         vaultId = vaultId,
                         selectedToken = selectedToken,
                         srcAddress = srcAddress,
@@ -2218,6 +2291,8 @@ internal class SendFormViewModel @Inject constructor(
             || this.defiType == DeFiNavActions.BOND
             || this.defiType == DeFiNavActions.STAKE_RUJI
             || this.defiType == DeFiNavActions.STAKE_TCY
+            || this.defiType == DeFiNavActions.STAKE_STCY
+            || this.defiType == DeFiNavActions.UNSTAKE_STCY
             || this.defiType == DeFiNavActions.MINT_YRUNE
             || this.defiType == DeFiNavActions.MINT_YTCY
             || this.defiType == DeFiNavActions.REDEEM_YRUNE
@@ -2398,7 +2473,8 @@ internal class SendFormViewModel @Inject constructor(
         // default coins, in case the account does not exist
         val defaultCoin = when (defiType) {
             DeFiNavActions.STAKE_RUJI, DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI
-            DeFiNavActions.STAKE_TCY, DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY
+            DeFiNavActions.STAKE_TCY, DeFiNavActions.UNSTAKE_TCY
+                -> Coins.ThorChain.TCY
             DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE
             DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY
             DeFiNavActions.BOND -> Coins.ThorChain.RUNE
@@ -2408,6 +2484,8 @@ internal class SendFormViewModel @Inject constructor(
             DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY
             DeFiNavActions.DEPOSIT_USDC_CIRCLE -> Coins.Ethereum.USDC
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> Coins.Ethereum.USDC
+            DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY
+            DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY
             null -> findPreselectedToken(
                 accounts, preSelectedChainIds, preSelectedTokenId,
             )

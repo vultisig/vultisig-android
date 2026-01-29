@@ -523,6 +523,7 @@ internal fun HeaderDeFiWidget(
     buttonText: String,
     onClickAction: () -> Unit,
     totalAmount: String,
+    totalPrice: String = "",
     isLoading: Boolean = false,
     isBalanceVisible: Boolean = true,
 ) {
@@ -567,6 +568,16 @@ internal fun HeaderDeFiWidget(
                         style = Theme.brockmann.headings.title1,
                         color = Theme.v2.colors.text.primary,
                     )
+
+                    if (totalPrice.isNotEmpty()) {
+                        UiSpacer(4.dp)
+
+                        Text(
+                            text = if (isBalanceVisible) totalPrice else HIDE_BALANCE_CHARS,
+                            style = Theme.brockmann.supplementary.footnote,
+                            color = Theme.v2.colors.text.extraLight,
+                        )
+                    }
                 }
             }
         }
@@ -595,6 +606,7 @@ internal fun HeaderDeFiWidget(
     onClickFirstAction: () -> Unit,
     onClickSecondAction: () -> Unit,
     totalAmount: String,
+    totalPrice: String = "",
     isLoading: Boolean = false,
     isBalanceVisible: Boolean = true,
 ) {
@@ -639,6 +651,16 @@ internal fun HeaderDeFiWidget(
                         style = Theme.brockmann.headings.title1,
                         color = Theme.v2.colors.text.primary,
                     )
+
+                    if (totalPrice.isNotEmpty()) {
+                        UiSpacer(4.dp)
+
+                        Text(
+                            text = if (isBalanceVisible) totalPrice else HIDE_BALANCE_CHARS,
+                            style = Theme.brockmann.supplementary.footnote,
+                            color = Theme.v2.colors.text.extraLight,
+                        )
+                    }
                 }
             }
         }

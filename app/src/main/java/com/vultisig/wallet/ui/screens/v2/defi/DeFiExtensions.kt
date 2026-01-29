@@ -40,6 +40,7 @@ internal val thorchainSupportStakingDeFi: List<Coin>
     get() = listOf(
         Coins.ThorChain.RUJI,
         Coins.ThorChain.TCY,
+        Coins.ThorChain.sTCY,
         Coins.ThorChain.yRUNE,
         Coins.ThorChain.yTCY,
     )
@@ -83,7 +84,9 @@ internal fun DeFiNavActions.getContractByDeFiAction(): String? {
         DeFiNavActions.REDEEM_YRUNE -> YRUNE_CONTRACT
 
         DeFiNavActions.STAKE_TCY,
-        DeFiNavActions.UNSTAKE_TCY -> STAKING_TCY_COMPOUND_CONTRACT
+        DeFiNavActions.UNSTAKE_TCY,
+        DeFiNavActions.STAKE_STCY,
+        DeFiNavActions.UNSTAKE_STCY -> STAKING_TCY_COMPOUND_CONTRACT
 
         else -> null
     }

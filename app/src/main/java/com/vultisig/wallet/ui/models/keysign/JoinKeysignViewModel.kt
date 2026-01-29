@@ -102,6 +102,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
@@ -882,26 +883,31 @@ internal class JoinKeysignViewModel @Inject constructor(
                         payload.memo,
                         chain
                     )
-                    val normalizedSignAminoJson = kotlinx.serialization.json.buildJsonObject {
-                        payload.signAmino?.msgs?.forEach { cosmosMsg ->
-                            val type = cosmosMsg?.type ?: return@forEach
-                            val valueElem = try {
-                                json.parseToJsonElement(cosmosMsg.value)
-                            } catch (e: Exception) {
-                                kotlinx.serialization.json.JsonPrimitive(cosmosMsg.value)
-                            }
+                    val normalizedSignAminoJson = kotlinx.serialization.json.buildJsonArray{
 
-                            put(
-                                "type",
-                                kotlinx.serialization.json.JsonPrimitive(
-                                    type
+                        payload.signAmino?.msgs?.forEach { cosmosMsg ->
+                            cosmosMsg?.type ?: return@forEach
+                            addJsonObject {
+                                val type = cosmosMsg.type
+                                val valueElem = try {
+                                    json.parseToJsonElement(cosmosMsg.value)
+                                } catch (e: Exception) {
+                                    kotlinx.serialization.json.JsonPrimitive(cosmosMsg.value)
+                                }
+
+                                put(
+                                    "type",
+                                    kotlinx.serialization.json.JsonPrimitive(
+                                        type
+                                    )
                                 )
-                            )
-                            put(
-                                "value",
-                                valueElem
-                            )
+                                put(
+                                    "value",
+                                    valueElem
+                                )
+                            }
                         }
+
                     }
 
                     val normalizedSignAmino = json.encodeToString(normalizedSignAminoJson)
