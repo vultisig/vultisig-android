@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.getStakeDeFiNavAction
 import com.vultisig.wallet.ui.screens.v2.defi.model.getUnstakeDeFiNavAction
 import com.vultisig.wallet.ui.theme.Theme
+import java.math.BigDecimal
 
 @Composable
 internal fun StakingTabContent(
@@ -93,7 +94,7 @@ internal fun StakingWidget(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
-                painter = painterResource(id = getHeaderIcon(state.stakeAmount)),
+                painter = painterResource(id = getHeaderIcon(state.stakedAmountDisplay)),
                 contentDescription = null,
                 modifier = Modifier.size(46.dp)
             )
@@ -117,7 +118,7 @@ internal fun StakingWidget(
                     )
                 } else {
                     Text(
-                        text = if (isBalanceVisible) state.stakeAmount else HIDE_BALANCE_CHARS,
+                        text = if (isBalanceVisible) state.stakedAmountDisplay else HIDE_BALANCE_CHARS,
                         style = Theme.brockmann.headings.title1,
                         color = Theme.v2.colors.text.primary,
                     )
@@ -218,19 +219,25 @@ internal fun StakingWidget(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ActionButton(
-                title = stringResource(
-                    if (!state.supportsMint) R.string.defi_action_unstake else R.string.defi_action_redeem
-                ),
-                icon = R.drawable.ic_circle_minus,
-                background = Color.Transparent,
-                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                contentColor = Theme.v2.colors.text.primary,
-                onClick = { onClickUnstake(state.coin.getUnstakeDeFiNavAction()) },
-                modifier = Modifier.weight(1f),
-                enabled = state.canUnstake,
-                iconCircleColor = Theme.v2.colors.text.extraLight
-            )
+            if (state.stakeAmount > BigDecimal.ZERO) {
+                ActionButton(
+                    title = stringResource(
+                        if (!state.supportsMint) R.string.defi_action_unstake else R.string.defi_action_redeem
+                    ),
+                    icon = R.drawable.ic_circle_minus,
+                    background = Color.Transparent,
+                    border = BorderStroke(
+                        1.dp,
+                        Theme.v2.colors.primary.accent4
+                    ),
+                    contentColor = Theme.v2.colors.text.primary,
+                    onClick = { onClickUnstake(state.coin.getUnstakeDeFiNavAction()) },
+                    modifier = Modifier.weight(1f),
+                    enabled = state.canUnstake,
+                    iconCircleColor = Theme.v2.colors.text.extraLight
+
+                )
+            }
 
             ActionButton(
                 title = stringResource(
@@ -336,7 +343,7 @@ private fun StakingWidgetFullActionsPreview() {
             state = StakePositionUiModel(
                 coin = Coins.ThorChain.RUJI,
                 stakeAssetHeader = "Staked RUJI",
-                stakeAmount = "1000 RUJI",
+                stakedAmountDisplay = "1000 RUJI",
                 apy = "18.5%",
                 canWithdraw = true,
                 canStake = true,
@@ -365,7 +372,7 @@ private fun StakingWidgetLoadingPreview() {
             state = StakePositionUiModel(
                 coin = Coins.ThorChain.RUJI,
                 stakeAssetHeader = "Staked RUJI",
-                stakeAmount = "0 RUJI",
+                stakedAmountDisplay = "0 RUJI",
                 apy = "0%",
                 canWithdraw = false,
                 canStake = false,
