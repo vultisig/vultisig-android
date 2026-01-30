@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.models.ResourceUsage
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
@@ -45,7 +46,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -104,7 +105,7 @@ internal class ChainTokensViewModel @Inject constructor(
     ) : ViewModel() {
     private val tokens = MutableStateFlow(emptyList<Coin>())
 
-    private lateinit var  chainRaw: String
+    private lateinit var chainRaw: String
     private lateinit var vaultId: String
     private var currentVault: Vault? = null
 
@@ -124,7 +125,7 @@ internal class ChainTokensViewModel @Inject constructor(
     fun initData(
         vaultId: String,
         chainId: String
-    ){
+    ) {
         this.vaultId = vaultId
         this.chainRaw = chainId
         refresh()
@@ -221,78 +222,81 @@ internal class ChainTokensViewModel @Inject constructor(
             accountsRepository.loadAddress(
                 vaultId = vaultId,
                 chain = chain,
-            ).combine(fetchMergeBalanceFlow(chain)) { address, mergeBalance ->
-                address to mergeBalance
-            }.catch {
-                updateRefreshing(false)
-                Timber.e(it)
-            }.onCompletion {
-                updateRefreshing(false)
-            }.combine(
-                uiState.value.searchTextFieldState.textAsFlow()
-            ) { (address, mergeBalances), searchQuery ->
-                val totalFiatValue = address.accounts
-                    .calculateAccountsTotalFiatValue()
-
-                val accounts = address.accounts
-                    .sortedWith(
-                        compareBy(
-                            { !it.token.isNativeToken },
-                            { (it.fiatValue?.value ?: it.tokenValue?.decimal)?.unaryMinus() })
-                    )
-
-                val tokensFromAccounts = accounts.map { it.token }
-                tokens.update { it + tokensFromAccounts }
-                val uiTokens = accounts.map { account ->
-                    val token = account.token
-                    ChainTokenUiModel(
-                        id = token.id,
-                        name = token.ticker,
-                        balance = account.tokenValue
-                            ?.let(mapTokenValueToStringWithUnitMapper)
-                            ?: "",
-                        fiatBalance = account.fiatValue
-                            ?.let { fiatValueToStringMapper(it) },
-                        tokenLogo = getCoinLogo(token.logo),
-                        chainLogo = chain.logo,
-                        monotoneChainLogo = chain.monoToneLogo,
-                        mergeBalance = mergeBalances.findMergeBalance(token).toString(),
-                        price = account.price?.let { fiatValueToStringMapper(it) },
-                        network = token.chain.raw,
-                    )
+            )
+                .onEach {
+                    updateRefreshing(it.accounts.hasNullAccount())
                 }
-
-                val accountAddress = address.address
-                val explorerUrl = explorerLinkRepository
-                    .getAddressLink(
-                        chain,
-                        accountAddress
-                    )
-                val totalBalance = totalFiatValue
-                    ?.let { fiatValueToStringMapper(it) }
-
-                uiState.update {
-                    it.copy(
-                        chainName = chainRaw,
-                        chainAddress = accountAddress,
-                        chainLogo = chain.logo,
-                        tokens = uiTokens.filter { uiToken ->
-                            searchQuery.isBlank() || uiToken.name.contains(
-                                searchQuery,
-                                ignoreCase = true
-                            )
-                        },
-                        explorerURL = explorerUrl,
-                        totalBalance = totalBalance,
-                        canDeposit = chain.isDepositSupported,
-                        canSwap = chain.isSwapSupported,
-                        canBuy = chain.isBuySupported,
-                        canSelectTokens = chain.canSelectTokens,
-                    )
+                .combine(fetchMergeBalanceFlow(chain)) { address, mergeBalance ->
+                    address to mergeBalance
                 }
-            }.onCompletion {
-                updateRefreshing(false)
-            }.collect()
+                .catch {
+                    updateRefreshing(false)
+                    Timber.e(it)
+                }
+                .combine(
+                    uiState.value.searchTextFieldState.textAsFlow()
+                ) { (address, mergeBalances), searchQuery ->
+                    val totalFiatValue = address.accounts
+                        .calculateAccountsTotalFiatValue()
+
+                    val accounts = address.accounts
+                        .sortedWith(
+                            compareBy(
+                                { !it.token.isNativeToken },
+                                { (it.fiatValue?.value ?: it.tokenValue?.decimal)?.unaryMinus() })
+                        )
+
+                    val tokensFromAccounts = accounts.map { it.token }
+                    tokens.update { it + tokensFromAccounts }
+                    val uiTokens = accounts.map { account ->
+                        val token = account.token
+                        ChainTokenUiModel(
+                            id = token.id,
+                            name = token.ticker,
+                            balance = account.tokenValue
+                                ?.let(mapTokenValueToStringWithUnitMapper)
+                                ?: "",
+                            fiatBalance = account.fiatValue
+                                ?.let { fiatValueToStringMapper(it) },
+                            tokenLogo = getCoinLogo(token.logo),
+                            chainLogo = chain.logo,
+                            monotoneChainLogo = chain.monoToneLogo,
+                            mergeBalance = mergeBalances.findMergeBalance(token).toString(),
+                            price = account.price?.let { fiatValueToStringMapper(it) },
+                            network = token.chain.raw,
+                        )
+                    }
+
+                    val accountAddress = address.address
+                    val explorerUrl = explorerLinkRepository
+                        .getAddressLink(
+                            chain,
+                            accountAddress
+                        )
+                    val totalBalance = totalFiatValue
+                        ?.let { fiatValueToStringMapper(it) }
+
+                    uiState.update {
+                        it.copy(
+                            chainName = chainRaw,
+                            chainAddress = accountAddress,
+                            chainLogo = chain.logo,
+                            tokens = uiTokens.filter { uiToken ->
+                                searchQuery.isBlank() || uiToken.name.contains(
+                                    searchQuery,
+                                    ignoreCase = true
+                                )
+                            },
+                            explorerURL = explorerUrl,
+                            totalBalance = totalBalance,
+                            canDeposit = chain.isDepositSupported,
+                            canSwap = chain.isSwapSupported,
+                            canBuy = chain.isBuySupported,
+                            canSelectTokens = chain.canSelectTokens,
+                        )
+                    }
+                }
+                .collect()
         }
     }
 
@@ -345,17 +349,17 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
-    fun hideSearchBar(){
+    fun hideSearchBar() {
         uiState.update { it.copy(isSearchMode = false) }
         bottomBarVisibility.showBottomBar()
     }
 
-    fun showSearchBar(){
+    fun showSearchBar() {
         uiState.update { it.copy(isSearchMode = true) }
         bottomBarVisibility.hideBottomBar()
     }
 
-    fun back(){
+    fun back() {
         viewModelScope.launch {
             navigator.back()
         }
@@ -389,5 +393,9 @@ internal class ChainTokensViewModel @Inject constructor(
         }?.shares?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
         return mergeBalance
+    }
+
+    private fun List<Account>.hasNullAccount() = any {
+        it.tokenValue == null || it.fiatValue == null
     }
 }
