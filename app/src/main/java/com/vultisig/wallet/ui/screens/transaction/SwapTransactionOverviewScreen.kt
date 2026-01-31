@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
+import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
@@ -47,6 +48,7 @@ internal fun SwapTransactionOverviewScreen(
     transactionHash: String,
     approveTransactionHash: String,
     transactionLink: String,
+    transactionStatus: TransactionStatus,
     approveTransactionLink: String,
     onComplete: () -> Unit,
     progressLink: String?,
@@ -259,6 +261,7 @@ private fun SwapTransactionOverviewScreenPreview() {
         approveTransactionLink = "",
         onComplete = {},
         progressLink = "",
-        transactionTypeUiModel = SwapTransactionUiModel()
+        transactionTypeUiModel = SwapTransactionUiModel(),
+        transactionStatus = TransactionStatus.Broadcasted
     )
 }

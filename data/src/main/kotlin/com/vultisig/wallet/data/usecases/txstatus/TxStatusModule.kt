@@ -26,7 +26,7 @@ internal interface TxStatusModule {
     @Binds
     @Singleton
     fun bindTransactionStatusRepository(
-        impl: TransactionStatusRepositoryFakeImpl
+        impl: TransactionStatusRepositoryImpl
     ): TransactionStatusRepository
 
     @EvmTxStatus
@@ -109,7 +109,7 @@ internal interface TxStatusModule {
     @Binds
     @Singleton
     fun bindTxStatusConfigurationProvider(
-        impl: TxStatusConfigurationProviderFakeImpl
+        impl: TxStatusConfigurationProviderImpl
     ): TxStatusConfigurationProvider
 
     @Binds

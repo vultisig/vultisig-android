@@ -272,7 +272,6 @@ internal class JoinKeysignViewModel @Inject constructor(
             isInitiatingDevice = false,
             addressBookRepository = addressBookRepository,
             transactionStatusServiceManager = transactionStatusServiceManager,
-            txStatusConfigurationProvider = txStatusConfigurationProvider,
         )
 
     val verifyUiModel =

@@ -29,12 +29,9 @@ import com.vultisig.wallet.data.repositories.TiersNFTRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
-import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
-import com.vultisig.wallet.ui.models.keysign.KeysignState
-import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
@@ -45,7 +42,6 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -58,9 +54,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.time.Instant
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @Immutable
 internal data class VaultAccountsUiModel(
@@ -129,8 +123,6 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
     private val tiersNFTRepository: TiersNFTRepository,
     private val remoteNFTService: TierRemoteNFTService,
-
-    private val serviceManager: TransactionStatusServiceManager,
 ) : ViewModel() {
 
     private var requestedVaultId: String? = savedStateHandle.toRoute<Route.Home>().openVaultId
@@ -141,31 +133,11 @@ internal class VaultAccountsViewModel @Inject constructor(
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
     private var loadDeFiBalancesJob: Job? = null
-    private var pollingTxStatusJob: Job? = null
 
     init {
-        startForegroundPolling(txHash = "", chain = Chain.Ethereum)
         collectCryptoConnectionType()
         collectLastOpenedVault()
     }
-
-    private fun startForegroundPolling(txHash: String, chain: Chain) {
-        pollingTxStatusJob?.cancel()
-
-        // Start service
-        serviceManager.startPolling(txHash, chain)
-
-        pollingTxStatusJob = viewModelScope.launch {
-
-            delay(1.seconds)
-            serviceManager.getStatusFlow()
-                ?.collect { statusResult ->
-                    println(statusResult)
-                }
-        }
-    }
-
-
     private fun collectCryptoConnectionType() {
         cryptoConnectionTypeRepository
             .activeCryptoConnectionFlow

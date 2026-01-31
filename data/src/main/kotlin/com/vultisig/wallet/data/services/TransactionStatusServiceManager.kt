@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -32,7 +33,7 @@ class TransactionStatusServiceManager @Inject constructor(
         val intent = Intent(context, TransactionStatusService::class.java).apply {
             action = TransactionStatusService.ACTION_START_POLLING
             putExtra(TransactionStatusService.EXTRA_TX_HASH, txHash)
-            putExtra(TransactionStatusService.EXTRA_CHAIN, chain.name)
+            putExtra(TransactionStatusService.EXTRA_CHAIN, chain.raw)
         }
 
         context.startForegroundService(intent)
@@ -44,7 +45,7 @@ class TransactionStatusServiceManager @Inject constructor(
         if (isBound) {
             try {
                 context.unbindService(serviceConnection)
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 // Service already unbound
             }
             isBound = false
@@ -56,7 +57,7 @@ class TransactionStatusServiceManager @Inject constructor(
         context.startService(intent)
     }
 
-    fun getStatusFlow(): Flow<TransactionStatusUpdate>? {
+    fun getStatusFlow(): Flow<TransactionResult>? {
         return serviceBinder?.statusFlow
     }
 
@@ -64,7 +65,7 @@ class TransactionStatusServiceManager @Inject constructor(
         if (isBound) {
             try {
                 context.unbindService(serviceConnection)
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 // Service already unbound
             }
             isBound = false

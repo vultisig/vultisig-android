@@ -49,7 +49,6 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
-import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
@@ -107,7 +106,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
     private val mapDepositTransactionUiModel: DepositTransactionToUiModelMapper,
     private val mapSwapTransactionToUiModel: SwapTransactionToUiModelMapper,
-    private val generateServiceName: GenerateServiceName,
+    generateServiceName: GenerateServiceName,
     private val routerApi: RouterApi,
     private val pullTssMessages: PullTssMessagesUseCase,
     private val broadcastTx: BroadcastTxUseCase,
@@ -115,7 +114,6 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val payloadToProtoMapper: PayloadToProtoMapper,
     private val discoverParticipantsUseCase: DiscoverParticipantsUseCase,
     private val addressBookRepository: AddressBookRepository,
-    private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
@@ -183,7 +181,6 @@ internal class KeysignFlowViewModel @Inject constructor(
             isInitiatingDevice = true,
             addressBookRepository = addressBookRepository,
             transactionStatusServiceManager = transactionStatusServiceManager,
-            txStatusConfigurationProvider = txStatusConfigurationProvider,
         )
 
     init {

@@ -5,7 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
@@ -14,40 +13,29 @@ import com.vultisig.wallet.data.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.PollingTxStatusUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
-import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.Duration
-import java.time.Instant
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.minutes
 
 @AndroidEntryPoint
 class TransactionStatusService : Service() {
 
     @Inject
     lateinit var pollingTxStatus: PollingTxStatusUseCase
-
-    @Inject
-    lateinit var txStatusConfigurationProvider: TxStatusConfigurationProvider
-
     private val binder = LocalBinder()
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var pollingJob: Job? = null
 
-    private val _statusFlow = MutableSharedFlow<TransactionStatusUpdate>(
-        replay = 1,
-        extraBufferCapacity = 10
-    )
-    val statusFlow: SharedFlow<TransactionStatusUpdate> = _statusFlow.asSharedFlow()
+    private val _statusFlow = MutableStateFlow<TransactionResult>(TransactionResult.Pending)
+    val statusFlow: StateFlow<TransactionResult> = _statusFlow.asStateFlow()
 
     inner class LocalBinder : Binder() {
         fun getService(): TransactionStatusService = this@TransactionStatusService
@@ -61,10 +49,11 @@ class TransactionStatusService : Service() {
                 val txHash = intent.getStringExtra(EXTRA_TX_HASH) ?: return START_NOT_STICKY
                 val chainName = intent.getStringExtra(EXTRA_CHAIN) ?: return START_NOT_STICKY
                 val chain = Chain.fromRaw(chainName)
-                
+
                 startForeground(NOTIFICATION_ID, createNotification("Checking transaction..."))
                 startPolling(txHash, chain)
             }
+
             ACTION_STOP_POLLING -> {
                 stopPolling()
                 stopSelf()
@@ -75,47 +64,23 @@ class TransactionStatusService : Service() {
 
     private fun startPolling(txHash: String, chain: Chain) {
         pollingJob?.cancel()
-        
-        val config = txStatusConfigurationProvider.getConfigurationForChain(chain)
-        val startTime = Instant.now()
-        handleResult(TransactionResult.Pending, txHash, "Transaction confirmed")
 
         pollingJob = serviceScope.launch {
             pollingTxStatus(chain, txHash)
                 .collect { result ->
-                    val elapsed = Duration.between(startTime, Instant.now()).toMillis()
-                    val maxWaitMillis = config.maxWaitMinutes.minutes.inWholeMilliseconds
-
+                    updateNotification(result.toNotificationMessage())
+                    _statusFlow.emit(result)
                     when (result) {
-                        is TransactionResult.Confirmed -> {
-                            handleResult(result, txHash, "Transaction confirmed")
-                            stopSelf()
-                        }
-                        is TransactionResult.Failed -> {
-                            handleResult(result, txHash, "Transaction failed: ${result.reason}")
-                            stopSelf()
-                        }
+                        is TransactionResult.Confirmed,
+                        is TransactionResult.Failed,
                         TransactionResult.NotFound -> {
-                            if (elapsed > maxWaitMillis) {
-                                handleResult(result, txHash, "Transaction not found")
-                                stopSelf()
-                            } else {
-                                updateNotification("Still searching for transaction...")
-                                _statusFlow.emit(TransactionStatusUpdate(txHash, result))
-                            }
+                            stopSelf()
                         }
-                        TransactionResult.Pending -> {
-                            updateNotification("Transaction pending...")
-                            _statusFlow.emit(TransactionStatusUpdate(txHash, result))
-                        }
+
+                        else -> Unit
                     }
                 }
         }
-    }
-
-    private fun handleResult(result: TransactionResult, txHash: String, message: String) {
-        updateNotification(message)
-        _statusFlow.tryEmit(TransactionStatusUpdate(txHash, result))
     }
 
     private fun stopPolling() {
@@ -139,7 +104,7 @@ class TransactionStatusService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Transaction Status")
             .setContentText(contentText)
-            .setSmallIcon(R.drawable.aave)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setContentIntent(openAppPendingIntent)
@@ -148,7 +113,7 @@ class TransactionStatusService : Service() {
 
     private fun updateNotification(contentText: String) {
         val notification = createNotification(contentText)
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
@@ -178,9 +143,11 @@ class TransactionStatusService : Service() {
         const val EXTRA_TX_HASH = "tx_hash"
         const val EXTRA_CHAIN = "chain"
     }
-}
 
-data class TransactionStatusUpdate(
-    val txHash: String,
-    val result: TransactionResult
-)
+    private fun TransactionResult.toNotificationMessage() = when (this) {
+        TransactionResult.Confirmed -> "Transaction confirmed"
+        is TransactionResult.Failed -> "Transaction failed"
+        TransactionResult.NotFound -> "Transaction not found"
+        TransactionResult.Pending -> "Transaction pending..."
+    }
+}

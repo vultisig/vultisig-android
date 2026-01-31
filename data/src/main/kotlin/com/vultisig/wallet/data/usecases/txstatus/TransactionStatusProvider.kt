@@ -16,24 +16,6 @@ interface TransactionStatusRepository {
     suspend fun checkTransactionStatus(txHash: String, chain: Chain): TransactionResult
 }
 
-
-internal class TransactionStatusRepositoryFakeImpl @Inject constructor() : TransactionStatusRepository {
-    override suspend fun checkTransactionStatus(
-        txHash: String,
-        chain: Chain
-    ): TransactionResult {
-        return listOf(
-            TransactionResult.Confirmed,
-            TransactionResult.Pending,
-            TransactionResult.NotFound,
-            TransactionResult.Failed("Network error"),
-            TransactionResult.Failed("Insufficient funds"),
-            TransactionResult.Failed("Transaction reverted")
-        ).random()
-    }
-}
-
-
 internal class TransactionStatusRepositoryImpl @Inject constructor(
     @param:EvmTxStatus private val evmProvider: TransactionStatusProvider,
     @param:UtxoTxStatus private val utxoProvider: TransactionStatusProvider,

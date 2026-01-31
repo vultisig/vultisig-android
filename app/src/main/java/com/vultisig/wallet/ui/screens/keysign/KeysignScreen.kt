@@ -102,7 +102,6 @@ private fun Keysign(
     val context = LocalContext.current
     val reviewManager = remember { ReviewManagerFactory.create(context) }
     val view = LocalView.current
-    val lifecycleOwner = LocalLifecycleOwner.current
 
     val wrapperViewModel = hiltViewModel(
         creationCallback = { factory: KeySignWrapperViewModel.Factory ->

@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
+import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
@@ -48,6 +49,7 @@ internal fun SendTxOverviewScreen(
     showSaveToAddressBook: Boolean,
     transactionHash: String,
     transactionLink: String,
+    transactionStatus: TransactionStatus,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
     onAddToAddressBook: () -> Unit,
@@ -61,7 +63,12 @@ internal fun SendTxOverviewScreen(
         onBack = onBack,
         bottomBarContent = {
             VsButton(
-                label = stringResource(R.string.transaction_done_title),
+                label = when(transactionStatus){
+                    TransactionStatus.Broadcasted -> "Broadcasted"
+                    TransactionStatus.Confirmed -> "Confirmed"
+                    is TransactionStatus.Failed -> "Failed ${transactionStatus.cause}"
+                    TransactionStatus.Pending -> "Pending"
+                },
                 variant = VsButtonVariant.Primary,
                 size = VsButtonSize.Small,
                 modifier = Modifier
@@ -319,6 +326,7 @@ private fun PreviewSendTxOverviewScreen() {
             )
         ).toUiTransactionInfo(),
         showSaveToAddressBook = true,
+        transactionStatus = TransactionStatus.Broadcasted
     )
 }
 
