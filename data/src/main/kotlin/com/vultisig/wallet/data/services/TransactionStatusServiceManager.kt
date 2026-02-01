@@ -18,17 +18,20 @@ class TransactionStatusServiceManager @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) {
     private var serviceBinder: TransactionStatusService? = null
+    private var isBound = false
     private val _serviceReady = MutableStateFlow(false)
     val serviceReady: StateFlow<Boolean> = _serviceReady.asStateFlow()
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             serviceBinder = (binder as? TransactionStatusService.LocalBinder)?.getService()
+            isBound = true
             _serviceReady.value = true
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             serviceBinder = null
+            isBound = false
             _serviceReady.value = false
         }
     }
@@ -39,15 +42,17 @@ class TransactionStatusServiceManager @Inject constructor(
             putExtra(TransactionStatusService.EXTRA_TX_HASH, txHash)
             putExtra(TransactionStatusService.EXTRA_CHAIN, chain.raw)
         }
-
         context.startForegroundService(intent)
-        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        if (!isBound) {
+            context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        }
     }
 
     fun stopPolling() {
-        if (_serviceReady.value) {
+        if (isBound) {
             try {
                 context.unbindService(serviceConnection)
+                isBound = false
             } catch (_: IllegalArgumentException) {
                 // Service already unbound
             }
@@ -62,10 +67,10 @@ class TransactionStatusServiceManager @Inject constructor(
 
     fun cancelPollingAndRemoveNotification() {
         serviceBinder?.cancelPollingAndRemoveNotification()
-
-        if (_serviceReady.value) {
+        if (isBound) {
             try {
                 context.unbindService(serviceConnection)
+                isBound = false
             } catch (_: IllegalArgumentException) {
                 // Service already unbound
             }
@@ -78,9 +83,10 @@ class TransactionStatusServiceManager @Inject constructor(
     }
 
     fun cleanup() {
-        if (_serviceReady.value) {
+        if (isBound) {
             try {
                 context.unbindService(serviceConnection)
+                isBound = false
             } catch (_: IllegalArgumentException) {
                 // Service already unbound
             }

@@ -112,8 +112,6 @@ internal class KeysignViewModel(
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
 
-    private val _isPollingInBackground = MutableStateFlow(false)
-
     val txHash = MutableStateFlow("")
     val approveTxHash = MutableStateFlow("")
     val txLink = MutableStateFlow("")
@@ -423,9 +421,7 @@ internal class KeysignViewModel(
     private fun startForegroundPolling(txHash: String, chain: Chain) {
         pollingTxStatusJob?.cancel()
 
-        // Start service
         transactionStatusServiceManager.startPolling(txHash, chain)
-        _isPollingInBackground.value = true
 
         pollingTxStatusJob = viewModelScope.launch {
             currentState.value =KeysignState.KeysignFinished(transactionStatus = TransactionStatus.Pending)

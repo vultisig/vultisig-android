@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
@@ -50,28 +51,56 @@ class TransactionStatusService : Service() {
     override fun onBind(intent: Intent?): IBinder = binder
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        when (intent?.action) {
+        if (intent == null) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        return when (intent.action) {
             ACTION_START_POLLING -> {
-                val txHash = intent.getStringExtra(EXTRA_TX_HASH) ?: return START_NOT_STICKY
-                val chainName = intent.getStringExtra(EXTRA_CHAIN) ?: return START_NOT_STICKY
+                val txHash = intent.getStringExtra(EXTRA_TX_HASH)
+                val chainName = intent.getStringExtra(EXTRA_CHAIN)
+
+                if (txHash == null || chainName == null) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+
                 val chain = Chain.fromRaw(chainName)
 
-                startForeground(NOTIFICATION_ID, createNotification("Checking transaction...", ongoing = true))
-                startPolling(txHash, chain)
+                try {
+                    startForeground(
+                        NOTIFICATION_ID,
+                        createNotification("Checking transaction...", ongoing = true)
+                    )
+                    startPolling(txHash, chain)
+                    START_STICKY
+                } catch (_: SecurityException) {
+                    stopSelf()
+                    START_NOT_STICKY
+                }
             }
 
             ACTION_STOP_POLLING -> {
                 stopPolling()
                 stopForegroundAndService(detachNotification = false)
+                START_NOT_STICKY
+            }
+
+            else -> {
+                stopSelf()
+                START_NOT_STICKY
             }
         }
-        return START_STICKY
     }
 
     private fun startPolling(txHash: String, chain: Chain) {
         pollingJob?.cancel()
 
         pollingJob = serviceScope.launch {
+            updateNotification("Transaction pending...", ongoing = true)
+            _statusFlow.emit(TransactionResult.Pending)
+
             delay(5.seconds)
             pollingTxStatus(chain, txHash)
                 .collect { result ->
@@ -84,7 +113,7 @@ class TransactionStatusService : Service() {
                             stopPolling()
                             stopForegroundAndService(detachNotification = true)
                         }
-                        else -> {
+                        TransactionResult.Pending -> {
                             updateNotification(result.toNotificationMessage(), ongoing = true)
                         }
                     }
@@ -140,8 +169,12 @@ class TransactionStatusService : Service() {
     }
 
     private fun updateNotification(contentText: String, ongoing: Boolean) {
-        val notification = createNotification(contentText, ongoing)
-        notificationManager.notify(NOTIFICATION_ID, notification)
+        try {
+            val notification = createNotification(contentText, ongoing)
+            notificationManager.notify(NOTIFICATION_ID, notification)
+        } catch (_: SecurityException) {
+            Timber.e("Failed to update notification")
+        }
     }
 
     private fun createNotificationChannel() {
@@ -152,7 +185,6 @@ class TransactionStatusService : Service() {
         ).apply {
             description = "Shows transaction status updates"
         }
-        val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.createNotificationChannel(channel)
     }
 
