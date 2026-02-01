@@ -63,6 +63,7 @@ internal fun SwapTransactionOverviewScreen(
         transactionHash = transactionHash,
         showToolbar = showToolbar,
         transactionLink = transactionLink,
+        transactionStatus = transactionStatus,
         onBack = onBack,
         tokenContent = {
             Box {

@@ -59,16 +59,12 @@ internal fun SendTxOverviewScreen(
     TxDoneScaffold(
         transactionHash = transactionHash,
         transactionLink = transactionLink,
+        transactionStatus = transactionStatus,
         showToolbar = showToolbar,
         onBack = onBack,
         bottomBarContent = {
             VsButton(
-                label = when(transactionStatus){
-                    TransactionStatus.Broadcasted -> "Broadcasted"
-                    TransactionStatus.Confirmed -> "Confirmed"
-                    is TransactionStatus.Failed -> "Failed ${transactionStatus.cause}"
-                    TransactionStatus.Pending -> "Pending"
-                },
+                label = stringResource(R.string.transaction_done_title),
                 variant = VsButtonVariant.Primary,
                 size = VsButtonSize.Small,
                 modifier = Modifier

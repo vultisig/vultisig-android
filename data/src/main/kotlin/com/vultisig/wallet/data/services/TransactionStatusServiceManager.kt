@@ -9,23 +9,27 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 class TransactionStatusServiceManager @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) {
     private var serviceBinder: TransactionStatusService? = null
-    private var isBound = false
+    private val _serviceReady = MutableStateFlow(false)
+    val serviceReady: StateFlow<Boolean> = _serviceReady.asStateFlow()
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             serviceBinder = (binder as? TransactionStatusService.LocalBinder)?.getService()
-            isBound = true
+            _serviceReady.value = true
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             serviceBinder = null
-            isBound = false
+            _serviceReady.value = false
         }
     }
 
@@ -37,19 +41,18 @@ class TransactionStatusServiceManager @Inject constructor(
         }
 
         context.startForegroundService(intent)
-
         context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
     fun stopPolling() {
-        if (isBound) {
+        if (_serviceReady.value) {
             try {
                 context.unbindService(serviceConnection)
             } catch (_: IllegalArgumentException) {
                 // Service already unbound
             }
-            isBound = false
         }
+        _serviceReady.value = false
 
         val intent = Intent(context, TransactionStatusService::class.java).apply {
             action = TransactionStatusService.ACTION_STOP_POLLING
@@ -57,18 +60,31 @@ class TransactionStatusServiceManager @Inject constructor(
         context.startService(intent)
     }
 
-    fun getStatusFlow(): Flow<TransactionResult>? {
-        return serviceBinder?.statusFlow
-    }
+    fun cancelPollingAndRemoveNotification() {
+        serviceBinder?.cancelPollingAndRemoveNotification()
 
-    fun cleanup() {
-        if (isBound) {
+        if (_serviceReady.value) {
             try {
                 context.unbindService(serviceConnection)
             } catch (_: IllegalArgumentException) {
                 // Service already unbound
             }
-            isBound = false
         }
+        _serviceReady.value = false
+    }
+
+    fun getStatusFlow(): Flow<TransactionResult>? {
+        return serviceBinder?.statusFlow
+    }
+
+    fun cleanup() {
+        if (_serviceReady.value) {
+            try {
+                context.unbindService(serviceConnection)
+            } catch (_: IllegalArgumentException) {
+                // Service already unbound
+            }
+        }
+        _serviceReady.value = false
     }
 }

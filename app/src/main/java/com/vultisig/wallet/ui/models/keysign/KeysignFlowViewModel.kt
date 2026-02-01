@@ -539,6 +539,7 @@ internal class KeysignFlowViewModel @Inject constructor(
 
     fun complete() {
         viewModelScope.launch {
+            transactionStatusServiceManager.cancelPollingAndRemoveNotification()
             navigator.route(
                 Route.Home(),
                 NavigationOptions(

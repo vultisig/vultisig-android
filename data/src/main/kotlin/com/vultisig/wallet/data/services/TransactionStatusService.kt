@@ -19,11 +19,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
 class TransactionStatusService : Service() {
@@ -36,6 +38,10 @@ class TransactionStatusService : Service() {
 
     private val _statusFlow = MutableStateFlow<TransactionResult>(TransactionResult.Pending)
     val statusFlow: StateFlow<TransactionResult> = _statusFlow.asStateFlow()
+
+    private val notificationManager by lazy {
+        getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+    }
 
     inner class LocalBinder : Binder() {
         fun getService(): TransactionStatusService = this@TransactionStatusService
@@ -50,13 +56,13 @@ class TransactionStatusService : Service() {
                 val chainName = intent.getStringExtra(EXTRA_CHAIN) ?: return START_NOT_STICKY
                 val chain = Chain.fromRaw(chainName)
 
-                startForeground(NOTIFICATION_ID, createNotification("Checking transaction..."))
+                startForeground(NOTIFICATION_ID, createNotification("Checking transaction...", ongoing = true))
                 startPolling(txHash, chain)
             }
 
             ACTION_STOP_POLLING -> {
                 stopPolling()
-                stopSelf()
+                stopForegroundAndService(detachNotification = false)
             }
         }
         return START_STICKY
@@ -66,18 +72,21 @@ class TransactionStatusService : Service() {
         pollingJob?.cancel()
 
         pollingJob = serviceScope.launch {
+            delay(5.seconds)
             pollingTxStatus(chain, txHash)
                 .collect { result ->
-                    updateNotification(result.toNotificationMessage())
                     _statusFlow.emit(result)
                     when (result) {
                         is TransactionResult.Confirmed,
                         is TransactionResult.Failed,
                         TransactionResult.NotFound -> {
-                            stopSelf()
+                            updateNotification(result.toNotificationMessage(), ongoing = false)
+                            stopPolling()
+                            stopForegroundAndService(detachNotification = true)
                         }
-
-                        else -> Unit
+                        else -> {
+                            updateNotification(result.toNotificationMessage(), ongoing = true)
+                        }
                     }
                 }
         }
@@ -88,7 +97,25 @@ class TransactionStatusService : Service() {
         pollingJob = null
     }
 
-    private fun createNotification(contentText: String): Notification {
+    private fun stopForegroundAndService(detachNotification: Boolean = false) {
+        if (detachNotification) {
+            stopForeground(STOP_FOREGROUND_DETACH)
+        } else {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            notificationManager.cancel(NOTIFICATION_ID)
+        }
+        stopSelf()
+    }
+
+
+    fun cancelPollingAndRemoveNotification() {
+        stopPolling()
+        notificationManager.cancel(NOTIFICATION_ID)
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    private fun createNotification(contentText: String, ongoing: Boolean): Notification {
         createNotificationChannel()
 
         val openAppIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
@@ -106,14 +133,14 @@ class TransactionStatusService : Service() {
             .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
+            .setOngoing(ongoing)
+            .setAutoCancel(!ongoing)
             .setContentIntent(openAppPendingIntent)
             .build()
     }
 
-    private fun updateNotification(contentText: String) {
-        val notification = createNotification(contentText)
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+    private fun updateNotification(contentText: String, ongoing: Boolean) {
+        val notification = createNotification(contentText, ongoing)
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 

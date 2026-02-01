@@ -47,6 +47,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -426,15 +428,12 @@ internal class KeysignViewModel(
         _isPollingInBackground.value = true
 
         pollingTxStatusJob = viewModelScope.launch {
-
-            currentState.value =
-                KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
-
-            delay(5.seconds)
-
+            currentState.value =KeysignState.KeysignFinished(transactionStatus = TransactionStatus.Pending)
+            transactionStatusServiceManager.serviceReady
+                .filter { it } // Wait until service is ready
+                .first()
             transactionStatusServiceManager.getStatusFlow()
                 ?.collect { statusResult ->
-                    delay(5.seconds)
                     currentState.value =
                         KeysignState.KeysignFinished(transactionStatus = statusResult.toTransactionStatus())
                     when (statusResult) {
