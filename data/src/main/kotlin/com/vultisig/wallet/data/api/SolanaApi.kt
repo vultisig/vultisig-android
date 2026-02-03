@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.JupiterApiImpl.Companion.JUPITER_URL
 import com.vultisig.wallet.data.api.models.BroadcastTransactionRespJson
+import com.vultisig.wallet.data.api.models.EvmRpcResponseJson
 import com.vultisig.wallet.data.api.models.JupiterTokenResponseJson
 import com.vultisig.wallet.data.api.models.RecentBlockHashResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
@@ -11,6 +12,7 @@ import com.vultisig.wallet.data.api.models.SolanaFeeForMessageResponse
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectJson
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectRespJson
 import com.vultisig.wallet.data.api.models.SolanaMinimumBalanceForRentExemptionJson
+import com.vultisig.wallet.data.api.models.SolanaSignatureStatusesResult
 import com.vultisig.wallet.data.api.models.SplAmountRpcResponseJson
 import com.vultisig.wallet.data.api.models.SplResponseAccountJson
 import com.vultisig.wallet.data.api.models.SplResponseJson
@@ -31,6 +33,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.addJsonObject
@@ -57,6 +60,8 @@ interface SolanaApi {
     ): Pair<String?, Boolean>
 
     suspend fun getFeeForMessage(message: String): BigInteger
+
+    suspend fun checkStatus(txHash: String): String?
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -386,6 +391,28 @@ internal class SolanaApiImp @Inject constructor(
         val rpcResp = response.bodyOrThrow<SolanaFeeForMessageResponse>()
 
         return rpcResp.result?.value ?: error("Error fetching getFeeForMessage")
+    }
+
+    override suspend fun checkStatus(txHash: String): String? {
+       return runCatching {
+           val params = buildJsonArray {
+               addJsonArray {
+                   add(JsonPrimitive(txHash))
+               }
+           }
+
+           val response: EvmRpcResponseJson<SolanaSignatureStatusesResult> = httpClient.postRpc(
+               url = rpcEndpoint,
+               method = "getSignatureStatuses",
+               params = params,
+           )
+           if (response.error != null) {
+               return null
+           }
+
+           response.result.value.firstOrNull()?.confirmationStatus
+
+       }.getOrNull()
     }
 
     companion object {

@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
-import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.md5
@@ -17,7 +16,6 @@ import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -31,6 +29,8 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
@@ -107,6 +107,7 @@ internal class KeysignViewModel(
     private val pullTssMessages: PullTssMessagesUseCase,
     private val isInitiatingDevice: Boolean,
     private val addressBookRepository: AddressBookRepository,
+    private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
 ) : ViewModel() {
     val currentState: MutableStateFlow<KeysignState> =

@@ -10,6 +10,7 @@ data class TxStatusConfiguration(
 
 interface TxStatusConfigurationProvider {
     fun getConfigurationForChain(chain: Chain): TxStatusConfiguration
+    fun supportTxStatus(chain: Chain): Boolean
 }
 
 internal class TxStatusConfigurationProviderImpl @Inject constructor() : TxStatusConfigurationProvider {
@@ -58,6 +59,10 @@ internal class TxStatusConfigurationProviderImpl @Inject constructor() : TxStatu
         Chain.Ripple to TxStatusConfiguration(2, 5 * 60),
         Chain.Tron to TxStatusConfiguration(2, 5 * 60)
     )
+
+    override fun supportTxStatus(chain: Chain): Boolean {
+        return chain in txStatusConfigs.keys
+    }
 
 
     override fun getConfigurationForChain(chain: Chain): TxStatusConfiguration {

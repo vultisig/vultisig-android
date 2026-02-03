@@ -22,7 +22,7 @@ class TronStatusProvider @Inject constructor(
             val contractRet = tx.ret?.firstOrNull()?.contractRet
                 ?: return TransactionResult.Confirmed
 
-            if (contractRet == "SUCCESS") {
+            if (contractRet.equals("SUCCESS", ignoreCase = true)) {
                 TransactionResult.Confirmed
             } else {
                 TransactionResult.Failed(contractRet)

@@ -1,5 +1,8 @@
 package com.vultisig.wallet.data.api.chains
 
+import com.vultisig.wallet.data.api.models.EvmRpcResponseJson
+import com.vultisig.wallet.data.api.models.SuiTransactionBlockOptions
+import com.vultisig.wallet.data.api.models.SuiTransactionBlockResponse
 import com.vultisig.wallet.data.api.utils.RpcResponseJson
 import com.vultisig.wallet.data.api.utils.postRpc
 import io.ktor.client.HttpClient
@@ -12,6 +15,7 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -40,6 +44,10 @@ interface SuiApi {
     suspend fun dryRunTransaction(
         transactionBytes: String,
     ): SuiDryRunResponse
+
+    suspend fun checkStatus(txHash: String): SuiTransactionBlockResponse?
+
+    suspend fun getLatestCheckpointSequenceNumber(): Long?
 }
 
 internal class SuiApiImpl @Inject constructor(
@@ -150,6 +158,31 @@ internal class SuiApiImpl @Inject constructor(
         }
 
         return dryRunResponse
+    }
+
+    override suspend fun checkStatus(txHash: String): SuiTransactionBlockResponse? {
+        return runCatching {
+            val response = http.postRpc<EvmRpcResponseJson<SuiTransactionBlockResponse>>(
+                url = rpcUrl,
+                method = "sui_getTransactionBlock",
+                params = buildJsonArray {
+                    add(txHash)
+                    add(json.encodeToJsonElement(SuiTransactionBlockOptions()))
+                }
+            )
+            response.result
+        }.getOrNull()
+    }
+
+    override suspend fun getLatestCheckpointSequenceNumber(): Long? {
+        return runCatching {
+            val response = http.postRpc<EvmRpcResponseJson<String>>(
+                url = rpcUrl,
+                method = "sui_getLatestCheckpointSequenceNumber",
+                params = JsonArray(emptyList())
+            )
+            response.result.toLongOrNull()
+        }.getOrNull()
     }
 }
 

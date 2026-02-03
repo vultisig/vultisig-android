@@ -49,6 +49,7 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
+import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
@@ -115,6 +116,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val discoverParticipantsUseCase: DiscoverParticipantsUseCase,
     private val addressBookRepository: AddressBookRepository,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
+    private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -181,6 +183,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             isInitiatingDevice = true,
             addressBookRepository = addressBookRepository,
             transactionStatusServiceManager = transactionStatusServiceManager,
+            txStatusConfigurationProvider = txStatusConfigurationProvider,
         )
 
     init {
