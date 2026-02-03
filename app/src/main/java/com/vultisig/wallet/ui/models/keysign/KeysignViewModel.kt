@@ -409,7 +409,7 @@ internal class KeysignViewModel(
                 startForegroundPolling(txHash, chain)
             }
             else {
-                KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
             }
         }
         if (approveTxHash.value.isNotEmpty()) {
