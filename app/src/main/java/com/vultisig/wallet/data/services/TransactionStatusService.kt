@@ -9,7 +9,7 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.vultisig.wallet.data.R
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.PollingTxStatusUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
@@ -69,9 +69,13 @@ class TransactionStatusService : Service() {
                 val chain = Chain.fromRaw(chainName)
 
                 try {
+                    val notification = createNotification(
+                        contentText = getString(R.string.transaction_status_checking_transaction),
+                        ongoing = true
+                    )
                     startForeground(
                         NOTIFICATION_ID,
-                        createNotification("Checking transaction...", ongoing = true)
+                        notification
                     )
                     startPolling(txHash, chain)
                     START_STICKY
@@ -98,7 +102,7 @@ class TransactionStatusService : Service() {
         pollingJob?.cancel()
 
         pollingJob = serviceScope.launch {
-            updateNotification("Transaction pending...", ongoing = true)
+            updateNotification(getString(R.string.transaction_status_pending), ongoing = true)
             _statusFlow.emit(TransactionResult.Pending)
 
             delay(5.seconds)
@@ -109,12 +113,18 @@ class TransactionStatusService : Service() {
                         is TransactionResult.Confirmed,
                         is TransactionResult.Failed,
                         TransactionResult.NotFound -> {
-                            updateNotification(result.toNotificationMessage(), ongoing = false)
+                            updateNotification(
+                                contentText = result.toNotificationMessage(),
+                                ongoing = false
+                            )
                             stopPolling()
                             stopForegroundAndService(detachNotification = true)
                         }
                         TransactionResult.Pending -> {
-                            updateNotification(result.toNotificationMessage(), ongoing = true)
+                            updateNotification(
+                                contentText = result.toNotificationMessage(),
+                                ongoing = true
+                            )
                         }
                     }
                 }
@@ -158,7 +168,7 @@ class TransactionStatusService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Transaction Status")
+            .setContentTitle(getString(R.string.transaction_status_notification_title))
             .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -180,7 +190,7 @@ class TransactionStatusService : Service() {
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Transaction Status",
+            getString(R.string.transaction_status_notification_title),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
             description = "Shows transaction status updates"
@@ -204,9 +214,9 @@ class TransactionStatusService : Service() {
     }
 
     private fun TransactionResult.toNotificationMessage() = when (this) {
-        TransactionResult.Confirmed -> "Transaction confirmed"
-        is TransactionResult.Failed -> "Transaction failed"
-        TransactionResult.NotFound -> "Transaction not found"
-        TransactionResult.Pending -> "Transaction pending..."
+        TransactionResult.Confirmed -> getString(R.string.transaction_status_confirmed)
+        is TransactionResult.Failed -> getString(R.string.transaction_status_failed)
+        TransactionResult.NotFound -> getString(R.string.transaction_status_not_found)
+        TransactionResult.Pending -> getString(R.string.transaction_status_pending)
     }
 }

@@ -184,6 +184,21 @@ data class TronContractInfoJson(
     )
 }
 
+@Serializable
+data class TronTransactionStatusResponse(
+    @SerialName("ret")
+    val ret: List<TronTransactionStatusRet>?,
+
+    @SerialName("txID")
+    val txId: String,
+)
+
+@Serializable
+data class TronTransactionStatusRet(
+    @SerialName("contractRet")
+    val contractRet: String
+)
+
 fun TronAccountResourceJson.calculateResourceStats(): ResourceUsage {
     val totalBandwidth = freeNetLimit + netLimit
     val usedBandwidth = freeNetUsed + netUsed

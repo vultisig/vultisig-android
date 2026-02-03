@@ -1,66 +1,52 @@
 package com.vultisig.wallet.data.api.txstatus
 
+import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
-import io.ktor.client.HttpClient
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.boolean
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import javax.inject.Inject
 
 class UtxoStatusProvider @Inject constructor(
-    private val httpClient: HttpClient,
-    private val json: Json,
+    private val blockChairApi: BlockChairApi,
 ) : TransactionStatusProvider {
 
-    private val apiUrls = mapOf(
-        Chain.Bitcoin to "https://mempool.space/api/tx",
-        Chain.Litecoin to "https://litecoinspace.org/api/tx",
-        Chain.Dogecoin to "https://dogechain.info/api/v1/transaction",
-        Chain.BitcoinCash to "https://api.blockchair.com/bitcoin-cash/dashboards/transaction",
-        Chain.Dash to "https://api.blockchair.com/dash/dashboards/transaction",
-        Chain.Zcash to "https://api.blockchair.com/zcash/dashboards/transaction"
-    )
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
+        val response = blockChairApi.getTsStatus(chain, txHash)
+        val txData = response?.data?.get(txHash)
         return try {
-            val baseUrl = apiUrls[chain] ?: return TransactionResult.Failed("Unknown chain")
-            val response = httpClient.get("$baseUrl/$txHash")
-
-            val body = response.bodyAsText()
-            val json = json.parseToJsonElement(body).jsonObject
-
-            val confirmed = when (chain) {
-                Chain.Bitcoin, Chain.Litecoin -> {
-                    json["status"]?.jsonObject?.get("confirmed")?.jsonPrimitive?.boolean ?: false
+            when {
+                txData == null -> {
+                    TransactionResult.NotFound
                 }
 
-                Chain.Dogecoin -> {
-                    json["confirmations"]?.jsonPrimitive?.int?.let { it > 0 } ?: false
+                txData.transaction == null -> {
+                    TransactionResult.NotFound
                 }
 
-                Chain.BitcoinCash, Chain.Dash, Chain.Zcash -> {
-                    // Blockchair API format
-                    val data = json["data"]?.jsonObject?.get(txHash)?.jsonObject
-                    val blockId = data?.get("block_id")?.jsonPrimitive?.int
-                    blockId != null && blockId > 0
+                txData.transaction.blockId == -1 -> {
+                    TransactionResult.Pending
                 }
 
-                else -> false
-            }
+                txData.transaction.blockId == null -> {
+                    TransactionResult.NotFound
+                }
+                else -> {
+                    val confirmations = response.context.state - txData.transaction.blockId + 1
 
-            if (confirmed) {
-                TransactionResult.Confirmed
-            } else {
-                TransactionResult.Pending
+                    when {
+                        confirmations <= 0 -> {
+                            TransactionResult.Pending
+                        }
+
+                        else -> {
+                            TransactionResult.Confirmed
+                        }
+                    }
+                }
             }
         } catch (_: Exception) {
-            TransactionResult.NotFound
+                TransactionResult.NotFound
+            }
         }
     }
-}

@@ -932,5 +932,11 @@
     <string name="swap_form_referral_discount_bps">Referral (-%1$d bps)</string>
     <string name="amino_sign">Amino Sign</string>
     <string name="amino_direct">Direct Sign</string>
+    <string name="transaction_status_confirmed">Transaction confirmed</string>
+    <string name="transaction_status_failed">Transaction failed</string>
+    <string name="transaction_status_not_found">Transaction not found</string>
+    <string name="transaction_status_pending">Transaction pending…</string>
+    <string name="transaction_status_notification_title">Transaction Status</string>
+    <string name="transaction_status_checking_transaction">Checking transaction...</string>
 
 </resources>

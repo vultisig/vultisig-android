@@ -13,10 +13,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
-// x y z
 
-
-// x impl   y interface|provide   z invoke
 @HiltWorker
 internal class TokenRefreshWorker @AssistedInject constructor(
     @Assisted appContext: Context,

@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.cardano.CardanoBalanceResponseJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoSlotResponseJson
+import com.vultisig.wallet.data.api.models.cardano.CardanoTxStatusResponseJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoUtxoRequestJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoUtxoResponseJson
 import com.vultisig.wallet.data.api.models.cardano.OgmiosTransactionResponse
@@ -25,6 +26,7 @@ import kotlin.coroutines.cancellation.CancellationException
 interface CardanoApi {
     suspend fun getBalance(coin: Coin): BigInteger
     suspend fun getUTXOs(coin: Coin): List<UtxoInfo>
+    suspend fun getTxStatus(txHash: String): CardanoTxStatusResponseJson?
     suspend fun calculateDynamicTTL(): ULong
     suspend fun broadcastTransaction(chain: String, signedTransaction: String): String?
 }
@@ -181,6 +183,20 @@ internal class CardanoApiImpl @Inject constructor(
     override suspend fun calculateDynamicTTL(): ULong {
         val currentSlot = getCurrentSlot()
         return currentSlot + 720u // Add 720 slots (~12 minutes at 1 slot per second)
+    }
+
+    override suspend fun getTxStatus(txHash: String): CardanoTxStatusResponseJson? {
+        val requestBody = mapOf("_tx_hashes" to listOf(txHash))
+        val response = httpClient.post(url) {
+            url {
+                path(
+                    apiV1Path,
+                    "tx_status"
+                )
+            }
+            setBody(requestBody)
+        }
+        return response.body<List<CardanoTxStatusResponseJson>>().firstOrNull()
     }
 }
 
