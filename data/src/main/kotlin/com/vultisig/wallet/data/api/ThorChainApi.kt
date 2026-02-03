@@ -1,7 +1,17 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.api.models.*
-import com.vultisig.wallet.data.api.models.cosmos.*
+import com.vultisig.wallet.data.api.models.DenomMetadata
+import com.vultisig.wallet.data.api.models.GraphQLResponse
+import com.vultisig.wallet.data.api.models.MetadataResponse
+import com.vultisig.wallet.data.api.models.MetadatasResponse
+import com.vultisig.wallet.data.api.models.TcyStakerResponse
+import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
+import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
+import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
+import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
@@ -9,15 +19,27 @@ import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -603,7 +625,8 @@ internal class ThorChainApiImpl @Inject constructor(
             header(xClientID, xClientIDValue)
         }
         return if (httpResponse.status.value == 400 &&
-            httpResponse.bodyAsText().contains("TCYStaker doesn't exist", ignoreCase = true)) {
+            httpResponse.bodyAsText().contains("TCYStaker doesn't exist", ignoreCase = true)
+        ) {
             TcyStakeResponse(
                 address = address,
                 amount = "0",
