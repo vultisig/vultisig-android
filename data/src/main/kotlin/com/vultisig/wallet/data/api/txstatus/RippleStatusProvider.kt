@@ -27,7 +27,7 @@ class RippleStatusProvider @Inject constructor(
             if (tx == null) {
                 return TransactionResult.Pending
             }
-            if (tx.result.status == "success" && tx.result.status.lowercase().contains("redundant")) {
+            if (tx.result.status == "success") {
                 TransactionResult.Confirmed
             } else {
                 TransactionResult.Failed(tx.result.status)

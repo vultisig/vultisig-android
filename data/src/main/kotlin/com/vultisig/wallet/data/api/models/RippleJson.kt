@@ -25,37 +25,46 @@ data class RippleBroadcastResponseResponseTransactionJson(
     val hash: String?,
 )
 
+
+
 @Serializable
-data class RippleErrorResponseJson(
+data class RippleBroadcastSuccessResponseJson(
     @SerialName("result")
-    val result: RippleErrorResultJson
+    val result: RippleBroadcastSuccessResultJson
 )
 
 @Serializable
-data class RippleErrorResultJson(
-    @SerialName("error")
-    val error: String,
-    @SerialName("error_code")
-    val errorCode: Int,
-    @SerialName("error_message")
-    val errorMessage: String,
-    @SerialName("request")
-    val request: RippleErrorRequestJson,
+data class RippleBroadcastSuccessResultJson(
+    @SerialName("hash")
+    val hash: String,
     @SerialName("status")
-    val status: String
+    val status: String,
+    @SerialName("tx_json")
+    val txJson: RippleBroadcastSuccessTransactionJson,
+    @SerialName("validated")
+    val validated: Boolean
 )
 
 @Serializable
-data class RippleErrorRequestJson(
-    @SerialName("binary")
-    val binary: Boolean,
-    @SerialName("command")
-    val command: String,
-    @SerialName("transaction")
-    val transaction: String
+data class RippleBroadcastSuccessTransactionJson(
+    @SerialName("Account")
+    val account: String,
+    @SerialName("DeliverMax")
+    val deliverMax: String,
+    @SerialName("Destination")
+    val destination: String,
+    @SerialName("Fee")
+    val fee: String,
+    @SerialName("Flags")
+    val flags: Int,
+    @SerialName("LastLedgerSequence")
+    val lastLedgerSequence: Int,
+    @SerialName("Sequence")
+    val sequence: Int,
+    @SerialName("SigningPubKey")
+    val signingPubKey: String,
+    @SerialName("TransactionType")
+    val transactionType: String,
+    @SerialName("TxnSignature")
+    val txnSignature: String
 )
-
-
-
-
-

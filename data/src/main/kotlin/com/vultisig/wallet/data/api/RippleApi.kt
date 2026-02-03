@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import RippleBroadcastResponseResponseJson
-import RippleErrorResponseJson
+import RippleBroadcastSuccessResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.TronTransactionStatusResponse
 import com.vultisig.wallet.data.models.Chain
@@ -31,7 +31,7 @@ interface RippleApi {
     suspend fun fetchServerState(): RippleServerStateResponseJson
     suspend fun getTsStatus(
         txHash: String,
-    ): RippleErrorResponseJson?
+    ): RippleBroadcastSuccessResponseJson?
 }
 
 internal class RippleApiImp @Inject constructor(
@@ -68,6 +68,11 @@ internal class RippleApiImp @Inject constructor(
                         "This sequence number has already passed.",
                         ignoreCase = true
                     )
+                    ||
+                    resultMessage.equals(
+                        "The transaction is redundant.",
+                        ignoreCase = true
+                    )
                 ) {
                     if (!rpcResp.result.txJson?.hash.isNullOrBlank()) {
                         return rpcResp.result.txJson.hash
@@ -91,7 +96,7 @@ internal class RippleApiImp @Inject constructor(
         }
     }
 
-    override suspend fun getTsStatus( txHash: String): RippleErrorResponseJson? {
+    override suspend fun getTsStatus( txHash: String): RippleBroadcastSuccessResponseJson? {
         val payload = RpcPayload(
             method = "tx",
             params = buildJsonArray {
@@ -107,7 +112,7 @@ internal class RippleApiImp @Inject constructor(
             setBody(payload)
         }
 
-        return response.bodyOrThrow<RippleErrorResponseJson>()
+        return response.bodyOrThrow<RippleBroadcastSuccessResponseJson>()
     }
 
 
