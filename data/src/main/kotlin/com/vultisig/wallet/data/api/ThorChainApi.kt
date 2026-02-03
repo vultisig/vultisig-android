@@ -1,17 +1,7 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.api.models.DenomMetadata
-import com.vultisig.wallet.data.api.models.GraphQLResponse
-import com.vultisig.wallet.data.api.models.MetadataResponse
-import com.vultisig.wallet.data.api.models.MetadatasResponse
-import com.vultisig.wallet.data.api.models.TcyStakerResponse
-import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
-import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
-import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
-import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
-import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
-import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
+import com.vultisig.wallet.data.api.models.*
+import com.vultisig.wallet.data.api.models.cosmos.*
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
@@ -19,27 +9,15 @@ import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.parameter
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.*
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -322,19 +300,29 @@ internal class ThorChainApiImpl @Inject constructor(
         if (!response.status.isSuccess()) {
             //The  URL initially returns a 'not found' response but eventually
             // provides a successful response after some time
-            if (response.status.equals(HttpStatusCode.NotFound))
+            if (response.status == HttpStatusCode.NotFound)
                 return ThorChainTransactionJson(
                     code = null,
                     codeSpace = null,
                     rawLog = response.bodyAsText()
                 )
-        } else
-            return ThorChainTransactionJson(
-                code = response.status.value,
-                codeSpace = HttpStatusCode.fromValue(response.status.value).description,
-                rawLog = response.bodyAsText()
+            return response.body()
+        }
+        val txResponse = response.body<CosmosTxResponseWrapper>().txResponse
+        // code == 0 means success in Cosmos SDK, non-zero means error
+        return if (txResponse.code == 0) {
+            ThorChainTransactionJson(
+                code = null,
+                codeSpace = null,
+                rawLog = txResponse.rawLog
             )
-        return response.body()
+        } else {
+            ThorChainTransactionJson(
+                code = txResponse.code,
+                codeSpace = txResponse.codespace,
+                rawLog = txResponse.rawLog
+            )
+        }
     }
 
     override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> {
@@ -701,6 +689,22 @@ data class ThorChainTransactionJson(
     val code: Int?,
     @SerialName("codespace")
     val codeSpace: String?,
+    @SerialName("raw_log")
+    val rawLog: String,
+)
+
+@Serializable
+private data class CosmosTxResponseWrapper(
+    @SerialName("tx_response")
+    val txResponse: CosmosTxResponse,
+)
+
+@Serializable
+private data class CosmosTxResponse(
+    @SerialName("code")
+    val code: Int,
+    @SerialName("codespace")
+    val codespace: String,
     @SerialName("raw_log")
     val rawLog: String,
 )
