@@ -1227,4 +1227,10 @@
     <string name="amino_sign">Amino 签名</string>
     <string name="amino_direct">直接签名</string>
     <string name="import_file_screen_enter_password">输入共享保险库密码</string>
+    <string name="transaction_status_confirmed">交易已确认</string>
+    <string name="transaction_status_failed">交易失败</string>
+    <string name="transaction_status_not_found">未找到交易记录</string>
+    <string name="transaction_status_pending">交易待处理……</string>
+    <string name="transaction_status_notification_title">交易状态</string>
+    <string name="transaction_status_checking_transaction">正在检查交易……</string>
 </resources>

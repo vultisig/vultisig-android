@@ -880,4 +880,10 @@
     <string name="swap_form_referral_discount_bps">Verwijzing (-%1$d bps)</string>
     <string name="amino_sign">Amino-handtekening</string>
     <string name="amino_direct">Directe handtekening</string>
+    <string name="transaction_status_confirmed">Transactie bevestigd</string>
+    <string name="transaction_status_failed">Transactie mislukt</string>
+    <string name="transaction_status_not_found">Transactie niet gevonden</string>
+    <string name="transaction_status_pending">Transactie in behandeling…</string>
+    <string name="transaction_status_notification_title">Transactiestatus</string>
+    <string name="transaction_status_checking_transaction">Transactie controleren...</string>
 </resources>

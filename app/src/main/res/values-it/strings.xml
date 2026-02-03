@@ -883,4 +883,10 @@
     <string name="amino_sign">Amino Sign</string>
     <string name="amino_direct">Firma diretta</string>
     <string name="import_file_screen_enter_password">Inserisci la password di condivisione del vault.</string>
+    <string name="transaction_status_confirmed">Transazione confermata</string>
+    <string name="transaction_status_failed">Transazione non riuscita</string>
+    <string name="transaction_status_not_found">Transazione non trovata</string>
+    <string name="transaction_status_pending">Transazione in sospeso…</string>
+    <string name="transaction_status_notification_title">Stato della transazione</string>
+    <string name="transaction_status_checking_transaction">Verifica della transazione in corso...</string>
 </resources>
