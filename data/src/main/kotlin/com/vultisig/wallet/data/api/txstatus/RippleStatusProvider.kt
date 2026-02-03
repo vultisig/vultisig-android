@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api.txstatus
 
+import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
@@ -15,41 +16,22 @@ import kotlinx.serialization.json.jsonPrimitive
 import javax.inject.Inject
 
 class RippleStatusProvider @Inject constructor(
-    private val httpClient: HttpClient,
-    private val json: Json,
+    private val rippleApi: RippleApi,
 ) : TransactionStatusProvider {
 
     private val rpcUrl = "https://s1.ripple.com:51234"
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
-            val response = httpClient.post(rpcUrl) {
-                setBody(
-                    """
-                    {
-                        "method": "tx",
-                        "params": [{"transaction": "$txHash"}]
-                    }
-                """.trimIndent()
-                )
-                headers {
-                    append("Content-Type", "application/json")
-                }
+            val tx = rippleApi.getTsStatus(txHash)
+
+            if (tx?.status == null) {
+                return TransactionResult.Pending
             }
-
-            val body = response.bodyAsText()
-            val json = json.parseToJsonElement(body).jsonObject
-            val result = json["result"]?.jsonObject
-
-            if (result != null) {
-                val validated = result["validated"]?.jsonPrimitive?.boolean
-                if (validated == true) {
-                    TransactionResult.Confirmed
-                } else {
-                    TransactionResult.Pending
-                }
+            if (tx.status == "success") {
+                TransactionResult.Confirmed
             } else {
-                TransactionResult.NotFound
+                TransactionResult.Failed(tx.status)
             }
         } catch (_: Exception) {
             TransactionResult.NotFound
