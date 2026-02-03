@@ -310,20 +310,26 @@ internal fun DepositFormScreen(
                 }
 
                 else -> {
-                    if (depositChain == Chain.ThorChain && depositOption !in arrayOf(
-                            DepositOption.Bond,
-                            DepositOption.Unbond,
-                            DepositOption.Leave,
+                    val checkThorDepositOptions = depositChain == Chain.ThorChain &&
+                            depositOption !in arrayOf(
+                        DepositOption.Bond,
+                        DepositOption.Unbond,
+                        DepositOption.Leave,
 
 
-                            DepositOption.SecuredAsset,
-                            DepositOption.WithdrawSecuredAsset,
-                        )
-                        && depositOption !in arrayOf(
-                            DepositOption.AddCacaoPool,
-                            DepositOption.RemoveCacaoPool
-                        )
-                    ) {
+                        DepositOption.SecuredAsset,
+                        DepositOption.WithdrawSecuredAsset,
+                    )
+                            && depositOption !in arrayOf(
+                        DepositOption.AddCacaoPool,
+                        DepositOption.RemoveCacaoPool
+                    )
+
+                    val checkMayaDepositOptions = depositChain == Chain.MayaChain &&
+                            depositOption == DepositOption.Custom
+
+
+                    if (checkThorDepositOptions || checkMayaDepositOptions) {
                         FormCard {
                             SelectionCard(
                                 title = state.selectedToken.ticker,
