@@ -24,14 +24,13 @@ class RippleStatusProvider @Inject constructor(
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
             val tx = rippleApi.getTsStatus(txHash)
-
-            if (tx?.status == null) {
+            if (tx == null) {
                 return TransactionResult.Pending
             }
-            if (tx.status == "success") {
+            if (tx.result.status == "success" && tx.result.status.lowercase().contains("redundant")) {
                 TransactionResult.Confirmed
             } else {
-                TransactionResult.Failed(tx.status)
+                TransactionResult.Failed(tx.result.status)
             }
         } catch (_: Exception) {
             TransactionResult.NotFound

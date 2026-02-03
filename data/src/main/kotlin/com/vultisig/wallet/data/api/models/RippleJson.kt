@@ -26,41 +26,33 @@ data class RippleBroadcastResponseResponseTransactionJson(
 )
 
 @Serializable
-data class RippleTxResponseJson(
+data class RippleErrorResponseJson(
     @SerialName("result")
-    val result: RippleTxResult? = null,
+    val result: RippleErrorResultJson
+)
+
+@Serializable
+data class RippleErrorResultJson(
+    @SerialName("error")
+    val error: String,
+    @SerialName("error_code")
+    val errorCode: Int,
+    @SerialName("error_message")
+    val errorMessage: String,
+    @SerialName("request")
+    val request: RippleErrorRequestJson,
     @SerialName("status")
-    val status: String? = null,
-    @SerialName("validated")
-    val validated: Boolean? = null
+    val status: String
 )
 
 @Serializable
-data class RippleTxResult(
-    @SerialName("engine_result")
-    val engineResult: String? = null,
-    @SerialName("engine_result_code")
-    val engineResultCode: Int? = null,
-    @SerialName("engine_result_message")
-    val engineResultMessage: String? = null,
-    @SerialName("tx_json")
-    val txJson: RippleTxJson? = null,
-    @SerialName("ledger_index")
-    val ledgerIndex: Long? = null
-)
-
-@Serializable
-data class RippleTxJson(
-    @SerialName("hash")
-    val hash: String? = null,
-    @SerialName("Account")
-    val account: String? = null,
-    @SerialName("Fee")
-    val fee: String? = null,
-    @SerialName("TransactionType")
-    val transactionType: String? = null,
-    @SerialName("Sequence")
-    val sequence: Int? = null
+data class RippleErrorRequestJson(
+    @SerialName("binary")
+    val binary: Boolean,
+    @SerialName("command")
+    val command: String,
+    @SerialName("transaction")
+    val transaction: String
 )
 
 

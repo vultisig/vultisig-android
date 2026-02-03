@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import RippleBroadcastResponseResponseJson
-import RippleTxResponseJson
+import RippleErrorResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.TronTransactionStatusResponse
 import com.vultisig.wallet.data.models.Chain
@@ -31,7 +31,7 @@ interface RippleApi {
     suspend fun fetchServerState(): RippleServerStateResponseJson
     suspend fun getTsStatus(
         txHash: String,
-    ): RippleTxResponseJson?
+    ): RippleErrorResponseJson?
 }
 
 internal class RippleApiImp @Inject constructor(
@@ -91,13 +91,14 @@ internal class RippleApiImp @Inject constructor(
         }
     }
 
-    override suspend fun getTsStatus( txHash: String): RippleTxResponseJson? {
+    override suspend fun getTsStatus( txHash: String): RippleErrorResponseJson? {
         val payload = RpcPayload(
             method = "tx",
             params = buildJsonArray {
                 addJsonObject {
                     put("transaction", txHash)
                     put("binary", false)
+                    put("api_version", 2)
                 }
             }
         )
@@ -106,7 +107,7 @@ internal class RippleApiImp @Inject constructor(
             setBody(payload)
         }
 
-        return response.bodyOrThrow<RippleTxResponseJson>()
+        return response.bodyOrThrow<RippleErrorResponseJson>()
     }
 
 

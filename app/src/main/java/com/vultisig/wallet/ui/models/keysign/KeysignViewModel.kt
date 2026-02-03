@@ -405,7 +405,7 @@ internal class KeysignViewModel(
             swapProgressLink.value =
                 explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
 
-            if(chain.standard == TokenStandard.EVM) {
+            if(chain.standard == TokenStandard.EVM || chain == Chain.Ripple) {
                 startForegroundPolling(txHash, chain)
             }
             else {
