@@ -334,10 +334,9 @@ private fun CreateFolderScreen(
                 .padding(bottom = 16.dp)
                 .padding(
                     horizontal = 16.dp
-                )
-            ,
+                ),
             onClick = onAddVaultClick,
-            state = if(state.isCreateButtonEnabled) VsButtonState.Enabled else VsButtonState.Disabled
+            state = if (state.isCreateButtonEnabled) VsButtonState.Enabled else VsButtonState.Disabled
         )
     }
 }
@@ -403,16 +402,21 @@ fun FolderNameTextField(
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (textFieldState.text.isEmpty()) {
-                        Text(
-                            text = stringResource(id = R.string.create_folder_placeholder),
-                            color = Theme.v2.colors.text.extraLight,
-                            style = Theme.brockmann.supplementary.footnote,
-                        )
-                    } else {
+                    Box(
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        if (textFieldState.text.isEmpty()) {
+                            Text(
+                                text = stringResource(id = R.string.create_folder_placeholder),
+                                color = Theme.v2.colors.text.extraLight,
+                                style = Theme.brockmann.supplementary.footnote,
+                            )
+                        }
                         input()
+                    }
+                    if (textFieldState.text.isNotEmpty()) {
                         UiSpacer(
-                            weight = 1f
+                            size = 8.dp
                         )
                         UiIcon(
                             drawableResId = R.drawable.close_circle,
