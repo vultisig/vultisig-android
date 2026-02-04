@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -41,10 +43,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
+import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.Variables
 import com.vultisig.wallet.ui.utils.ColorGenerator
 
 @Composable
@@ -59,6 +68,7 @@ internal fun AddressBookBottomSheet(
             AddressBookContent(
                 state = state,
                 onAddressClick = model::selectAddress,
+                onCancelClick = model::back
             )
         }
     )
@@ -68,30 +78,92 @@ internal fun AddressBookBottomSheet(
 private fun AddressBookContent(
     state: AddressBookBottomSheetUiModel,
     onAddressClick: (AddressEntryUiModel) -> Unit,
+    onCancelClick: () -> Unit
 ) {
     var isShowingAddresses by remember { mutableStateOf(true) }
-
-    V2Scaffold(
+    V2BottomSheet(
+        onDismissRequest = onCancelClick,
+        leftAction = {
+            VsCircleButton(
+                drawableResId = R.drawable.big_close,
+                onClick = onCancelClick,
+                type = VsCircleButtonType.Tertiary,
+                size = VsCircleButtonSize.Small,
+            )
+        },
         title = stringResource(R.string.address_book_toolbar_title),
-        applyDefaultPaddings = false,
-        content = {
-            Column(
-                modifier = Modifier.padding(
-                    horizontal = V2Scaffold.PADDING_HORIZONTAL
-                )
+    )
+    {
+        Column(
+            modifier = Modifier.padding(
+                horizontal = V2Scaffold.PADDING_HORIZONTAL,
+                vertical = V2Scaffold.PADDING_HORIZONTAL,
+            )
+        ) {
+            AddressToggle(
+                isShowingAddresses = isShowingAddresses,
+                onAddressClick = { isShowingAddresses = true },
+                onVaultClick = { isShowingAddresses = false },
+            )
+            LazyColumn(
+                contentPadding = PaddingValues(
+                    vertical = V2Scaffold.PADDING_VERTICAL,
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                AddressToggle(
-                    isShowingAddresses = isShowingAddresses,
-                    onAddressClick = { isShowingAddresses = true },
-                    onVaultClick = { isShowingAddresses = false },
-                )
-                LazyColumn(
-                    contentPadding = PaddingValues(
-                        vertical = V2Scaffold.PADDING_VERTICAL,
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(if (isShowingAddresses) state.addresses else state.vaults) {
+                val displayItems = if (isShowingAddresses) state.addresses else state.vaults
+
+                if (displayItems.isEmpty()) {
+                    item {
+                        Column(
+                            Modifier
+                                .fillMaxSize()
+                                .background(
+                                    color = Theme.v2.colors.variables.backgroundsSurface1,
+                                    shape = RoundedCornerShape(size = 12.dp)
+                                )
+                                .padding(
+                                    start = 24.dp,
+                                    end = 24.dp,
+                                    top = 20.dp,
+                                    bottom = 20.dp,
+                                ),
+
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+
+                            UiIcon(
+                                drawableResId = R.drawable.book,
+                                size = 24.dp,
+                                tint = Theme.v2.colors.primary.accent4
+                            )
+                            UiSpacer(
+                                size = 14.dp
+                            )
+
+                            Text(
+                                text = stringResource(R.string.address_book_empty_title),
+                                style = Theme.brockmann.button.medium.regular,
+                                color = Theme.v2.colors.neutrals.n50,
+                                textAlign = TextAlign.Center
+                            )
+
+                            UiSpacer(
+                                size = 8.dp
+                            )
+
+                            Text(
+                                text = stringResource(R.string.address_book_empty_description),
+                                style = Theme.brockmann.button.medium.small,
+                                color = Theme.v2.colors.text.extraLight,
+                                textAlign = TextAlign.Center
+                            )
+
+                        }
+                    }
+                } else {
+                    items(displayItems) {
                         EntryItem(
                             title = it.title,
                             subtitle = it.subtitle,
@@ -102,9 +174,11 @@ private fun AddressBookContent(
                         )
                     }
                 }
+
             }
-        },
-    )
+        }
+    }
+
 }
 
 @Composable
@@ -118,38 +192,29 @@ private fun AddressToggle(
             .height(intrinsicSize = IntrinsicSize.Min)
     ) {
         LookaheadScope {
-            Box(
-                modifier = Modifier
-                    .animatePlacementInScope(this)
-                    .background(
-                        color = Theme.v2.colors.primary.accent3,
-                        shape = CircleShape
-                    )
-                    .fillMaxWidth(0.5f)
-                    .fillMaxHeight()
-                    .align(
-                        if (isShowingAddresses) Alignment.CenterStart
-                        else Alignment.CenterEnd
-                    )
-            )
+
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier
                     .border(
                         width = 1.dp,
-                        color = Theme.v2.colors.primary.accent3,
-                        shape = CircleShape,
+                        color = Theme.v2.colors.border.normal,
+                        shape = RoundedCornerShape(size = 60.dp)
                     )
+                    .padding(4.dp)
                     .fillMaxWidth(),
             ) {
                 PickerItem(
                     title = stringResource(R.string.address_book_saved_addresses),
-                    onClick = onAddressClick
+                    onClick = onAddressClick,
+                    isSelected = isShowingAddresses
+
                 )
 
                 PickerItem(
                     title = stringResource(R.string.address_book_my_vaults),
-                    onClick = onVaultClick
+                    onClick = onVaultClick,
+                    isSelected = !isShowingAddresses
                 )
             }
         }
@@ -160,7 +225,9 @@ private fun AddressToggle(
 private fun RowScope.PickerItem(
     title: String,
     onClick: () -> Unit,
+    isSelected: Boolean
 ) {
+
     Text(
         text = title,
         style = Theme.brockmann.supplementary.footnote,
@@ -169,10 +236,18 @@ private fun RowScope.PickerItem(
         overflow = TextOverflow.MiddleEllipsis,
         maxLines = 1,
         modifier = Modifier
-            .clip(CircleShape)
+            .width(160.dp)
+            .height(42.dp)
+            .background(
+                color = if (isSelected) Theme.v2.colors.variables.buttonsCTAPrimary
+                else Theme.v2.colors.backgrounds.transparent,
+                shape = RoundedCornerShape(size = 99.dp)
+            )
+            .padding(
+                vertical = 12.dp,
+                horizontal = 20.dp,
+            )
             .clickable(onClick = onClick)
-            .padding(all = 12.dp)
-            .weight(1f)
     )
 }
 
@@ -257,5 +332,6 @@ private fun PreviewAddressBookBottomSheet() {
     AddressBookContent(
         state = AddressBookBottomSheetUiModel(),
         onAddressClick = {},
+        onCancelClick = {}
     )
 }
