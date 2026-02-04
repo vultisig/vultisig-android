@@ -18,9 +18,6 @@ import javax.inject.Inject
 class RippleStatusProvider @Inject constructor(
     private val rippleApi: RippleApi,
 ) : TransactionStatusProvider {
-
-    private val rpcUrl = "https://s1.ripple.com:51234"
-
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
             val tx = rippleApi.getTsStatus(txHash)

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api.txstatus
 
+import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
@@ -16,33 +17,21 @@ import kotlinx.serialization.json.jsonPrimitive
 import javax.inject.Inject
 
 class PolkadotStatusProvider @Inject constructor(
-    private val httpClient: HttpClient,
-    private val json: Json,
-    ) : TransactionStatusProvider {
+    private val rippleApi: RippleApi,
+) : TransactionStatusProvider {
 
     private val apiUrl = "https://polkadot.api.subscan.io/api/scan/extrinsic"
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
-            val response = httpClient.post(apiUrl) {
-                setBody("""{"hash": "$txHash"}""")
-                headers {
-                    append("Content-Type", "application/json")
-                }
+            val tx = rippleApi.getTsStatus(txHash)
+            if (tx == null) {
+                return TransactionResult.NotFound
             }
-
-            val body = response.bodyAsText()
-            val json = json.parseToJsonElement(body).jsonObject
-
-            if (json["data"] != null && json["data"] !is JsonNull) {
-                val finalized = json["data"]?.jsonObject?.get("finalized")?.jsonPrimitive?.boolean
-                if (finalized == true) {
-                    TransactionResult.Confirmed
-                } else {
-                    TransactionResult.Pending
-                }
+            if (tx.result.status == "success") {
+                return TransactionResult.Confirmed
             } else {
-                TransactionResult.NotFound
+                return TransactionResult.Failed(tx.result.status)
             }
         } catch (_: Exception) {
             TransactionResult.NotFound

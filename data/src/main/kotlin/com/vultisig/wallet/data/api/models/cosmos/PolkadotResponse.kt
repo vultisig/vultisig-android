@@ -70,3 +70,39 @@ data class PolkadotQueryInfoResponseJson(
         val partialFee: String?,
     )
 }
+
+@Serializable
+data class PolkadotExtrinsicResponseJson(
+    @SerialName("code")
+    val code: Int,
+    @SerialName("message")
+    val message: String,
+    @SerialName("generated_at")
+    val generatedAt: Long,
+    @SerialName("data")
+    val data: PolkadotExtrinsicDataJson? = null,
+)
+
+@Serializable
+data class PolkadotExtrinsicDataJson(
+    @SerialName("error")
+    val polkadotErrorData: PolkadotErrorData? = null,
+)
+
+
+@Serializable
+data class PolkadotErrorData(
+    @SerialName("batch_index")
+    val batchIndex: Int,
+    @SerialName("doc")
+    val doc: String,
+    @SerialName("module")
+    val module: String,
+    @SerialName("name")
+    val name: String,
+    @SerialName("value")
+    val value: String,
+    @SerialName("version")
+    val version: Int,
+)
+
