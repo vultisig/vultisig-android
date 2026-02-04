@@ -38,10 +38,13 @@ internal fun SignMessageFormScreen(
     }
 
     val focusManager = LocalFocusManager.current
+    val isFormValid = model.methodFieldState.text.isNotBlank() &&
+            model.messageFieldState.text.isNotBlank()
+
     SignMessageFormScreen(
         methodFieldState = model.methodFieldState,
         messageFieldState = model.messageFieldState,
-        state = if (state.isLoading)
+        state = if (state.isLoading || !isFormValid)
             VsButtonState.Disabled
         else
             VsButtonState.Enabled,
