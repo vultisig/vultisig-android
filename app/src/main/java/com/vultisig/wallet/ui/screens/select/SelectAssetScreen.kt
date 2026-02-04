@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -86,44 +87,50 @@ private fun SelectAssetScreen(
             }
         },
         content = {
-            LazyColumn(
-                contentPadding = PaddingValues(
-                    all = 16.dp,
-                ),
-            ) {
-                val assets = state.assets
-                itemsIndexed(assets) { index, item ->
-                    val isFirst = index == 0
-                    val isLast = index == assets.size - 1
-                    val rounding = 12.dp
+            val assets = state.assets
+            if (assets.isEmpty()) {
+                Column(modifier = Modifier.padding(all = 16.dp)) {
+                    NoFoundContent(message = stringResource(R.string.select_asset_no_result))
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(
+                        all = 16.dp,
+                    ),
+                ) {
+                    itemsIndexed(assets) { index, item ->
+                        val isFirst = index == 0
+                        val isLast = index == assets.size - 1
+                        val rounding = 12.dp
 
-                    AssetItem(
-                        logo = item.logo,
-                        title = item.title,
-                        subtitle = item.subtitle,
-                        amount = item.amount,
-                        value = item.value,
-                        isDisabled = item.isDisabled,
-                        modifier = Modifier
-                            .clickable(onClick = {
-                                onAssetClick(item)
-                            })
-                            .background(
-                                color = Theme.v2.colors.backgrounds.secondary,
-                                shape = RoundedCornerShape(
-                                    topStart = if (isFirst) rounding else 0.dp,
-                                    topEnd = if (isFirst) rounding else 0.dp,
-                                    bottomStart = if (isLast) rounding else 0.dp,
-                                    bottomEnd = if (isLast) rounding else 0.dp,
+                        AssetItem(
+                            logo = item.logo,
+                            title = item.title,
+                            subtitle = item.subtitle,
+                            amount = item.amount,
+                            value = item.value,
+                            isDisabled = item.isDisabled,
+                            modifier = Modifier
+                                .clickable(onClick = {
+                                    onAssetClick(item)
+                                })
+                                .background(
+                                    color = Theme.v2.colors.backgrounds.secondary,
+                                    shape = RoundedCornerShape(
+                                        topStart = if (isFirst) rounding else 0.dp,
+                                        topEnd = if (isFirst) rounding else 0.dp,
+                                        bottomStart = if (isLast) rounding else 0.dp,
+                                        bottomEnd = if (isLast) rounding else 0.dp,
+                                    )
                                 )
-                            )
-                    )
-
-                    if (!isLast) {
-                        UiGradientDivider(
-                            initialColor = Theme.v2.colors.backgrounds.secondary,
-                            endColor = Theme.v2.colors.backgrounds.secondary,
                         )
+
+                        if (!isLast) {
+                            UiGradientDivider(
+                                initialColor = Theme.v2.colors.backgrounds.secondary,
+                                endColor = Theme.v2.colors.backgrounds.secondary,
+                            )
+                        }
                     }
                 }
             }

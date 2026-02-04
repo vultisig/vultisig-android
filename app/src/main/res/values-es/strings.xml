@@ -14,6 +14,7 @@
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="swap_form_on_chain">en</string>
     <string name="select_asset_title">Seleccionar activo</string>
+    <string name="select_asset_no_result">No se encontraron resultados.</string>
     <string name="select_chain_chain_title">Cadena</string>
     <string name="select_chain_balance_title">Saldo</string>
     <string name="vault_settings_delete_subtitle">Eliminar tu recurso compartido de bóveda de forma permanente</string>

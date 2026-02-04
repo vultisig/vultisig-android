@@ -71,6 +71,7 @@
     <string name="vault_settings_security_screen_title_bottomsheet">Sigurnost na lancu onemogućena</string>
     <string name="vault_settings_security_screen_content_bottomsheet">Onemogućavanje sigurnosti na lancu znači da Blockaid ne može provjeriti transakcije. Bit ćete manje zaštićeni.</string>
     <string name="select_asset_title">Odaberi imovinu</string>
+    <string name="select_asset_no_result">Nema rezultata.</string>
     <string name="select_chain_chain_title">Lanac</string>
     <string name="select_chain_balance_title">Stanje</string>
     <string name="send_screen_title">POŠALJI</string>

@@ -10,6 +10,7 @@
     <string name="vault_settings_reshare_subtitle">Tresor mit einem neuen Komitee erneut teilen</string>
     <string name="vault_settings_delete_title">Löschen</string>
     <string name="select_asset_title">Asset auswählen</string>
+    <string name="select_asset_no_result">Kein Ergebnis gefunden.</string>
     <string name="select_chain_chain_title">Kette</string>
     <string name="select_chain_balance_title">Guthaben</string>
     <string name="vault_settings_security_title">On-Chain-Sicherheit</string>

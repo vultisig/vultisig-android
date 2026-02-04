@@ -93,6 +93,7 @@
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Erro</string>
     <string name="select_asset_title">Selecionar ativo</string>
+    <string name="select_asset_no_result">Nenhum resultado encontrado.</string>
     <string name="select_chain_chain_title">Cadeia</string>
     <string name="select_chain_balance_title">Saldo</string>
     <string name="send_error_no_amount">A quantidade deve ser um número positivo.</string>
