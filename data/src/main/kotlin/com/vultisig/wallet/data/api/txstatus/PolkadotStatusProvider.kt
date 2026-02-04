@@ -20,9 +20,6 @@ import javax.inject.Inject
 class PolkadotStatusProvider @Inject constructor(
     private val polkadotApi: PolkadotApi,
 ) : TransactionStatusProvider {
-
-    private val apiUrl = "https://polkadot.api.subscan.io/api/scan/extrinsic"
-
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
             val tx = polkadotApi.getTsStatus(txHash)
