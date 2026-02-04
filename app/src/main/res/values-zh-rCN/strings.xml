@@ -636,6 +636,7 @@
 
     <!-- Select Asset/Chain -->
     <string name="select_asset_title">选择资产</string>
+    <string name="select_asset_no_result">未找到结果。</string>
     <string name="select_chain_chain_title">链</string>
     <string name="select_chain_balance_title">余额</string>
 

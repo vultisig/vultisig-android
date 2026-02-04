@@ -14,6 +14,7 @@
     <string name="vault_settings_rename_title">Переименовать</string>
     <string name="swap_form_on_chain">на</string>
     <string name="select_asset_title">Выбрать актив</string>
+    <string name="select_asset_no_result">Результат не найден.</string>
     <string name="select_chain_chain_title">Сеть</string>
     <string name="select_chain_balance_title">Баланс</string>
     <string name="vault_settings_rename_subtitle">Редактировать имя вашего хранилища</string>

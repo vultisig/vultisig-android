@@ -33,6 +33,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.models.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -83,70 +84,79 @@ private fun SelectNetworkScreen(
             }
         },
         content = {
-            LazyColumn(
-                contentPadding = PaddingValues(
-                    all = 16.dp,
-                ),
-            ) {
-                item {
-                    Row {
-                        UiSpacer(18.dp)
+            val networks = state.networks
+            if (networks.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .padding(all = 16.dp)
+                ) {
+                    NoFoundContent(message = stringResource(R.string.no_chains_found))
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(
+                        all = 16.dp,
+                    ),
+                ) {
+                    item {
+                        Row {
+                            UiSpacer(18.dp)
 
-                        Text(
-                            text = stringResource(R.string.select_chain_chain_title),
-                            style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.extraLight,
-                        )
-
-                        if(state.showAllChains.not()) {
-                            UiSpacer(1f)
                             Text(
-                                text = stringResource(R.string.select_chain_balance_title),
+                                text = stringResource(R.string.select_chain_chain_title),
                                 style = Theme.brockmann.supplementary.caption,
                                 color = Theme.v2.colors.text.extraLight,
                             )
-                            UiSpacer(20.dp)
-                        }
-                    }
-                    UiSpacer(16.dp)
-                }
 
-                val networks = state.networks
-                itemsIndexed(networks) { index, item ->
-                    val isFirst = index == 0
-                    val isLast = index == networks.size - 1
-                    val rounding = 12.dp
-                    val isSelected = state.selectedNetwork == item.chain
-                    val selectedColor = if (isSelected) {
-                        Theme.v2.colors.backgrounds.tertiary_2
-                    } else {
-                        Theme.v2.colors.backgrounds.secondary
-                    }
-
-                    NetworkItem(
-                        logo = item.logo,
-                        title = item.title,
-                        value = item.value ?: "",
-                        modifier = Modifier
-                            .clickable(onClick = {
-                                onNetworkClick(item)
-                            })
-                            .background(
-                                color = selectedColor,
-                                shape = RoundedCornerShape(
-                                    topStart = if (isFirst) rounding else 0.dp,
-                                    topEnd = if (isFirst) rounding else 0.dp,
-                                    bottomStart = if (isLast) rounding else 0.dp,
-                                    bottomEnd = if (isLast) rounding else 0.dp,
+                            if (state.showAllChains.not()) {
+                                UiSpacer(1f)
+                                Text(
+                                    text = stringResource(R.string.select_chain_balance_title),
+                                    style = Theme.brockmann.supplementary.caption,
+                                    color = Theme.v2.colors.text.extraLight,
                                 )
-                            )
-                    )
+                                UiSpacer(20.dp)
+                            }
+                        }
+                        UiSpacer(16.dp)
+                    }
 
-                    if (!isLast) {
-                        UiGradientDivider(
-                            initialColor = selectedColor,
-                            endColor = selectedColor,
+                    itemsIndexed(networks) { index, item ->
+                        val isFirst = index == 0
+                        val isLast = index == networks.size - 1
+                        val rounding = 12.dp
+                        val isSelected = state.selectedNetwork == item.chain
+                        val selectedColor = if (isSelected) {
+                            Theme.v2.colors.backgrounds.tertiary_2
+                        } else {
+                            Theme.v2.colors.backgrounds.secondary
+                        }
+
+                        NetworkItem(
+                            logo = item.logo,
+                            title = item.title,
+                            value = item.value ?: "",
+                            modifier = Modifier
+                                .clickable(onClick = {
+                                    onNetworkClick(item)
+                                })
+                                .background(
+                                    color = selectedColor,
+                                    shape = RoundedCornerShape(
+                                        topStart = if (isFirst) rounding else 0.dp,
+                                        topEnd = if (isFirst) rounding else 0.dp,
+                                        bottomStart = if (isLast) rounding else 0.dp,
+                                        bottomEnd = if (isLast) rounding else 0.dp,
+                                    )
+                                )
                         )
+
+                        if (!isLast) {
+                            UiGradientDivider(
+                                initialColor = selectedColor,
+                                endColor = selectedColor,
+                            )
+                        }
                     }
                 }
             }

@@ -71,6 +71,7 @@
     <string name="vault_settings_security_screen_title_bottomsheet">Sicurezza on-chain disabilitata</string>
     <string name="vault_settings_security_screen_content_bottomsheet">La disabilitazione della sicurezza on-chain significa che Blockaid non può verificare le transazioni. Sarai meno protetto.</string>
     <string name="select_asset_title">Seleziona asset</string>
+    <string name="select_asset_no_result">Nessun risultato trovato.</string>
     <string name="select_chain_chain_title">Catena</string>
     <string name="select_chain_balance_title">Saldo</string>
     <string name="send_screen_title">Invia</string>

@@ -12,6 +12,7 @@
     <string name="vault_settings_rename_title">Hernoemen</string>
     <string name="swap_form_on_chain">op</string>
     <string name="select_asset_title">Asset selecteren</string>
+    <string name="select_asset_no_result">Geen resultaat gevonden.</string>
     <string name="select_chain_chain_title">Keten</string>
     <string name="select_chain_balance_title">Saldo</string>
     <string name="vault_settings_rename_subtitle">Wijzig uw kluisnaam</string>
