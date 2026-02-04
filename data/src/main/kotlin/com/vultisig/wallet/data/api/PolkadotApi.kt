@@ -152,10 +152,10 @@ internal class PolkadotApiImp @Inject constructor(
         }
         val responseContent = response.body<PolkadotBroadcastTransactionJson>()
         if (responseContent.error != null) {
-            if (responseContent.error.code == 1012) {
+            if (responseContent.error.code == 1012 || responseContent.error.code == 1013) {
                 return null
             }
-            throw Exception("Error broadcasting transaction: $responseContent")
+            throw Exception("Error broadcasting transaction: ${responseContent.error.data ?: responseContent.error.message}}")
         }
         return responseContent.result
     }
@@ -182,11 +182,11 @@ internal class PolkadotApiImp @Inject constructor(
 
     override suspend fun getTsStatus(txHash: String): PolkadotExtrinsicResponseJson? {
 
-            val response = httpClient.post(POLKADOT_EXTRINSIC_API_URL) {
-                setBody(mapOf("hash" to txHash))
-            }
-            return response.bodyOrThrow<PolkadotExtrinsicResponseJson>()
+        val response = httpClient.post(POLKADOT_EXTRINSIC_API_URL) {
+            setBody(mapOf("hash" to txHash))
         }
+        return response.bodyOrThrow<PolkadotExtrinsicResponseJson>()
+    }
 
     private companion object {
         private const val POLKADOT_API_URL = "https://api.vultisig.com/dot/"

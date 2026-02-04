@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api.txstatus
 
+import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
@@ -17,24 +18,24 @@ import kotlinx.serialization.json.jsonPrimitive
 import javax.inject.Inject
 
 class PolkadotStatusProvider @Inject constructor(
-    private val rippleApi: RippleApi,
+    private val polkadotApi: PolkadotApi,
 ) : TransactionStatusProvider {
 
     private val apiUrl = "https://polkadot.api.subscan.io/api/scan/extrinsic"
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
-            val tx = rippleApi.getTsStatus(txHash)
+            val tx = polkadotApi.getTsStatus(txHash)
             if (tx == null) {
                 return TransactionResult.NotFound
             }
-            if (tx.result.status == "success") {
+            if (tx.message.lowercase() == "success") {
                 return TransactionResult.Confirmed
             } else {
-                return TransactionResult.Failed(tx.result.status)
+                return TransactionResult.Failed(tx.data?.polkadotErrorData?.value ?: tx.message)
             }
-        } catch (_: Exception) {
-            TransactionResult.NotFound
+        } catch (e: Exception) {
+            TransactionResult.Failed(e.message.toString())
         }
     }
 }
