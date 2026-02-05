@@ -155,7 +155,7 @@ internal class PolkadotApiImp @Inject constructor(
             if (responseContent.error.code == 1012 || responseContent.error.code == 1013) {
                 return null
             }
-            throw Exception("Error broadcasting transaction: ${responseContent.error.data ?: responseContent.error.message}}")
+            throw Exception("Error broadcasting transaction: ${responseContent.error.data ?: responseContent.error.message}")
         }
         return responseContent.result
     }

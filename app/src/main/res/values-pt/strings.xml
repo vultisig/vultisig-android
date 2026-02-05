@@ -888,5 +888,5 @@
     <string name="transaction_status_not_found">Transação não encontrada</string>
     <string name="transaction_status_pending">Transação pendente…</string>
     <string name="transaction_status_notification_title">Estado da transação</string>
-    <string name="transaction_status_checking_transaction">A verificar transação...</string>
+   <string name="transaction_status_checking_transaction">A verificar transação…</string>
 </resources>
