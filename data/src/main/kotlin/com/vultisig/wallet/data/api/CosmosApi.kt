@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceDenomTraceJ
 import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.CosmosThorChainResponseSerializer
@@ -32,6 +33,7 @@ interface CosmosApi {
     suspend fun getWasmTokenBalance(address: String, contractAddress: String): CosmosBalance
     suspend fun getIbcDenomTraces(contractAddress: String): CosmosIbcDenomTraceDenomTraceJson
     suspend fun getLatestBlock(): String
+    suspend fun getTxStatus(txHash: String): CosmosTxStatusJson?
 }
 
 interface CosmosApiFactory {
@@ -148,5 +150,12 @@ internal class CosmosApiImp(
             ?.get("height")
             ?.jsonPrimitive
             ?.content ?: "0"
+    }
+
+    override suspend fun getTxStatus(txHash: String): CosmosTxStatusJson? {
+        return runCatching {
+            val response = httpClient.post("$rpcEndpoint/cosmos/tx/v1beta1/txs/$txHash")
+            response.body<CosmosTxStatusJson>()
+        }.getOrNull()
     }
 }

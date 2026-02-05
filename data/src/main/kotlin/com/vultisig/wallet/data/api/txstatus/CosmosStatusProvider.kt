@@ -1,40 +1,34 @@
 package com.vultisig.wallet.data.api.txstatus
 
+import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
-import io.ktor.client.HttpClient
-import io.ktor.client.request.get
 import javax.inject.Inject
 
-class CosmosStatusProvider @Inject constructor(private val httpClient: HttpClient) :
+class CosmosStatusProvider @Inject constructor(
+    private val cosmosApiFactory: CosmosApiFactory,
+) :
     TransactionStatusProvider {
 
-    private val apiUrls = mapOf(
-        Chain.GaiaChain to "https://rest.cosmos.directory/cosmoshub/cosmos/tx/v1beta1/txs",
-        Chain.Kujira to "https://rest.cosmos.directory/kujira/cosmos/tx/v1beta1/txs",
-        Chain.Osmosis to "https://rest.cosmos.directory/osmosis/cosmos/tx/v1beta1/txs",
-        Chain.Dydx to "https://rest.cosmos.directory/dydx/cosmos/tx/v1beta1/txs",
-        Chain.Terra to "https://rest.cosmos.directory/terra/cosmos/tx/v1beta1/txs",
-        Chain.TerraClassic to "https://rest.cosmos.directory/terra2/cosmos/tx/v1beta1/txs",
-        Chain.Noble to "https://rest.cosmos.directory/noble/cosmos/tx/v1beta1/txs",
-        Chain.Akash to "https://rest.cosmos.directory/akash/cosmos/tx/v1beta1/txs"
-    )
-
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        return try {
-            val baseUrl = apiUrls[chain] ?: return TransactionResult.Failed("Unknown chain")
-            val response = httpClient.get("$baseUrl/$txHash")
+        val txResponse = cosmosApiFactory.createCosmosApi(chain).getTxStatus(txHash)
+            ?: return TransactionResult.NotFound
 
-            // HTTP 200 means transaction found and confirmed
-            // HTTP 404 means transaction not found (pending)
-            if (response.status.value == 200) {
+        return if (txResponse.txResponse?.height?.toIntOrNull() != null &&
+            txResponse.txResponse.height.toInt() > 0
+        ) {
+            if (txResponse.txResponse.code == 0) {
                 TransactionResult.Confirmed
             } else {
-                TransactionResult.Pending
+                TransactionResult.Failed(
+                    txResponse.txResponse.rawLog
+                        ?: "Transaction failed with code ${txResponse.txResponse.code}"
+                )
             }
-        } catch (_: Exception) {
-            TransactionResult.NotFound
+        } else {
+            TransactionResult.Pending
         }
+
     }
 }
