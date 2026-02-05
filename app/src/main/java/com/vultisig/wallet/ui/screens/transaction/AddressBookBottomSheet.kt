@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -117,16 +118,15 @@ private fun AddressBookContent(
                     item {
                         Column(
                             Modifier
-                                .fillMaxSize()
+                                .fillMaxWidth()
+                                .heightIn(min = 140.dp)
                                 .background(
                                     color = Theme.v2.colors.variables.backgroundsSurface1,
                                     shape = RoundedCornerShape(size = 12.dp)
                                 )
                                 .padding(
-                                    start = 24.dp,
-                                    end = 24.dp,
-                                    top = 20.dp,
-                                    bottom = 20.dp,
+                                    vertical = 20.dp,
+                                    horizontal = 24.dp,
                                 ),
 
                             verticalArrangement = Arrangement.Center,
