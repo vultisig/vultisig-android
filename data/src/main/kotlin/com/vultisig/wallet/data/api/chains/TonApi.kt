@@ -30,6 +30,7 @@ interface TonApi {
     suspend fun getJettonWallet(address: String, contract: String): JettonWalletsJson
 
     suspend fun getEstimateFee(address: String, serializedBoc: String): BigInteger
+    suspend fun getTsStatus(txHash: String): TonStatusResponse
 }
 
 internal class TonApiImpl @Inject constructor(
@@ -37,6 +38,7 @@ internal class TonApiImpl @Inject constructor(
 ) : TonApi {
 
     private val baseUrl: String = "https://api.vultisig.com/ton"
+    private val eventUrl = "https://tonapi.io/v2/events/"
 
     override suspend fun getBalance(address: String): BigInteger =
         getAddressInformation(address).balance
@@ -103,6 +105,13 @@ internal class TonApiImpl @Inject constructor(
 
         return feeResponse.result?.sourceFees?.totalFee()?.toBigInteger()
             ?: throw Exception("Can't calculate Fees")
+    }
+
+    override suspend fun getTsStatus(
+        txHash: String
+    ): TonStatusResponse {
+        val response = http.get("${eventUrl}${txHash}")
+        return response.bodyOrThrow<TonStatusResponse>()
     }
 }
 
@@ -222,3 +231,14 @@ data class TonFees(
 ) {
     fun totalFee(): Long = inFwdFee + storageFee + gasFee + fwdFee
 }
+@Serializable
+data class TonStatusResponse(
+    @SerialName("in_progress")
+    val inProgress: Boolean?,
+    @SerialName("progress")
+    val progress: Double?,
+    @SerialName("error")
+    val error: String?,
+    @SerialName("error_code")
+    val errorCode: Int?
+)

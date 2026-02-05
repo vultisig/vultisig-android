@@ -1,40 +1,33 @@
 package com.vultisig.wallet.data.api.txstatus
 
+import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
-import io.ktor.client.HttpClient
-import io.ktor.client.request.get
-import io.ktor.client.request.parameter
-import io.ktor.client.statement.bodyAsText
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
+import io.ktor.client.call.body
 import javax.inject.Inject
 
 class TonStatusProvider @Inject constructor(
-    private val httpClient: HttpClient,
-    private val json: Json,) : TransactionStatusProvider {
-
-    private val apiUrl = "https://toncenter.com/api/v2/getTransactions"
-
+    private val tonApi: TonApi
+) : TransactionStatusProvider {
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
-            val response = httpClient.get(apiUrl) {
-                parameter("hash", txHash)
+            var result = tonApi.getTsStatus(txHash)
+
+            if (!result.error.isNullOrEmpty() || result.errorCode != null) {
+                return TransactionResult.Failed(result.error ?: result.errorCode.toString())
             }
 
-            val body = response.bodyAsText()
-            val json = json.parseToJsonElement(body).jsonObject
-            val result = json["result"]?.jsonArray
-
-            if (!result.isNullOrEmpty()) {
-                TransactionResult.Confirmed
+            if (result.inProgress == false) {
+                return TransactionResult.Confirmed
             } else {
-                TransactionResult.NotFound
+                TransactionResult.Pending
             }
-        } catch (_: Exception) {
-            TransactionResult.NotFound
+        } catch (e: Exception) {
+            if(e.message?.contains("entity not found", ignoreCase = true) ?: false) {
+                return TransactionResult.Pending
+            }
+            TransactionResult.Failed(e.message.toString())
         }
     }
 }
