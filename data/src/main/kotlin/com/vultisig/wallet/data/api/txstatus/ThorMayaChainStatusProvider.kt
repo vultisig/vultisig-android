@@ -25,8 +25,8 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
             } else {
                 TransactionResult.Pending
             }
-        } catch (_: Exception) {
-            TransactionResult.NotFound
+        } catch (e: Exception) {
+            TransactionResult.Failed(e.message.toString())
         }
     }
 }
