@@ -121,7 +121,8 @@ data class Neutrals(
 data class Variables(
     val backgroundsSurface1: Color = Color(0xFF061B3A),
     val bordersLight: Color = Color(0xFF11284A),
-    val textPrimary: Color = Color(0xFFF0F4FC)
+    val textPrimary: Color = Color(0xFFF0F4FC),
+    val buttonsCTAPrimary: Color = Color(0xFF0B4EFF)
 )
 
 data class FillsColors(
