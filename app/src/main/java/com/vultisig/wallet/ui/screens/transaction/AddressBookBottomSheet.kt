@@ -243,11 +243,11 @@ private fun RowScope.PickerItem(
                 else Theme.v2.colors.backgrounds.transparent,
                 shape = RoundedCornerShape(size = 99.dp)
             )
+            .clickable(onClick = onClick)
             .padding(
                 vertical = 12.dp,
                 horizontal = 20.dp,
             )
-            .clickable(onClick = onClick)
     )
 }
 
