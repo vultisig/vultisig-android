@@ -12,23 +12,30 @@ class CosmosStatusProvider @Inject constructor(
     TransactionStatusProvider {
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        val txResponse = cosmosApiFactory.createCosmosApi(chain).getTxStatus(txHash)
-            ?: return TransactionResult.NotFound
+        try {
+            val txResponse = cosmosApiFactory.createCosmosApi(chain).getTxStatus(txHash)
+                ?: return TransactionResult.NotFound
 
-        return if (txResponse.txResponse?.height?.toIntOrNull() != null &&
-            txResponse.txResponse.height.toInt() > 0
-        ) {
-            if (txResponse.txResponse.code == 0) {
-                TransactionResult.Confirmed
+            return if (txResponse.txResponse?.height?.toIntOrNull() != null &&
+                txResponse.txResponse.height.toInt() > 0
+            ) {
+                if (txResponse.txResponse.code == 0) {
+                    TransactionResult.Confirmed
+                } else {
+                    TransactionResult.Failed(
+                        txResponse.txResponse.rawLog
+                            ?: "Transaction failed with code ${txResponse.txResponse.code}"
+                    )
+                }
             } else {
-                TransactionResult.Failed(
-                    txResponse.txResponse.rawLog
-                        ?: "Transaction failed with code ${txResponse.txResponse.code}"
-                )
+                TransactionResult.Pending
             }
-        } else {
-            TransactionResult.Pending
+        } catch (e: Exception) {
+            if(e.message?.contains("tx not found") == true){
+                return TransactionResult.Pending
+            }
+            return TransactionResult.Failed(e.message.toString())
         }
-
     }
+
 }

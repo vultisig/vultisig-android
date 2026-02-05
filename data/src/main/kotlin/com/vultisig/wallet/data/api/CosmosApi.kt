@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.CosmosThorChainResponseSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -153,9 +154,7 @@ internal class CosmosApiImp(
     }
 
     override suspend fun getTxStatus(txHash: String): CosmosTxStatusJson? {
-        return runCatching {
-            val response = httpClient.post("$rpcEndpoint/cosmos/tx/v1beta1/txs/$txHash")
-            response.body<CosmosTxStatusJson>()
-        }.getOrNull()
+            val response = httpClient.get("$rpcEndpoint/cosmos/tx/v1beta1/txs/$txHash")
+            return response.bodyOrThrow<CosmosTxStatusJson>()
     }
 }

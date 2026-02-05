@@ -6,7 +6,9 @@ import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class CosmosTxStatusJson(
+    @SerialName("tx_response")
     val txResponse: TxResponse? = null,
+    @SerialName("tx")
     val tx: JsonObject? = null
 )
 
