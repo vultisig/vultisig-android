@@ -115,7 +115,7 @@ internal data class SwapFormUiModel(
     val fee: String = "",
     val error: UiText? = null,
     val formError: UiText? = null,
-    val isSwapDisabled: Boolean = false,
+    val isSwapDisabled: Boolean = true,
     val isLoading: Boolean = false,
     val isLoadingNextScreen: Boolean = false,
     val enableMaxAmount: Boolean = false,
@@ -1253,6 +1253,8 @@ internal class SwapFormViewModel @Inject constructor(
                                 }
                             }
                         }
+
+                        validateBalanceForSwap(src, srcTokenValue)
                     } catch (e: SwapException) {
                         this@SwapFormViewModel.quote = null
                         val formError = when (e) {
@@ -1375,6 +1377,60 @@ internal class SwapFormViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 delay(expiredAt - Clock.System.now())
                 refreshQuoteState.value++
+            }
+        }
+    }
+
+    private fun validateBalanceForSwap(
+        src: SendSrc,
+        srcAmountValue: BigInteger,
+    ) {
+        val srcToken = src.account.token
+        val selectedSrcBalance = src.account.tokenValue?.value ?: return
+
+        if (srcToken.isNativeToken) {
+            val totalRequired = srcAmountValue +
+                    (estimatedNetworkFeeTokenValue.value?.value ?: BigInteger.ZERO)
+            if (totalRequired > selectedSrcBalance) {
+                uiState.update {
+                    it.copy(
+                        isSwapDisabled = true,
+                        formError = UiText.FormattedText(
+                            R.string.swap_error_insufficient_balance_and_fees,
+                            listOf(srcToken.ticker)
+                        )
+                    )
+                }
+            }
+        } else {
+            if (srcAmountValue > selectedSrcBalance) {
+                uiState.update {
+                    it.copy(
+                        isSwapDisabled = true,
+                        formError = UiText.FormattedText(
+                            R.string.swap_error_insufficient_source_token,
+                            listOf(srcToken.ticker)
+                        )
+                    )
+                }
+            } else {
+                val nativeTokenAccount =
+                    src.address.accounts.find { it.token.isNativeToken }
+                val nativeTokenValue =
+                    nativeTokenAccount?.tokenValue?.value ?: return
+                if (nativeTokenValue < (estimatedNetworkFeeTokenValue.value?.value
+                        ?: BigInteger.ZERO)
+                ) {
+                    uiState.update {
+                        it.copy(
+                            isSwapDisabled = true,
+                            formError = UiText.FormattedText(
+                                R.string.swap_error_insufficient_gas_fees,
+                                listOf("${nativeTokenAccount.token.ticker} (${nativeTokenAccount.token.chain.raw})")
+                            )
+                        )
+                    }
+                }
             }
         }
     }
