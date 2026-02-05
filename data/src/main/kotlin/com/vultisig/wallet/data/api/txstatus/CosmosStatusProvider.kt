@@ -16,8 +16,8 @@ class CosmosStatusProvider @Inject constructor(
             val txResponse = cosmosApiFactory.createCosmosApi(chain).getTxStatus(txHash)
                 ?: return TransactionResult.NotFound
 
-            return if (txResponse.txResponse?.height?.toIntOrNull() != null &&
-                txResponse.txResponse.height.toInt() > 0
+            return if (txResponse.txResponse?.height?.toLongOrNull() != null &&
+                txResponse.txResponse.height.toLong() > 0
             ) {
                 if (txResponse.txResponse.code == 0) {
                     TransactionResult.Confirmed

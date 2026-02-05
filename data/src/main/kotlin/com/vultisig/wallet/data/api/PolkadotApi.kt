@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.api
 
-import RippleBroadcastSuccessResponseJson
 import com.vultisig.wallet.data.api.models.PolkadotResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotBroadcastTransactionJson
@@ -15,14 +14,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.add
-import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -37,7 +30,7 @@ interface PolkadotApi {
     suspend fun getBlockHeader(): BigInteger
     suspend fun broadcastTransaction(tx: String): String?
     suspend fun getPartialFee(tx: String): BigInteger
-    suspend fun getTsStatus(txHash: String): PolkadotExtrinsicResponseJson?
+    suspend fun getTxStatus(txHash: String): PolkadotExtrinsicResponseJson?
 
 }
 
@@ -180,7 +173,7 @@ internal class PolkadotApiImp @Inject constructor(
             ?: throw Exception("Can't obtained Partial Fee")
     }
 
-    override suspend fun getTsStatus(txHash: String): PolkadotExtrinsicResponseJson? {
+    override suspend fun getTxStatus(txHash: String): PolkadotExtrinsicResponseJson? {
 
         val response = httpClient.post(POLKADOT_EXTRINSIC_API_URL) {
             setBody(mapOf("hash" to txHash))
@@ -190,9 +183,9 @@ internal class PolkadotApiImp @Inject constructor(
 
     private companion object {
         private const val POLKADOT_API_URL = "https://api.vultisig.com/dot/"
-        val POLKADOT_BALANCE_API_URL =
+        private const val POLKADOT_BALANCE_API_URL =
             "https://assethub-polkadot.api.subscan.io/api/v2/scan/search"
-        val POLKADOT_EXTRINSIC_API_URL =
+        private const  val POLKADOT_EXTRINSIC_API_URL =
             "https://assethub-polkadot.api.subscan.io/api/scan/extrinsic"
     }
 }
