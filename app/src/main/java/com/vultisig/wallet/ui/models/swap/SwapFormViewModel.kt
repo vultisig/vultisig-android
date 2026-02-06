@@ -61,7 +61,6 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
-import com.vultisig.wallet.ui.models.swap.SwapFormViewModel.QuoteCache.Companion.MAX_SIZE
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -848,7 +847,12 @@ internal class SwapFormViewModel @Inject constructor(
 
         resetQuoteState()
 
-        // Swap token selections
+        // Swap token selections (both resolved values and backing IDs,
+        // so collectSelectedTokens() doesn't overwrite on next addresses emission)
+        val bufId = selectedSrcId.value
+        selectedSrcId.value = selectedDstId.value
+        selectedDstId.value = bufId
+
         val buffer = selectedSrc.value
         selectedSrc.value = selectedDst.value
         selectedDst.value = buffer
