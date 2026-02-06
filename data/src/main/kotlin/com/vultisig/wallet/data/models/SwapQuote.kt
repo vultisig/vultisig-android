@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.models
 
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import kotlinx.datetime.Instant
