@@ -61,6 +61,7 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
+import com.vultisig.wallet.ui.models.swap.SwapFormViewModel.QuoteCache.Companion.MAX_SIZE
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -205,12 +206,13 @@ internal class SwapFormViewModel @Inject constructor(
             val srcTokenId: String,
             val dstTokenId: String,
             val srcAmount: BigInteger,
+            val provider: SwapProvider,
         )
 
         private val entries = linkedMapOf<Key, SwapQuote>()
 
-        fun get(srcTokenId: String, dstTokenId: String, srcAmount: BigInteger): SwapQuote? {
-            val key = Key(srcTokenId, dstTokenId, srcAmount)
+        fun get(srcTokenId: String, dstTokenId: String, srcAmount: BigInteger, provider: SwapProvider): SwapQuote? {
+            val key = Key(srcTokenId, dstTokenId, srcAmount, provider)
             val quote = entries[key] ?: return null
             return if (Clock.System.now() < quote.expiredAt) {
                 quote
@@ -220,8 +222,14 @@ internal class SwapFormViewModel @Inject constructor(
             }
         }
 
-        fun put(srcTokenId: String, dstTokenId: String, srcAmount: BigInteger, quote: SwapQuote) {
-            entries[Key(srcTokenId, dstTokenId, srcAmount)] = quote
+        fun put(
+            srcTokenId: String,
+            dstTokenId: String,
+            srcAmount: BigInteger,
+            provider: SwapProvider,
+            quote: SwapQuote
+        ) {
+            entries[Key(srcTokenId, dstTokenId, srcAmount, provider)] = quote
             evict()
         }
 
@@ -879,13 +887,14 @@ internal class SwapFormViewModel @Inject constructor(
      */
     private fun cacheCurrentQuote() {
         val currentQuote = quote ?: return
+        val currentProvider = provider ?: return
         val srcToken = selectedSrc.value?.account?.token ?: return
         val dstToken = selectedDst.value?.account?.token ?: return
         val currentAmount = srcAmount
             ?.movePointRight(srcToken.decimal)
             ?.toBigInteger() ?: return
 
-        quoteCache.put(srcToken.id, dstToken.id, currentAmount, currentQuote)
+        quoteCache.put(srcToken.id, dstToken.id, currentAmount, currentProvider, currentQuote)
     }
 
     /** Clears the active quote and resets destination-related UI fields for a fresh calculation. */
@@ -1089,12 +1098,13 @@ internal class SwapFormViewModel @Inject constructor(
         srcTokenId: String,
         dstTokenId: String,
         srcAmount: BigInteger,
+        provider: SwapProvider,
         fetch: suspend () -> SwapQuote,
     ): SwapQuote {
-        quoteCache.get(srcTokenId, dstTokenId, srcAmount)?.let { return it }
+        quoteCache.get(srcTokenId, dstTokenId, srcAmount, provider)?.let { return it }
 
         return fetch().also { fresh ->
-            quoteCache.put(srcTokenId, dstTokenId, srcAmount, fresh)
+            quoteCache.put(srcTokenId, dstTokenId, srcAmount, provider, fresh)
         }
     }
 
@@ -1159,7 +1169,12 @@ internal class SwapFormViewModel @Inject constructor(
                                     srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
                                 val (quote, recommendedMinAmountToken) = if (provider == SwapProvider.MAYA) {
-                                    val mayaSwapQuote = getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue) {
+                                    val mayaSwapQuote = getCachedQuoteOrFetch(
+                                        srcToken.id,
+                                        dstToken.id,
+                                        srcTokenValue,
+                                        SwapProvider.MAYA
+                                    ) {
                                         swapQuoteRepository.getMayaSwapQuote(
                                             dstAddress = dst.address.address,
                                             srcToken = srcToken,
@@ -1180,7 +1195,12 @@ internal class SwapFormViewModel @Inject constructor(
                                         checkReferralBpsDiscount(tierType, srcToken, tokenValue, code)
                                     }
 
-                                    val thorSwapQuote = getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue) {
+                                    val thorSwapQuote = getCachedQuoteOrFetch(
+                                        srcToken.id,
+                                        dstToken.id,
+                                        srcTokenValue,
+                                        SwapProvider.THORCHAIN
+                                    ) {
                                         swapQuoteRepository.getSwapQuote(
                                             dstAddress = dst.address.address,
                                             srcToken = srcToken,
@@ -1242,29 +1262,30 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
                                 val isAffiliate =
                                     srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
-                                val swapQuote = getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue) {
-                                    val apiQuote = swapQuoteRepository.getKyberSwapQuote(
-                                        srcToken = srcToken,
-                                        dstToken = dstToken,
-                                        tokenValue = tokenValue,
-                                        isAffiliate = isAffiliate,
-                                    )
-                                    val expectedDstValue = TokenValue(
-                                        value = apiQuote.dstAmount.toBigInteger(),
-                                        token = dstToken,
-                                    )
-                                    val tokenFees =
-                                        TokenValue(value = apiQuote.tx.gasPrice.toBigInteger() * (apiQuote.tx.gas.takeIf { it != 0L }
-                                            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
-                                            token = srcNativeToken)
-                                    SwapQuote.OneInch(
-                                        expectedDstValue = expectedDstValue,
-                                        fees = tokenFees,
-                                        data = apiQuote,
-                                        expiredAt = Clock.System.now() + expiredAfter,
-                                        provider = provider.getSwapProviderId(),
-                                    )
-                                }
+                                val swapQuote =
+                                    getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.KYBER) {
+                                        val apiQuote = swapQuoteRepository.getKyberSwapQuote(
+                                            srcToken = srcToken,
+                                            dstToken = dstToken,
+                                            tokenValue = tokenValue,
+                                            isAffiliate = isAffiliate,
+                                        )
+                                        val expectedDstValue = TokenValue(
+                                            value = apiQuote.dstAmount.toBigInteger(),
+                                            token = dstToken,
+                                        )
+                                        val tokenFees =
+                                            TokenValue(value = apiQuote.tx.gasPrice.toBigInteger() * (apiQuote.tx.gas.takeIf { it != 0L }
+                                                ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
+                                                token = srcNativeToken)
+                                        SwapQuote.OneInch(
+                                            expectedDstValue = expectedDstValue,
+                                            fees = tokenFees,
+                                            data = apiQuote,
+                                            expiredAt = Clock.System.now() + expiredAfter,
+                                            provider = provider.getSwapProviderId(),
+                                        )
+                                    }
                                 this@SwapFormViewModel.quote = swapQuote
 
                                 val fiatFees =
@@ -1303,7 +1324,12 @@ internal class SwapFormViewModel @Inject constructor(
                                 val isAffiliate =
                                     srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
-                                val swapQuote = getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue) {
+                                val swapQuote = getCachedQuoteOrFetch(
+                                    srcToken.id,
+                                    dstToken.id,
+                                    srcTokenValue,
+                                    SwapProvider.ONEINCH
+                                ) {
                                     val apiQuote = swapQuoteRepository.getOneInchSwapQuote(
                                         srcToken = srcToken,
                                         dstToken = dstToken,
@@ -1359,61 +1385,62 @@ internal class SwapFormViewModel @Inject constructor(
                             }
 
                             SwapProvider.LIFI, SwapProvider.JUPITER -> {
-                                val swapQuote = getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue) {
-                                    val apiQuote =
-                                        if (provider == SwapProvider.LIFI) swapQuoteRepository.getLiFiSwapQuote(
-                                            srcAddress = src.address.address,
-                                            dstAddress = dst.address.address,
-                                            srcToken = srcToken,
-                                            dstToken = dstToken,
-                                            tokenValue = tokenValue,
-                                            bpsDiscount = vultBPSDiscount ?: 0,
-                                        ) else swapQuoteRepository.getJupiterSwapQuote(
-                                            srcAddress = src.address.address,
-                                            srcToken = srcToken,
-                                            dstToken = dstToken,
-                                            tokenValue = tokenValue
+                                val swapQuote =
+                                    getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, provider) {
+                                        val apiQuote =
+                                            if (provider == SwapProvider.LIFI) swapQuoteRepository.getLiFiSwapQuote(
+                                                srcAddress = src.address.address,
+                                                dstAddress = dst.address.address,
+                                                srcToken = srcToken,
+                                                dstToken = dstToken,
+                                                tokenValue = tokenValue,
+                                                bpsDiscount = vultBPSDiscount ?: 0,
+                                            ) else swapQuoteRepository.getJupiterSwapQuote(
+                                                srcAddress = src.address.address,
+                                                srcToken = srcToken,
+                                                dstToken = dstToken,
+                                                tokenValue = tokenValue
+                                            )
+
+                                        val expectedDstValue = TokenValue(
+                                            value = apiQuote.dstAmount.toBigInteger(),
+                                            token = dstToken,
                                         )
 
-                                    val expectedDstValue = TokenValue(
-                                        value = apiQuote.dstAmount.toBigInteger(),
-                                        token = dstToken,
-                                    )
-
-                                    val (feeAmount, feeCoin) = try {
-                                        if (apiQuote.tx.swapFeeTokenContract.isNotEmpty()) {
-                                            val tokenContract = apiQuote.tx.swapFeeTokenContract
-                                            val chainId = srcNativeToken.chain.id
-                                            val amount = apiQuote.tx.swapFee.toBigInteger()
-                                            val coinAndFiatValue = searchToken(chainId, tokenContract)
-                                                ?: error("Can't find token or price")
-                                            val newNativeAmount =
-                                                convertTokenToTokenUseCase.convertTokenToToken(
-                                                    amount,
-                                                    coinAndFiatValue,
-                                                    srcNativeToken
-                                                )
-                                            Pair(newNativeAmount, srcNativeToken)
-                                        } else {
-                                            Pair(apiQuote.tx.swapFee.toBigInteger(), srcNativeToken)
+                                        val (feeAmount, feeCoin) = try {
+                                            if (apiQuote.tx.swapFeeTokenContract.isNotEmpty()) {
+                                                val tokenContract = apiQuote.tx.swapFeeTokenContract
+                                                val chainId = srcNativeToken.chain.id
+                                                val amount = apiQuote.tx.swapFee.toBigInteger()
+                                                val coinAndFiatValue = searchToken(chainId, tokenContract)
+                                                    ?: error("Can't find token or price")
+                                                val newNativeAmount =
+                                                    convertTokenToTokenUseCase.convertTokenToToken(
+                                                        amount,
+                                                        coinAndFiatValue,
+                                                        srcNativeToken
+                                                    )
+                                                Pair(newNativeAmount, srcNativeToken)
+                                            } else {
+                                                Pair(apiQuote.tx.swapFee.toBigInteger(), srcNativeToken)
+                                            }
+                                        } catch (t: Throwable) {
+                                            Timber.e(t)
+                                            Pair(BigInteger.ZERO, srcNativeToken)
                                         }
-                                    } catch (t: Throwable) {
-                                        Timber.e(t)
-                                        Pair(BigInteger.ZERO, srcNativeToken)
-                                    }
 
-                                    val updatedTx = apiQuote.tx.copy(swapFee = feeAmount.toString())
-                                    val tokenFees = TokenValue(
-                                        value = feeAmount, token = feeCoin
-                                    )
-                                    SwapQuote.OneInch(
-                                        expectedDstValue = expectedDstValue,
-                                        fees = tokenFees,
-                                        data = apiQuote.copy(tx = updatedTx),
-                                        expiredAt = Clock.System.now() + expiredAfter,
-                                        provider = provider.getSwapProviderId(),
-                                    )
-                                }
+                                        val updatedTx = apiQuote.tx.copy(swapFee = feeAmount.toString())
+                                        val tokenFees = TokenValue(
+                                            value = feeAmount, token = feeCoin
+                                        )
+                                        SwapQuote.OneInch(
+                                            expectedDstValue = expectedDstValue,
+                                            fees = tokenFees,
+                                            data = apiQuote.copy(tx = updatedTx),
+                                            expiredAt = Clock.System.now() + expiredAfter,
+                                            provider = provider.getSwapProviderId(),
+                                        )
+                                    }
 
                                 this@SwapFormViewModel.quote = swapQuote
 
