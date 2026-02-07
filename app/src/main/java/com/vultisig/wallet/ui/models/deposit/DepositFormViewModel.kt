@@ -542,31 +542,10 @@ internal class DepositFormViewModel @Inject constructor(
 
                 DepositOption.WithdrawSecuredAsset -> {
                     viewModelScope.launch {
-                        val address = this@DepositFormViewModel.address.value ?: return@launch
-                        thorAddressFieldState.setTextAndPlaceCursorAtEnd(address.address)
-                        val availableSecuredAssets = address.accounts.filter { account ->
-                            account.token.isSecuredAsset()
-                        }.map {
-                            TokenWithdrawSecureAsset(
-                                ticker = it.token.ticker,
-                                contract = it.token.contractAddress,
-                                coin = it.token,
-                                tokenValue = it.tokenValue
-                            )
-                        }
-                        if (availableSecuredAssets.isNotEmpty()) {
-                            val selectedSecuredAsset = availableSecuredAssets.first()
-                            val balance = selectedSecuredAsset.tokenValue?.let(
-                                mapTokenValueToStringWithUnit
-                            )
-                            state.update {
-                                it.copy(
-                                    availableSecuredAssets = availableSecuredAssets,
-                                    selectedSecuredAsset = selectedSecuredAsset,
-                                    balance = balance?.asUiText() ?: UiText.Empty,
-                                )
+                        this@DepositFormViewModel.address
+                            .filterNotNull().collect { address ->
+                                handleWithdrawSecuredAsset(address)
                             }
-                        }
                     }
                 }
 
@@ -579,6 +558,33 @@ internal class DepositFormViewModel @Inject constructor(
             }
         }
 
+    }
+
+    private fun handleWithdrawSecuredAsset(address: Address) {
+        thorAddressFieldState.setTextAndPlaceCursorAtEnd(address.address)
+        val availableSecuredAssets = address.accounts.filter { account ->
+            account.token.isSecuredAsset()
+        }.map {
+            TokenWithdrawSecureAsset(
+                ticker = it.token.ticker,
+                contract = it.token.contractAddress,
+                coin = it.token,
+                tokenValue = it.tokenValue
+            )
+        }
+        if (availableSecuredAssets.isNotEmpty()) {
+            val selectedSecuredAsset = availableSecuredAssets.first()
+            val balance = selectedSecuredAsset.tokenValue?.let(
+                mapTokenValueToStringWithUnit
+            )
+            state.update {
+                it.copy(
+                    availableSecuredAssets = availableSecuredAssets,
+                    selectedSecuredAsset = selectedSecuredAsset,
+                    balance = balance?.asUiText() ?: UiText.Empty,
+                )
+            }
+        }
     }
 
     private fun collectSecuredAssetAddresses() {
