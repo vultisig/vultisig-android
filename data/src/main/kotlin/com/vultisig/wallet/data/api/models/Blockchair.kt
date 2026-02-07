@@ -60,17 +60,17 @@ data class TransactionHashJson(
 )
 
 
-
 @Serializable
 data class TransactionHashRequestBodyJson(
     @SerialName("data")
     val data: String
 )
 
-
 @Serializable
 data class BlockChairDashboardResponse(
-    val data: Map<String, TransactionData>,
+    @SerialName("data")
+    val data: Map<String, TransactionData>?,
+    @SerialName("context")
     val context: ContextData
 )
 
@@ -87,5 +87,6 @@ data class TransactionInfo(
 
 @Serializable
 data class ContextData(
+    @SerialName("state")
     val state: Int,
 )

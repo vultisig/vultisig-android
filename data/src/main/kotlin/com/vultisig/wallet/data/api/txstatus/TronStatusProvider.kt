@@ -13,7 +13,10 @@ class TronStatusProvider @Inject constructor(
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
-            val tx = tronApi.getTsStatus(chain, txHash)
+            val tx = tronApi.getTsStatus(
+                chain,
+                txHash
+            )
 
             if (tx?.txId == null) {
                 return TransactionResult.Pending
@@ -22,7 +25,11 @@ class TronStatusProvider @Inject constructor(
             val contractRet = tx.ret?.firstOrNull()?.contractRet
                 ?: return TransactionResult.Confirmed
 
-            if (contractRet.equals("SUCCESS", ignoreCase = true)) {
+            if (contractRet.equals(
+                    "SUCCESS",
+                    ignoreCase = true
+                )
+            ) {
                 TransactionResult.Confirmed
             } else {
                 TransactionResult.Failed(contractRet)
@@ -30,8 +37,8 @@ class TronStatusProvider @Inject constructor(
 
         } catch (_: ClientRequestException) {
             TransactionResult.Pending
-        } catch (_: Exception) {
-            TransactionResult.NotFound
+        } catch (e: Exception) {
+            TransactionResult.Failed(e.message.toString())
         }
     }
 }
