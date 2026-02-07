@@ -115,6 +115,8 @@ private fun CreateFolderScreen(
     tryCheck: (Boolean, String) -> Boolean,
     onDeleteFolderClick: () -> Unit,
 ) {
+    val buttonHeight = 64.dp
+    val buttonBottomPadding = 16.dp
 
     Box {
         Column(
@@ -122,6 +124,7 @@ private fun CreateFolderScreen(
                 .padding(
                     horizontal = 16.dp
                 )
+                .padding(bottom = buttonHeight + buttonBottomPadding)
         ) {
 
             UiSpacer(
