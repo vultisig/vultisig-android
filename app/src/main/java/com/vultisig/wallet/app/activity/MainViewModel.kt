@@ -1,6 +1,5 @@
 package com.vultisig.wallet.app.activity
 
-import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -18,16 +17,14 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.utils.NetworkUtils.observeConnectivityAsFlow
+import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -47,7 +44,7 @@ internal class MainViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val appUpdateManager: AppUpdateManager,
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
-    @param:ApplicationContext private val context: Context,
+    networkUtils: NetworkUtils,
 ) : ViewModel() {
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
@@ -92,7 +89,7 @@ internal class MainViewModel @Inject constructor(
             initializeThorChainNetworkId()
         }
 
-        context
+        networkUtils
             .observeConnectivityAsFlow()
             .map { !it } // offline = not online
             .distinctUntilChanged()

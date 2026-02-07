@@ -5,18 +5,37 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import com.vultisig.wallet.data.networkutils.NetworkState
+import com.vultisig.wallet.data.networkutils.NetworkStateManager
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
+import javax.inject.Inject
 
-object NetworkUtils {
 
-    fun isNetworkAvailable(context: Context): Boolean {
+class NetworkUtils @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+    private val networkStateManager: NetworkStateManager
+) {
+
+    fun observeConnectivityAsFlow(): Flow<Boolean> =
+        combine(
+            context.observeConnectivityAsFlow(),
+            networkStateManager.networkState,
+        ) { isConnected, requestState ->
+            isConnected || !(
+                    requestState is NetworkState.Error &&
+                            requestState.error is java.net.UnknownHostException)
+        }
+
+    fun isNetworkAvailable(): Boolean {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
