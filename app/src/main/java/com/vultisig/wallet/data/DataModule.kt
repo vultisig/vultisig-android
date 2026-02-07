@@ -5,6 +5,7 @@ package com.vultisig.wallet.data
 import android.content.Context
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.vultisig.wallet.BuildConfig
+import com.vultisig.wallet.data.networkutils.Ipv4FirstDns
 import com.vultisig.wallet.data.networkutils.NetworkStateInterceptor
 import com.vultisig.wallet.data.networkutils.NetworkStateManager
 import com.vultisig.wallet.data.repositories.PrettyJson
@@ -100,6 +101,7 @@ internal interface DataModule {
                         retryOnConnectionFailure = true
                     )
                     addInterceptor(networkStateInterceptor)
+                    dns(Ipv4FirstDns())
                 }
             }
         }
