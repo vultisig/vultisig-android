@@ -520,7 +520,7 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson {
         val url =
-            "https://api-thorchain.rorcual.xyz/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
+            "https://thorchain.ibs.team/api/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
         return httpClient.get(url) {
             header(xClientID, xClientIDValue)
         }.bodyOrThrow<VaultRedemptionResponseJson>()
