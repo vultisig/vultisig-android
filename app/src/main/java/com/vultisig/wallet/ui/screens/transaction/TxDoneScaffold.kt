@@ -91,12 +91,14 @@ internal fun TxDoneScaffold(
         content = {
             when (transactionStatus) {
                 TransactionStatus.Broadcasted,
-                TransactionStatus.Confirmed -> {
+                TransactionStatus.Confirmed,
+                TransactionStatus.Pending -> {
                     SuccessTransaction(
                         modifier = Modifier.padding(it),
                         tokenContent = tokenContent,
                         transactionHash = transactionHash,
                         transactionLink = transactionLink,
+                        transactionStatus = transactionStatus,
                         coroutineScope = coroutineScope,
                         snackbarHostState = snackbarHostState,
                         context = context,
@@ -110,12 +112,6 @@ internal fun TxDoneScaffold(
                         errorState = ErrorState.CRITICAL,
                         description = transactionStatus.cause.asString(),
                         onButtonClick = onBack
-                    )
-                }
-
-                TransactionStatus.Pending -> {
-                    TransactionPending(
-                        modifier = Modifier.padding(it),
                     )
                 }
             }
@@ -132,6 +128,7 @@ private fun SuccessTransaction(
     tokenContent: @Composable (() -> Unit),
     transactionHash: String,
     transactionLink: String,
+    transactionStatus: TransactionStatus,
     coroutineScope: CoroutineScope,
     snackbarHostState: SnackbarHostState,
     context: Context,
@@ -151,17 +148,25 @@ private fun SuccessTransaction(
             ),
     ) {
         AnimatedVisibility(isTransactionDetailVisible.not()) {
+            val isTransactionPending = transactionStatus == TransactionStatus.Pending
             Box {
-                Image(
-                    painter = painterResource(R.drawable.img_tx_overview_bg),
-                    contentDescription = null,
-                    alignment = Alignment.Center,
-                    modifier = Modifier
-                        .padding(horizontal = 48.dp)
-                        .fillMaxWidth(),
-                )
+                if (isTransactionPending){
+                    TransactionPending()
+                } else {
+                    Image(
+                        painter = painterResource(R.drawable.img_tx_overview_bg),
+                        contentDescription = null,
+                        alignment = Alignment.Center,
+                        modifier = Modifier
+                            .padding(horizontal = 48.dp)
+                            .fillMaxWidth(),
+                    )
+                }
                 Text(
-                    text = stringResource(R.string.tx_transaction_successful_screen_title),
+                    text = stringResource(
+                        if (isTransactionPending) R.string.transaction_status_pending else
+                            R.string.tx_transaction_successful_screen_title
+                    ),
                     textAlign = TextAlign.Center,
                     style = Theme.brockmann.body.l.medium
                         .copy(
@@ -252,8 +257,7 @@ private fun TransactionPending(modifier: Modifier = Modifier) {
     RiveAnimation(
         animation = R.raw.riv_transaction_pending,
         modifier = modifier
-            .fillMaxSize()
-            .wrapContentSize()
+            .fillMaxWidth()
     )
 }
 
@@ -276,6 +280,7 @@ private fun SuccessTransactionPreview() {
             transactionLink = "tx link",
             coroutineScope = rememberCoroutineScope(),
             snackbarHostState = remember { SnackbarHostState() },
+            transactionStatus = TransactionStatus.Pending,
             context = LocalContext.current,
             detailContent = {
                 Column {
