@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.models.CustomTokenResponse
 import com.vultisig.wallet.data.api.models.EvmBaseFeeJson
 import com.vultisig.wallet.data.api.models.EvmFeeHistoryResponseJson
 import com.vultisig.wallet.data.api.models.EvmRpcResponseJson
+import com.vultisig.wallet.data.api.models.EvmTxStatusJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.RpcResponse
 import com.vultisig.wallet.data.api.models.RpcResponseJson
@@ -63,6 +64,8 @@ interface EvmApi {
     ): VultisigBalanceJson
 
     suspend fun getERC20Balance(address: String, contractAddress: String): BigInteger
+
+    suspend fun getTxStatus(txHash: String): EvmRpcResponseJson<EvmTxStatusJson>?
 }
 
 interface EvmApiFactory {
@@ -568,6 +571,22 @@ class EvmApiImp(
         )
         val data = rpcResp.result?.stripHexPrefix()?.let { Numeric.hexStringToByteArray(it) }
         return Numeric.toHexString(data?.copyOfRange(data.size - 20, data.size))
+    }
+
+    override suspend fun getTxStatus(txHash: String): EvmRpcResponseJson<EvmTxStatusJson>? {
+        val rpcResp = try {
+            fetch<EvmRpcResponseJson<EvmTxStatusJson>>(
+                method = "eth_getTransactionReceipt",
+                params =
+                    buildJsonArray {
+                        add(txHash)
+                    }
+            )
+        }
+        catch (_: Exception){
+            null
+        }
+        return rpcResp
     }
 
     companion object {

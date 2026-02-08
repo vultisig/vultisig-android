@@ -91,3 +91,13 @@ data class SolanaFeeForMessageResult(
     @Contextual
     val value: BigInteger? = null,
 )
+
+@Serializable
+data class SolanaSignatureStatusesResult(
+    val value: List<SolanaSignatureStatus?> = emptyList(),
+)
+
+@Serializable
+data class SolanaSignatureStatus(
+    val confirmationStatus: String? = null,
+)

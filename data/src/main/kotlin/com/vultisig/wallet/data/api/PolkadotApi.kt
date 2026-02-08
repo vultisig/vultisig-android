@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api
 import com.vultisig.wallet.data.api.models.PolkadotResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotBroadcastTransactionJson
+import com.vultisig.wallet.data.api.models.cosmos.PolkadotExtrinsicResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHashJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHeaderJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetNonceJson
@@ -29,21 +30,20 @@ interface PolkadotApi {
     suspend fun getBlockHeader(): BigInteger
     suspend fun broadcastTransaction(tx: String): String?
     suspend fun getPartialFee(tx: String): BigInteger
+    suspend fun getTxStatus(txHash: String): PolkadotExtrinsicResponseJson?
+
 }
 
 internal class PolkadotApiImp @Inject constructor(
     private val httpClient: HttpClient
 ) : PolkadotApi {
-    private val polkadotApiUrl = "https://api.vultisig.com/dot/"
-    private val polkadotBalanceApiUrl = "https://assethub-polkadot.api.subscan.io/api/v2/scan/search"
-
     override suspend fun getBalance(address: String): BigInteger {
         try {
             val bodyMap = mapOf(
                 "key" to address
             )
             val response = httpClient
-                .post(polkadotBalanceApiUrl) {
+                .post(POLKADOT_BALANCE_API_URL) {
                     setBody(bodyMap)
                 }
             val rpcResp = response.body<PolkadotResponseJson>()
@@ -68,7 +68,7 @@ internal class PolkadotApiImp @Inject constructor(
             },
             id = 1,
         )
-        val response = httpClient.post(polkadotApiUrl) {
+        val response = httpClient.post(POLKADOT_API_URL) {
             setBody(payload)
         }
         return response.body<PolkadotGetNonceJson>().result
@@ -83,7 +83,7 @@ internal class PolkadotApiImp @Inject constructor(
             },
             id = 1,
         )
-        val response = httpClient.post(polkadotApiUrl) {
+        val response = httpClient.post(POLKADOT_API_URL) {
             setBody(payload)
         }
         return response.body<PolkadotGetBlockHashJson>().result
@@ -100,13 +100,16 @@ internal class PolkadotApiImp @Inject constructor(
             params = buildJsonArray { },
             id = 1,
         )
-        val response = httpClient.post(polkadotApiUrl) {
+        val response = httpClient.post(POLKADOT_API_URL) {
             setBody(payload)
         }
         val rpcResp = response.body<PolkadotGetRunTimeVersionJson>()
         val specVersion = rpcResp.result.specVersion
         val transactionVersion = rpcResp.result.transactionVersion
-        return Pair(specVersion, transactionVersion)
+        return Pair(
+            specVersion,
+            transactionVersion
+        )
     }
 
     override suspend fun getBlockHeader(): BigInteger {
@@ -117,12 +120,15 @@ internal class PolkadotApiImp @Inject constructor(
             id = 1,
         )
 
-        val response = httpClient.post(polkadotApiUrl) {
+        val response = httpClient.post(POLKADOT_API_URL) {
             setBody(payload)
         }
         val responseContent = response.body<PolkadotGetBlockHeaderJson>()
         val number = responseContent.result.number
-        return BigInteger(number.drop(2), 16)
+        return BigInteger(
+            number.drop(2),
+            16
+        )
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
@@ -134,15 +140,15 @@ internal class PolkadotApiImp @Inject constructor(
             },
             id = 1,
         )
-        val response = httpClient.post(polkadotApiUrl) {
+        val response = httpClient.post(POLKADOT_API_URL) {
             setBody(payload)
         }
         val responseContent = response.body<PolkadotBroadcastTransactionJson>()
         if (responseContent.error != null) {
-            if (responseContent.error.code == 1012) {
+            if (responseContent.error.code == 1012 || responseContent.error.code == 1013) {
                 return null
             }
-            throw Exception("Error broadcasting transaction: $responseContent")
+            throw Exception("Error broadcasting transaction: ${responseContent.error.data ?: responseContent.error.message}")
         }
         return responseContent.result
     }
@@ -157,7 +163,7 @@ internal class PolkadotApiImp @Inject constructor(
             id = 1,
         )
 
-        val response = httpClient.post(polkadotApiUrl) {
+        val response = httpClient.post(POLKADOT_API_URL) {
             setBody(payload)
         }
 
@@ -165,5 +171,21 @@ internal class PolkadotApiImp @Inject constructor(
             ?.partialFee
             ?.toBigIntegerOrNull()
             ?: throw Exception("Can't obtained Partial Fee")
+    }
+
+    override suspend fun getTxStatus(txHash: String): PolkadotExtrinsicResponseJson? {
+
+        val response = httpClient.post(POLKADOT_EXTRINSIC_API_URL) {
+            setBody(mapOf("hash" to txHash))
+        }
+        return response.bodyOrThrow<PolkadotExtrinsicResponseJson>()
+    }
+
+    private companion object {
+        private const val POLKADOT_API_URL = "https://api.vultisig.com/dot/"
+        private const val POLKADOT_BALANCE_API_URL =
+            "https://assethub-polkadot.api.subscan.io/api/v2/scan/search"
+        private const  val POLKADOT_EXTRINSIC_API_URL =
+            "https://assethub-polkadot.api.subscan.io/api/scan/extrinsic"
     }
 }

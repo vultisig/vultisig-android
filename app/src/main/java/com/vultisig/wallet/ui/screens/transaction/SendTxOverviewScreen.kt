@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
+import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
@@ -48,6 +49,7 @@ internal fun SendTxOverviewScreen(
     showSaveToAddressBook: Boolean,
     transactionHash: String,
     transactionLink: String,
+    transactionStatus: TransactionStatus,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
     onAddToAddressBook: () -> Unit,
@@ -57,6 +59,7 @@ internal fun SendTxOverviewScreen(
     TxDoneScaffold(
         transactionHash = transactionHash,
         transactionLink = transactionLink,
+        transactionStatus = transactionStatus,
         showToolbar = showToolbar,
         onBack = onBack,
         bottomBarContent = {
@@ -319,6 +322,7 @@ private fun PreviewSendTxOverviewScreen() {
             )
         ).toUiTransactionInfo(),
         showSaveToAddressBook = true,
+        transactionStatus = TransactionStatus.Broadcasted
     )
 }
 

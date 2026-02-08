@@ -701,7 +701,7 @@ data class ThorChainTransactionJson(
     val code: Int?,
     @SerialName("codespace")
     val codeSpace: String?,
-    @SerialName("raw_log")
+    @SerialName("rawLog")
     val rawLog: String,
 )
 

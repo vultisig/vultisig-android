@@ -52,6 +52,12 @@ data class EvmBaseFeeJson(
 )
 
 @Serializable
+data class EvmTxStatusJson(
+    @SerialName("status")
+    val status: String,
+)
+
+@Serializable
 data class EvmRpcResponseJson<T>(
     @SerialName("id")
     val id: Int,
