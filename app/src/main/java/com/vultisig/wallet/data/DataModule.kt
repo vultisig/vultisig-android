@@ -5,6 +5,9 @@ package com.vultisig.wallet.data
 import android.content.Context
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.vultisig.wallet.BuildConfig
+import com.vultisig.wallet.data.networkutils.Ipv4FirstDns
+import com.vultisig.wallet.data.networkutils.NetworkStateInterceptor
+import com.vultisig.wallet.data.networkutils.NetworkStateManager
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.utils.BigDecimalSerializer
 import com.vultisig.wallet.data.utils.BigIntegerSerializer
@@ -52,6 +55,7 @@ internal interface DataModule {
         @Singleton
         fun provideHttpClient(
             json: Json,
+            networkStateInterceptor: NetworkStateInterceptor,
         ): HttpClient = HttpClient(OkHttp) {
             if (BuildConfig.DEBUG) {
                 install(Logging) {
@@ -96,9 +100,19 @@ internal interface DataModule {
                     retryOnConnectionFailure(
                         retryOnConnectionFailure = true
                     )
+                    addInterceptor(networkStateInterceptor)
+                    dns(Ipv4FirstDns())
                 }
             }
         }
+
+        @Provides
+        @Singleton
+        fun provideNetworkStateInterceptor(
+            networkStateManager: NetworkStateManager
+        ) = NetworkStateInterceptor(
+            networkStateManager = networkStateManager
+        )
 
         @Provides
         @Singleton
