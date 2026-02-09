@@ -34,7 +34,7 @@ class NetworkUtils @Inject constructor(
     }
 
 
-    fun Context.observeConnectivityAsFlow(): Flow<Boolean> = callbackFlow {
+    private fun Context.observeConnectivityAsFlow(): Flow<Boolean> = callbackFlow {
         val connectivityManager =
             getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 

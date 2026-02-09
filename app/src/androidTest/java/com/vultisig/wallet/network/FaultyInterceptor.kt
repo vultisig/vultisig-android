@@ -1,18 +1,19 @@
 package com.vultisig.wallet.network
 
+import okhttp3.Interceptor
 import okhttp3.Interceptor.Chain
 import okhttp3.Protocol
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 
-class FaultyInterceptor {
+class FaultyInterceptor : Interceptor {
     private var exceptionToThrow: Exception? = null
 
     fun setFailure(e: Exception) {
         this.exceptionToThrow = e
     }
 
-    fun intercept(chain: Chain): Response {
+    override fun intercept(chain: Chain): Response {
         // If the test set an exception, throw it immediately
         exceptionToThrow?.let { throw it }
 

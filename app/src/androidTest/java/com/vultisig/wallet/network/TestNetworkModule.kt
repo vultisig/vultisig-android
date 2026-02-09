@@ -4,7 +4,6 @@ import com.vultisig.wallet.data.di.NetworkModule
 import com.vultisig.wallet.data.networkutils.NetworkStateInterceptor
 import dagger.Module
 import dagger.Provides
-import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
 import io.ktor.client.HttpClient
@@ -44,7 +43,7 @@ object TestNetworkModule {
             headers.appendIfNameAbsent(HttpHeaders.ContentType, "application/json")
         }
         install(ContentNegotiation) {
-            json(Json, ContentType.Any)
+            json(json, ContentType.Any)
         }
 
         install(HttpRequestRetry) {
@@ -61,9 +60,7 @@ object TestNetworkModule {
                 addInterceptor(networkStateInterceptor)
 
                 // This ensures the exception happens "downstream" from the logic interceptor
-                addInterceptor { chain ->
-                    faultyInterceptor.intercept(chain)
-                }
+                addInterceptor(faultyInterceptor)
             }
         }
     }
