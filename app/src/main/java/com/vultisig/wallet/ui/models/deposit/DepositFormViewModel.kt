@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models.deposit
 
-
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -15,6 +14,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
 import com.vultisig.wallet.data.crypto.getChainName
@@ -60,6 +60,7 @@ import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.getChain
+import com.vultisig.wallet.data.utils.getCoinBy
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
@@ -70,6 +71,8 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.screens.select.AssetSelected
+
+
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
@@ -78,8 +81,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -91,13 +96,21 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
+import vultisig.keysign.v1.WasmExecuteContractPayload
 import wallet.core.jni.CoinType
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.collections.first
+import kotlin.collections.map
+import kotlin.let
 
 internal enum class DepositOption {
     AddCacaoPool,
@@ -540,12 +553,43 @@ internal class DepositFormViewModel @Inject constructor(
                     handleRemoveCacaoOption()
                 }
 
-                DepositOption.WithdrawSecuredAsset -> {
+                DepositOption.WithdrawSecuredAsset ->{
                     viewModelScope.launch {
-                        this@DepositFormViewModel.address
-                            .filterNotNull().collect { address ->
-                                handleWithdrawSecuredAsset(address)
+                        accountsRepository.loadAddress(vaultId, Chain.ThorChain)
+                            .collect { addresses ->
+                                thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
                             }
+
+                        accountsRepository.loadAddress(
+                            vaultId = vaultId,
+                            chain = Chain.ThorChain,
+                        ).catch {
+                            Timber.e(it)
+                        }.collect { address ->
+                            val availableSecuredAssets = address.accounts.filter { account ->
+                                account.token.isSecuredAsset()
+                            }.map {
+                                TokenWithdrawSecureAsset(
+                                    ticker = it.token.ticker,
+                                    contract = it.token.contractAddress,
+                                    coin = it.token,
+                                    tokenValue = it.tokenValue
+                                )
+                            }
+                            if (availableSecuredAssets.isNotEmpty()) {
+                                val selectedSecuredAsset = availableSecuredAssets.first()
+                                val balance = selectedSecuredAsset.tokenValue?.let(
+                                    mapTokenValueToStringWithUnit
+                                )
+                                state.update {
+                                    it.copy(
+                                        availableSecuredAssets = availableSecuredAssets,
+                                        selectedSecuredAsset = selectedSecuredAsset,
+                                        balance = balance?.asUiText() ?: UiText.Empty,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -558,33 +602,6 @@ internal class DepositFormViewModel @Inject constructor(
             }
         }
 
-    }
-
-    private fun handleWithdrawSecuredAsset(address: Address) {
-        thorAddressFieldState.setTextAndPlaceCursorAtEnd(address.address)
-        val availableSecuredAssets = address.accounts.filter { account ->
-            account.token.isSecuredAsset()
-        }.map {
-            TokenWithdrawSecureAsset(
-                ticker = it.token.ticker,
-                contract = it.token.contractAddress,
-                coin = it.token,
-                tokenValue = it.tokenValue
-            )
-        }
-        if (availableSecuredAssets.isNotEmpty()) {
-            val selectedSecuredAsset = availableSecuredAssets.first()
-            val balance = selectedSecuredAsset.tokenValue?.let(
-                mapTokenValueToStringWithUnit
-            )
-            state.update {
-                it.copy(
-                    availableSecuredAssets = availableSecuredAssets,
-                    selectedSecuredAsset = selectedSecuredAsset,
-                    balance = balance?.asUiText() ?: UiText.Empty,
-                )
-            }
-        }
     }
 
     private fun collectSecuredAssetAddresses() {
@@ -1145,7 +1162,7 @@ internal class DepositFormViewModel @Inject constructor(
             utxos = specific.utxos,
             thorAddress = thorAddress,
             operation = OPERATION_MINT,
-        )
+            )
     }
 
     private suspend fun createWithdrawSecuredAssetTransaction(): DepositTransaction {
@@ -1246,7 +1263,7 @@ internal class DepositFormViewModel @Inject constructor(
                 isMaxAmountEnabled = false,
                 isDeposit = true,
                 tokenAmountValue = tokenAmountInt,
-            )
+                )
 
         val estimatedGasFee = gasFeeToEstimate.invoke(fromGas)
 

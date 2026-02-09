@@ -1,45 +1,38 @@
 package com.vultisig.wallet.data.networkutils
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import io.ktor.http.HttpStatusCode
 import okhttp3.Interceptor
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Protocol
 import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import timber.log.Timber
 import javax.inject.Inject
-import javax.inject.Singleton
 
-class NetworkStateInterceptor @Inject constructor(
-    private val networkStateManager: NetworkStateManager
-) : Interceptor {
+class NetworkStateInterceptor @Inject constructor() : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val url = request.url.toString()
-        networkStateManager.updateState(NetworkState.Loading)
+
         return try {
-            val response = chain.proceed(request)
-            networkStateManager.updateState(NetworkState.Success(url, response.code))
-            response
+            chain.proceed(request)
         } catch (e: Exception) {
-            networkStateManager.updateState(NetworkState.Error(url, e))
-            Timber.e(e)
-            throw e
+            Timber.e(e, "NetworkStateInterceptor: Caught exception for $url")
+
+            // Create a Synthetic Error Response
+            // This prevents the exception from bubbling up and crashing the app.
+            // We use HTTP 503 (Service Unavailable) as a generic container.
+            val mediaType = "application/json".toMediaTypeOrNull()
+            val errorMessage = "{\"error\": \"Network failure: ${e.localizedMessage}\"}"
+            val responseBody = errorMessage.toResponseBody(mediaType)
+
+            return Response.Builder()
+                .request(request)
+                .protocol(Protocol.HTTP_1_1)
+                .code(HttpStatusCode.ServiceUnavailable.value)
+                .message("Client Side Network Error: ${e.message}")
+                .body(responseBody)
+                .build()
         }
     }
-}
-
-@Singleton
-class NetworkStateManager @Inject constructor() {
-    private val _networkState = MutableStateFlow<NetworkState>(NetworkState.Idle)
-    val networkState: StateFlow<NetworkState> = _networkState.asStateFlow()
-    fun updateState(state: NetworkState) {
-        _networkState.value = state
-    }
-}
-
-sealed class NetworkState {
-    object Idle : NetworkState()
-    object Loading : NetworkState()
-    data class Success(val url: String, val code: Int) : NetworkState()
-    data class Error(val url: String, val error: Throwable) : NetworkState()
 }
