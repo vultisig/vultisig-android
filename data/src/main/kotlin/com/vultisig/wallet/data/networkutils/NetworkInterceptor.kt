@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.networkutils
 
 import io.ktor.http.HttpStatusCode
+import kotlinx.io.IOException
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Protocol
@@ -16,7 +17,7 @@ class NetworkStateInterceptor @Inject constructor() : Interceptor {
 
         return try {
             chain.proceed(request)
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             Timber.e(e, "NetworkStateInterceptor: Caught exception for $url")
 
             // Create a Synthetic Error Response
