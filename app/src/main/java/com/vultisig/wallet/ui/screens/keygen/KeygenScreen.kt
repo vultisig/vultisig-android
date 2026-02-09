@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalRiveComposeAPI::class)
-
 package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.annotation.StringRes
@@ -38,10 +36,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import app.rive.ExperimentalRiveComposeAPI
+import app.rive.Fit
 import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
-import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.ui.components.KeepScreenOn
@@ -143,7 +140,7 @@ private fun KeygenScreen(
                         file = riveFile,
                         viewModelInstance = vmi,
                         modifier = Modifier.fillMaxSize(),
-                        fit = Fit.COVER
+                        fit = Fit.Cover()
                     )
                 } else {
                     ErrorView(
