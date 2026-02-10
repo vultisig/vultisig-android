@@ -30,7 +30,7 @@ interface TonApi {
     suspend fun getJettonWallet(address: String, contract: String): JettonWalletsJson
 
     suspend fun getEstimateFee(address: String, serializedBoc: String): BigInteger
-    suspend fun getTsStatus(txHash: String): TonStatusResponse
+    suspend fun getTsStatus(txHash: String): TransactionsResponse
 }
 
 internal class TonApiImpl @Inject constructor(
@@ -38,7 +38,7 @@ internal class TonApiImpl @Inject constructor(
 ) : TonApi {
 
     private val baseUrl: String = "https://api.vultisig.com/ton"
-    private val eventUrl = "https://tonapi.io/v2/events/"
+    private val eventUrl = "https://toncenter.com/api/v3/transactions?hash="
 
     override suspend fun getBalance(address: String): BigInteger =
         getAddressInformation(address).balance
@@ -56,9 +56,10 @@ internal class TonApiImpl @Inject constructor(
 
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun broadcastTransaction(transaction: String): String? {
-        val response = http.post("$baseUrl/v2/sendBocReturnHash") {
+        val body = http.post("$baseUrl/v2/sendBocReturnHash") {
             setBody(TonBroadcastTransactionRequestJson(transaction))
-        }.body<TonBroadcastTransactionResponseJson>()
+        }
+        val response = body.body<TonBroadcastTransactionResponseJson>()
         if (response.error != null) {
             if (response.error.contains("duplicate message")) {
                 return null
@@ -109,9 +110,9 @@ internal class TonApiImpl @Inject constructor(
 
     override suspend fun getTsStatus(
         txHash: String
-    ): TonStatusResponse {
+    ): TransactionsResponse {
         val response = http.get("${eventUrl}${txHash}")
-        return response.bodyOrThrow<TonStatusResponse>()
+        return response.bodyOrThrow<TransactionsResponse>()
     }
 }
 
@@ -232,13 +233,46 @@ data class TonFees(
     fun totalFee(): Long = inFwdFee + storageFee + gasFee + fwdFee
 }
 @Serializable
-data class TonStatusResponse(
-    @SerialName("in_progress")
-    val inProgress: Boolean?,
-    @SerialName("progress")
-    val progress: Double?,
-    @SerialName("error")
-    val error: String?,
-    @SerialName("error_code")
-    val errorCode: Int?
+data class TransactionsResponse(
+    val transactions: List<TransactionItem> = emptyList()
 )
+
+@Serializable
+data class TransactionItem(
+    val hash: String,
+    @SerialName("end_status")
+    val endStatus: String? = null,
+    @SerialName("orig_status")
+    val origStatus: String? = null,
+    val description: Description? = null
+)
+
+@Serializable
+data class Description(
+    val aborted: Boolean? = null,
+    val destroyed: Boolean? = null,
+    @SerialName("compute_ph")
+    val computePh: ComputePh? = null,
+    val action: Action? = null
+)
+
+@Serializable
+data class ComputePh(
+    val success: Boolean? = null,
+    @SerialName("exit_code")
+    val exitCode: Int? = null
+)
+
+@Serializable
+data class Action(
+    val success: Boolean? = null,
+    @SerialName("result_code")
+    val resultCode: Int? = null
+)
+
+sealed class TransactionCheckResult {
+    object NotFound : TransactionCheckResult()
+    object Success : TransactionCheckResult()
+    data class Failed(val reason: String) : TransactionCheckResult()
+    object InProgress : TransactionCheckResult()
+}

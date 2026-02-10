@@ -105,7 +105,6 @@ class TransactionStatusService : Service() {
             updateNotification(getString(R.string.transaction_status_pending), ongoing = true)
             _statusFlow.emit(TransactionResult.Pending)
 
-            delay(5.seconds)
             pollingTxStatus(chain, txHash)
                 .collect { result ->
                     _statusFlow.emit(result)
