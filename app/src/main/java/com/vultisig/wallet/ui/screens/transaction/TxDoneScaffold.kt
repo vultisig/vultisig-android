@@ -11,8 +11,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -45,7 +46,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.errors.ErrorState
-import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorWaves
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
@@ -53,7 +54,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.UiText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -89,32 +90,17 @@ internal fun TxDoneScaffold(
             }
         },
         content = {
-            when (transactionStatus) {
-                TransactionStatus.Broadcasted,
-                TransactionStatus.Confirmed,
-                TransactionStatus.Pending -> {
-                    SuccessTransaction(
-                        modifier = Modifier.padding(it),
-                        tokenContent = tokenContent,
-                        transactionHash = transactionHash,
-                        transactionLink = transactionLink,
-                        transactionStatus = transactionStatus,
-                        coroutineScope = coroutineScope,
-                        snackbarHostState = snackbarHostState,
-                        context = context,
-                        detailContent = detailContent
-                    )
-                }
-
-                is TransactionStatus.Failed -> {
-                    ErrorView(
-                        title = "Transaction failed",
-                        errorState = ErrorState.CRITICAL,
-                        description = transactionStatus.cause.asString(),
-                        onButtonClick = onBack
-                    )
-                }
-            }
+            SuccessTransaction(
+                modifier = Modifier.padding(it),
+                tokenContent = tokenContent,
+                transactionHash = transactionHash,
+                transactionLink = transactionLink,
+                transactionStatus = transactionStatus,
+                coroutineScope = coroutineScope,
+                snackbarHostState = snackbarHostState,
+                context = context,
+                detailContent = detailContent
+            )
         },
         bottomBar = {
             bottomBarContent()
@@ -149,9 +135,24 @@ private fun SuccessTransaction(
     ) {
         AnimatedVisibility(isTransactionDetailVisible.not()) {
             val isTransactionPending = transactionStatus == TransactionStatus.Pending
-            Box {
-                if (isTransactionPending){
+            val isTransactionFailed = transactionStatus is TransactionStatus.Failed
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 300.dp),
+                contentAlignment = Alignment.Center,
+
+            ) {
+                if (isTransactionPending) {
                     TransactionPending()
+                } else if (isTransactionFailed) {
+                    ErrorWaves(
+                        title = "Transaction failed",
+                        errorState = ErrorState.CRITICAL,
+                        modifier = Modifier.offset(
+                            y = (20).dp
+                        )
+                    )
                 } else {
                     Image(
                         painter = painterResource(R.drawable.img_tx_overview_bg),
@@ -162,23 +163,25 @@ private fun SuccessTransaction(
                             .fillMaxWidth(),
                     )
                 }
-                Text(
-                    text = stringResource(
-                        if (isTransactionPending) R.string.transaction_status_pending else
-                            R.string.tx_transaction_successful_screen_title
-                    ),
-                    textAlign = TextAlign.Center,
-                    style = Theme.brockmann.body.l.medium
-                        .copy(
-                            brush = Theme.v2.colors.gradients.primary,
+                if(isTransactionFailed.not()) {
+                    Text(
+                        text = stringResource(
+                            if (isTransactionPending) R.string.transaction_status_pending else
+                                R.string.tx_transaction_successful_screen_title
                         ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .padding(
-                            bottom = 48.dp,
-                        ),
-                )
+                        textAlign = TextAlign.Center,
+                        style = Theme.brockmann.body.l.medium
+                            .copy(
+                                brush = Theme.v2.colors.gradients.primary,
+                            ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .padding(
+                                bottom = 48.dp,
+                            ),
+                    )
+                }
             }
         }
 
@@ -269,18 +272,18 @@ private fun SuccessTransactionPreview() {
             modifier = Modifier.padding(it),
             tokenContent = {
                 VsOverviewToken(
-                    header = "",
+                    header = "token header",
                     valuedToken = ValuedToken.Empty,
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
                         .fillMaxWidth(),
                 )
             },
-            transactionHash = "",
+            transactionHash = "tx hash",
             transactionLink = "tx link",
             coroutineScope = rememberCoroutineScope(),
             snackbarHostState = remember { SnackbarHostState() },
-            transactionStatus = TransactionStatus.Pending,
+            transactionStatus = TransactionStatus.Failed(UiText.Empty),
             context = LocalContext.current,
             detailContent = {
                 Column {
@@ -350,13 +353,5 @@ private fun SuccessTransactionPreview() {
                 }
             }
         )
-    }
-}
-
-@Preview
-@Composable
-private fun TransactionPendingPreview() {
-    Scaffold {
-        TransactionPending(modifier = Modifier.padding(it))
     }
 }

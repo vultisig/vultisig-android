@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.core.net.toUri
@@ -12,9 +13,15 @@ import com.vultisig.wallet.ui.models.OnRampViewModel.Companion.BANXA_URL
 @SuppressLint("ComposableNaming")
 @Composable
 internal fun VsUriHandler(): UriHandler {
+    val isPreview = LocalInspectionMode.current
     val activity = LocalActivity.current
     val uriHandler = LocalUriHandler.current
-    return VsUriHandler(requireNotNull(activity), uriHandler)
+
+    return if (isPreview || activity == null) {
+        uriHandler
+    } else {
+        VsUriHandler(activity, uriHandler)
+    }
 }
 
 private class VsUriHandler(
