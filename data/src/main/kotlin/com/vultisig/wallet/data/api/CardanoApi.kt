@@ -116,6 +116,17 @@ internal class CardanoApiImpl @Inject constructor(
                         error("Failed to broadcast transaction: $errorMessage")
                     }
                 }
+
+                HttpStatusCode.BadRequest -> {
+                    val ogmiosError = response.body<OgmiosTransactionResponse>()
+                    ogmiosError.error?.data?.unknownOutputReferences?.firstOrNull()?.transaction?.id
+                        ?: run {
+                            val errorMessage = ogmiosError.error?.message ?: "Unknown error"
+                            Timber.e("Cardano transaction submission failed: $errorMessage")
+                            error("Failed to broadcast transaction: $errorMessage")
+                        }
+                }
+
                 else -> {
                     Timber.e("Failed to broadcast Cardano transaction: ${response.status}")
                     error("Failed to broadcast transaction: ${response.status}")
