@@ -145,7 +145,7 @@ private fun VaultListScreen(
                 UiSpacer(size = 16.dp)
                 Text(
                     text = stringResource(id = R.string.vault_list_vaults_list),
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                     style = Theme.brockmann.supplementary.caption,
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
@@ -352,7 +352,7 @@ internal fun VaultInfo(
             Text(
                 text = "$vaultCounts Vault${if (vaultCounts != 1) "s" else ""}",
                 style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
             )
 
             UiSpacer(
@@ -373,7 +373,7 @@ internal fun VaultInfo(
             LoadableValue(
                 value = totalBalance,
                 style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 isVisible = true
             )
         }

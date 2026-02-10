@@ -20,7 +20,7 @@ fun CopiableAddress(
     modifier: Modifier = Modifier,
     address: String,
     onAddressCopied: (String) -> Unit = {},
-    tint: Color = Theme.v2.colors.text.extraLight,
+    tint: Color = Theme.v2.colors.text.tertiary,
     maxLength: Dp = 64.dp
 ) {
     Row(

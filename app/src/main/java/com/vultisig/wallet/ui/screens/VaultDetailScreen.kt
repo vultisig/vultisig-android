@@ -201,7 +201,7 @@ fun VaultDetailGroup(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.extraLight
+            color = Theme.v2.colors.text.tertiary
         )
         content()
     }
@@ -304,7 +304,7 @@ private fun KeyItem(type: String, value: String, onCopyCompleted: (String) -> Un
             Text(
                 text = value,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight
+                color = Theme.v2.colors.text.tertiary
             )
         }
         UiSpacer(16.dp)
@@ -362,7 +362,7 @@ internal fun SettingInfoItemVertical(
         Text(
             text = key,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.light,
+            color = Theme.v2.colors.text.secondary,
         )
 
         Text(
@@ -394,7 +394,7 @@ private fun DeviceItem(
                 Text(
                     text = stringResource(R.string.peer_discovery_this_device),
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.light
+                    color = Theme.v2.colors.text.secondary
                 )
             }
         } else null

@@ -278,10 +278,10 @@ internal fun SwapScreen(
                                         VsBasicTextField(
                                             textFieldState = srcAmountTextFieldState,
                                             style = Theme.brockmann.headings.title2,
-                                            color = Theme.v2.colors.text.light,
+                                            color = Theme.v2.colors.text.secondary,
                                             textAlign = TextAlign.End,
                                             hint = "0",
-                                            hintColor = Theme.v2.colors.text.extraLight,
+                                            hintColor = Theme.v2.colors.text.tertiary,
                                             hintStyle = Theme.brockmann.headings.title2,
                                             lineLimits = TextFieldLineLimits.SingleLine,
                                             interactionSource = interactionSource,
@@ -376,7 +376,7 @@ internal fun SwapScreen(
                                     Text(
                                         text = state.estimatedDstTokenValue,
                                         style = Theme.brockmann.headings.title2,
-                                        color = Theme.v2.colors.text.light,
+                                        color = Theme.v2.colors.text.secondary,
                                         textAlign = TextAlign.End,
                                         maxLines = 1,
                                     )
@@ -415,7 +415,7 @@ internal fun SwapScreen(
                                     Row {
                                         Text(
                                             text = state.totalFee,
-                                            color = Theme.v2.colors.text.light,
+                                            color = Theme.v2.colors.text.secondary,
                                             style = Theme.brockmann.supplementary.caption,
                                             textAlign = TextAlign.End,
                                         )
@@ -509,7 +509,7 @@ internal fun SwapScreen(
 
                                             Text(
                                                 text = "-${state.vultBpsDiscountFiatValue}",
-                                                color = Theme.v2.colors.text.light,
+                                                color = Theme.v2.colors.text.secondary,
                                                 style = Theme.brockmann.supplementary.caption,
                                             )
                                         }
@@ -536,7 +536,7 @@ internal fun SwapScreen(
                                                     R.string.swap_form_referral_discount_bps,
                                                     state.referralBpsDiscount
                                                 ),
-                                                color = Theme.v2.colors.text.extraLight,
+                                                color = Theme.v2.colors.text.tertiary,
                                                 style = Theme.brockmann.supplementary.caption,
                                             )
 
@@ -546,7 +546,7 @@ internal fun SwapScreen(
 
                                             Text(
                                                 text = "-${state.referralBpsDiscountFiatValue}",
-                                                color = Theme.v2.colors.text.light,
+                                                color = Theme.v2.colors.text.secondary,
                                                 style = Theme.brockmann.supplementary.caption,
                                             )
                                         }
@@ -735,7 +735,7 @@ private fun VultDiscountTier(vultBpsDiscount: Int, tierType: TierType?) {
                 stringResource(title),
                 vultBpsDiscount,
             ),
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.supplementary.caption,
         )
     }
@@ -803,7 +803,7 @@ private fun TokenInput(
             Text(
                 text = selectedToken?.let { "${it.balance} ${it.title}" } ?: "",
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 textAlign = TextAlign.End,
             )
         }
@@ -842,7 +842,7 @@ private fun TokenInput(
                     Text(
                         text = fiatValue,
                         style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                         textAlign = TextAlign.End,
                     )
                 }
@@ -927,7 +927,7 @@ internal fun TokenChip(
                 Text(
                     text = stringResource(R.string.swap_form_native),
                     style = Theme.brockmann.supplementary.captionSmall,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
             }
         }
@@ -978,7 +978,7 @@ private fun QuoteTimer(
         Text(
             text = timeLeft,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.light,
+            color = Theme.v2.colors.text.secondary,
         )
 
         CircularProgressIndicator(

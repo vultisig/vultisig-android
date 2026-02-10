@@ -300,7 +300,7 @@ private fun ReferralExpirationItem(expiration: String = "25 May of 2027", isLoad
             .padding(all = 16.dp),
     ) {
         Text(
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.body.s.medium,
             text = stringResource(R.string.referral_view_expires_on)
         )
@@ -356,7 +356,7 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
                     }
                     append(stringResource(R.string.referral_view_on_swaps))
                 },
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption,
             )
 
@@ -404,7 +404,7 @@ private fun ReferralRewardsBanner(
 
             Text(
                 text = stringResource(R.string.referral_view_collected_rewards),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.body.s.medium,
             )
 
@@ -557,7 +557,7 @@ internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
         Text(
             style = Theme.brockmann.supplementary.caption,
             text = stringResource(R.string.referral_cta),
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center
         )
 

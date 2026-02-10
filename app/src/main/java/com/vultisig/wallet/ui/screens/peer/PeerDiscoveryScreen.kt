@@ -221,7 +221,7 @@ internal fun PeerDiscoveryScreen(
                         network = state.network,
                         onSwitchModeClick = onSwitchModeClick
                     ),
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                     style = Theme.brockmann.supplementary.caption,
                     textAlign = TextAlign.Center
                 )
@@ -585,7 +585,7 @@ private fun LocalModeHint() {
         Text(
             text = stringResource(R.string.peer_discovery_local_mode_hint),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.light,
+            color = Theme.v2.colors.text.secondary,
         )
     }
 }
@@ -686,7 +686,7 @@ private fun PeerDeviceItem(
                 Text(
                     text = caption,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.v2.colors.text.secondary,
                     maxLines = 1,
                 )
             }
@@ -761,7 +761,7 @@ internal fun ConnectingToServer(
         Text(
             text = stringResource(R.string.keygen_connecting_with_server_take_a_second),
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.light,
+            color = Theme.v2.colors.text.secondary,
             textAlign = TextAlign.Center,
         )
     }

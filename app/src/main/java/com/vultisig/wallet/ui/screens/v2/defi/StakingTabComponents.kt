@@ -105,7 +105,7 @@ internal fun StakingWidget(
                 Text(
                     text = state.stakeAssetHeader,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
 
                 UiSpacer(4.dp)
@@ -234,7 +234,7 @@ internal fun StakingWidget(
                     onClick = { onClickUnstake(state.coin.getUnstakeDeFiNavAction()) },
                     modifier = Modifier.weight(1f),
                     enabled = state.canUnstake,
-                    iconCircleColor = Theme.v2.colors.text.extraLight
+                    iconCircleColor = Theme.v2.colors.text.tertiary
 
                 )
             }
@@ -274,7 +274,7 @@ internal fun StakingHeader(
             Text(
                 text = title,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
             )
 
             UiSpacer(4.dp)

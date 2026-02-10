@@ -85,7 +85,7 @@ private fun BackupVaultScreen(
                             url = "https://docs.vultisig.com/vultisig-user-actions/managing-your-vault/vault-backup",
                             styles = TextLinkStyles(
                                 style = SpanStyle(
-                                    color = Theme.v2.colors.text.light,
+                                    color = Theme.v2.colors.text.secondary,
                                     textDecoration = TextDecoration.Underline,
                                 )
                             )
@@ -98,7 +98,7 @@ private fun BackupVaultScreen(
                 Text(
                     text = link,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                     textAlign = TextAlign.Center,
                 )
             }
