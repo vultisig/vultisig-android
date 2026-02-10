@@ -19,7 +19,7 @@
         "SolanaSpecific": {
           "recent_block_hash": "ChGn9VLAKcy878i2qC7KiLGL19gGreSnjDuNbUreURfN",
           "priority_fee": "0",
-          "has_program_id": false
+          "program_id": false
         }
       },
       "memo": "",

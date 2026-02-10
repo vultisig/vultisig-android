@@ -212,7 +212,7 @@ data class SolanaSpecific(
     val recentBlockHash: String,
     @SerialName("priority_fee")
     val priorityFee: String,
-    @SerialName("has_program_id")
+    @SerialName("program_id")
     val hasProgramId: Boolean,
     @SerialName("from_token_associated_address")
     val fromAddressPubKey: String? = null,
