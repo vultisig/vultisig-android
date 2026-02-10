@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.components.v2.searchbar
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -125,7 +123,7 @@ internal fun SearchBar(
                         if (state.text.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.search_bar_search),
-                                color = Theme.v2.colors.text.extraLight,
+                                color = Theme.v2.colors.text.tertiary,
                                 style = Theme.brockmann.supplementary.footnote,
                             )
                             UiSpacer(

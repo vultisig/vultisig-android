@@ -54,7 +54,7 @@ internal fun VsTabs(
                         color = if (tab == selectedTab) {
                             Theme.v2.colors.text.primary
                         } else {
-                            Theme.v2.colors.text.extraLight
+                            Theme.v2.colors.text.tertiary
                         },
                         style = Theme.brockmann.body.s.medium,
                     )

@@ -78,7 +78,7 @@ internal fun ReferralVaultListContentScreen(
             ) {
                 Text(
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                     text = stringResource(R.string.referral_top_bar_list_vaults),
                     textAlign = TextAlign.Start,
                 )
@@ -161,7 +161,7 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
             Text(
                 text = vault.signingInfo,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
             )
         }
 

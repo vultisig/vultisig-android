@@ -287,7 +287,7 @@ private fun AddressItem(
                 Text(
                     text = address,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.v2.colors.text.secondary,
                     maxLines = 1,
                     overflow = TextOverflow.MiddleEllipsis
                 )

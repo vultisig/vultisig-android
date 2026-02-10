@@ -175,14 +175,14 @@ fun InfoItem(icon: Int, label: String, value: String?) {
                 size = 16.dp,
                 drawableResId = icon,
                 contentDescription = null,
-                tint = Theme.v2.colors.text.extraLight,
+                tint = Theme.v2.colors.text.tertiary,
             )
 
             UiSpacer(4.dp)
 
             Text(
                 text = label,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.body.s.medium,
             )
         }
@@ -193,7 +193,7 @@ fun InfoItem(icon: Int, label: String, value: String?) {
             Text(
                 text = value,
                 style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.light,
+                color = Theme.v2.colors.text.secondary,
             )
         }
     }
@@ -410,7 +410,7 @@ internal fun PositionsSelectionDialog(
                 Text(
                     text = stringResource(R.string.enable_at_least_one_position),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
             }
         },
@@ -491,7 +491,7 @@ internal fun DeFiWarningBanner(
             Text(
                 text = text,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.light,
+                color = Theme.v2.colors.text.secondary,
             )
         }
 
@@ -552,7 +552,7 @@ internal fun HeaderDeFiWidget(
                 Text(
                     text = title,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
 
                 UiSpacer(4.dp)
@@ -575,7 +575,7 @@ internal fun HeaderDeFiWidget(
                         Text(
                             text = if (isBalanceVisible) totalPrice else HIDE_BALANCE_CHARS,
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                         )
                     }
                 }
@@ -635,7 +635,7 @@ internal fun HeaderDeFiWidget(
                 Text(
                     text = title,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
 
                 UiSpacer(4.dp)
@@ -658,7 +658,7 @@ internal fun HeaderDeFiWidget(
                         Text(
                             text = if (isBalanceVisible) totalPrice else HIDE_BALANCE_CHARS,
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                         )
                     }
                 }

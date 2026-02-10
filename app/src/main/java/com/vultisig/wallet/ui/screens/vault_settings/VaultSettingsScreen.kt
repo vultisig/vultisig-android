@@ -320,14 +320,14 @@ private fun BackupOption(
                 Text(
                     text = description,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.v2.colors.text.secondary,
                 )
             }
 
             UiIcon(
                 drawableResId = R.drawable.ic_caret_right,
                 size = 20.dp,
-                tint = Theme.v2.colors.text.light,
+                tint = Theme.v2.colors.text.secondary,
             )
         }
     }

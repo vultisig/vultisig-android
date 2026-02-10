@@ -92,7 +92,7 @@ private fun FastVaultEmailScreen(
             Text(
                 text = stringResource(R.string.enter_email_screen_desc),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight
+                color = Theme.v2.colors.text.tertiary
             )
             VsTextInputField(
                 textFieldState = textFieldState,

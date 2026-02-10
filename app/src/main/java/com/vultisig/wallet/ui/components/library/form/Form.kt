@@ -600,7 +600,7 @@ internal fun FormDetails2(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.supplementary.caption,
             textAlign = TextAlign.Start,
         )
@@ -610,7 +610,7 @@ internal fun FormDetails2(
         } else {
             Text(
                 text = value,
-                color = Theme.v2.colors.text.light,
+                color = Theme.v2.colors.text.secondary,
                 style = Theme.brockmann.supplementary.caption,
                 textAlign = TextAlign.End,
             )
@@ -631,7 +631,7 @@ internal fun FormDetails2(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.supplementary.caption,
             textAlign = TextAlign.Start,
         )
@@ -653,7 +653,7 @@ internal fun FormDetails2(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.supplementary.caption,
             textAlign = TextAlign.Start,
         )
@@ -663,7 +663,7 @@ internal fun FormDetails2(
         } else {
             Text(
                 text = value,
-                color = Theme.v2.colors.text.light,
+                color = Theme.v2.colors.text.secondary,
                 style = Theme.brockmann.supplementary.caption,
                 textAlign = TextAlign.End,
             )
