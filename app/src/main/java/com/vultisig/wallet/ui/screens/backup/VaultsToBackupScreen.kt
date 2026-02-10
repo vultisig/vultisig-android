@@ -140,7 +140,7 @@ private fun SelectVaultTypeHeader(
         Text(
             text = stringResource(R.string.backup_select_vaults_subtitle),
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
         )
 
         UiSpacer(
@@ -187,14 +187,14 @@ private fun BackupVaultContainer(
                 Row {
                     Text(
                         text = title,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                         style = Theme.brockmann.body.s.medium,
                     )
                     UiSpacer(weight = 1f)
                     UiIcon(
                         drawableResId = R.drawable.ic_small_caret_right,
                         size = 16.dp,
-                        tint = Theme.v2.colors.text.extraLight,
+                        tint = Theme.v2.colors.text.tertiary,
                     )
                 }
                 UiSpacer(size = topSpacerHeight)
@@ -291,7 +291,7 @@ private fun RemainedCountText(remainedCount: Int?) {
                 R.string.more,
                 remainedCount
             ),
-            color = Theme.v2.colors.text.light,
+            color = Theme.v2.colors.text.secondary,
             style = Theme.brockmann.supplementary.footnote,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()

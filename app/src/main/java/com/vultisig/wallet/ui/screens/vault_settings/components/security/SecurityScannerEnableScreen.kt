@@ -68,7 +68,7 @@ private fun SecurityScannerEnableScreen(
             Text(
                 text = stringResource(id = R.string.vault_settings_security_screen_title_content),
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.light
+                color = Theme.v2.colors.text.secondary
             )
 
             Row (

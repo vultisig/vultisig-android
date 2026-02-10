@@ -114,7 +114,7 @@ fun SecurityScannerBottomSheetContent(
 
         Text(
             text = contentStyle.description,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.body.s.medium,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -127,7 +127,7 @@ fun SecurityScannerBottomSheetContent(
             ) {
                 Text(
                     text = stringResource(R.string.security_scanner_powered_by),
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                     style = Theme.brockmann.body.s.medium,
                     textAlign = TextAlign.Center,
                 )

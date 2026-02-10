@@ -20,13 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.crypto.getChainName
-import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -44,14 +42,12 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.models.deposit.TokenWithdrawSecureAsset
-import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
 import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
 import com.vultisig.wallet.ui.screens.function.UnMergeFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
-import com.vultisig.wallet.ui.utils.textAsFlow
 
 @Composable
 internal fun DepositFormScreen(
@@ -485,7 +481,7 @@ internal fun DepositFormScreen(
                         Text(
                             text = stringResource(R.string.mint_secured_asset_secure),
                             style = Theme.brockmann.body.s.regular,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                         )
 
                         V2Container(
@@ -514,7 +510,7 @@ internal fun DepositFormScreen(
                                 Chain.ThorChain.raw
                             ),
                             style = Theme.brockmann.body.s.regular,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                         )
 
                         V2Container(
@@ -535,7 +531,7 @@ internal fun DepositFormScreen(
                         Text(
                             text = stringResource(R.string.generated_memo),
                             style = Theme.brockmann.body.s.regular,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                         )
 
                         V2Container(

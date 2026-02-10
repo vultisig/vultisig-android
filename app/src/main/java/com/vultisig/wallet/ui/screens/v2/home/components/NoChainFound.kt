@@ -57,7 +57,7 @@ internal fun NoChainFound(
         Text(
             text = stringResource(R.string.no_chain_make_sure_that),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center,
         )
 

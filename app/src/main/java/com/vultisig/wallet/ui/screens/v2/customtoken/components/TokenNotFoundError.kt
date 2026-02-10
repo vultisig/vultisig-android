@@ -52,7 +52,7 @@ internal fun TokenNotFoundError(
             UiSpacer(size = 8.dp)
             Text(
                 text = stringResource(R.string.custom_token_not_found_desc),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.footnote,
                 textAlign = TextAlign.Center,
                 modifier = Modifier

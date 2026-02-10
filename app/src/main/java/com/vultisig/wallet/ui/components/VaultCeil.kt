@@ -79,7 +79,7 @@ internal fun VaultCeil(
                         Row {
                             UiIcon(
                                 drawableResId = R.drawable.hamburger_menu,
-                                tint = Theme.v2.colors.text.extraLight,
+                                tint = Theme.v2.colors.text.tertiary,
                                 size = 16.dp,
                             )
                             UiSpacer(
@@ -189,7 +189,7 @@ internal fun VaultCeil(
                                     ?: "",
                                 style = Theme.brockmann.supplementary.footnote,
                                 color = if (model.isFolder && isSelected)
-                                    Theme.v2.colors.alerts.info else Theme.v2.colors.text.extraLight,
+                                    Theme.v2.colors.alerts.info else Theme.v2.colors.text.tertiary,
 
                                 )
                         }
@@ -225,7 +225,7 @@ internal fun VaultCeil(
                                 model.signersSize
                             ),
                             style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                             modifier = Modifier
                                 .border(
                                     shape = RoundedCornerShape(
@@ -263,7 +263,7 @@ private fun ActiveVaultName(
         text = content,
         style = Theme.brockmann.supplementary.footnote,
         color = if (isFolder && isSelected)
-            Theme.v2.colors.alerts.info else Theme.v2.colors.text.extraLight,
+            Theme.v2.colors.alerts.info else Theme.v2.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier.widthIn(max = 140.dp),

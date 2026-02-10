@@ -154,7 +154,7 @@ private fun TokenDetailsContent(
             value = uiModel.token.balance,
             isVisible = uiModel.isBalanceVisible,
             style = Theme.brockmann.headings.subtitle,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
         )
 
         UiSpacer(

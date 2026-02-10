@@ -12,16 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,7 +38,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
 import com.vultisig.wallet.ui.components.util.dashedBorder
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
@@ -53,11 +48,9 @@ import com.vultisig.wallet.ui.models.ImportFileState
 import com.vultisig.wallet.ui.models.ImportFileViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordUiModel
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordBottomSheet
-import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordSheetContent
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.ActivityResultContractsGetContentWithMimeTypes
-import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -210,7 +203,7 @@ private fun ImportFileScreen(
                         color = when {
                             uiModel.error != null -> Theme.v2.colors.alerts.error
                             !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
-                            else -> Theme.v2.colors.text.light
+                            else -> Theme.v2.colors.text.secondary
                         },
                         style = Theme.brockmann.headings.subtitle,
                         textAlign = TextAlign.Center,
@@ -222,7 +215,7 @@ private fun ImportFileScreen(
                 if (uiModel.fileName.isNullOrBlank()) {
                     Text(
                         text = stringResource(R.string.import_file_supported_file_types_dat_bak_vult),
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                         style = Theme.brockmann.supplementary.footnote,
                     )
                 }

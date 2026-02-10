@@ -206,7 +206,7 @@ private fun LoadingStageItem(
             text = text,
             style = Theme.brockmann.body.m.medium,
             color = if (isLoading) Theme.v2.colors.text.primary
-            else Theme.v2.colors.text.extraLight,
+            else Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center,
         )
     }
