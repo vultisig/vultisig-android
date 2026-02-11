@@ -13,7 +13,7 @@ data class OgmiosTransactionResponse(
     @SerialName("result")
     val result: OgmiosTransactionResult? = null,
     @SerialName("error")
-    val error: RpcError? = null,
+    val error: OgmiosError? = null,
 )
 
 @Serializable
@@ -27,3 +27,35 @@ data class OgmiosTransaction(
     @SerialName("id")
     val id: String,
 )
+
+@Serializable
+data class OgmiosError(
+    @SerialName("code")
+    val code: Int? = null,
+    @SerialName("message")
+    val message: String? = null,
+    @SerialName("data")
+    val data: OgmiosErrorData? = null
+)
+
+@Serializable
+data class OgmiosErrorData(
+    @SerialName("unknownOutputReferences")
+    val unknownOutputReferences: List<UnknownOutputReference> = emptyList()
+)
+
+@Serializable
+data class UnknownOutputReference(
+    @SerialName("transaction")
+    val transaction: UnknownOutputTransaction? = null,
+    @SerialName("index")
+    val index: Int? = null
+)
+
+@Serializable
+data class UnknownOutputTransaction(
+    @SerialName("id")
+    val id: String? = null
+)
+
+

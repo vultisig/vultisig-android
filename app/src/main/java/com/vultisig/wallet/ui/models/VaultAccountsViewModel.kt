@@ -138,7 +138,6 @@ internal class VaultAccountsViewModel @Inject constructor(
         collectCryptoConnectionType()
         collectLastOpenedVault()
     }
-
     private fun collectCryptoConnectionType() {
         cryptoConnectionTypeRepository
             .activeCryptoConnectionFlow

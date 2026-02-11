@@ -58,6 +58,10 @@ data class PolkadotBroadcastTransactionJson(
 data class PolkadotBroadcastTransactionErrorJson(
     @SerialName("code")
     val code: Int,
+    @SerialName("message")
+    val message: String?,
+    @SerialName("data")
+    val data: String?,
 )
 
 @Serializable
@@ -70,3 +74,41 @@ data class PolkadotQueryInfoResponseJson(
         val partialFee: String?,
     )
 }
+
+@Serializable
+data class PolkadotExtrinsicResponseJson(
+    @SerialName("code")
+    val code: Int,
+    @SerialName("message")
+    val message: String,
+    @SerialName("generated_at")
+    val generatedAt: Long,
+    @SerialName("data")
+    val data: PolkadotExtrinsicDataJson? = null,
+)
+
+@Serializable
+data class PolkadotExtrinsicDataJson(
+    @SerialName("error")
+    val polkadotErrorData: PolkadotErrorData? = null,
+    @SerialName("extrinsic_hash")
+    val extrinsicHash: String?,
+)
+
+
+@Serializable
+data class PolkadotErrorData(
+    @SerialName("batch_index")
+    val batchIndex: Int,
+    @SerialName("doc")
+    val doc: String,
+    @SerialName("module")
+    val module: String,
+    @SerialName("name")
+    val name: String,
+    @SerialName("value")
+    val value: String,
+    @SerialName("version")
+    val version: Int,
+)
+
