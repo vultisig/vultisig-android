@@ -160,7 +160,7 @@ internal fun TxDoneScaffold(
                                     isTransactionDetailVisible = true
                                 })
                                 .padding(vertical = 12.dp),
-                            titleColor = Theme.v2.colors.text.light,
+                            titleColor = Theme.v2.colors.text.secondary,
                             content = {
                                 UiIcon(
                                     R.drawable.ic_caret_right,

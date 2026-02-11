@@ -148,7 +148,7 @@ internal fun SettingsBox(
         title?.let {
             Text(
                 text = it,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption
 
             )
@@ -211,7 +211,7 @@ internal fun SettingItem(
                 item.subTitle?.let {
                     Text(
                         text = it.asString(),
-                        color = tint ?: Theme.v2.colors.text.light,
+                        color = tint ?: Theme.v2.colors.text.secondary,
                         style = Theme.brockmann.supplementary.caption,
                     )
                 }

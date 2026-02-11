@@ -35,7 +35,7 @@ fun VsButton(
             Text(
                 text = label,
                 style = Theme.brockmann.button.semibold.semibold,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
             )
         }
     }

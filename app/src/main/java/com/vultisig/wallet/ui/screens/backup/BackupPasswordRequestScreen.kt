@@ -232,7 +232,7 @@ private fun BackupCaution(
                 text = highlightedText(
                     mainText = mainText,
                     highlightedWords = highlightedWords,
-                    mainTextColor = Theme.v2.colors.text.extraLight,
+                    mainTextColor = Theme.v2.colors.text.tertiary,
                     mainTextStyle = Theme.brockmann.supplementary.footnote,
                     highlightTextColor = Theme.v2.colors.text.primary,
                     highlightTextStyle = Theme.brockmann.supplementary.footnote,

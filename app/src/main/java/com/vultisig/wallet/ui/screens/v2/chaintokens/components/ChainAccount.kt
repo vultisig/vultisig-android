@@ -119,7 +119,7 @@ internal fun ChainAccount(
                     value = price,
                     isVisible = true,
                     style = Theme.satoshi.price.caption,
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.v2.colors.text.secondary,
                     modifier = Modifier
                         .padding(
                             horizontal = 8.dp,
@@ -152,7 +152,7 @@ internal fun ChainAccount(
                 value = balance,
                 isVisible = isBalanceVisible,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 maxLines = 2,
                 textAlign = TextAlign.End,
             )

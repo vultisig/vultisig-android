@@ -171,7 +171,7 @@ fun ResourceCard(
                         Icon(
                             painter = painterResource(R.drawable.circleinfo),
                             contentDescription = "info",
-                            tint = colors.text.extraLight
+                            tint = colors.text.tertiary
                         )
                     }
                 }
@@ -201,7 +201,7 @@ fun ResourceCard(
                     AutoSizingText(
                         text = "${state.available}/${state.total}",
                         style = Theme.brockmann.supplementary.caption,
-                        color = colors.text.light,
+                        color = colors.text.secondary,
                     )
                     Spacer(modifier = Modifier.height(7.dp))
                     AnimatedProgressBar(
@@ -429,7 +429,7 @@ fun BandwidthEnergyItem(
                             modifier = Modifier.rotate(rotation.value),
                             painter = painterResource(id = R.drawable.small_caret_down),
                             contentDescription = null,
-                            tint = colors.text.button.light,
+                            tint = colors.text.button.primary,
                         )
                     }
                     if (isExpanded) {

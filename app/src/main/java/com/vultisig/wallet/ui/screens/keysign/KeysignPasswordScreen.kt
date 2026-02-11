@@ -164,7 +164,7 @@ fun KeysignPasswordSheetContent(
         if (subtitle != null) {
             Text(
                 text = subtitle,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption,
                 modifier = Modifier
                     .width(211.dp)
@@ -224,7 +224,7 @@ fun KeysignPasswordSheetContent(
                     text = if (isHintVisible) stringResource(R.string.keysign_password_hide_hint) else stringResource(
                         R.string.keysign_password_show_hint
                     ),
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.v2.colors.text.secondary,
                     style = Theme.brockmann.supplementary.footnote,
                 )
 
@@ -237,7 +237,7 @@ fun KeysignPasswordSheetContent(
                     modifier = Modifier
                         .rotate(degrees = caretRotationDegree),
                     size = 12.dp,
-                    tint = Theme.v2.colors.text.light,
+                    tint = Theme.v2.colors.text.secondary,
                 )
             }
 
@@ -248,7 +248,7 @@ fun KeysignPasswordSheetContent(
                     )
                     Text(
                         text = state.passwordHint.asString(),
-                        color = Theme.v2.colors.text.light,
+                        color = Theme.v2.colors.text.secondary,
                         style = Theme.brockmann.supplementary.footnote,
                         modifier = Modifier.fillMaxWidth(),
                     )

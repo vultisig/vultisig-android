@@ -166,7 +166,7 @@ fun VsCenterHighlightCarousel(
         ) {
             Text(
                 text = stringResource(R.string.select_chain_title),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.body.m.medium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )

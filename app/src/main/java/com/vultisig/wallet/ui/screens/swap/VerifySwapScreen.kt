@@ -206,7 +206,7 @@ private fun VerifySwapScreen(
                     Text(
                         text = stringResource(R.string.verify_swap_youre_swapping_title),
                         style = Theme.brockmann.headings.subtitle,
-                        color = Theme.v2.colors.text.light,
+                        color = Theme.v2.colors.text.secondary,
                     )
 
                     UiSpacer(24.dp)
@@ -254,7 +254,7 @@ private fun VerifySwapScreen(
                         Text(
                             stringResource(R.string.swap_form_dst_token_title),
                             style = Theme.brockmann.supplementary.captionSmall,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                         )
 
                         HorizontalDivider(
@@ -354,7 +354,7 @@ private fun VerifySwapScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                         textAlign = TextAlign.Center,
                     )
 
@@ -420,7 +420,7 @@ internal fun SwapToken(
         val text = buildAnnotatedString {
             append(value)
             append(" ")
-            withStyle(SpanStyle(color = Theme.v2.colors.text.extraLight)) {
+            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
                 append(token.ticker)
             }
         }
@@ -432,7 +432,7 @@ internal fun SwapToken(
                 Text(
                     text = stringResource(R.string.swap_form_min_pay),
                     style = Theme.brockmann.supplementary.captionSmall,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
             }
 
@@ -458,7 +458,7 @@ internal fun SwapToken(
                 Text(
                     text = valuedToken.fiatValue,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
             }
         }
@@ -493,7 +493,7 @@ internal fun SwapToken(
                     Text(
                         text = stringResource(R.string.swap_form_on_chain) + " ${token.chain.swapAssetName()}",
                         style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                     )
                 }
             }
@@ -533,7 +533,7 @@ internal fun VerifyCardDetails(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             maxLines = 1,
         )
 
@@ -568,7 +568,7 @@ internal fun VerifyVaultDetails(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             maxLines = 1,
         )
 
@@ -599,7 +599,7 @@ internal fun VerifyVaultDetails(
                 Text(
                     text = display,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                     maxLines = 1,
                 )
             }
@@ -624,7 +624,7 @@ internal fun VerifyCardJsonDetails(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             maxLines = 1,
         )
 

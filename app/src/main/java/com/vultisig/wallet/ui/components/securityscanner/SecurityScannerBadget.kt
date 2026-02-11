@@ -48,7 +48,7 @@ internal fun SecurityScannerBadget(
 
             is TransactionScanStatus.Scanning -> {
                 CircularProgressIndicator(
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.v2.colors.text.secondary,
                     modifier = Modifier.size(16.dp),
                     strokeWidth = 2.dp
                 )
@@ -59,14 +59,14 @@ internal fun SecurityScannerBadget(
                     text = stringResource(R.string.security_scanner_transaction_scanning),
                     fontSize = 14.sp,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.light
+                    color = Theme.v2.colors.text.secondary
                 )
             }
 
             is TransactionScanStatus.Error -> {
                 ScanStatusContentWithLogo(
                     image = Icons.Default.Warning,
-                    imageColor = Theme.v2.colors.text.light,
+                    imageColor = Theme.v2.colors.text.secondary,
                     message = stringResource(R.string.security_scanner_transaction_not_scanned),
                     providerLogoId = status.provider,
                 )
@@ -97,7 +97,7 @@ private fun ScanStatusContentWithLogo(
         text = message,
         fontSize = 14.sp,
         style = Theme.brockmann.supplementary.footnote,
-        color = Theme.v2.colors.text.light
+        color = Theme.v2.colors.text.secondary
     )
 
     Spacer(modifier = Modifier.width(4.dp))

@@ -149,7 +149,7 @@ private fun ReferralEditVaultScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                         style = Theme.brockmann.body.s.medium,
                         text = stringResource(R.string.referral_create_expiration_date),
                         textAlign = TextAlign.Start,

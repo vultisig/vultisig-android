@@ -80,7 +80,7 @@ internal fun TokenSelectionScreen(
                 Text(
                     text = stringResource(R.string.token_selecton_screen_enable_at_least_one),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
 
             }

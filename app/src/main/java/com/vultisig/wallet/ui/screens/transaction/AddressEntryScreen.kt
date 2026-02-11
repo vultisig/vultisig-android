@@ -198,7 +198,7 @@ internal fun SelectChain(
                 Text(
                     text = stringResource(R.string.address_entry_select),
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
             } else {
                 TokenLogo(

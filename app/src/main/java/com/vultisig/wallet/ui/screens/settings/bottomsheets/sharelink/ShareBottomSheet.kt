@@ -87,7 +87,7 @@ private fun ShareLinkContent(
 
         Text(
             text = stringResource(R.string.settings_screen_share_the_app),
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.supplementary.footnote,
             modifier = Modifier
                 .padding(
@@ -132,7 +132,7 @@ private fun ShareLinkContent(
                 Text(
                     text = uiModel.link,
                     style = Theme.brockmann.body.m.regular,
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.v2.colors.text.secondary,
                     modifier = Modifier
                         .weight(1f),
                     maxLines = 1,
