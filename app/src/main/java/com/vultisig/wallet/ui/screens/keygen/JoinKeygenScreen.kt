@@ -74,7 +74,7 @@ private fun JoinKeygenScreen(
         Text(
             text = stringResource(R.string.join_key_gen_your_vault_will_start_generating),
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center,
         )
 

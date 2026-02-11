@@ -327,7 +327,7 @@ private fun TierCard(
                 Text(
                     text = stringResource(R.string.vault_tier_hold),
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.extraLight
+                    color = Theme.v2.colors.text.tertiary
                 )
 
                 Row(

@@ -84,7 +84,7 @@ private fun ScanQrHelpModalContent(onGotItClick: () -> Unit) {
             UiSpacer(12.dp)
             Text(
                 text = stringResource(R.string.scan_qr_code_modal_annotation),
-                color = Theme.v2.colors.text.light,
+                color = Theme.v2.colors.text.secondary,
                 style = Theme.brockmann.body.s.medium,
                 textAlign = TextAlign.Center
             )

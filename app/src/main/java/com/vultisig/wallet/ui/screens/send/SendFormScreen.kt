@@ -634,7 +634,7 @@ private fun FoldableAmountWidget(
                                 if (primaryFieldState.text.isEmpty()) {
                                     Text(
                                         text = "0",
-                                        color = Theme.v2.colors.text.light,
+                                        color = Theme.v2.colors.text.secondary,
                                         style = Theme.brockmann.headings.largeTitle,
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier
@@ -655,7 +655,7 @@ private fun FoldableAmountWidget(
 
                     Text(
                         text = "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText",
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                         style = Theme.brockmann.body.s.medium,
                         textAlign = TextAlign.Center,
                     )
@@ -718,7 +718,7 @@ private fun FoldableAmountWidget(
                 Text(
                     text = (state.selectedCoin?.balance ?: "0") + ticker,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.v2.colors.text.secondary,
                     textAlign = TextAlign.End,
                     modifier = Modifier
                         .weight(1f),
@@ -751,7 +751,7 @@ private fun FoldableAmountWidget(
                     Text(
                         text = stringResource(R.string.send_form_add_memo),
                         style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                         modifier = Modifier
                             .weight(1f),
                     )
@@ -801,7 +801,7 @@ private fun FoldableAmountWidget(
                     Text(
                         text = stringResource(R.string.bond_operator_fees_basis_point),
                         style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                     )
 
                     UiSpacer(12.dp)
@@ -827,7 +827,7 @@ private fun FoldableAmountWidget(
                     Text(
                         text = stringResource(R.string.deposit_form_operator_slippage_title),
                         style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                     )
 
                     UiSpacer(12.dp)
@@ -898,7 +898,7 @@ private fun FoldableDestinationAddressWidget(
         completeTitleContent = {
             Text(
                 text = addressFieldState.text.toString(),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.body.s.medium,
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
@@ -917,7 +917,7 @@ private fun FoldableDestinationAddressWidget(
         ) {
             Text(
                 text = stringResource(R.string.send_from_address),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption,
             )
 
@@ -953,7 +953,7 @@ private fun FoldableDestinationAddressWidget(
 
                 Text(
                     text = state.srcAddress,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                     style = Theme.brockmann.supplementary.caption,
                     maxLines = 1,
                     overflow = TextOverflow.MiddleEllipsis,
@@ -967,7 +967,7 @@ private fun FoldableDestinationAddressWidget(
                     DeFiNavActions.BOND, DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
                     else -> stringResource(R.string.send_to_address)
                 },
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption,
             )
 
@@ -1054,7 +1054,7 @@ private fun FoldableBondDestinationAddress(
         completeTitleContent = {
             Text(
                 text = addressFieldState.text.toString(),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.body.s.medium,
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
@@ -1076,7 +1076,7 @@ private fun FoldableBondDestinationAddress(
                     null, DeFiNavActions.BOND, DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
                     else -> stringResource(R.string.send_to_address)
                 },
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption,
             )
 
@@ -1138,7 +1138,7 @@ private fun FoldableBondDestinationAddress(
 
             Text(
                 text = stringResource(R.string.bond_provider_optional),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption,
             )
 
@@ -1240,7 +1240,7 @@ private fun FoldableAssetWidget(
                 Text(
                     text = selectedToken?.title ?: "",
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
             }
         }
@@ -1297,7 +1297,7 @@ private fun FoldableAssetWidget(
                                 R.string.form_token_selection_balance,
                                 token.balance ?: ""
                             ),
-                            color = Theme.v2.colors.text.light,
+                            color = Theme.v2.colors.text.secondary,
                             style = Theme.brockmann.body.s.medium,
                             textAlign = TextAlign.End,
                         )
@@ -1308,7 +1308,7 @@ private fun FoldableAssetWidget(
                             Text(
                                 text = fiatValue,
                                 textAlign = TextAlign.End,
-                                color = Theme.v2.colors.text.extraLight,
+                                color = Theme.v2.colors.text.tertiary,
                                 style = Theme.brockmann.supplementary.caption,
                             )
                         }
@@ -1331,7 +1331,7 @@ internal fun EstimatedNetworkFee(
         Text(
             text = stringResource(R.string.send_form_est_network_fee),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
         )
 
         Column(
@@ -1363,7 +1363,7 @@ internal fun EstimatedNetworkFee(
                 Text(
                     text = fiatGas,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
             }
         }
@@ -1446,7 +1446,7 @@ private fun PercentageChip(
             Text(
                 text = title,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.light,
+                color = Theme.v2.colors.text.secondary,
                 textAlign = TextAlign.Center,
             )
         }
@@ -1518,7 +1518,7 @@ private fun ToggleButton(
     UiIcon(
         drawableResId = drawableResId,
         size = 16.dp,
-        tint = Theme.v2.colors.text.light,
+        tint = Theme.v2.colors.text.secondary,
         modifier = Modifier
             .clip(CircleShape)
             .clickable(onClick = onClick)

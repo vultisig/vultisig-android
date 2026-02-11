@@ -142,7 +142,7 @@ internal fun VerifySendScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                         textAlign = TextAlign.Center,
                     )
                     VsHoldableButton(
@@ -195,7 +195,7 @@ internal fun VerifySendScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_sending),
                         style = Theme.brockmann.headings.subtitle,
-                        color = Theme.v2.colors.text.light,
+                        color = Theme.v2.colors.text.secondary,
                     )
 
                     UiSpacer(24.dp)
@@ -276,7 +276,7 @@ internal fun VerifySendScreen(
                         Text(
                             text = stringResource(R.string.verify_deposit_network),
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                             maxLines = 1,
                         )
 

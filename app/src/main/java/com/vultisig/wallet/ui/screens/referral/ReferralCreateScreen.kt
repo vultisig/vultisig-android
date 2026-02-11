@@ -188,7 +188,7 @@ private fun ReferralCreateScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                             style = Theme.brockmann.body.s.medium,
                             text = stringResource(R.string.referral_create_status),
                             textAlign = TextAlign.Start,
@@ -240,7 +240,7 @@ private fun ReferralCreateScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                         style = Theme.brockmann.body.s.medium,
                         text = stringResource(R.string.referral_create_expiration_date),
                         textAlign = TextAlign.Start,
@@ -460,7 +460,7 @@ internal fun EstimatedNetworkFee(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
         )
 
         Column(
@@ -490,7 +490,7 @@ internal fun EstimatedNetworkFee(
                 Text(
                     text = fiatGas,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
             }
         }

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -172,9 +171,9 @@ fun VsButton(
     ) {
         val contentColor by animateColorAsState(
             when (state) {
-                Enabled -> colors.text.button.light
+                Enabled -> colors.text.button.primary
                 Disabled -> colors.text.button.disabled
-                Default -> colors.text.button.light
+                Default -> colors.text.button.primary
             },
             label = "VsButton.contentColor"
         )

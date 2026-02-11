@@ -190,7 +190,7 @@ private fun ConfirmDeleteScreen(
                     Text(
                         text = stringResource(resId),
                         style = Theme.brockmann.supplementary.caption,
-                        color = colors.text.light
+                        color = colors.text.secondary
                     )
                 }
             }
@@ -244,7 +244,7 @@ private fun VerticalVaultInfo2(
         Text(
             text = value,
             style = Theme.brockmann.supplementary.caption,
-            color = colors.text.extraLight
+            color = colors.text.tertiary
         )
     }
 }
@@ -282,7 +282,7 @@ private fun DeleteVaultBanner() {
         Text(
             text = stringResource(R.string.confirm_delete_permanent_delete_message),
             style = Theme.brockmann.supplementary.footnote,
-            color = colors.text.extraLight
+            color = colors.text.tertiary
         )
     }
 }

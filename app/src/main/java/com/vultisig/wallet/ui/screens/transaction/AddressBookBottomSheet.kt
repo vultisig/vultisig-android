@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -34,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -46,7 +43,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
@@ -54,7 +50,6 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.v2.Variables
 import com.vultisig.wallet.ui.utils.ColorGenerator
 
 @Composable
@@ -156,7 +151,7 @@ private fun AddressBookContent(
                             Text(
                                 text = stringResource(R.string.address_book_empty_description),
                                 style = Theme.brockmann.button.medium.small,
-                                color = Theme.v2.colors.text.extraLight,
+                                color = Theme.v2.colors.text.tertiary,
                                 textAlign = TextAlign.Center
                             )
 
@@ -231,7 +226,7 @@ private fun RowScope.PickerItem(
     Text(
         text = title,
         style = Theme.brockmann.supplementary.footnote,
-        color = Theme.v2.colors.text.light,
+        color = Theme.v2.colors.text.secondary,
         textAlign = TextAlign.Center,
         overflow = TextOverflow.MiddleEllipsis,
         maxLines = 1,
@@ -318,7 +313,7 @@ private fun EntryItem(
             Text(
                 text = subtitle,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.light,
+                color = Theme.v2.colors.text.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
             )

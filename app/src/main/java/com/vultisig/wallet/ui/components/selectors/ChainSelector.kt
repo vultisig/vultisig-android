@@ -110,7 +110,7 @@ internal fun ChainSelector(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
         )
 
         ChainSelector(

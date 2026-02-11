@@ -192,7 +192,7 @@ private fun WalletEarnOption(
         verticalArrangement = Arrangement.Center
     ) {
 
-        val contentColor= if (enabled) Theme.v2.colors.text.primary else Theme.v2.colors.text.extraLight
+        val contentColor= if (enabled) Theme.v2.colors.text.primary else Theme.v2.colors.text.tertiary
         val contentColorAnimated by animateColorAsState(contentColor)
         UiIcon(
             drawableResId = icon,

@@ -185,7 +185,7 @@ private fun AssetItem(
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.light,
+            color = Theme.v2.colors.text.secondary,
             modifier = Modifier
                 .border(
                     width = 1.dp,
@@ -213,7 +213,7 @@ private fun AssetItem(
                 AutoSizingText(
                     text = value,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
             }
         }

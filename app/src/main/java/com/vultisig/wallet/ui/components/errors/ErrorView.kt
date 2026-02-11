@@ -137,7 +137,7 @@ internal fun ErrorWaves(
             Text(
                 text = description,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 textAlign = TextAlign.Center
             )
         }

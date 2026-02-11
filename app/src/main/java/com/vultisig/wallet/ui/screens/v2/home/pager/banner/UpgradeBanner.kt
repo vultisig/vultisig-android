@@ -44,7 +44,7 @@ internal fun UpgradeBanner(
             Text(
                 text = stringResource(R.string.upgrade_banner_sign_faster),
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
             )
             UiSpacer(
                 size = 2.dp

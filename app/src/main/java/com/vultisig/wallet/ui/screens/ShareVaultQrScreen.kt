@@ -260,7 +260,7 @@ private fun QrContainer(
                 uid.takeLast(10)
             ), /*Should we display the full text, or only the last 10 items, based on the UI design??*/
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.light,
+            color = Theme.v2.colors.text.secondary,
         )
 
         UiSpacer(
@@ -298,7 +298,7 @@ private fun QrContainer(
         Text(
             text = stringResource(R.string.share_vault_qr_address),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.light,
+            color = Theme.v2.colors.text.secondary,
         )
 
     }
@@ -330,12 +330,12 @@ private fun Info() {
         UiIcon(
             drawableResId = R.drawable.ic_info,
             size = 16.dp,
-            tint = Theme.v2.colors.text.light,
+            tint = Theme.v2.colors.text.secondary,
         )
         Text(
             text = stringResource(R.string.share_vault_qr_info),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.light,
+            color = Theme.v2.colors.text.secondary,
         )
     }
 }

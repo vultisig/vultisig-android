@@ -106,7 +106,7 @@ private fun FastVaultVerificationScreen(
                                 text = stringResource(
                                     R.string.vault_backup_screen_email_sent_to, state.sentEmailTo
                                 ),
-                                color = Theme.v2.colors.text.extraLight,
+                                color = Theme.v2.colors.text.tertiary,
                                 style = Theme.brockmann.supplementary.footnote,
                             )
 
@@ -114,7 +114,7 @@ private fun FastVaultVerificationScreen(
                                 text = stringResource(
                                     R.string.vault_backup_screen_change_email,
                                 ),
-                                color = Theme.v2.colors.text.light,
+                                color = Theme.v2.colors.text.secondary,
                                 textDecoration = TextDecoration.Underline,
                                 style = Theme.brockmann.supplementary.footnote,
                                 modifier = Modifier.clickOnce(
@@ -133,7 +133,7 @@ private fun FastVaultVerificationScreen(
                             append(" ")
                             withStyle(
                                 style = SpanStyle(
-                                    color = Theme.v2.colors.text.light,
+                                    color = Theme.v2.colors.text.secondary,
                                     textDecoration = TextDecoration.Underline
                                 )
                             ) {
@@ -144,7 +144,7 @@ private fun FastVaultVerificationScreen(
                         Text(
                             text = annotatedString,
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 24.dp)
@@ -182,7 +182,7 @@ private fun FastVaultVerificationScreen(
                 Text(
                     text = stringResource(R.string.enter_backup_screen_desc),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight
+                    color = Theme.v2.colors.text.tertiary
                 )
                 UiSpacer(1f)
 

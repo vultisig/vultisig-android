@@ -91,7 +91,7 @@ internal fun SearchedTokenInfo(
 
                     Text(
                         text = token.chain.raw,
-                        color = Theme.v2.colors.text.light,
+                        color = Theme.v2.colors.text.secondary,
                         style = Theme.brockmann.supplementary.captionSmall,
                         modifier = Modifier.Companion
                             .border(
@@ -110,7 +110,7 @@ internal fun SearchedTokenInfo(
                 )
                 Text(
                     text = token.contractAddress,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                     style = Theme.brockmann.supplementary.caption,
                     maxLines = 1,
                     overflow = TextOverflow.Companion.Ellipsis

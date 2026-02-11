@@ -77,7 +77,7 @@ private fun FastVaultPasswordReminderDialog(
             text = stringResource(R.string.periodically_ask_verify_password),
             textAlign = TextAlign.Center,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             modifier = Modifier
         )
 
