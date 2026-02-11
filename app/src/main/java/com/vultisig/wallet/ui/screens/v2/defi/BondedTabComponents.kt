@@ -91,7 +91,7 @@ internal fun ActiveNodesWidget(
             Text(
                 text = stringResource(R.string.active_nodes),
                 style = Theme.brockmann.button.medium.medium,
-                color = Theme.v2.colors.text.light,
+                color = Theme.v2.colors.text.secondary,
             )
 
             UiSpacer(1f)
@@ -99,7 +99,7 @@ internal fun ActiveNodesWidget(
             UiIcon(
                 drawableResId = R.drawable.ic_caret_down,
                 size = 16.dp,
-                tint = Theme.v2.colors.text.light,
+                tint = Theme.v2.colors.text.secondary,
                 modifier = Modifier.rotate(180f)
             )
         }
@@ -140,7 +140,7 @@ private fun NodeContent(
             Text(
                 text = stringResource(R.string.node_address_formatted, node.address),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 modifier = Modifier.weight(1f, fill = false),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -218,7 +218,7 @@ private fun NodeContent(
                 onClick = onClickUnbond,
                 modifier = Modifier.weight(1f),
                 enabled = node.status.canUnbond,
-                iconCircleColor = Theme.v2.colors.text.extraLight
+                iconCircleColor = Theme.v2.colors.text.tertiary
             )
 
             ActionButton(
@@ -239,7 +239,7 @@ private fun NodeContent(
             Text(
                 text = stringResource(R.string.wait_until_node_churned_out),
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.light,
+                color = Theme.v2.colors.text.secondary,
             )
         }
     }

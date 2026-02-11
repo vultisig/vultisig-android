@@ -175,7 +175,7 @@ private fun HintBoxPopupContent(
 
             Text(
                 text = message,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.footnote
             )
         }

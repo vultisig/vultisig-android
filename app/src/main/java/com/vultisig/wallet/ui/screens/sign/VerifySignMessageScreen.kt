@@ -172,7 +172,7 @@ private fun SignMessageBox(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.supplementary.caption
         )
 
@@ -193,7 +193,7 @@ private fun SignMessageBox(
                     horizontal = 24.dp,
                     vertical = 20.dp,
                 ),
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.body.s.medium
         )
     }

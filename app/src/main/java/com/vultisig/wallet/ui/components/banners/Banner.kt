@@ -97,7 +97,7 @@ internal fun Banner(
     ) {
         val contentColor = when (variant) {
             BannerVariant.Warning -> Theme.v2.colors.alerts.warning
-            BannerVariant.Info -> Theme.v2.colors.text.light
+            BannerVariant.Info -> Theme.v2.colors.text.secondary
             BannerVariant.Error -> Theme.v2.colors.alerts.error
             BannerVariant.Success -> Theme.v2.colors.alerts.success
         }

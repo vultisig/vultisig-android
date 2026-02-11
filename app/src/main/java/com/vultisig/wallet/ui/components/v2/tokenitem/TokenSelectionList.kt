@@ -325,7 +325,7 @@ private fun TokenSelectionListPreview() {
                 Text(
                     "Select tokens to manage",
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.extraLight
+                    color = Theme.v2.colors.text.tertiary
                 )
             }
         },

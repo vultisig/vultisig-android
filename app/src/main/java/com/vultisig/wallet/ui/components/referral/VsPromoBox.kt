@@ -61,7 +61,7 @@ fun VsPromoBox(
 
             Text(
                 text = description,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.captionSmall,
             )
         }
@@ -109,7 +109,7 @@ fun VsPromoTag(
 
         Text(
             text = text,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.supplementary.caption,
         )
     }

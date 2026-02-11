@@ -103,7 +103,7 @@ internal fun AccountItem(
                         account.assetsSize
                     ),
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -117,7 +117,7 @@ internal fun AccountItem(
                             isVisible = isBalanceVisible,
                             text = nativeTokenAmount,
                             style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )

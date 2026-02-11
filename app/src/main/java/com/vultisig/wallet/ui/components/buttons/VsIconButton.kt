@@ -81,7 +81,7 @@ fun VsIconButton(
         val contentColor = when (state) {
             Enabled -> when (variant) {
                 Primary -> Theme.v2.colors.backgrounds.primary
-                Secondary -> Theme.v2.colors.text.button.light
+                Secondary -> Theme.v2.colors.text.button.primary
             }
 
             Disabled -> Theme.v2.colors.text.button.disabled

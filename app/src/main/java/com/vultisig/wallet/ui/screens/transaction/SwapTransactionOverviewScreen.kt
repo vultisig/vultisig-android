@@ -238,7 +238,7 @@ internal fun Details(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = titleColor ?: Theme.v2.colors.text.extraLight,
+            color = titleColor ?: Theme.v2.colors.text.tertiary,
         )
 
         UiSpacer(

@@ -186,7 +186,7 @@ private fun CreateFolderScreen(
 
                 Text(
                     text = stringResource(R.string.add_folder_active_vaults),
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.v2.colors.text.secondary,
                     style = Theme.brockmann.body.s.medium,
                 )
 
@@ -207,7 +207,7 @@ private fun CreateFolderScreen(
                             UiSpacer(size = 20.dp)
                             Text(
                                 text = stringResource(id = R.string.add_folder_available_vaults),
-                                color = Theme.v2.colors.text.light,
+                                color = Theme.v2.colors.text.secondary,
                                 style = Theme.brockmann.body.s.medium,
                             )
 
@@ -282,7 +282,7 @@ private fun CreateFolderScreen(
             if (!isEditMode) {
                 Text(
                     text = stringResource(id = R.string.add_folder_list_title),
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.v2.colors.text.secondary,
                     style = Theme.brockmann.body.s.medium,
                 )
                 UiSpacer(size = 12.dp)
@@ -411,7 +411,7 @@ fun FolderNameTextField(
                         if (textFieldState.text.isEmpty()) {
                             Text(
                                 text = stringResource(id = R.string.create_folder_placeholder),
-                                color = Theme.v2.colors.text.extraLight,
+                                color = Theme.v2.colors.text.tertiary,
                                 style = Theme.brockmann.supplementary.footnote,
                             )
                         }

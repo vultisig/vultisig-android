@@ -111,7 +111,7 @@ private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
 
             Text(
                 text = faq.question,
-                color = Theme.v2.colors.text.light,
+                color = Theme.v2.colors.text.secondary,
                 style = Theme.brockmann.body.s.medium,
                 lineHeight = 20.sp,
                 modifier = Modifier.weight(1f)
@@ -123,7 +123,7 @@ private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
                 modifier = Modifier.rotate(rotation.value),
                 painter = painterResource(id = R.drawable.small_caret_down),
                 contentDescription = null,
-                tint = colors.text.extraLight,
+                tint = colors.text.tertiary,
             )
         }
 

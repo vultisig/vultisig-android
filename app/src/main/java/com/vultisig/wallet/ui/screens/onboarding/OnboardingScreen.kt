@@ -132,7 +132,7 @@ private fun OnboardingScreen(
                     Text(
                         text = stringResource(R.string.welcome_screen_skip),
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.v2.colors.text.tertiary,
                         modifier = Modifier
                             .clickable(onClick = onSkipClick)
                             .testTag("OnboardingScreen.skip")
@@ -172,7 +172,7 @@ private fun Description(
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_1_part_3,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.light),
+                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.secondary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_1_part_4,

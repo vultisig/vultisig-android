@@ -106,7 +106,7 @@ private fun FastVaultPasswordHintScreen(
             Text(
                 text = stringResource(R.string.fast_vault_password_hint_screen_desc),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight
+                color = Theme.v2.colors.text.tertiary
             )
             VsTextInputField(
                 textFieldState = textFieldState,
