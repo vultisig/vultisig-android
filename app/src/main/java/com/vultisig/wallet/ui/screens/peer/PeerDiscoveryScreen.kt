@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalRiveComposeAPI::class)
-
 package com.vultisig.wallet.ui.screens.peer
 
 import android.icu.text.MessageFormat
@@ -59,10 +57,9 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import app.rive.ExperimentalRiveComposeAPI
+import app.rive.Fit
 import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
-import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
 import com.vultisig.wallet.ui.components.KeepScreenOn
@@ -73,8 +70,8 @@ import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
+import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
@@ -132,7 +129,7 @@ internal fun KeygenPeerDiscoveryScreen(
                 file = riveFile,
                 viewModelInstance = vmi,
                 modifier = Modifier.fillMaxSize(),
-                fit = Fit.COVER
+                fit = Fit.Cover()
             )
         }
 
