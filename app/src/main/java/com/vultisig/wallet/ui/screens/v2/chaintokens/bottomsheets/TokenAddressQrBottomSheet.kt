@@ -139,7 +139,7 @@ private fun TokenAddressQrContent(
 
         Row {
             VsButton(
-                variant = VsButtonVariant.Tertiary,
+                variant = VsButtonVariant.Secondary,
                 size = VsButtonSize.Small,
                 label = stringResource(R.string.share_vault_qr_share),
                 onClick = onShareQrClick,

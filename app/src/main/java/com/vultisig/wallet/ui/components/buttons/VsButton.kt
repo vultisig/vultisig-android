@@ -29,7 +29,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 enum class VsButtonVariant {
-    Primary, Secondary, Error, Tertiary,
+    Primary, Secondary, Error, CTA
 }
 
 enum class VsButtonState {
@@ -55,23 +55,23 @@ fun VsButton(
         when (state) {
             Enabled -> when (variant) {
                 Primary -> colors.buttons.tertiary
-                Secondary -> colors.backgrounds.primary
+                Secondary -> colors.backgrounds.tertiary_2
                 Error -> colors.alerts.error
-                Tertiary -> colors.backgrounds.tertiary_2
+                CTA -> colors.buttons.ctaPrimary
             }
 
             Disabled -> when (variant) {
                 Primary -> colors.buttons.disabled
-                Secondary -> colors.backgrounds.primary
+                Secondary -> colors.backgrounds.tertiary_2
                 Error -> colors.buttons.disabledError
-                Tertiary -> colors.backgrounds.tertiary_2
+                CTA -> colors.buttons.ctaDisabled
             }
 
             Default -> when (variant) {
                 Primary -> colors.buttons.tertiary
-                Secondary -> colors.backgrounds.transparent
+                Secondary -> colors.backgrounds.tertiary
                 Error -> colors.alerts.error
-                Tertiary -> colors.backgrounds.tertiary
+                CTA -> colors.buttons.ctaPrimary
             }
         },
         label = "VsButton.backgroundColor"
@@ -82,23 +82,23 @@ fun VsButton(
         when (state) {
             Enabled -> when (variant) {
                 Primary -> colors.buttons.tertiary
-                Secondary -> colors.primary.accent3
+                Secondary -> colors.backgrounds.tertiary_2
                 Error -> colors.alerts.error
-                Tertiary -> colors.backgrounds.tertiary_2
+                CTA -> colors.buttons.ctaPrimary
             }
 
             Disabled -> when (variant) {
                 Primary -> colors.buttons.disabled
-                Secondary -> colors.border.disabled
+                Secondary -> colors.backgrounds.tertiary_2
                 Error -> colors.buttons.disabledError
-                Tertiary -> colors.backgrounds.tertiary_2
+                CTA -> colors.buttons.ctaDisabled
             }
 
             Default -> when (variant) {
                 Primary -> colors.buttons.tertiary
-                Secondary -> colors.buttons.tertiary
+                Secondary -> colors.backgrounds.tertiary
                 Error -> colors.alerts.error
-                Tertiary -> colors.backgrounds.tertiary
+                CTA -> colors.buttons.ctaPrimary
             }
         },
         label = "VsButton.borderColor"
@@ -287,20 +287,6 @@ private fun VsButtonPreview() {
             onClick = {}
         )
 
-        VsButton(
-            label = "Tertiary enabled",
-            variant = Tertiary,
-            state = Enabled,
-            size = Mini,
-            onClick = {}
-        )
 
-        VsButton(
-            label = "Tertiary disabled",
-            variant = Tertiary,
-            state = Disabled,
-            size = Mini,
-            onClick = {}
-        )
     }
 }

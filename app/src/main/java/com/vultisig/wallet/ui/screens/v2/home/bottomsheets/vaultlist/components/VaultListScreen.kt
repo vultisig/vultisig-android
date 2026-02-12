@@ -201,7 +201,7 @@ private fun VaultListScreen(
                 modifier = Modifier
                     .fillMaxWidth(),
                 onClick = onCreateNewFolder,
-                variant = VsButtonVariant.Tertiary
+                variant = VsButtonVariant.Secondary
             ) {
                 UiIcon(
                     drawableResId = R.drawable.ic_folder,
