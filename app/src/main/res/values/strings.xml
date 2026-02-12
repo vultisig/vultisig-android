@@ -933,5 +933,7 @@
     <string name="swap_form_referral_discount_bps">Referral (-%1$d bps)</string>
     <string name="amino_sign">Amino Sign</string>
     <string name="amino_direct">Direct Sign</string>
+    <string name="raw_transaction_data">Raw Transaction Data</string>
+    <string name="solana_raw_transaction">Solana Raw Transaction</string>
 
 </resources>

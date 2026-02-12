@@ -912,6 +912,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                     val signDirect = payload.signDirect?.let {
                         json.encodeToString(parseCosmosMessage(it))
                     } ?: ""
+
+                    val signSolana = payload.signSolana?.let{
+                        json.encodeToString(it)
+                    }
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = payload.vaultPublicKeyECDSA,
@@ -932,6 +936,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         totalGas = totalGasAndFee.formattedTokenValue,
                         signAmino = normalizedSignAmino,
                         signDirect = signDirect,
+                        signSolana = signSolana,
                     )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)

@@ -884,4 +884,6 @@
     <string name="amino_sign">Amino Sign</string>
     <string name="amino_direct">Firma diretta</string>
     <string name="import_file_screen_enter_password">Inserisci la password di condivisione del vault.</string>
+    <string name="raw_transaction_data">Dati grezzi sulle transazioni</string>
+    <string name="solana_raw_transaction">Transazioni grezze Solana</string>
 </resources>

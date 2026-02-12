@@ -6,13 +6,16 @@ import KeysignPayload
 import OneinchQuote
 import OneinchSwapPayload
 import OneinchTransaction
+import SignSolana
 import SwapPayload
 import ThorchainSwapPayload
 import TriggerSmartContractPayload
 import WasmExecuteContractPayload
+import androidx.compose.runtime.remember
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
+import com.vultisig.wallet.data.chains.helpers.SolanaTransactionParser
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenStandard
@@ -27,6 +30,7 @@ import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.TransactionType
 import vultisig.keysign.v1.TronTriggerSmartContractPayload
 import java.math.BigInteger
+import kotlin.text.flatMap
 
 fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.payload.KeysignPayload {
     val coin = this.coin.toInternalCoinPayload()
@@ -76,6 +80,11 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
                 accountNumber = signDirect.accountNumber,
             )
         },
+        signSolana = this.signSolana?.let { signSolana ->
+            vultisig.keysign.v1.SignSolana(
+                rawTransactions = listOf(signSolana.rawTransactions)
+            )
+        },
         memo = this.memo,
         vaultPublicKeyECDSA = this.vaultPublicKeyEcdsa,
         vaultLocalPartyID = "",
@@ -89,7 +98,6 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
             )
         },
         tronTriggerSmartContractPayload = this.triggerSmartContractPayload?.toTriggerSmartContractPayload(),
-        skipBroadcast = false // Not present in source, handled as default
     )
 }
 
@@ -116,6 +124,25 @@ internal fun WasmExecuteContractPayload.toWasmPayload(): vultisig.keysign.v1.Was
         }
     )
 }
+
+//internal fun SignSolana.toSignSolana(): vultisig.keysign.v1.SignSolana {
+//    val allInstructions = remember(this) {
+//        this.rawTransactions.map { tx ->
+//            try {
+//                val parsed = SolanaTransactionParser.parse(tx)
+//                parsed.instructions
+//            } catch (e: Exception) {
+//                emptyList()
+//            }
+//        }
+//    }
+//
+//
+//
+//    return SignSolana(
+//        rawTransactions = this.rawTransactions
+//    )
+//}
 
 internal fun Coin.toInternalCoinPayload(): com.vultisig.wallet.data.models.Coin {
     return com.vultisig.wallet.data.models.Coin(

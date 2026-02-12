@@ -883,4 +883,6 @@
     <string name="amino_sign">Assinatura Amino</string>
     <string name="amino_direct">Assinatura Direta</string>
     <string name="import_file_screen_enter_password">Introduza a palavra‑passe da partilha do cofre.</string>
+    <string name="raw_transaction_data">Dados brutos de transação</string>
+    <string name="solana_raw_transaction">Transação bruta de Solana</string>
 </resources>

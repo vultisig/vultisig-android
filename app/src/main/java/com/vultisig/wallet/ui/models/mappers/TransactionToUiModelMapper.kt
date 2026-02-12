@@ -2,21 +2,19 @@ package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.Transaction
-import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
-import kotlinx.serialization.json.Json
-import vultisig.keysign.v1.SignAmino
 import javax.inject.Inject
 
-internal interface TransactionToUiModelMapper : SuspendMapperFunc<Transaction, SendTxUiModel>
+internal interface TransactionToUiModelMapper : SuspendMapperFunc<Transaction, TransactionDetailsUiModel>
 
 internal class TransactionToUiModelMapperImpl @Inject constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
 ) : TransactionToUiModelMapper {
 
-    override suspend fun invoke(from: Transaction): SendTxUiModel {
-        return SendTxUiModel(
+    override suspend fun invoke(from: Transaction): TransactionDetailsUiModel {
+        return TransactionDetailsUiModel(
             token = ValuedToken(
                 value = mapTokenValueToDecimalUiString(from.tokenValue),
                 token = from.token,
@@ -27,6 +25,7 @@ internal class TransactionToUiModelMapperImpl @Inject constructor(
             memo = from.memo,
             signAmino = from.signAmino,
             signDirect = from.signDirect,
+            signSolana = from.signSolana,
             networkFeeFiatValue = from.estimatedFee,
             networkFeeTokenValue = from.totalGas,
         )

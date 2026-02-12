@@ -881,4 +881,6 @@
     <string name="amino_sign">Амино-подпись</string>
     <string name="amino_direct">Прямая подпись</string>
     <string name="import_file_screen_enter_password">Введите пароль для общего доступа к хранилищу.</string>
+    <string name="raw_transaction_data">Исходные данные транзакции</string>
+    <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
 </resources>

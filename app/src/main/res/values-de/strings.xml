@@ -886,4 +886,6 @@
     <string name="amino_sign">Amino-Signatur</string>
     <string name="amino_direct">Direkte Signatur</string>
     <string name="import_file_screen_enter_password">Geben Sie das Passwort für die Tresorfreigabe ein.</string>
+    <string name="raw_transaction_data">Rohdaten der Transaktion</string>
+    <string name="solana_raw_transaction">Solana-Rohdaten der Transaktion</string>
 </resources>

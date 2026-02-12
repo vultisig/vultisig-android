@@ -196,7 +196,7 @@ internal class KeysignShareViewModel @Inject constructor(
                     DeFiAction.CIRCLE_USDC_WITHDRAW
                 } else {
                     DeFiAction.NONE
-                }
+                },
             )
         }
     }

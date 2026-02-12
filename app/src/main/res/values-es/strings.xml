@@ -884,4 +884,6 @@
     <string name="amino_sign">Firma Amino</string>
     <string name="amino_direct">Firma directa</string>
     <string name="import_file_screen_enter_password">Introduzca la contraseña del recurso compartido de la bóveda.</string>
+    <string name="raw_transaction_data">Datos de transacciones sin procesar</string>
+    <string name="solana_raw_transaction">Transacción sin procesar de Solana</string>
 </resources>

@@ -22,6 +22,8 @@ data class KeysignPayload(
     val blockchainSpecific: BlockchainSpecific,
     @SerialName("sign_data")
     val signData: SignData? = null,
+    @SerialName("sign_solana")
+    val signSolana: SignSolana? = null,
     @SerialName("utxo_info")
     val utxoInfo: List<UtxoInfo>? = null,
     @SerialName("vault_public_key_ecdsa")
@@ -302,6 +304,11 @@ data class SignAmino(
     val msgs: List<Msgs> = emptyList(),
 )
 
+@Serializable
+data class SignSolana(
+    @SerialName("raw_transactions")
+    val rawTransactions: String,
+)
 @Serializable
 data class Fee(
     @SerialName("amount")

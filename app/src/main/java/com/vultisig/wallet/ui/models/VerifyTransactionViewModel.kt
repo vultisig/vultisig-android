@@ -43,12 +43,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import vultisig.keysign.v1.SignAmino
 import java.math.BigInteger
 import javax.inject.Inject
 
 @Immutable
-internal data class SendTxUiModel(
+internal data class TransactionDetailsUiModel(
     val token: ValuedToken = ValuedToken.Empty,
 
     val networkFeeFiatValue: String = "",
@@ -60,11 +59,12 @@ internal data class SendTxUiModel(
     val memo: String? = null,
     val signAmino: String? = null,
     val signDirect: String? = null,
+    val signSolana: String? = null,
 )
 
 @Immutable
 internal data class VerifyTransactionUiModel(
-    val transaction: SendTxUiModel = SendTxUiModel(),
+    val transaction: TransactionDetailsUiModel = TransactionDetailsUiModel(),
     val consentAddress: Boolean = false,
     val consentAmount: Boolean = false,
     val consentDst: Boolean = false,
@@ -125,7 +125,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         loadPassword()
     }
 
-    private suspend fun calculateFees(transactionUiModel: SendTxUiModel) {
+    private suspend fun calculateFees(transactionUiModel: TransactionDetailsUiModel) {
         val tx = transaction
         val chain = tx.token.chain
         val vault = withContext(Dispatchers.IO) {

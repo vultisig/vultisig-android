@@ -111,6 +111,15 @@ class SolanaHelper(
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
+        keysignPayload.signSolana?.let { signSolana ->
+            val allHashes = mutableListOf<String>()
+            for (base64Tx in signSolana.rawTransactions) {
+                val hashes = getPreSignedImageHashForRaw(base64Tx)
+                allHashes.addAll(hashes)
+            }
+            return allHashes
+        }
+
         val result = getPreSignedInputData(keysignPayload)
         val hashes = TransactionCompiler.preImageHashes(coinType, result)
         val preSigningOutput =
@@ -218,4 +227,109 @@ class SolanaHelper(
 
        return Base64.encode(dataMessage)
     }
+    private fun getPreSignedImageHashForRaw(base64Transaction: String): List<String> {
+        val txData = android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
+            ?: throw Exception("Invalid base64 transaction")
+
+        // Decode the transaction using TransactionDecoder
+        val decodedData = wallet.core.jni.TransactionDecoder.decode(coinType, txData)
+        val decodingOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
+
+        if (decodingOutput.errorMessage.isNotEmpty()) {
+            throw Exception(decodingOutput.errorMessage)
+        }
+
+        if (!decodingOutput.hasTransaction()) {
+            throw Exception("Invalid transaction format")
+        }
+
+        // Wrap in SolanaSigningInput with rawMessage
+        val input = Solana.SigningInput.newBuilder()
+            .setRawMessage(decodingOutput.transaction)
+            .build()
+
+        val inputData = input.toByteArray()
+
+        // Get pre-image hashes
+        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
+        val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+
+        if (preSigningOutput.errorMessage.isNotEmpty()) {
+            throw Exception(preSigningOutput.errorMessage)
+        }
+
+        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
+    }
+
+    private fun signRawTransaction(
+        coinHexPubKey: String,
+        base64Transaction: String,
+        signatures: Map<String, tss.KeysignResponse>,
+    ): SignedTransactionResult {
+        // 1. Validate inputs
+        val pubkeyData = coinHexPubKey.toHexByteArray()
+        val publicKey = PublicKey(pubkeyData, PublicKeyType.ED25519)
+
+        val txData = android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
+            ?: throw Exception("Invalid base64 transaction")
+
+        // 2. Decode the transaction using TransactionDecoder
+        val decodedData = wallet.core.jni.TransactionDecoder.decode(coinType, txData)
+        val decodingOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
+
+        if (decodingOutput.errorMessage.isNotEmpty()) {
+            throw Exception(decodingOutput.errorMessage)
+        }
+
+        if (!decodingOutput.hasTransaction()) {
+            throw Exception("Invalid transaction format")
+        }
+
+        // 3. Wrap in SolanaSigningInput with rawMessage
+        val input = Solana.SigningInput.newBuilder()
+            .setRawMessage(decodingOutput.transaction)
+            .build()
+
+        val inputData = input.toByteArray()
+
+        // 4. Get pre-image hash
+        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
+        val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+
+        if (preSigningOutput.errorMessage.isNotEmpty()) {
+            throw Exception(preSigningOutput.errorMessage)
+        }
+
+        // 5. Get signature from MPC results
+        val key = Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())
+        val signature = signatures[key]?.getSignature() ?: throw Exception("Signature not found")
+
+        // 6. Verify signature
+        if (!publicKey.verify(signature, preSigningOutput.data.toByteArray())) {
+            throw Exception("Signature verification failed")
+        }
+
+        // 7. Compile with TransactionCompiler.compileWithSignatures
+        val allSignatures = DataVector()
+        val publicKeys = DataVector()
+        allSignatures.add(signature)
+        publicKeys.add(pubkeyData)
+
+        val compiled = TransactionCompiler.compileWithSignatures(
+            coinType,
+            inputData,
+            allSignatures,
+            publicKeys
+        )
+
+        // 8. Return SignedTransactionResult
+        val output = Solana.SigningOutput.parseFrom(compiled)
+            .checkError()
+
+        return SignedTransactionResult(
+            rawTransaction = output.encoded,
+            transactionHash = output.encoded.take(64).encodeBase64()
+        )
+    }
+
 }

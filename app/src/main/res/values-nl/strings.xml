@@ -881,4 +881,6 @@
     <string name="swap_form_referral_discount_bps">Verwijzing (-%1$d bps)</string>
     <string name="amino_sign">Amino-handtekening</string>
     <string name="amino_direct">Directe handtekening</string>
+    <string name="raw_transaction_data">Ruwe transactiegegevens</string>
+    <string name="solana_raw_transaction">Solana Ruwe transactie</string>
 </resources>

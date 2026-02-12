@@ -1228,4 +1228,6 @@
     <string name="amino_sign">Amino 签名</string>
     <string name="amino_direct">直接签名</string>
     <string name="import_file_screen_enter_password">输入共享保险库密码</string>
+    <string name="raw_transaction_data">原始交易数据</string>
+    <string name="solana_raw_transaction">Solana 原始交易数据</string>
 </resources>
