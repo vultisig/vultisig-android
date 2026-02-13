@@ -80,9 +80,9 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
                 accountNumber = signDirect.accountNumber,
             )
         },
-        signSolana = this.signSolana?.let { signSolana ->
+        signSolana = this.signData?.signSolana?.let { signSolana ->
             vultisig.keysign.v1.SignSolana(
-                rawTransactions = listOf(signSolana.rawTransactions)
+                rawTransactions = signSolana.rawTransactions
             )
         },
         memo = this.memo,
