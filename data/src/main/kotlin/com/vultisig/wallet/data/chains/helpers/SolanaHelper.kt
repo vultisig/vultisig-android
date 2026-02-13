@@ -39,7 +39,10 @@ class SolanaHelper(
         if (keysignPayload.coin.chain != Chain.Solana) {
             error("Chain is not Solana")
         }
-        val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
+        val toAddress = AnyAddress(
+            keysignPayload.toAddress,
+            coinType
+        )
 
         val input = Solana.SigningInput.newBuilder()
             .setV0Msg(true)
@@ -69,7 +72,7 @@ class SolanaHelper(
                 .build()
                 .toByteArray()
         } else {
-            if (!solanaSpecific.fromAddressPubKey.isNullOrEmpty()  && !solanaSpecific.toAddressPubKey.isNullOrEmpty()) {
+            if (!solanaSpecific.fromAddressPubKey.isNullOrEmpty() && !solanaSpecific.toAddressPubKey.isNullOrEmpty()) {
                 val transfer = Solana.TokenTransfer.newBuilder()
                     .setTokenMintAddress(keysignPayload.coin.contractAddress)
                     .setSenderTokenAddress(solanaSpecific.fromAddressPubKey)
@@ -121,7 +124,10 @@ class SolanaHelper(
         }
 
         val result = getPreSignedInputData(keysignPayload)
-        val hashes = TransactionCompiler.preImageHashes(coinType, result)
+        val hashes = TransactionCompiler.preImageHashes(
+            coinType,
+            result
+        )
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
         if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
@@ -134,23 +140,49 @@ class SolanaHelper(
         keysignPayload: KeysignPayload,
         signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
-        val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
+        keysignPayload.signSolana?.let { signSolana ->
+            val firstTx = signSolana.rawTransactions.firstOrNull()
+                ?: error("No transactions to sign")
+
+            return signRawTransaction(
+                coinHexPubKey = keysignPayload.coin.hexPublicKey,
+                base64Transaction = firstTx,
+                signatures = signatures
+            )
+        }
+
+        val publicKey = PublicKey(
+            vaultHexPublicKey.toHexByteArray(),
+            PublicKeyType.ED25519
+        )
         val input = getPreSignedInputData(keysignPayload)
-        val hashes = TransactionCompiler.preImageHashes(coinType, input)
+        val hashes = TransactionCompiler.preImageHashes(
+            coinType,
+            input
+        )
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
                 .checkError()
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())
         val allSignatures = DataVector()
         val publicKeys = DataVector()
-        val signature = signatures[key]?.getSignature() ?: throw Exception("Signature not found")
-        if (!publicKey.verify(signature, preSigningOutput.data.toByteArray())) {
-            throw Exception("Signature verification failed")
+        val signature = signatures[key]?.getSignature() ?: error("Signature not found")
+        if (!publicKey.verify(
+                signature,
+                preSigningOutput.data.toByteArray()
+            )
+        ) {
+            error("Signature verification failed")
         }
         allSignatures.add(signature)
         publicKeys.add(publicKey.data())
         val compiledWithSignature =
-            TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
+            TransactionCompiler.compileWithSignatures(
+                coinType,
+                input,
+                allSignatures,
+                publicKeys
+            )
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
             .checkError()
         return SignedTransactionResult(
@@ -164,9 +196,15 @@ class SolanaHelper(
         signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
         val publicKey =
-            PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
+            PublicKey(
+                vaultHexPublicKey.toHexByteArray(),
+                PublicKeyType.ED25519
+            )
 
-        val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
+        val preHashes = TransactionCompiler.preImageHashes(
+            coinType,
+            inputData
+        )
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
                 .checkError()
@@ -179,7 +217,8 @@ class SolanaHelper(
             signatures[key]?.getSignature() ?: error("Signature not found")
 
         val verified = publicKey.verify(
-            signature, (preSigningOutput.data).toByteArray()
+            signature,
+            (preSigningOutput.data).toByteArray()
         )
         if (!verified) {
             error("Signature verification failed")
@@ -206,57 +245,74 @@ class SolanaHelper(
     fun getZeroSignedTransaction(
         keysignPayload: KeysignPayload,
     ): String {
-        val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
+        val publicKey = PublicKey(
+            vaultHexPublicKey.toHexByteArray(),
+            PublicKeyType.ED25519
+        )
         val input = getPreSignedInputData(keysignPayload)
         val allSignatures = DataVector()
         val publicKeys = DataVector()
         allSignatures.add("0".repeat(128).toHexByteArray())
         publicKeys.add(publicKey.data())
         val compiledWithSignature =
-            TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
+            TransactionCompiler.compileWithSignatures(
+                coinType,
+                input,
+                allSignatures,
+                publicKeys
+            )
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
             .checkError()
         return output.encoded
     }
 
-    fun getVersionedMessage(keysignPayload: KeysignPayload) : String {
+    fun getVersionedMessage(keysignPayload: KeysignPayload): String {
         val input = getPreSignedInputData(keysignPayload)
-        val preHashes = TransactionCompiler.preImageHashes(coinType, input)
-        val dataMessage = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
+        val preHashes = TransactionCompiler.preImageHashes(
+            coinType,
+            input
+        )
+        val dataMessage =
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
                 .checkError().data.toByteArray()
 
-       return Base64.encode(dataMessage)
+        return Base64.encode(dataMessage)
     }
-    private fun getPreSignedImageHashForRaw(base64Transaction: String): List<String> {
-        val txData = android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
-            ?: throw Exception("Invalid base64 transaction")
 
-        // Decode the transaction using TransactionDecoder
-        val decodedData = wallet.core.jni.TransactionDecoder.decode(coinType, txData)
+    private fun getPreSignedImageHashForRaw(base64Transaction: String): List<String> {
+        val txData = android.util.Base64.decode(
+            base64Transaction,
+            android.util.Base64.DEFAULT
+        )
+            ?: error("Invalid base64 transaction")
+
+        val decodedData = wallet.core.jni.TransactionDecoder.decode(
+            coinType,
+            txData
+        )
         val decodingOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
 
         if (decodingOutput.errorMessage.isNotEmpty()) {
-            throw Exception(decodingOutput.errorMessage)
+            error(decodingOutput.errorMessage)
         }
 
         if (!decodingOutput.hasTransaction()) {
-            throw Exception("Invalid transaction format")
+            error("Invalid transaction format")
         }
 
-        // Wrap in SolanaSigningInput with rawMessage
         val input = Solana.SigningInput.newBuilder()
             .setRawMessage(decodingOutput.transaction)
             .build()
 
         val inputData = input.toByteArray()
 
-        // Get pre-image hashes
-        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-
-        if (preSigningOutput.errorMessage.isNotEmpty()) {
-            throw Exception(preSigningOutput.errorMessage)
-        }
+        val hashes = TransactionCompiler.preImageHashes(
+            coinType,
+            inputData
+        )
+        val preSigningOutput =
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+                .checkError()
 
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
     }
@@ -266,50 +322,60 @@ class SolanaHelper(
         base64Transaction: String,
         signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
-        // 1. Validate inputs
         val pubkeyData = coinHexPubKey.toHexByteArray()
-        val publicKey = PublicKey(pubkeyData, PublicKeyType.ED25519)
+        val publicKey = PublicKey(
+            pubkeyData,
+            PublicKeyType.ED25519
+        )
 
-        val txData = android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
-            ?: throw Exception("Invalid base64 transaction")
+        val txData = android.util.Base64.decode(
+            base64Transaction,
+            android.util.Base64.DEFAULT
+        )
+            ?: error("Invalid base64 transaction")
 
-        // 2. Decode the transaction using TransactionDecoder
-        val decodedData = wallet.core.jni.TransactionDecoder.decode(coinType, txData)
+        val decodedData = wallet.core.jni.TransactionDecoder.decode(
+            coinType,
+            txData
+        )
         val decodingOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
 
         if (decodingOutput.errorMessage.isNotEmpty()) {
-            throw Exception(decodingOutput.errorMessage)
+            error(decodingOutput.errorMessage)
         }
 
         if (!decodingOutput.hasTransaction()) {
-            throw Exception("Invalid transaction format")
+            error("Invalid transaction format")
         }
 
-        // 3. Wrap in SolanaSigningInput with rawMessage
         val input = Solana.SigningInput.newBuilder()
             .setRawMessage(decodingOutput.transaction)
             .build()
 
         val inputData = input.toByteArray()
 
-        // 4. Get pre-image hash
-        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+        val hashes = TransactionCompiler.preImageHashes(
+            coinType,
+            inputData
+        )
+        val preSigningOutput =
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
 
         if (preSigningOutput.errorMessage.isNotEmpty()) {
-            throw Exception(preSigningOutput.errorMessage)
+            error(preSigningOutput.errorMessage)
         }
 
-        // 5. Get signature from MPC results
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())
-        val signature = signatures[key]?.getSignature() ?: throw Exception("Signature not found")
+        val signature = signatures[key]?.getSignature() ?: error("Signature not found")
 
-        // 6. Verify signature
-        if (!publicKey.verify(signature, preSigningOutput.data.toByteArray())) {
-            throw Exception("Signature verification failed")
+        if (!publicKey.verify(
+                signature,
+                preSigningOutput.data.toByteArray()
+            )
+        ) {
+            error("Signature verification failed")
         }
 
-        // 7. Compile with TransactionCompiler.compileWithSignatures
         val allSignatures = DataVector()
         val publicKeys = DataVector()
         allSignatures.add(signature)
@@ -322,7 +388,6 @@ class SolanaHelper(
             publicKeys
         )
 
-        // 8. Return SignedTransactionResult
         val output = Solana.SigningOutput.parseFrom(compiled)
             .checkError()
 

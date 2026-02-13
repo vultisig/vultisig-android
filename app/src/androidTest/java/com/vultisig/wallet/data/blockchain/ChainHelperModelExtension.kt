@@ -13,6 +13,7 @@ import TriggerSmartContractPayload
 import WasmExecuteContractPayload
 import androidx.compose.runtime.remember
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
+import com.vultisig.wallet.data.models.proto.v1.SignSolanaProto
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.chains.helpers.SolanaTransactionParser
@@ -81,7 +82,7 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
             )
         },
         signSolana = this.signData?.signSolana?.let { signSolana ->
-            vultisig.keysign.v1.SignSolana(
+            SignSolanaProto(
                 rawTransactions = signSolana.rawTransactions
             )
         },

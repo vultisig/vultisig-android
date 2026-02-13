@@ -50,7 +50,7 @@ fun SignSolanaDisplayView(
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                vertical = 12.dp,
+                vertical = 10.dp,
             )
     ) {
 
@@ -88,11 +88,11 @@ fun SignSolanaDisplayView(
                     .heightIn(max = 400.dp)
                     .background(
                         color = Theme.v2.colors.variables.bordersLight,
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(12.dp)
                     )
-                    .padding(12.dp)
+                    .padding(8.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 InstructionsSummarySection(signSolana)
 
@@ -119,7 +119,7 @@ private fun InstructionsSummarySection(signSolana: SignSolana) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
                 text = "Transaction Instructions Summary",
-                style = Theme.brockmann.button.medium.medium,
+                style = Theme.brockmann.button.medium.regular,
                 color = Theme.v2.colors.text.primary
             )
 
@@ -145,23 +145,29 @@ private fun InstructionRow(
             .fillMaxWidth()
             .background(
                 shape = RoundedCornerShape(8.dp),
-                color = Theme.v2.colors.backgrounds.surface3
+                color = Theme.v2.colors.backgrounds.darkBackground
             )
-            .padding(12.dp),
+            .padding(6.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = "Instruction ${index + 1}",
-                style = Theme.brockmann.button.medium.medium,
-                color = Theme.v2.colors.text.primary
+                style = Theme.brockmann.button.medium.regular,
+                color = Theme.v2.colors.text.primary,
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace,
+                lineHeight = 14.sp
             )
 
             instruction.instructionType?.let { type ->
                 Text(
                     text = ": $type",
-                    style = Theme.brockmann.button.medium.medium,
-                    color = Theme.v2.colors.text.primary
+                    style = Theme.brockmann.button.medium.regular,
+                    color = Theme.v2.colors.text.primary,
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    lineHeight = 14.sp
                 )
             }
         }
@@ -169,22 +175,27 @@ private fun InstructionRow(
         instruction.programName?.let { name ->
             Text(
                 text = "Program: $name",
-                fontSize = 12.sp,
-                color = Theme.v2.colors.neutrals.n100
+                color = Theme.v2.colors.neutrals.n100,
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace,
+                lineHeight = 14.sp
             )
         }
 
         Text(
             text = "Program ID: ${instruction.programId}",
-            fontSize = 12.sp,
             color = Theme.v2.colors.neutrals.n100,
-            fontFamily = FontFamily.Monospace
+            fontSize = 10.sp,
+            fontFamily = FontFamily.Monospace,
+            lineHeight = 14.sp
         )
 
         Text(
             text = "Accounts: ${instruction.accountsCount} | Data length: ${instruction.dataLength} bytes",
-            fontSize = 12.sp,
-            color = Theme.v2.colors.neutrals.n100
+            color = Theme.v2.colors.neutrals.n100,
+            fontSize = 10.sp,
+            fontFamily = FontFamily.Monospace,
+            lineHeight = 14.sp
         )
     }
 }
@@ -194,7 +205,7 @@ private fun RawTransactionsSection(signSolana: SignSolana) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text(
             text = stringResource(R.string.raw_transaction_data),
-            style = Theme.brockmann.button.medium.medium,
+            style = Theme.brockmann.button.medium.regular,
             color = Theme.v2.colors.text.primary
         )
         Column(
@@ -204,7 +215,7 @@ private fun RawTransactionsSection(signSolana: SignSolana) {
                     color = Theme.v2.colors.backgrounds.darkBackground,
                     shape = RoundedCornerShape(8.dp)
                 )
-                .padding(10.dp),
+                .padding(6.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             signSolana.rawTransactions.forEach { tx ->
