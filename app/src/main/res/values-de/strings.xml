@@ -886,6 +886,12 @@
     <string name="amino_sign">Amino-Signatur</string>
     <string name="amino_direct">Direkte Signatur</string>
     <string name="import_file_screen_enter_password">Geben Sie das Passwort für die Tresorfreigabe ein.</string>
+    <string name="transaction_status_confirmed">Transaktion bestätigt</string>
+    <string name="transaction_status_failed">Transaktion fehlgeschlagen</string>
+    <string name="transaction_status_not_found">Transaktion nicht gefunden</string>
+    <string name="transaction_status_pending">Transaktion ausstehend…</string>
+    <string name="transaction_status_notification_title">Transaktionsstatus</string>
+    <string name="transaction_status_checking_transaction">Transaktion wird geprüft…</string>
     <string name="raw_transaction_data">Rohdaten der Transaktion</string>
     <string name="solana_raw_transaction">Solana-Rohdaten der Transaktion</string>
 </resources>

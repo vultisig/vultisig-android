@@ -178,17 +178,9 @@ suspend fun Context.provideFileUri(file: File): Uri = doFileOperation {
 
 
 suspend fun Uri.fileContent(context: Context): String? = doFileOperation {
-    try {
-        val item = context.contentResolver.openInputStream(this@fileContent)
-        val bytes = item?.readBytes()
-        bytes?.toString(Charsets.UTF_8)
-    } catch (e: Exception) {
-        Timber.e(
-            e,
-            "Failed to read file content from URI"
-        )
-        null
-    }
+    val item = context.contentResolver.openInputStream(this@fileContent)
+    val bytes = item?.readBytes()
+    bytes?.toString(Charsets.UTF_8)
 }
 
 

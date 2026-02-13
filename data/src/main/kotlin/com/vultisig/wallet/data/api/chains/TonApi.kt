@@ -30,6 +30,7 @@ interface TonApi {
     suspend fun getJettonWallet(address: String, contract: String): JettonWalletsJson
 
     suspend fun getEstimateFee(address: String, serializedBoc: String): BigInteger
+    suspend fun getTsStatus(txHash: String): TonStatusResult
 }
 
 internal class TonApiImpl @Inject constructor(
@@ -42,21 +43,31 @@ internal class TonApiImpl @Inject constructor(
         getAddressInformation(address).balance
 
     override suspend fun getJettonBalance(address: String, contract: String): BigInteger {
-        val wallet = getJettonWallet(address, contract).jettonWallets.firstOrNull()
+        val wallet = getJettonWallet(
+            address,
+            contract
+        ).jettonWallets.firstOrNull()
         return wallet?.balance?.toBigIntegerOrNull() ?: BigInteger.ZERO
     }
 
     private suspend fun getAddressInformation(address: String): TonAddressInfoResponseJson =
         http.get("$baseUrl/v3/addressInformation") {
-            parameter("address", address)
-            parameter("use_v2", false)
+            parameter(
+                "address",
+                address
+            )
+            parameter(
+                "use_v2",
+                false
+            )
         }.body<TonAddressInfoResponseJson>()
 
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun broadcastTransaction(transaction: String): String? {
-        val response = http.post("$baseUrl/v2/sendBocReturnHash") {
+        val body = http.post("$baseUrl/v2/sendBocReturnHash") {
             setBody(TonBroadcastTransactionRequestJson(transaction))
-        }.body<TonBroadcastTransactionResponseJson>()
+        }
+        val response = body.body<TonBroadcastTransactionResponseJson>()
         if (response.error != null) {
             if (response.error.contains("duplicate message")) {
                 return null
@@ -75,7 +86,10 @@ internal class TonApiImpl @Inject constructor(
         address: String,
     ): BigInteger =
         http.get("$baseUrl/v2/getExtendedAddressInformation") {
-            parameter("address", address)
+            parameter(
+                "address",
+                address
+            )
         }.body<TonSpecificTransactionInfoResponseJson>()
             .result
             .accountState
@@ -89,20 +103,42 @@ internal class TonApiImpl @Inject constructor(
 
     override suspend fun getJettonWallet(address: String, contract: String): JettonWalletsJson {
         return http.get("$baseUrl/v3/jetton/wallets") {
-            parameter("owner_address", address)
-            parameter("jetton_master_address", contract)
+            parameter(
+                "owner_address",
+                address
+            )
+            parameter(
+                "jetton_master_address",
+                contract
+            )
         }.bodyOrThrow<JettonWalletsJson>()
     }
 
     override suspend fun getEstimateFee(address: String, serializedBoc: String): BigInteger {
         val feeResponse = http.get("$baseUrl/v3/estimateFee") {
-            parameter("address", address)
-            parameter("body", serializedBoc)
-            parameter("ignore_chksig", true)
+            parameter(
+                "address",
+                address
+            )
+            parameter(
+                "body",
+                serializedBoc
+            )
+            parameter(
+                "ignore_chksig",
+                true
+            )
         }.bodyOrThrow<TonEstimateFeeJson>()
 
         return feeResponse.result?.sourceFees?.totalFee()?.toBigInteger()
             ?: throw Exception("Can't calculate Fees")
+    }
+
+    override suspend fun getTsStatus(
+        txHash: String
+    ): TonStatusResult {
+        val response = http.get("${baseUrl}/v3/transactionsByMessage?msg_hash=${txHash}")
+        return response.bodyOrThrow<TonStatusResult>()
     }
 }
 
@@ -222,3 +258,16 @@ data class TonFees(
 ) {
     fun totalFee(): Long = inFwdFee + storageFee + gasFee + fwdFee
 }
+
+@Serializable
+data class TonStatusResult(
+    @SerialName("transactions")
+    val transactions: List<TransactionJson> = emptyList(),
+)
+
+@Serializable
+data class TransactionJson(
+    @SerialName("finality")
+    val finality: String? = null
+)
+
