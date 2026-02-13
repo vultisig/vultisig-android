@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.BlockChairDashboardResponse
 import com.vultisig.wallet.data.api.models.BlockChairInfo
 import com.vultisig.wallet.data.api.models.BlockChairInfoJson
 import com.vultisig.wallet.data.api.models.SuggestedTransactionFeeDataJson
@@ -27,6 +28,10 @@ interface BlockChairApi {
 
     suspend fun getBlockChairStats(chain: Chain): BigInteger
     suspend fun broadcastTransaction(chain: Chain, signedTransaction: String): String
+    suspend fun getTsStatus(
+        chain: Chain,
+        txHash: String,
+    ): BlockChairDashboardResponse?
 }
 
 internal class BlockChairApiImp @Inject constructor(
@@ -70,6 +75,7 @@ internal class BlockChairApiImp @Inject constructor(
             }
         return response.body<SuggestedTransactionFeeDataJson>().data.value
     }
+
     suspend fun broadcastTransactionMempool(signedTransaction: String): String {
         try {
             val response = httpClient.post("https://api.vultisig.com/bitcoin/") {
@@ -81,14 +87,13 @@ internal class BlockChairApiImp @Inject constructor(
                 throw Exception("Failed to broadcast transaction")
             }
             return response.bodyAsText() // Returns the transaction ID
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             Timber.e("Error broadcasting transaction: ${e.message}")
             throw e
         }
     }
     override suspend fun broadcastTransaction(chain: Chain, signedTransaction: String): String {
-        when(chain){
+        when (chain) {
             Chain.Bitcoin -> {
                 return broadcastTransactionMempool(signedTransaction)
             }
@@ -109,6 +114,19 @@ internal class BlockChairApiImp @Inject constructor(
 
                 return response.body<TransactionHashDataJson>().data.value
             }
+        }
+    }
+
+    override suspend fun getTsStatus(
+        chain: Chain,
+        txHash: String,
+    ): BlockChairDashboardResponse? {
+        return try {
+            val response =
+                httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/transaction/${txHash}")
+            response.body<BlockChairDashboardResponse>()
+        } catch (e: Exception) {
+            null
         }
     }
 }

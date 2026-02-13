@@ -9,8 +9,10 @@ import com.vultisig.wallet.data.api.models.TronChainParametersJson
 import com.vultisig.wallet.data.api.models.TronContractInfoJson
 import com.vultisig.wallet.data.api.models.TronContractRequestJson
 import com.vultisig.wallet.data.api.models.TronSpecificBlockJson
+import com.vultisig.wallet.data.api.models.TronTransactionStatusResponse
 import com.vultisig.wallet.data.api.models.TronTriggerConstantContractJson
 import com.vultisig.wallet.data.chains.helpers.TronFunctions.buildTrc20TransferParameters
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
@@ -54,6 +56,11 @@ interface TronApi {
     suspend fun getAccount(address: String): TronAccountJson
 
     suspend fun getContractMetadata(contract: String): TronContractInfoJson
+
+    suspend fun getTsStatus(
+        chain: Chain,
+        txHash: String,
+    ): TronTransactionStatusResponse?
 }
 
 internal class TronApiImpl @Inject constructor(
@@ -170,6 +177,26 @@ internal class TronApiImpl @Inject constructor(
             setBody(TronContractRequestJson(contract))
         }.bodyOrThrow<TronContractInfoJson>()
     }
+
+    override suspend fun getTsStatus(
+        chain: Chain,
+        txHash: String,
+    ): TronTransactionStatusResponse? {
+
+        return try {
+            httpClient.post(tronGrid) {
+                url {
+                    path("tron", "walletsolidity", "gettransactionbyid")
+                }
+                setBody(
+                    mapOf("value" to txHash)
+                )
+            }.body<TronTransactionStatusResponse?>()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
 
     companion object {
         const val TRANSFER_FUNCTION_SELECTOR = "transfer(address,uint256)"
