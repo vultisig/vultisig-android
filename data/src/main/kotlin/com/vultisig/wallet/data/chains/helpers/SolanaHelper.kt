@@ -141,12 +141,13 @@ class SolanaHelper(
         signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
         keysignPayload.signSolana?.let { signSolana ->
-            val firstTx = signSolana.rawTransactions.firstOrNull()
-                ?: error("No transactions to sign")
+            require(signSolana.rawTransactions.size == 1) {
+                "Expected exactly one Solana raw transaction"
+            }
 
             return signRawTransaction(
                 coinHexPubKey = keysignPayload.coin.hexPublicKey,
-                base64Transaction = firstTx,
+                base64Transaction = signSolana.rawTransactions.first(),
                 signatures = signatures
             )
         }
@@ -284,7 +285,6 @@ class SolanaHelper(
             base64Transaction,
             android.util.Base64.DEFAULT
         )
-            ?: error("Invalid base64 transaction")
 
         val decodedData = wallet.core.jni.TransactionDecoder.decode(
             coinType,

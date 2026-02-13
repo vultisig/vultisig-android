@@ -213,7 +213,7 @@ data class SolanaSpecific(
     @SerialName("priority_fee")
     val priorityFee: String,
     @SerialName("program_id")
-    val hasProgramId: Boolean,
+    val programId: Boolean,
     @SerialName("from_token_associated_address")
     val fromAddressPubKey: String? = null,
     @SerialName("to_token_associated_address")

@@ -35,6 +35,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.ParsedSolanaTransaction
 import com.vultisig.wallet.data.chains.helpers.SolanaTransactionParser
 import com.vultisig.wallet.ui.theme.Theme
+import timber.log.Timber
 import vultisig.keysign.v1.SignSolana
 import kotlin.collections.flatMap
 
@@ -110,6 +111,7 @@ private fun InstructionsSummarySection(signSolana: SignSolana) {
                 val parsed = SolanaTransactionParser.parse(tx)
                 parsed.instructions
             } catch (e: Exception) {
+                Timber.w(e, "Failed to parse Solana transaction")
                 emptyList()
             }
         }
@@ -229,17 +231,4 @@ private fun RawTransactionsSection(signSolana: SignSolana) {
             }
         }
     }
-}
-
-@Preview
-@Composable
-private fun SignSolanaDisplayPrewview() {
-    SignSolanaDisplayView(
-        SignSolana(
-            rawTransactions = listOf(
-                "AgAAAAAABJgYHhQO8v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v1+Vt2u1ZpXn5+2z5s6q9v",
-            )
-        )
-    )
-
 }

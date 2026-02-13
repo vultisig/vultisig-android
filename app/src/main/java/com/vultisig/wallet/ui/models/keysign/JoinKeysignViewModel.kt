@@ -919,17 +919,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         json.encodeToString(parseCosmosMessage(it))
                     } ?: ""
 
-                    val signSolana = payload.signSolana?.let { obj ->
-                        try {
-                            val field = obj::class.java.getDeclaredField("rawTransactions").apply { isAccessible = true }
-                            val list = field.get(obj) as? List<*>
-                            list?.firstOrNull() as? String ?: ""
-                        } catch (e: Exception) {
-                            val str = obj.toString()
-                            val inside = "\\[([^\\]]+)]".toRegex().find(str)?.groupValues?.get(1)?.trim()
-                            inside?.split(",")?.firstOrNull()?.trim() ?: ""
-                        }
-                    }
+                    val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = payload.vaultPublicKeyECDSA,

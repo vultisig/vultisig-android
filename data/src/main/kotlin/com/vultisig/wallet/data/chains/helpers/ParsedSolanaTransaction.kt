@@ -29,19 +29,16 @@ object SolanaTransactionParser {
 
     fun parse(base64Transaction: String): ParsedSolanaTransaction {
         val txData = android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
-            ?: throw Exception("Invalid base64 transaction")
 
-        // Use WalletCore's TransactionDecoder to parse the transaction
         val decodedData = TransactionDecoder.decode(CoinType.SOLANA, txData)
         val decodingOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
 
         if (!decodingOutput.hasTransaction()) {
-            throw Exception("Invalid transaction format")
+            error("Invalid transaction format")
         }
 
         val transaction = decodingOutput.transaction
 
-        // Extract instructions and account keys based on message type
         val instructions: List<Solana.RawMessage.Instruction>
         val accountKeys: List<String>
 
@@ -56,10 +53,9 @@ object SolanaTransactionParser {
                 instructions = legacyMessage.instructionsList
                 accountKeys = legacyMessage.accountKeysList
             }
-            else -> throw Exception("Invalid transaction format")
+            else -> error("Invalid transaction format")
         }
 
-        // Parse instructions
         val parsedInstructions = instructions.map { instruction ->
             val programIndex = instruction.programId.toInt()
             val programId = accountKeys.getOrNull(programIndex) ?: "Unknown"
@@ -89,7 +85,6 @@ object SolanaTransactionParser {
 
         val discriminator = instructionData[0].toInt() and 0xFF
 
-        // System Program
         if (programId == "11111111111111111111111111111111") {
             return when (discriminator) {
                 0 -> "Create Account"
@@ -101,7 +96,6 @@ object SolanaTransactionParser {
             }
         }
 
-        // Token Program
         if (programId == "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") {
             return when (discriminator) {
                 0 -> "Initialize Mint"
@@ -115,7 +109,6 @@ object SolanaTransactionParser {
             }
         }
 
-        // Token-2022 Program
         if (programId == "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb") {
             return when (discriminator) {
                 0 -> "Initialize Mint"
@@ -129,12 +122,10 @@ object SolanaTransactionParser {
             }
         }
 
-        // Associated Token Program
         if (programId == "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL") {
             return "Create Associated Token Account"
         }
 
-        // Compute Budget Program
         if (programId == "ComputeBudget111111111111111111111111111111") {
             return when (discriminator) {
                 0 -> "Request Heap Frame"

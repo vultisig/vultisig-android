@@ -252,7 +252,7 @@ internal fun VerifySendScreen(
 
                         SignSolanaDisplayView(
                             signSolana = SignSolana(
-                                rawTransactions = listOf(tx.signSolana)
+                                rawTransactions = listOf(it)
                             )
                         )
                     }
