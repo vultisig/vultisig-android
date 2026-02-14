@@ -58,9 +58,8 @@ fun SignSolanaDisplayView(
         ) {
             Text(
                 text = stringResource(R.string.solana_raw_transaction),
-                style = Theme.brockmann.supplementary.footnote,
+                style = Theme.brockmann.button.medium.regular,
                 color = Theme.v2.colors.text.tertiary,
-                maxLines = 1,
             )
 
             IconButton(
@@ -106,18 +105,22 @@ private fun InstructionsSummarySection(signSolana: SignSolana) {
                 val parsed = SolanaTransactionParser.parse(tx)
                 parsed.instructions
             } catch (e: Exception) {
-                Timber.w(e, "Failed to parse Solana transaction")
+                Timber.w(
+                    e,
+                    "Failed to parse Solana transaction"
+                )
                 emptyList()
             }
         }
     }
 
     if (allInstructions.isNotEmpty()) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = "Transaction Instructions Summary",
                 style = Theme.brockmann.button.medium.regular,
-                color = Theme.v2.colors.text.primary
+                color = Theme.v2.colors.text.primary,
+                fontSize = 13.sp,
             )
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -152,6 +155,7 @@ private fun InstructionRow(
                 text = "Instruction ${index + 1}",
                 style = Theme.brockmann.button.medium.regular,
                 color = Theme.v2.colors.text.primary,
+                fontSize = 10.sp,
             )
 
             instruction.instructionType?.let { type ->
@@ -159,6 +163,7 @@ private fun InstructionRow(
                     text = ": $type",
                     style = Theme.brockmann.button.medium.medium,
                     color = Theme.v2.colors.text.primary,
+                    fontSize = 10.sp,
                 )
             }
         }
@@ -168,7 +173,7 @@ private fun InstructionRow(
                 text = "Program: $name",
                 style = Theme.brockmann.button.medium.medium,
                 color = Theme.v2.colors.neutrals.n100,
-                fontSize = 10.sp,
+                fontSize = 10.sp
             )
         }
 
@@ -194,7 +199,8 @@ private fun RawTransactionsSection(signSolana: SignSolana) {
         Text(
             text = stringResource(R.string.raw_transaction_data),
             style = Theme.brockmann.button.medium.regular,
-            color = Theme.v2.colors.text.primary
+            color = Theme.v2.colors.text.primary,
+            lineHeight = 13.sp
         )
         Column(
             modifier = Modifier
@@ -212,7 +218,7 @@ private fun RawTransactionsSection(signSolana: SignSolana) {
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
                     color = Theme.v2.colors.buttons.primary,
-                    lineHeight = 14.sp
+                    lineHeight = 12.sp
                 )
             }
         }
