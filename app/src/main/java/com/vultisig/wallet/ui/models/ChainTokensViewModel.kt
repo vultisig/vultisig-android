@@ -214,7 +214,6 @@ internal class ChainTokensViewModel @Inject constructor(
 
         loadDataJob?.cancel()
         loadDataJob = viewModelScope.launch {
-            updateRefreshing(true)
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
             currentVault = vaultRepository.get(vaultId)
                 ?: error("No vault with $vaultId")
@@ -223,14 +222,10 @@ internal class ChainTokensViewModel @Inject constructor(
                 vaultId = vaultId,
                 chain = chain,
             )
-                .onEach {
-                    updateRefreshing(it.accounts.hasNullAccount())
-                }
                 .combine(fetchMergeBalanceFlow(chain)) { address, mergeBalance ->
                     address to mergeBalance
                 }
                 .catch {
-                    updateRefreshing(false)
                     Timber.e(it)
                 }
                 .combine(
@@ -378,10 +373,6 @@ internal class ChainTokensViewModel @Inject constructor(
         )
     }
 
-    private fun updateRefreshing(isRefreshing: Boolean) {
-        uiState.update { it.copy(isRefreshing = isRefreshing) }
-    }
-
     private fun List<MergeAccount>.findMergeBalance(coin: Coin): BigInteger {
         val ticker = coin.ticker.lowercase()
 
@@ -394,8 +385,5 @@ internal class ChainTokensViewModel @Inject constructor(
 
         return mergeBalance
     }
-
-    private fun List<Account>.hasNullAccount() = any {
-        it.tokenValue == null || it.fiatValue == null
-    }
+    
 }
