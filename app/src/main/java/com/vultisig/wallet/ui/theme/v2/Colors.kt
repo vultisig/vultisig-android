@@ -38,7 +38,8 @@ data class Buttons(
     val tertiary: Color = Color(0xFF2155DF),
     val disabled: Color = Color(0xFF0B1A3A),
     val disabledError: Color = Color(0xFF501E1E),
-    val ctaPrimary: Color = Color(0xFF0B4EFF)
+    val ctaPrimary: Color = Color(0xFF0B4EFF),
+    val ctaDisabled: Color = Color(0xFF23376D)
 )
 
 
