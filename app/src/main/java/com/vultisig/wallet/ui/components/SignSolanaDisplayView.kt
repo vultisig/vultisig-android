@@ -6,15 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,10 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
@@ -147,7 +142,7 @@ private fun InstructionRow(
             .fillMaxWidth()
             .background(
                 shape = RoundedCornerShape(8.dp),
-                color = Theme.v2.colors.backgrounds.darkBackground
+                color = Theme.v2.colors.backgrounds.dark
             )
             .padding(6.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -157,19 +152,13 @@ private fun InstructionRow(
                 text = "Instruction ${index + 1}",
                 style = Theme.brockmann.button.medium.regular,
                 color = Theme.v2.colors.text.primary,
-                fontSize = 10.sp,
-                fontFamily = FontFamily.Monospace,
-                lineHeight = 14.sp
             )
 
             instruction.instructionType?.let { type ->
                 Text(
                     text = ": $type",
-                    style = Theme.brockmann.button.medium.regular,
+                    style = Theme.brockmann.button.medium.medium,
                     color = Theme.v2.colors.text.primary,
-                    fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace,
-                    lineHeight = 14.sp
                 )
             }
         }
@@ -177,27 +166,24 @@ private fun InstructionRow(
         instruction.programName?.let { name ->
             Text(
                 text = "Program: $name",
+                style = Theme.brockmann.button.medium.medium,
                 color = Theme.v2.colors.neutrals.n100,
                 fontSize = 10.sp,
-                fontFamily = FontFamily.Monospace,
-                lineHeight = 14.sp
             )
         }
 
         Text(
             text = "Program ID: ${instruction.programId}",
             color = Theme.v2.colors.neutrals.n100,
+            style = Theme.brockmann.button.medium.medium,
             fontSize = 10.sp,
-            fontFamily = FontFamily.Monospace,
-            lineHeight = 14.sp
         )
 
         Text(
             text = "Accounts: ${instruction.accountsCount} | Data length: ${instruction.dataLength} bytes",
             color = Theme.v2.colors.neutrals.n100,
+            style = Theme.brockmann.button.medium.medium,
             fontSize = 10.sp,
-            fontFamily = FontFamily.Monospace,
-            lineHeight = 14.sp
         )
     }
 }
@@ -214,7 +200,7 @@ private fun RawTransactionsSection(signSolana: SignSolana) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = Theme.v2.colors.backgrounds.darkBackground,
+                    color = Theme.v2.colors.backgrounds.dark,
                     shape = RoundedCornerShape(8.dp)
                 )
                 .padding(6.dp),

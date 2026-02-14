@@ -64,7 +64,7 @@ data class Backgrounds(
     val teal: Color = Color(0xFF15D7AC),
     val orange: Color = Color(0xffF7961B),
     val disabled: Color = Color(0x800B1A3A),
-    val darkBackground: Color = Color(0xff02132B)
+    val dark: Color = Color(0xFF061C3C)
 )
 
 data class Primary(
