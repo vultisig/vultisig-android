@@ -370,12 +370,18 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun hideSearchBar() {
         uiState.update { it.copy(isSearchMode = false) }
-        bottomBarVisibility.showBottomBar()
     }
 
     fun showSearchBar() {
         uiState.update { it.copy(isSearchMode = true) }
-        bottomBarVisibility.hideBottomBar()
+    }
+
+    fun handleKeyboardState(isKeyboardOpen: Boolean) {
+        if (isKeyboardOpen) {
+            bottomBarVisibility.hideBottomBar()
+        } else {
+            bottomBarVisibility.showBottomBar()
+        }
     }
 
     fun back() {
