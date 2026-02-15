@@ -128,12 +128,13 @@ internal class ChainTokensViewModel @Inject constructor(
     ) {
         this.vaultId = vaultId
         this.chainRaw = chainId
-        refresh()
+        updateBalanceVisibility()
+        loadData(isRefresh = false)
     }
 
     fun refresh() {
         updateBalanceVisibility()
-        loadData()
+        loadData(isRefresh = true)
     }
 
     fun send() {
@@ -189,7 +190,7 @@ internal class ChainTokensViewModel @Inject constructor(
                 )
             )
             requestResultRepository.request<Unit>(REFRESH_TOKEN_DATA)
-            loadData()
+            loadData(isRefresh = true)
         }
     }
 
@@ -206,7 +207,9 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
-    private fun loadData() {
+    private fun loadData(
+        isRefresh: Boolean
+    ) {
         discoverTokenUseCase(
             vaultId,
             chainRaw
@@ -214,18 +217,39 @@ internal class ChainTokensViewModel @Inject constructor(
 
         loadDataJob?.cancel()
         loadDataJob = viewModelScope.launch {
+            if(isRefresh) {
+                updateRefreshing(true)
+            }
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
+
+            val addressDataSource = if (isRefresh) {
+                accountsRepository.loadAddress(
+                    vaultId = vaultId,
+                    chain = chain,
+                )
+            } else {
+                accountsRepository.loadCachedAddress(
+                    vaultId = vaultId,
+                    chain = chain,
+                )
+            }
+
             currentVault = vaultRepository.get(vaultId)
                 ?: error("No vault with $vaultId")
             collectTronResourceStats(chain)
-            accountsRepository.loadAddress(
-                vaultId = vaultId,
-                chain = chain,
-            )
+            addressDataSource
+                .onEach {
+                    if (isRefresh) {
+                        updateRefreshing(it.accounts.hasNullAccount())
+                    }
+                }
                 .combine(fetchMergeBalanceFlow(chain)) { address, mergeBalance ->
                     address to mergeBalance
                 }
                 .catch {
+                    if(isRefresh) {
+                        updateRefreshing(false)
+                    }
                     Timber.e(it)
                 }
                 .combine(
@@ -373,6 +397,10 @@ internal class ChainTokensViewModel @Inject constructor(
         )
     }
 
+    private fun updateRefreshing(isRefreshing: Boolean) {
+        uiState.update { it.copy(isRefreshing = isRefreshing) }
+    }
+
     private fun List<MergeAccount>.findMergeBalance(coin: Coin): BigInteger {
         val ticker = coin.ticker.lowercase()
 
@@ -385,5 +413,8 @@ internal class ChainTokensViewModel @Inject constructor(
 
         return mergeBalance
     }
-    
+
+    private fun List<Account>.hasNullAccount() = any {
+        it.tokenValue == null || it.fiatValue == null
+    }
 }

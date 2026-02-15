@@ -22,6 +22,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -47,6 +48,11 @@ interface AccountsRepository {
     ): Flow<List<Address>>
 
     fun loadAddress(
+        vaultId: String,
+        chain: Chain,
+    ): Flow<Address>
+
+    fun loadCachedAddress(
         vaultId: String,
         chain: Chain,
     ): Flow<Address>
@@ -148,7 +154,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
     private suspend fun MutableList<Address>.fetchAccountFromDb() {
         val balances = balanceRepository.getCachedTokenBalances(
             this.map { adr -> adr.address },
-            this.map { adr -> adr.accounts.map { it.token } }.flatten()
+            this.flatMap { adr -> adr.accounts.map { it.token } }
         )
 
         mapIndexed { index, account ->
@@ -208,13 +214,55 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         emit(account)
 
-        val address = account.address
+        emitCachedAddress(account)
+
+        val loadPrices = supervisorScope {
+            async { tokenPriceRepository.refresh(updatedCoins) }
+        }
+
+        loadPrices.await()
+
+        emitRefreshAddress(account)
+
+    }.map {
+        it.distinctByChainAndContractAddress()
+    }
+
+    override fun loadCachedAddress(vaultId: String, chain: Chain): Flow<Address> = flow {
+        val vault = getVault(vaultId)
+        val coins = vault.coins.filter { it.chain == chain }
+
+        val account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+            ?: return@flow
+        emitCachedAddress(account)
+    }
+
+    private suspend fun FlowCollector<Address>.emitRefreshAddress(
+        address: Address,
+    ) {
+        val tokenAddress = address.address
+        emit(
+            address.copy(
+                accounts = address.accounts.map {
+                    val balance = balanceRepository.getTokenBalanceAndPrice(tokenAddress, it.token)
+                        .first()
+
+                    it.applyBalance(balance.tokenBalance, balance.price)
+                }
+            )
+        )
+    }
+
+
+    private suspend fun FlowCollector<Address>.emitCachedAddress(address: Address) {
+
+        val tokenAddress = address.address
 
         emit(
-            account.copy(
-                accounts = account.accounts.map {
+            address.copy(
+                accounts = address.accounts.map {
                     val balance = balanceRepository.getCachedTokenBalanceAndPrice(
-                        address,
+                        tokenAddress,
                         it.token,
                     )
 
@@ -222,25 +270,6 @@ internal class AccountsRepositoryImpl @Inject constructor(
                 }
             )
         )
-
-        val loadPrices = supervisorScope {
-            async { tokenPriceRepository.refresh(updatedCoins) }
-        }
-
-
-        loadPrices.await()
-
-        emit(
-            account.copy(
-                accounts = account.accounts.map {
-                    val balance = balanceRepository.getTokenBalanceAndPrice(address, it.token)
-                        .first()
-
-                    it.applyBalance(balance.tokenBalance, balance.price)
-                }
-            ))
-    }.map {
-        it.distinctByChainAndContractAddress()
     }
 
     override suspend fun fetchMergeBalance(chain: Chain, vaultId: String): List<MergeAccount> {
