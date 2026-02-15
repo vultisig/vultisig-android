@@ -232,10 +232,18 @@ internal class AccountsRepositoryImpl @Inject constructor(
         val vault = getVault(vaultId)
         val coins = vault.coins.filter { it.chain == chain }
 
-        val account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+        val account = chainAndTokensToAddressMapper.map(
+            ChainAndTokens(
+                chain,
+                coins
+            )
+        )
             ?: return@flow
         emitCachedAddress(account)
+    }.map {
+        it.distinctByChainAndContractAddress()
     }
+
 
     private suspend fun FlowCollector<Address>.emitRefreshAddress(
         address: Address,
