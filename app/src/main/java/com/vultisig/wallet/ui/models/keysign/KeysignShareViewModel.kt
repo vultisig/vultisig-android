@@ -79,7 +79,7 @@ internal class KeysignShareViewModel @Inject constructor(
             this@KeysignShareViewModel.vault = vault
             amount.value = mapTokenValueToStringWithUnit(transaction.tokenValue)
             customMessagePayload = null
-            keysignPayload = KeysignPayload( // wrong data
+            keysignPayload = KeysignPayload(
                 coin = coin,
                 toAddress = transaction.dstAddress,
                 toAmount = transaction.tokenValue.value,
