@@ -32,7 +32,6 @@ import com.vultisig.wallet.data.chains.helpers.SolanaTransactionParser
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
 import vultisig.keysign.v1.SignSolana
-import kotlin.collections.flatMap
 
 @Composable
 fun SignSolanaDisplayView(
