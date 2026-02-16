@@ -212,6 +212,8 @@ data class SolanaSpecific(
     val recentBlockHash: String,
     @SerialName("priority_fee")
     val priorityFee: String,
+    @SerialName("has_program_id")
+    val hasProgramId: Boolean,
     @SerialName("program_id")
     val programId: Boolean,
     @SerialName("from_token_associated_address")
