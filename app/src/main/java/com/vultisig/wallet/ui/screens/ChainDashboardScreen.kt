@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -32,12 +33,13 @@ internal fun ChainDashboardScreen(
     val uiModel by viewModel.uiState.collectAsState()
 
     Scaffold(
-        bottomBar = if (uiModel.isBottomBarVisible) {
-            {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
+            ) {
+                if (uiModel.isBottomBarVisible) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -56,10 +58,8 @@ internal fun ChainDashboardScreen(
                     }
                 }
             }
-        } else {
-            {}
-        },
-    ) { paddingValues ->
+        }
+    ){ paddingValues ->
         Box(
             modifier = Modifier
                 .padding(
