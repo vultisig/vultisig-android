@@ -232,6 +232,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             }
             if (!shareViewModel.hasAllData) {
                moveToState(Error("Keysign information not available"))
+                return
             }
 
             val vault = shareViewModel.vault ?: return

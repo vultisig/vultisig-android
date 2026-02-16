@@ -91,7 +91,10 @@ internal fun KeysignPeerDiscovery(
             }
         }
     }
-    LaunchedEffect(key1 = viewModel.selection) {
+    LaunchedEffect(
+        key1 = viewModel.selection,
+        vault
+    ) {
         viewModel.selection.asFlow().collect { newList ->
             if (vault.signers.isEmpty()) {
                 Timber.e("Vault signers size is 0")
