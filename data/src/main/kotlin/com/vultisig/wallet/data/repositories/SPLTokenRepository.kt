@@ -34,6 +34,7 @@ internal class SplTokenRepositoryImpl @Inject constructor(
     private val tokenValueDao: TokenValueDao,
     private val mapSplTokenJsonFromSplTokenInfo: SplTokenJsonFromSplTokenInfoMapper,
     private val mapSplAccountJsonToSplToken: SplResponseAccountJsonMapper,
+    private val tokenPriceRepository: TokenPriceRepository,
 ) : SplTokenRepository {
 
     override suspend fun getTokens(address: String, vault: Vault) =
@@ -54,6 +55,7 @@ internal class SplTokenRepositoryImpl @Inject constructor(
         val splTokenResponse = rawSPLTokens.map(mapSplAccountJsonToSplToken)
         val result = getSplTokensByContractAddress(splTokenResponse.map { it.mint })
         return splTokenResponse.map { key ->
+            //here
             result.firstOrNull { resultItem -> resultItem.mint == key.mint }
                 ?.let { matchingResult ->
                     key to initCoinData(matchingResult, key.mint)
@@ -63,7 +65,8 @@ internal class SplTokenRepositoryImpl @Inject constructor(
 
     private suspend fun getSplTokensByContractAddress(contractAddresses: List<String>): List<SplTokenJson> {
         var result = solanaApi.getSPLTokensInfo(contractAddresses)
-        if (result.size != contractAddresses.size) {
+        //here
+         if (result.size != contractAddresses.size) {
             //search for missing tokens in splTokenResponse
             val missingMints = contractAddresses.filter { mint ->
                 result.none { it.mint == mint }
@@ -104,7 +107,18 @@ internal class SplTokenRepositoryImpl @Inject constructor(
             ?.run { initCoinData(this, contractAddress) }
 
     override suspend fun getJupiterTokens(): List<Coin> = try {
-        solanaApi.getJupiterTokens().toCoins()
+        val tokens = solanaApi.getJupiterTokens()
+
+        // Store USD prices for tokens that have them
+        tokens.forEach { token ->
+            token.usdPrice?.let { price ->
+                // Store price in database using tokenPriceRepository
+                // You'll need to inject TokenPriceRepository into SPLTokenRepositoryImpl
+                tokenPriceRepository.storeJupiterTokenPrice(token.contractAddress, price)
+            }
+        }
+
+        tokens.toCoins()
     } catch (e: Exception) {
         emptyList()
     }
@@ -139,7 +153,8 @@ internal class SplTokenRepositoryImpl @Inject constructor(
         ticker = tokenResponse.tokenList.ticker,
         logo = tokenResponse.tokenList.logo ?: "",
         decimal = tokenResponse.decimals,
-        priceProviderID = tokenResponse.tokenList.extensions?.coingeckoId ?: "",
+        priceProviderID = tokenResponse.tokenList.extensions?.coingeckoId
+            ?: tokenResponse.usdPrice?.toString() ?: "",
         contractAddress = contractAddress,
         isNativeToken = false,
         address = "",

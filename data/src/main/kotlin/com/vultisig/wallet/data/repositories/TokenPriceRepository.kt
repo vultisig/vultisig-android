@@ -23,8 +23,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlin.let
+import kotlin.times
+import kotlin.toBigDecimal
 
 interface TokenPriceRepository {
 
@@ -55,6 +59,12 @@ interface TokenPriceRepository {
     suspend fun getPriceByPriceProviderId(
         priceProviderId: String,
     ): BigDecimal
+
+    suspend fun storeJupiterTokenPrice(
+        tokenId: String,
+        usdPrice: Double
+    )
+
 }
 
 
@@ -102,16 +112,39 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         val priceProviderIds = mutableListOf<String>()
         val chainContractAddresses = mutableMapOf<Chain, List<Coin>>()
 
+        val usdPrices : MutableMap<TokenId, BigDecimal> = mutableMapOf()
         // sort tokens with contract address and price provider id to different lists
         tokens.forEach { token ->
-            if (token.priceProviderID.isNotEmpty()) {
+            if (token.priceProviderID.isNotEmpty() && token.priceProviderID.toDoubleOrNull() == null) {
                 priceProviderIds.add(token.priceProviderID)
             } else {
+                token.priceProviderID.toBigDecimalOrNull()?.let {
+                    usdPrices[token.id] = it
+                }
                 val existingChain = chainContractAddresses
                     .getOrPut(token.chain) { mutableListOf() }
                 chainContractAddresses[token.chain] = existingChain + token
             }
         }
+
+        val tetherPrice = if (currency == AppCurrency.USD.ticker.lowercase()) {
+            1.toBigDecimal()
+        } else {
+            fetchTetherPrice()
+        }
+
+        usdPrices.asSequence().mapNotNull {(tokenId, priceUsd) ->
+            // Pair<TokenId, Map<String, BigDecimal>>
+//  Map<TokenId, CurrencyToPrice>
+            
+        val  test= usdPrices.mapValues { (_, priceUsd) ->
+            mapOf(currency to priceUsd * tetherPrice)
+        }
+
+            savePrices(test,currency)
+
+        }
+
 
         val pricesWithProviderIds = coinGeckoApi.getCryptoPrices(priceProviderIds, currencies)
             .asSequence()
@@ -121,7 +154,6 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             }
             .flatten()
             .toMap()
-
         savePrices(pricesWithProviderIds, currency)
 
         chainContractAddresses
@@ -142,6 +174,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                     }
                     .toMap()
 
+                //here
                 savePrices(pricesWithContractAddress, currency)
             }
 
@@ -180,6 +213,29 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
         val cryptoPrices = coinGeckoApi.getCryptoPrices(listOf(priceProviderId), listOf(currency))
         return cryptoPrices.values.firstOrNull()?.values?.firstOrNull() ?: BigDecimal.ZERO
+    }
+
+    override suspend fun storeJupiterTokenPrice(
+        tokenId: String,
+        usdPrice: Double
+    ) {
+        val currency = appCurrencyRepository.currency.first().ticker.lowercase()
+
+        // Convert USD price to the user's currency
+        val priceInUserCurrency = if (currency == "usd") {
+            BigDecimal.valueOf(usdPrice)
+        } else {
+            val tetherPrice = fetchTetherPrice()
+            BigDecimal.valueOf(usdPrice) * tetherPrice
+        }
+
+        tokenPriceDao.insertTokenPrice(
+            TokenPriceEntity(
+                tokenId = tokenId,
+                currency = currency,
+                price = priceInUserCurrency.toPlainString(),
+            )
+        )
     }
 
     private suspend fun savePrices(
@@ -272,7 +328,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         ).values.firstOrNull()
 
 
-    private suspend fun fetchTetherPrice() =
+     suspend fun fetchTetherPrice() =
         getPriceByPriceProviderId(TETHER_PRICE_PROVIDER_ID)
 
     private suspend fun fetchThorPoolPrices(tokenList: List<Coin>, currency: String) {
@@ -290,32 +346,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                 Timber.e(e, "Failed to fetch prices from pools")
                 return@supervisorScope
             }
-
-            val tickerUsd = AppCurrency.USD.ticker.lowercase()
-            val tetherPrice = if (currency.equals(tickerUsd, ignoreCase = true))
-                1.toBigDecimal()
-            else fetchTetherPrice()
-
-            val tokenIdToPrices = thorTokens.asSequence()
-                .mapNotNull {
-                    val mappedAsset = mapThorPoolAsset(it.contractAddress)
-                    var priceUsd = poolAssetToPriceMap[mappedAsset]?.toBigDecimal(scale = 8)
-
-                    // Fall back to ticker-based mapping for backwards compatibility
-                    if (priceUsd == null) {
-                        val tickerAsset = "thor.${it.ticker}".lowercase()
-                        priceUsd = poolAssetToPriceMap[tickerAsset]?.toBigDecimal(scale = 8)
-                    }
-
-                    // If still no price found, skip this token
-                    if (priceUsd == null) {
-                        return@mapNotNull null
-                    }
-
-                    //Since ninerealms provides prices in USD, we use the USDT rate to convert them into the selected currency
-                    it.id to mapOf(currency to priceUsd * tetherPrice)
-                }
-                .toMap()
+            val tokenIdToPrices = buildTokenPriceMap(thorTokens,poolAssetToPriceMap,currency)
 
             savePrices(
                 tokenIdToPrices,
@@ -323,6 +354,42 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             )
         }
     }
+
+
+
+private suspend fun buildTokenPriceMap(
+    thorTokens: List<Coin>,
+    poolAssetToPriceMap:  Map<String, BigInteger>,
+    currency: String
+):  Map<TokenId, Map<String, BigDecimal>> {
+    val tickerUsd = AppCurrency.USD.ticker.lowercase()
+    val tetherPrice = if (currency.equals(tickerUsd, ignoreCase = true))
+        1.toBigDecimal()
+    else fetchTetherPrice()
+
+    return thorTokens.asSequence()
+        .mapNotNull {
+            val mappedAsset = mapThorPoolAsset(it.contractAddress)
+            var priceUsd = poolAssetToPriceMap[mappedAsset]?.toBigDecimal(scale = 8)
+
+            // Fall back to ticker-based mapping for backwards compatibility
+            if (priceUsd == null) {
+                val tickerAsset = "thor.${it.ticker}".lowercase()
+                priceUsd = poolAssetToPriceMap[tickerAsset]?.toBigDecimal(scale = 8)
+            }
+
+            // If still no price found, skip this token
+            if (priceUsd == null) {
+                return@mapNotNull null
+            }
+
+            //Since ninerealms provides prices in USD, we use the USDT rate to convert them into the selected currency
+            it.id to mapOf(currency to priceUsd * tetherPrice)
+        }
+        .toMap()
+
+}
+
 
     private suspend fun fetchThorContractPrices(
         tokenList: List<Coin>,
