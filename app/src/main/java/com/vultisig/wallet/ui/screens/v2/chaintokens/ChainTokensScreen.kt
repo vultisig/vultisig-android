@@ -56,6 +56,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.KeyboardAware
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.showReviewPopUp
 
@@ -70,7 +71,7 @@ internal fun ChainTokensScreen(
     val context = LocalContext.current
     val reviewManager = remember { ReviewManagerFactory.create(context) }
 
-
+    KeyboardAware(viewModel::handleKeyboardState)
 
     LaunchedEffect(Unit) {
         viewModel.initData(

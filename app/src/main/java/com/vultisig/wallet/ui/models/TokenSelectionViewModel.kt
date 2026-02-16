@@ -107,18 +107,29 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     fun onCommitChanges() {
         val toEnableAccounts = uiState.value.tokens.filter { it.isEnabled }
+        val toDisableAccounts = uiState.value.tokens - toEnableAccounts.toSet()
 
         viewModelScope.launch {
             toEnableAccounts.forEach {
-                enableTokenUseCase(vaultId, it.coin)
+                enableTokenUseCase(
+                    vaultId,
+                    it.coin
+                )
             }
-            val toEnableIds = toEnableAccounts.map { it.coin.id }.toSet()
+            val toDisableIds = toDisableAccounts.map { it.coin.id }.toSet()
             val currentEnabled = vaultRepository.getEnabledTokens(vaultId).first()
-            val toRemoveFromVault = currentEnabled.filter { it.chain.id == chainId && it.id !in toEnableIds && !it.isNativeToken }
+            val toRemoveFromVault =
+                currentEnabled.filter { it.chain.id == chainId && it.id in toDisableIds && !it.isNativeToken }
             toRemoveFromVault.forEach {
-                vaultRepository.disableTokenFromVault(vaultId, it)
+                vaultRepository.disableTokenFromVault(
+                    vaultId,
+                    it
+                )
             }
-            requestResultRepository.respond(REFRESH_TOKEN_DATA, Unit)
+            requestResultRepository.respond(
+                REFRESH_TOKEN_DATA,
+                Unit
+            )
             navigator.back()
         }
     }
@@ -139,7 +150,10 @@ internal class TokenSelectionViewModel @Inject constructor(
 
             try {
                 val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
-                val allChainTokens = getChainTokens(chain, vault)
+                val allChainTokens = getChainTokens(
+                    chain,
+                    vault
+                )
                     .map { tokens -> tokens.filter { !it.isNativeToken } }
                 val enabledTokenIdsLowercase = enabledTokenIds.map { tokenId ->
                     tokenId.lowercase()
@@ -165,11 +179,21 @@ internal class TokenSelectionViewModel @Inject constructor(
                 .map { it.toString() },
         ) { tempSelections, enabledTokenIds, enabledTokens, disabledTokens, query ->
             val selectedUiTokens = enabledTokens
-                .filter { it.ticker.contains(query, ignoreCase = true) }
+                .filter {
+                    it.ticker.contains(
+                        query,
+                        ignoreCase = true
+                    )
+                }
                 .asUiTokens(enabledTokenIds)
 
             val otherUiTokens = if (query.isNotBlank()) {
-                disabledTokens.filter { it.ticker.contains(query, ignoreCase = true) }
+                disabledTokens.filter {
+                    it.ticker.contains(
+                        query,
+                        ignoreCase = true
+                    )
+                }
             } else {
                 disabledTokens
             }.asUiTokens(enabledTokenIds)
@@ -203,17 +227,21 @@ internal class TokenSelectionViewModel @Inject constructor(
             coin.apply {
                 if (enabledTokenIds.value.contains(id))
                     return@apply
-                enableTokenUseCase(vaultId, this)
+                enableTokenUseCase(
+                    vaultId,
+                    this
+                )
                 loadTokens()
             }
         }
     }
 
-    fun back(){
+    fun back() {
         viewModelScope.launch {
             navigator.back()
         }
     }
+
     fun setSearchText(searchText: String) {
         searchTextFieldState.setTextAndPlaceCursorAtEnd(text = searchText)
     }
