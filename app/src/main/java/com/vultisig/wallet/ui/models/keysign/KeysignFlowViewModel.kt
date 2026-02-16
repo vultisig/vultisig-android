@@ -8,10 +8,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -51,6 +53,7 @@ import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.ui.models.AddressProvider
+import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -60,6 +63,10 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Deposit
+import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Send
+import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Sign
+import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Swap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
@@ -67,6 +74,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -85,6 +94,17 @@ internal sealed class KeysignFlowState {
     data object Keysign : KeysignFlowState()
     data class Error (val errorMessage: String) : KeysignFlowState()
 }
+
+@Immutable
+data class KeysignFlowUiState(
+    val vault: Vault = Vault(id = "", name = ""),
+    val amount: String = "",
+    val toAmount: String = "",
+    val toAddress: String = "",
+    val isSwap: Boolean = false,
+    val qrBitmapPainter: BitmapPainter? = null,
+    val isLoading: Boolean = false,
+)
 
 @HiltViewModel
 internal class KeysignFlowViewModel @Inject constructor(
@@ -186,6 +206,8 @@ internal class KeysignFlowViewModel @Inject constructor(
             txStatusConfigurationProvider = txStatusConfigurationProvider,
         )
 
+    val uiState = MutableStateFlow(KeysignFlowUiState())
+
     init {
         viewModelScope.launch {
             currentState.collect { state ->
@@ -197,16 +219,27 @@ internal class KeysignFlowViewModel @Inject constructor(
     }
 
     suspend fun setData(
-        vault: Vault,
+        shareViewModel: KeysignShareViewModel,
         context: Context,
-        keysignPayload: KeysignPayload?,
-        customMessagePayload: CustomMessagePayload?,
         txType: Route.Keysign.Keysign.TxType,
     ) {
         try {
+            when (txType) {
+                Send -> shareViewModel.loadTransaction(transactionId)
+                Swap -> shareViewModel.loadSwapTransaction(transactionId)
+                Deposit -> shareViewModel.loadDepositTransaction(transactionId)
+                Sign -> shareViewModel.loadSignMessageTx(transactionId)
+            }
+            if (!shareViewModel.hasAllData) {
+               moveToState(Error("Keysign information not available"))
+            }
+
+            val vault = shareViewModel.vault ?: return
             _currentVault = vault
+            val keysignPayload = shareViewModel.keysignPayload
             val modifiedKeysignPayload = updateSolanaKeysignPayload(keysignPayload)
             _keysignPayload = modifiedKeysignPayload
+            val customMessagePayload = shareViewModel.customMessagePayload
             this.customMessagePayload = customMessagePayload
             messagesToSign = when {
                 modifiedKeysignPayload != null ->
@@ -221,6 +254,32 @@ internal class KeysignFlowViewModel @Inject constructor(
                     )
 
                 else -> error("Payload is null")
+            }
+
+            shareViewModel.amount.onEach {amount ->
+                uiState.update {
+                    it.copy(amount = amount)
+                }
+            }.launchIn(viewModelScope)
+
+            shareViewModel.toAmount.onEach {toAmount ->
+                uiState.update {
+                    it.copy(toAmount = toAmount)
+                }
+            }.launchIn(viewModelScope)
+
+            shareViewModel.qrBitmapPainter.onEach {qrBitmapPainter ->
+                uiState.update {
+                    it.copy(qrBitmapPainter = qrBitmapPainter)
+                }
+            }.launchIn(viewModelScope)
+
+            uiState.update {
+                it.copy(
+                    vault = vault,
+                    isSwap = shareViewModel.keysignPayload?.swapPayload != null,
+                    toAddress = keysignPayload?.toAddress?:"",
+                )
             }
 
             this.selection.value = listOf(vault.localPartyID)
