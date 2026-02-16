@@ -218,6 +218,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         }
     }
 
+    private var shareVmCollectorsJob: Job? = null
     suspend fun setData(
         shareViewModel: KeysignShareViewModel,
         context: Context,
@@ -257,23 +258,24 @@ internal class KeysignFlowViewModel @Inject constructor(
                 else -> error("Payload is null")
             }
 
-            shareViewModel.amount.onEach {amount ->
-                uiState.update {
-                    it.copy(amount = amount)
+            shareVmCollectorsJob?.cancel()
+            shareVmCollectorsJob = viewModelScope.launch {
+                launch {
+                    shareViewModel.amount.collect { amount ->
+                        uiState.update { it.copy(amount = amount) }
+                    }
                 }
-            }.launchIn(viewModelScope)
-
-            shareViewModel.toAmount.onEach {toAmount ->
-                uiState.update {
-                    it.copy(toAmount = toAmount)
+                launch {
+                    shareViewModel.toAmount.collect { toAmount ->
+                        uiState.update { it.copy(toAmount = toAmount) }
+                    }
                 }
-            }.launchIn(viewModelScope)
-
-            shareViewModel.qrBitmapPainter.onEach {qrBitmapPainter ->
-                uiState.update {
-                    it.copy(qrBitmapPainter = qrBitmapPainter)
+                launch {
+                    shareViewModel.qrBitmapPainter.collect { painter ->
+                        uiState.update { it.copy(qrBitmapPainter = painter) }
+                    }
                 }
-            }.launchIn(viewModelScope)
+            }
 
             uiState.update {
                 it.copy(
