@@ -213,7 +213,7 @@ data class SolanaSpecific(
     @SerialName("priority_fee")
     val priorityFee: String,
     @SerialName("has_program_id")
-    val hasProgramId: Boolean,
+    val hasProgramId: Boolean? = false,
     @SerialName("from_token_associated_address")
     val fromAddressPubKey: String? = null,
     @SerialName("to_token_associated_address")
@@ -287,6 +287,8 @@ data class UtxoInfo(
 
 @Serializable
 data class SignData(
+    @SerialName("sign_solana")
+    val signSolana: SignSolana? = null,
     @SerialName("sign_direct")
     val signDirect: SignDirect? = null,
     @SerialName("sign_amino")
@@ -302,6 +304,11 @@ data class SignAmino(
     val msgs: List<Msgs> = emptyList(),
 )
 
+@Serializable
+data class SignSolana(
+    @SerialName("raw_transactions")
+    val rawTransactions: List<String> = emptyList(),
+)
 @Serializable
 data class Fee(
     @SerialName("amount")

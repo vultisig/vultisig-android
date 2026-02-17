@@ -890,4 +890,6 @@
     <string name="transaction_status_pending">Transazione in sospeso…</string>
     <string name="transaction_status_notification_title">Stato della transazione</string>
     <string name="transaction_status_checking_transaction">Verifica della transazione in corso…</string>
+    <string name="raw_transaction_data">Dati grezzi sulle transazioni</string>
+    <string name="solana_raw_transaction">Transazioni grezze Solana</string>
 </resources>

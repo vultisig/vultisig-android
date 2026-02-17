@@ -10,7 +10,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
-import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
@@ -128,7 +128,7 @@ private fun KeysignPreview() {
         transactionLink = "",
         approveTransactionLink = "",
         transactionTypeUiModel = TransactionTypeUiModel.Send(
-            SendTxUiModel(
+            TransactionDetailsUiModel(
                 srcAddress = "0x1234567890",
                 dstAddress = "0x1234567890",
                 memo = "some memo",
