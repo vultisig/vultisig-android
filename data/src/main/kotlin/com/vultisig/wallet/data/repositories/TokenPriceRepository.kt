@@ -113,24 +113,28 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         val chainContractAddresses = mutableMapOf<Chain, List<Coin>>()
 
         val usdPrices : MutableMap<TokenId, BigDecimal> = mutableMapOf()
+        val tetherPrice = if (currency == AppCurrency.USD.ticker.lowercase()) {
+            1.toBigDecimal()
+        } else {
+            fetchTetherPrice()
+        }
         // sort tokens with contract address and price provider id to different lists
         tokens.forEach { token ->
             if (token.priceProviderID.isNotEmpty() && token.priceProviderID.toDoubleOrNull() == null) {
                 priceProviderIds.add(token.priceProviderID)
             } else {
                 token.priceProviderID.toBigDecimalOrNull()?.let {
-                    usdPrices[token.id] = it
+                    var test =mapOf(currency to  it  * tetherPrice)
+                    // Map<String, BigDecimal>
+                    // Map<TokenId, CurrencyToPrice>
+                    TokenI
+
+                    savePrices(mapOf(currency to  it  * tetherPrice),currency)
                 }
                 val existingChain = chainContractAddresses
                     .getOrPut(token.chain) { mutableListOf() }
                 chainContractAddresses[token.chain] = existingChain + token
             }
-        }
-
-        val tetherPrice = if (currency == AppCurrency.USD.ticker.lowercase()) {
-            1.toBigDecimal()
-        } else {
-            fetchTetherPrice()
         }
 
         usdPrices.asSequence().mapNotNull {(tokenId, priceUsd) ->
@@ -141,7 +145,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             mapOf(currency to priceUsd * tetherPrice)
         }
 
-            savePrices(test,currency)
+
 
         }
 
