@@ -123,13 +123,14 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             if (token.priceProviderID.isNotEmpty() && token.priceProviderID.toDoubleOrNull() == null) {
                 priceProviderIds.add(token.priceProviderID)
             } else {
-                token.priceProviderID.toBigDecimalOrNull()?.let {
-                    var test =mapOf(currency to  it  * tetherPrice)
-                    // Map<String, BigDecimal>
-                    // Map<TokenId, CurrencyToPrice>
-                    TokenI
-
-                    savePrices(mapOf(currency to  it  * tetherPrice),currency)
+                token.priceProviderID.toBigDecimalOrNull()?.let { priceUsd ->
+                    val tokenIdToPrices: Map<TokenId, CurrencyToPrice> = mapOf(
+                        token.id to mapOf(currency to priceUsd * tetherPrice)
+                    )
+                    savePrices(
+                        tokenIdToPrices,
+                        currency = currency
+                    )
                 }
                 val existingChain = chainContractAddresses
                     .getOrPut(token.chain) { mutableListOf() }
