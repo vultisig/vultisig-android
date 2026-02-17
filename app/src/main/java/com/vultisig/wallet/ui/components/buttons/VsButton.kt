@@ -29,7 +29,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 enum class VsButtonVariant {
-    Primary, Secondary, Error, CTA
+    Primary, Secondary, Error, CTA, Tertiary,
 }
 
 enum class VsButtonState {
@@ -58,6 +58,7 @@ fun VsButton(
                 Secondary -> colors.backgrounds.tertiary_2
                 Error -> colors.alerts.error
                 CTA -> colors.buttons.ctaPrimary
+                Tertiary -> colors.neutrals.n50
             }
 
             Disabled -> when (variant) {
@@ -65,6 +66,7 @@ fun VsButton(
                 Secondary -> colors.backgrounds.tertiary_2
                 Error -> colors.buttons.disabledError
                 CTA -> colors.buttons.ctaDisabled
+                Tertiary -> colors.neutrals.n400
             }
 
             Default -> when (variant) {
@@ -72,6 +74,7 @@ fun VsButton(
                 Secondary -> colors.backgrounds.tertiary
                 Error -> colors.alerts.error
                 CTA -> colors.buttons.ctaPrimary
+                Tertiary -> colors.neutrals.n50
             }
         },
         label = "VsButton.backgroundColor"
@@ -85,6 +88,7 @@ fun VsButton(
                 Secondary -> colors.backgrounds.tertiary_2
                 Error -> colors.alerts.error
                 CTA -> colors.buttons.ctaPrimary
+                Tertiary -> colors.neutrals.n50
             }
 
             Disabled -> when (variant) {
@@ -92,6 +96,7 @@ fun VsButton(
                 Secondary -> colors.backgrounds.tertiary_2
                 Error -> colors.buttons.disabledError
                 CTA -> colors.buttons.ctaDisabled
+                Tertiary -> colors.neutrals.n400
             }
 
             Default -> when (variant) {
@@ -99,6 +104,7 @@ fun VsButton(
                 Secondary -> colors.backgrounds.tertiary
                 Error -> colors.alerts.error
                 CTA -> colors.buttons.ctaPrimary
+                Tertiary -> colors.neutrals.n50
             }
         },
         label = "VsButton.borderColor"
@@ -170,10 +176,21 @@ fun VsButton(
         onClick = onClick,
     ) {
         val contentColor by animateColorAsState(
-            when (state) {
-                Enabled -> colors.text.button.primary
-                Disabled -> colors.text.button.disabled
-                Default -> colors.text.button.primary
+            when {
+                variant != Tertiary -> {
+                    when (state) {
+                        Enabled -> colors.text.button.primary
+                        Disabled -> colors.text.button.disabled
+                        Default -> colors.text.button.primary
+                    }
+                }
+                else -> {
+                    when (state) {
+                        Enabled -> colors.text.inverse
+                        Disabled -> colors.text.button.disabled
+                        Default -> colors.text.inverse
+                    }
+                }
             },
             label = "VsButton.contentColor"
         )
@@ -284,6 +301,27 @@ private fun VsButtonPreview() {
             variant = Primary,
             state = Enabled,
             size = Mini,
+            onClick = {}
+        )
+
+        VsButton(
+            label = "Tertiary Mini Small",
+            variant = Tertiary,
+            state = Enabled,
+            onClick = {}
+        )
+
+        VsButton(
+            label = "Tertiary Mini Small",
+            variant = Tertiary,
+            state = Disabled,
+            onClick = {}
+        )
+
+        VsButton(
+            label = "Tertiary Mini Small",
+            variant = Tertiary,
+            state = Default,
             onClick = {}
         )
 

@@ -887,4 +887,5 @@
     <string name="transaction_status_pending">Transactie in behandeling…</string>
     <string name="transaction_status_notification_title">Transactiestatus</string>
     <string name="transaction_status_checking_transaction">Transactie controleren...</string>
+    <string name="vault_count_recommended">Aanbevolen</string>
 </resources>

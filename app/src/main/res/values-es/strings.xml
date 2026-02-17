@@ -890,4 +890,5 @@
     <string name="transaction_status_pending">Transacción pendiente…</string>
     <string name="transaction_status_notification_title">Estado de la transacción</string>
     <string name="transaction_status_checking_transaction">Comprobando transacción…</string>
+    <string name="vault_count_recommended">Recomendada</string>
 </resources>

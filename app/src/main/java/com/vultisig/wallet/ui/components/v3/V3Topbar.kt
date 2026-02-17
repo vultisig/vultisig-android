@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.v3.components
+package com.vultisig.wallet.ui.components.v3
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope

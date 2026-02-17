@@ -939,5 +939,6 @@
     <string name="transaction_status_pending">Transaction pending…</string>
     <string name="transaction_status_notification_title">Transaction Status</string>
     <string name="transaction_status_checking_transaction">Checking transaction...</string>
+    <string name="vault_count_recommended">Recommended</string>
 
 </resources>
