@@ -25,9 +25,6 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
-import kotlin.let
-import kotlin.times
-import kotlin.toBigDecimal
 
 interface TokenPriceRepository {
 
