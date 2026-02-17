@@ -159,7 +159,7 @@
           "compute_limit": "100000",
           "from_token_associated_address": "6K5LhrNFFN8kiC3onq8xfaUTKefHQMVWY6jXdwAhYnz4",
           "to_token_associated_address": "6K5LhrNFFN8kiC3onq8xfaUTKefHQMVWY6jXdwAhYnz4",
-          "program_id": false
+          "has_program_id": false
         }
       },
       "utxo_info": [],
