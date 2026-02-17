@@ -213,7 +213,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 priorityFee = solanaSpecific.priorityFee.toBigInteger(),
                 fromAddressPubKey = solanaSpecific.fromAddressPubKey,
                 toAddressPubKey = solanaSpecific.toAddressPubKey,
-                programId = solanaSpecific.programId,
+                programId = solanaSpecific.hasProgramId,
                 priorityLimit = solanaSpecific.priorityLimit?.toBigInteger() ?: BigInteger.ZERO
             )
         }
