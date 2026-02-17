@@ -448,7 +448,6 @@ internal fun SetupNavGraph(
             val args = entry.toRoute<Keysign.Keysign>()
             KeysignScreen(
                 txType = args.txType,
-                transactionId = args.transactionId,
             )
         }
 

@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.keysign
 
-import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -10,76 +9,41 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.play.core.review.ReviewManagerFactory
-import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
+import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
-import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Deposit
-import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Send
-import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Sign
-import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Swap
 import com.vultisig.wallet.ui.utils.performHaptic
 import com.vultisig.wallet.ui.utils.showReviewPopUp
-import timber.log.Timber
 
 @Composable
 internal fun KeysignScreen(
-    transactionId: TransactionId,
     txType: Route.Keysign.Keysign.TxType,
-    keysignShareViewModel: KeysignShareViewModel =
-        hiltViewModel(LocalActivity.current as MainActivity)
-) {
-    try {
-        when (txType) {
-            Send -> keysignShareViewModel.loadTransaction(transactionId)
-            Swap -> keysignShareViewModel.loadSwapTransaction(transactionId)
-            Deposit -> keysignShareViewModel.loadDepositTransaction(transactionId)
-            Sign -> keysignShareViewModel.loadSignMessageTx(transactionId)
-        }
-    }
-    catch (e: Exception) {
-        Timber.e(e, "Error loading transaction for keysign")
-    }
-
-    KeysignFlowScreen(txType = txType)
-}
-
-@Composable
-private fun KeysignFlowScreen(
     viewModel: KeysignFlowViewModel = hiltViewModel(),
-    sharedViewModel: KeysignShareViewModel =
-        hiltViewModel(LocalActivity.current as MainActivity),
-    txType: Route.Keysign.Keysign.TxType,
 ) {
-    val keysignFlowState by viewModel.currentState.collectAsState()
 
-    if (!sharedViewModel.hasAllData) {
-        // information is not available, go back
-        viewModel.moveToState(KeysignFlowState.Error("Keysign information not available"))
-    }
+    val keysignFlowState by viewModel.currentState.collectAsState()
 
     when (val state = keysignFlowState) {
         is KeysignFlowState.PeerDiscovery -> {
             KeysignPeerDiscovery(
                 viewModel = viewModel,
-                txType = txType
+                txType = txType,
             )
         }
 
         is KeysignFlowState.Keysign -> {
             Keysign(
                 viewModel = viewModel.keysignViewModel,
-                onError = { viewModel.moveToState(KeysignFlowState.Error(it)) },
+                onError = { viewModel.moveToState(Error(it)) },
                 onComplete = viewModel::complete,
             )
         }
 
-        is KeysignFlowState.Error -> {
+        is Error -> {
             KeysignErrorScreen(
                 errorMessage = state.errorMessage,
                 tryAgain = viewModel::tryAgain,
