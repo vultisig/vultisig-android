@@ -37,24 +37,28 @@ import timber.log.Timber
 internal fun KeysignPeerDiscovery(
     viewModel: KeysignFlowViewModel,
     txType: Route.Keysign.Keysign.TxType,
+    sharedViewModel: KeysignShareViewModel =
+        hiltViewModel(LocalActivity.current as MainActivity)
 ) {
     KeepScreenOn()
 
     val activity = LocalContext.current
+    val uiModel by viewModel.uiState.collectAsState()
 
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.collectAsState(initial = emptyList()).value
-    val isLoading = viewModel.isLoading.collectAsState().value
     val context = LocalContext.current.applicationContext
-    val sharedViewModel: KeysignShareViewModel =
-        hiltViewModel(LocalActivity.current as MainActivity)
-    val vault = sharedViewModel.vault ?: return
-    val keysignPayload = sharedViewModel.keysignPayload
-    val customMessagePayload = sharedViewModel.customMessagePayload
-    val isSwap = sharedViewModel.keysignPayload?.swapPayload != null
-    val amount by sharedViewModel.amount.collectAsState()
-    val toAmount by sharedViewModel.toAmount.collectAsState()
-    val bitmapPainter by sharedViewModel.qrBitmapPainter.collectAsState()
+
+
+    LaunchedEffect(txType) {
+        viewModel.setData(
+            shareViewModel = sharedViewModel,
+            context = context,
+            txType = txType
+        )
+    }
+
+    val isSwap = uiModel.isSwap
     val qrShareTitle = if (isSwap)
         stringResource(R.string.qr_title_join_swap_keysign)
     else
@@ -62,21 +66,22 @@ internal fun KeysignPeerDiscovery(
 
     val qrShareBackground = Theme.v2.colors.backgrounds.primary
 
-    val qrShareDescription = if (keysignPayload != null) {
+    val vault = uiModel.vault
+    val qrShareDescription =
         if (isSwap)
             stringResource(
                 R.string.qr_title_join_keysign_swap_description,
                 vault.name.forCanvasMinify(),
-                amount.forCanvasMinify(),
-                toAmount.forCanvasMinify(),
+                uiModel.amount.forCanvasMinify(),
+                uiModel.toAmount.forCanvasMinify(),
             ) else
             stringResource(
                 R.string.qr_title_join_keysign_description,
                 vault.name.forCanvasMinify(),
-                amount.forCanvasMinify(),
-                keysignPayload.toAddress.forCanvasMinify(),
+                uiModel.amount.forCanvasMinify(),
+                uiModel.toAddress.forCanvasMinify(),
             )
-    } else ""
+
 
     LaunchedEffect(key1 = viewModel.participants) {
         viewModel.participants.collect { newList ->
@@ -86,7 +91,10 @@ internal fun KeysignPeerDiscovery(
             }
         }
     }
-    LaunchedEffect(key1 = viewModel.selection) {
+    LaunchedEffect(
+        key1 = viewModel.selection,
+        vault
+    ) {
         viewModel.selection.asFlow().collect { newList ->
             if (vault.signers.isEmpty()) {
                 Timber.e("Vault signers size is 0")
@@ -97,10 +105,6 @@ internal fun KeysignPeerDiscovery(
                 viewModel.moveToState(KeysignFlowState.Keysign)
             }
         }
-    }
-    LaunchedEffect(Unit) {
-        // start mediator server
-        viewModel.setData(vault, context, keysignPayload, customMessagePayload, txType = txType)
     }
 
     LaunchedEffect(viewModel.keysignMessage.value) {
@@ -115,7 +119,7 @@ internal fun KeysignPeerDiscovery(
         }
     }
 
-    LaunchedEffect(bitmapPainter) {
+    LaunchedEffect(uiModel.qrBitmapPainter) {
         sharedViewModel.saveShareQrBitmap(
             context,
             qrShareBackground.toArgb(),
@@ -134,7 +138,7 @@ internal fun KeysignPeerDiscovery(
         minimumDevices = Utils.getThreshold(vault.signers.size),
         selectionState = selectionState,
         participants = participants,
-        bitmapPainter = bitmapPainter,
+        bitmapPainter = uiModel.qrBitmapPainter,
         networkPromptOption = viewModel.networkOption.value,
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, context) },
         onAddParticipant = { viewModel.addParticipant(it) },
