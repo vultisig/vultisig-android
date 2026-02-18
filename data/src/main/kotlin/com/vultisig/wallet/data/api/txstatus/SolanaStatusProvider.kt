@@ -21,7 +21,7 @@ internal class SolanaStatusProvider @Inject constructor(
                 else -> TransactionResult.NotFound
             }
         } catch (e: Exception) {
-            Timber.tag("solanaApiImp").d(e.message.toString())
+            Timber.tag("SolanaStatusProvider").d(e.message.toString())
             return TransactionResult.Failed(e.message.toString())
         }
     }
