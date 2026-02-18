@@ -396,25 +396,41 @@ internal class SolanaApiImp @Inject constructor(
     }
 
     override suspend fun checkStatus(txHash: String): EvmRpcResponseJson<SolanaSignatureStatusesResult>? {
-        val params = buildJsonArray {
-            addJsonArray {
-                add(JsonPrimitive(txHash))
+        try {
+            val params = buildJsonArray {
+                addJsonArray {
+                    add(JsonPrimitive(txHash))
+                }
+                buildJsonObject {
+                    put(
+                        "searchTransactionHistory",
+                        true
+                    )
+                }
             }
-            buildJsonObject {
-                put(
-                    "searchTransactionHistory",
-                    true
+
+            val response: EvmRpcResponseJson<SolanaSignatureStatusesResult> = httpClient.postRpc(
+                url = rpcEndpoint,
+                method = "getSignatureStatuses",
+                params = params,
+            )
+
+            return response
+        } catch (e: Exception) {
+            val msg = e.message ?: ""
+            if ("403" in msg || msg.contains(
+                    "Forbidden",
+                    ignoreCase = true
+                ) || msg.contains(
+                    "forbidden",
+                    ignoreCase = true
                 )
+            ) {
+                Timber.tag("SolanaApiImp").d("Forbidden (403) when checking tx status: $txHash")
+                return null
             }
+            throw e
         }
-
-        val response: EvmRpcResponseJson<SolanaSignatureStatusesResult> = httpClient.postRpc(
-            url = rpcEndpoint,
-            method = "getSignatureStatuses",
-            params = params,
-        )
-
-        return response
     }
 
     companion object {
