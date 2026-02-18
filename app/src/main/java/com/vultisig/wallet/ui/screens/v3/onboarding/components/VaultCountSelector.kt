@@ -1,22 +1,31 @@
 package com.vultisig.wallet.ui.screens.v3.onboarding.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -26,11 +35,16 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.v3.AnimatedItem
+import com.vultisig.wallet.ui.components.v3.MinusSign
+import com.vultisig.wallet.ui.components.v3.PlusSign
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun VaultCountSelector(
     count: Int,
+    onIncrease: () -> Unit,
+    onDecrease: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val thumbPosition = remember(count) {
@@ -51,6 +65,40 @@ internal fun VaultCountSelector(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            ChangeCountButton(
+                enabled = count > 1,
+                onClick = onDecrease,
+                isIncrease = false,
+            )
+
+            AnimatedItem(
+                current = count,
+                items = (1..4).toList(),
+                color = Theme.v2.colors.neutrals.n50,
+                style = Theme.brockmann.headings.headline,
+            ) { it: Int ->
+                if (it == 4) "+$it"
+                else "$it"
+            }
+
+            ChangeCountButton(
+                enabled = count < 4,
+                onClick = onIncrease,
+                isIncrease = true,
+            )
+        }
+
+        UiSpacer(
+            size = 22.dp
+        )
 
         Box(modifier = modifier) {
             TrackBackground()
@@ -85,6 +133,55 @@ internal fun VaultCountSelector(
         )
     }
 
+}
+
+@Composable
+private fun ChangeCountButton(
+    modifier: Modifier = Modifier,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    isIncrease: Boolean,
+) {
+    Box(
+        modifier = modifier
+            .alpha(animateFloatAsState(if (enabled) 1f else 0.5f).value)
+            .size(
+                width = 64.dp,
+                height = 46.dp,
+            )
+            .clip(
+                shape = CircleShape
+            )
+            .background(
+                color =
+                    animateColorAsState( targetValue =
+                        if (enabled)
+                            Theme.v2.colors.backgrounds.surface2
+                        else
+                            Theme.v2.colors.buttons.ctaDisabled
+                    ).value
+            )
+            .clickable(
+                enabled = enabled,
+                onClick = onClick,
+            ),
+        content = {
+            if (isIncrease) {
+                PlusSign(
+                    modifier = Modifier.size(
+                        15.dp
+                    ),
+                )
+            } else {
+                MinusSign(
+                    modifier = Modifier.size(
+                        15.dp
+                    ),
+                )
+            }
+        },
+        contentAlignment = Alignment.Center,
+    )
 }
 
 @Composable
@@ -148,7 +245,29 @@ private fun BoxScope.AnimatedThumb(
 @Composable
 @Preview
 private fun VaultCountSelectorPreview() {
-    VaultCountSelector(
-        count = 2,
-    )
+    var count by remember {
+        mutableIntStateOf(1)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                color = Theme.v2.colors.backgrounds.background
+            )
+            .padding(
+                16.dp
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        VaultCountSelector(
+            count = count,
+            onIncrease = {
+                count++
+            },
+            onDecrease = {
+                count--
+            }
+        )
+    }
 }

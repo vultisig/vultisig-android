@@ -63,7 +63,7 @@ fun VsButton(
 
             Disabled -> when (variant) {
                 Primary -> colors.buttons.disabled
-                Secondary -> colors.backgrounds.tertiary_2
+                Secondary -> colors.buttons.ctaDisabled
                 Error -> colors.buttons.disabledError
                 CTA -> colors.buttons.ctaDisabled
                 Tertiary -> colors.neutrals.n400
@@ -325,6 +325,19 @@ private fun VsButtonPreview() {
             onClick = {}
         )
 
+        VsButton(
+            label = "CTA Enabled",
+            variant = CTA,
+            state = Enabled,
+            onClick = {}
+        )
+
+        VsButton(
+            label = "CTA Disabled",
+            variant = CTA,
+            state = Disabled,
+            onClick = {}
+        )
 
     }
 }
