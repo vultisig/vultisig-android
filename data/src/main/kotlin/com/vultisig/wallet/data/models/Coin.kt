@@ -16,7 +16,7 @@ data class Coin(
     val priceProviderID: String,
     val contractAddress: String,
     val isNativeToken: Boolean,
-    val usdPrice: BigDecimal?=BigDecimal.ZERO,
+    val usdPrice: BigDecimal? = null,
 ) {
     val id: TokenId
         get() = "${ticker}-${chain.id}"

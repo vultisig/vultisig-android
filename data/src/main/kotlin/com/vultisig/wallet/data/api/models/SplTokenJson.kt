@@ -78,7 +78,7 @@ data class SplTokenJson(
     @SerialName("mint")
     val mint: String,
     @SerialName("usdPrice")
-    val usdPrice: Double?,
+    val usdPrice: Double? = null,
 )
 
 @Serializable
@@ -96,7 +96,7 @@ data class SplTokenInfo(
     @SerialName("extensions")
     val extensions: SplExtensionsJson?,
     @SerialName("usdPrice")
-    val usdPrice: Double?,
+    val usdPrice: Double? = null,
 )
 
 
