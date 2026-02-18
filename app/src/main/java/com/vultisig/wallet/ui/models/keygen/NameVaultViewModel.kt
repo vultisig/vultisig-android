@@ -72,10 +72,14 @@ internal class NameVaultViewModel @Inject constructor(
 
     private suspend fun generateVaultName() {
         val proposeName = withContext(Dispatchers.IO) {
-            val baseName = if (args.vaultType == VaultType.Fast) {
-                "Fast Vault"
-            } else {
-                "Secure Vault"
+            val baseName = when {
+                args.tssAction == TssAction.KeyImport -> if (args.vaultType == VaultType.Fast) {
+                    "Import Vault"
+                } else {
+                    "Import Vault"
+                }
+                args.vaultType == VaultType.Fast -> "Fast Vault"
+                else -> "Secure Vault"
             }
 
             generateUniqueName(baseName, vaultNamesList)
@@ -118,14 +122,14 @@ internal class NameVaultViewModel @Inject constructor(
             when (args.vaultType) {
                 VaultType.Fast -> {
                     navigator.route(
-                        Route.VaultInfo.Email(name, TssAction.KEYGEN)
+                        Route.VaultInfo.Email(name, args.tssAction)
                     )
                 }
 
                 VaultType.Secure -> {
                     navigator.route(
                         Route.Keygen.PeerDiscovery(
-                            action = TssAction.KEYGEN,
+                            action = args.tssAction,
                             vaultName = name,
                         )
                     )

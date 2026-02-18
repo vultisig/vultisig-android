@@ -16,7 +16,10 @@ import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssKeyType
+import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.getEcdsaSigningKey
+import com.vultisig.wallet.data.models.getEddsaSigningKey
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
@@ -134,7 +137,7 @@ internal class KeysignViewModel(
                     SigningLibType.DKLS ->
                         startKeysignDkls()
                     SigningLibType.KeyImport ->
-                        TODO("Add KeyImport Signing logic")
+                        startKeysignKeyImport()
                 }
             }
         }
@@ -183,6 +186,90 @@ internal class KeysignViewModel(
                         encryptionKeyHex = encryptionKeyHex,
                         messageToSign = messagesToSign,
                         isInitiateDevice = isInitiatingDevice,
+                        sessionApi = sessionApi,
+                        encryption = encryption,
+                    )
+
+                    schnorr.keysignWithRetry()
+
+                    this.signatures += schnorr.signatures
+
+                    if (signatures.isEmpty()) {
+                        error("Failed to sign transaction, signatures empty")
+                    }
+                }
+            }
+
+            Timber.d("All messages signed, broadcasting transaction")
+            if (!skipBroadcast()) {
+                broadcastTransaction()
+                checkThorChainTxResult()
+            }
+
+            currentState.value = KeysignState.KeysignFinished
+            isNavigateToHome = true
+        } catch (e: Exception) {
+            Timber.e(e)
+            currentState.value = KeysignState.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    /**
+     * KeyImport signing: uses per-chain public keys and empty derivation path.
+     * The per-chain keyshare already corresponds to the derived key, so no
+     * BIP32 derivation is needed during signing (chainPath = "").
+     */
+    private suspend fun startKeysignKeyImport() {
+        if (keysignPayload == null && customMessagePayload == null) {
+            error("Keysign payload is null")
+        }
+        try {
+            val chain = keysignPayload?.coin?.chain
+                ?: error("No chain in keysign payload")
+
+            when (keyType) {
+                TssKeyType.ECDSA -> {
+                    currentState.value = KeysignState.KeysignECDSA
+
+                    val (ecdsaKey, _) = vault.getEcdsaSigningKey(chain)
+
+                    val dkls = DKLSKeysign(
+                        vault = vault,
+                        keysignCommittee = keysignCommittee,
+                        mediatorURL = serverUrl,
+                        sessionID = sessionId,
+                        encryptionKeyHex = encryptionKeyHex,
+                        messageToSign = messagesToSign,
+                        chainPath = "",
+                        isInitiateDevice = isInitiatingDevice,
+                        publicKeyOverride = ecdsaKey,
+                        sessionApi = sessionApi,
+                        encryption = encryption,
+                    )
+
+                    dkls.keysignWithRetry()
+
+                    this.signatures += dkls.signatures
+                    if (signatures.isEmpty()) {
+                        error("Failed to sign transaction, signatures empty")
+                    }
+                    calculateCustomMessageSignature(this.signatures.values.first())
+                }
+
+                TssKeyType.EDDSA -> {
+                    currentState.value = KeysignState.KeysignEdDSA
+
+                    val eddsaKey = vault.getEddsaSigningKey(chain)
+
+                    val schnorr = SchnorrKeysign(
+                        vault = vault,
+                        keysignCommittee = keysignCommittee,
+                        mediatorURL = serverUrl,
+                        sessionID = sessionId,
+                        encryptionKeyHex = encryptionKeyHex,
+                        messageToSign = messagesToSign,
+                        isInitiateDevice = isInitiatingDevice,
+                        publicKeyOverride = eddsaKey,
                         sessionApi = sessionApi,
                         encryption = encryption,
                     )

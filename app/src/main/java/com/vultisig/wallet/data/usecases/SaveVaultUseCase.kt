@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
@@ -41,8 +43,19 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
             val nativeTokens = tokenRepository.nativeTokens.first()
                 .associateBy { it.chain }
 
-            defaultChainsRepository.selectedDefaultChains
-                .first()
+            // For KeyImport: ThorChain always first, plus all user-selected chains.
+            // Non-imported chains (like ThorChain if not selected) use BIP32 fallback.
+            val chainsToAdd = if (insertedVault.libType == SigningLibType.KeyImport) {
+                val importedChains = insertedVault.chainPublicKeys
+                    .mapNotNull { cpk ->
+                        try { Chain.fromRaw(cpk.chain) } catch (_: Exception) { null }
+                    }
+                (listOf(Chain.ThorChain) + importedChains).distinct()
+            } else {
+                defaultChainsRepository.selectedDefaultChains.first()
+            }
+
+            chainsToAdd
                 .mapNotNull { nativeTokens[it] }
                 .forEach { nativeToken ->
                     val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(

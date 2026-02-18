@@ -49,6 +49,7 @@ internal fun StartScreen(
         onCreateNewVaultClick = model::navigateToCreateVault,
         onScanQrCodeClick = model::navigateToScanQrCode,
         onImportVaultClick = model::navigateToImportVault,
+        onImportSeedphraseClick = model::navigateToImportSeedphrase,
     )
 }
 
@@ -58,6 +59,7 @@ private fun StartScreen(
     onCreateNewVaultClick: () -> Unit,
     onScanQrCodeClick: () -> Unit,
     onImportVaultClick: () -> Unit,
+    onImportSeedphraseClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
     val logoScale = remember {
@@ -153,6 +155,17 @@ private fun StartScreen(
                             delay = 450,
                         ),
                 )
+
+                VsButton(
+                    label = stringResource(R.string.home_screen_import_seed_phrase),
+                    variant = VsButtonVariant.Tertiary,
+                    onClick = onImportSeedphraseClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .startScreenAnimations(
+                            delay = 550,
+                        ),
+                )
             }
         }
     }
@@ -192,6 +205,7 @@ private fun StartScreenPreview() {
         onCreateNewVaultClick = {},
         onScanQrCodeClick = {},
         onImportVaultClick = {},
+        onImportSeedphraseClick = {},
         onBackClick = {},
     )
 }

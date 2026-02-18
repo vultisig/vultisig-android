@@ -486,9 +486,25 @@ internal val MIGRATION_24_25 = object : Migration(24, 25) {
         // Update price provider ID from matic-network to polygon-ecosystem-token
         database.execSQL(
             """
-            UPDATE coin 
+            UPDATE coin
             SET priceProviderId = 'polygon-ecosystem-token'
             WHERE priceProviderId = 'matic-network'
+            """.trimIndent()
+        )
+    }
+}
+
+val MIGRATION_25_26 = object : Migration(25, 26) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `chainPublicKey` (
+            `vaultId` TEXT NOT NULL,
+            `chain` TEXT NOT NULL,
+            `publicKey` TEXT NOT NULL,
+            `isEddsa` INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY(`vaultId`, `chain`),
+            FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON UPDATE CASCADE ON DELETE CASCADE)
             """.trimIndent()
         )
     }

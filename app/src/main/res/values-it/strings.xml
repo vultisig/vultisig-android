@@ -884,4 +884,43 @@
     <string name="amino_sign">Amino Sign</string>
     <string name="amino_direct">Firma diretta</string>
     <string name="import_file_screen_enter_password">Inserisci la password di condivisione del vault.</string>
+
+    <!-- Key Import / Seed Phrase Import -->
+    <string name="home_screen_import_seed_phrase">Import Seed Phrase</string>
+    <string name="import_seedphrase_title">Enter Your Seed Phrase</string>
+    <string name="import_seedphrase_subtitle">Enter your 12 or 24 word recovery phrase</string>
+    <string name="import_seedphrase_label">Seed Phrase</string>
+    <string name="import_seedphrase_hint">Enter your recovery phrase…</string>
+    <string name="import_seedphrase_word_count">%1$d / %2$d words</string>
+    <string name="import_seedphrase_invalid_word_count">Expected %2$s words, got %1$s</string>
+    <string name="import_seedphrase_invalid_phrase">Invalid seed phrase</string>
+    <string name="import_seedphrase_already_imported">Questa frase seed è già stata importata</string>
+    <string name="import_seedphrase_duplicate_description">Per favore importa una frase seed diversa</string>
+    <string name="import_seedphrase_import_button">Import</string>
+    <string name="import_seedphrase_checking">Checking…</string>
+
+    <string name="key_import_chains_title">Select Chains</string>
+    <string name="key_import_chains_scanning">Scanning for active chains…</string>
+    <string name="key_import_chains_scanning_desc">Checking your wallet for existing balances across all supported chains</string>
+    <string name="key_import_chains_select_manually">Select Manually</string>
+    <string name="key_import_chains_found_title">Active Chains Found</string>
+    <string name="key_import_chains_found_desc">We found balances on the following chains. You can continue with these or customize your selection.</string>
+    <string name="key_import_chains_continue">Continue</string>
+    <string name="key_import_chains_customize">Customize</string>
+    <string name="key_import_chains_no_active_title">No Active Chains Found</string>
+    <string name="key_import_chains_no_active_desc">We couldn\'t find any balances. Please select the chains you want to import manually.</string>
+    <string name="key_import_chains_select_title">Select Chains (%1$d)</string>
+    <string name="key_import_chains_all">All</string>
+    <string name="key_import_chains_none">None</string>
+
+    <string name="key_import_device_count_title">Choose Setup</string>
+    <string name="key_import_device_count_fast">Fast</string>
+    <string name="key_import_device_count_secure">Secure</string>
+    <string name="key_import_device_count_get_started">Get Started</string>
+    <string name="key_import_device_count_fast_desc_1">1 device + Vultisig server</string>
+    <string name="key_import_device_count_fast_desc_2">Quick and easy setup</string>
+    <string name="key_import_device_count_fast_desc_3">Email-based recovery</string>
+    <string name="key_import_device_count_secure_desc_1">2 or more devices required</string>
+    <string name="key_import_device_count_secure_desc_2">Maximum security</string>
+    <string name="key_import_device_count_secure_desc_3">No third-party server involvement</string>
 </resources>
