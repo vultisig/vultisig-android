@@ -55,6 +55,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             skipBroadcast = from.skipBroadcast ?: false,
             signAmino = from.signAmino,
             signDirect = from.signDirect,
+            signSolana = from.signSolana,
             swapPayload = when {
                 from.oneinchSwapPayload != null -> from.oneinchSwapPayload.let { it ->
                     SwapPayload.EVM(

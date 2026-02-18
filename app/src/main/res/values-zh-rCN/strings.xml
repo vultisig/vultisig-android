@@ -1234,4 +1234,6 @@
     <string name="transaction_status_pending">交易待处理……</string>
     <string name="transaction_status_notification_title">交易状态</string>
     <string name="transaction_status_checking_transaction">正在检查交易……</string>
+    <string name="raw_transaction_data">原始交易数据</string>
+    <string name="solana_raw_transaction">Solana 原始交易数据</string>
 </resources>

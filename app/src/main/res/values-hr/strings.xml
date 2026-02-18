@@ -891,4 +891,6 @@
     <string name="transaction_status_pending">Transakcija na čekanju…</string>
     <string name="transaction_status_notification_title">Status transakcije</string>
     <string name="transaction_status_checking_transaction">Provjera transakcije...</string>
+    <string name="raw_transaction_data">Sirovi podaci o transakciji</string>
+    <string name="solana_raw_transaction">Solana Sirova transakcija</string>
 </resources>

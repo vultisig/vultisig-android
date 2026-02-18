@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.ui.components.SignSolanaDisplayView
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -40,7 +41,7 @@ import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
@@ -50,6 +51,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import vultisig.keysign.v1.SignSolana
 
 @Composable
 internal fun VerifySendScreen(
@@ -245,6 +247,16 @@ internal fun VerifySendScreen(
                             subtitle = tx.signDirect
                         )
                     }
+                    tx.signSolana?.takeIf { it.isNotBlank() }?.let {
+                        VerifyCardDivider(0.dp)
+
+                        SignSolanaDisplayView(
+                            signSolana = SignSolana(
+                                rawTransactions = listOf(it)
+                            )
+                        )
+                    }
+
 
                     if (state.functionSignature != null) {
                         VerifyCardDivider(0.dp)
@@ -412,7 +424,7 @@ internal fun OtherField(
 private fun PreviewVerifySendScreen() {
     VerifySendScreen(
         state = VerifyTransactionUiModel(
-            transaction = SendTxUiModel(
+            transaction = TransactionDetailsUiModel(
                 srcAddress = "0x1234567890",
                 dstAddress = "0x1234567890",
                 memo = "some memo",
