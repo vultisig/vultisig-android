@@ -14,15 +14,12 @@ internal class SolanaStatusProvider @Inject constructor(
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         try {
-            if(txHash.isEmpty())
-            {
-                TransactionResult.Failed("not tx hash")
-            }
             val confirmationStatus =
                 solanaApi.checkStatus(txHash)?.result?.value?.firstOrNull()?.confirmationStatus
             return when (confirmationStatus) {
                 "finalized" -> TransactionResult.Confirmed
                 "confirmed", "processed" -> TransactionResult.Pending
+                null -> TransactionResult.Pending
                 else -> TransactionResult.NotFound
             }
         } catch (e: Exception) {
