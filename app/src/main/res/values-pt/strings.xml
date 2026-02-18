@@ -889,5 +889,7 @@
     <string name="transaction_status_pending">Transação pendente…</string>
     <string name="transaction_status_notification_title">Estado da transação</string>
    <string name="transaction_status_checking_transaction">A verificar transação…</string>
+    <string name="raw_transaction_data">Dados brutos de transação</string>
+    <string name="solana_raw_transaction">Transação bruta de Solana</string>
     <string name="vault_count_recommended">Recomendada</string>
 </resources>

@@ -10,6 +10,7 @@ typealias CoinProto = vultisig.keysign.v1.Coin
 typealias ThorChainSwapPayloadProto = vultisig.keysign.v1.THORChainSwapPayload
 typealias SignAminoProto = vultisig.keysign.v1.SignAmino
 typealias SignDirectProto = vultisig.keysign.v1.SignDirect
+typealias SignSolanaProto = vultisig.keysign.v1.SignSolana
 typealias KeygenMessageProto = vultisig.keygen.v1.KeygenMessage
 typealias ReshareMessageProto = vultisig.keygen.v1.ReshareMessage
 typealias VaultProto = Vault

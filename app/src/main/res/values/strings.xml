@@ -939,6 +939,8 @@
     <string name="transaction_status_pending">Transaction pending…</string>
     <string name="transaction_status_notification_title">Transaction Status</string>
     <string name="transaction_status_checking_transaction">Checking transaction...</string>
+    <string name="raw_transaction_data">Raw Transaction Data</string>
+    <string name="solana_raw_transaction">Solana Raw Transaction</string>
     <string name="vault_count_recommended">Recommended</string>
 
 </resources>

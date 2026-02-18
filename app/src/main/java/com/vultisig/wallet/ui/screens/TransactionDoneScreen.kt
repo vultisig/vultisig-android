@@ -28,7 +28,7 @@ import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
@@ -184,7 +184,7 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
 }
 
 @Composable
-private fun TransactionDetail(transaction: SendTxUiModel?) {
+private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
     if (transaction != null) {
 
         UiHorizontalDivider()
@@ -290,7 +290,7 @@ private fun TransactionDoneViewPreview() {
         onUriClick = {},
         onBack = {},
         transactionTypeUiModel = TransactionTypeUiModel.Send(
-            SendTxUiModel(
+            TransactionDetailsUiModel(
                 srcAddress = "0x1234567890",
                 dstAddress = "0x1234567890",
                 memo = "some memo",
