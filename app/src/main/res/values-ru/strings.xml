@@ -889,4 +889,5 @@
     <string name="transaction_status_checking_transaction">Проверка транзакции…</string>
     <string name="raw_transaction_data">Исходные данные транзакции</string>
     <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
+    <string name="vault_count_recommended">Рекомендуется</string>
 </resources>
