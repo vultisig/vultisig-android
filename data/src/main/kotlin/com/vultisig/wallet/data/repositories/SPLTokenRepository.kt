@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
 import timber.log.Timber
+import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -139,12 +140,12 @@ internal class SplTokenRepositoryImpl @Inject constructor(
         ticker = tokenResponse.tokenList.ticker,
         logo = tokenResponse.tokenList.logo ?: "",
         decimal = tokenResponse.decimals,
-        priceProviderID = tokenResponse.tokenList.extensions?.coingeckoId
-            ?: tokenResponse.usdPrice?.toString() ?: "",
+        priceProviderID = tokenResponse.tokenList.extensions?.coingeckoId ?: "",
         contractAddress = contractAddress,
         isNativeToken = false,
         address = "",
-        hexPublicKey = ""
+        hexPublicKey = "",
+        usdPrice = tokenResponse.usdPrice?.toBigDecimal() ?: BigDecimal.ZERO,
     )
 
     private fun List<JupiterTokenResponseJson>.toCoins() =

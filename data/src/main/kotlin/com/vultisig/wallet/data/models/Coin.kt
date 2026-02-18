@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
 import wallet.core.jni.CoinType
+import java.math.BigDecimal
 
 typealias TokenId = String
 
@@ -15,6 +16,7 @@ data class Coin(
     val priceProviderID: String,
     val contractAddress: String,
     val isNativeToken: Boolean,
+    val usdPrice: BigDecimal?=BigDecimal.ZERO,
 ) {
     val id: TokenId
         get() = "${ticker}-${chain.id}"
