@@ -89,7 +89,7 @@ internal fun LpWidget(
                 Text(
                     text = state.titleLp,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.v2.colors.text.tertiary,
                 )
 
                 UiSpacer(4.dp)
@@ -141,7 +141,7 @@ internal fun LpWidget(
         Column {
             Text(
                 text = stringResource(R.string.lp_position),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.body.s.medium,
             )
 
@@ -177,7 +177,7 @@ internal fun LpWidget(
                 onClick = onClickRemove,
                 modifier = Modifier.weight(1f),
                 enabled = true,
-                iconCircleColor = Theme.v2.colors.text.extraLight
+                iconCircleColor = Theme.v2.colors.text.tertiary
             )
 
             ActionButton(

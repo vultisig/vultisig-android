@@ -159,7 +159,7 @@ internal fun VaultAccountsScreen(
                     ) {
                         Text(
                             text = stringResource(R.string.home_portfolio_balance),
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.v2.colors.text.tertiary,
                             style = Theme.brockmann.body.s.medium
                         )
                         UiSpacer(

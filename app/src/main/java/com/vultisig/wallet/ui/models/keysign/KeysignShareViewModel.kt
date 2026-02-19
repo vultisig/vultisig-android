@@ -67,8 +67,7 @@ internal class KeysignShareViewModel @Inject constructor(
     private var qrBitmap: Bitmap? = null
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
-    fun loadTransaction(transactionId: TransactionId) {
-        runBlocking {
+    suspend fun loadTransaction(transactionId: TransactionId) {
             val transaction = transactionRepository.getTransaction(transactionId)
 
             val vault = vaultRepository.get(transaction.vaultId)!!
@@ -93,12 +92,9 @@ internal class KeysignShareViewModel @Inject constructor(
                 wasmExecuteContractPayload = null,
             )
         }
-    }
 
-    fun loadSignMessageTx(id: String) {
-        runBlocking {
+    suspend fun loadSignMessageTx(id: String) {
             val dto = customMessagePayloadRepo.get(id)
-                ?: return@runBlocking
 
             val vault = vaultRepository.get(dto.vaultId)!!
 
@@ -106,11 +102,10 @@ internal class KeysignShareViewModel @Inject constructor(
             keysignPayload = null
             customMessagePayload = dto.payload
         }
-    }
+
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
-    fun loadSwapTransaction(transactionId: TransactionId) {
-        runBlocking {
+    suspend fun loadSwapTransaction(transactionId: TransactionId) {
             val transaction = swapTransactionRepository.getTransaction(transactionId)
 
             val vault = vaultRepository.get(transaction.vaultId)!!
@@ -157,7 +152,7 @@ internal class KeysignShareViewModel @Inject constructor(
                     )
                 }
             }
-        }
+
     }
 
     private fun Coin.adjustBitcoinCashAddressFormat() = copy(
@@ -167,8 +162,7 @@ internal class KeysignShareViewModel @Inject constructor(
     )
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
-    fun loadDepositTransaction(transactionId: TransactionId) {
-        runBlocking {
+    suspend fun loadDepositTransaction(transactionId: TransactionId) {
             val transaction = depositTransaction.getTransaction(transactionId)
 
             val vault = vaultRepository.get(transaction.vaultId)!!
@@ -196,9 +190,9 @@ internal class KeysignShareViewModel @Inject constructor(
                     DeFiAction.CIRCLE_USDC_WITHDRAW
                 } else {
                     DeFiAction.NONE
-                }
+                },
             )
-        }
+
     }
 
     fun loadQrPainter(address: String) =

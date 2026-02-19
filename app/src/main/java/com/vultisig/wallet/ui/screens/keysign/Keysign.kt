@@ -10,8 +10,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
-import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
+import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
@@ -50,7 +51,7 @@ internal fun KeysignView(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         when (state) {
-            KeysignState.KeysignFinished -> {
+            is KeysignState.KeysignFinished -> {
                 when (transactionTypeUiModel) {
                     is TransactionTypeUiModel.Swap -> {
                         SwapTransactionOverviewScreen(
@@ -58,6 +59,7 @@ internal fun KeysignView(
                             transactionHash = txHash,
                             approveTransactionHash = approveTransactionHash,
                             transactionLink = transactionLink,
+                            transactionStatus = state.transactionStatus,
                             approveTransactionLink = approveTransactionLink,
                             onComplete = onComplete,
                             progressLink = progressLink,
@@ -72,6 +74,7 @@ internal fun KeysignView(
                             transactionLink = transactionLink,
                             onComplete = onComplete,
                             onBack = onBack,
+                            transactionStatus = state.transactionStatus,
                             tx = transactionTypeUiModel.toUiTransactionInfo(),
                             showToolbar = showToolbar,
                             onAddToAddressBook = onAddToAddressBook,
@@ -118,14 +121,14 @@ internal fun KeysignView(
 @Composable
 private fun KeysignPreview() {
     KeysignView(
-        state = KeysignState.CreatingInstance,
+        state = KeysignState.KeysignFinished(TransactionStatus.Confirmed),
         progressLink = null,
         txHash = "0x1234567890",
         approveTransactionHash = "0x1234567890",
         transactionLink = "",
         approveTransactionLink = "",
         transactionTypeUiModel = TransactionTypeUiModel.Send(
-            SendTxUiModel(
+            TransactionDetailsUiModel(
                 srcAddress = "0x1234567890",
                 dstAddress = "0x1234567890",
                 memo = "some memo",

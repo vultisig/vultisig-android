@@ -3,22 +3,18 @@ package com.vultisig.wallet.ui.screens.keygen
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -32,8 +28,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.StartViewModel
+import com.vultisig.wallet.ui.screens.v3.components.V3Scaffold
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.startScreenAnimations
 
@@ -76,13 +72,12 @@ private fun StartScreen(
         )
     }
 
-    V2Scaffold(
+    V3Scaffold(
         onBackClick = if (hasBackButton) onBackClick else null
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .background(Theme.v2.colors.backgrounds.primary),
+                .fillMaxSize(),
             horizontalAlignment = CenterHorizontally,
         ) {
             Column(
@@ -91,27 +86,53 @@ private fun StartScreen(
                 horizontalAlignment = CenterHorizontally
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.vultisig),
+                    painter = painterResource(id = R.drawable.logo),
                     contentDescription = "vultisig",
                     modifier = Modifier
-                        .width(200.dp)
+                        .width(60.dp)
                         .scale(logoScale.value)
                 )
                 UiSpacer(16.dp)
                 Text(
                     text = stringResource(R.string.create_new_vault_screen_vultisig),
                     color = Theme.v2.colors.text.primary,
-                    style = Theme.brockmann.headings.largeTitle
+                    style = Theme.brockmann.headings.title1
                 )
             }
 
             Column(
                 horizontalAlignment = CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.padding(
-                    all = 8.dp
-                )
+
             ) {
+
+                Row {
+                    VsButton(
+                        label = stringResource(R.string.home_screen_scan_qr_code),
+                        variant = VsButtonVariant.Secondary,
+                        iconLeft = R.drawable.scan_qr,
+                        onClick = onScanQrCodeClick,
+                        modifier = Modifier
+                            .weight(1f)
+                            .startScreenAnimations(
+                                delay = 450,
+                            ),
+                    )
+
+                    UiSpacer(size = 8.dp)
+
+                    VsButton(
+                        label = stringResource(R.string.home_screen_import_vault),
+                        variant = VsButtonVariant.Secondary,
+                        iconLeft = R.drawable.import_vault,
+                        onClick = onImportVaultClick,
+                        modifier = Modifier
+                            .weight(1f)
+                            .startScreenAnimations(
+                                delay = 450,
+                            ),
+                    )
+                }
 
                 VsButton(
                     label = stringResource(R.string.create_new_vault_screen_create_new_vault),
@@ -124,30 +145,20 @@ private fun StartScreen(
                     onClick = onCreateNewVaultClick
                 )
 
-                SeparatorWithText(
-                    text = stringResource(R.string.create_new_vault_screen_or),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .startScreenAnimations(
-                            delay = 350,
-                        )
-                )
-
                 VsButton(
                     label = stringResource(R.string.home_screen_scan_qr_code),
-                    variant = VsButtonVariant.Tertiary,
+                    variant = VsButtonVariant.Secondary,
                     onClick = onScanQrCodeClick,
                     modifier = Modifier
                         .fillMaxWidth()
                         .startScreenAnimations(
-                            delay = 450,
+                            delay = 350,
                         ),
                 )
 
-
                 VsButton(
                     label = stringResource(R.string.home_screen_import_vault),
-                    variant = VsButtonVariant.Tertiary,
+                    variant = VsButtonVariant.Secondary,
                     onClick = onImportVaultClick,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -158,7 +169,7 @@ private fun StartScreen(
 
                 VsButton(
                     label = stringResource(R.string.home_screen_import_seed_phrase),
-                    variant = VsButtonVariant.Tertiary,
+                    variant = VsButtonVariant.Secondary,
                     onClick = onImportSeedphraseClick,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -171,31 +182,7 @@ private fun StartScreen(
     }
 }
 
-@Composable
-private fun SeparatorWithText(
-    text: String,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        HorizontalDivider(
-            modifier = Modifier.weight(1f),
-            color = Theme.v2.colors.border.light,
-        )
-        Text(
-            text = text,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.primary
-        )
-        HorizontalDivider(
-            modifier = Modifier.weight(1f),
-            color = Theme.v2.colors.border.light,
-        )
-    }
-}
+
 
 @Preview
 @Composable

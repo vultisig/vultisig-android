@@ -63,7 +63,7 @@ internal fun VsOverviewToken(
         Text(
             text = header,
             style = Theme.brockmann.supplementary.captionSmall,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center,
             maxLines = 1,
         )
@@ -112,7 +112,7 @@ internal fun VsOverviewToken(
         val text = buildAnnotatedString {
             append(value)
             append(" ")
-            withStyle(SpanStyle(color = Theme.v2.colors.text.extraLight)) {
+            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
                 append(token.ticker)
             }
         }
@@ -128,7 +128,7 @@ internal fun VsOverviewToken(
         Text(
             text = valuedToken.fiatValue,
             style = Theme.brockmann.supplementary.captionSmall,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
         )
     }
 }

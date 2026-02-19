@@ -106,13 +106,13 @@ private fun ScanningContent(
         Text(
             text = stringResource(R.string.key_import_chains_scanning_desc),
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center,
         )
         UiSpacer(32.dp)
         VsButton(
             label = stringResource(R.string.key_import_chains_select_manually),
-            variant = VsButtonVariant.Tertiary,
+            variant = VsButtonVariant.Secondary,
             onClick = onSelectManually,
         )
     }
@@ -138,7 +138,7 @@ private fun ActiveChainsContent(
         Text(
             text = stringResource(R.string.key_import_chains_found_desc),
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
         )
         UiSpacer(16.dp)
 
@@ -161,7 +161,7 @@ private fun ActiveChainsContent(
         UiSpacer(8.dp)
         VsButton(
             label = stringResource(R.string.key_import_chains_customize),
-            variant = VsButtonVariant.Tertiary,
+            variant = VsButtonVariant.Secondary,
             onClick = onCustomize,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -189,7 +189,7 @@ private fun NoActiveChainsContent(
         Text(
             text = stringResource(R.string.key_import_chains_no_active_desc),
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center,
         )
         UiSpacer(32.dp)
@@ -229,12 +229,12 @@ private fun CustomizeChainsContent(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 VsButton(
                     label = stringResource(R.string.key_import_chains_all),
-                    variant = VsButtonVariant.Tertiary,
+                    variant = VsButtonVariant.Secondary,
                     onClick = onSelectAll,
                 )
                 VsButton(
                     label = stringResource(R.string.key_import_chains_none),
-                    variant = VsButtonVariant.Tertiary,
+                    variant = VsButtonVariant.Secondary,
                     onClick = onDeselectAll,
                 )
             }

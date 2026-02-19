@@ -105,7 +105,7 @@ private fun SelectNetworkScreen(
                             Text(
                                 text = stringResource(R.string.select_chain_chain_title),
                                 style = Theme.brockmann.supplementary.caption,
-                                color = Theme.v2.colors.text.extraLight,
+                                color = Theme.v2.colors.text.tertiary,
                             )
 
                             if (state.showAllChains.not()) {
@@ -113,7 +113,7 @@ private fun SelectNetworkScreen(
                                 Text(
                                     text = stringResource(R.string.select_chain_balance_title),
                                     style = Theme.brockmann.supplementary.caption,
-                                    color = Theme.v2.colors.text.extraLight,
+                                    color = Theme.v2.colors.text.tertiary,
                                 )
                                 UiSpacer(20.dp)
                             }
@@ -203,7 +203,7 @@ private fun NetworkItem(
             Text(
                 text = value,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
             )
         }
     }

@@ -40,13 +40,13 @@ internal fun VsSearchTextField(
         UiIcon(
             drawableResId = R.drawable.ic_search,
             size = 22.dp,
-            tint = Theme.v2.colors.text.extraLight,
+            tint = Theme.v2.colors.text.tertiary,
         )
 
         BasicFormTextField(
             textFieldState = fieldState,
             textStyle = Theme.brockmann.body.m.medium,
-            hintColor = Theme.v2.colors.text.extraLight,
+            hintColor = Theme.v2.colors.text.tertiary,
             hint = stringResource(R.string.token_selection_search_hint),
             keyboardType = KeyboardType.Text,
             onLostFocus = { /* no-op */ },

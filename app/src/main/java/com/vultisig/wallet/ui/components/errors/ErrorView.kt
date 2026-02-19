@@ -41,16 +41,57 @@ internal fun ErrorView(
             .fillMaxSize()
             .background(Theme.v2.colors.backgrounds.primary)
             .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.Companion.CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
 
         ) {
-        val waveCircleColor = Theme.v2.colors.border.light
 
         UiSpacer(
             weight = 1f
         )
 
+        ErrorWaves(
+            title = title,
+            description = description,
+            errorState = errorState
+        )
+
+        UiSpacer(30.dp)
+        VsButton(
+            variant = VsButtonVariant.Secondary,
+            label = buttonText,
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onButtonClick
+        )
+
+        UiSpacer(
+            weight = 1f
+        )
+
+        AppVersionText()
+
+        UiSpacer(
+            size = 50.dp
+        )
+    }
+
+
+}
+
+@Composable
+internal fun ErrorWaves(
+    modifier: Modifier = Modifier,
+    title: String,
+    description: String? = null,
+    errorState: ErrorState = ErrorState.WARNING,
+){
+
+    val waveCircleColor = Theme.v2.colors.border.light
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
         Image(
             imageVector = ImageVector.vectorResource(id = when(errorState){
                 ErrorState.CRITICAL -> R.drawable.error_critical
@@ -96,31 +137,11 @@ internal fun ErrorView(
             Text(
                 text = description,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
                 textAlign = TextAlign.Center
             )
         }
-
-        UiSpacer(30.dp)
-        VsButton(
-            variant = VsButtonVariant.Secondary,
-            label = buttonText,
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onButtonClick
-        )
-
-        UiSpacer(
-            weight = 1f
-        )
-
-        AppVersionText()
-
-        UiSpacer(
-            size = 50.dp
-        )
     }
-
-
 }
 
 enum class ErrorState {

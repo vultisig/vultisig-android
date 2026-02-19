@@ -118,7 +118,7 @@ internal fun VsTextInputField(
                 if (labelIcon != null) {
                     Icon(
                         painter = painterResource(labelIcon),
-                        tint = Theme.v2.colors.text.extraLight,
+                        tint = Theme.v2.colors.text.tertiary,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
@@ -203,7 +203,7 @@ internal fun VsTextInputField(
                                     R.drawable.visible else
                                     invisibleIcon
                             ),
-                            tint = Theme.v2.colors.text.button.light,
+                            tint = Theme.v2.colors.text.button.primary,
                             contentDescription = null,
                             modifier = Modifier
                                 .size(20.dp)
@@ -262,7 +262,7 @@ internal fun VsTextInputField(
                         if (trailingText != null) {
                             Text(
                                 text = trailingText,
-                                color = Theme.v2.colors.text.light,
+                                color = Theme.v2.colors.text.secondary,
                                 style = Theme.brockmann.body.s.medium,
                             )
                         }
@@ -271,7 +271,7 @@ internal fun VsTextInputField(
                             UiSpacer(8.dp)
                             Icon(
                                 painter = painterResource(trailingIcon),
-                                tint = Theme.v2.colors.text.button.light,
+                                tint = Theme.v2.colors.text.button.primary,
                                 contentDescription = null,
                                 modifier = Modifier
                                     .width(20.dp)
@@ -286,7 +286,7 @@ internal fun VsTextInputField(
                             UiSpacer(8.dp)
                             Icon(
                                 painter = painterResource(trailingIcon2),
-                                tint = Theme.v2.colors.text.button.light,
+                                tint = Theme.v2.colors.text.button.primary,
                                 contentDescription = null,
                                 modifier = Modifier
                                     .size(20.dp)
@@ -324,7 +324,7 @@ private fun TextInputFieldHint(
     if (textFieldState.text.isEmpty() && hint != null) {
         Text(
             text = hint,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.body.m.medium,
             modifier = modifier,
         )

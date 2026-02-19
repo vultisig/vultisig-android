@@ -53,7 +53,7 @@ internal fun ImportSeedphraseScreen(
             Text(
                 text = stringResource(R.string.import_seedphrase_subtitle),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.v2.colors.text.tertiary,
             )
 
             UiSpacer(24.dp)

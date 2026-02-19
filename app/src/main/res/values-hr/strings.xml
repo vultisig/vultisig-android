@@ -885,6 +885,14 @@
     <string name="amino_sign">Amino potpis</string>
     <string name="amino_direct">Izravni potpis</string>
     <string name="import_file_screen_enter_password">Unesite lozinku za dijeljenje trezora</string>
+    <string name="transaction_status_confirmed">Transakcija potvrđena</string>
+    <string name="transaction_status_failed">Transakcija nije uspjela</string>
+    <string name="transaction_status_not_found">Transakcija nije pronađena</string>
+    <string name="transaction_status_pending">Transakcija na čekanju…</string>
+    <string name="transaction_status_notification_title">Status transakcije</string>
+    <string name="transaction_status_checking_transaction">Provjera transakcije...</string>
+    <string name="raw_transaction_data">Sirovi podaci o transakciji</string>
+    <string name="solana_raw_transaction">Solana Sirova transakcija</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Import Seed Phrase</string>

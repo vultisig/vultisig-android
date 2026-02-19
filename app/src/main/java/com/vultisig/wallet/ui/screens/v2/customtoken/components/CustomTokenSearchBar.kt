@@ -66,7 +66,7 @@ internal fun CustomTokenSearchBar(
                         UiIcon(
                             drawableResId = R.drawable.search_custom_token,
                             size = 16.dp,
-                            tint = Theme.v2.colors.text.button.light,
+                            tint = Theme.v2.colors.text.button.primary,
                             onClick = onSearchClick
                         )
                         UiSpacer(
@@ -99,7 +99,7 @@ internal fun CustomTokenSearchBar(
                                 Text(
                                     text = context.getString(R.string.custom_token_enter_contract_address),
                                     style = Theme.brockmann.supplementary.footnote,
-                                    color = Theme.v2.colors.text.extraLight
+                                    color = Theme.v2.colors.text.tertiary
                                 )
                             } else {
                                 textField()
@@ -121,7 +121,7 @@ internal fun CustomTokenSearchBar(
                             R.drawable.close_2,
                         size = if (it) 16.dp else
                             10.dp,
-                        tint = Theme.v2.colors.text.light,
+                        tint = Theme.v2.colors.text.secondary,
                         onClick = if (it) onPasteClick else onCloseClick,
                     )
                 }
@@ -146,7 +146,7 @@ internal fun CustomTokenSearchBar(
                     size = VsCircleButtonSize.Custom(size = 40.dp),
                     designType = DesignType.Solid,
                     iconSize = 20.dp,
-                    tint = Theme.v2.colors.text.light
+                    tint = Theme.v2.colors.text.secondary
                 )
             }
 

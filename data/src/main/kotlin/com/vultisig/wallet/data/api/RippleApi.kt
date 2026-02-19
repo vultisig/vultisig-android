@@ -1,8 +1,12 @@
 package com.vultisig.wallet.data.api
 
 import RippleBroadcastResponseResponseJson
+import RippleBroadcastSuccessResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
+import com.vultisig.wallet.data.api.models.TronTransactionStatusResponse
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -25,6 +29,9 @@ interface RippleApi {
     suspend fun getBalance(coin: Coin): BigInteger
     suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson?
     suspend fun fetchServerState(): RippleServerStateResponseJson
+    suspend fun getTsStatus(
+        txHash: String,
+    ): RippleBroadcastSuccessResponseJson?
 }
 
 internal class RippleApiImp @Inject constructor(
@@ -61,6 +68,11 @@ internal class RippleApiImp @Inject constructor(
                         "This sequence number has already passed.",
                         ignoreCase = true
                     )
+                    ||
+                    resultMessage.equals(
+                        "The transaction is redundant.",
+                        ignoreCase = true
+                    )
                 ) {
                     if (!rpcResp.result.txJson?.hash.isNullOrBlank()) {
                         return rpcResp.result.txJson.hash
@@ -82,6 +94,25 @@ internal class RippleApiImp @Inject constructor(
             )
             error(e.message ?: "Error in Broadcast XRP Transaction")
         }
+    }
+
+    override suspend fun getTsStatus( txHash: String): RippleBroadcastSuccessResponseJson? {
+        val payload = RpcPayload(
+            method = "tx",
+            params = buildJsonArray {
+                addJsonObject {
+                    put("transaction", txHash)
+                    put("binary", false)
+                    put("api_version", 2)
+                }
+            }
+        )
+
+        val response = http.post(BASE_XRP_CLUSTER) {
+            setBody(payload)
+        }
+
+        return response.bodyOrThrow<RippleBroadcastSuccessResponseJson>()
     }
 
 

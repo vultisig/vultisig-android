@@ -8,10 +8,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -30,7 +32,6 @@ import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mappers.PayloadToProtoMapper
 import com.vultisig.wallet.data.mediator.MediatorService
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
@@ -43,13 +44,16 @@ import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
+import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.ui.models.AddressProvider
+import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -59,6 +63,10 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Deposit
+import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Send
+import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Sign
+import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Swap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
@@ -66,6 +74,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -84,6 +94,17 @@ internal sealed class KeysignFlowState {
     data object Keysign : KeysignFlowState()
     data class Error (val errorMessage: String) : KeysignFlowState()
 }
+
+@Immutable
+data class KeysignFlowUiState(
+    val vault: Vault = Vault(id = "", name = ""),
+    val amount: String = "",
+    val toAmount: String = "",
+    val toAddress: String = "",
+    val isSwap: Boolean = false,
+    val qrBitmapPainter: BitmapPainter? = null,
+    val isLoading: Boolean = false,
+)
 
 @HiltViewModel
 internal class KeysignFlowViewModel @Inject constructor(
@@ -106,7 +127,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
     private val mapDepositTransactionUiModel: DepositTransactionToUiModelMapper,
     private val mapSwapTransactionToUiModel: SwapTransactionToUiModelMapper,
-    private val generateServiceName: GenerateServiceName,
+    generateServiceName: GenerateServiceName,
     private val routerApi: RouterApi,
     private val pullTssMessages: PullTssMessagesUseCase,
     private val broadcastTx: BroadcastTxUseCase,
@@ -114,6 +135,8 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val payloadToProtoMapper: PayloadToProtoMapper,
     private val discoverParticipantsUseCase: DiscoverParticipantsUseCase,
     private val addressBookRepository: AddressBookRepository,
+    private val transactionStatusServiceManager: TransactionStatusServiceManager,
+    private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -179,7 +202,11 @@ internal class KeysignFlowViewModel @Inject constructor(
             pullTssMessages = pullTssMessages,
             isInitiatingDevice = true,
             addressBookRepository = addressBookRepository,
+            transactionStatusServiceManager = transactionStatusServiceManager,
+            txStatusConfigurationProvider = txStatusConfigurationProvider,
         )
+
+    val uiState = MutableStateFlow(KeysignFlowUiState())
 
     init {
         viewModelScope.launch {
@@ -191,17 +218,30 @@ internal class KeysignFlowViewModel @Inject constructor(
         }
     }
 
+    private var shareVmCollectorsJob: Job? = null
     suspend fun setData(
-        vault: Vault,
+        shareViewModel: KeysignShareViewModel,
         context: Context,
-        keysignPayload: KeysignPayload?,
-        customMessagePayload: CustomMessagePayload?,
         txType: Route.Keysign.Keysign.TxType,
     ) {
         try {
+            when (txType) {
+                Send -> shareViewModel.loadTransaction(transactionId)
+                Swap -> shareViewModel.loadSwapTransaction(transactionId)
+                Deposit -> shareViewModel.loadDepositTransaction(transactionId)
+                Sign -> shareViewModel.loadSignMessageTx(transactionId)
+            }
+            if (!shareViewModel.hasAllData) {
+               moveToState(Error("Keysign information not available"))
+                return
+            }
+
+            val vault = shareViewModel.vault ?: return
             _currentVault = vault
+            val keysignPayload = shareViewModel.keysignPayload
             val modifiedKeysignPayload = updateSolanaKeysignPayload(keysignPayload)
             _keysignPayload = modifiedKeysignPayload
+            val customMessagePayload = shareViewModel.customMessagePayload
             this.customMessagePayload = customMessagePayload
             messagesToSign = when {
                 modifiedKeysignPayload != null ->
@@ -216,6 +256,33 @@ internal class KeysignFlowViewModel @Inject constructor(
                     )
 
                 else -> error("Payload is null")
+            }
+
+            shareVmCollectorsJob?.cancel()
+            shareVmCollectorsJob = viewModelScope.launch {
+                launch {
+                    shareViewModel.amount.collect { amount ->
+                        uiState.update { it.copy(amount = amount) }
+                    }
+                }
+                launch {
+                    shareViewModel.toAmount.collect { toAmount ->
+                        uiState.update { it.copy(toAmount = toAmount) }
+                    }
+                }
+                launch {
+                    shareViewModel.qrBitmapPainter.collect { painter ->
+                        uiState.update { it.copy(qrBitmapPainter = painter) }
+                    }
+                }
+            }
+
+            uiState.update {
+                it.copy(
+                    vault = vault,
+                    isSwap = shareViewModel.keysignPayload?.swapPayload != null,
+                    toAddress = keysignPayload?.toAddress?:"",
+                )
             }
 
             this.selection.value = listOf(vault.localPartyID)
@@ -537,6 +604,7 @@ internal class KeysignFlowViewModel @Inject constructor(
 
     fun complete() {
         viewModelScope.launch {
+            transactionStatusServiceManager.cancelPollingAndRemoveNotification()
             navigator.route(
                 Route.Home(),
                 NavigationOptions(

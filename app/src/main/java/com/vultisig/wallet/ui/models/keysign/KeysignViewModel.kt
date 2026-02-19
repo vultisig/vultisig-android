@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
@@ -24,14 +25,17 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
+import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
-import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
@@ -39,11 +43,15 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asUiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -59,16 +67,26 @@ internal sealed class KeysignState {
     data object CreatingInstance : KeysignState()
     data object KeysignECDSA : KeysignState()
     data object KeysignEdDSA : KeysignState()
-    data object KeysignFinished : KeysignState()
+    data class KeysignFinished(val transactionStatus: TransactionStatus) : KeysignState()
     data class Error(val errorMessage: String) : KeysignState()
 }
 
 internal sealed interface TransactionTypeUiModel {
-    data class Send(val tx: SendTxUiModel) : TransactionTypeUiModel
+    data class Send(val tx: TransactionDetailsUiModel) : TransactionTypeUiModel
     data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransactionTypeUiModel
-    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) : TransactionTypeUiModel
+    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) :
+        TransactionTypeUiModel
+
     data class SignMessage(val model: SignMessageTransactionUiModel) : TransactionTypeUiModel
 }
+
+sealed interface TransactionStatus {
+    data object Broadcasted : TransactionStatus
+    data object Pending : TransactionStatus
+    data object Confirmed : TransactionStatus
+    data class Failed(val cause: UiText) : TransactionStatus
+}
+
 
 internal class KeysignViewModel(
     val vault: Vault,
@@ -92,9 +110,12 @@ internal class KeysignViewModel(
     private val pullTssMessages: PullTssMessagesUseCase,
     private val isInitiatingDevice: Boolean,
     private val addressBookRepository: AddressBookRepository,
+    private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
+    private val transactionStatusServiceManager: TransactionStatusServiceManager,
 ) : ViewModel() {
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
+
     val txHash = MutableStateFlow("")
     val approveTxHash = MutableStateFlow("")
     val txLink = MutableStateFlow("")
@@ -107,11 +128,13 @@ internal class KeysignViewModel(
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
 
     private var pullTssMessagesJob: Job? = null
-
     private val signatures: MutableMap<String, KeysignResponse> = mutableMapOf()
     private var featureFlag: FeatureFlagJson? = null
 
     private var isNavigateToHome: Boolean = false
+
+
+    private var pollingTxStatusJob: Job? = null
 
     init {
         val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
@@ -136,6 +159,7 @@ internal class KeysignViewModel(
 
                     SigningLibType.DKLS ->
                         startKeysignDkls()
+
                     SigningLibType.KeyImport ->
                         startKeysignKeyImport()
                 }
@@ -205,8 +229,6 @@ internal class KeysignViewModel(
                 broadcastTransaction()
                 checkThorChainTxResult()
             }
-
-            currentState.value = KeysignState.KeysignFinished
             isNavigateToHome = true
         } catch (e: Exception) {
             Timber.e(e)
@@ -290,7 +312,7 @@ internal class KeysignViewModel(
                 checkThorChainTxResult()
             }
 
-            currentState.value = KeysignState.KeysignFinished
+            currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
             isNavigateToHome = true
         } catch (e: Exception) {
             Timber.e(e)
@@ -334,7 +356,6 @@ internal class KeysignViewModel(
             broadcastTransaction()
             checkThorChainTxResult()
 
-            currentState.value = KeysignState.KeysignFinished
             isNavigateToHome = true
 
             pullTssMessagesJob?.cancel()
@@ -438,6 +459,7 @@ internal class KeysignViewModel(
         var nonceAcc = BigInteger.ZERO
 
         val approvePayload = payload.approvePayload
+        val chain = payload.coin.chain
         if (approvePayload != null) {
             val signedApproveTransaction = THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                 .getSignedApproveTransaction(
@@ -446,7 +468,7 @@ internal class KeysignViewModel(
                     signatures
                 )
 
-            val evmApi = evmApiFactory.createEvmApi(payload.coin.chain)
+            val evmApi = evmApiFactory.createEvmApi(chain)
             approveTxHash.value = evmApi.sendTransaction(signedApproveTransaction.rawTransaction)
 
             nonceAcc++
@@ -460,21 +482,60 @@ internal class KeysignViewModel(
         )
 
         val txHash = broadcastTx(
-            chain = payload.coin.chain,
+            chain = chain,
             tx = signedTx,
         )
 
         Timber.d("transaction hash: $txHash")
         if (txHash != null) {
             this.txHash.value = txHash
-            txLink.value = explorerLinkRepository.getTransactionLink(payload.coin.chain, txHash)
+            txLink.value = explorerLinkRepository.getTransactionLink(chain, txHash)
             swapProgressLink.value =
                 explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
+
+            if(txStatusConfigurationProvider.supportTxStatus(chain)) {
+                startForegroundPolling(txHash, chain)
+            }
+            else {
+                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+            }
         }
         if (approveTxHash.value.isNotEmpty()) {
             approveTxLink.value =
-                explorerLinkRepository.getTransactionLink(payload.coin.chain, approveTxHash.value)
+                explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
         }
+    }
+
+    private fun startForegroundPolling(txHash: String, chain: Chain) {
+        pollingTxStatusJob?.cancel()
+
+        transactionStatusServiceManager.startPolling(txHash, chain)
+
+        pollingTxStatusJob = viewModelScope.launch {
+            currentState.value =KeysignState.KeysignFinished(transactionStatus = TransactionStatus.Pending)
+            transactionStatusServiceManager.serviceReady
+                .filter { it } // Wait until service is ready
+                .first()
+            transactionStatusServiceManager.getStatusFlow()
+                ?.collect { statusResult ->
+                    currentState.value =
+                        KeysignState.KeysignFinished(transactionStatus = statusResult.toTransactionStatus())
+                    when (statusResult) {
+                        TransactionResult.NotFound,
+                        is TransactionResult.Failed,
+                        TransactionResult.Confirmed -> {
+                            transactionStatusServiceManager.stopPolling()
+                            pollingTxStatusJob?.cancel()
+                        }
+                        else -> Unit
+                    }
+                }
+        }
+    }
+
+    fun stopPolling() {
+        pollingTxStatusJob?.cancel()
+        transactionStatusServiceManager.stopPolling()
     }
 
     fun navigateToHome() {
@@ -505,5 +566,18 @@ internal class KeysignViewModel(
                 )
             }
         }
+    }
+
+    private fun TransactionResult.toTransactionStatus() = when (this) {
+        TransactionResult.Confirmed -> TransactionStatus.Confirmed
+        is TransactionResult.Failed -> TransactionStatus.Failed(this.reason.asUiText())
+        TransactionResult.NotFound -> TransactionStatus.Failed("Confirmation taking longer than expected".asUiText())
+        TransactionResult.Pending -> TransactionStatus.Pending
+    }
+
+    override fun onCleared() {
+        stopPolling()
+        transactionStatusServiceManager.cleanup()
+        super.onCleared()
     }
 }
