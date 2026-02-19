@@ -77,6 +77,8 @@ data class SplTokenJson(
     val tokenList: SplTokenListJson,
     @SerialName("mint")
     val mint: String,
+    @SerialName("usdPrice")
+    val usdPrice: Double? = null,
 )
 
 @Serializable
@@ -93,6 +95,8 @@ data class SplTokenInfo(
     val logoURI: String?,
     @SerialName("extensions")
     val extensions: SplExtensionsJson?,
+    @SerialName("usdPrice")
+    val usdPrice: Double? = null,
 )
 
 
@@ -184,7 +188,9 @@ data class JupiterTokenResponseJson(
     @SerialName("icon")
     val logo: String?,
     @SerialName("extensions")
-    val extensions: JupiterTokenCoinGeckoIdJson?
+    val extensions: JupiterTokenCoinGeckoIdJson?,
+    @SerialName("usdPrice")
+    val usdPrice: Double? = null,
 )
 
 @Serializable
