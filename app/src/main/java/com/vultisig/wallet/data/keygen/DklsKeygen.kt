@@ -318,6 +318,8 @@ class DKLSKeygen(
                         keygenSetupMsg = getDklsSetupMessage()
                     }
                 }
+                // KeyImport uses messageId2 (HTTP header "message-id") instead of messageId
+                // ("message_id") to match the iOS relay server contract for per-chain setup messages.
                 sessionApi.uploadSetupMessage(
                     serverUrl = mediatorURL,
                     sessionId = sessionID,
@@ -331,6 +333,7 @@ class DKLSKeygen(
                     messageId2 = if (action == TssAction.KeyImport) additionalHeader.ifEmpty { null } else null,
                 )
             } else {
+                // Same header choice as upload: KeyImport → "message-id", others → "message_id".
                 keygenSetupMsg =
                     sessionApi.getSetupMessage(
                         mediatorURL, sessionID,

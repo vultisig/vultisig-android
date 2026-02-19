@@ -43,14 +43,13 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
             val nativeTokens = tokenRepository.nativeTokens.first()
                 .associateBy { it.chain }
 
-            // For KeyImport: ThorChain always first, plus all user-selected chains.
-            // Non-imported chains (like ThorChain if not selected) use BIP32 fallback.
+            // For KeyImport: only add chains the user explicitly selected during import.
+            // Each chain's key is already fully derived, so no BIP32 derivation is needed.
             val chainsToAdd = if (insertedVault.libType == SigningLibType.KeyImport) {
-                val importedChains = insertedVault.chainPublicKeys
+                insertedVault.chainPublicKeys
                     .mapNotNull { cpk ->
                         try { Chain.fromRaw(cpk.chain) } catch (_: Exception) { null }
                     }
-                (listOf(Chain.ThorChain) + importedChains).distinct()
             } else {
                 defaultChainsRepository.selectedDefaultChains.first()
             }
