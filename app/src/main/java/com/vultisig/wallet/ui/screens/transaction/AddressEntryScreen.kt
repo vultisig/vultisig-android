@@ -140,6 +140,7 @@ internal fun AddAddressEntryScreen(
                 trailingIcon = R.drawable.camera,
                 onTrailingIconClick = onScan,
                 keyboardType = KeyboardType.Text,
+                autoCorrectEnabled = false,
                 trailingIcon2 = R.drawable.copy2,
                 onTrailingIcon2Click = {
                     clipboardData.value?.let { clipBoard ->

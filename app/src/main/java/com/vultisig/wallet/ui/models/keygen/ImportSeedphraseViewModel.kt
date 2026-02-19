@@ -164,6 +164,7 @@ internal class ImportSeedphraseViewModel @Inject constructor(
         raw.trim().replace(Regex("[\\s\\n\\r\\t]+"), " ")
 
     fun back() {
+        keyImportRepository.clear()
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
