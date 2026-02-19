@@ -100,7 +100,7 @@ data class ChainPublicKeyEntity(
     val chain: String,
     @ColumnInfo("publicKey")
     val publicKey: String,
-    @ColumnInfo("isEddsa")
+    @ColumnInfo("isEddsa", defaultValue = "0")
     val isEddsa: Boolean,
 )
 

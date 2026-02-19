@@ -247,7 +247,7 @@ internal class KeygenViewModel @Inject constructor(
         when (action) {
             TssAction.KEYGEN, TssAction.Migrate -> dklsKeygen.dklsKeygenWithRetry(0)
             TssAction.ReShare -> dklsKeygen.reshareWithRetry(0)
-            TssAction.KeyImport -> error("KeyImport not supported yet")
+            TssAction.KeyImport -> error("KeyImport is handled by startKeyImportKeygen()")
         }
 
         updateStep(KeygenState.KeygenEdDSA)
@@ -273,7 +273,7 @@ internal class KeygenViewModel @Inject constructor(
         when (action) {
             TssAction.KEYGEN, TssAction.Migrate -> schnorr.schnorrKeygenWithRetry(0)
             TssAction.ReShare -> schnorr.schnorrReshareWithRetry(0)
-            TssAction.KeyImport -> error("KeyImport not supported yet")
+            TssAction.KeyImport -> error("KeyImport is handled by startKeyImportKeygen()")
         }
 
         val keyshareEcdsa = dklsKeygen.keyshare!!
@@ -678,10 +678,17 @@ internal class KeygenViewModel @Inject constructor(
 
     private fun resolveKeygenErrorFromException(e: Exception): ErrorUiModel {
         if (e is DuplicateVaultException) {
-            return ErrorUiModel(
-                title = UiText.StringResource(R.string.import_seedphrase_already_imported),
-                description = UiText.StringResource(R.string.import_seedphrase_duplicate_description),
-            )
+            return if (action == TssAction.KeyImport) {
+                ErrorUiModel(
+                    title = UiText.StringResource(R.string.import_seedphrase_already_imported),
+                    description = UiText.StringResource(R.string.import_seedphrase_duplicate_description),
+                )
+            } else {
+                ErrorUiModel(
+                    title = UiText.StringResource(R.string.generating_key_screen_keygen_failed),
+                    description = UiText.DynamicString(e.message ?: "Unknown error"),
+                )
+            }
         }
 
         val isThresholdError = checkIsThresholdError(e)

@@ -109,8 +109,22 @@ fun Vault.getEddsaSigningKey(chain: Chain): String {
     if (libType != SigningLibType.KeyImport) {
         return pubKeyEDDSA
     }
-    return chainPublicKeys.firstOrNull { it.chain == chain.raw && it.isEddsa }?.publicKey
-        ?: pubKeyEDDSA
+    // Exact chain match first
+    chainPublicKeys.firstOrNull { it.chain == chain.raw && it.isEddsa }?.let {
+        return it.publicKey
+    }
+    // Derivation-path fallback (mirrors getEcdsaSigningKey)
+    chainPublicKeys.firstOrNull { cpk ->
+        cpk.isEddsa && try {
+            Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
+                    chain.coinType.compatibleDerivationPath()
+        } catch (_: Exception) {
+            false
+        }
+    }?.let {
+        return it.publicKey
+    }
+    return pubKeyEDDSA
 }
 
 fun Vault.getPubKeyByChain(chain: Chain): String {

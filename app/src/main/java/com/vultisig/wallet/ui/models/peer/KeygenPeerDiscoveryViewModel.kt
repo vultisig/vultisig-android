@@ -576,6 +576,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 }
 
                 TssAction.KeyImport -> {
+                    // KeyImport always uses DKLS protocol, matching the QR payload
                     vultiSignerRepository.joinKeyImport(
                         JoinKeyImportRequest(
                             vaultName = vaultName,
@@ -585,7 +586,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                             localPartyId = generateServerPartyId(),
                             encryptionPassword = password,
                             email = email,
-                            libType = libType.toJson(),
+                            libType = SigningLibType.DKLS.toJson(),
                             chains = keyImportRepository.get()?.chainSettings?.map { it.chain.raw }
                                 ?: emptyList()
                         )
