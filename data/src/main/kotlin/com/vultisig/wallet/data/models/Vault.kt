@@ -77,11 +77,11 @@ fun Vault.isFastVault(): Boolean {
 /**
  * Returns (publicKey, chainCode) for ECDSA signing on the given [chain].
  *
- * For KeyImport vaults, resolves the per-chain key from [chainPublicKeys]:
+ * For KeyImport vaults, resolves the per-chain key from [ChainPublicKey]:
  * - Exact chain match first, then derivation-path match (e.g. all EVM chains share one key).
  * - Returns empty chainCode when a per-chain key is found, signaling that BIP32 derivation
  *   should be skipped (the key is already fully derived).
- * - Falls back to root (pubKeyECDSA + hexChainCode) for chains not in [chainPublicKeys].
+ * - Falls back to root (pubKeyECDSA + hexChainCode) for chains not in [ChainPublicKey].
  */
 fun Vault.getEcdsaSigningKey(chain: Chain): Pair<String, String> {
     if (libType != SigningLibType.KeyImport) {
@@ -91,7 +91,7 @@ fun Vault.getEcdsaSigningKey(chain: Chain): Pair<String, String> {
         ?: chainPublicKeys.firstOrNull { cpk ->
             !cpk.isEddsa && try {
                 Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
-                    chain.coinType.compatibleDerivationPath()
+                        chain.coinType.compatibleDerivationPath()
             } catch (_: Exception) {
                 false
             }
@@ -112,9 +112,22 @@ fun Vault.getEddsaSigningKey(chain: Chain): String {
 }
 
 fun Vault.getPubKeyByChain(chain: Chain): String {
-    // For KeyImport vaults, use chain-specific public key if available
-    chainPublicKeys.firstOrNull { it.chain == chain.raw }?.let {
-        return it.publicKey
+    if (libType == SigningLibType.KeyImport) {
+        // Exact chain match first
+        chainPublicKeys.firstOrNull { it.chain == chain.raw }?.let {
+            return it.publicKey
+        }
+        // Derivation-path fallback (e.g. BSC reuses ETH key)
+        chainPublicKeys.firstOrNull { cpk ->
+            try {
+                Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
+                        chain.coinType.compatibleDerivationPath()
+            } catch (_: Exception) {
+                false
+            }
+        }?.let {
+            return it.publicKey
+        }
     }
     // Fall back to root public key
     return when (chain) {

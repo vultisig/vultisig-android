@@ -14,6 +14,7 @@ import wallet.core.jni.CoinType
 import wallet.core.jni.Derivation
 import wallet.core.jni.HDWallet
 import java.math.BigInteger
+import kotlin.coroutines.cancellation.CancellationException
 import javax.inject.Inject
 
 data class ChainBalanceResult(
@@ -71,8 +72,10 @@ internal class ScanChainBalancesUseCaseImpl @Inject constructor(
             val nativeToken = tokenRepository.getNativeToken(chain.id)
             val tokenValue = balanceRepository.getTokenValue(address, nativeToken).first()
             tokenValue.value > BigInteger.ZERO
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Timber.d(e, "Failed to check balance for ${chain.id} at $address")
+            Timber.d(e, "Failed to check balance for ${chain.id}")
             false
         }
 

@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 import javax.inject.Inject
 
 internal data class ImportSeedphraseUiModel(
@@ -143,12 +144,14 @@ internal class ImportSeedphraseViewModel @Inject constructor(
                 state.update { it.copy(isImporting = false) }
 
                 navigator.route(Route.KeyImport.ChainsSetup)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 state.update {
                     it.copy(
                         isImporting = false,
                         errorMessage = UiText.DynamicString(
-                            e.message ?: "Unknown error"
+                            e.message ?: ""
                         ),
                         innerState = VsTextInputFieldInnerState.Error,
                     )

@@ -559,7 +559,7 @@ internal class ImportSeedphraseViewModelTest {
 
             assertFalse(vm.state.value.isImporting)
             assertEquals(
-                UiText.DynamicString("Unknown error"),
+                UiText.DynamicString(""),
                 vm.state.value.errorMessage,
             )
             assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)

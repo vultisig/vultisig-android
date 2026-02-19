@@ -16,7 +16,7 @@ fun interface ValidateMnemonicUseCase {
 internal class ValidateMnemonicUseCaseImpl @Inject constructor() : ValidateMnemonicUseCase {
 
     override fun invoke(mnemonic: String): MnemonicValidationResult {
-        val normalized = mnemonic.trim().replace(Regex("\\s+"), " ")
+        val normalized = mnemonic.trim().replace(WHITESPACE_REGEX, " ")
         val wordCount = normalized.split(" ").size
 
         if (wordCount != 12 && wordCount != 24) {
@@ -28,5 +28,9 @@ internal class ValidateMnemonicUseCaseImpl @Inject constructor() : ValidateMnemo
         } else {
             MnemonicValidationResult.InvalidPhrase
         }
+    }
+
+    private companion object {
+        val WHITESPACE_REGEX = Regex("\\s+")
     }
 }

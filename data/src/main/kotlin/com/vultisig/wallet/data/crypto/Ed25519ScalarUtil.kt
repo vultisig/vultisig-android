@@ -10,7 +10,7 @@ import java.security.MessageDigest
  * Applies SHA-512 hashing, clamping, and mod-L reduction to raw Ed25519 seeds
  * before they are passed to Schnorr TSS keygen. Matches iOS implementation.
  */
-object Ed25519ScalarUtil {
+internal object Ed25519ScalarUtil {
 
     // ed25519 group order L
     private val L = BigInteger(

@@ -17,7 +17,6 @@ import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssKeyType
-import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
@@ -60,7 +59,7 @@ import tss.ServiceImpl
 import tss.Tss
 import vultisig.keysign.v1.CustomMessagePayload
 import java.math.BigInteger
-import java.util.Base64
+import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 internal sealed class KeysignState {
@@ -247,13 +246,16 @@ internal class KeysignViewModel(
         }
         try {
             val chain = keysignPayload?.coin?.chain
-                ?: error("No chain in keysign payload")
 
             when (keyType) {
                 TssKeyType.ECDSA -> {
                     currentState.value = KeysignState.KeysignECDSA
 
-                    val (ecdsaKey, _) = vault.getEcdsaSigningKey(chain)
+                    val ecdsaKey = if (chain != null) {
+                        vault.getEcdsaSigningKey(chain).first
+                    } else {
+                        vault.pubKeyECDSA
+                    }
 
                     val dkls = DKLSKeysign(
                         vault = vault,
@@ -281,7 +283,11 @@ internal class KeysignViewModel(
                 TssKeyType.EDDSA -> {
                     currentState.value = KeysignState.KeysignEdDSA
 
-                    val eddsaKey = vault.getEddsaSigningKey(chain)
+                    val eddsaKey = if (chain != null) {
+                        vault.getEddsaSigningKey(chain)
+                    } else {
+                        vault.pubKeyEDDSA
+                    }
 
                     val schnorr = SchnorrKeysign(
                         vault = vault,
@@ -311,8 +317,6 @@ internal class KeysignViewModel(
                 broadcastTransaction()
                 checkThorChainTxResult()
             }
-
-            currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
             isNavigateToHome = true
         } catch (e: Exception) {
             Timber.e(e)
@@ -461,7 +465,8 @@ internal class KeysignViewModel(
         val approvePayload = payload.approvePayload
         val chain = payload.coin.chain
         if (approvePayload != null) {
-            val signedApproveTransaction = THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+            val (approveKey, approveChainCode) = vault.getEcdsaSigningKey(chain)
+            val signedApproveTransaction = THORChainSwaps(approveKey, approveChainCode)
                 .getSignedApproveTransaction(
                     approvePayload,
                     payload,
@@ -493,10 +498,9 @@ internal class KeysignViewModel(
             swapProgressLink.value =
                 explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
 
-            if(txStatusConfigurationProvider.supportTxStatus(chain)) {
+            if (txStatusConfigurationProvider.supportTxStatus(chain)) {
                 startForegroundPolling(txHash, chain)
-            }
-            else {
+            } else {
                 currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
             }
         }
@@ -512,7 +516,7 @@ internal class KeysignViewModel(
         transactionStatusServiceManager.startPolling(txHash, chain)
 
         pollingTxStatusJob = viewModelScope.launch {
-            currentState.value =KeysignState.KeysignFinished(transactionStatus = TransactionStatus.Pending)
+            currentState.value = KeysignState.KeysignFinished(transactionStatus = TransactionStatus.Pending)
             transactionStatusServiceManager.serviceReady
                 .filter { it } // Wait until service is ready
                 .first()
@@ -527,6 +531,7 @@ internal class KeysignViewModel(
                             transactionStatusServiceManager.stopPolling()
                             pollingTxStatusJob?.cancel()
                         }
+
                         else -> Unit
                     }
                 }

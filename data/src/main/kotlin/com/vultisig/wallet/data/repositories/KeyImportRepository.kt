@@ -16,7 +16,9 @@ data class ChainImportSetting(
 data class KeyImportData(
     val mnemonic: String,
     val chainSettings: List<ChainImportSetting> = emptyList(),
-)
+) {
+    override fun toString(): String = "KeyImportData(***)"
+}
 
 interface KeyImportRepository {
     fun get(): KeyImportData?
@@ -28,19 +30,26 @@ interface KeyImportRepository {
 @Singleton
 internal class KeyImportRepositoryImpl @Inject constructor() : KeyImportRepository {
 
+    @Volatile
     private var data: KeyImportData? = null
 
     override fun get(): KeyImportData? = data
 
     override fun setMnemonic(mnemonic: String) {
-        data = KeyImportData(mnemonic = mnemonic)
+        synchronized(this) {
+            data = KeyImportData(mnemonic = mnemonic)
+        }
     }
 
     override fun setChainSettings(settings: List<ChainImportSetting>) {
-        data = data?.copy(chainSettings = settings)
+        synchronized(this) {
+            data = data?.copy(chainSettings = settings)
+        }
     }
 
     override fun clear() {
-        data = null
+        synchronized(this) {
+            data = null
+        }
     }
 }

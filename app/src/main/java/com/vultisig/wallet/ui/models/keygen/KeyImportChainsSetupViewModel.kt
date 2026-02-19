@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.ChainImportSetting
 import com.vultisig.wallet.data.repositories.DerivationPath
 import com.vultisig.wallet.data.repositories.KeyImportRepository
-import com.vultisig.wallet.data.usecases.ChainBalanceResult
 import com.vultisig.wallet.data.usecases.ScanChainBalancesUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -18,6 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import kotlin.coroutines.cancellation.CancellationException
 import javax.inject.Inject
 
 internal enum class ChainsSetupState {
@@ -46,7 +46,6 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
 
     val state = MutableStateFlow(KeyImportChainsSetupUiModel())
 
-    private var scanResults: List<ChainBalanceResult> = emptyList()
 
     init {
         startScanning()
@@ -61,8 +60,6 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
                 val results = withContext(Dispatchers.IO) {
                     scanChainBalances(mnemonic)
                 }
-                scanResults = results
-
                 val activeResults = results.filter { it.hasBalance }
 
                 val allChainItems = Chain.keyImportSupportedChains
@@ -102,6 +99,8 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
                         )
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to scan chain balances")
                 // Fall back to manual selection
@@ -129,11 +128,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
         }
     }
 
-    fun customize() {
-        state.update {
-            it.copy(screenState = ChainsSetupState.CustomizeChains)
-        }
-    }
+    fun customize() = selectManually()
 
     fun toggleChain(chain: Chain) {
         state.update { current ->
@@ -172,8 +167,10 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
         val selectedChains = when (currentState.screenState) {
             ChainsSetupState.ActiveChains ->
                 currentState.activeChains.filter { it.isSelected }
+
             ChainsSetupState.CustomizeChains ->
                 currentState.allChains.filter { it.isSelected }
+
             else -> return
         }
 

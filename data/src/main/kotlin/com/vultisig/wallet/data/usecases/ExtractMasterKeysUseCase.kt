@@ -13,7 +13,9 @@ data class MasterKeys(
     val ecdsaMasterKeyHex: String,
     val eddsaMasterKeyHex: String,
     val hexChainCode: String,
-)
+) {
+    override fun toString(): String = "MasterKeys(***)"
+}
 
 fun interface ExtractMasterKeysUseCase {
     operator fun invoke(mnemonic: String): MasterKeys

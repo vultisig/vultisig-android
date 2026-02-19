@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalStdlibApi::class)
+
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.crypto.Ed25519ScalarUtil
@@ -15,7 +17,9 @@ data class ChainKeyResult(
     val chain: Chain,
     val privateKeyHex: String,
     val isEddsa: Boolean,
-)
+) {
+    override fun toString(): String = "ChainKeyResult(chain=${chain.raw}, ***)"
+}
 
 fun interface DeriveChainKeyUseCase {
     operator fun invoke(
@@ -43,10 +47,9 @@ internal class DeriveChainKeyUseCaseImpl @Inject constructor() : DeriveChainKeyU
 
         val privateKeyHex = if (isEddsa) {
             // EdDSA chains require scalar clamping before Schnorr keygen (matches iOS)
-            Ed25519ScalarUtil.clampThenUniformScalar(keyData)
-                .joinToString("") { "%02x".format(it) }
+            Ed25519ScalarUtil.clampThenUniformScalar(keyData).toHexString()
         } else {
-            keyData.joinToString("") { "%02x".format(it) }
+            keyData.toHexString()
         }
 
         return ChainKeyResult(

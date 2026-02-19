@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -61,14 +60,17 @@ internal fun KeyImportChainsSetupScreen(
             ChainsSetupState.Scanning -> ScanningContent(
                 onSelectManually = model::selectManually,
             )
+
             ChainsSetupState.ActiveChains -> ActiveChainsContent(
                 chains = state.activeChains,
                 onContinue = model::continueWithSelection,
                 onCustomize = model::customize,
             )
+
             ChainsSetupState.NoActiveChains -> NoActiveChainsContent(
                 onSelectManually = model::selectManually,
             )
+
             ChainsSetupState.CustomizeChains -> CustomizeChainsContent(
                 chains = state.allChains,
                 selectedCount = state.selectedCount,
