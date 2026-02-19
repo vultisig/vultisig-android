@@ -1,12 +1,14 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.api.models.BlockChairDashboardResponse
+import com.vultisig.wallet.data.api.models.BlockChairStatusResponse
 import com.vultisig.wallet.data.api.models.BlockChairInfo
 import com.vultisig.wallet.data.api.models.BlockChairInfoJson
 import com.vultisig.wallet.data.api.models.SuggestedTransactionFeeDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashRequestBodyJson
+import com.vultisig.wallet.data.api.models.quotes.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.utils.UTXOStatusQuoteResponseSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -31,12 +33,13 @@ interface BlockChairApi {
     suspend fun getTsStatus(
         chain: Chain,
         txHash: String,
-    ): BlockChairDashboardResponse?
+    ): BlockChainStatusDeserialized?
 }
 
 internal class BlockChairApiImp @Inject constructor(
     private val json: Json,
     private val httpClient: HttpClient,
+    private val utxoStatusQuoteResponseSerializer: UTXOStatusQuoteResponseSerializer,
 ) : BlockChairApi {
 
     private fun getChainName(chain: Chain): String = when (chain) {
@@ -109,7 +112,7 @@ internal class BlockChairApiImp @Inject constructor(
                     }
                 if (response.status != HttpStatusCode.OK) {
                     Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")
-                    throw Exception("fail to broadcast transaction")
+                    error("fail to broadcast transaction: ${response.bodyAsText()}")
                 }
 
                 return response.body<TransactionHashDataJson>().data.value
@@ -120,13 +123,31 @@ internal class BlockChairApiImp @Inject constructor(
     override suspend fun getTsStatus(
         chain: Chain,
         txHash: String,
-    ): BlockChairDashboardResponse? {
+    ): BlockChainStatusDeserialized? {
         return try {
             val response =
                 httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/transaction/${txHash}")
-            response.body<BlockChairDashboardResponse>()
+
+
+            json.decodeFromString(
+                utxoStatusQuoteResponseSerializer,
+                response.bodyAsText()
+            )
+
         } catch (e: Exception) {
-            null
+            val msg = e.message ?: ""
+            if ("403" in msg || msg.contains(
+                    "Forbidden",
+                    ignoreCase = true
+                ) || msg.contains(
+                    "forbidden",
+                    ignoreCase = true
+                )
+            ) {
+                Timber.tag("SolanaApiImp").d("Forbidden (403) when checking tx status: $txHash")
+                return null
+            }
+            throw e
         }
     }
 }
