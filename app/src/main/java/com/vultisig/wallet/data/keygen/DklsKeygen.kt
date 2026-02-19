@@ -327,11 +327,16 @@ class DKLSKeygen(
                             Numeric.hexStringToByteArray(encryptionKeyHex)
                         )
                     ),
-                    messageId = additionalHeader
+                    messageId = if (action == TssAction.KeyImport) null else additionalHeader,
+                    messageId2 = if (action == TssAction.KeyImport) additionalHeader.ifEmpty { null } else null,
                 )
             } else {
                 keygenSetupMsg =
-                    sessionApi.getSetupMessage(mediatorURL, sessionID, additionalHeader)
+                    sessionApi.getSetupMessage(
+                        mediatorURL, sessionID,
+                        messageId = if (action == TssAction.KeyImport) null else additionalHeader,
+                        messageId2 = if (action == TssAction.KeyImport) additionalHeader.ifEmpty { null } else null,
+                    )
                         .let {
                             encryption.decrypt(
                                 Base64.decode(it),

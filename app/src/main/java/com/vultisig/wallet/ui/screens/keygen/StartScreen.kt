@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
@@ -105,34 +104,6 @@ private fun StartScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
 
             ) {
-
-                Row {
-                    VsButton(
-                        label = stringResource(R.string.home_screen_scan_qr_code),
-                        variant = VsButtonVariant.Secondary,
-                        iconLeft = R.drawable.scan_qr,
-                        onClick = onScanQrCodeClick,
-                        modifier = Modifier
-                            .weight(1f)
-                            .startScreenAnimations(
-                                delay = 450,
-                            ),
-                    )
-
-                    UiSpacer(size = 8.dp)
-
-                    VsButton(
-                        label = stringResource(R.string.home_screen_import_vault),
-                        variant = VsButtonVariant.Secondary,
-                        iconLeft = R.drawable.import_vault,
-                        onClick = onImportVaultClick,
-                        modifier = Modifier
-                            .weight(1f)
-                            .startScreenAnimations(
-                                delay = 450,
-                            ),
-                    )
-                }
 
                 VsButton(
                     label = stringResource(R.string.create_new_vault_screen_create_new_vault),

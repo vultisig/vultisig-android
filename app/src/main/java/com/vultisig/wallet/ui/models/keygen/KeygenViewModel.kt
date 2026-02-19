@@ -222,8 +222,8 @@ internal class KeygenViewModel @Inject constructor(
                 val eddsaUIResp = Tss.getLocalUIEddsa(eddsaShare)
                 localUiEddsa = eddsaUIResp.padEnd(64, '0')
 
-            } catch (_: Exception) {
-                error("Can't get local ui for migration")
+            } catch (e: Exception) {
+                throw IllegalStateException("Can't get local ui for migration", e)
             }
         }
 
@@ -720,8 +720,10 @@ internal class KeygenViewModel @Inject constructor(
                 keygenState = step,
                 progress = when (step) {
                     is KeygenState.CreatingInstance -> 0.0f
-                    is KeygenState.KeygenECDSA -> 0.25f
-                    is KeygenState.KeygenEdDSA -> 0.50f
+                    is KeygenState.KeygenECDSA ->
+                        if (libType == SigningLibType.KeyImport) 0.25f else 0.33f
+                    is KeygenState.KeygenEdDSA ->
+                        if (libType == SigningLibType.KeyImport) 0.50f else 0.66f
                     is KeygenState.KeygenChains -> 0.75f
                     is KeygenState.ReshareECDSA -> 0.33f
                     is KeygenState.ReshareEdDSA -> 0.66f
