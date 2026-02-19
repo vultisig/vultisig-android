@@ -398,6 +398,7 @@
     <string name="reshare_step_generating_eddsa">Gerando chave EdDSA</string>
     <string name="keygen_connecting_with_server">A ligar ao servidor…</string>
     <string name="keygen_step_generating_eddsa">Gerando chave EDDSA</string>
+    <string name="keygen_step_generating_chain_keys">Gerando chaves de cadeia</string>
     <string name="reshare_step_generating_ecdsa">Gerando chave ECDSA</string>
     <string name="merge_account_doesnt_exist">O token selecionado não foi encontrado para este endereço</string>
     <string name="keygen_email_error">E-mail incorreto, por favor verifique</string>

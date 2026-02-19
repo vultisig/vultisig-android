@@ -299,6 +299,8 @@ class SchnorrKeygen(
                     if (this.localUi.isEmpty()) {
                         throw RuntimeException("can't import key, local UI is empty")
                     }
+                    // additionalHeader namespaces the setup message on the relay server so
+                    // per-chain sessions (e.g. "Solana") don't collide with the root EdDSA one.
                     val eddsaHeader = additionalHeader.ifEmpty { "eddsa_key_import" }
                     if (this.isInitiatingDevice) {
                         val (keyImportSetupMsg, keyImportHandler) = getDklsKeyImportSetupMessage(

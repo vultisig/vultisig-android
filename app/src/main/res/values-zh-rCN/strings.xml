@@ -624,6 +624,7 @@
     <string name="keygen_step_preparing_vault">准备金库</string>
     <string name="keygen_step_generating_ecdsa">生成 ECDSA 密钥</string>
     <string name="keygen_step_generating_eddsa">生成 EdDSA 密钥</string>
+    <string name="keygen_step_generating_chain_keys">生成链密钥</string>
     <string name="reshare_step_generating_ecdsa">生成 ECDSA 密钥</string>
     <string name="reshare_step_generating_eddsa">生成 EdDSA 密钥</string>
     <string name="keygen_connecting_with_server">连接服务器中…</string>

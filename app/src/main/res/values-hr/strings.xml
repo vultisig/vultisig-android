@@ -401,6 +401,7 @@
     <string name="reshare_step_generating_eddsa">Generiranje EDDSA ključa</string>
     <string name="keygen_connecting_with_server">Povezivanje sa serverom...</string>
     <string name="keygen_step_generating_eddsa">Generiranje EDDSA ključa</string>
+    <string name="keygen_step_generating_chain_keys">Generiranje ključeva lanca</string>
     <string name="reshare_step_generating_ecdsa">Generiranje ECDSA ključa</string>
     <string name="merge_account_doesnt_exist">Odabrani token nije pronađen za ovu adresu</string>
     <string name="keygen_email_error">Netočna e-pošta, molimo provjerite</string>

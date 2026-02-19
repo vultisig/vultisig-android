@@ -400,6 +400,7 @@
     <string name="reshare_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
     <string name="keygen_connecting_with_server">Mit Server verbinden …</string>
     <string name="keygen_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
+    <string name="keygen_step_generating_chain_keys">Ketten-Schlüssel generieren</string>
     <string name="reshare_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
     <string name="merge_account_doesnt_exist">Das ausgewählte Token wurde für diese Adresse nicht gefunden.</string>
     <string name="keygen_email_error">Falsche E-Mail, bitte überprüfen</string>

@@ -18,6 +18,8 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
@@ -43,16 +45,19 @@ internal class ImportSeedphraseViewModel @Inject constructor(
 ) : ViewModel() {
 
     val mnemonicFieldState = TextFieldState()
-    val state = MutableStateFlow(ImportSeedphraseUiModel())
+    private val _state = MutableStateFlow(ImportSeedphraseUiModel())
+    val state: StateFlow<ImportSeedphraseUiModel> = _state.asStateFlow()
 
     init {
+        // Two separate collectors: immediate (no debounce) clears stale errors on every
+        // keystroke, while debounced validates after the user stops typing.
         observeImmediateInput()
         observeMnemonicChanges()
     }
 
     private fun observeImmediateInput() = viewModelScope.launch {
         mnemonicFieldState.textAsFlow().collect {
-            state.update {
+            _state.update {
                 it.copy(
                     errorMessage = null,
                     isImportEnabled = false,
@@ -68,7 +73,7 @@ internal class ImportSeedphraseViewModel @Inject constructor(
             .collectLatest { text ->
                 val trimmed = cleanMnemonic(text.toString())
                 if (trimmed.isEmpty()) {
-                    state.update {
+                    _state.update {
                         it.copy(
                             wordCount = 0,
                             expectedWordCount = 12,
@@ -82,6 +87,7 @@ internal class ImportSeedphraseViewModel @Inject constructor(
 
                 val words = trimmed.split(Regex("\\s+"))
                 val wordCount = words.size
+                // BIP39 supports 12 or 24 words; auto-detect target based on input length
                 val expectedWordCount = if (wordCount > 12) 24 else 12
 
                 val result = validateMnemonic(trimmed)
@@ -93,6 +99,7 @@ internal class ImportSeedphraseViewModel @Inject constructor(
                             R.string.import_seedphrase_invalid_word_count,
                             listOf(result.actual.toString(), expectedWordCount.toString())
                         )
+
                     is MnemonicValidationResult.InvalidPhrase ->
                         UiText.StringResource(R.string.import_seedphrase_invalid_phrase)
                 }
@@ -100,12 +107,13 @@ internal class ImportSeedphraseViewModel @Inject constructor(
                 val innerState = when (result) {
                     is MnemonicValidationResult.Valid ->
                         VsTextInputFieldInnerState.Success
+
                     is MnemonicValidationResult.InvalidWordCount,
                     is MnemonicValidationResult.InvalidPhrase ->
                         VsTextInputFieldInnerState.Error
                 }
 
-                state.update {
+                _state.update {
                     it.copy(
                         wordCount = wordCount,
                         expectedWordCount = expectedWordCount,
@@ -119,17 +127,18 @@ internal class ImportSeedphraseViewModel @Inject constructor(
 
     fun importSeedphrase() {
         if (state.value.isImporting) return
+        if (!state.value.isImportEnabled) return
 
         val mnemonic = cleanMnemonic(mnemonicFieldState.text.toString())
 
         viewModelScope.launch {
-            state.update { it.copy(isImporting = true) }
+            _state.update { it.copy(isImporting = true) }
 
             try {
                 val isDuplicate = checkMnemonicDuplicate(mnemonic)
 
                 if (isDuplicate) {
-                    state.update {
+                    _state.update {
                         it.copy(
                             isImporting = false,
                             errorMessage = UiText.StringResource(R.string.import_seedphrase_already_imported),
@@ -141,18 +150,20 @@ internal class ImportSeedphraseViewModel @Inject constructor(
 
                 keyImportRepository.setMnemonic(mnemonic)
 
-                state.update { it.copy(isImporting = false) }
+                _state.update { it.copy(isImporting = false) }
 
                 navigator.route(Route.KeyImport.ChainsSetup)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                state.update {
+                keyImportRepository.clear()
+                _state.update {
                     it.copy(
                         isImporting = false,
-                        errorMessage = UiText.DynamicString(
-                            e.message ?: ""
-                        ),
+                        errorMessage = if (e.message != null)
+                            UiText.DynamicString(e.message!!)
+                        else
+                            UiText.StringResource(R.string.error_view_default_description),
                         innerState = VsTextInputFieldInnerState.Error,
                     )
                 }
@@ -160,6 +171,7 @@ internal class ImportSeedphraseViewModel @Inject constructor(
         }
     }
 
+    // Normalize pasted input: collapse newlines, tabs, multiple spaces into single spaces
     private fun cleanMnemonic(raw: String): String =
         raw.trim().replace(Regex("[\\s\\n\\r\\t]+"), " ")
 

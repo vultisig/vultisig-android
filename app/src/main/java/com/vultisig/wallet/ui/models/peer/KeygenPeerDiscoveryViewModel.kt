@@ -141,10 +141,12 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     private val encryptionKeyHex = Utils.encryptionKeyHex
 
+    // For KeyImport, derive the BIP32 chain code from the mnemonic so the vault can
+    // derive addresses for chains not explicitly imported. For other actions, use a random hex.
     private var hexChainCode: String = if (args.action == TssAction.KeyImport) {
-        val mnemonic = keyImportRepository.get()?.mnemonic ?: ""
-        if (mnemonic.isNotEmpty()) extractMasterKeys(mnemonic).hexChainCode
-        else Utils.encryptionKeyHex
+        val mnemonic = keyImportRepository.get()?.mnemonic
+            ?: error("KeyImport requires a mnemonic in KeyImportRepository")
+        extractMasterKeys(mnemonic).hexChainCode
     } else {
         Utils.encryptionKeyHex
     }

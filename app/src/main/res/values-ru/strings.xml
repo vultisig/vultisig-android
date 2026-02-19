@@ -397,6 +397,7 @@
     <string name="reshare_step_generating_eddsa">Генерация ключа EdDSA</string>
     <string name="keygen_connecting_with_server">Подключение к серверу…</string>
     <string name="keygen_step_generating_eddsa">Генерация ключа EdDSA</string>
+    <string name="keygen_step_generating_chain_keys">Генерация ключей цепочек</string>
     <string name="reshare_step_generating_ecdsa">Генерация ключа ECDSA</string>
     <string name="merge_account_doesnt_exist">Выбранный токен не найден для этого адреса</string>
     <string name="keygen_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>

@@ -87,6 +87,8 @@ fun Vault.getEcdsaSigningKey(chain: Chain): Pair<String, String> {
     if (libType != SigningLibType.KeyImport) {
         return Pair(pubKeyECDSA, hexChainCode)
     }
+    // First try exact chain match, then fall back to matching derivation path
+    // (e.g. BSC/Polygon/Arbitrum all share ETH's m/44'/60'/0'/0/0 key).
     val chainPubKey = chainPublicKeys.firstOrNull { it.chain == chain.raw && !it.isEddsa }
         ?: chainPublicKeys.firstOrNull { cpk ->
             !cpk.isEddsa && try {
@@ -113,13 +115,14 @@ fun Vault.getEddsaSigningKey(chain: Chain): String {
 
 fun Vault.getPubKeyByChain(chain: Chain): String {
     if (libType == SigningLibType.KeyImport) {
+        val expectedIsEddsa = chain.TssKeysignType == TssKeyType.EDDSA
         // Exact chain match first
-        chainPublicKeys.firstOrNull { it.chain == chain.raw }?.let {
+        chainPublicKeys.firstOrNull { it.chain == chain.raw && it.isEddsa == expectedIsEddsa }?.let {
             return it.publicKey
         }
         // Derivation-path fallback (e.g. BSC reuses ETH key)
         chainPublicKeys.firstOrNull { cpk ->
-            try {
+            cpk.isEddsa == expectedIsEddsa && try {
                 Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
                         chain.coinType.compatibleDerivationPath()
             } catch (_: Exception) {

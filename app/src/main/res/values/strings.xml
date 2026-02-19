@@ -516,6 +516,7 @@
     <string name="keygen_step_preparing_vault">Preparing Vault</string>
     <string name="keygen_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="keygen_step_generating_eddsa">Generating EdDSA Key</string>
+    <string name="keygen_step_generating_chain_keys">Generating Chain Keys</string>
     <string name="reshare_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="reshare_step_generating_eddsa">Generating EdDSA Key</string>
     <string name="keygen_connecting_with_server">Connecting with server...</string>

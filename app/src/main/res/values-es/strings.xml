@@ -398,6 +398,7 @@
     <string name="keygen_step_preparing_vault">Preparando la bóveda</string>
     <string name="keygen_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="keygen_step_generating_eddsa">Generación de clave EdDSA</string>
+    <string name="keygen_step_generating_chain_keys">Generación de claves de cadena</string>
     <string name="keygen_connecting_with_server">Conectando con el servidor…</string>
     <string name="reshare_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="reshare_step_generating_eddsa">Generación de clave EDDSA</string>

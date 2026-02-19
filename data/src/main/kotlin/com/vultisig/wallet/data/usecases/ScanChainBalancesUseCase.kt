@@ -34,18 +34,18 @@ internal class ScanChainBalancesUseCaseImpl @Inject constructor(
 ) : ScanChainBalancesUseCase {
 
     override suspend fun invoke(mnemonic: String): List<ChainBalanceResult> = coroutineScope {
-        val wallet = HDWallet(mnemonic, "")
-
         val chainsToScan = Chain.keyImportSupportedChains
 
+        // Scan all chains in parallel. Solana needs two checks because Phantom
+        // uses a different derivation path than the standard Solana one.
         val jobs = chainsToScan.flatMap { chain ->
             val defaultJob = async {
-                scanChain(wallet, chain, DerivationPath.Default)
+                scanChain(mnemonic, chain, DerivationPath.Default)
             }
 
             if (chain == Chain.Solana) {
                 val phantomJob = async {
-                    scanChain(wallet, chain, DerivationPath.Phantom)
+                    scanChain(mnemonic, chain, DerivationPath.Phantom)
                 }
                 listOf(defaultJob, phantomJob)
             } else {
@@ -57,10 +57,12 @@ internal class ScanChainBalancesUseCaseImpl @Inject constructor(
     }
 
     private suspend fun scanChain(
-        wallet: HDWallet,
+        mnemonic: String,
         chain: Chain,
         derivationPath: DerivationPath,
     ): ChainBalanceResult {
+        // Create a fresh HDWallet per task — HDWallet (JNI) is not thread-safe
+        val wallet = HDWallet(mnemonic, "")
         val address = when {
             chain == Chain.Solana && derivationPath == DerivationPath.Phantom ->
                 wallet.getAddressDerivation(CoinType.SOLANA, Derivation.SOLANASOLANA)

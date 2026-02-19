@@ -65,6 +65,7 @@ internal sealed interface KeygenState {
     data object CreatingInstance : KeygenState
     data object KeygenECDSA : KeygenState
     data object KeygenEdDSA : KeygenState
+    data object KeygenChains : KeygenState
     data object ReshareECDSA : KeygenState
     data object ReshareEdDSA : KeygenState
     data object Success : KeygenState
@@ -381,6 +382,8 @@ internal class KeygenViewModel @Inject constructor(
             val chainPublicKeys = mutableListOf<ChainPublicKey>()
 
             // Phase 3: Per-chain keygen
+            updateStep(KeygenState.KeygenChains)
+
             val chainSettings = keyImportData.chainSettings
             for (chainSetting in chainSettings) {
                 val chainKeyResult = withContext(Dispatchers.IO) {
@@ -390,7 +393,8 @@ internal class KeygenViewModel @Inject constructor(
                 val chainName = chainSetting.chain.raw
 
                 if (chainKeyResult.isEddsa) {
-                    // EdDSA chain: Schnorr keygen
+                    // EdDSA chain: Schnorr keygen. setupMessage is empty because
+                    // per-chain sessions create their own setup via getDklsKeyImportSetupMessage.
                     val chainSchnorr = SchnorrKeygen(
                         localPartyId = vault.localPartyID,
                         keygenCommittee = keygenCommittee,
@@ -419,7 +423,8 @@ internal class KeygenViewModel @Inject constructor(
                         ChainPublicKey(chain = chainName, publicKey = chainKeyshare.pubKey, isEddsa = true)
                     )
                 } else {
-                    // ECDSA chain: DKLS keygen
+                    // ECDSA chain: DKLS keygen. Each chain gets its own session with the
+                    // chain-specific private key injected via localUi.
                     val chainDkls = DKLSKeygen(
                         localPartyId = vault.localPartyID,
                         keygenCommittee = keygenCommittee,
@@ -708,8 +713,9 @@ internal class KeygenViewModel @Inject constructor(
                 keygenState = step,
                 progress = when (step) {
                     is KeygenState.CreatingInstance -> 0.0f
-                    is KeygenState.KeygenECDSA -> 0.33f
-                    is KeygenState.KeygenEdDSA -> 0.66f
+                    is KeygenState.KeygenECDSA -> 0.25f
+                    is KeygenState.KeygenEdDSA -> 0.50f
+                    is KeygenState.KeygenChains -> 0.75f
                     is KeygenState.ReshareECDSA -> 0.33f
                     is KeygenState.ReshareEdDSA -> 0.66f
                     is KeygenState.Success -> 1f
@@ -729,6 +735,11 @@ internal class KeygenViewModel @Inject constructor(
 
                         is KeygenState.KeygenEdDSA -> KeygenStepUiModel(
                             UiText.StringResource(R.string.keygen_step_generating_eddsa),
+                            true
+                        )
+
+                        is KeygenState.KeygenChains -> KeygenStepUiModel(
+                            UiText.StringResource(R.string.keygen_step_generating_chain_keys),
                             true
                         )
 

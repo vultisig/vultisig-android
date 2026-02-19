@@ -27,6 +27,12 @@ interface KeyImportRepository {
     fun clear()
 }
 
+/**
+ * In-memory holder for mnemonic and chain settings during the KeyImport flow.
+ * Lifecycle: set in ImportSeedphrase → read in PeerDiscovery/Keygen → cleared in
+ * KeygenViewModel.finally or on back/error. @Volatile + synchronized ensures
+ * visibility across coroutine dispatchers and atomicity of read-modify-write.
+ */
 @Singleton
 internal class KeyImportRepositoryImpl @Inject constructor() : KeyImportRepository {
 

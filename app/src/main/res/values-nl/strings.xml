@@ -398,6 +398,7 @@
     <string name="reshare_step_generating_eddsa">EdDSA-sleutel genereren</string>
     <string name="keygen_connecting_with_server">Verbinding met server maken…</string>
     <string name="keygen_step_generating_eddsa">EDDSA-sleutel genereren</string>
+    <string name="keygen_step_generating_chain_keys">Ketensleutels genereren</string>
     <string name="reshare_step_generating_ecdsa">ECDSA-sleutel genereren</string>
     <string name="merge_account_doesnt_exist">Geselecteerde token niet gevonden voor dit adres</string>
     <string name="keygen_email_error">Onjuist e-mailadres, controleer dit</string>

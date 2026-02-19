@@ -401,6 +401,7 @@
     <string name="reshare_step_generating_eddsa">Generazione della chiave EdDSA</string>
     <string name="keygen_connecting_with_server">Connessione con il server…</string>
     <string name="keygen_step_generating_eddsa">Generazione della chiave EdDSA</string>
+    <string name="keygen_step_generating_chain_keys">Generazione delle chiavi della catena</string>
     <string name="reshare_step_generating_ecdsa">Generazione della chiave ECDSA</string>
     <string name="merge_account_doesnt_exist">Il token selezionato non è stato trovato per questo indirizzo</string>
     <string name="keygen_email_error">E-mail errata, controllala</string>

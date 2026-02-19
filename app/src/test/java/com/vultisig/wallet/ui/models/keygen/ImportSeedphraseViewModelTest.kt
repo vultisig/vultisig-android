@@ -20,6 +20,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -312,32 +313,49 @@ internal class ImportSeedphraseViewModelTest {
 
     @Test
     fun `double submit guard prevents concurrent imports`() = runTest(mainDispatcher) {
+        // Make checkMnemonicDuplicate suspend forever to simulate ongoing import
+        checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
+            delay(Long.MAX_VALUE)
+            false
+        }
         val vm = createViewModel()
 
-        // Manually set isImporting to simulate ongoing import
-        vm.state.value = vm.state.value.copy(isImporting = true)
-
-        vm.importSeedphrase()
+        // Type valid phrase and wait for validation
+        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+        advanceTimeBy(600)
         advanceUntilIdle()
+        assertTrue(vm.state.value.isImportEnabled)
 
-        // Should still be true — method returned early, no reset
+        // First import starts — sets isImporting=true, suspends at checkMnemonicDuplicate
+        vm.importSeedphrase()
+        assertTrue(vm.state.value.isImporting)
+
+        // Second import should be blocked by isImporting guard
+        vm.importSeedphrase()
         assertTrue(vm.state.value.isImporting)
     }
 
     @Test
-    fun `double submit guard does not call duplicate check`() = runTest(mainDispatcher) {
-        var duplicateCheckCalled = false
+    fun `double submit guard does not call duplicate check twice`() = runTest(mainDispatcher) {
+        var duplicateCheckCount = 0
         checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
-            duplicateCheckCalled = true
+            duplicateCheckCount++
+            delay(Long.MAX_VALUE)
             false
         }
         val vm = createViewModel()
-        vm.state.value = vm.state.value.copy(isImporting = true)
 
-        vm.importSeedphrase()
+        // Type valid phrase and wait for validation
+        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+        advanceTimeBy(600)
         advanceUntilIdle()
 
-        assertFalse(duplicateCheckCalled)
+        // First import — suspends at checkMnemonicDuplicate
+        vm.importSeedphrase()
+        // Second import — blocked by isImporting guard
+        vm.importSeedphrase()
+
+        assertEquals(1, duplicateCheckCount)
     }
 
     // endregion
@@ -559,7 +577,7 @@ internal class ImportSeedphraseViewModelTest {
 
             assertFalse(vm.state.value.isImporting)
             assertEquals(
-                UiText.DynamicString(""),
+                UiText.StringResource(R.string.error_view_default_description),
                 vm.state.value.errorMessage,
             )
             assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)

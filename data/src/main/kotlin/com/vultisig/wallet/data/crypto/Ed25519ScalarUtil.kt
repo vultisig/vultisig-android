@@ -17,13 +17,18 @@ internal object Ed25519ScalarUtil {
         "7237005577332262213973186563042994240857116359379907606001950938285454250989"
     )
 
+    /**
+     * Converts a raw 32-byte Ed25519 seed into a uniform scalar suitable for
+     * Schnorr TSS keygen. Steps: SHA-512 hash → take lower 32 bytes →
+     * clamp per RFC 8032 → reduce mod L (group order).
+     */
     fun clampThenUniformScalar(seed: ByteArray): ByteArray {
         require(seed.size == 32) { "Seed must be 32 bytes" }
 
         val hash = MessageDigest.getInstance("SHA-512").digest(seed)
         val scalar = hash.copyOf(32)
 
-        // Clamp
+        // RFC 8032 clamping: clear lowest 3 bits, clear top 2 bits, set bit 254
         scalar[0] = (scalar[0].toInt() and 0xF8).toByte()
         scalar[31] = (scalar[31].toInt() and 0x3F).toByte()
         scalar[31] = (scalar[31].toInt() or 0x40).toByte()

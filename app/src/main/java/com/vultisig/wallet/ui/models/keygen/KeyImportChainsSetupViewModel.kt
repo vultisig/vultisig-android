@@ -13,6 +13,8 @@ import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,7 +46,8 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
     private val scanChainBalances: ScanChainBalancesUseCase,
 ) : ViewModel() {
 
-    val state = MutableStateFlow(KeyImportChainsSetupUiModel())
+    private val _state = MutableStateFlow(KeyImportChainsSetupUiModel())
+    val state: StateFlow<KeyImportChainsSetupUiModel> = _state.asStateFlow()
 
 
     init {
@@ -62,6 +65,9 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
                 }
                 val activeResults = results.filter { it.hasBalance }
 
+                // Build the full chain list for CustomizeChains screen, pre-selecting
+                // chains that have balance. Use the active result's derivation path
+                // (e.g. Phantom for Solana) if one was found with balance.
                 val allChainItems = Chain.keyImportSupportedChains
                     .map { chain ->
                         val hasBalance = activeResults.any { it.chain == chain }
@@ -82,7 +88,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
                             isSelected = true,
                         )
                     }
-                    state.update {
+                    _state.update {
                         it.copy(
                             screenState = ChainsSetupState.ActiveChains,
                             activeChains = activeItems,
@@ -91,7 +97,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
                         )
                     }
                 } else {
-                    state.update {
+                    _state.update {
                         it.copy(
                             screenState = ChainsSetupState.NoActiveChains,
                             allChains = allChainItems,
@@ -112,7 +118,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
                             isSelected = false,
                         )
                     }
-                state.update {
+                _state.update {
                     it.copy(
                         screenState = ChainsSetupState.NoActiveChains,
                         allChains = allChainItems,
@@ -123,7 +129,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
     }
 
     fun selectManually() {
-        state.update {
+        _state.update {
             it.copy(screenState = ChainsSetupState.CustomizeChains)
         }
     }
@@ -131,7 +137,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
     fun customize() = selectManually()
 
     fun toggleChain(chain: Chain) {
-        state.update { current ->
+        _state.update { current ->
             val updatedChains = current.allChains.map {
                 if (it.chain == chain) it.copy(isSelected = !it.isSelected) else it
             }
@@ -143,7 +149,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
     }
 
     fun selectAll() {
-        state.update { current ->
+        _state.update { current ->
             val updatedChains = current.allChains.map { it.copy(isSelected = true) }
             current.copy(
                 allChains = updatedChains,
@@ -153,7 +159,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
     }
 
     fun deselectAll() {
-        state.update { current ->
+        _state.update { current ->
             val updatedChains = current.allChains.map { it.copy(isSelected = false) }
             current.copy(
                 allChains = updatedChains,
@@ -164,6 +170,8 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
 
     fun continueWithSelection() {
         val currentState = state.value
+        // ActiveChains screen shows only chains with balance; CustomizeChains
+        // shows all supported chains. Pick the list matching the current screen.
         val selectedChains = when (currentState.screenState) {
             ChainsSetupState.ActiveChains ->
                 currentState.activeChains.filter { it.isSelected }

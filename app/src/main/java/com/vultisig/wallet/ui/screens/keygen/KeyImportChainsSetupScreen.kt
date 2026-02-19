@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.screens.keygen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -327,7 +327,11 @@ private fun ChainChip(
                 else Theme.v2.colors.border.light,
                 shape = shape,
             )
-            .clickable(onClick = onClick)
+            .toggleable(
+                value = isSelected,
+                role = androidx.compose.ui.semantics.Role.Checkbox,
+                onValueChange = { onClick() },
+            )
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
