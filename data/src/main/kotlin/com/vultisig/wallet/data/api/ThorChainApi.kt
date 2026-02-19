@@ -112,6 +112,11 @@ interface ThorChainApi {
     suspend fun fetchTcyUserDistributions(address: String): TcyUserDistributionsResponse
     suspend fun fetchTcyModuleBalance(): TcyModuleBalanceResponse
     suspend fun fetchTcyStakers(): TcyStakersResponse
+
+    fun buildAffiliateParams(
+        referralCode: String,
+        discountBps: Int,
+    ): Map<String, String>
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -208,7 +213,7 @@ internal class ThorChainApiImpl @Inject constructor(
         }
     }
 
-    private fun buildAffiliateParams(
+    override fun buildAffiliateParams(
         referralCode: String,
         discountBps: Int,
     ): Map<String, String> {

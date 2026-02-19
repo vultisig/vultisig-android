@@ -51,6 +51,7 @@ interface MayaChainApi {
         amount: String,
         isAffiliate: Boolean,
         bpsDiscount: Int,
+        referralCode: String,
     ): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
@@ -64,6 +65,7 @@ interface MayaChainApi {
 
 internal class MayaChainApiImp @Inject constructor(
     private val httpClient: HttpClient,
+    private val thorChainApi: ThorChainApi,
     private val thorChainSwapQuoteResponseJsonSerializer: ThorChainSwapQuoteResponseJsonSerializer,
     private val json: Json,
 ) : MayaChainApi {
@@ -105,10 +107,13 @@ internal class MayaChainApiImp @Inject constructor(
         amount: String,
         isAffiliate: Boolean,
         bpsDiscount: Int,
+        referralCode: String
     ): THORChainSwapQuoteDeserialized {
         try {
-            val affiliateFeeRate =
-                maxOf(THORChainSwaps.AFFILIATE_FEE_RATE.toInt() - bpsDiscount, 0).toString()
+            val affiliateParams = thorChainApi.buildAffiliateParams(
+                referralCode = referralCode,
+                discountBps = bpsDiscount,
+            )
 
             val response = httpClient
                 .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
@@ -117,8 +122,14 @@ internal class MayaChainApiImp @Inject constructor(
                     parameter("amount", amount)
                     parameter("destination", address)
                     parameter("streaming_interval", MAYA_STREAMING_INTERVAL)
-                    parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                    parameter("affiliate_bps", if (isAffiliate) affiliateFeeRate else "0")
+                    if (affiliateParams.isNotEmpty()) {
+                        affiliateParams.forEach { (key, value) ->
+                            when (key) {
+                                "affiliate" -> parameter("affiliate", value)
+                                "affiliate_bps" -> parameter("affiliate_bps", value)
+                            }
+                        }
+                    }
                     header(xClientID, xClientIDValue)
                 }
             if (!response.status.isSuccess()) {
