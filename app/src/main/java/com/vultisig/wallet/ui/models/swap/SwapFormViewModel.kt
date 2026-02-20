@@ -1157,7 +1157,7 @@ internal class SwapFormViewModel @Inject constructor(
                         }
 
                         val referral = referralCode.value
-                            ?: vaultId?.takeIf { srcToken.chain.id == Chain.ThorChain.id }
+                            ?: vaultId?.takeIf { srcToken.chain.id == Chain.ThorChain.id || srcToken.chain.id == Chain.MayaChain.id }
                                 ?.let { referralRepository.getExternalReferralBy(it) }
 
                         referral?.let { code ->
