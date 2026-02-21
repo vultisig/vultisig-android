@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.utils
 
+import com.vultisig.wallet.data.api.models.BlockChairStatusEmpty
+import com.vultisig.wallet.data.api.models.BlockChairStatusResponse
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
@@ -18,6 +20,7 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
@@ -31,6 +34,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
@@ -164,6 +168,31 @@ class LiFiSwapQuoteResponseSerializerImpl @Inject constructor(private val json: 
         } else {
             LiFiSwapQuoteDeserialized.Error(
                 json.decodeFromJsonElement<LiFiSwapQuoteError>(jsonObject)
+            )
+        }
+    }
+}
+
+
+interface UTXOStatusQuoteResponseSerializer : DefaultSerializer<BlockChainStatusDeserialized>
+
+class UTXOStatusQuoteResponseSerializerImpl @Inject constructor(private val json: Json) :
+    UTXOStatusQuoteResponseSerializer {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("UTXOStatusQuoteResponseSerializer")
+
+    override fun deserialize(decoder: Decoder): BlockChainStatusDeserialized {
+        val input = decoder as JsonDecoder
+        val jsonObject = input.decodeJsonElement().jsonObject
+        val dataElement = jsonObject["data"]
+
+        return if (dataElement is JsonObject) {
+            BlockChainStatusDeserialized.Result(
+                json.decodeFromJsonElement<BlockChairStatusResponse>(jsonObject)
+            )
+        } else {
+            BlockChainStatusDeserialized.Empty(
+                json.decodeFromJsonElement<BlockChairStatusEmpty>(jsonObject)
             )
         }
     }
