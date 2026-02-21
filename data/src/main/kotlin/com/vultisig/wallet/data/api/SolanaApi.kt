@@ -24,11 +24,13 @@ import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -416,12 +418,7 @@ internal class SolanaApiImp @Inject constructor(
 
             return response
         } catch (e: Exception) {
-            val msg = e.message ?: ""
-            if ("403" in msg || msg.contains(
-                    "Forbidden",
-                    ignoreCase = true
-                )
-            ) {
+            if (e is ClientRequestException && e.response.status == HttpStatusCode.Forbidden) {
                 Timber.tag("SolanaApiImp").w("Forbidden (403) when checking tx status: $txHash")
                 return null
             }
