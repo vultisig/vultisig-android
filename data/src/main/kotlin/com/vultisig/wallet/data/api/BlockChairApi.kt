@@ -113,7 +113,7 @@ internal class BlockChairApiImp @Inject constructor(
                     }
                 if (response.status != HttpStatusCode.OK) {
                     val errorBody = response.bodyAsText()
-                    Timber.d("fail to broadcast transaction: $errorBody")
+                    Timber.e("fail to broadcast transaction: $errorBody")
                     error("fail to broadcast transaction: $errorBody")
                 }
 

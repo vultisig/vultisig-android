@@ -420,9 +420,6 @@ internal class SolanaApiImp @Inject constructor(
             if ("403" in msg || msg.contains(
                     "Forbidden",
                     ignoreCase = true
-                ) || msg.contains(
-                    "forbidden",
-                    ignoreCase = true
                 )
             ) {
                 Timber.tag("SolanaApiImp").w("Forbidden (403) when checking tx status: $txHash")
