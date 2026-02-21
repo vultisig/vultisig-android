@@ -32,6 +32,8 @@ import com.vultisig.wallet.ui.screens.v3.components.V3Scaffold
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.startScreenAnimations
 
+private const val IS_IMPORT_SEEDPHRASE_ENABLED = false
+
 @Composable
 internal fun StartScreen(
     model: StartViewModel = hiltViewModel(),
@@ -45,6 +47,7 @@ internal fun StartScreen(
         onScanQrCodeClick = model::navigateToScanQrCode,
         onImportVaultClick = model::navigateToImportVault,
         onImportSeedphraseClick = model::navigateToImportSeedphrase,
+        isImportSeedphraseEnabled = IS_IMPORT_SEEDPHRASE_ENABLED,
     )
 }
 
@@ -56,6 +59,7 @@ private fun StartScreen(
     onImportVaultClick: () -> Unit,
     onImportSeedphraseClick: () -> Unit,
     onBackClick: () -> Unit,
+    isImportSeedphraseEnabled: Boolean = false,
 ) {
     val logoScale = remember {
         Animatable(0f)
@@ -103,7 +107,7 @@ private fun StartScreen(
                 horizontalAlignment = CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
 
-            ) {
+                ) {
 
                 VsButton(
                     label = stringResource(R.string.create_new_vault_screen_create_new_vault),
@@ -138,21 +142,22 @@ private fun StartScreen(
                         ),
                 )
 
-                VsButton(
-                    label = stringResource(R.string.home_screen_import_seed_phrase),
-                    variant = VsButtonVariant.Secondary,
-                    onClick = onImportSeedphraseClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .startScreenAnimations(
-                            delay = 550,
-                        ),
-                )
+                if (isImportSeedphraseEnabled) {
+                    VsButton(
+                        label = stringResource(R.string.home_screen_import_seed_phrase),
+                        variant = VsButtonVariant.Secondary,
+                        onClick = onImportSeedphraseClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .startScreenAnimations(
+                                delay = 550,
+                            ),
+                    )
+                }
             }
         }
     }
 }
-
 
 
 @Preview
