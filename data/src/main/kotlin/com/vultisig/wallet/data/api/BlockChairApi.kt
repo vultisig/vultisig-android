@@ -111,8 +111,9 @@ internal class BlockChairApiImp @Inject constructor(
                         setBody(bodyContent)
                     }
                 if (response.status != HttpStatusCode.OK) {
-                    Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")
-                    error("fail to broadcast transaction: ${response.bodyAsText()}")
+                    val errorBody = response.bodyAsText()
+                    Timber.d("fail to broadcast transaction: $errorBody")
+                    error("fail to broadcast transaction: $errorBody")
                 }
 
                 return response.body<TransactionHashDataJson>().data.value

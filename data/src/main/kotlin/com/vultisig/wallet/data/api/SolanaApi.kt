@@ -38,7 +38,7 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
@@ -396,11 +396,12 @@ internal class SolanaApiImp @Inject constructor(
 
     override suspend fun checkStatus(txHash: String): EvmRpcResponseJson<SolanaSignatureStatusesResult>? {
         try {
+
             val params = buildJsonArray {
                 addJsonArray {
                     add(JsonPrimitive(txHash))
                 }
-                buildJsonObject {
+                addJsonObject {
                     put(
                         "searchTransactionHistory",
                         true

@@ -34,6 +34,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
@@ -183,8 +184,9 @@ class UTXOStatusQuoteResponseSerializerImpl @Inject constructor(private val json
     override fun deserialize(decoder: Decoder): BlockChainStatusDeserialized {
         val input = decoder as JsonDecoder
         val jsonObject = input.decodeJsonElement().jsonObject
+        val dataElement = jsonObject["data"]
 
-        return if (jsonObject.toString().contains("block_id")) {
+        return if (dataElement is JsonObject) {
             BlockChainStatusDeserialized.Result(
                 json.decodeFromJsonElement<BlockChairStatusResponse>(jsonObject)
             )
