@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.api
 
-import RippleBroadcastSuccessResponseJson
 import com.vultisig.wallet.data.api.JupiterApiImpl.Companion.JUPITER_URL
 import com.vultisig.wallet.data.api.models.BroadcastTransactionRespJson
 import com.vultisig.wallet.data.api.models.EvmRpcResponseJson

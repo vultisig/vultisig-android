@@ -128,25 +128,17 @@ internal class BlockChairApiImp @Inject constructor(
             val response =
                 httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/transaction/${txHash}")
 
-
+            if (response.status == HttpStatusCode.Forbidden) {
+                Timber.tag("BlockChairApiImp")
+                    .d("Forbidden (403) when checking tx status: $txHash")
+                return null
+            }
             json.decodeFromString(
                 utxoStatusQuoteResponseSerializer,
                 response.bodyAsText()
             )
 
         } catch (e: Exception) {
-            val msg = e.message ?: ""
-            if ("403" in msg || msg.contains(
-                    "Forbidden",
-                    ignoreCase = true
-                ) || msg.contains(
-                    "forbidden",
-                    ignoreCase = true
-                )
-            ) {
-                Timber.tag("SolanaApiImp").d("Forbidden (403) when checking tx status: $txHash")
-                return null
-            }
             throw e
         }
     }

@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.models.quotes.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.text.get
 
@@ -14,21 +15,21 @@ class UtxoStatusProvider @Inject constructor(
 
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        val response = blockChairApi.getTsStatus(
-            chain,
-            txHash
-        )
-        val txData = when (response) {
-            is BlockChainStatusDeserialized.Result -> response.data.data?.get(txHash)
-            is BlockChainStatusDeserialized.Empty -> null
-            null -> null
-        }
-        val context = when (response) {
-            is BlockChainStatusDeserialized.Result -> response.data.context
-            is BlockChainStatusDeserialized.Empty -> null
-            null -> null
-        }
         return try {
+            val response = blockChairApi.getTsStatus(
+                chain,
+                txHash
+            )
+            val txData = when (response) {
+                is BlockChainStatusDeserialized.Result -> response.data.data?.get(txHash)
+                is BlockChainStatusDeserialized.Empty -> null
+                null -> null
+            }
+            val context = when (response) {
+                is BlockChainStatusDeserialized.Result -> response.data.context
+                is BlockChainStatusDeserialized.Empty -> null
+                null -> null
+            }
             when {
                 txData == null -> {
                     TransactionResult.Pending
@@ -62,7 +63,11 @@ class UtxoStatusProvider @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            TransactionResult.Failed(e.message.toString())
+            Timber.tag("UtxoStatusProvider").e(
+                e,
+                "Error checking tx status: $txHash"
+            )
+            TransactionResult.Failed(e.message.orEmpty())
         }
     }
 }

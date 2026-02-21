@@ -23,7 +23,7 @@ internal class SolanaStatusProvider @Inject constructor(
                 else -> TransactionResult.NotFound
             }
         } catch (e: Exception) {
-            Timber.tag("SolanaStatusProvider").d(e.message.toString())
+            Timber.tag("SolanaStatusProvider").e(e, "Failed to check status for $txHash")
             return TransactionResult.Failed(e.message.toString())
         }
     }
