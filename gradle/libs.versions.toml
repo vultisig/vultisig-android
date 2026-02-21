@@ -22,6 +22,7 @@ datetime = "0.6.1"
 espresso = "3.6.1"
 datastorePreferences = "1.1.4"
 junitJupiter = "5.11.4"
+mockk = "1.13.16"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 kotlin = "2.1.20"
@@ -71,6 +72,8 @@ hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", vers
 hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hilt" }
 hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hilt" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesCore" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 androidx-security = { module = "androidx.security:security-crypto", version.ref = "security" }
 
 apache-compress = { module = "org.apache.commons:commons-compress", version.ref = "apache-compress" }

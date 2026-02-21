@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -149,6 +150,7 @@ internal class FastVaultVerificationViewModel @Inject constructor(
                         )
 
                     } catch (e: Exception) {
+                        Timber.e(e, "FastVaultVerification: save vault failed")
                         updateVerifyState(VerifyPinState.Error)
                     }
                 } else {

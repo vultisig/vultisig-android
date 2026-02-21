@@ -290,6 +290,7 @@ internal fun VaultAccountsScreen(
                                 .padding(horizontal = 16.dp)
                                 .padding(bottom = 16.dp),
                             onEditClick = onChooseChains,
+                            isEditVisible = state.isChainSelectionEnabled,
                             isTabMenu = isTabMenu,
                             onSearchClick = {
                                 isTabMenu = false
@@ -308,7 +309,8 @@ internal fun VaultAccountsScreen(
                         ) {
                             if (isShowingSearchResult.value && state.noChainFound) {
                                 NoChainFound(
-                                    onChooseChains = onChooseChains
+                                    isChainSelectionEnabled = state.isChainSelectionEnabled,
+                                    onChooseChains = onChooseChains,
                                 )
                             } else {
                                 if (state.getAccounts.isEmpty()) {

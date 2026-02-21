@@ -1,12 +1,14 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.db.dao.VaultDao
+import com.vultisig.wallet.data.db.models.ChainPublicKeyEntity
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
 import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultWithKeySharesAndTokens
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.ChainPublicKey
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.Vault
@@ -157,6 +159,13 @@ internal class VaultRepositoryImpl @Inject constructor(
                     },
                 )
             },
+            chainPublicKeys = vault.chainPublicKeys.map {
+                ChainPublicKey(
+                    chain = it.chain,
+                    publicKey = it.publicKey,
+                    isEddsa = it.isEddsa,
+                )
+            },
             libType = vault.vault.libType,
         )
     }
@@ -191,6 +200,14 @@ internal class VaultRepositoryImpl @Inject constructor(
             },
             coins = vault.coins.map {
                 it.toCoinEntity(vaultId)
+            },
+            chainPublicKeys = vault.chainPublicKeys.map {
+                ChainPublicKeyEntity(
+                    vaultId = vaultId,
+                    chain = it.chain,
+                    publicKey = it.publicKey,
+                    isEddsa = it.isEddsa,
+                )
             },
         )
     }

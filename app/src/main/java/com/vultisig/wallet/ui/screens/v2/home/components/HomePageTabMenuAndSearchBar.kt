@@ -17,6 +17,7 @@ internal fun HomePageTabMenuAndSearchBar(
 //    onTNFTsClick: () -> Unit = {},
     onPortfolioClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
+    isEditVisible: Boolean = true,
     onSearchClick: () -> Unit,
     onCancelSearchClick: () -> Unit,
     isTabMenu: Boolean,
@@ -33,6 +34,7 @@ internal fun HomePageTabMenuAndSearchBar(
 //                onTNFTsClick = onTNFTsClick,
                 onPortfolioClick = onPortfolioClick,
                 onEditClick = onEditClick,
+                isEditVisible = isEditVisible,
                 onSearchClick = {
                     onSearchClick()
                 },

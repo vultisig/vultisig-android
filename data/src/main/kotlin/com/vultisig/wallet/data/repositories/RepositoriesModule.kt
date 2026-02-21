@@ -311,6 +311,12 @@ internal interface RepositoriesModule {
     fun bindTronResourceRepository(
         impl: TronResourceDataSourceImpl
     ): TronResourceDataSource
+
+    @Binds
+    @Singleton
+    fun bindKeyImportRepository(
+        impl: KeyImportRepositoryImpl
+    ): KeyImportRepository
 }
 
 @Qualifier

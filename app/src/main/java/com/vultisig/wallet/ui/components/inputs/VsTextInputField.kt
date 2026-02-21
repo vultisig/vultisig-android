@@ -90,6 +90,7 @@ internal fun VsTextInputField(
     onKeyboardAction: KeyboardActionHandler? = null,
     imeAction: ImeAction = ImeAction.Unspecified,
     keyboardType: KeyboardType = KeyboardType.Unspecified,
+    autoCorrectEnabled: Boolean = true,
     enabled: Boolean = true,
 ) {
     var focused by remember {
@@ -225,6 +226,7 @@ internal fun VsTextInputField(
                         textStyle = inputTextStyle,
                         cursorBrush = Theme.cursorBrush,
                         keyboardOptions = KeyboardOptions(
+                            autoCorrectEnabled = autoCorrectEnabled,
                             keyboardType = keyboardType,
                             imeAction = imeAction,
                         ),

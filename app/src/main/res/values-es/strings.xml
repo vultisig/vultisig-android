@@ -398,6 +398,7 @@
     <string name="keygen_step_preparing_vault">Preparando la bóveda</string>
     <string name="keygen_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="keygen_step_generating_eddsa">Generación de clave EdDSA</string>
+    <string name="keygen_step_generating_chain_keys">Generación de claves de cadena</string>
     <string name="keygen_connecting_with_server">Conectando con el servidor…</string>
     <string name="reshare_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="reshare_step_generating_eddsa">Generación de clave EDDSA</string>
@@ -892,4 +893,43 @@
     <string name="transaction_status_checking_transaction">Comprobando transacción…</string>
     <string name="raw_transaction_data">Datos de transacciones sin procesar</string>
     <string name="solana_raw_transaction">Transacción sin procesar de Solana</string>
+
+    <!-- Key Import / Seed Phrase Import -->
+    <string name="home_screen_import_seed_phrase">Importar frase semilla</string>
+    <string name="import_seedphrase_title">Ingrese su frase semilla</string>
+    <string name="import_seedphrase_subtitle">Ingrese su frase de recuperación de 12 o 24 palabras</string>
+    <string name="import_seedphrase_label">Frase semilla</string>
+    <string name="import_seedphrase_hint">Ingrese su frase de recuperación…</string>
+    <string name="import_seedphrase_word_count">%1$d / %2$d palabras</string>
+    <string name="import_seedphrase_invalid_word_count">Se esperaban %2$s palabras, se obtuvieron %1$s</string>
+    <string name="import_seedphrase_invalid_phrase">Frase semilla no válida</string>
+    <string name="import_seedphrase_already_imported">Esta frase semilla ya ha sido importada</string>
+    <string name="import_seedphrase_duplicate_description">Por favor, importe una frase semilla diferente</string>
+    <string name="import_seedphrase_import_button">Importar</string>
+    <string name="import_seedphrase_checking">Verificando…</string>
+
+    <string name="key_import_chains_title">Seleccionar cadenas</string>
+    <string name="key_import_chains_scanning">Buscando cadenas activas…</string>
+    <string name="key_import_chains_scanning_desc">Verificando su billetera en busca de saldos existentes en todas las cadenas compatibles</string>
+    <string name="key_import_chains_select_manually">Seleccionar manualmente</string>
+    <string name="key_import_chains_found_title">Cadenas activas encontradas</string>
+    <string name="key_import_chains_found_desc">Encontramos saldos en las siguientes cadenas. Puede continuar o personalizar su selección.</string>
+    <string name="key_import_chains_continue">Continuar</string>
+    <string name="key_import_chains_customize">Personalizar</string>
+    <string name="key_import_chains_no_active_title">No se encontraron cadenas activas</string>
+    <string name="key_import_chains_no_active_desc">No pudimos encontrar saldos. Seleccione las cadenas que desea importar manualmente.</string>
+    <string name="key_import_chains_select_title">Seleccionar cadenas (%1$d)</string>
+    <string name="key_import_chains_all">Todas</string>
+    <string name="key_import_chains_none">Ninguna</string>
+
+    <string name="key_import_device_count_title">Elegir configuración</string>
+    <string name="key_import_device_count_fast">Rápido</string>
+    <string name="key_import_device_count_secure">Seguro</string>
+    <string name="key_import_device_count_get_started">Comenzar</string>
+    <string name="key_import_device_count_fast_desc_1">1 dispositivo + servidor Vultisig</string>
+    <string name="key_import_device_count_fast_desc_2">Configuración rápida y sencilla</string>
+    <string name="key_import_device_count_fast_desc_3">Recuperación por correo electrónico</string>
+    <string name="key_import_device_count_secure_desc_1">Se requieren 2 o más dispositivos</string>
+    <string name="key_import_device_count_secure_desc_2">Máxima seguridad</string>
+    <string name="key_import_device_count_secure_desc_3">Sin servidor de terceros</string>
 </resources>

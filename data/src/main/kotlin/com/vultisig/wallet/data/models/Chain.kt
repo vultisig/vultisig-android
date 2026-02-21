@@ -82,6 +82,9 @@ enum class Chain(
                     ignoreCase = true
                 )
             }
+
+        val keyImportSupportedChains: List<Chain>
+            get() = entries.filter { it != Cardano }
     }
 }
 

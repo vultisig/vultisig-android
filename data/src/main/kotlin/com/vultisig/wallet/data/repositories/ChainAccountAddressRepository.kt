@@ -6,7 +6,9 @@ import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
 import com.vultisig.wallet.data.crypto.CardanoUtils
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.ChainPublicKey
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
@@ -45,13 +47,22 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
         chain: Chain,
         vault: Vault,
     ): Pair<String, String> {
+        // For KeyImport vaults, chain-specific public keys are already derived.
+        // Look for exact chain match first, then match by derivation path
+        // (e.g., all EVM chains share m/44'/60'/0'/0/0)
+        val chainPubKey = findChainPublicKey(chain, vault)
+
         when (chain.TssKeysignType) {
             TssKeyType.ECDSA -> {
-                val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
-                    vault.pubKeyECDSA,
-                    vault.hexChainCode,
-                    chain.coinType.compatibleDerivationPath()
-                )
+                val derivedPublicKey = if (chainPubKey != null) {
+                    chainPubKey.publicKey
+                } else {
+                    PublicKeyHelper.getDerivedPublicKey(
+                        vault.pubKeyECDSA,
+                        vault.hexChainCode,
+                        chain.coinType.compatibleDerivationPath()
+                    )
+                }
                 val publicKey =
                     PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
                 if (chain == Chain.MayaChain) {
@@ -73,14 +84,11 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
             }
 
             TssKeyType.EDDSA -> {
-                if (chain == Chain.Cardano) {
-                    // For Cardano, we still need to create a proper PublicKey for transaction signing
-                    // even though we're creating the address manually
-                    val address = CardanoUtils.createEnterpriseAddress(vault.pubKeyEDDSA)
+                val eddsaPubKey = chainPubKey?.publicKey ?: vault.pubKeyEDDSA
 
-                    // Always create Enterprise address to avoid "stake address" component
-                    // Use WalletCore's proper Blake2b hashing for deterministic results across all devices
-                    // Validate Cardano address using WalletCore's own validation
+                if (chain == Chain.Cardano) {
+                    val address = CardanoUtils.createEnterpriseAddress(eddsaPubKey)
+
                     if (!AnyAddress.isValid(
                             address,
                             CoinType.CARDANO
@@ -95,17 +103,17 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                             CoinType.CARDANO,
                             "ada"
                         ).description(),
-                        vault.pubKeyEDDSA
+                        eddsaPubKey
                     )
                 }
                 val publicKey =
                     PublicKey(
-                        vault.pubKeyEDDSA.hexToByteArray(),
+                        eddsaPubKey.hexToByteArray(),
                         PublicKeyType.ED25519
                     )
                 return Pair(
                     chain.coinType.deriveAddressFromPublicKey(publicKey),
-                    vault.pubKeyEDDSA
+                    eddsaPubKey
                 )
             }
         }
@@ -133,6 +141,37 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
         )
 
         else -> chain.coinType.validate(address)
+    }
+
+    /**
+     * For KeyImport vaults, find the chain-specific public key.
+     * First tries an exact chain match, then falls back to finding another chain
+     * with the same derivation path (e.g., all EVM chains share m/44'/60'/0'/0/0).
+     */
+    private fun findChainPublicKey(chain: Chain, vault: Vault): ChainPublicKey? {
+        if (vault.libType != SigningLibType.KeyImport) return null
+
+        val isEddsa = chain.TssKeysignType == TssKeyType.EDDSA
+
+        // Exact chain match
+        val exact = vault.chainPublicKeys.firstOrNull {
+            it.chain == chain.raw && it.isEddsa == isEddsa
+        }
+        if (exact != null) return exact
+
+        // For ECDSA chains, find another chain with the same derivation path
+        if (!isEddsa) {
+            val targetDerivePath = chain.coinType.compatibleDerivationPath()
+            return vault.chainPublicKeys.firstOrNull { cpk ->
+                !cpk.isEddsa && try {
+                    Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() == targetDerivePath
+                } catch (_: Exception) {
+                    false
+                }
+            }
+        }
+
+        return null
     }
 
     private fun adjustAddressPrefix(type: CoinType, address: String): String =
