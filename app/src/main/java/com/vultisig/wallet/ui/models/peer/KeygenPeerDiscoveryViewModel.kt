@@ -126,6 +126,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
+    private val networkUtils: NetworkUtils,
 ) : ViewModel() {
 
     val state = MutableStateFlow(PeerDiscoveryUiModel())
@@ -170,7 +171,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
         }
     }
 
-    private fun isConnected() = NetworkUtils.isNetworkAvailable(context)
+    private fun isConnected() = networkUtils.isNetworkAvailable()
 
     fun back() {
         viewModelScope.launch {
