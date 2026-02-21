@@ -38,7 +38,6 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
@@ -426,7 +425,7 @@ internal class SolanaApiImp @Inject constructor(
                     ignoreCase = true
                 )
             ) {
-                Timber.tag("SolanaApiImp").d("Forbidden (403) when checking tx status: $txHash")
+                Timber.tag("SolanaApiImp").w("Forbidden (403) when checking tx status: $txHash")
                 return null
             }
             throw e

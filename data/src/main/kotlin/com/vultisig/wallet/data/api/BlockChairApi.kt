@@ -17,6 +17,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.math.BigInteger
@@ -125,22 +126,21 @@ internal class BlockChairApiImp @Inject constructor(
         chain: Chain,
         txHash: String,
     ): BlockChainStatusDeserialized? {
-        return try {
-            val response =
-                httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/transaction/${txHash}")
+        val response =
+            httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/transaction/${txHash}")
 
-            if (response.status == HttpStatusCode.Forbidden) {
-                Timber.tag("BlockChairApiImp")
-                    .d("Forbidden (403) when checking tx status: $txHash")
-                return null
-            }
-            json.decodeFromString(
-                utxoStatusQuoteResponseSerializer,
-                response.bodyAsText()
-            )
-
-        } catch (e: Exception) {
-            throw e
+        if (response.status == HttpStatusCode.Forbidden) {
+            Timber.tag("BlockChairApiImp").d("Forbidden (403) when checking tx status: $txHash")
+            return null
         }
+        if (!response.status.isSuccess()) {
+            Timber.tag("BlockChairApiImp")
+                .e("Failed to get tx status: ${response.status} for $txHash")
+            return null
+        }
+        return json.decodeFromString(
+            utxoStatusQuoteResponseSerializer,
+            response.bodyAsText()
+        )
     }
 }
