@@ -1156,6 +1156,15 @@ internal class SwapFormViewModel @Inject constructor(
                             null
                         }
 
+                        val referral = referralCode.value
+                            ?: vaultId?.takeIf { srcToken.chain.id == Chain.ThorChain.id || srcToken.chain.id == Chain.MayaChain.id }
+                                ?.let { referralRepository.getExternalReferralBy(it) }
+
+                        referral?.let { code ->
+                            val tierType = vultBPSDiscount?.getTierType()
+                            checkReferralBpsDiscount(tierType, srcToken, tokenValue, code)
+                        }
+
 
                         checkVultBpsDiscount(srcToken, tokenValue, vultBPSDiscount)
 
@@ -1182,18 +1191,12 @@ internal class SwapFormViewModel @Inject constructor(
                                             tokenValue = tokenValue,
                                             isAffiliate = isAffiliate,
                                             bpsDiscount = vultBPSDiscount ?: 0,
+                                            referralCode = referral.orEmpty(),
                                         )
                                     } as SwapQuote.MayaChain
                                     mayaSwapQuote to mayaSwapQuote.recommendedMinTokenValue
                                 } else {
-                                    val referral = referralCode.value
-                                        ?: vaultId?.takeIf { srcToken.chain.id == Chain.ThorChain.id }
-                                            ?.let { referralRepository.getExternalReferralBy(it) }
 
-                                    referral?.let { code ->
-                                        val tierType = vultBPSDiscount?.getTierType()
-                                        checkReferralBpsDiscount(tierType, srcToken, tokenValue, code)
-                                    }
 
                                     val thorSwapQuote = getCachedQuoteOrFetch(
                                         srcToken.id,
