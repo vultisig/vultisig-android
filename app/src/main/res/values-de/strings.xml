@@ -892,4 +892,6 @@
     <string name="transaction_status_pending">Transaktion ausstehend…</string>
     <string name="transaction_status_notification_title">Transaktionsstatus</string>
     <string name="transaction_status_checking_transaction">Transaktion wird geprüft…</string>
+    <string name="raw_transaction_data">Rohdaten der Transaktion</string>
+    <string name="solana_raw_transaction">Solana-Rohdaten der Transaktion</string>
 </resources>

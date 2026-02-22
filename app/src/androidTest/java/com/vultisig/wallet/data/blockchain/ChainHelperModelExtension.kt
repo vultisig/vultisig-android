@@ -11,6 +11,7 @@ import ThorchainSwapPayload
 import TriggerSmartContractPayload
 import WasmExecuteContractPayload
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
+import com.vultisig.wallet.data.models.proto.v1.SignSolanaProto
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
@@ -76,6 +77,11 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
                 accountNumber = signDirect.accountNumber,
             )
         },
+        signSolana = this.signData?.signSolana?.let { signSolana ->
+            SignSolanaProto(
+                rawTransactions = signSolana.rawTransactions
+            )
+        },
         memo = this.memo,
         vaultPublicKeyECDSA = this.vaultPublicKeyEcdsa,
         vaultLocalPartyID = "",
@@ -89,7 +95,6 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
             )
         },
         tronTriggerSmartContractPayload = this.triggerSmartContractPayload?.toTriggerSmartContractPayload(),
-        skipBroadcast = false // Not present in source, handled as default
     )
 }
 
