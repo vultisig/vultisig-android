@@ -98,6 +98,16 @@ data class SolanaSignatureStatusesResult(
 )
 
 @Serializable
+data class SolanaRpcResponseJson<T>(
+    @SerialName("id")
+    val id: Int,
+    @SerialName("result")
+    val result: T,
+    @SerialName("error")
+    val error: RpcError?,
+)
+
+@Serializable
 data class SolanaSignatureStatus(
     val confirmationStatus: String? = null,
 )

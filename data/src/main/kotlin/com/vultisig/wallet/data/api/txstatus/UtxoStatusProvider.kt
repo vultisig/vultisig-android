@@ -1,9 +1,11 @@
 package com.vultisig.wallet.data.api.txstatus
 
 import com.vultisig.wallet.data.api.BlockChairApi
+import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
+import timber.log.Timber
 import javax.inject.Inject
 
 class UtxoStatusProvider @Inject constructor(
@@ -12,12 +14,19 @@ class UtxoStatusProvider @Inject constructor(
 
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        val response = blockChairApi.getTsStatus(chain, txHash)
-        val txData = response?.data?.get(txHash)
         return try {
+            val response = blockChairApi.getTsStatus(
+                chain,
+                txHash
+            )
+            val (txData, context) = when (response) {
+                is BlockChainStatusDeserialized.Result -> response.data.data?.get(txHash) to response.data.context
+                else -> null to null
+            }
+
             when {
                 txData == null -> {
-                    TransactionResult.NotFound
+                    TransactionResult.Pending
                 }
 
                 txData.transaction == null -> {
@@ -31,8 +40,10 @@ class UtxoStatusProvider @Inject constructor(
                 txData.transaction.blockId == null -> {
                     TransactionResult.NotFound
                 }
+
                 else -> {
-                    val confirmations = response.context.state - txData.transaction.blockId + 1
+                    val confirmations =
+                        context?.state?.minus(txData.transaction.blockId)?.plus(1) ?: 0
 
                     when {
                         confirmations <= 0 -> {
@@ -45,8 +56,12 @@ class UtxoStatusProvider @Inject constructor(
                     }
                 }
             }
-        } catch (_: Exception) {
-                TransactionResult.NotFound
-            }
+        } catch (e: Exception) {
+            Timber.tag("UtxoStatusProvider").e(
+                e,
+                "Error checking tx status: $txHash"
+            )
+            TransactionResult.Failed(e.message.orEmpty())
         }
     }
+}
