@@ -1,18 +1,11 @@
 package com.vultisig.wallet.data.api.models.quotes
 
-import com.vultisig.wallet.data.api.models.BlockChairStatusEmpty
-import com.vultisig.wallet.data.api.models.BlockChairStatusResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 sealed interface LiFiSwapQuoteDeserialized {
     data class Result(val data: LiFiSwapQuoteJson) : LiFiSwapQuoteDeserialized
     data class Error(val error: LiFiSwapQuoteError) : LiFiSwapQuoteDeserialized
-}
-
-sealed interface BlockChainStatusDeserialized {
-    data class Result(val data: BlockChairStatusResponse) : BlockChainStatusDeserialized
-    data class Empty(val empty: BlockChairStatusEmpty) : BlockChainStatusDeserialized
 }
 
 

@@ -1,14 +1,13 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.api.models.BlockChairStatusResponse
+import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.api.models.BlockChairInfo
 import com.vultisig.wallet.data.api.models.BlockChairInfoJson
 import com.vultisig.wallet.data.api.models.SuggestedTransactionFeeDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashRequestBodyJson
-import com.vultisig.wallet.data.api.models.quotes.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.utils.UTXOStatusQuoteResponseSerializer
+import com.vultisig.wallet.data.utils.UTXOStatusResponseSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -40,8 +39,11 @@ interface BlockChairApi {
 internal class BlockChairApiImp @Inject constructor(
     private val json: Json,
     private val httpClient: HttpClient,
-    private val utxoStatusQuoteResponseSerializer: UTXOStatusQuoteResponseSerializer,
+    private val utxoStatusResponseSerializer: UTXOStatusResponseSerializer,
 ) : BlockChairApi {
+    companion object {
+        private const val BASE_URL = "https://api.vultisig.com/blockchair"
+    }
 
     private fun getChainName(chain: Chain): String = when (chain) {
         Chain.Bitcoin -> "bitcoin"
@@ -60,7 +62,7 @@ internal class BlockChairApiImp @Inject constructor(
     ): BlockChairInfo? {
         try {
             val response =
-                httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/address/${address}?state=latest") {
+                httpClient.get("$BASE_URL/${getChainName(chain)}/dashboards/address/${address}?state=latest") {
                     header("Content-Type", "application/json")
                 }
             val responseData = response.body<BlockChairInfoJson>()
@@ -74,7 +76,7 @@ internal class BlockChairApiImp @Inject constructor(
 
     override suspend fun getBlockChairStats(chain: Chain): BigInteger {
         val response =
-            httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/stats") {
+            httpClient.get("$BASE_URL/${getChainName(chain)}/stats") {
                 header("Content-Type", "application/json")
             }
         return response.body<SuggestedTransactionFeeDataJson>().data.value
@@ -107,7 +109,7 @@ internal class BlockChairApiImp @Inject constructor(
                 )
                 Timber.d("bodyContent:$bodyContent")
                 val response =
-                    httpClient.post("https://api.vultisig.com/blockchair/${getChainName(chain)}/push/transaction") {
+                    httpClient.post("$BASE_URL/${getChainName(chain)}/push/transaction") {
                         header("Content-Type", "application/json")
                         setBody(bodyContent)
                     }
@@ -127,7 +129,7 @@ internal class BlockChairApiImp @Inject constructor(
         txHash: String,
     ): BlockChainStatusDeserialized? {
         val response =
-            httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/transaction/${txHash}")
+            httpClient.get("$BASE_URL/${getChainName(chain)}/dashboards/transaction/${txHash}")
 
         if (response.status == HttpStatusCode.Forbidden) {
             Timber.tag("BlockChairApiImp").d("Forbidden (403) when checking tx status: $txHash")
@@ -139,7 +141,7 @@ internal class BlockChairApiImp @Inject constructor(
             return null
         }
         return json.decodeFromString(
-            utxoStatusQuoteResponseSerializer,
+            utxoStatusResponseSerializer,
             response.bodyAsText()
         )
     }

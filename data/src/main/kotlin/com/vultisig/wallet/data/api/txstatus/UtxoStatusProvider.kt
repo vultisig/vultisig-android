@@ -1,13 +1,12 @@
 package com.vultisig.wallet.data.api.txstatus
 
 import com.vultisig.wallet.data.api.BlockChairApi
-import com.vultisig.wallet.data.api.models.quotes.BlockChainStatusDeserialized
+import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.text.get
 
 class UtxoStatusProvider @Inject constructor(
     private val blockChairApi: BlockChairApi,
@@ -20,16 +19,11 @@ class UtxoStatusProvider @Inject constructor(
                 chain,
                 txHash
             )
-            val txData = when (response) {
-                is BlockChainStatusDeserialized.Result -> response.data.data?.get(txHash)
-                is BlockChainStatusDeserialized.Empty -> null
-                null -> null
+            val (txData, context) = when (response) {
+                is BlockChainStatusDeserialized.Result -> response.data.data?.get(txHash) to response.data.context
+                else -> null to null
             }
-            val context = when (response) {
-                is BlockChainStatusDeserialized.Result -> response.data.context
-                is BlockChainStatusDeserialized.Empty -> null
-                null -> null
-            }
+
             when {
                 txData == null -> {
                     TransactionResult.Pending

@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.utils
 
-import com.vultisig.wallet.data.api.models.BlockChairStatusEmpty
+import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.api.models.BlockChairStatusResponse
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
@@ -20,7 +20,6 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
@@ -174,10 +173,10 @@ class LiFiSwapQuoteResponseSerializerImpl @Inject constructor(private val json: 
 }
 
 
-interface UTXOStatusQuoteResponseSerializer : DefaultSerializer<BlockChainStatusDeserialized>
+interface UTXOStatusResponseSerializer : DefaultSerializer<BlockChainStatusDeserialized>
 
-class UTXOStatusQuoteResponseSerializerImpl @Inject constructor(private val json: Json) :
-    UTXOStatusQuoteResponseSerializer {
+class UTXOStatusResponseSerializerImpl @Inject constructor(private val json: Json) :
+    UTXOStatusResponseSerializer {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("UTXOStatusQuoteResponseSerializer")
 
@@ -186,15 +185,15 @@ class UTXOStatusQuoteResponseSerializerImpl @Inject constructor(private val json
         val jsonObject = input.decodeJsonElement().jsonObject
         val dataElement = jsonObject["data"]
 
-        return if (dataElement is JsonObject) {
+        return (if (dataElement is JsonObject) {
             BlockChainStatusDeserialized.Result(
                 json.decodeFromJsonElement<BlockChairStatusResponse>(jsonObject)
             )
         } else {
-            BlockChainStatusDeserialized.Empty(
-                json.decodeFromJsonElement<BlockChairStatusEmpty>(jsonObject)
+            BlockChainStatusDeserialized.Error(
+                ""
             )
-        }
+        })
     }
 }
 

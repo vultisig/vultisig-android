@@ -56,8 +56,8 @@ internal interface SerializerModule {
     @Binds
     @Singleton
     fun bindUTXoStatusResponseSerializer(
-        impl: UTXOStatusQuoteResponseSerializerImpl,
-    ): UTXOStatusQuoteResponseSerializer
+        impl: UTXOStatusResponseSerializerImpl,
+    ): UTXOStatusResponseSerializer
 
 
     @Binds

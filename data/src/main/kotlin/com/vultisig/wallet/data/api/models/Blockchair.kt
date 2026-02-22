@@ -74,11 +74,6 @@ data class BlockChairStatusResponse(
     val context: ContextData
 )
 
-@Serializable
-data class BlockChairStatusEmpty(
-    @SerialName("data")
-    val data: List<String>? = null,
-)
 
 @Serializable
 data class TransactionData(
