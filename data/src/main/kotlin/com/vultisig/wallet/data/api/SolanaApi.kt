@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.JupiterApiImpl.Companion.JUPITER_URL
 import com.vultisig.wallet.data.api.models.BroadcastTransactionRespJson
-import com.vultisig.wallet.data.api.models.EvmRpcResponseJson
+import com.vultisig.wallet.data.api.models.SolanaRpcResponseJson
 import com.vultisig.wallet.data.api.models.JupiterTokenResponseJson
 import com.vultisig.wallet.data.api.models.RecentBlockHashResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
@@ -63,7 +63,7 @@ interface SolanaApi {
 
     suspend fun getFeeForMessage(message: String): BigInteger
 
-    suspend fun checkStatus(txHash: String): EvmRpcResponseJson<SolanaSignatureStatusesResult>?
+    suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>?
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -395,7 +395,7 @@ internal class SolanaApiImp @Inject constructor(
         return rpcResp.result?.value ?: error("Error fetching getFeeForMessage")
     }
 
-    override suspend fun checkStatus(txHash: String): EvmRpcResponseJson<SolanaSignatureStatusesResult>? {
+    override suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>? {
         try {
 
             val params = buildJsonArray {
@@ -410,7 +410,7 @@ internal class SolanaApiImp @Inject constructor(
                 }
             }
 
-            val response: EvmRpcResponseJson<SolanaSignatureStatusesResult> = httpClient.postRpc(
+            val response: SolanaRpcResponseJson<SolanaSignatureStatusesResult> = httpClient.postRpc(
                 url = rpcEndpoint,
                 method = "getSignatureStatuses",
                 params = params,
