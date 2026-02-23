@@ -397,6 +397,7 @@
     <string name="reshare_step_generating_eddsa">Генерация ключа EdDSA</string>
     <string name="keygen_connecting_with_server">Подключение к серверу…</string>
     <string name="keygen_step_generating_eddsa">Генерация ключа EdDSA</string>
+    <string name="keygen_step_generating_chain_keys">Генерация ключей цепочек</string>
     <string name="reshare_step_generating_ecdsa">Генерация ключа ECDSA</string>
     <string name="merge_account_doesnt_exist">Выбранный токен не найден для этого адреса</string>
     <string name="keygen_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>
@@ -889,4 +890,43 @@
     <string name="transaction_status_checking_transaction">Проверка транзакции…</string>
     <string name="raw_transaction_data">Исходные данные транзакции</string>
     <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
+
+    <!-- Key Import / Seed Phrase Import -->
+    <string name="home_screen_import_seed_phrase">Импортировать сид-фразу</string>
+    <string name="import_seedphrase_title">Введите вашу сид-фразу</string>
+    <string name="import_seedphrase_subtitle">Введите вашу фразу восстановления из 12 или 24 слов</string>
+    <string name="import_seedphrase_label">Сид-фраза</string>
+    <string name="import_seedphrase_hint">Введите вашу фразу восстановления…</string>
+    <string name="import_seedphrase_word_count">%1$d / %2$d слов</string>
+    <string name="import_seedphrase_invalid_word_count">Ожидалось %2$s слов, получено %1$s</string>
+    <string name="import_seedphrase_invalid_phrase">Недействительная сид-фраза</string>
+    <string name="import_seedphrase_already_imported">Эта сид-фраза уже была импортирована</string>
+    <string name="import_seedphrase_duplicate_description">Пожалуйста, импортируйте другую сид-фразу</string>
+    <string name="import_seedphrase_import_button">Импортировать</string>
+    <string name="import_seedphrase_checking">Проверка…</string>
+
+    <string name="key_import_chains_title">Выберите цепочки</string>
+    <string name="key_import_chains_scanning">Поиск активных цепочек…</string>
+    <string name="key_import_chains_scanning_desc">Проверка вашего кошелька на наличие балансов во всех поддерживаемых цепочках</string>
+    <string name="key_import_chains_select_manually">Выбрать вручную</string>
+    <string name="key_import_chains_found_title">Найдены активные цепочки</string>
+    <string name="key_import_chains_found_desc">Мы нашли балансы в следующих цепочках. Вы можете продолжить или настроить выбор.</string>
+    <string name="key_import_chains_continue">Продолжить</string>
+    <string name="key_import_chains_customize">Настроить</string>
+    <string name="key_import_chains_no_active_title">Активные цепочки не найдены</string>
+    <string name="key_import_chains_no_active_desc">Балансы не найдены. Выберите цепочки для импорта вручную.</string>
+    <string name="key_import_chains_select_title">Выберите цепочки (%1$d)</string>
+    <string name="key_import_chains_all">Все</string>
+    <string name="key_import_chains_none">Ничего</string>
+
+    <string name="key_import_device_count_title">Выберите настройку</string>
+    <string name="key_import_device_count_fast">Быстрая</string>
+    <string name="key_import_device_count_secure">Безопасная</string>
+    <string name="key_import_device_count_get_started">Начать</string>
+    <string name="key_import_device_count_fast_desc_1">1 устройство + сервер Vultisig</string>
+    <string name="key_import_device_count_fast_desc_2">Быстрая и простая настройка</string>
+    <string name="key_import_device_count_fast_desc_3">Восстановление по электронной почте</string>
+    <string name="key_import_device_count_secure_desc_1">Требуется 2 или более устройств</string>
+    <string name="key_import_device_count_secure_desc_2">Максимальная безопасность</string>
+    <string name="key_import_device_count_secure_desc_3">Без стороннего сервера</string>
 </resources>

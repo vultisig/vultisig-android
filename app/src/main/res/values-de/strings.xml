@@ -400,6 +400,7 @@
     <string name="reshare_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
     <string name="keygen_connecting_with_server">Mit Server verbinden …</string>
     <string name="keygen_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
+    <string name="keygen_step_generating_chain_keys">Ketten-Schlüssel generieren</string>
     <string name="reshare_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
     <string name="merge_account_doesnt_exist">Das ausgewählte Token wurde für diese Adresse nicht gefunden.</string>
     <string name="keygen_email_error">Falsche E-Mail, bitte überprüfen</string>
@@ -894,4 +895,43 @@
     <string name="transaction_status_checking_transaction">Transaktion wird geprüft…</string>
     <string name="raw_transaction_data">Rohdaten der Transaktion</string>
     <string name="solana_raw_transaction">Solana-Rohdaten der Transaktion</string>
+
+    <!-- Key Import / Seed Phrase Import -->
+    <string name="home_screen_import_seed_phrase">Seed-Phrase importieren</string>
+    <string name="import_seedphrase_title">Seed-Phrase eingeben</string>
+    <string name="import_seedphrase_subtitle">Geben Sie Ihre Wiederherstellungsphrase mit 12 oder 24 Wörtern ein</string>
+    <string name="import_seedphrase_label">Seed-Phrase</string>
+    <string name="import_seedphrase_hint">Wiederherstellungsphrase eingeben…</string>
+    <string name="import_seedphrase_word_count">%1$d / %2$d Wörter</string>
+    <string name="import_seedphrase_invalid_word_count">%2$s Wörter erwartet, %1$s erhalten</string>
+    <string name="import_seedphrase_invalid_phrase">Ungültige Seed-Phrase</string>
+    <string name="import_seedphrase_already_imported">Diese Seed-Phrase wurde bereits importiert</string>
+    <string name="import_seedphrase_duplicate_description">Bitte importieren Sie eine andere Seed-Phrase</string>
+    <string name="import_seedphrase_import_button">Importieren</string>
+    <string name="import_seedphrase_checking">Überprüfung…</string>
+
+    <string name="key_import_chains_title">Blockchains auswählen</string>
+    <string name="key_import_chains_scanning">Suche nach aktiven Blockchains…</string>
+    <string name="key_import_chains_scanning_desc">Ihr Wallet wird auf vorhandene Guthaben in allen unterstützten Blockchains überprüft</string>
+    <string name="key_import_chains_select_manually">Manuell auswählen</string>
+    <string name="key_import_chains_found_title">Aktive Blockchains gefunden</string>
+    <string name="key_import_chains_found_desc">Wir haben Guthaben auf den folgenden Blockchains gefunden. Sie können fortfahren oder Ihre Auswahl anpassen.</string>
+    <string name="key_import_chains_continue">Weiter</string>
+    <string name="key_import_chains_customize">Anpassen</string>
+    <string name="key_import_chains_no_active_title">Keine aktiven Blockchains gefunden</string>
+    <string name="key_import_chains_no_active_desc">Es wurden keine Guthaben gefunden. Bitte wählen Sie die Blockchains manuell aus, die Sie importieren möchten.</string>
+    <string name="key_import_chains_select_title">Blockchains auswählen (%1$d)</string>
+    <string name="key_import_chains_all">Alle</string>
+    <string name="key_import_chains_none">Keine</string>
+
+    <string name="key_import_device_count_title">Einrichtung wählen</string>
+    <string name="key_import_device_count_fast">Schnell</string>
+    <string name="key_import_device_count_secure">Sicher</string>
+    <string name="key_import_device_count_get_started">Loslegen</string>
+    <string name="key_import_device_count_fast_desc_1">1 Gerät + Vultisig-Server</string>
+    <string name="key_import_device_count_fast_desc_2">Schnelle und einfache Einrichtung</string>
+    <string name="key_import_device_count_fast_desc_3">E-Mail-basierte Wiederherstellung</string>
+    <string name="key_import_device_count_secure_desc_1">2 oder mehr Geräte erforderlich</string>
+    <string name="key_import_device_count_secure_desc_2">Maximale Sicherheit</string>
+    <string name="key_import_device_count_secure_desc_3">Ohne Drittanbieter-Server</string>
 </resources>
