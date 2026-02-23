@@ -1,49 +1,40 @@
 package com.vultisig.wallet.data.networkutils
 
+import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.respond
-import io.ktor.client.plugins.HttpCallValidator
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.headersOf
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
+import java.io.IOException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.net.ssl.SSLHandshakeException
 
 /**
- * CONTRACT TESTS FOR NETWORK ERROR HANDLING
+ * Contract tests for network error handling.
  *
- * These tests define the CORRECT behavior a network error handling layer must satisfy.
+ * Verifies that the `HttpCallValidator` approach (`IOException` → `NetworkException`)
+ * satisfies all requirements, and does NOT swallow errors it shouldn't.
  *
- * Group 1 (interceptor503_*): Uses the interceptor approach (IOException -> synthetic 503).
- *   -> These tests FAIL, proving the approach violates the contract.
- *
- * Group 2 (httpCallValidator_*): Uses HttpCallValidator (IOException -> NetworkException).
- *   -> These tests PASS, proving the alternative satisfies the contract.
- *
- * The contract requirements:
- * 1. Network failures must be distinguishable from real server errors
- * 2. Network failures must not break response deserialization
- * 3. bodyOrThrow() must report network failures as client-side errors (code 0), not server errors
- * 4. Callers using status-code checks must not confuse network failures with broadcast failures
- * 5. Existing try-catch(Exception) patterns must still catch network errors
+ * Contract requirements:
+ * 1. Network failures must be distinguishable from real server errors.
+ * 2. Network failures must not break response deserialization.
+ * 3. `bodyOrThrow()` must report network failures as client-side errors (code 0).
+ * 4. Callers using status-code checks must not confuse network failures with server rejections.
+ * 5. Existing `catch(Exception)` patterns must still catch network errors.
+ * 6. All `IOException` subtypes (SSL, timeout, DNS, connection) are handled uniformly.
+ * 7. Non-network errors (deserialization, business logic) are NOT swallowed.
  */
 class NetworkStateInterceptorContractTest {
 
@@ -66,243 +57,148 @@ class NetworkStateInterceptorContractTest {
     @Serializable
     data class ContextData(@SerialName("state") val state: Int)
 
-    private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
-
-    private val jsonHeaders = headersOf(
-        HttpHeaders.ContentType, ContentType.Application.Json.toString()
-    )
-
-    // The exact body format produced by NetworkStateInterceptor
-    private val syntheticBody = """{"error": "Network failure: Unable to resolve host"}"""
-
-    // A real server 503 body
-    private val realServer503Body = """{"error": "Service temporarily unavailable"}"""
-
-    /**
-     * Simulates what callers see after NetworkStateInterceptor converts IOException to 503.
-     */
-    private fun buildInterceptorClient(): HttpClient = HttpClient(MockEngine {
-        respond(
-            content = syntheticBody,
-            status = HttpStatusCode.ServiceUnavailable,
-            headers = jsonHeaders,
-        )
-    }) {
-        install(ContentNegotiation) { json(json, ContentType.Any) }
-    }
-
-    /**
-     * Simulates a REAL server returning 503.
-     */
-    private fun buildRealServer503Client(): HttpClient = HttpClient(MockEngine {
-        respond(
-            content = realServer503Body,
-            status = HttpStatusCode.ServiceUnavailable,
-            headers = jsonHeaders,
-        )
-    }) {
-        install(ContentNegotiation) { json(json, ContentType.Any) }
-    }
-
-    /**
-     * Uses HttpCallValidator to map IOException -> NetworkException(httpStatusCode=0).
-     */
-    private fun buildHttpCallValidatorClient(): HttpClient = HttpClient(MockEngine {
-        throw java.io.IOException("Unable to resolve host")
-    }) {
-        install(ContentNegotiation) { json(json, ContentType.Any) }
-        install(HttpCallValidator) {
-            handleResponseExceptionWithRequest { cause, _ ->
-                when (cause) {
-                    is java.io.IOException -> throw NetworkException(
-                        httpStatusCode = 0,
-                        message = "No internet connection",
-                        cause = cause,
-                    )
-                }
-            }
-        }
-    }
+    @Serializable
+    data class SimpleResponse(@SerialName("value") val value: String)
 
     // ================================================================
-    // GROUP 1: Interceptor approach — these tests FAIL (contract violated)
+    // GROUP 1: All IOException subtypes → NetworkException(httpStatusCode=0)
     //
-    // Each test asserts what SHOULD happen when the phone has no internet.
-    // The interceptor approach produces a synthetic 503 instead, breaking
-    // every assertion.
+    // Every transport-level failure must produce a NetworkException with
+    // httpStatusCode=0 regardless of the specific IOException subclass.
     // ================================================================
 
     @Test
-    fun interceptor503_networkFailureMustBeDifferentFromServerError() = runBlocking {
-        val interceptorClient = buildInterceptorClient()
-        val realServerClient = buildRealServer503Client()
-
-        val networkFailureResponse = interceptorClient.get("https://api.vultisig.com/test")
-        val serverErrorResponse = realServerClient.get("https://api.vultisig.com/test")
-
-        // CONTRACT: A caller MUST be able to distinguish "phone has no internet"
-        // from "server returned 503". These status codes MUST differ.
-        assertNotEquals(
-            "Network failure status must differ from real server 503, " +
-                    "but both returned ${networkFailureResponse.status}",
-            serverErrorResponse.status,
-            networkFailureResponse.status,
+    fun ioException_becomesNetworkExceptionWithCode0() = runBlocking {
+        assertTransportExceptionBecomesNetworkException(
+            IOException("Connection reset")
         )
-
-        interceptorClient.close()
-        realServerClient.close()
     }
 
     @Test
-    fun interceptor503_networkFailureMustNotBreakDeserialization() = runBlocking {
-        val client = buildInterceptorClient()
-
-        val response = client.get("https://api.vultisig.com/blockchair/litecoin/dashboards/transaction/abc")
-
-        // CONTRACT: When there's no internet, calling body<T>() must throw
-        // a NetworkException or IOException — NOT a deserialization error.
-        // The caller should see "no internet", not "missing field: context".
-        try {
-            response.body<BlockChairDashboardResponse>()
-            fail("Expected an exception when deserializing during network failure")
-        } catch (e: NetworkException) {
-            // CORRECT: NetworkException means the caller knows it's a network problem
-            assertEquals("Should indicate client-side error", 0, e.httpStatusCode)
-        } catch (_: java.io.IOException) {
-            // CORRECT: IOException is also an acceptable signal for network failure
-        } catch (e: Exception) {
-            // WRONG: Any other exception (e.g. SerializationException, MissingFieldException)
-            // means the network failure was disguised as a data parsing error.
-            fail(
-                "Network failure must throw NetworkException or IOException, " +
-                        "but threw ${e::class.simpleName}: ${e.message}"
-            )
-        }
-
-        client.close()
+    fun sslHandshakeException_becomesNetworkExceptionWithCode0() = runBlocking {
+        assertTransportExceptionBecomesNetworkException(
+            SSLHandshakeException("Handshake failed")
+        )
     }
 
     @Test
-    fun interceptor503_bodyOrThrowMustReportClientSideError() = runBlocking {
-        val client = buildInterceptorClient()
+    fun socketTimeoutException_becomesNetworkExceptionWithCode0() = runBlocking {
+        assertTransportExceptionBecomesNetworkException(
+            SocketTimeoutException("Read timed out")
+        )
+    }
 
-        val response = client.get("https://api.vultisig.com/solana/")
+    @Test
+    fun connectException_becomesNetworkExceptionWithCode0() = runBlocking {
+        assertTransportExceptionBecomesNetworkException(
+            ConnectException("Connection refused")
+        )
+    }
 
-        // CONTRACT: When there's no internet, bodyOrThrow must produce a
-        // NetworkException with httpStatusCode=0 (client-side), not 503.
+    @Test
+    fun unknownHostException_becomesNetworkExceptionWithCode0() = runBlocking {
+        assertTransportExceptionBecomesNetworkException(
+            UnknownHostException("Unable to resolve host")
+        )
+    }
+
+    private suspend fun assertTransportExceptionBecomesNetworkException(
+        ioException: IOException,
+    ) {
+        val client = MockHttpClient.throwingIOException(ioException)
         try {
-            response.bodyOrThrow<String>()
-            fail("Expected NetworkException from bodyOrThrow")
+            client.get("https://api.vultisig.com/test")
+            fail("Expected NetworkException but request succeeded")
         } catch (e: NetworkException) {
             assertEquals(
-                "Network failure must have httpStatusCode=0 (client-side), not a server code. " +
-                        "Got httpStatusCode=${e.httpStatusCode}",
-                0,
-                e.httpStatusCode,
+                "httpStatusCode must be 0 for client-side transport errors",
+                0, e.httpStatusCode,
             )
+            assertEquals("No internet connection", e.message)
+            assertTrue(
+                "cause must be the original IOException (${ioException::class.simpleName})",
+                e.cause is IOException,
+            )
+            assertEquals(ioException.message, e.cause?.message)
         }
-
         client.close()
     }
 
+    // ================================================================
+    // GROUP 2: Network failure vs server error — must be distinguishable
+    // ================================================================
+
     @Test
-    fun interceptor503_broadcastCallerMustNotSeeTransactionFailure() = runBlocking {
-        val client = buildInterceptorClient()
-
-        val response = client.get("https://api.vultisig.com/blockchair/litecoin/push/transaction")
-
-        // CONTRACT: When there's no internet, the broadcast path should NOT
-        // see a non-OK status that looks like a server rejection.
-        // Simulates BlockChairApi.broadcastTransaction:
-        //   if (response.status != HttpStatusCode.OK) {
-        //       error("fail to broadcast transaction: $errorBody")
-        //   }
-        assertTrue(
-            "Network failure must not produce a non-OK HTTP response. " +
-                    "Got ${response.status} — callers will treat this as a broadcast rejection " +
-                    "and show 'fail to broadcast transaction' instead of 'no internet'.",
-            response.status.isSuccess(),
+    fun networkFailure_isClearlyDistinguished_fromRealServer503() = runBlocking {
+        val networkClient = MockHttpClient.throwingIOException(
+            IOException("Unable to resolve host")
+        )
+        val serverClient = MockHttpClient.respondingWith(
+            HttpStatusCode.ServiceUnavailable,
+            """{"error": "Service temporarily unavailable"}""",
         )
 
-        client.close()
-    }
-
-    // ================================================================
-    // GROUP 2: HttpCallValidator approach — these tests PASS
-    // ================================================================
-
-    @Test
-    fun httpCallValidator_networkFailureIsClearlyDistinguishedFromServerError() = runBlocking {
-        val validatorClient = buildHttpCallValidatorClient()
-        val serverClient = buildRealServer503Client()
-
-        // Network failure -> exception (no response at all)
+        // Network failure → exception (no response)
         val networkException = try {
-            validatorClient.get("https://api.vultisig.com/test")
+            networkClient.get("https://api.vultisig.com/test")
             null
         } catch (e: NetworkException) {
             e
         }
 
-        // Server error -> normal response with 503
+        // Server 503 → normal response
         val serverResponse = serverClient.get("https://api.vultisig.com/test")
 
-        // CONTRACT SATISFIED: Network failure is an exception, server error is a response.
-        // They are fundamentally different types — impossible to confuse.
         assertNotNull("Network failure must throw an exception", networkException)
         assertEquals(0, networkException!!.httpStatusCode)
         assertEquals(HttpStatusCode.ServiceUnavailable, serverResponse.status)
 
-        validatorClient.close()
+        networkClient.close()
         serverClient.close()
     }
 
     @Test
-    fun httpCallValidator_networkFailureDoesNotBreakDeserialization() = runBlocking {
-        val client = buildHttpCallValidatorClient()
+    fun networkFailure_doesNotBreakDeserialization() = runBlocking {
+        val client = MockHttpClient.throwingIOException(
+            IOException("Unable to resolve host")
+        )
 
-        // CONTRACT SATISFIED: No response is created, so body<T>() is never called.
-        // The caller gets a clean NetworkException before any deserialization occurs.
+        // Exception is thrown at client.get() — body<T>() is never called.
         try {
             client.get("https://api.vultisig.com/blockchair/litecoin/dashboards/transaction/abc")
             fail("Expected NetworkException")
         } catch (e: NetworkException) {
             assertEquals(0, e.httpStatusCode)
             assertEquals("No internet connection", e.message)
-            assertTrue(e.cause is java.io.IOException)
         }
 
         client.close()
     }
 
     @Test
-    fun httpCallValidator_bodyOrThrowIsNeverReached() = runBlocking {
-        val client = buildHttpCallValidatorClient()
+    fun networkFailure_bodyOrThrow_isNeverReached() = runBlocking {
+        val client = MockHttpClient.throwingIOException(
+            IOException("Unable to resolve host")
+        )
 
-        // CONTRACT SATISFIED: The exception is thrown BEFORE any response exists,
-        // so bodyOrThrow() is never called. The caller catches NetworkException
-        // with httpStatusCode=0 in their existing catch(Exception) block.
         try {
             val response = client.get("https://api.vultisig.com/solana/")
             response.bodyOrThrow<String>()
             fail("Expected NetworkException before reaching bodyOrThrow")
         } catch (e: NetworkException) {
-            assertEquals(
-                "httpStatusCode must be 0 for client-side errors",
-                0,
-                e.httpStatusCode,
-            )
+            assertEquals(0, e.httpStatusCode)
         }
 
         client.close()
     }
 
     @Test
-    fun httpCallValidator_existingCatchBlocksStillWork() = runBlocking {
-        val client = buildHttpCallValidatorClient()
+    fun networkException_isCaughtByExistingCatchExceptionBlocks() = runBlocking {
+        val client = MockHttpClient.throwingIOException(
+            IOException("Unable to resolve host")
+        )
 
-        // CONTRACT SATISFIED: The 46+ catch(e: Exception) blocks across the codebase
-        // still work because NetworkException extends RuntimeException.
+        // Simulates the 46+ catch(Exception) blocks across the codebase.
         val result: String? = try {
             client.get("https://test.com").bodyAsText()
         } catch (_: Exception) {
@@ -310,6 +206,135 @@ class NetworkStateInterceptorContractTest {
         }
 
         assertEquals(null, result)
+        client.close()
+    }
+
+    // ================================================================
+    // GROUP 3: Server responses pass through correctly
+    //
+    // HttpCallValidator must NOT intercept real HTTP responses.
+    // Only transport-level IOExceptions are caught.
+    // ================================================================
+
+    @Test
+    fun server200_withValidJson_deserializesCorrectly() = runBlocking {
+        val client = MockHttpClient.respondingWith(
+            HttpStatusCode.OK,
+            """{"value": "hello"}""",
+        )
+
+        val response = client.get("https://api.vultisig.com/test")
+        val body = response.body<SimpleResponse>()
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("hello", body.value)
+
+        client.close()
+    }
+
+    @Test
+    fun server4xx_responseIsReturnedNormally() = runBlocking {
+        val client = MockHttpClient.respondingWith(
+            HttpStatusCode.BadRequest,
+            """{"error": "Invalid address"}""",
+        )
+
+        val response = client.get("https://api.vultisig.com/test")
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertEquals("""{"error": "Invalid address"}""", response.bodyAsText())
+
+        client.close()
+    }
+
+    @Test
+    fun server5xx_responseIsReturnedNormally() = runBlocking {
+        val client = MockHttpClient.respondingWith(
+            HttpStatusCode.InternalServerError,
+            """{"error": "Internal server error"}""",
+        )
+
+        val response = client.get("https://api.vultisig.com/test")
+
+        assertEquals(HttpStatusCode.InternalServerError, response.status)
+
+        client.close()
+    }
+
+    @Test
+    fun bodyOrThrow_onNon2xx_throwsNetworkExceptionWithActualStatusCode() = runBlocking {
+        val client = MockHttpClient.respondingWith(
+            HttpStatusCode.BadRequest,
+            """{"message": "Invalid address format"}""",
+        )
+
+        try {
+            val response = client.get("https://api.vultisig.com/blockchair/push")
+            response.bodyOrThrow<String>()
+            fail("Expected NetworkException from bodyOrThrow on 400")
+        } catch (e: NetworkException) {
+            // bodyOrThrow wraps non-2xx with the ACTUAL server status code,
+            // NOT 0 (which is reserved for transport errors).
+            assertEquals(400, e.httpStatusCode)
+        }
+
+        client.close()
+    }
+
+    // ================================================================
+    // GROUP 4: Deserialization errors escape HttpCallValidator
+    //
+    // These tests prove that HttpCallValidator does NOT swallow
+    // application-level errors. Deserialization failures must propagate
+    // to the caller — this is the crash vector that safeLaunch addresses.
+    // ================================================================
+
+    @Test
+    fun server200_withInvalidJson_throwsDeserializationError_notNetworkException() = runBlocking {
+        val client = MockHttpClient.respondingWith(
+            HttpStatusCode.OK,
+            "this is not json at all",
+        )
+
+        try {
+            val response = client.get("https://api.vultisig.com/test")
+            response.body<SimpleResponse>()
+            fail("Expected a deserialization exception")
+        } catch (e: NetworkException) {
+            fail(
+                "Deserialization errors must NOT become NetworkException. " +
+                        "Got NetworkException(${e.httpStatusCode}): ${e.message}"
+            )
+        } catch (_: Exception) {
+            // CORRECT: Deserialization error escapes as a non-NetworkException.
+            // This is the crash vector that safeLaunch protects against.
+        }
+
+        client.close()
+    }
+
+    @Test
+    fun server200_withWrongJsonShape_throwsDeserializationError() = runBlocking {
+        // Simulates what happens when a server returns 200 but with unexpected JSON.
+        // The synthetic body from the old interceptor caused exactly this problem.
+        val client = MockHttpClient.respondingWith(
+            HttpStatusCode.OK,
+            """{"error": "Network failure: Unable to resolve host"}""",
+        )
+
+        try {
+            val response = client.get("https://api.vultisig.com/blockchair/litecoin/dashboards/transaction/abc")
+            response.body<BlockChairDashboardResponse>()
+            fail("Expected a deserialization exception for mismatched JSON shape")
+        } catch (e: NetworkException) {
+            fail(
+                "JSON shape mismatch must NOT become NetworkException. " +
+                        "Got NetworkException(${e.httpStatusCode}): ${e.message}"
+            )
+        } catch (_: Exception) {
+            // CORRECT: missing required field "context" → deserialization error.
+            // This proves the old interceptor's synthetic 503 body would crash here.
+        }
 
         client.close()
     }

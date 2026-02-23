@@ -129,6 +129,9 @@ For keygen/keysign testing with multiple emulators:
 - Use sealed state classes for error states
 - Provide meaningful error messages to users
 - Log errors with Timber (use appropriate log levels)
+- Use `safeLaunch` instead of `viewModelScope.launch` for coroutines that perform network calls or deserialization
+- Use `bodyOrThrow()` instead of raw `.body<T>()` in API methods for consistent error wrapping
+- See [docs/network-error-handling.md](docs/network-error-handling.md) for the full two-layer error handling architecture
 
 ## Git Workflow
 
