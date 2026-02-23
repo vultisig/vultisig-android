@@ -601,6 +601,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
             Chain.Blast, Chain.CronosChain -> setOf(SwapProvider.LIFI)
             Chain.Solana -> setOf(
+                SwapProvider.THORCHAIN,
                 SwapProvider.JUPITER,
                 SwapProvider.LIFI
             )
