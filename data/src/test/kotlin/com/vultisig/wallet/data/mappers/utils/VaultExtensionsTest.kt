@@ -9,8 +9,8 @@ import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getSignersExceptLocalParty
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
-import junit.framework.TestCase.assertEquals
-import kotlin.test.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class VaultExtensionsTest {
     private val vault = Vault(
@@ -38,7 +38,7 @@ class VaultExtensionsTest {
         assertEquals(2, vault.getVaultPart())
     }
 
-@Test
+    @Test
     fun `getVaultPart returns 3 when localPartyID is third in signers`() {
         val vault = vault.copy(
             localPartyID = "3",

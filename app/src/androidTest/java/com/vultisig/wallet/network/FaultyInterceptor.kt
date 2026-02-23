@@ -6,6 +6,12 @@ import okhttp3.Protocol
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 
+/**
+ * OkHttp interceptor for instrumented tests that simulates transport-level failures.
+ *
+ * Call [setFailure] before making a request to make the interceptor throw that exception
+ * instead of proceeding with the chain. When no failure is set, returns a 200 OK response.
+ */
 class FaultyInterceptor : Interceptor {
     private var exceptionToThrow: Exception? = null
 
@@ -14,10 +20,8 @@ class FaultyInterceptor : Interceptor {
     }
 
     override fun intercept(chain: Chain): Response {
-        // If the test set an exception, throw it immediately
         exceptionToThrow?.let { throw it }
 
-        // Fallback: Return 200 OK if no exception set
         return Response.Builder()
             .request(chain.request())
             .protocol(Protocol.HTTP_1_1)

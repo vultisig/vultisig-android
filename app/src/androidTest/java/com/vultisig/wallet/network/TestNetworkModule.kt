@@ -2,7 +2,6 @@ package com.vultisig.wallet.network
 
 import com.vultisig.wallet.data.di.NetworkModule
 import com.vultisig.wallet.data.networkutils.HttpClientConfigurator
-import com.vultisig.wallet.data.networkutils.NetworkStateInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
@@ -25,7 +24,6 @@ object TestNetworkModule {
     @Singleton
     fun provideHttpClient(
         baseConfig: HttpClientConfigurator,
-        networkStateInterceptor: NetworkStateInterceptor,
         faultyInterceptor: FaultyInterceptor,
     ): HttpClient = HttpClient(OkHttp) {
 
@@ -33,7 +31,6 @@ object TestNetworkModule {
 
         engine {
             config {
-                addInterceptor(networkStateInterceptor)
                 addInterceptor(faultyInterceptor)
             }
         }

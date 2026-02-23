@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.di
 
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.data.networkutils.HttpClientConfigurator
-import com.vultisig.wallet.data.networkutils.NetworkStateInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,7 +26,6 @@ internal interface NetworkModule {
         @Singleton
         fun provideHttpClient(
             baseConfig: HttpClientConfigurator,
-            networkStateInterceptor: NetworkStateInterceptor,
         ): HttpClient = HttpClient(OkHttp) {
             baseConfig.configure(this)
 
@@ -47,8 +45,6 @@ internal interface NetworkModule {
                     writeTimeout(15, TimeUnit.SECONDS)
 
                     retryOnConnectionFailure(true)
-
-                    addInterceptor(networkStateInterceptor)
                 }
             }
         }
