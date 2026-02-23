@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.JupiterApiImpl.Companion.JUPITER_URL
 import com.vultisig.wallet.data.api.models.BroadcastTransactionRespJson
-import com.vultisig.wallet.data.api.models.EvmRpcResponseJson
+import com.vultisig.wallet.data.api.models.SolanaRpcResponseJson
 import com.vultisig.wallet.data.api.models.JupiterTokenResponseJson
 import com.vultisig.wallet.data.api.models.RecentBlockHashResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
@@ -24,11 +24,13 @@ import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -61,7 +63,7 @@ interface SolanaApi {
 
     suspend fun getFeeForMessage(message: String): BigInteger
 
-    suspend fun checkStatus(txHash: String): String?
+    suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>?
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -393,26 +395,35 @@ internal class SolanaApiImp @Inject constructor(
         return rpcResp.result?.value ?: error("Error fetching getFeeForMessage")
     }
 
-    override suspend fun checkStatus(txHash: String): String? {
-       return runCatching {
-           val params = buildJsonArray {
-               addJsonArray {
-                   add(JsonPrimitive(txHash))
-               }
-           }
+    override suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>? {
+        try {
 
-           val response: EvmRpcResponseJson<SolanaSignatureStatusesResult> = httpClient.postRpc(
-               url = rpcEndpoint,
-               method = "getSignatureStatuses",
-               params = params,
-           )
-           if (response.error != null) {
-               return null
-           }
+            val params = buildJsonArray {
+                addJsonArray {
+                    add(JsonPrimitive(txHash))
+                }
+                addJsonObject {
+                    put(
+                        "searchTransactionHistory",
+                        true
+                    )
+                }
+            }
 
-           response.result.value.firstOrNull()?.confirmationStatus
+            val response: SolanaRpcResponseJson<SolanaSignatureStatusesResult> = httpClient.postRpc(
+                url = rpcEndpoint,
+                method = "getSignatureStatuses",
+                params = params,
+            )
 
-       }.getOrNull()
+            return response
+        } catch (e: Exception) {
+            if (e is ClientRequestException && e.response.status == HttpStatusCode.Forbidden) {
+                Timber.tag("SolanaApiImp").w("Forbidden (403) when checking tx status: $txHash")
+                return null
+            }
+            throw e
+        }
     }
 
     companion object {

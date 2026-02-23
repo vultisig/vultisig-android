@@ -53,6 +53,12 @@ internal interface SerializerModule {
         impl: LiFiSwapQuoteResponseSerializerImpl,
     ): LiFiSwapQuoteResponseSerializer
 
+    @Binds
+    @Singleton
+    fun bindUTXoStatusResponseSerializer(
+        impl: UTXOStatusResponseSerializerImpl,
+    ): UTXOStatusResponseSerializer
+
 
     @Binds
     @Singleton
