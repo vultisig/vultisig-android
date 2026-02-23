@@ -5,7 +5,7 @@ without crashing the app (new changes only, existing code may still remain as is
 
 ## Architecture Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────┐
 │  ViewModel                                          │
 │  viewModelScope.safeLaunch(onError = { ... }) {     │  ← Layer 2: catches ALL exceptions
