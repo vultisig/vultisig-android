@@ -311,6 +311,12 @@ internal interface RepositoriesModule {
     fun bindTronResourceRepository(
         impl: TronResourceDataSourceImpl
     ): TronResourceDataSource
+
+    @Binds
+    @Singleton
+    fun bindTransactionHistoryRepository(
+        impl: TransactionHistoryRepositoryImpl
+    ): TransactionHistoryRepository
 }
 
 @Qualifier

@@ -38,6 +38,7 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getPubKeyByChain
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -54,6 +55,7 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
@@ -65,6 +67,8 @@ import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.ui.models.TransactionScanStatus
@@ -72,10 +76,12 @@ import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.keygen.MediatorServiceDiscoveryListener
+import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
-import com.vultisig.wallet.ui.models.mappers.TokenValueAndChainMapper
+import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
+import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
-import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
+import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
@@ -181,8 +187,9 @@ internal class JoinKeysignViewModel @Inject constructor(
     @param:PrettyJson private val json: Json,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
-    private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
-    private val mapTokenValueAndChainMapperWithUnit: TokenValueAndChainMapper,
+    private val mapTransactionHistoryData: SendTransactionHistoryDataMapper,
+    private val mapSwapTransactionToHistoryData: SwapTransactionToHistoryDataMapper,
+    private val mapDepositTransactionHistoryData: DepositTransactionHistoryDataMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val tokenRepository: TokenRepository,
@@ -210,6 +217,8 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
+    private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val resolveProviderUseCase: ResolveProviderUseCase,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -243,6 +252,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var isNavigateToHome: Boolean = false
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
+    private var transactionHistoryData: TransactionHistoryData? = null
     private var payloadId: String = ""
     private var tempKeysignMessageProto: KeysignMessageProto? = null
 
@@ -273,6 +283,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             addressBookRepository = addressBookRepository,
             transactionStatusServiceManager = transactionStatusServiceManager,
             txStatusConfigurationProvider = txStatusConfigurationProvider,
+            transactionHistoryData = transactionHistoryData,
+            transactionHistoryRepository = transactionHistoryRepository,
         )
 
     val verifyUiModel =
@@ -539,7 +551,15 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                 val vaultName = _currentVault.name
 
-                when (swapPayload) {
+                val provider = resolveProviderUseCase(
+                    SwapSelectionContext(
+                        srcToken,
+                        dstToken,
+                        srcTokenValue
+                    )
+                )?.getSwapProviderId().orEmpty()
+
+                val swapTransaction = when (swapPayload) {
                     is SwapPayload.EVM -> {
                         val oneInchSwapTxJson = swapPayload.data.quote.tx
                         //if swapFee is not null then it provider is Lifi otherwise 1inch
@@ -567,7 +587,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             currency
                         )
 
-                        val swapTransaction = SwapTransactionUiModel(
+                        SwapTransactionUiModel(
                             src = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
                                 token = srcToken,
@@ -605,15 +625,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             totalFee = fiatValueToStringMapper(
                                 estimatedFee + networkGasFeeFiatValue
                             ),
-                        )
-
-                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction)
-
-                        verifyUiModel.value = VerifyUiModel.Swap(
-                            VerifySwapUiModel(
-                                tx = swapTransaction,
-                                vaultName = vaultName,
-                            )
+                            provider = provider
                         )
                     }
 
@@ -630,7 +642,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             quote.fees,
                             currency
                         )
-                        val swapTransactionUiModel = SwapTransactionUiModel(
+                        SwapTransactionUiModel(
                             src = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
                                 token = srcToken,
@@ -669,14 +681,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             totalFee = fiatValueToStringMapper(
                                 estimatedFee + networkGasFeeFiatValue
                             ),
-                        )
-                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
-
-                        verifyUiModel.value = VerifyUiModel.Swap(
-                            VerifySwapUiModel(
-                                tx = swapTransactionUiModel,
-                                vaultName = vaultName,
-                            )
+                            provider = provider
                         )
                     }
 
@@ -704,7 +709,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 quote.fees,
                                 currency
                             )
-                        val swapTransactionUiModel = SwapTransactionUiModel(
+
+                        SwapTransactionUiModel(
                             src = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
                                 token = srcToken,
@@ -743,16 +749,19 @@ internal class JoinKeysignViewModel @Inject constructor(
                             totalFee = fiatValueToStringMapper(
                                 estimatedFee + networkGasFeeFiatValue
                             ),
-                        )
-                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
-                        verifyUiModel.value = VerifyUiModel.Swap(
-                            VerifySwapUiModel(
-                                tx = swapTransactionUiModel,
-                                vaultName = vaultName,
-                            )
+                            provider = provider
                         )
                     }
                 }
+
+                transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction)
+                transactionHistoryData = mapSwapTransactionToHistoryData(swapTransaction)
+                verifyUiModel.value = VerifyUiModel.Swap(
+                    VerifySwapUiModel(
+                        tx = swapTransaction,
+                        vaultName = vaultName,
+                    )
+                )
             }
 
             else -> {
@@ -831,6 +840,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     )
                     transactionTypeUiModel =
                         TransactionTypeUiModel.Deposit(depositTransactionUiModel)
+                    transactionHistoryData = mapDepositTransactionHistoryData(depositTransactionUiModel)
                     verifyUiModel.value = VerifyUiModel.Deposit(
                         VerifyDepositUiModel(
                             depositTransactionUiModel
@@ -945,6 +955,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
                     transactionTypeUiModel = TransactionTypeUiModel.Send(transactionToUiModel)
+                    transactionHistoryData = mapTransactionHistoryData(transactionToUiModel)
                     verifyUiModel.value = VerifyUiModel.Send(
                         VerifyTransactionUiModel(
                             transaction = transactionToUiModel,

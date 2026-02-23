@@ -12,16 +12,24 @@ import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
+import com.vultisig.wallet.data.db.models.TransactionStatus.BROADCASTED
+import com.vultisig.wallet.data.db.models.TransactionStatus.PENDING
+import com.vultisig.wallet.data.db.models.TransactionType
 import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.CommonTransactionHistoryData
+import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.SwapTransactionHistoryData
+import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
@@ -109,6 +117,8 @@ internal class KeysignViewModel(
     private val addressBookRepository: AddressBookRepository,
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
+    private val transactionHistoryData: TransactionHistoryData?,
+    private val transactionHistoryRepository: TransactionHistoryRepository,
 ) : ViewModel() {
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
@@ -408,14 +418,48 @@ internal class KeysignViewModel(
 
             if(txStatusConfigurationProvider.supportTxStatus(chain)) {
                 startForegroundPolling(txHash, chain)
+                saveTransactionHistory(txHash, chain, PENDING)
             }
             else {
                 currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+                saveTransactionHistory(txHash, chain, BROADCASTED)
             }
         }
         if (approveTxHash.value.isNotEmpty()) {
             approveTxLink.value =
                 explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
+        }
+    }
+
+    private suspend fun saveTransactionHistory(
+        txHash: String,
+        chain: Chain,
+        status: com.vultisig.wallet.data.db.models.TransactionStatus
+    ) {
+        transactionHistoryData?.let {
+            val now = System.currentTimeMillis()
+            val historyData = CommonTransactionHistoryData(
+                vaultId = vault.id,
+                txHash = txHash,
+                chain = chain.raw,
+                timestamp = now,
+                explorerUrl = txLink.value,
+                status = status,
+                type = when (it) {
+                    is SendTransactionHistoryData -> TransactionType.SEND
+                    is SwapTransactionHistoryData -> TransactionType.SWAP
+                },
+                fiatValue = null,
+                confirmedAt = null,
+                failureReason = null,
+                lastCheckedAt = now,
+            )
+            transactionHistoryRepository.recordTransaction(
+                vaultId = vault.id,
+                txHash = txHash,
+                txData = it,
+                genericData = historyData
+            )
         }
     }
 

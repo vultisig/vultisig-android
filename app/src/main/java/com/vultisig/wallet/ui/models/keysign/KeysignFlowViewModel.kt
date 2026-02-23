@@ -42,6 +42,7 @@ import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
@@ -54,8 +55,12 @@ import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
+import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
+import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
+import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
@@ -74,8 +79,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -137,6 +140,10 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val addressBookRepository: AddressBookRepository,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
+    private val transactionHistoryDataMapper: SendTransactionHistoryDataMapper,
+    private val depositTransactionHistoryDataMapper: DepositTransactionHistoryDataMapper,
+    private val swapTransactionToHistoryDataMapper: SwapTransactionToHistoryDataMapper,
+    private val transactionHistoryRepository: TransactionHistoryRepository,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -172,6 +179,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     val isLoading = MutableStateFlow(false)
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
+    private var transactionHistoryData: TransactionHistoryData? = null
 
     private val tssKeysignType: TssKeyType
         get() = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA
@@ -204,6 +212,8 @@ internal class KeysignFlowViewModel @Inject constructor(
             addressBookRepository = addressBookRepository,
             transactionStatusServiceManager = transactionStatusServiceManager,
             txStatusConfigurationProvider = txStatusConfigurationProvider,
+            transactionHistoryData = transactionHistoryData,
+            transactionHistoryRepository = transactionHistoryRepository,
         )
 
     val uiState = MutableStateFlow(KeysignFlowUiState())
@@ -291,7 +301,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             updateTransactionUiModel(keysignPayload, customMessagePayload,txType)
         } catch (e: Exception) {
             Timber.e(e)
-            moveToState(KeysignFlowState.Error(e.message.toString()))
+            moveToState(Error(e.message.toString()))
         }
     }
 
@@ -308,7 +318,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private suspend fun updateKeysignPayload(context: Context) {
         stopParticipantDiscovery()
         _currentVault ?: run {
-            moveToState(KeysignFlowState.Error("Vault is not set"))
+            moveToState(Error("Vault is not set"))
             return
         }
         val vault = _currentVault!!
@@ -389,7 +399,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         if (keysignPayload != null) {
             transactionId.let {
                 val isSwap =
-                    keysignPayload.swapPayload != null || txType == Route.Keysign.Keysign.TxType.Swap
+                    keysignPayload.swapPayload != null || txType == Swap
 
                 viewModelScope.launch {
                     val isDeposit = when (val specific = keysignPayload.blockChainSpecific) {
@@ -407,29 +417,41 @@ internal class KeysignFlowViewModel @Inject constructor(
                                     }
 
                         else ->
-                            txType == Route.Keysign.Keysign.TxType.Deposit
+                            txType == Deposit
                     }
 
-                    transactionTypeUiModel = when {
-                        isSwap -> TransactionTypeUiModel.Swap(
-                            mapSwapTransactionToUiModel(
+                    when {
+                        isSwap -> {
+                            val swapTransactionUiModel = mapSwapTransactionToUiModel(
                                 swapTransactionRepository.getTransaction(transactionId)
                             )
-                        )
+                            transactionTypeUiModel = TransactionTypeUiModel.Swap(
+                                swapTransactionUiModel
+                            )
+                            transactionHistoryData = swapTransactionToHistoryDataMapper(swapTransactionUiModel)
+                        }
 
-                        isDeposit -> TransactionTypeUiModel.Deposit(
-                            mapDepositTransactionUiModel(
+                        isDeposit -> {
+                            val depositTransactionUiModel = mapDepositTransactionUiModel(
                                 depositTransactionRepository.getTransaction(transactionId)
                             )
-                        )
+                            transactionTypeUiModel = TransactionTypeUiModel.Deposit(
+                                depositTransactionUiModel
+                            )
+                            transactionHistoryData = depositTransactionHistoryDataMapper(depositTransactionUiModel)
+                        }
 
-                        else -> TransactionTypeUiModel.Send(
-                            mapTransactionToUiModel(
+                        else -> {
+                            val transactionDetailsUiModel = mapTransactionToUiModel(
                                 transactionRepository.getTransaction(
                                     transactionId
                                 )
                             )
-                        )
+                            transactionHistoryData = transactionHistoryDataMapper(transactionDetailsUiModel)
+                            transactionTypeUiModel = TransactionTypeUiModel.Send(
+                                transactionDetailsUiModel
+                            )
+                        }
                     }
                 }
             }
@@ -449,7 +471,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             if (intent.action == MediatorService.SERVICE_ACTION) {
                 Timber.tag("KeysignFlowViewModel").d("onReceive: Mediator service started")
                 if (_currentVault == null) {
-                    moveToState(KeysignFlowState.Error("Vault is not set"))
+                    moveToState(Error("Vault is not set"))
                     return
                 }
                 // send a request to local mediator server to start the session
@@ -535,7 +557,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             currentState.update { nextState }
         } catch (e: Exception) {
             isLoading.value = false
-            moveToState(KeysignFlowState.Error(e.message.toString()))
+            moveToState(Error(e.message.toString()))
         }
     }
 
