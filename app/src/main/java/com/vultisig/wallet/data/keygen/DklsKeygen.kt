@@ -327,11 +327,14 @@ class DKLSKeygen(
                             Numeric.hexStringToByteArray(encryptionKeyHex)
                         )
                     ),
-                    messageId = additionalHeader
+                    messageId = additionalHeader.ifEmpty { null },
                 )
             } else {
                 keygenSetupMsg =
-                    sessionApi.getSetupMessage(mediatorURL, sessionID, additionalHeader)
+                    sessionApi.getSetupMessage(
+                        mediatorURL, sessionID,
+                        messageId = additionalHeader.ifEmpty { null },
+                    )
                         .let {
                             encryption.decrypt(
                                 Base64.decode(it),

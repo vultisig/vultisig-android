@@ -80,6 +80,30 @@ data class SignerEntity(
     val title: String,
 )
 
+@Entity(
+    tableName = "chainPublicKey",
+    primaryKeys = ["vaultId", "chain"],
+    foreignKeys = [
+        ForeignKey(
+            entity = VaultEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["vaultId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ]
+)
+data class ChainPublicKeyEntity(
+    @ColumnInfo("vaultId")
+    val vaultId: String,
+    @ColumnInfo("chain")
+    val chain: String,
+    @ColumnInfo("publicKey")
+    val publicKey: String,
+    @ColumnInfo("isEddsa", defaultValue = "0")
+    val isEddsa: Boolean,
+)
+
 
 data class VaultWithKeySharesAndTokens(
     @Embedded val vault: VaultEntity,
@@ -101,4 +125,10 @@ data class VaultWithKeySharesAndTokens(
         entityColumn = "vaultId"
     )
     val coins: List<CoinEntity>,
+
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "vaultId"
+    )
+    val chainPublicKeys: List<ChainPublicKeyEntity>,
 )

@@ -17,7 +17,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.UiText.*
+import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.time.delay
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -72,10 +71,10 @@ internal class NameVaultViewModel @Inject constructor(
 
     private suspend fun generateVaultName() {
         val proposeName = withContext(Dispatchers.IO) {
-            val baseName = if (args.vaultType == VaultType.Fast) {
-                "Fast Vault"
-            } else {
-                "Secure Vault"
+            val baseName = when {
+                args.tssAction == TssAction.KeyImport -> "Import Vault"
+                args.vaultType == VaultType.Fast -> "Fast Vault"
+                else -> "Secure Vault"
             }
 
             generateUniqueName(baseName, vaultNamesList)
@@ -118,14 +117,14 @@ internal class NameVaultViewModel @Inject constructor(
             when (args.vaultType) {
                 VaultType.Fast -> {
                     navigator.route(
-                        Route.VaultInfo.Email(name, TssAction.KEYGEN)
+                        Route.VaultInfo.Email(name, args.tssAction)
                     )
                 }
 
                 VaultType.Secure -> {
                     navigator.route(
                         Route.Keygen.PeerDiscovery(
-                            action = TssAction.KEYGEN,
+                            action = args.tssAction,
                             vaultName = name,
                         )
                     )

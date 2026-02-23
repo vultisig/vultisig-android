@@ -35,11 +35,13 @@ import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.models.proto.v1.toProto
+import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.QrHelperModalRepository
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
+import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.CreateQrCodeSharingBitmapUseCase
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.GenerateServerPartyId
@@ -123,6 +125,8 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private val vultiSignerRepository: VultiSignerRepository,
     private val qrHelperModalRepository: QrHelperModalRepository,
     private val vaultRepository: VaultRepository,
+    private val keyImportRepository: KeyImportRepository,
+    private val extractMasterKeys: ExtractMasterKeysUseCase,
 
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
@@ -137,7 +141,15 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     private val encryptionKeyHex = Utils.encryptionKeyHex
 
-    private var hexChainCode: String = Utils.encryptionKeyHex
+    // For KeyImport, derive the BIP32 chain code from the mnemonic so the vault can
+    // derive addresses for chains not explicitly imported. For other actions, use a random hex.
+    private var hexChainCode: String = if (args.action == TssAction.KeyImport) {
+        val mnemonic = keyImportRepository.get()?.mnemonic
+            ?: error("KeyImport requires a mnemonic in KeyImportRepository")
+        extractMasterKeys(mnemonic).hexChainCode
+    } else {
+        Utils.encryptionKeyHex
+    }
     private var localPartyId = Utils.deviceName(context)
     private val vaultName: String = args.vaultName
     private var libType = SigningLibType.GG20
@@ -257,9 +269,11 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                     keygenCommittee = listOf(localPartyId) + state.value.selectedDevices,
                     encryptionKeyHex = encryptionKeyHex,
                     isInitiatingDevice = true,
-                    libType = if (args.action == TssAction.Migrate)
-                        SigningLibType.DKLS
-                    else libType,
+                    libType = when (args.action) {
+                        TssAction.Migrate -> SigningLibType.DKLS
+                        TssAction.KeyImport -> SigningLibType.KeyImport
+                        else -> libType
+                    },
 
                     email = email,
                     password = password,
@@ -469,7 +483,23 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                             )
                         )
                     ).encodeBase64()
-        TssAction.KeyImport-> TODO()
+        TssAction.KeyImport ->
+            "https://vultisig.com?type=NewVault&tssType=KeyImport&jsonData=" +
+                    compressQr(
+                        protoBuf.encodeToByteArray(
+                            KeygenMessageProto(
+                                sessionId = sessionId,
+                                hexChainCode = hexChainCode,
+                                serviceName = serviceName,
+                                encryptionKeyHex = encryptionKeyHex,
+                                useVultisigRelay = isRelayEnabled,
+                                vaultName = vaultName,
+                                libType = SigningLibType.KeyImport.toProto(),
+                                chains = keyImportRepository.get()?.chainSettings?.map { it.chain.raw }
+                                    ?: emptyList(),
+                            )
+                        )
+                    ).encodeBase64()
         TssAction.ReShare, TssAction.Migrate ->
             "https://vultisig.com?type=NewVault&tssType=${args.action.toLinkTssType()}&jsonData=" +
                     compressQr(
@@ -546,6 +576,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 }
 
                 TssAction.KeyImport -> {
+                    // Server uses joinKeyImport endpoint to determine the flow
                     vultiSignerRepository.joinKeyImport(
                         JoinKeyImportRequest(
                             vaultName = vaultName,
@@ -555,8 +586,9 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                             localPartyId = generateServerPartyId(),
                             encryptionPassword = password,
                             email = email,
-                            libType = libType.toJson(),
-                            chains = emptyList() // TODO: please add correct chain list later
+                            libType = SigningLibType.DKLS.toJson(),
+                            chains = keyImportRepository.get()?.chainSettings?.map { it.chain.raw }
+                                ?: emptyList()
                         )
                     )
                 }

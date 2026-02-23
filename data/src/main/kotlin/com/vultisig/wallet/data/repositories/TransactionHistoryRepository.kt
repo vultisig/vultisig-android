@@ -27,10 +27,14 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
     private val dao: TransactionHistoryDao,
 ) : TransactionHistoryRepository {
 
-    override suspend fun recordTransaction(vaultId: String, txHash: String, txData: TransactionHistoryData, genericData: CommonTransactionHistoryData) =
-        dao.insert(
-            transaction =  txData.toEntity(genericData)
-        )
+    override suspend fun recordTransaction(
+        vaultId: String,
+        txHash: String,
+        txData: TransactionHistoryData,
+        genericData: CommonTransactionHistoryData
+    ) = dao.insert(
+        transaction = txData.toEntity(genericData)
+    )
 
 
     override suspend fun updateTransactionStatus(

@@ -63,4 +63,10 @@ internal class StartViewModel @Inject constructor(
         }
     }
 
+    fun navigateToImportSeedphrase() {
+        viewModelScope.launch {
+            navigator.route(Route.KeyImport.ImportSeedphrase)
+        }
+    }
+
 }

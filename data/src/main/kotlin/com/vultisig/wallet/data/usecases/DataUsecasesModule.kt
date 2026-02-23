@@ -221,4 +221,40 @@ internal interface DataUsecasesModule {
         impl: ParseCosmosMessageUseCaseImpl,
     ): ParseCosmosMessageUseCase
 
+    @Binds
+    @Singleton
+    fun bindValidateMnemonicUseCase(
+        impl: ValidateMnemonicUseCaseImpl,
+    ): ValidateMnemonicUseCase
+
+    @Binds
+    @Singleton
+    fun bindCheckMnemonicDuplicateUseCase(
+        impl: CheckMnemonicDuplicateUseCaseImpl,
+    ): CheckMnemonicDuplicateUseCase
+
+    @Binds
+    @Singleton
+    fun bindExtractMasterKeysUseCase(
+        impl: ExtractMasterKeysUseCaseImpl,
+    ): ExtractMasterKeysUseCase
+
+    @Binds
+    @Singleton
+    fun bindScanChainBalancesUseCase(
+        impl: ScanChainBalancesUseCaseImpl,
+    ): ScanChainBalancesUseCase
+
+    @Binds
+    @Singleton
+    fun bindDeriveChainKeyUseCase(
+        impl: DeriveChainKeyUseCaseImpl,
+    ): DeriveChainKeyUseCase
+
+    @Binds
+    @Singleton
+    fun bindRefreshPendingTransactionsUseCase(
+        impl: RefreshPendingTransactionsUseCaseImpl,
+    ): RefreshPendingTransactionsUseCase
+
 }
