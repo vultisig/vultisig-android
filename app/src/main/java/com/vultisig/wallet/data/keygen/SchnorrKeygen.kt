@@ -317,12 +317,11 @@ class SchnorrKeygen(
                                     Numeric.hexStringToByteArray(encryptionKeyHex)
                                 )
                             ),
-                            messageId = null,
-                            messageId2 = eddsaHeader
+                            messageId = eddsaHeader,
                         )
                     } else {
                         val keygenSetupMsg =
-                            sessionApi.getSetupMessage(mediatorURL, sessionID, null, eddsaHeader)
+                            sessionApi.getSetupMessage(mediatorURL, sessionID, eddsaHeader)
                                 .let {
                                     encryption.decrypt(
                                         Base64.decode(it),
@@ -472,14 +471,13 @@ class SchnorrKeygen(
                             Numeric.hexStringToByteArray(encryptionKeyHex)
                         )
                     ),
-                    null,
-                    "eddsa"
+                    messageId = "eddsa",
                 )
             } else {
                 // download the setup message from relay server
                 // back off for 500ms so the initiate device will upload the setup message correctly
                 delay(500)
-                reshareSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, null, "eddsa")
+                reshareSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, "eddsa")
                     .let {
                         encryption.decrypt(
                             Base64.decode(it),

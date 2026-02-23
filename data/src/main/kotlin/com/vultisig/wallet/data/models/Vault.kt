@@ -26,6 +26,11 @@ data class Vault(
 
 }
 
+data class SigningKey(
+    val publicKey: String,
+    val chainCode: String,
+)
+
 data class ChainPublicKey(
     val chain: String,
     val publicKey: String,
@@ -83,9 +88,9 @@ fun Vault.isFastVault(): Boolean {
  *   should be skipped (the key is already fully derived).
  * - Falls back to root (pubKeyECDSA + hexChainCode) for chains not in [ChainPublicKey].
  */
-fun Vault.getEcdsaSigningKey(chain: Chain): Pair<String, String> {
+fun Vault.getEcdsaSigningKey(chain: Chain): SigningKey {
     if (libType != SigningLibType.KeyImport) {
-        return Pair(pubKeyECDSA, hexChainCode)
+        return SigningKey(pubKeyECDSA, hexChainCode)
     }
     // First try exact chain match, then fall back to matching derivation path
     // (e.g. BSC/Polygon/Arbitrum all share ETH's m/44'/60'/0'/0/0 key).
@@ -99,9 +104,9 @@ fun Vault.getEcdsaSigningKey(chain: Chain): Pair<String, String> {
             }
         }
     return if (chainPubKey != null) {
-        Pair(chainPubKey.publicKey, "")
+        SigningKey(chainPubKey.publicKey, "")
     } else {
-        Pair(pubKeyECDSA, hexChainCode)
+        SigningKey(pubKeyECDSA, hexChainCode)
     }
 }
 

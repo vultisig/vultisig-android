@@ -252,7 +252,7 @@ internal class KeysignViewModel(
                     currentState.value = KeysignState.KeysignECDSA
 
                     val ecdsaKey = if (chain != null) {
-                        vault.getEcdsaSigningKey(chain).first
+                        vault.getEcdsaSigningKey(chain).publicKey
                     } else {
                         vault.pubKeyECDSA
                     }
