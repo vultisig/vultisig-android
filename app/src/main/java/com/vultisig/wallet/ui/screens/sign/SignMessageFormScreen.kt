@@ -87,6 +87,7 @@ private fun SignMessageFormScreen(
                 textFieldState = methodFieldState,
                 hint = stringResource(id = R.string.hint_signing_method),
                 keyboardType = KeyboardType.Text,
+                autoCorrectEnabled = false,
             )
 
             UiSpacer(14.dp)
@@ -95,6 +96,7 @@ private fun SignMessageFormScreen(
                 textFieldState = messageFieldState,
                 hint = stringResource(id = R.string.hint_message_to_sign),
                 keyboardType = KeyboardType.Text,
+                autoCorrectEnabled = false,
             )
         }
     }

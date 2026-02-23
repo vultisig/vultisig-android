@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
+import com.vultisig.wallet.data.db.models.ChainPublicKeyEntity
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.DisabledCoinEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
@@ -52,12 +53,16 @@ interface VaultDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSigners(signers: List<SignerEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertChainPublicKeys(chainPublicKeys: List<ChainPublicKeyEntity>)
+
     @Transaction
     suspend fun insert(vault: VaultWithKeySharesAndTokens) {
         insertVault(vault.vault)
         insertCoins(vault.coins)
         insertKeyshares(vault.keyShares)
         insertSigners(vault.signers)
+        insertChainPublicKeys(vault.chainPublicKeys)
     }
 
     @Transaction
@@ -83,6 +88,12 @@ interface VaultDao {
     @Upsert
     suspend fun upsertSigners(signers: List<SignerEntity>)
 
+    @Upsert
+    suspend fun upsertChainPublicKeys(chainPublicKeys: List<ChainPublicKeyEntity>)
+
+    @Query("DELETE FROM chainPublicKey WHERE vaultId = :vaultId")
+    suspend fun deleteChainPublicKeys(vaultId: String)
+
     @Transaction
     suspend fun upsert(vault: VaultWithKeySharesAndTokens) {
         upsertVault(vault.vault)
@@ -92,6 +103,8 @@ interface VaultDao {
         // otherwise we need to figure who get removed , and remove them
         deleteSigners(vault.vault.id)
         upsertSigners(vault.signers)
+        deleteChainPublicKeys(vault.vault.id)
+        upsertChainPublicKeys(vault.chainPublicKeys)
     }
 
     @Query("DELETE FROM coin WHERE vaultId = :vaultId AND id = :tokenId")

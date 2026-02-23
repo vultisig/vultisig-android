@@ -1,6 +1,11 @@
 package com.vultisig.wallet.data.mappers.utils
 
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.ChainPublicKey
+import com.vultisig.wallet.data.models.SigningKey
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getSignersExceptLocalParty
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
@@ -110,4 +115,82 @@ class VaultExtensionsTest {
 
         assertEquals(listOf("1", "3"), vault.getSignersExceptLocalParty())
     }
+
+    @Test
+    fun `getEcdsaSigningKey returns root key for GG20 vault`() {
+        val vault = vault.copy(
+            pubKeyECDSA = "rootEcdsa",
+            hexChainCode = "rootChainCode",
+            libType = SigningLibType.GG20,
+        )
+
+        assertEquals(
+            SigningKey("rootEcdsa", "rootChainCode"),
+            vault.getEcdsaSigningKey(Chain.Ethereum),
+        )
+    }
+
+    @Test
+    fun `getEcdsaSigningKey returns root key for DKLS vault`() {
+        val vault = vault.copy(
+            pubKeyECDSA = "rootEcdsa",
+            hexChainCode = "rootChainCode",
+            libType = SigningLibType.DKLS,
+        )
+
+        assertEquals(
+            SigningKey("rootEcdsa", "rootChainCode"),
+            vault.getEcdsaSigningKey(Chain.Bitcoin),
+        )
+    }
+
+    @Test
+    fun `getEcdsaSigningKey returns per-chain key with empty chainCode for exact chain match`() {
+        val vault = vault.copy(
+            pubKeyECDSA = "rootEcdsa",
+            hexChainCode = "rootChainCode",
+            libType = SigningLibType.KeyImport,
+            chainPublicKeys = listOf(
+                ChainPublicKey(chain = "Ethereum", publicKey = "ethKey", isEddsa = false),
+            ),
+        )
+
+        assertEquals(
+            SigningKey("ethKey", ""),
+            vault.getEcdsaSigningKey(Chain.Ethereum),
+        )
+    }
+
+    @Test
+    fun `getEcdsaSigningKey ignores eddsa keys for ecdsa lookup`() {
+        val vault = vault.copy(
+            pubKeyECDSA = "rootEcdsa",
+            hexChainCode = "rootChainCode",
+            libType = SigningLibType.KeyImport,
+            chainPublicKeys = listOf(
+                ChainPublicKey(chain = "Ethereum", publicKey = "eddsaKey", isEddsa = true),
+            ),
+        )
+
+        assertEquals(
+            SigningKey("rootEcdsa", "rootChainCode"),
+            vault.getEcdsaSigningKey(Chain.Ethereum),
+        )
+    }
+
+    @Test
+    fun `getEcdsaSigningKey falls back to root key when no chain keys exist`() {
+        val vault = vault.copy(
+            pubKeyECDSA = "rootEcdsa",
+            hexChainCode = "rootChainCode",
+            libType = SigningLibType.KeyImport,
+            chainPublicKeys = emptyList(),
+        )
+
+        assertEquals(
+            SigningKey("rootEcdsa", "rootChainCode"),
+            vault.getEcdsaSigningKey(Chain.Bitcoin),
+        )
+    }
+
 }
