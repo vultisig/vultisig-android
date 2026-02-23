@@ -10,11 +10,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import java.io.IOException
 
 /**
@@ -50,7 +50,7 @@ class SafeLaunchTest {
         }
         job.join()
 
-        assertNotNull("IOException must be caught", caught)
+        assertNotNull(caught, "IOException must be caught")
         assertTrue(caught is IOException)
     }
 
@@ -65,7 +65,7 @@ class SafeLaunchTest {
         }
         job.join()
 
-        assertNotNull("RuntimeException from error() must be caught", caught)
+        assertNotNull(caught, "RuntimeException from error() must be caught")
         assertTrue(caught is IllegalStateException)
         assertEquals("fail to broadcast transaction: invalid hex", caught!!.message)
     }
@@ -83,7 +83,7 @@ class SafeLaunchTest {
         }
         job.join()
 
-        assertNotNull("NetworkException must be caught", caught)
+        assertNotNull(caught, "NetworkException must be caught")
         assertTrue(caught is NetworkException)
         assertEquals(500, (caught as NetworkException).httpStatusCode)
     }
@@ -98,7 +98,7 @@ class SafeLaunchTest {
         }
         job.join()
 
-        assertNotNull("SerializationException must be caught", caught)
+        assertNotNull(caught, "SerializationException must be caught")
         assertTrue(caught is kotlinx.serialization.SerializationException)
     }
 
@@ -114,7 +114,7 @@ class SafeLaunchTest {
         }
         job.join()
 
-        assertNotNull("NullPointerException must be caught", caught)
+        assertNotNull(caught, "NullPointerException must be caught")
         assertTrue(caught is NullPointerException)
     }
 
@@ -137,11 +137,11 @@ class SafeLaunchTest {
         job.join()
 
         assertFalse(
+            onErrorCalled,
             "CancellationException must NOT trigger onError — " +
                     "it must propagate to cancel the coroutine",
-            onErrorCalled,
         )
-        assertTrue("Job must be cancelled", job.isCancelled)
+        assertTrue(job.isCancelled, "Job must be cancelled")
     }
 
     @Test
@@ -154,10 +154,10 @@ class SafeLaunchTest {
         job.join()
 
         assertFalse(
-            "Directly thrown CancellationException must NOT trigger onError",
             onErrorCalled,
+            "Directly thrown CancellationException must NOT trigger onError",
         )
-        assertTrue("Job must be cancelled", job.isCancelled)
+        assertTrue(job.isCancelled, "Job must be cancelled")
     }
 
     // ================================================================
@@ -174,10 +174,10 @@ class SafeLaunchTest {
         }
         job.join()
 
-        assertTrue("Block must complete", blockCompleted)
-        assertFalse("onError must not be called on success", onErrorCalled)
-        assertTrue("Job must complete normally", job.isCompleted)
-        assertFalse("Job must not be cancelled", job.isCancelled)
+        assertTrue(blockCompleted, "Block must complete")
+        assertFalse(onErrorCalled, "onError must not be called on success")
+        assertTrue(job.isCompleted, "Job must complete normally")
+        assertFalse(job.isCancelled, "Job must not be cancelled")
     }
 
     @Test
@@ -191,8 +191,8 @@ class SafeLaunchTest {
         job.join()
 
         assertTrue(
+            caught === original,
             "onError must receive the exact same exception instance",
-            caught === original
         )
     }
 
@@ -203,8 +203,8 @@ class SafeLaunchTest {
         }
         job.join()
 
-        assertTrue("Job must complete (not hang) after error", job.isCompleted)
-        assertFalse("Job must not be cancelled when error is caught", job.isCancelled)
+        assertTrue(job.isCompleted, "Job must complete (not hang) after error")
+        assertFalse(job.isCancelled, "Job must not be cancelled when error is caught")
     }
 
     @Test
@@ -224,7 +224,7 @@ class SafeLaunchTest {
         job3.join()
 
         assertEquals("success", firstResult)
-        assertNotNull("second must have caught error", secondCaught)
+        assertNotNull(secondCaught, "second must have caught error")
         assertEquals("also success", thirdResult)
     }
 
@@ -251,10 +251,10 @@ class SafeLaunchTest {
 
             // Layer 1 (HttpCallValidator) converts IOException → NetworkException
             // Layer 2 (safeLaunch) catches it — no crash
-            assertNotNull("safeLaunch must catch the NetworkException", caught)
+            assertNotNull(caught, "safeLaunch must catch the NetworkException")
             assertTrue(
-                "Must be NetworkException from HttpCallValidator, got ${caught!!::class.simpleName}",
                 caught is NetworkException,
+                "Must be NetworkException from HttpCallValidator, got ${caught!!::class.simpleName}",
             )
             assertEquals(0, (caught as NetworkException).httpStatusCode)
 
@@ -279,12 +279,12 @@ class SafeLaunchTest {
 
             // HttpCallValidator does NOT catch deserialization errors (correct).
             // safeLaunch catches them — no crash.
-            assertNotNull("safeLaunch must catch deserialization error", caught)
+            assertNotNull(caught, "safeLaunch must catch deserialization error")
             assertFalse(
+                caught is NetworkException,
                 "Deserialization error must NOT be NetworkException — " +
                         "it's an application-level bug, not a transport error. " +
                         "Got: ${caught!!::class.simpleName}",
-                caught is NetworkException,
             )
 
             client.close()
@@ -305,7 +305,7 @@ class SafeLaunchTest {
             }
             job.join()
 
-            assertNotNull("safeLaunch must catch NetworkException from bodyOrThrow", caught)
+            assertNotNull(caught, "safeLaunch must catch NetworkException from bodyOrThrow")
             assertTrue(caught is NetworkException)
             assertEquals(500, (caught as NetworkException).httpStatusCode)
 
@@ -332,7 +332,7 @@ class SafeLaunchTest {
             }
             job.join()
 
-            assertNotNull("safeLaunch must catch the error() call", caught)
+            assertNotNull(caught, "safeLaunch must catch the error() call")
             assertTrue(caught is IllegalStateException)
             assertTrue(caught!!.message!!.contains("fail to broadcast"))
 
@@ -357,9 +357,9 @@ class SafeLaunchTest {
         }
 
         assertTrue(
+            exceptionEscaped,
             "Without safeLaunch, deserialization errors escape to the caller. " +
                     "In a ViewModel without try-catch, this crashes the app.",
-            exceptionEscaped,
         )
 
         client.close()
@@ -397,6 +397,6 @@ class SafeLaunchTest {
         }
         job.join()
 
-        assertTrue("Job must complete even with default handler", job.isCompleted)
+        assertTrue(job.isCompleted, "Job must complete even with default handler")
     }
 }

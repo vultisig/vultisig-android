@@ -10,11 +10,11 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertInstanceOf
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.Test
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -110,15 +110,9 @@ class NetworkStateInterceptorContractTest {
             client.get("https://api.vultisig.com/test")
             fail("Expected NetworkException but request succeeded")
         } catch (e: NetworkException) {
-            assertEquals(
-                "httpStatusCode must be 0 for client-side transport errors",
-                0, e.httpStatusCode,
-            )
+            assertEquals(0, e.httpStatusCode)
             assertEquals("No internet connection", e.message)
-            assertTrue(
-                "cause must be the original IOException (${ioException::class.simpleName})",
-                e.cause is IOException,
-            )
+            assertInstanceOf(IOException::class.java, e.cause)
             assertEquals(ioException.message, e.cause?.message)
         }
         client.close()
@@ -149,7 +143,7 @@ class NetworkStateInterceptorContractTest {
         // Server 503 → normal response
         val serverResponse = serverClient.get("https://api.vultisig.com/test")
 
-        assertNotNull("Network failure must throw an exception", networkException)
+        assertNotNull(networkException)
         assertEquals(0, networkException!!.httpStatusCode)
         assertEquals(HttpStatusCode.ServiceUnavailable, serverResponse.status)
 

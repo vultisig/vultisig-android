@@ -41,6 +41,10 @@ kotlin {
     jvmToolchain(21)
 }
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
 protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:3.23.4"
@@ -120,7 +124,7 @@ dependencies {
 
     // test
     testImplementation(libs.ktor.client.mock)
-    testImplementation(libs.junit)
+    testImplementation(libs.junit.jupiter)
     testImplementation(kotlin("test"))
     
     androidTestImplementation(libs.junit)
