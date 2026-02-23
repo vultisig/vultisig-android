@@ -43,13 +43,13 @@ class SchnorrKeysign(
     val vault: Vault,
     val encryptionKeyHex: String,
     val isInitiateDevice: Boolean,
-
+    val publicKeyOverride: String? = null,
 
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
 ) {
     val localPartyID: String = vault.localPartyID
-    val publicKeyEdDSA: String = vault.pubKeyEDDSA
+    val publicKeyEdDSA: String = publicKeyOverride ?: vault.pubKeyEDDSA
     var messenger: TssMessenger? = null
     val cache = mutableMapOf<String, Any>()
     val signatures = mutableMapOf<String, KeysignResponse>()

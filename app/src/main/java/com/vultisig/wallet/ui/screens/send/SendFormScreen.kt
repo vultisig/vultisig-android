@@ -774,6 +774,7 @@ private fun FoldableAmountWidget(
                     VsTextInputField(
                         textFieldState = memoFieldState,
                         hint = stringResource(R.string.send_form_enter_memo),
+                        autoCorrectEnabled = false,
                         trailingIcon = R.drawable.paste,
                         onTrailingIconClick = {
                             clipboardData.value
@@ -982,6 +983,7 @@ private fun FoldableDestinationAddressWidget(
                     }
                 },
                 keyboardType = KeyboardType.Text,
+                autoCorrectEnabled = false,
                 imeAction = ImeAction.Next,
                 innerState = if (state.dstAddressError != null)
                     VsTextInputFieldInnerState.Error
@@ -1091,6 +1093,7 @@ private fun FoldableBondDestinationAddress(
                     }
                 },
                 keyboardType = KeyboardType.Text,
+                autoCorrectEnabled = false,
                 imeAction = ImeAction.Next,
                 innerState = if (state.dstAddressError != null)
                     VsTextInputFieldInnerState.Error
@@ -1148,6 +1151,7 @@ private fun FoldableBondDestinationAddress(
                 textFieldState = providerFieldState,
                 hint = stringResource(R.string.send_to_address_hint),
                 keyboardType = KeyboardType.Text,
+                autoCorrectEnabled = false,
                 imeAction = ImeAction.Next,
                 innerState = if (state.bondProviderError != null) {
                     VsTextInputFieldInnerState.Error

@@ -8,6 +8,9 @@ internal object PublicKeyHelper {
         hexChainCode: String,
         derivePath: String,
     ): String {
+        // Empty chain code = key is already derived (KeyImport per-chain keys).
+        // Skip BIP32 derivation and return the key as-is.
+        if (hexChainCode.isEmpty()) return hexPublicKey
         return Tss.getDerivedPubKey(hexPublicKey, hexChainCode, derivePath, false)
     }
 }
