@@ -14,6 +14,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,8 +25,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.coroutines.cancellation.CancellationException
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 internal data class ImportSeedphraseUiModel(
     val wordCount: Int = 0,
@@ -178,7 +179,7 @@ internal class ImportSeedphraseViewModel @Inject constructor(
     fun back() {
         keyImportRepository.clear()
         viewModelScope.launch {
-            navigator.navigate(Destination.Back)
+            navigator.back()
         }
     }
 }

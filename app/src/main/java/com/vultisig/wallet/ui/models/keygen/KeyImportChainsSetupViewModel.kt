@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keygen
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
@@ -10,6 +11,7 @@ import com.vultisig.wallet.data.usecases.ScanChainBalancesUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,19 +21,21 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import kotlin.coroutines.cancellation.CancellationException
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 internal enum class ChainsSetupState {
     Scanning, ActiveChains, NoActiveChains, CustomizeChains
 }
 
+@Immutable
 internal data class ChainItemUiModel(
     val chain: Chain,
     val derivationPath: DerivationPath,
     val isSelected: Boolean,
 )
 
+@Immutable
 internal data class KeyImportChainsSetupUiModel(
     val screenState: ChainsSetupState = ChainsSetupState.Scanning,
     val activeChains: List<ChainItemUiModel> = emptyList(),
@@ -137,11 +141,11 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
     fun customize() = selectManually()
 
     fun toggleChain(chain: Chain) {
-        _state.update { current ->
-            val updatedChains = current.allChains.map {
-                if (it.chain == chain) it.copy(isSelected = !it.isSelected) else it
-            }
-            current.copy(
+        val updatedChains = _state.value.allChains.map {
+            if (it.chain == chain) it.copy(isSelected = !it.isSelected) else it
+        }
+        _state.update {
+            it.copy(
                 allChains = updatedChains,
                 selectedCount = updatedChains.count { it.isSelected },
             )
@@ -149,9 +153,9 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
     }
 
     fun selectAll() {
-        _state.update { current ->
-            val updatedChains = current.allChains.map { it.copy(isSelected = true) }
-            current.copy(
+        val updatedChains = _state.value.allChains.map { it.copy(isSelected = true) }
+        _state.update {
+            it.copy(
                 allChains = updatedChains,
                 selectedCount = updatedChains.size,
             )
@@ -159,9 +163,9 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
     }
 
     fun deselectAll() {
-        _state.update { current ->
-            val updatedChains = current.allChains.map { it.copy(isSelected = false) }
-            current.copy(
+        val updatedChains = _state.value.allChains.map { it.copy(isSelected = false) }
+        _state.update {
+            it.copy(
                 allChains = updatedChains,
                 selectedCount = 0,
             )
@@ -200,7 +204,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
 
     fun back() {
         viewModelScope.launch {
-            navigator.navigate(Destination.Back)
+            navigator.back()
         }
     }
 }

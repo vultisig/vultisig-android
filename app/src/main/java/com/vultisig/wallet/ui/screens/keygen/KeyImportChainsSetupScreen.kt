@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.screens.keygen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -43,6 +43,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.ChainItemUiModel
 import com.vultisig.wallet.ui.models.keygen.ChainsSetupState
+import com.vultisig.wallet.ui.models.keygen.KeyImportChainsSetupUiModel
 import com.vultisig.wallet.ui.models.keygen.KeyImportChainsSetupViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -52,32 +53,55 @@ internal fun KeyImportChainsSetupScreen(
 ) {
     val state by model.state.collectAsState()
 
-    V2Scaffold(
+    KeyImportChainsSetupContent(
+        state = state,
         onBackClick = model::back,
+        onSelectManually = model::selectManually,
+        onCustomize = model::customize,
+        onToggleChain = model::toggleChain,
+        onSelectAll = model::selectAll,
+        onDeselectAll = model::deselectAll,
+        onContinue = model::continueWithSelection,
+    )
+}
+
+@Composable
+internal fun KeyImportChainsSetupContent(
+    state: KeyImportChainsSetupUiModel,
+    onBackClick: () -> Unit,
+    onSelectManually: () -> Unit,
+    onCustomize: () -> Unit,
+    onToggleChain: (Chain) -> Unit,
+    onSelectAll: () -> Unit,
+    onDeselectAll: () -> Unit,
+    onContinue: () -> Unit,
+) {
+    V2Scaffold(
+        onBackClick = onBackClick,
         title = stringResource(R.string.key_import_chains_title),
     ) {
         when (state.screenState) {
             ChainsSetupState.Scanning -> ScanningContent(
-                onSelectManually = model::selectManually,
+                onSelectManually = onSelectManually,
             )
 
             ChainsSetupState.ActiveChains -> ActiveChainsContent(
                 chains = state.activeChains,
-                onContinue = model::continueWithSelection,
-                onCustomize = model::customize,
+                onContinue = onContinue,
+                onCustomize = onCustomize,
             )
 
             ChainsSetupState.NoActiveChains -> NoActiveChainsContent(
-                onSelectManually = model::selectManually,
+                onSelectManually = onSelectManually,
             )
 
             ChainsSetupState.CustomizeChains -> CustomizeChainsContent(
                 chains = state.allChains,
                 selectedCount = state.selectedCount,
-                onToggleChain = model::toggleChain,
-                onSelectAll = model::selectAll,
-                onDeselectAll = model::deselectAll,
-                onContinue = model::continueWithSelection,
+                onToggleChain = onToggleChain,
+                onSelectAll = onSelectAll,
+                onDeselectAll = onDeselectAll,
+                onContinue = onContinue,
             )
         }
     }

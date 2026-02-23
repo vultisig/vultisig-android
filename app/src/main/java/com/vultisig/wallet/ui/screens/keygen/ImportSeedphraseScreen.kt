@@ -1,8 +1,10 @@
 package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,13 +18,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import androidx.compose.foundation.layout.Spacer
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel
 import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -35,6 +37,25 @@ internal fun ImportSeedphraseScreen(
     val state by model.state.collectAsState()
 
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    ImportSeedphraseContent(
+        state = state,
+        mnemonicFieldState = model.mnemonicFieldState,
+        onBackClick = model::back,
+        onImportClick = {
+            keyboardController?.hide()
+            model.importSeedphrase()
+        },
+    )
+}
+
+@Composable
+internal fun ImportSeedphraseContent(
+    state: ImportSeedphraseUiModel,
+    mnemonicFieldState: TextFieldState,
+    onBackClick: () -> Unit,
+    onImportClick: () -> Unit,
+) {
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
@@ -43,7 +64,7 @@ internal fun ImportSeedphraseScreen(
     }
 
     V2Scaffold(
-        onBackClick = model::back,
+        onBackClick = onBackClick,
         title = stringResource(R.string.import_seedphrase_title),
     ) {
         Column(
@@ -59,7 +80,7 @@ internal fun ImportSeedphraseScreen(
             UiSpacer(24.dp)
 
             VsTextInputField(
-                textFieldState = model.mnemonicFieldState,
+                textFieldState = mnemonicFieldState,
                 label = stringResource(R.string.import_seedphrase_label),
                 hint = stringResource(R.string.import_seedphrase_hint),
                 type = VsTextInputFieldType.MultiLine(minLines = 5),
@@ -87,10 +108,7 @@ internal fun ImportSeedphraseScreen(
                 label = if (state.isImporting)
                     stringResource(R.string.import_seedphrase_checking)
                 else stringResource(R.string.import_seedphrase_import_button),
-                onClick = {
-                    keyboardController?.hide()
-                    model.importSeedphrase()
-                },
+                onClick = onImportClick,
                 state = if (state.isImportEnabled && !state.isImporting)
                     VsButtonState.Enabled
                 else VsButtonState.Disabled,
