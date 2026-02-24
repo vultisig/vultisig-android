@@ -128,7 +128,7 @@ internal class ThorChainApiImpl @Inject constructor(
     override suspend fun getUnstakableTcyAmount(address: String): String? {
         return try {
             val response =
-                httpClient.get("https://stagenet-thornode.ninerealms.com/thorchain/tcy_staker/$address") {
+                httpClient.get("https://thornode.ninerealms.com/thorchain/tcy_staker/$address") {
                     header(xClientID, xClientIDValue)
                 }
             if (!response.status.isSuccess()) {
@@ -143,7 +143,7 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun getTcyAutoCompoundAmount(address: String): String? {
-        val url = "https://stagenet-thornode.ninerealms.com/cosmos/bank/v1beta1/balances/$address"
+        val url = "https://thornode.ninerealms.com/cosmos/bank/v1beta1/balances/$address"
         val response = httpClient.get(url)
         return if (!response.status.isSuccess()) {
             null
@@ -160,7 +160,7 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun getBalance(address: String): List<CosmosBalance> {
         val response = httpClient
-            .get("https://stagenet-thornode.ninerealms.com/cosmos/bank/v1beta1/balances/$address") {
+            .get("https://thornode.ninerealms.com/cosmos/bank/v1beta1/balances/$address") {
                 header(xClientID, xClientIDValue)
             }
         val resp = response.body<CosmosBalanceResponse>()
@@ -182,20 +182,20 @@ internal class ThorChainApiImpl @Inject constructor(
         )
 
         val response = httpClient
-            .get("https://stagenet-thornode.ninerealms.com/thorchain/quote/swap") {
+            .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
                 parameter("from_asset", fromAsset)
                 parameter("to_asset", toAsset)
                 parameter("amount", amount)
                 parameter("destination", address)
                 parameter("streaming_interval", interval)
-//                if (affiliateParams.isNotEmpty()) {
-//                    affiliateParams.forEach { (key, value) ->
-//                        when (key) {
-//                            "affiliate" -> parameter("affiliate", value)
-//                            "affiliate_bps" -> parameter("affiliate_bps", value)
-//                        }
-//                    }
-//                }
+                if (affiliateParams.isNotEmpty()) {
+                    affiliateParams.forEach { (key, value) ->
+                        when (key) {
+                            "affiliate" -> parameter("affiliate", value)
+                            "affiliate_bps" -> parameter("affiliate_bps", value)
+                        }
+                    }
+                }
             }
         return try {
             json.decodeFromString(
@@ -258,7 +258,7 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response = httpClient
-            .get("https://stagenet-thornode.ninerealms.com/auth/accounts/$address") {
+            .get("https://thornode.ninerealms.com/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
             }
         return response.body<THORChainAccountResultJson>().result?.value
@@ -266,7 +266,7 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun getTHORChainNativeTransactionFee(): BigInteger {
-        val response = httpClient.get("https://stagenet-thornode.ninerealms.com/thorchain/network") {
+        val response = httpClient.get("https://thornode.ninerealms.com/thorchain/network") {
             header(xClientID, xClientIDValue)
         }
         val content = response.body<NativeTxFeeRune>()
@@ -274,7 +274,7 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun getTHORChainReferralFees(): NativeTxFeeRune {
-        return httpClient.get("https://stagenet-thornode.ninerealms.com/thorchain/network") {
+        return httpClient.get("https://thornode.ninerealms.com/thorchain/network") {
             header(xClientID, xClientIDValue)
         }.bodyOrThrow<NativeTxFeeRune>()
     }
@@ -301,7 +301,7 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun getNetworkChainId(): String =
-        httpClient.get("https://stagenet-rpc.ninerealms.com/status")
+        httpClient.get("https://rpc.ninerealms.com/status")
             .body<JsonObject>()["result"]
             ?.jsonObject
             ?.get("node_info")
@@ -315,7 +315,7 @@ internal class ThorChainApiImpl @Inject constructor(
         name: String,
         chain: String,
     ): String? = httpClient
-        .get("https://stagenet-midgard.ninerealms.com/v2/thorname/lookup/$name")
+        .get("https://midgard.ninerealms.com/v2/thorname/lookup/$name")
         .body<ThorNameResponseJson>()
         .entries
         .find { it.chain == chain }
@@ -323,7 +323,7 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson {
         val response = httpClient
-            .get("https://stagenet-thornode.ninerealms.com/cosmos/tx/v1beta1/txs/$tx")
+            .get("https://thornode.ninerealms.com/cosmos/tx/v1beta1/txs/$tx")
         if (!response.status.isSuccess()) {
             //The  URL initially returns a 'not found' response but eventually
             // provides a successful response after some time
@@ -344,7 +344,7 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> {
         val response = httpClient
-            .get("https://stagenet-thornode.ninerealms.com/thorchain/inbound_addresses") {
+            .get("https://thornode.ninerealms.com/thorchain/inbound_addresses") {
                 header(xClientID, xClientIDValue)
             }
         if (!response.status.isSuccess()) {
@@ -659,9 +659,9 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     companion object {
-        private const val NNRLM_URL = "https://stagenet-thornode.ninerealms.com/thorchain"
-        private const val THORNODE_BASE = "https://stagenet-thornode.ninerealms.com"
-        private const val MIDGARD_URL = "https://stagenet-midgard.ninerealms.com/v2"
+        private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
+        private const val THORNODE_BASE = "https://thornode.ninerealms.com"
+        private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2"
     }
 }
 

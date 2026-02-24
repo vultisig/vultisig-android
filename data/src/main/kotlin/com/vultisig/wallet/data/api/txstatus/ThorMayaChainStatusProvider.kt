@@ -11,7 +11,7 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
     TransactionStatusProvider {
 
     private val apiUrls = mapOf(
-        Chain.ThorChain to "https://stagenet-thornode.ninerealms.com/thorchain/tx/status",
+        Chain.ThorChain to "https://thornode.ninerealms.com/thorchain/tx/status",
         Chain.MayaChain to "https://mayanode.mayachain.info/mayachain/tx/status"
     )
 
