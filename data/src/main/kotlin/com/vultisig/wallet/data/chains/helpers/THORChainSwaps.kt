@@ -215,7 +215,7 @@ class THORChainSwaps(
             }
 
             Chain.Solana -> {
-                val helper = SolanaHelper(keysignPayload.vaultPublicKeyECDSA)
+                val helper = SolanaHelper(vaultHexChainCode)
                 return helper.getSwapSignedTransaction(inputData, signatures)
             }
 
