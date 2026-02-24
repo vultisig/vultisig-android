@@ -67,7 +67,7 @@ object SigningHelper {
 
         val approvePayload = payload.approvePayload
         if (approvePayload != null) {
-            messages += THORChainSwaps(ecdsaKey, ecdsaChainCode)
+            messages += THORChainSwaps(ecdsaKey, ecdsaChainCode,eddsaKey)
                 .getPreSignedApproveImageHash(approvePayload, payload)
             nonceAcc++
         }
@@ -76,7 +76,7 @@ object SigningHelper {
         if (swapPayload != null && swapPayload !is SwapPayload.MayaChain) {
             when (swapPayload) {
                 is SwapPayload.ThorChain -> {
-                    messages += THORChainSwaps(ecdsaKey, ecdsaChainCode)
+                    messages += THORChainSwaps(ecdsaKey, ecdsaChainCode,eddsaKey)
                         .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
                 }
                 is SwapPayload.EVM -> {
@@ -98,7 +98,7 @@ object SigningHelper {
                 else -> Unit
             }
         } else if (swapPayload != null && swapPayload is SwapPayload.MayaChain && !swapPayload.srcToken.isNativeToken) {
-            messages += THORChainSwaps(ecdsaKey, ecdsaChainCode)
+            messages += THORChainSwaps(ecdsaKey, ecdsaChainCode,eddsaKey)
                 .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
         } else {
             messages += when (chain) {
@@ -210,7 +210,7 @@ object SigningHelper {
         if (swapPayload != null && swapPayload !is SwapPayload.MayaChain) {
             when (swapPayload) {
                 is SwapPayload.ThorChain -> {
-                    return THORChainSwaps(ecdsaKey, ecdsaChainCode)
+                    return THORChainSwaps(ecdsaKey, ecdsaChainCode,eddsaKey)
                         .getSignedTransaction(
                             swapPayload.data,
                             keysignPayload,
@@ -237,7 +237,7 @@ object SigningHelper {
                 else -> {}
             }
         } else if (swapPayload != null && swapPayload is SwapPayload.MayaChain && !swapPayload.srcToken.isNativeToken) {
-            return THORChainSwaps(ecdsaKey, ecdsaChainCode)
+            return THORChainSwaps(ecdsaKey, ecdsaChainCode,eddsaKey)
                 .getSignedTransaction(
                     swapPayload.data,
                     keysignPayload,
