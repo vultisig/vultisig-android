@@ -5,11 +5,8 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.junit.jupiter.api.Assertions.assertArrayEquals
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import org.junit.Assert.*
+import org.junit.Test
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -247,111 +244,93 @@ class ParseCosmosMessageTest {
         assertEquals(longMemo, result.memo)
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun `parseCosmosMessage should throw when chainId is blank`() {
-        assertThrows<IllegalArgumentException> {
-            val txBody = createValidTxBody()
-            val authInfo = createValidAuthInfo()
+        val txBody = createValidTxBody()
+        val authInfo = createValidAuthInfo()
 
-            val signDirect = SignDirectProto(
-                chainId = "",
-                accountNumber = "12345",
-                bodyBytes = encodeTxBody(txBody),
-                authInfoBytes = encodeAuthInfo(authInfo)
-            )
+        val signDirect = SignDirectProto(
+            chainId = "",
+            accountNumber = "12345",
+            bodyBytes = encodeTxBody(txBody),
+            authInfoBytes = encodeAuthInfo(authInfo)
+        )
 
-            parseCosmosMessage(signDirect)
-        }
+        parseCosmosMessage(signDirect)
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun `parseCosmosMessage should throw when accountNumber is blank`() {
-        assertThrows<IllegalArgumentException> {
-            val txBody = createValidTxBody()
-            val authInfo = createValidAuthInfo()
+        val txBody = createValidTxBody()
+        val authInfo = createValidAuthInfo()
 
-            val signDirect = SignDirectProto(
-                chainId = "cosmoshub-4",
-                accountNumber = "",
-                bodyBytes = encodeTxBody(txBody),
-                authInfoBytes = encodeAuthInfo(authInfo)
-            )
+        val signDirect = SignDirectProto(
+            chainId = "cosmoshub-4",
+            accountNumber = "",
+            bodyBytes = encodeTxBody(txBody),
+            authInfoBytes = encodeAuthInfo(authInfo)
+        )
 
-            parseCosmosMessage(signDirect)
-        }
+        parseCosmosMessage(signDirect)
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun `parseCosmosMessage should throw when bodyBytes is blank`() {
-        assertThrows<IllegalArgumentException> {
-            val authInfo = createValidAuthInfo()
+        val authInfo = createValidAuthInfo()
 
-            val signDirect = SignDirectProto(
-                chainId = "cosmoshub-4",
-                accountNumber = "12345",
-                bodyBytes = "",
-                authInfoBytes = encodeAuthInfo(authInfo)
-            )
+        val signDirect = SignDirectProto(
+            chainId = "cosmoshub-4",
+            accountNumber = "12345",
+            bodyBytes = "",
+            authInfoBytes = encodeAuthInfo(authInfo)
+        )
 
-            parseCosmosMessage(signDirect)
-        }
+        parseCosmosMessage(signDirect)
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun `parseCosmosMessage should throw when authInfoBytes is blank`() {
-        assertThrows<IllegalArgumentException> {
-            val txBody = createValidTxBody()
+        val txBody = createValidTxBody()
 
-            val signDirect = SignDirectProto(
-                chainId = "cosmoshub-4",
-                accountNumber = "12345",
-                bodyBytes = encodeTxBody(txBody),
-                authInfoBytes = ""
-            )
+        val signDirect = SignDirectProto(
+            chainId = "cosmoshub-4",
+            accountNumber = "12345",
+            bodyBytes = encodeTxBody(txBody),
+            authInfoBytes = ""
+        )
 
-            parseCosmosMessage(signDirect)
-        }
+        parseCosmosMessage(signDirect)
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun `decodeTxBodySafe should throw on invalid base64`() {
-        assertThrows<IllegalArgumentException> {
-            decodeTxBodySafe("not-valid-base64!@#$")
-        }
+        decodeTxBodySafe("not-valid-base64!@#$")
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun `decodeAuthInfoSafe should throw on invalid base64`() {
-        assertThrows<IllegalArgumentException> {
-            decodeAuthInfoSafe("not-valid-base64!@#$")
-        }
+        decodeAuthInfoSafe("not-valid-base64!@#$")
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun `decodeTxBodySafe should throw on invalid protobuf data`() {
-        assertThrows<IllegalArgumentException> {
-            val invalidProtobuf = Base64.encode(byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte()))
-            decodeTxBodySafe(invalidProtobuf)
-        }
+        val invalidProtobuf = Base64.encode(byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte()))
+        decodeTxBodySafe(invalidProtobuf)
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun `decodeAuthInfoSafe should throw on invalid protobuf data`() {
-        assertThrows<IllegalArgumentException> {
-            val invalidProtobuf = Base64.encode(byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte()))
-            decodeAuthInfoSafe(invalidProtobuf)
-        }
+        val invalidProtobuf = Base64.encode(byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte()))
+        decodeAuthInfoSafe(invalidProtobuf)
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun `decodeTxBodySafe should throw when TxBody has no messages`() {
-        assertThrows<IllegalArgumentException> {
-            val emptyTxBody = TxBody(
-                messages = emptyList(),
-                memo = "no messages"
-            )
-            decodeTxBodySafe(encodeTxBody(emptyTxBody))
-        }
+        val emptyTxBody = TxBody(
+            messages = emptyList(),
+            memo = "no messages"
+        )
+        decodeTxBodySafe(encodeTxBody(emptyTxBody))
     }
 
     @Test

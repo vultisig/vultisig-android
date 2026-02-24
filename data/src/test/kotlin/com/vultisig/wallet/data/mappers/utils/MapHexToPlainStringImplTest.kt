@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.mappers.utils
 
-import org.junit.jupiter.api.Test
+import com.vultisig.wallet.data.mappers.utils.MapHexToPlainStringImpl
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 

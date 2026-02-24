@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.usecases
 
 import io.ktor.util.decodeBase64Bytes
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertEquals
+import org.junit.Test
 import kotlin.test.assertFailsWith
 
 class AesEncryptionTest {
