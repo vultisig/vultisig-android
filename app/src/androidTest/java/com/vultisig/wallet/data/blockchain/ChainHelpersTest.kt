@@ -245,7 +245,7 @@ class ChainHelpersTest {
     @Test
     fun sendThorchainSwapTest() {
         val transactions: List<TransactionData> = loadTransactionData(THORCHAIN_SWAP_JSON_FILE)
-        val swapHelper = THORChainSwaps(HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
+        val swapHelper = THORChainSwaps(HEX_PUBLIC_KEY, HEX_CHAIN_CODE,HEX_PUBLIC_KEY)
         transactions.forEach { transaction ->
             val payload = transaction.keysignPayload.toInternalKeySignPayload()
             val swapPayload = payload.swapPayload as SwapPayload.ThorChain

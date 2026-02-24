@@ -193,6 +193,9 @@ class SolanaHelper(
     }
 
     fun getSwapPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+        require(!keysignPayload.memo.isNullOrEmpty()) {
+            "THORChain swap memo must not be null or empty for Solana swap transactions"
+        }
         return getPreSignedInputData(keysignPayload)
     }
 
