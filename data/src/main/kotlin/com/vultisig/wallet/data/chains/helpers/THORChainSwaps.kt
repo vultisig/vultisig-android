@@ -87,6 +87,11 @@ class THORChainSwaps(
                 )
             }
 
+            Chain.Solana -> {
+                val helper = SolanaHelper(vaultHexPublicKey)
+                return helper.getSwapPreSignedInputData(keysignPayload)
+            }
+
             else -> {
                 throw Exception("Unsupported chain")
             }
@@ -207,6 +212,11 @@ class THORChainSwaps(
                     keysignPayload = keysignPayload,
                     signatures = signatures
                 )
+            }
+
+            Chain.Solana -> {
+                val helper = SolanaHelper(keysignPayload.vaultPublicKeyECDSA)
+                return helper.getSwapSignedTransaction(inputData, signatures)
             }
 
             else -> {

@@ -192,6 +192,10 @@ class SolanaHelper(
         )
     }
 
+    fun getSwapPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+        return getPreSignedInputData(keysignPayload)
+    }
+
     fun getSwapSignedTransaction(
         inputData: ByteArray,
         signatures: Map<String, tss.KeysignResponse>,
