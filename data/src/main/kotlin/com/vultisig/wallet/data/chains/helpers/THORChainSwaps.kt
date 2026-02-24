@@ -88,7 +88,7 @@ class THORChainSwaps(
             }
 
             Chain.Solana -> {
-                val helper = SolanaHelper(vaultHexPublicKey)
+                val helper = SolanaHelper(vaultHexChainCode)
                 return helper.getSwapPreSignedInputData(keysignPayload)
             }
 
