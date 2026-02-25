@@ -161,21 +161,23 @@ internal class ImportFileViewModel @Inject constructor(
         // Only apply this heuristic when libType is the default GG20 (old backups).
         // KeyImport vaults also use "share" filenames but must keep their libType.
         val regex = "share\\d+of\\d+".toRegex()
-        if (vault.libType == SigningLibType.GG20
+        val adjustedVault = if (vault.libType == SigningLibType.GG20
             && uiModel.value.fileName?.contains(regex) == true
         ) {
-            vault.libType = SigningLibType.DKLS
+            vault.copy(libType = SigningLibType.DKLS)
+        } else {
+            vault
         }
         saveVault(
-            vault,
+            adjustedVault,
             false
         )
         vaultDataStoreRepository.setBackupStatus(
-            vault.id,
+            adjustedVault.id,
             true
         )
         discoverToken(
-            vault.id,
+            adjustedVault.id,
             null
         )
         if (uiModel.value.isZip == true) {
@@ -183,21 +185,21 @@ internal class ImportFileViewModel @Inject constructor(
                 it.content != uiModel.value.fileContent
             }
             if (updatedZipOutput.isEmpty()) {
-                navigateToHome(vault = vault)
+                navigateToHome(vault = adjustedVault)
 
             } else {
                 uiModel.update {
                     it.copy(
                         zipOutputs = updatedZipOutput,
                         canNavigateToHome = true,
-                        activeVault = vault
+                        activeVault = adjustedVault
                     )
                 }
             }
             return
         }
 
-        navigateToHome(vault)
+        navigateToHome(adjustedVault)
     }
 
     private suspend fun navigateToHome(vault: Vault) {
