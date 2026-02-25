@@ -156,5 +156,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.junit.jupiter)
     androidTestImplementation(libs.wallet.core)
+    androidTestImplementation(libs.ktor.client.mock)
     testImplementation(kotlin("test"))
 }
