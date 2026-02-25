@@ -120,7 +120,7 @@ class ChainHelpersTest {
     @Test
     fun sendSolana() {
         val transactions: List<TransactionData> = loadTransactionData(SOLANA_JSON_FILE)
-        val helper = SolanaHelper(HEX_PUBLIC_KEY)
+        val helper = SolanaHelper(HEX_PUBLIC_KEY_EDDSA)
 
         transactions.forEach { transaction ->
             val preImageHashes =
@@ -245,7 +245,7 @@ class ChainHelpersTest {
     @Test
     fun sendThorchainSwapTest() {
         val transactions: List<TransactionData> = loadTransactionData(THORCHAIN_SWAP_JSON_FILE)
-        val swapHelper = THORChainSwaps(HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
+        val swapHelper = THORChainSwaps(HEX_PUBLIC_KEY, HEX_CHAIN_CODE, HEX_PUBLIC_KEY_EDDSA)
         transactions.forEach { transaction ->
             val payload = transaction.keysignPayload.toInternalKeySignPayload()
             val swapPayload = payload.swapPayload as SwapPayload.ThorChain
@@ -348,7 +348,10 @@ class ChainHelpersTest {
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"
+        private const val HEX_PUBLIC_KEY_EDDSA =
+            "75be85178816db3bc71a4f3e64e5c89866d8b7daae827ba9cf4ecd1ed9e645d5"
         private const val HEX_CHAIN_CODE =
             "c9b189a8232b872b8d9ccd867d0db316dd10f56e729c310fe072adf5fd204ae7"
+
     }
 }
