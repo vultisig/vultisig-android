@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -13,10 +14,16 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
+import javax.inject.Inject
 
-object NetworkUtils {
 
-    fun isNetworkAvailable(context: Context): Boolean {
+class NetworkUtils @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+) {
+
+    fun observeConnectivityAsFlow(): Flow<Boolean> = context.observeConnectivityAsFlow()
+
+    fun isNetworkAvailable(): Boolean {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
@@ -27,7 +34,7 @@ object NetworkUtils {
     }
 
 
-    fun Context.observeConnectivityAsFlow(): Flow<Boolean> = callbackFlow {
+    private fun Context.observeConnectivityAsFlow(): Flow<Boolean> = callbackFlow {
         val connectivityManager =
             getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
@@ -118,8 +125,4 @@ object NetworkUtils {
         .distinctUntilChanged()
         .flowOn(Dispatchers.IO)
 }
-
-
-
-
 
