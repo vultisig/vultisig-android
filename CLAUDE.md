@@ -130,6 +130,20 @@ For keygen/keysign testing with multiple emulators:
 - Provide meaningful error messages to users
 - Log errors with Timber (use appropriate log levels)
 
+### Localization
+- When adding or modifying string resources in `app/src/main/res/values/strings.xml`, **always** add translations to all supported locale files:
+  - `values-de/strings.xml` (German)
+  - `values-es/strings.xml` (Spanish)
+  - `values-hr/strings.xml` (Croatian)
+  - `values-it/strings.xml` (Italian)
+  - `values-nl/strings.xml` (Dutch)
+  - `values-pt/strings.xml` (Portuguese)
+  - `values-ru/strings.xml` (Russian)
+  - `values-zh-rCN/strings.xml` (Chinese Simplified)
+- Insert new keys in the same relative position across all locale files (next to surrounding keys)
+- Before translating, **check existing strings in that locale file** for established terminology (e.g., grep for similar keys). Use the same terms — do not guess translations from English
+- "Chains" means blockchains, not literal chains. Each locale has its own established term — e.g., Russian uses "Сети" (networks), German uses "Blockchains", Spanish uses "cadenas", Italian uses "catene", etc. Always match what the locale already uses
+
 ## Git Workflow
 
 ### Branch Naming

@@ -923,6 +923,8 @@
     <string name="key_import_chains_select_title">Blockchains auswählen (%1$d)</string>
     <string name="key_import_chains_all">Alle</string>
     <string name="key_import_chains_none">Keine</string>
+    <string name="key_import_chains_get_started">Loslegen</string>
+    <string name="key_import_chains_no_results">Keine Blockchains entsprechen Ihrer Suche</string>
 
     <string name="key_import_device_count_title">Einrichtung wählen</string>
     <string name="key_import_device_count_fast">Schnell</string>
