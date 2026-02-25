@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.core.net.toUri
@@ -103,6 +104,11 @@ internal class ImportFileViewModel @Inject constructor(
                         key
                     )
                     hidePasswordPromptDialog()
+                } catch (e: SQLiteConstraintException) {
+                    Timber.tag("ImportFileInsertVaultData").e(e)
+                    snackBarChannel.send(
+                        UiText.StringResource(R.string.import_file_screen_duplicate_vault)
+                    )
                 } catch (e: Exception) {
                     Timber.e(e)
                     showErrorHint()
@@ -119,6 +125,11 @@ internal class ImportFileViewModel @Inject constructor(
                 fileContent,
                 null
             )
+        } catch (e: SQLiteConstraintException) {
+            Timber.tag("ImportFileInsertVaultData").e(e)
+            snackBarChannel.send(
+                UiText.StringResource(R.string.import_file_screen_duplicate_vault)
+            )
         } catch (e: Exception) {
             Timber.e(e)
             uiModel.update {
@@ -127,7 +138,6 @@ internal class ImportFileViewModel @Inject constructor(
                     passwordErrorHint = null,
                 )
             }
-
         }
     }
 
@@ -148,8 +158,12 @@ internal class ImportFileViewModel @Inject constructor(
     private suspend fun insertVaultToDb(vault: Vault) {
         // if the backup didn't set libtype correctly , then we need a way to override it manually
         // when the backup file has share\d+of\d+ in the filename, then it's a DKLS vault
+        // Only apply this heuristic when libType is the default GG20 (old backups).
+        // KeyImport vaults also use "share" filenames but must keep their libType.
         val regex = "share\\d+of\\d+".toRegex()
-        if (uiModel.value.fileName?.contains(regex) == true) {
+        if (vault.libType == SigningLibType.GG20
+            && uiModel.value.fileName?.contains(regex) == true
+        ) {
             vault.libType = SigningLibType.DKLS
         }
         saveVault(
