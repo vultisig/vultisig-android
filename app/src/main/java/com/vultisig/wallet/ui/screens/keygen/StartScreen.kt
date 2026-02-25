@@ -32,7 +32,7 @@ import com.vultisig.wallet.ui.screens.v3.components.V3Scaffold
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.startScreenAnimations
 
-private const val IS_IMPORT_SEEDPHRASE_ENABLED = false
+private const val IS_IMPORT_SEEDPHRASE_ENABLED = true
 
 @Composable
 internal fun StartScreen(

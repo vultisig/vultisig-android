@@ -120,27 +120,20 @@ internal fun SearchBar(
                         UiSpacer(
                             8.dp,
                         )
-                        if (state.text.isEmpty()) {
-                            Text(
-                                text = stringResource(R.string.search_bar_search),
-                                color = Theme.v2.colors.text.tertiary,
-                                style = Theme.brockmann.supplementary.footnote,
-                            )
-                            UiSpacer(
-                                weight = 1f
-                            )
-                            if (isPasteEnabled) {
-                                PasteIcon(onPaste = onPasteClick)
+                        Box(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (state.text.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.search_bar_search),
+                                    color = Theme.v2.colors.text.tertiary,
+                                    style = Theme.brockmann.supplementary.footnote,
+                                )
                             }
-                        } else {
-                            Box(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                input()
-                            }
-                            UiSpacer(
-                                size = 8.dp
-                            )
+                            input()
+                        }
+                        if (state.text.isNotEmpty()) {
+                            UiSpacer(size = 8.dp)
                             UiIcon(
                                 drawableResId = R.drawable.close_circle,
                                 size = 18.dp,
@@ -149,6 +142,8 @@ internal fun SearchBar(
                                     state.clearText()
                                 }
                             )
+                        } else if (isPasteEnabled) {
+                            PasteIcon(onPaste = onPasteClick)
                         }
                     }
                 }

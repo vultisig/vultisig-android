@@ -922,6 +922,8 @@
     <string name="key_import_chains_select_title">Odaberi lance (%1$d)</string>
     <string name="key_import_chains_all">Sve</string>
     <string name="key_import_chains_none">Ništa</string>
+    <string name="key_import_chains_get_started">Započni</string>
+    <string name="key_import_chains_no_results">Nijedan lanac ne odgovara vašem pretraživanju</string>
 
     <string name="key_import_device_count_title">Odaberi postavke</string>
     <string name="key_import_device_count_fast">Brzo</string>

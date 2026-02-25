@@ -918,6 +918,8 @@
     <string name="key_import_chains_select_title">Выберите цепочки (%1$d)</string>
     <string name="key_import_chains_all">Все</string>
     <string name="key_import_chains_none">Ничего</string>
+    <string name="key_import_chains_get_started">Начать</string>
+    <string name="key_import_chains_no_results">Нет сетей, соответствующих запросу</string>
 
     <string name="key_import_device_count_title">Выберите настройку</string>
     <string name="key_import_device_count_fast">Быстрая</string>

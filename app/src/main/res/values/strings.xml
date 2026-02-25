@@ -969,6 +969,8 @@
     <string name="key_import_chains_select_title">Select Chains (%1$d)</string>
     <string name="key_import_chains_all">All</string>
     <string name="key_import_chains_none">None</string>
+    <string name="key_import_chains_get_started">Get Started</string>
+    <string name="key_import_chains_no_results">No chains match your search</string>
     <string name="key_import_device_count_title">Choose Setup</string>
     <string name="key_import_device_count_fast">Fast</string>
     <string name="key_import_device_count_secure">Secure</string>

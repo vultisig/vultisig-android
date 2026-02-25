@@ -923,6 +923,8 @@
     <string name="key_import_chains_select_title">Seleziona catene (%1$d)</string>
     <string name="key_import_chains_all">Tutte</string>
     <string name="key_import_chains_none">Nessuna</string>
+    <string name="key_import_chains_get_started">Inizia</string>
+    <string name="key_import_chains_no_results">Nessuna catena corrisponde alla tua ricerca</string>
 
     <string name="key_import_device_count_title">Scegli configurazione</string>
     <string name="key_import_device_count_fast">Veloce</string>

@@ -922,6 +922,8 @@
     <string name="key_import_chains_select_title">Selecionar cadeias (%1$d)</string>
     <string name="key_import_chains_all">Todas</string>
     <string name="key_import_chains_none">Nenhuma</string>
+    <string name="key_import_chains_get_started">Começar</string>
+    <string name="key_import_chains_no_results">Nenhuma cadeia corresponde à sua pesquisa</string>
 
     <string name="key_import_device_count_title">Escolher configuração</string>
     <string name="key_import_device_count_fast">Rápido</string>
