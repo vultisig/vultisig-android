@@ -2,23 +2,21 @@ package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -41,6 +39,11 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
+import com.vultisig.wallet.ui.components.v2.tokenitem.GridItem
+import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.keygen.ChainItemUiModel
 import com.vultisig.wallet.ui.models.keygen.ChainsSetupState
 import com.vultisig.wallet.ui.models.keygen.KeyImportChainsSetupUiModel
@@ -55,12 +58,11 @@ internal fun KeyImportChainsSetupScreen(
 
     KeyImportChainsSetupContent(
         state = state,
+        searchTextFieldState = model.searchTextFieldState,
         onBackClick = model::back,
         onSelectManually = model::selectManually,
         onCustomize = model::customize,
         onToggleChain = model::toggleChain,
-        onSelectAll = model::selectAll,
-        onDeselectAll = model::deselectAll,
         onContinue = model::continueWithSelection,
     )
 }
@@ -68,12 +70,11 @@ internal fun KeyImportChainsSetupScreen(
 @Composable
 internal fun KeyImportChainsSetupContent(
     state: KeyImportChainsSetupUiModel,
+    searchTextFieldState: TextFieldState,
     onBackClick: () -> Unit,
     onSelectManually: () -> Unit,
     onCustomize: () -> Unit,
     onToggleChain: (Chain) -> Unit,
-    onSelectAll: () -> Unit,
-    onDeselectAll: () -> Unit,
     onContinue: () -> Unit,
 ) {
     V2Scaffold(
@@ -96,11 +97,10 @@ internal fun KeyImportChainsSetupContent(
             )
 
             ChainsSetupState.CustomizeChains -> CustomizeChainsContent(
-                chains = state.allChains,
+                chains = state.filteredChains,
                 selectedCount = state.selectedCount,
+                searchTextFieldState = searchTextFieldState,
                 onToggleChain = onToggleChain,
-                onSelectAll = onSelectAll,
-                onDeselectAll = onDeselectAll,
                 onContinue = onContinue,
             )
         }
@@ -227,14 +227,12 @@ private fun NoActiveChainsContent(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CustomizeChainsContent(
     chains: List<ChainItemUiModel>,
     selectedCount: Int,
+    searchTextFieldState: TextFieldState,
     onToggleChain: (Chain) -> Unit,
-    onSelectAll: () -> Unit,
-    onDeselectAll: () -> Unit,
     onContinue: () -> Unit,
 ) {
     Column(
@@ -242,52 +240,51 @@ private fun CustomizeChainsContent(
             .fillMaxSize()
             .padding(16.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.key_import_chains_select_title, selectedCount),
-                style = Theme.brockmann.headings.subtitle,
-                color = Theme.v2.colors.text.primary,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                VsButton(
-                    label = stringResource(R.string.key_import_chains_all),
-                    variant = VsButtonVariant.Secondary,
-                    onClick = onSelectAll,
-                )
-                VsButton(
-                    label = stringResource(R.string.key_import_chains_none),
-                    variant = VsButtonVariant.Secondary,
-                    onClick = onDeselectAll,
-                )
-            }
-        }
-        UiSpacer(16.dp)
+        SearchBar(
+            state = searchTextFieldState,
+            onCancelClick = {},
+            isInitiallyFocused = false,
+        )
 
-        FlowRow(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            chains.forEach { item ->
-                ChainChip(
-                    chain = item.chain,
-                    isSelected = item.isSelected,
-                    onClick = { onToggleChain(item.chain) },
-                )
+        UiSpacer(14.dp)
+
+        if (chains.isEmpty()) {
+            NoFoundContent(
+                message = stringResource(R.string.key_import_chains_no_results),
+            )
+            Spacer(modifier = Modifier.weight(1f))
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 74.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.weight(1f),
+            ) {
+                items(
+                    items = chains,
+                    key = { it.chain.id },
+                    contentType = { "chain_grid_item" },
+                ) { item ->
+                    GridItem(
+                        uiModel = TokenSelectionGridUiModel(
+                            tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
+                                name = item.chain.raw,
+                                logo = item.chain.logo,
+                            ),
+                            isChecked = item.isSelected,
+                        ),
+                        onCheckedChange = { onToggleChain(item.chain) },
+                    )
+                }
             }
         }
 
         UiSpacer(16.dp)
 
         VsButton(
-            label = stringResource(R.string.key_import_chains_continue),
+            label = stringResource(R.string.key_import_chains_get_started),
             onClick = onContinue,
+            variant = VsButtonVariant.CTA,
             state = if (selectedCount > 0) VsButtonState.Enabled else VsButtonState.Disabled,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -326,51 +323,5 @@ private fun ChainListItem(
                 tint = Theme.v2.colors.alerts.success,
             )
         }
-    }
-}
-
-@Composable
-private fun ChainChip(
-    chain: Chain,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-) {
-    val shape = RoundedCornerShape(12.dp)
-    Row(
-        modifier = Modifier
-            .clip(shape)
-            .then(
-                if (isSelected) Modifier.background(
-                    Theme.v2.colors.buttons.primary.copy(alpha = 0.15f)
-                )
-                else Modifier
-            )
-            .border(
-                width = 1.dp,
-                color = if (isSelected) Theme.v2.colors.buttons.primary
-                else Theme.v2.colors.border.light,
-                shape = shape,
-            )
-            .toggleable(
-                value = isSelected,
-                role = androidx.compose.ui.semantics.Role.Checkbox,
-                onValueChange = { onClick() },
-            )
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Image(
-            painter = painterResource(chain.logo),
-            contentDescription = chain.raw,
-            modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape),
-        )
-        Text(
-            text = chain.raw,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.primary,
-        )
     }
 }

@@ -1,6 +1,8 @@
 package com.vultisig.wallet.ui.models.keygen
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
@@ -40,6 +42,7 @@ internal data class KeyImportChainsSetupUiModel(
     val screenState: ChainsSetupState = ChainsSetupState.Scanning,
     val activeChains: List<ChainItemUiModel> = emptyList(),
     val allChains: List<ChainItemUiModel> = emptyList(),
+    val filteredChains: List<ChainItemUiModel> = emptyList(),
     val selectedCount: Int = 0,
 )
 
@@ -53,10 +56,34 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
     private val _state = MutableStateFlow(KeyImportChainsSetupUiModel())
     val state: StateFlow<KeyImportChainsSetupUiModel> = _state.asStateFlow()
 
+    val searchTextFieldState = TextFieldState()
 
     init {
         startScanning()
+        collectSearchQuery()
     }
+
+    private fun collectSearchQuery() {
+        viewModelScope.launch {
+            snapshotFlow { searchTextFieldState.text }
+                .collect { query ->
+                    filterChains(query.toString())
+                }
+        }
+    }
+
+    private fun filterChains(query: String) {
+        _state.update { current ->
+            current.copy(filteredChains = applyFilter(current.allChains, query))
+        }
+    }
+
+    private fun applyFilter(
+        chains: List<ChainItemUiModel>,
+        query: String = searchTextFieldState.text.toString(),
+    ): List<ChainItemUiModel> =
+        if (query.isBlank()) chains
+        else chains.filter { it.chain.raw.contains(query, ignoreCase = true) }
 
     private fun startScanning() {
         viewModelScope.launch {
@@ -97,6 +124,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
                             screenState = ChainsSetupState.ActiveChains,
                             activeChains = activeItems,
                             allChains = allChainItems,
+                            filteredChains = allChainItems,
                             selectedCount = activeItems.size,
                         )
                     }
@@ -105,6 +133,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
                         it.copy(
                             screenState = ChainsSetupState.NoActiveChains,
                             allChains = allChainItems,
+                            filteredChains = allChainItems,
                             selectedCount = 0,
                         )
                     }
@@ -126,6 +155,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
                     it.copy(
                         screenState = ChainsSetupState.NoActiveChains,
                         allChains = allChainItems,
+                        filteredChains = allChainItems,
                     )
                 }
             }
@@ -147,7 +177,8 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
         _state.update {
             it.copy(
                 allChains = updatedChains,
-                selectedCount = updatedChains.count { it.isSelected },
+                filteredChains = applyFilter(updatedChains),
+                selectedCount = updatedChains.count { c -> c.isSelected },
             )
         }
     }
@@ -157,6 +188,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
         _state.update {
             it.copy(
                 allChains = updatedChains,
+                filteredChains = applyFilter(updatedChains),
                 selectedCount = updatedChains.size,
             )
         }
@@ -167,6 +199,7 @@ internal class KeyImportChainsSetupViewModel @Inject constructor(
         _state.update {
             it.copy(
                 allChains = updatedChains,
+                filteredChains = applyFilter(updatedChains),
                 selectedCount = 0,
             )
         }
