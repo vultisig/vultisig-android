@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
@@ -121,9 +121,10 @@ internal fun VsCodeInputField(
 
         val boxModifier = remember(boxSize.intValue, density) {
             if (boxSize.intValue > 0) {
-                Modifier.size(with(density) {
+                val height = with(density) {
                     boxSize.intValue.toDp()
-                })
+                }
+                Modifier.size(width = height * 1.25f, height = height)
             } else {
                 Modifier.wrapContentSize()
             }
@@ -135,7 +136,7 @@ internal fun VsCodeInputField(
             repeat(maxCharacters) { index ->
                 val isActiveBox = focusedState.value && index == value.length
 
-                val inputBoxShape = RoundedCornerShape(12.dp)
+                val inputBoxShape = CircleShape
                 val inputManager = LocalSoftwareKeyboardController.current
 
                 Box(

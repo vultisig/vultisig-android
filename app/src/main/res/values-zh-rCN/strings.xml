@@ -624,6 +624,7 @@
     <string name="keygen_step_preparing_vault">准备金库</string>
     <string name="keygen_step_generating_ecdsa">生成 ECDSA 密钥</string>
     <string name="keygen_step_generating_eddsa">生成 EdDSA 密钥</string>
+    <string name="keygen_step_generating_chain_keys">生成链密钥</string>
     <string name="reshare_step_generating_ecdsa">生成 ECDSA 密钥</string>
     <string name="reshare_step_generating_eddsa">生成 EdDSA 密钥</string>
     <string name="keygen_connecting_with_server">连接服务器中…</string>
@@ -1228,6 +1229,7 @@
     <string name="amino_sign">Amino 签名</string>
     <string name="amino_direct">直接签名</string>
     <string name="import_file_screen_enter_password">输入共享保险库密码</string>
+
     <string name="transaction_status_confirmed">交易已确认</string>
     <string name="transaction_status_failed">交易失败</string>
     <string name="transaction_status_not_found">未找到交易记录</string>
@@ -1236,5 +1238,46 @@
     <string name="transaction_status_checking_transaction">正在检查交易……</string>
     <string name="raw_transaction_data">原始交易数据</string>
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
+
+    <!-- Key Import / Seed Phrase Import -->
+    <string name="home_screen_import_seed_phrase">导入助记词</string>
+    <string name="import_seedphrase_title">输入您的助记词</string>
+    <string name="import_seedphrase_subtitle">输入您的12或24个单词的恢复短语</string>
+    <string name="import_seedphrase_label">助记词</string>
+    <string name="import_seedphrase_hint">输入您的恢复短语…</string>
+    <string name="import_seedphrase_word_count">%1$d / %2$d 个单词</string>
+    <string name="import_seedphrase_invalid_word_count">预期 %2$s 个单词，实际 %1$s 个</string>
+    <string name="import_seedphrase_invalid_phrase">无效的助记词</string>
+    <string name="import_seedphrase_already_imported">该助记词已被导入</string>
+    <string name="import_seedphrase_duplicate_description">请导入其他助记词</string>
+    <string name="import_seedphrase_import_button">导入</string>
+    <string name="import_seedphrase_checking">检查中…</string>
+
+    <string name="key_import_chains_title">选择链</string>
+    <string name="key_import_chains_scanning">正在搜索活跃链…</string>
+    <string name="key_import_chains_scanning_desc">正在检查您的钱包在所有支持链上的现有余额</string>
+    <string name="key_import_chains_select_manually">手动选择</string>
+    <string name="key_import_chains_found_title">发现活跃链</string>
+    <string name="key_import_chains_found_desc">我们在以下链上发现了余额。您可以继续或自定义选择。</string>
+    <string name="key_import_chains_continue">继续</string>
+    <string name="key_import_chains_customize">自定义</string>
+    <string name="key_import_chains_no_active_title">未发现活跃链</string>
+    <string name="key_import_chains_no_active_desc">未找到任何余额。请手动选择您要导入的链。</string>
+    <string name="key_import_chains_select_title">选择链 (%1$d)</string>
+    <string name="key_import_chains_all">全部</string>
+    <string name="key_import_chains_none">无</string>
+    <string name="key_import_chains_get_started">开始</string>
+    <string name="key_import_chains_no_results">没有与您的搜索匹配的链</string>
+
+    <string name="key_import_device_count_title">选择设置</string>
+    <string name="key_import_device_count_fast">快速</string>
+    <string name="key_import_device_count_secure">安全</string>
+    <string name="key_import_device_count_get_started">开始</string>
+    <string name="key_import_device_count_fast_desc_1">1台设备 + Vultisig服务器</string>
+    <string name="key_import_device_count_fast_desc_2">快速简便的设置</string>
+    <string name="key_import_device_count_fast_desc_3">通过电子邮件恢复</string>
+    <string name="key_import_device_count_secure_desc_1">需要2台或更多设备</string>
+    <string name="key_import_device_count_secure_desc_2">最高安全级别</string>
+    <string name="key_import_device_count_secure_desc_3">无第三方服务器参与</string>
     <string name="vault_count_recommended">推荐</string>
 </resources>

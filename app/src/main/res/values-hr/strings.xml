@@ -401,6 +401,7 @@
     <string name="reshare_step_generating_eddsa">Generiranje EDDSA ključa</string>
     <string name="keygen_connecting_with_server">Povezivanje sa serverom...</string>
     <string name="keygen_step_generating_eddsa">Generiranje EDDSA ključa</string>
+    <string name="keygen_step_generating_chain_keys">Generiranje ključeva lanca</string>
     <string name="reshare_step_generating_ecdsa">Generiranje ECDSA ključa</string>
     <string name="merge_account_doesnt_exist">Odabrani token nije pronađen za ovu adresu</string>
     <string name="keygen_email_error">Netočna e-pošta, molimo provjerite</string>
@@ -893,5 +894,46 @@
     <string name="transaction_status_checking_transaction">Provjera transakcije...</string>
     <string name="raw_transaction_data">Sirovi podaci o transakciji</string>
     <string name="solana_raw_transaction">Solana Sirova transakcija</string>
+
+    <!-- Key Import / Seed Phrase Import -->
+    <string name="home_screen_import_seed_phrase">Uvezi frazu za oporavak</string>
+    <string name="import_seedphrase_title">Unesite svoju frazu za oporavak</string>
+    <string name="import_seedphrase_subtitle">Unesite svoju frazu za oporavak od 12 ili 24 riječi</string>
+    <string name="import_seedphrase_label">Fraza za oporavak</string>
+    <string name="import_seedphrase_hint">Unesite svoju frazu za oporavak…</string>
+    <string name="import_seedphrase_word_count">%1$d / %2$d riječi</string>
+    <string name="import_seedphrase_invalid_word_count">Očekivano %2$s riječi, dobiveno %1$s</string>
+    <string name="import_seedphrase_invalid_phrase">Nevažeća fraza za oporavak</string>
+    <string name="import_seedphrase_already_imported">Ova fraza za oporavak je već uvezena</string>
+    <string name="import_seedphrase_duplicate_description">Molimo uvezite drugu frazu za oporavak</string>
+    <string name="import_seedphrase_import_button">Uvezi</string>
+    <string name="import_seedphrase_checking">Provjera…</string>
+
+    <string name="key_import_chains_title">Odaberi lance</string>
+    <string name="key_import_chains_scanning">Traženje aktivnih lanaca…</string>
+    <string name="key_import_chains_scanning_desc">Provjera novčanika za postojeća stanja na svim podržanim lancima</string>
+    <string name="key_import_chains_select_manually">Odaberi ručno</string>
+    <string name="key_import_chains_found_title">Pronađeni aktivni lanci</string>
+    <string name="key_import_chains_found_desc">Pronašli smo stanja na sljedećim lancima. Možete nastaviti ili prilagoditi odabir.</string>
+    <string name="key_import_chains_continue">Nastavi</string>
+    <string name="key_import_chains_customize">Prilagodi</string>
+    <string name="key_import_chains_no_active_title">Nisu pronađeni aktivni lanci</string>
+    <string name="key_import_chains_no_active_desc">Nismo pronašli nikakva stanja. Ručno odaberite lance koje želite uvesti.</string>
+    <string name="key_import_chains_select_title">Odaberi lance (%1$d)</string>
+    <string name="key_import_chains_all">Sve</string>
+    <string name="key_import_chains_none">Ništa</string>
+    <string name="key_import_chains_get_started">Započni</string>
+    <string name="key_import_chains_no_results">Nijedan lanac ne odgovara vašem pretraživanju</string>
+
+    <string name="key_import_device_count_title">Odaberi postavke</string>
+    <string name="key_import_device_count_fast">Brzo</string>
+    <string name="key_import_device_count_secure">Sigurno</string>
+    <string name="key_import_device_count_get_started">Započni</string>
+    <string name="key_import_device_count_fast_desc_1">1 uređaj + Vultisig poslužitelj</string>
+    <string name="key_import_device_count_fast_desc_2">Brzo i jednostavno postavljanje</string>
+    <string name="key_import_device_count_fast_desc_3">Oporavak putem e-pošte</string>
+    <string name="key_import_device_count_secure_desc_1">Potrebna 2 ili više uređaja</string>
+    <string name="key_import_device_count_secure_desc_2">Maksimalna sigurnost</string>
+    <string name="key_import_device_count_secure_desc_3">Bez poslužitelja treće strane</string>
     <string name="vault_count_recommended">Preporučeno</string>
 </resources>

@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
@@ -33,6 +32,8 @@ import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.startScreenAnimations
 
+private const val IS_IMPORT_SEEDPHRASE_ENABLED = true
+
 @Composable
 internal fun StartScreen(
     model: StartViewModel = hiltViewModel(),
@@ -45,6 +46,8 @@ internal fun StartScreen(
         onCreateNewVaultClick = model::navigateToCreateVault,
         onScanQrCodeClick = model::navigateToScanQrCode,
         onImportVaultClick = model::navigateToImportVault,
+        onImportSeedphraseClick = model::navigateToImportSeedphrase,
+        isImportSeedphraseEnabled = IS_IMPORT_SEEDPHRASE_ENABLED,
     )
 }
 
@@ -54,7 +57,9 @@ private fun StartScreen(
     onCreateNewVaultClick: () -> Unit,
     onScanQrCodeClick: () -> Unit,
     onImportVaultClick: () -> Unit,
+    onImportSeedphraseClick: () -> Unit,
     onBackClick: () -> Unit,
+    isImportSeedphraseEnabled: Boolean = false,
 ) {
     val logoScale = remember {
         Animatable(0f)
@@ -102,35 +107,7 @@ private fun StartScreen(
                 horizontalAlignment = CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
 
-            ) {
-
-                Row {
-                    VsButton(
-                        label = stringResource(R.string.home_screen_scan_qr_code),
-                        variant = VsButtonVariant.Secondary,
-                        iconLeft = R.drawable.scan_qr,
-                        onClick = onScanQrCodeClick,
-                        modifier = Modifier
-                            .weight(1f)
-                            .startScreenAnimations(
-                                delay = 450,
-                            ),
-                    )
-
-                    UiSpacer(size = 8.dp)
-
-                    VsButton(
-                        label = stringResource(R.string.home_screen_import_vault),
-                        variant = VsButtonVariant.Secondary,
-                        iconLeft = R.drawable.import_vault,
-                        onClick = onImportVaultClick,
-                        modifier = Modifier
-                            .weight(1f)
-                            .startScreenAnimations(
-                                delay = 450,
-                            ),
-                    )
-                }
+                ) {
 
                 VsButton(
                     label = stringResource(R.string.create_new_vault_screen_create_new_vault),
@@ -143,11 +120,44 @@ private fun StartScreen(
                     onClick = onCreateNewVaultClick
                 )
 
+                VsButton(
+                    label = stringResource(R.string.home_screen_scan_qr_code),
+                    variant = VsButtonVariant.Secondary,
+                    onClick = onScanQrCodeClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .startScreenAnimations(
+                            delay = 350,
+                        ),
+                )
+
+                VsButton(
+                    label = stringResource(R.string.home_screen_import_vault),
+                    variant = VsButtonVariant.Secondary,
+                    onClick = onImportVaultClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .startScreenAnimations(
+                            delay = 450,
+                        ),
+                )
+
+                if (isImportSeedphraseEnabled) {
+                    VsButton(
+                        label = stringResource(R.string.home_screen_import_seed_phrase),
+                        variant = VsButtonVariant.Secondary,
+                        onClick = onImportSeedphraseClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .startScreenAnimations(
+                                delay = 550,
+                            ),
+                    )
+                }
             }
         }
     }
 }
-
 
 
 @Preview
@@ -158,6 +168,7 @@ private fun StartScreenPreview() {
         onCreateNewVaultClick = {},
         onScanQrCodeClick = {},
         onImportVaultClick = {},
+        onImportSeedphraseClick = {},
         onBackClick = {},
     )
 }

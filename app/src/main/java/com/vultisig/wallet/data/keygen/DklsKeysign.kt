@@ -45,12 +45,13 @@ class DKLSKeysign(
     val encryptionKeyHex: String,
     val chainPath: String,
     val isInitiateDevice: Boolean,
+    val publicKeyOverride: String? = null,
 
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
 ) {
     val localPartyID: String = vault.localPartyID
-    private val publicKeyECDSA: String = vault.pubKeyECDSA
+    private val publicKeyECDSA: String = publicKeyOverride ?: vault.pubKeyECDSA
     private var messenger: TssMessenger =
         TssMessenger(
             serverAddress = mediatorURL,

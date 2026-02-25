@@ -398,6 +398,7 @@
     <string name="reshare_step_generating_eddsa">EdDSA-sleutel genereren</string>
     <string name="keygen_connecting_with_server">Verbinding met server maken…</string>
     <string name="keygen_step_generating_eddsa">EDDSA-sleutel genereren</string>
+    <string name="keygen_step_generating_chain_keys">Ketensleutels genereren</string>
     <string name="reshare_step_generating_ecdsa">ECDSA-sleutel genereren</string>
     <string name="merge_account_doesnt_exist">Geselecteerde token niet gevonden voor dit adres</string>
     <string name="keygen_email_error">Onjuist e-mailadres, controleer dit</string>
@@ -889,5 +890,46 @@
     <string name="transaction_status_checking_transaction">Transactie controleren...</string>
     <string name="raw_transaction_data">Ruwe transactiegegevens</string>
     <string name="solana_raw_transaction">Solana Ruwe transactie</string>
+
+    <!-- Key Import / Seed Phrase Import -->
+    <string name="home_screen_import_seed_phrase">Herstelzin importeren</string>
+    <string name="import_seedphrase_title">Voer uw herstelzin in</string>
+    <string name="import_seedphrase_subtitle">Voer uw herstelzin van 12 of 24 woorden in</string>
+    <string name="import_seedphrase_label">Herstelzin</string>
+    <string name="import_seedphrase_hint">Voer uw herstelzin in…</string>
+    <string name="import_seedphrase_word_count">%1$d / %2$d woorden</string>
+    <string name="import_seedphrase_invalid_word_count">%2$s woorden verwacht, %1$s ontvangen</string>
+    <string name="import_seedphrase_invalid_phrase">Ongeldige herstelzin</string>
+    <string name="import_seedphrase_already_imported">Deze herstelzin is al geïmporteerd</string>
+    <string name="import_seedphrase_duplicate_description">Importeer alstublieft een andere herstelzin</string>
+    <string name="import_seedphrase_import_button">Importeren</string>
+    <string name="import_seedphrase_checking">Controleren…</string>
+
+    <string name="key_import_chains_title">Ketens selecteren</string>
+    <string name="key_import_chains_scanning">Zoeken naar actieve ketens…</string>
+    <string name="key_import_chains_scanning_desc">Uw portemonnee wordt gecontroleerd op bestaande saldi voor alle ondersteunde ketens</string>
+    <string name="key_import_chains_select_manually">Handmatig selecteren</string>
+    <string name="key_import_chains_found_title">Actieve ketens gevonden</string>
+    <string name="key_import_chains_found_desc">We hebben saldi gevonden op de volgende ketens. U kunt doorgaan of uw selectie aanpassen.</string>
+    <string name="key_import_chains_continue">Doorgaan</string>
+    <string name="key_import_chains_customize">Aanpassen</string>
+    <string name="key_import_chains_no_active_title">Geen actieve ketens gevonden</string>
+    <string name="key_import_chains_no_active_desc">Er zijn geen saldi gevonden. Selecteer handmatig de ketens die u wilt importeren.</string>
+    <string name="key_import_chains_select_title">Ketens selecteren (%1$d)</string>
+    <string name="key_import_chains_all">Alles</string>
+    <string name="key_import_chains_none">Geen</string>
+    <string name="key_import_chains_get_started">Aan de slag</string>
+    <string name="key_import_chains_no_results">Geen ketens komen overeen met uw zoekopdracht</string>
+
+    <string name="key_import_device_count_title">Kies instelling</string>
+    <string name="key_import_device_count_fast">Snel</string>
+    <string name="key_import_device_count_secure">Beveiligd</string>
+    <string name="key_import_device_count_get_started">Aan de slag</string>
+    <string name="key_import_device_count_fast_desc_1">1 apparaat + Vultisig-server</string>
+    <string name="key_import_device_count_fast_desc_2">Snelle en eenvoudige installatie</string>
+    <string name="key_import_device_count_fast_desc_3">Herstel via e-mail</string>
+    <string name="key_import_device_count_secure_desc_1">2 of meer apparaten vereist</string>
+    <string name="key_import_device_count_secure_desc_2">Maximale beveiliging</string>
+    <string name="key_import_device_count_secure_desc_3">Geen externe server</string>
     <string name="vault_count_recommended">Aanbevolen</string>
 </resources>

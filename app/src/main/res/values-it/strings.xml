@@ -401,6 +401,7 @@
     <string name="reshare_step_generating_eddsa">Generazione della chiave EdDSA</string>
     <string name="keygen_connecting_with_server">Connessione con il server…</string>
     <string name="keygen_step_generating_eddsa">Generazione della chiave EdDSA</string>
+    <string name="keygen_step_generating_chain_keys">Generazione delle chiavi della catena</string>
     <string name="reshare_step_generating_ecdsa">Generazione della chiave ECDSA</string>
     <string name="merge_account_doesnt_exist">Il token selezionato non è stato trovato per questo indirizzo</string>
     <string name="keygen_email_error">E-mail errata, controllala</string>
@@ -884,6 +885,8 @@
     <string name="amino_sign">Amino Sign</string>
     <string name="amino_direct">Firma diretta</string>
     <string name="import_file_screen_enter_password">Inserisci la password di condivisione del vault.</string>
+
+    <!-- Transaction Status Strings from main branch -->
     <string name="transaction_status_confirmed">Transazione confermata</string>
     <string name="transaction_status_failed">Transazione non riuscita</string>
     <string name="transaction_status_not_found">Transazione non trovata</string>
@@ -892,5 +895,46 @@
     <string name="transaction_status_checking_transaction">Verifica della transazione in corso…</string>
     <string name="raw_transaction_data">Dati grezzi sulle transazioni</string>
     <string name="solana_raw_transaction">Transazioni grezze Solana</string>
+
+    <!-- Key Import / Seed Phrase Import -->
+    <string name="home_screen_import_seed_phrase">Importa frase seed</string>
+    <string name="import_seedphrase_title">Inserisci la tua frase seed</string>
+    <string name="import_seedphrase_subtitle">Inserisci la tua frase di recupero di 12 o 24 parole</string>
+    <string name="import_seedphrase_label">Frase seed</string>
+    <string name="import_seedphrase_hint">Inserisci la tua frase di recupero…</string>
+    <string name="import_seedphrase_word_count">%1$d / %2$d parole</string>
+    <string name="import_seedphrase_invalid_word_count">Previste %2$s parole, ottenute %1$s</string>
+    <string name="import_seedphrase_invalid_phrase">Frase seed non valida</string>
+    <string name="import_seedphrase_already_imported">Questa frase seed è già stata importata</string>
+    <string name="import_seedphrase_duplicate_description">Per favore importa una frase seed diversa</string>
+    <string name="import_seedphrase_import_button">Importa</string>
+    <string name="import_seedphrase_checking">Verifica in corso…</string>
+
+    <string name="key_import_chains_title">Seleziona catene</string>
+    <string name="key_import_chains_scanning">Ricerca catene attive…</string>
+    <string name="key_import_chains_scanning_desc">Verifica del portafoglio per saldi esistenti su tutte le catene supportate</string>
+    <string name="key_import_chains_select_manually">Seleziona manualmente</string>
+    <string name="key_import_chains_found_title">Catene attive trovate</string>
+    <string name="key_import_chains_found_desc">Abbiamo trovato saldi sulle seguenti catene. Puoi continuare o personalizzare la selezione.</string>
+    <string name="key_import_chains_continue">Continua</string>
+    <string name="key_import_chains_customize">Personalizza</string>
+    <string name="key_import_chains_no_active_title">Nessuna catena attiva trovata</string>
+    <string name="key_import_chains_no_active_desc">Non sono stati trovati saldi. Seleziona manualmente le catene che vuoi importare.</string>
+    <string name="key_import_chains_select_title">Seleziona catene (%1$d)</string>
+    <string name="key_import_chains_all">Tutte</string>
+    <string name="key_import_chains_none">Nessuna</string>
+    <string name="key_import_chains_get_started">Inizia</string>
+    <string name="key_import_chains_no_results">Nessuna catena corrisponde alla tua ricerca</string>
+
+    <string name="key_import_device_count_title">Scegli configurazione</string>
+    <string name="key_import_device_count_fast">Veloce</string>
+    <string name="key_import_device_count_secure">Sicuro</string>
+    <string name="key_import_device_count_get_started">Inizia</string>
+    <string name="key_import_device_count_fast_desc_1">1 dispositivo + server Vultisig</string>
+    <string name="key_import_device_count_fast_desc_2">Configurazione rapida e semplice</string>
+    <string name="key_import_device_count_fast_desc_3">Recupero tramite e-mail</string>
+    <string name="key_import_device_count_secure_desc_1">Richiesti 2 o più dispositivi</string>
+    <string name="key_import_device_count_secure_desc_2">Massima sicurezza</string>
+    <string name="key_import_device_count_secure_desc_3">Nessun server di terze parti</string>
     <string name="vault_count_recommended">Consigliata</string>
 </resources>

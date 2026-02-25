@@ -15,8 +15,8 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 fun SetupVaultRive(
-    modifier: Modifier = Modifier,
     animationRes: Int,
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier

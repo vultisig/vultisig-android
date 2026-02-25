@@ -9,8 +9,10 @@ import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.ui.navigation.Route.*
+import com.vultisig.wallet.ui.navigation.Route.BackupVault
 import com.vultisig.wallet.ui.navigation.Route.SelectNetwork.Filters
+import com.vultisig.wallet.ui.navigation.Route.VaultInfo
+import com.vultisig.wallet.ui.navigation.Route.VaultList
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -230,6 +232,17 @@ internal sealed class Route {
     @Serializable
     data object ChooseVaultType
 
+    data object KeyImport {
+        @Serializable
+        data object ImportSeedphrase
+
+        @Serializable
+        data object ChainsSetup
+
+        @Serializable
+        data object DeviceCount
+    }
+
     object VaultInfo {
 
         @Serializable
@@ -241,6 +254,7 @@ internal sealed class Route {
         @Serializable
         data class Name(
             val vaultType: VaultType,
+            val tssAction: TssAction = TssAction.KEYGEN,
         )
 
         // required only by fast vault
@@ -287,6 +301,7 @@ internal sealed class Route {
             val email: String? = null,
             val password: String? = null,
             val hint: String? = null,
+            val deviceCount: Int? = null,
 
             // reshare
             val vaultId: VaultId? = null,
@@ -603,6 +618,23 @@ internal sealed class Route {
     data class ChainDashboard(
         val route: ChainDashboardRoute
     )
+
+
+    @Serializable
+    data class EnterVaultInfo(
+        val count: Int
+    )
+
+
+    @Serializable
+    data class SetupVaultInfo(
+        val count: Int
+    )
+
+    @Serializable
+    data object ChooseVaultCount
+
+
 }
 
 @Serializable

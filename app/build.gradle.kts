@@ -144,6 +144,8 @@ dependencies {
     // test
     testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
@@ -153,5 +155,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.junit.jupiter)
     androidTestImplementation(libs.wallet.core)
+    androidTestImplementation(libs.ktor.client.mock)
     testImplementation(kotlin("test"))
 }

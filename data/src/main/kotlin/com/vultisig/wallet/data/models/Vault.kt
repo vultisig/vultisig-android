@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
+import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import kotlinx.serialization.Serializable
 
 typealias VaultId = String
@@ -16,6 +17,7 @@ data class Vault(
     var resharePrefix: String = "",
     var keyshares: List<KeyShare> = listOf(),
     val coins: List<Coin> = emptyList(),
+    var chainPublicKeys: List<ChainPublicKey> = emptyList(),
     var libType: SigningLibType = SigningLibType.GG20,
 ) {
 
@@ -23,6 +25,17 @@ data class Vault(
         keyshares.firstOrNull { it.pubKey == pubKey }?.keyShare
 
 }
+
+data class SigningKey(
+    val publicKey: String,
+    val chainCode: String,
+)
+
+data class ChainPublicKey(
+    val chain: String,
+    val publicKey: String,
+    val isEddsa: Boolean,
+)
 
 @Serializable
 enum class SigningLibType {
@@ -66,7 +79,79 @@ fun Vault.isFastVault(): Boolean {
     return containsServerSigner() && !isServerVault()
 }
 
+/**
+ * Returns (publicKey, chainCode) for ECDSA signing on the given [chain].
+ *
+ * For KeyImport vaults, resolves the per-chain key from [ChainPublicKey]:
+ * - Exact chain match first, then derivation-path match (e.g. all EVM chains share one key).
+ * - Returns empty chainCode when a per-chain key is found, signaling that BIP32 derivation
+ *   should be skipped (the key is already fully derived).
+ * - Falls back to root (pubKeyECDSA + hexChainCode) for chains not in [ChainPublicKey].
+ */
+fun Vault.getEcdsaSigningKey(chain: Chain): SigningKey {
+    if (libType != SigningLibType.KeyImport) {
+        return SigningKey(pubKeyECDSA, hexChainCode)
+    }
+    // First try exact chain match, then fall back to matching derivation path
+    // (e.g. BSC/Polygon/Arbitrum all share ETH's m/44'/60'/0'/0/0 key).
+    val chainPubKey = chainPublicKeys.firstOrNull { it.chain == chain.raw && !it.isEddsa }
+        ?: chainPublicKeys.firstOrNull { cpk ->
+            !cpk.isEddsa && try {
+                Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
+                        chain.coinType.compatibleDerivationPath()
+            } catch (_: Exception) {
+                false
+            }
+        }
+    return if (chainPubKey != null) {
+        SigningKey(chainPubKey.publicKey, "")
+    } else {
+        SigningKey(pubKeyECDSA, hexChainCode)
+    }
+}
+
+fun Vault.getEddsaSigningKey(chain: Chain): String {
+    if (libType != SigningLibType.KeyImport) {
+        return pubKeyEDDSA
+    }
+    // Exact chain match first
+    chainPublicKeys.firstOrNull { it.chain == chain.raw && it.isEddsa }?.let {
+        return it.publicKey
+    }
+    // Derivation-path fallback (mirrors getEcdsaSigningKey)
+    chainPublicKeys.firstOrNull { cpk ->
+        cpk.isEddsa && try {
+            Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
+                    chain.coinType.compatibleDerivationPath()
+        } catch (_: Exception) {
+            false
+        }
+    }?.let {
+        return it.publicKey
+    }
+    return pubKeyEDDSA
+}
+
 fun Vault.getPubKeyByChain(chain: Chain): String {
+    if (libType == SigningLibType.KeyImport) {
+        val expectedIsEddsa = chain.TssKeysignType == TssKeyType.EDDSA
+        // Exact chain match first
+        chainPublicKeys.firstOrNull { it.chain == chain.raw && it.isEddsa == expectedIsEddsa }?.let {
+            return it.publicKey
+        }
+        // Derivation-path fallback (e.g. BSC reuses ETH key)
+        chainPublicKeys.firstOrNull { cpk ->
+            cpk.isEddsa == expectedIsEddsa && try {
+                Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
+                        chain.coinType.compatibleDerivationPath()
+            } catch (_: Exception) {
+                false
+            }
+        }?.let {
+            return it.publicKey
+        }
+    }
+    // Fall back to root public key
     return when (chain) {
         Chain.ThorChain,
         Chain.MayaChain -> pubKeyECDSA

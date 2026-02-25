@@ -13,7 +13,11 @@ import com.vultisig.wallet.ui.theme.Theme
 
 
 @Composable
-fun SetupVaultGuideItem(){
+fun SetupVaultGuideItem(
+    logo: Int = R.drawable.icon_shield_solid,
+    title: String,
+    subTitle: String
+){
     Row {
         UiIcon(
             drawableResId = R.drawable.icon_shield_solid,
@@ -45,5 +49,9 @@ fun SetupVaultGuideItem(){
 @Preview
 @Composable
 private fun SetupVaultGuideItemPreview(){
-    SetupVaultGuideItem()
+    SetupVaultGuideItem(
+        logo = R.drawable.icon_shield_solid,
+        title = "No single point of failure",
+        subTitle = "One device alone can’t move funds. If one device is lost or exposed, it can’t approve on its own."
+    )
 }

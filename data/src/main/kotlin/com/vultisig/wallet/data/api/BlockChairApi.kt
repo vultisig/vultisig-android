@@ -1,12 +1,13 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.api.models.BlockChairDashboardResponse
+import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.api.models.BlockChairInfo
 import com.vultisig.wallet.data.api.models.BlockChairInfoJson
 import com.vultisig.wallet.data.api.models.SuggestedTransactionFeeDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashRequestBodyJson
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.utils.UTXOStatusResponseSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -15,6 +16,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.math.BigInteger
@@ -31,13 +33,17 @@ interface BlockChairApi {
     suspend fun getTsStatus(
         chain: Chain,
         txHash: String,
-    ): BlockChairDashboardResponse?
+    ): BlockChainStatusDeserialized?
 }
 
 internal class BlockChairApiImp @Inject constructor(
     private val json: Json,
     private val httpClient: HttpClient,
+    private val utxoStatusResponseSerializer: UTXOStatusResponseSerializer,
 ) : BlockChairApi {
+    companion object {
+        private const val BASE_URL = "https://api.vultisig.com/blockchair"
+    }
 
     private fun getChainName(chain: Chain): String = when (chain) {
         Chain.Bitcoin -> "bitcoin"
@@ -56,7 +62,7 @@ internal class BlockChairApiImp @Inject constructor(
     ): BlockChairInfo? {
         try {
             val response =
-                httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/address/${address}?state=latest") {
+                httpClient.get("$BASE_URL/${getChainName(chain)}/dashboards/address/${address}?state=latest") {
                     header("Content-Type", "application/json")
                 }
             val responseData = response.body<BlockChairInfoJson>()
@@ -70,7 +76,7 @@ internal class BlockChairApiImp @Inject constructor(
 
     override suspend fun getBlockChairStats(chain: Chain): BigInteger {
         val response =
-            httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/stats") {
+            httpClient.get("$BASE_URL/${getChainName(chain)}/stats") {
                 header("Content-Type", "application/json")
             }
         return response.body<SuggestedTransactionFeeDataJson>().data.value
@@ -103,13 +109,14 @@ internal class BlockChairApiImp @Inject constructor(
                 )
                 Timber.d("bodyContent:$bodyContent")
                 val response =
-                    httpClient.post("https://api.vultisig.com/blockchair/${getChainName(chain)}/push/transaction") {
+                    httpClient.post("$BASE_URL/${getChainName(chain)}/push/transaction") {
                         header("Content-Type", "application/json")
                         setBody(bodyContent)
                     }
                 if (response.status != HttpStatusCode.OK) {
-                    Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")
-                    throw Exception("fail to broadcast transaction")
+                    val errorBody = response.bodyAsText()
+                    Timber.e("fail to broadcast transaction: $errorBody")
+                    error("fail to broadcast transaction: $errorBody")
                 }
 
                 return response.body<TransactionHashDataJson>().data.value
@@ -120,13 +127,22 @@ internal class BlockChairApiImp @Inject constructor(
     override suspend fun getTsStatus(
         chain: Chain,
         txHash: String,
-    ): BlockChairDashboardResponse? {
-        return try {
-            val response =
-                httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/transaction/${txHash}")
-            response.body<BlockChairDashboardResponse>()
-        } catch (e: Exception) {
-            null
+    ): BlockChainStatusDeserialized? {
+        val response =
+            httpClient.get("$BASE_URL/${getChainName(chain)}/dashboards/transaction/${txHash}")
+
+        if (response.status == HttpStatusCode.Forbidden) {
+            Timber.tag("BlockChairApiImp").d("Forbidden (403) when checking tx status: $txHash")
+            return null
         }
+        if (!response.status.isSuccess()) {
+            Timber.tag("BlockChairApiImp")
+                .e("Failed to get tx status: ${response.status} for $txHash")
+            return null
+        }
+        return json.decodeFromString(
+            utxoStatusResponseSerializer,
+            response.bodyAsText()
+        )
     }
 }

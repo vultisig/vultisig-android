@@ -71,7 +71,10 @@ import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordHintScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
+import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseScreen
 import com.vultisig.wallet.ui.screens.keygen.JoinKeygenScreen
+import com.vultisig.wallet.ui.screens.keygen.KeyImportChainsSetupScreen
+import com.vultisig.wallet.ui.screens.keygen.KeyImportDeviceCountScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenScreen
 import com.vultisig.wallet.ui.screens.keygen.NameVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.StartScreen
@@ -118,6 +121,9 @@ import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQr
 import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBottomSheet
 import com.vultisig.wallet.ui.screens.v2.receive.ReceiveBottomSheet
+import com.vultisig.wallet.ui.screens.v3.onboarding.ChooseDeviceCountScreen
+import com.vultisig.wallet.ui.screens.v3.onboarding.EnterVaultInfoScreen
+import com.vultisig.wallet.ui.screens.v3.onboarding.SetupVaultInfoScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
@@ -316,6 +322,19 @@ internal fun SetupNavGraph(
             ChooseVaultScreen()
         }
 
+        // key import
+        composable<Route.KeyImport.ImportSeedphrase> {
+            ImportSeedphraseScreen()
+        }
+
+        composable<Route.KeyImport.ChainsSetup> {
+            KeyImportChainsSetupScreen()
+        }
+
+        composable<Route.KeyImport.DeviceCount> {
+            KeyImportDeviceCountScreen()
+        }
+
         composable<VaultInfo.Name> {
             NameVaultScreen()
         }
@@ -356,7 +375,7 @@ internal fun SetupNavGraph(
             VaultBackupOnboardingScreen()
         }
 
-        composable<FastVaultVerification> {
+        dialog <FastVaultVerification> {
             FastVaultVerificationScreen()
         }
 
@@ -548,6 +567,19 @@ internal fun SetupNavGraph(
 
         composable<Route.VaultsToBackup> {
             VaultsToBackupScreen()
+        }
+
+        composable<Route.ChooseVaultCount> {
+             ChooseDeviceCountScreen()
+        }
+
+        composable<Route.SetupVaultInfo> {
+            SetupVaultInfoScreen()
+        }
+
+
+        composable<Route.EnterVaultInfo> {
+            EnterVaultInfoScreen()
         }
 
         dialog<Route.Receive> {

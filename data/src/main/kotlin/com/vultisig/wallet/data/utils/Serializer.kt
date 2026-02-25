@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.utils
 
+import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
+import com.vultisig.wallet.data.api.models.BlockChairStatusResponse
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
@@ -31,6 +33,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
@@ -166,6 +169,31 @@ class LiFiSwapQuoteResponseSerializerImpl @Inject constructor(private val json: 
                 json.decodeFromJsonElement<LiFiSwapQuoteError>(jsonObject)
             )
         }
+    }
+}
+
+
+interface UTXOStatusResponseSerializer : DefaultSerializer<BlockChainStatusDeserialized>
+
+class UTXOStatusResponseSerializerImpl @Inject constructor(private val json: Json) :
+    UTXOStatusResponseSerializer {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("UTXOStatusQuoteResponseSerializer")
+
+    override fun deserialize(decoder: Decoder): BlockChainStatusDeserialized {
+        val input = decoder as JsonDecoder
+        val jsonObject = input.decodeJsonElement().jsonObject
+        val dataElement = jsonObject["data"]
+
+        return (if (dataElement is JsonObject) {
+            BlockChainStatusDeserialized.Result(
+                json.decodeFromJsonElement<BlockChairStatusResponse>(jsonObject)
+            )
+        } else {
+            BlockChainStatusDeserialized.Error(
+                ""
+            )
+        })
     }
 }
 
