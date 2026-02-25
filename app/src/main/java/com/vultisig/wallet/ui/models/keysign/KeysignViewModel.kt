@@ -466,7 +466,7 @@ internal class KeysignViewModel(
         val chain = payload.coin.chain
         if (approvePayload != null) {
             val (approveKey, approveChainCode) = vault.getEcdsaSigningKey(chain)
-            val signedApproveTransaction = THORChainSwaps(approveKey, approveChainCode)
+            val signedApproveTransaction = THORChainSwaps(approveKey, approveChainCode,vault.getEddsaSigningKey(chain))
                 .getSignedApproveTransaction(
                     approvePayload,
                     payload,
