@@ -253,7 +253,7 @@ class MldsaKeygen(
                             encryption.decrypt(
                                 Base64.decode(it),
                                 Numeric.hexStringToByteArray(encryptionKeyHex)
-                            )!!
+                            ) ?: error("fail to decrypt MLDSA keygen setup message")
                         }.let {
                             Base64.decode(it)
                         }
