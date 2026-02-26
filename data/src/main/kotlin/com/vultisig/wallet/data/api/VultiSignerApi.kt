@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
@@ -20,6 +21,10 @@ internal interface VultiSignerApi {
 
     suspend fun joinKeygen(
         request: JoinKeygenRequestJson,
+    )
+
+    suspend fun createMldsa(
+        request: CreateMldsaVaultRequestJson,
     )
     suspend fun joinKeyImport(
         request: JoinKeyImportRequest,
@@ -60,6 +65,14 @@ internal class VultiSignerApiImpl @Inject constructor(
         request: JoinKeygenRequestJson,
     ) {
         http.post("$URL/create") {
+            setBody(request)
+        }.throwIfUnsuccessful()
+    }
+
+    override suspend fun createMldsa(
+        request: CreateMldsaVaultRequestJson,
+    ) {
+        http.post("$URL/mldsa") {
             setBody(request)
         }.throwIfUnsuccessful()
     }
