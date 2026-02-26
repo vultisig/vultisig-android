@@ -296,7 +296,7 @@ class MldsaKeysign(
                         encryption.decrypt(
                             Base64.decode(it),
                             Numeric.hexStringToByteArray(encryptionKeyHex)
-                        )!!
+                        ) ?: error("fail to decrypt MLDSA keysign setup message")
                     }.let {
                         Base64.decode(it)
                     }
