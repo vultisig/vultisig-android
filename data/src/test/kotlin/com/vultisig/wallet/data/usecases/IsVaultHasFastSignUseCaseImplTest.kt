@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import java.io.IOException
 
 internal class IsVaultHasFastSignUseCaseImplTest {
 
@@ -68,6 +70,15 @@ internal class IsVaultHasFastSignUseCaseImplTest {
         coEvery { repository.hasFastSign(ECDSA_KEY) } returns false
 
         assertFalse(useCase(vault()))
+    }
+
+    @Test
+    fun `secure vault propagates exception when API fails`() = runTest {
+        coEvery { repository.hasFastSign(ECDSA_KEY) } throws IOException("Network error")
+
+        assertThrows<IOException> {
+            useCase(vault())
+        }
     }
 
     private fun vault(
