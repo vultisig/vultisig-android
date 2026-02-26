@@ -569,10 +569,6 @@ internal sealed class Route {
     @Serializable
     data object OnChainSecurity
 
-    @Serializable
-    data class RegisterVault(
-        val vaultId: String,
-    )
 
     @Serializable
     data class ReferralOnboarding(

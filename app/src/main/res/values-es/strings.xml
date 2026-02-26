@@ -309,19 +309,11 @@
     <string name="vault_settings_delete_vault_part">Compartir de la bóveda:</string>
     <string name="vault_password_hint_to_long">La pista es demasiado larga</string>
     <string name="vault_details_screen_vault_part_desc">Compartir %1$s-de-%2$s</string>
-    <string name="settings_screen_register_your_vaults">¡Registra tus bóvedas!</string>
-    <string name="register_vault_screen_title">Registra tus bóvedas</string>
-    <string name="register_vault_screen_step_3">Sube tu código QR de Vault</string>
-    <string name="register_vault_screen_step_4">¡Rastrea tus VULTIES (Puntos de bóveda)!</string>
-    <string name="register_vault_screen_step_2_go_to">Ir a</string>
-    <string name="register_vault_screen_step_2_vultisig_web">Web de Vultisig</string>
-    <string name="register_vault_screen_step_1">Guarda tu código QR de Vault</string>
     <string name="do_not_remind_me_again">No me lo recuerdes otra vez</string>
     <string name="monthly_backup_reminder_title">No olvides hacer una copia de seguridad de tus recursos compartidos de bóveda y verificar que estén completos.</string>
     <string name="transaction_complete_screen_title">Transacción completada</string>
     <string name="qr_address_screen_description">Dirección de %1$s:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Bóveda incorrecta seleccionada</string>
-    <string name="register_vault_screen_save_qr_code">Guardar código QR</string>
     <string name="verify_swap_screen_total_fees">Tarifas totales</string>
     <string name="scan_qr_code_error_text">Se escanea un código QR no relacionado</string>
     <string name="scan_qr_code_error_button">Atrás</string>
@@ -503,7 +495,6 @@
     <string name="referral_view_add_friend">Agregar referencia de un amigo</string>
     <string name="referral_view_save">Guardar</string>
     <string name="referral_view_on_swaps">en intercambios ahora</string>
-    <string name="register_vault_screen_guide_title">Guía de registro</string>
     <string name="faq_settings_q7">¿Vultisig es de código abierto y está auditado?</string>
     <string name="faq_settings_q8">¿Cómo gestiona Vultisig la privacidad y la protección de datos?</string>
     <string name="faq_settings_q9">¿Cómo se compara Vultisig con otras billeteras multifirma?</string>

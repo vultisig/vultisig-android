@@ -309,19 +309,11 @@
     <string name="vault_settings_delete_vault_part">Tresorteil:</string>
     <string name="vault_password_hint_to_long">Der Hinweis ist zu lang</string>
     <string name="vault_details_screen_vault_part_desc">Teilen %1$s-von-%2$s</string>
-    <string name="settings_screen_register_your_vaults">Registrieren Sie Ihre Tresore!</string>
-    <string name="register_vault_screen_title">Tresor registrieren</string>
-    <string name="register_vault_screen_step_3">Laden Sie Ihren Tresor‑QR‑Code hoch</string>
-    <string name="register_vault_screen_step_4">Verfolgen Sie Ihre VULTIES (Tresor‑Punkte)!</string>
-    <string name="register_vault_screen_step_2_go_to">Gehen Sie zu</string>
-    <string name="register_vault_screen_step_2_vultisig_web">Vultisig-Webseite</string>
-    <string name="register_vault_screen_step_1">Speichern Sie Ihren Tresor‑QR‑Code</string>
     <string name="do_not_remind_me_again">Erinnere mich nicht mehr daran</string>
     <string name="monthly_backup_reminder_title">Vergessen Sie nicht, Ihre Tresorfreigaben zu sichern und die Vollständigkeit zu überprüfen.</string>
     <string name="transaction_complete_screen_title">Transaktion abgeschlossen</string>
     <string name="qr_address_screen_description">%1$s Adresse:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Falscher Tresor ausgewählt</string>
-    <string name="register_vault_screen_save_qr_code">QR-Code speichern</string>
     <string name="verify_swap_screen_total_fees">Gesamtgebühren</string>
     <string name="scan_qr_code_error_text">Nicht zugehöriger QR-Code wird gescannt</string>
     <string name="scan_qr_code_error_button">Zurück</string>
@@ -501,7 +493,6 @@
     <string name="referral_view_add_friend">Freundesempfehlung hinzufügen</string>
     <string name="referral_view_save">Speichern</string>
     <string name="referral_view_on_swaps">Jetzt bei Swaps</string>
-    <string name="register_vault_screen_guide_title">Registrierungsleitfaden</string>
     <string name="faq_settings_q7">Ist Vultisig Open‑Source und geprüft?</string>
     <string name="faq_settings_q8">Wie geht Vultisig mit Datenschutz um?</string>
     <string name="faq_settings_q9">Wie schneidet Vultisig im Vergleich zu anderen Multisig-Wallets ab?</string>

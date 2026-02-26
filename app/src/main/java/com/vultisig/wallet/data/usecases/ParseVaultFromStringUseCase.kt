@@ -5,6 +5,7 @@ package com.vultisig.wallet.data.usecases
 import android.util.Base64
 import com.vultisig.wallet.data.mappers.VaultFromOldJsonMapper
 import com.vultisig.wallet.data.mappers.utils.MapHexToPlainString
+import com.vultisig.wallet.data.models.ChainPublicKey
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.OldJsonVault
 import com.vultisig.wallet.data.models.OldJsonVaultRoot
@@ -72,14 +73,28 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
             localPartyID = proto.localPartyId,
             signers = proto.signers,
             resharePrefix = proto.resharePrefix,
-            keyshares = proto.keyShares.filterNotNull().map { keyShare ->
-                KeyShare(
-                    pubKey = keyShare.publicKey,
-                    keyShare = keyShare.keyshare
-                )
-            },
+            keyshares = proto.keyShares.filterNotNull()
+                .map { keyShare ->
+                    KeyShare(
+                        pubKey = keyShare.publicKey,
+                        keyShare = keyShare.keyshare
+                    )
+                }
+                // Deduplicate by pubKey — chains sharing the same derivation path
+                // (e.g. EVM chains with coinType 60) produce duplicate pubKeys.
+                // associateBy keeps the last entry, matching extension's fromCommVault behavior.
+                .associateBy { it.pubKey }
+                .values
+                .toList(),
             coins = emptyList(),
             libType = proto.libType.toSigningLibType(),
+            chainPublicKeys = proto.chainPublicKeys.filterNotNull().map { cpk ->
+                ChainPublicKey(
+                    chain = cpk.chain,
+                    publicKey = cpk.publicKey,
+                    isEddsa = cpk.isEddsa,
+                )
+            },
         )
     }
 
@@ -98,7 +113,7 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
                 }
             )
             json.decodeFromString<OldJsonVaultRoot>(hexToPlainString).vault
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             json.decodeFromString<OldJsonVault>(input)
         }
 

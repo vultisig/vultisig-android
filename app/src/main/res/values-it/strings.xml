@@ -310,19 +310,11 @@
     <string name="vault_settings_delete_vault_part">Condividi del caveau:</string>
     <string name="vault_password_hint_to_long">Il suggerimento è troppo lungo</string>
     <string name="vault_details_screen_vault_part_desc">Condividi %1$s-di-%2$s</string>
-    <string name="settings_screen_register_your_vaults">Registra i tuoi Vault!</string>
-    <string name="register_vault_screen_title">Registra Vault</string>
-    <string name="register_vault_screen_step_3">Carica il codice QR del Vault</string>
-    <string name="register_vault_screen_step_4">Tieni traccia dei tuoi VULTIES (Punti Vault)!</string>
-    <string name="register_vault_screen_step_2_go_to">Vai a</string>
-    <string name="register_vault_screen_step_2_vultisig_web">Vultisig Web</string>
-    <string name="register_vault_screen_step_1">Salva il tuo Vault QR</string>
     <string name="do_not_remind_me_again">Non ricordarmelo più</string>
     <string name="monthly_backup_reminder_title">Non dimenticare di eseguire il backup delle condivisioni del vault e di verificarne la completezza.</string>
     <string name="transaction_complete_screen_title">Transazione completata</string>
     <string name="qr_address_screen_description">%1$s indirizzo:\n %2$s</string>
     <string name="join_keysign_wrong_vault">È stato selezionato il caveau sbagliato</string>
-    <string name="register_vault_screen_save_qr_code">Salva il codice QR</string>
     <string name="verify_swap_screen_total_fees">Totale commissioni</string>
     <string name="scan_qr_code_error_text">Il codice QR non correlato è stato scansionato</string>
     <string name="scan_qr_code_error_button">Indietro</string>
@@ -502,7 +494,6 @@
     <string name="referral_view_add_friend">Aggiungi referral di un amico</string>
     <string name="referral_view_save">Salva</string>
     <string name="referral_view_on_swaps">sugli swap ora</string>
-    <string name="register_vault_screen_guide_title">Guida alla registrazione</string>
     <string name="faq_settings_q7">Vultisig è open source ed è stato sottoposto ad audit?</string>
     <string name="faq_settings_q8">Come gestisce Vultisig la privacy e la protezione dei dati?</string>
     <string name="faq_settings_q9">Come si confronta Vultisig con altri wallet multisig?</string>

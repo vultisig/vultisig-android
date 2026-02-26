@@ -147,6 +147,54 @@ For keygen/keysign testing with multiple emulators:
 - Before translating, **check existing strings in that locale file** for established terminology (e.g., grep for similar keys). Use the same terms — do not guess translations from English
 - "Chains" means blockchains, not literal chains. Each locale has its own established term — e.g., Russian uses "Сети" (networks), German uses "Blockchains", Spanish uses "cadenas", Italian uses "catene", etc. Always match what the locale already uses
 
+### Deleting Screens / Views
+When a screen, composable, or UI component is removed from the app, **all resources exclusively used by it must also be deleted**. This includes:
+
+#### String Resources
+- Remove the string key from **every** locale file:
+  - `values/strings.xml` (English — default)
+  - `values-de/strings.xml` (German)
+  - `values-es/strings.xml` (Spanish)
+  - `values-hr/strings.xml` (Croatian)
+  - `values-it/strings.xml` (Italian)
+  - `values-nl/strings.xml` (Dutch)
+  - `values-pt/strings.xml` (Portuguese)
+  - `values-ru/strings.xml` (Russian)
+  - `values-zh-rCN/strings.xml` (Chinese Simplified)
+- Also remove any XML comment blocks (e.g. `<!-- Register Vault Screen -->`) that only annotated the deleted keys
+- Before deleting a string key, **verify it is not referenced elsewhere** in the codebase (grep for the key name across all `.kt` and `.xml` files)
+
+#### Drawable / Image Resources
+- Delete any drawable files (`.xml`, `.webp`, `.png`, `.svg`, etc.) in `app/src/main/res/drawable*/` that are **only** referenced by the deleted screen
+- Before deleting a drawable, **verify it is not used by any other screen or component** (grep for the drawable name across all `.kt` and `.xml` files)
+
+#### Navigation
+- Remove the screen's `Route` data class / object from `Navigation.kt`
+- Remove the corresponding `composable<Route.ScreenName>` block from `NavGraph.kt`
+- Remove the import of the deleted screen composable from `NavGraph.kt`
+
+#### ViewModel & Model Files
+- Delete the screen's `ViewModel` class file
+- Delete any UI model / state data classes that are only used by the deleted screen
+
+#### Settings / Menu Entries
+- If the screen was reachable from a settings or menu list, remove:
+  - The `SettingsItem` (or equivalent) data object from the ViewModel
+  - Its entry in the menu item list
+  - Its `when` branch in the click handler
+
+#### Checklist
+When deleting a screen, go through this checklist:
+1. ✅ Delete the `Screen.kt` composable file
+2. ✅ Delete the `ViewModel.kt` file
+3. ✅ Remove the `Route` entry from `Navigation.kt`
+4. ✅ Remove the `composable<Route.X>` block and import from `NavGraph.kt`
+5. ✅ Remove the menu/settings item, list entry, and click handler (if applicable)
+6. ✅ Delete all exclusively-used drawable resources
+7. ✅ Remove all associated string keys from **all 9** locale `strings.xml` files
+8. ✅ Remove orphaned XML comment blocks in strings files
+9. ✅ Grep the entire codebase to confirm no remaining references to the deleted screen, route, strings, or drawables
+
 ## Git Workflow
 
 ### Branch Naming
