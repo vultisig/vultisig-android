@@ -7,11 +7,13 @@ import com.silencelaboratories.godilithium.Handle
 import com.silencelaboratories.godilithium.MldsaSecurityLevel
 import com.silencelaboratories.godilithium.go_slice
 import com.silencelaboratories.godilithium.godilithium.mldsa_keygen_session_finish
+import com.silencelaboratories.godilithium.godilithium.mldsa_keygen_session_free
 import com.silencelaboratories.godilithium.godilithium.mldsa_keygen_session_from_setup
 import com.silencelaboratories.godilithium.godilithium.mldsa_keygen_session_input_message
 import com.silencelaboratories.godilithium.godilithium.mldsa_keygen_session_message_receiver
 import com.silencelaboratories.godilithium.godilithium.mldsa_keygen_session_output_message
 import com.silencelaboratories.godilithium.godilithium.mldsa_keygen_setupmsg_new
+import com.silencelaboratories.godilithium.godilithium.mldsa_keyshare_free
 import com.silencelaboratories.godilithium.godilithium.mldsa_keyshare_public_key
 import com.silencelaboratories.godilithium.godilithium.mldsa_keyshare_to_bytes
 import com.silencelaboratories.godilithium.godilithium.tss_buffer_free
@@ -229,63 +231,72 @@ class MldsaKeygen(
     suspend fun mldsaKeygenWithRetry(attempt: Int) {
         try {
             val handler = Handle()
-            val keygenSetupMsg: ByteArray
-
-            if (isInitiateDevice && attempt == 0) {
-                keygenSetupMsg = getMldsaSetupMessage()
-                sessionApi.uploadSetupMessage(
-                    serverUrl = mediatorURL,
-                    sessionId = sessionID,
-                    message = Base64.encode(
-                        encryption.encrypt(
-                            Base64.encodeToByteArray(keygenSetupMsg),
-                            Numeric.hexStringToByteArray(encryptionKeyHex)
-                        )
-                    ),
-                    messageId = "mldsa",
-                )
-            } else {
-                keygenSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, "mldsa")
-                    .let {
-                        encryption.decrypt(
-                            Base64.decode(it),
-                            Numeric.hexStringToByteArray(encryptionKeyHex)
-                        )!!
-                    }.let {
-                        Base64.decode(it)
-                    }
-            }
-
-            setupMessage = keygenSetupMsg
-            val decodedSetupMsg = keygenSetupMsg.toGoSlice()
-            val localPartyIDArr = localPartyId.toByteArray()
-            val localPartySlice = localPartyIDArr.toGoSlice()
-
-            val result = mldsa_keygen_session_from_setup(
-                MldsaSecurityLevel.MlDsa44,
-                decodedSetupMsg,
-                localPartySlice,
-                handler
-            )
-            if (result != LIB_OK) {
-                error("fail to create mldsa session from setup message, error: $result")
-            }
-
-            processMldsaOutboundMessage(handler)
-            val isFinished = pullInboundMessages(handler)
-            if (isFinished) {
-                val keyshareHandler = Handle()
-                val keyShareResult = mldsa_keygen_session_finish(handler, keyshareHandler)
-                if (keyShareResult != LIB_OK) {
-                    error("fail to get mldsa keyshare, $keyShareResult")
+            try {
+                val keygenSetupMsg: ByteArray
+                if (isInitiateDevice && attempt == 0) {
+                    keygenSetupMsg = getMldsaSetupMessage()
+                    sessionApi.uploadSetupMessage(
+                        serverUrl = mediatorURL,
+                        sessionId = sessionID,
+                        message = Base64.encode(
+                            encryption.encrypt(
+                                Base64.encodeToByteArray(keygenSetupMsg),
+                                Numeric.hexStringToByteArray(encryptionKeyHex)
+                            )
+                        ),
+                        messageId = "mldsa",
+                    )
+                } else {
+                    keygenSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, "mldsa")
+                        .let {
+                            encryption.decrypt(
+                                Base64.decode(it),
+                                Numeric.hexStringToByteArray(encryptionKeyHex)
+                            )!!
+                        }.let {
+                            Base64.decode(it)
+                        }
                 }
-                val keyshareBytes = getKeyshareBytes(keyshareHandler)
-                val publicKey = getPublicKeyBytes(keyshareHandler)
-                keyshare = MldsaKeyshare(
-                    pubKey = publicKey.toHexString(),
-                    keyshare = Base64.encode(keyshareBytes)
+
+                setupMessage = keygenSetupMsg
+                val decodedSetupMsg = keygenSetupMsg.toGoSlice()
+                val localPartyIDArr = localPartyId.toByteArray()
+                val localPartySlice = localPartyIDArr.toGoSlice()
+
+                val result = mldsa_keygen_session_from_setup(
+                    MldsaSecurityLevel.MlDsa44,
+                    decodedSetupMsg,
+                    localPartySlice,
+                    handler
                 )
-                Timber.d("MLDSA publicKey: ${publicKey.toHexString()}")
+                if (result != LIB_OK) {
+                    error("fail to create mldsa session from setup message, error: $result")
+                }
+
+                processMldsaOutboundMessage(handler)
+                val isFinished = pullInboundMessages(handler)
+                if (isFinished) {
+                    val keyshareHandler = Handle()
+                    try {
+                        val keyShareResult = mldsa_keygen_session_finish(handler, keyshareHandler)
+                        if (keyShareResult != LIB_OK) {
+                            error("fail to get mldsa keyshare, $keyShareResult")
+                        }
+                        val keyshareBytes = getKeyshareBytes(keyshareHandler)
+                        val publicKey = getPublicKeyBytes(keyshareHandler)
+                        keyshare = MldsaKeyshare(
+                            pubKey = publicKey.toHexString(),
+                            keyshare = Base64.encode(keyshareBytes)
+                        )
+                        Timber.d("MLDSA publicKey: ${publicKey.toHexString()}")
+                    } finally {
+                        mldsa_keyshare_free(keyshareHandler)
+                        keyshareHandler.delete()
+                    }
+                }
+            } finally {
+                mldsa_keygen_session_free(handler)
+                handler.delete()
             }
         } catch (e: CancellationException) {
             throw e

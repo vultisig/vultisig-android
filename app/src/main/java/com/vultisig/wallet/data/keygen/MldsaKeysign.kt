@@ -7,9 +7,11 @@ import com.silencelaboratories.godilithium.Handle
 import com.silencelaboratories.godilithium.MldsaSecurityLevel
 import com.silencelaboratories.godilithium.go_slice
 import com.silencelaboratories.godilithium.godilithium.mldsa_decode_message
+import com.silencelaboratories.godilithium.godilithium.mldsa_keyshare_free
 import com.silencelaboratories.godilithium.godilithium.mldsa_keyshare_from_bytes
 import com.silencelaboratories.godilithium.godilithium.mldsa_keyshare_key_id
 import com.silencelaboratories.godilithium.godilithium.mldsa_sign_session_finish
+import com.silencelaboratories.godilithium.godilithium.mldsa_sign_session_free
 import com.silencelaboratories.godilithium.godilithium.mldsa_sign_session_from_setup
 import com.silencelaboratories.godilithium.godilithium.mldsa_sign_session_input_message
 import com.silencelaboratories.godilithium.godilithium.mldsa_sign_session_message_receiver
@@ -72,10 +74,10 @@ class MldsaKeysign(
     @Throws(Exception::class)
     private fun getMldsaKeyshareID(): ByteArray {
         val buf = tss_buffer()
+        val keyShareBytes = getKeyshareBytes()
+        val keyshareSlice = keyShareBytes.toGoSlice()
+        val h = Handle()
         try {
-            val keyShareBytes = getKeyshareBytes()
-            val keyshareSlice = keyShareBytes.toGoSlice()
-            val h = Handle()
             val result = mldsa_keyshare_from_bytes(keyshareSlice, h)
             if (result != LIB_OK) {
                 error("fail to create MLDSA keyshare handle from bytes, $result")
@@ -86,6 +88,8 @@ class MldsaKeysign(
             }
             return BufferUtilJNI.get_bytes_from_tss_buffer(buf)
         } finally {
+            mldsa_keyshare_free(h)
+            h.delete()
             tss_buffer_free(buf)
         }
     }
@@ -198,7 +202,8 @@ class MldsaKeysign(
         val start = System.nanoTime()
         while (true) {
             try {
-                val msgs = sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
+                val msgs =
+                    sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
 
                 if (msgs.isNotEmpty()) {
                     if (processInboundMessage(handle, msgs, messageID)) {
@@ -302,36 +307,46 @@ class MldsaKeysign(
             }
             val decodedSetupMsg = keysignSetupMsg.toGoSlice()
             val handler = Handle()
-            val localPartyIDArr = localPartyID.toByteArray()
-            val localPartySlice = localPartyIDArr.toGoSlice()
-            val keyShareBytes = getKeyshareBytes()
-            val keyshareSlice = keyShareBytes.toGoSlice()
-            val keyshareHandle = Handle()
-            val result = mldsa_keyshare_from_bytes(keyshareSlice, keyshareHandle)
-            if (result != LIB_OK) {
-                error("fail to create MLDSA keyshare handle from bytes, $result")
-            }
-            val sessionResult = mldsa_sign_session_from_setup(
-                MldsaSecurityLevel.MlDsa44,
-                decodedSetupMsg,
-                localPartySlice,
-                keyshareHandle,
-                handler
-            )
-            if (sessionResult != LIB_OK) {
-                error("fail to create MLDSA sign session from setup message, error: $sessionResult")
-            }
-            processMldsaOutboundMessage(handler)
-            val isFinished = pullInboundMessages(handler, msgHash)
-            if (isFinished) {
-                val sig = mldsaSignSessionFinish(handler)
-                val resp = KeysignResponse()
-                resp.msg = messageToSign
-                // MLDSA signature is stored as raw bytes in hex
-                resp.derSignature = sig.toHexString()
-                val keySignVerify = KeysignVerify(mediatorURL, sessionID, sessionApi)
-                keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
-                signatures[messageToSign] = resp
+            try {
+                val localPartyIDArr = localPartyID.toByteArray()
+                val localPartySlice = localPartyIDArr.toGoSlice()
+                val keyShareBytes = getKeyshareBytes()
+                val keyshareSlice = keyShareBytes.toGoSlice()
+                val keyshareHandle = Handle()
+                try {
+                    val result = mldsa_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+                    if (result != LIB_OK) {
+                        error("fail to create MLDSA keyshare handle from bytes, $result")
+                    }
+                    val sessionResult = mldsa_sign_session_from_setup(
+                        MldsaSecurityLevel.MlDsa44,
+                        decodedSetupMsg,
+                        localPartySlice,
+                        keyshareHandle,
+                        handler
+                    )
+                    if (sessionResult != LIB_OK) {
+                        error("fail to create MLDSA sign session from setup message, error: $sessionResult")
+                    }
+                } finally {
+                    mldsa_keyshare_free(keyshareHandle)
+                    keyshareHandle.delete()
+                }
+                processMldsaOutboundMessage(handler)
+                val isFinished = pullInboundMessages(handler, msgHash)
+                if (isFinished) {
+                    val sig = mldsaSignSessionFinish(handler)
+                    val resp = KeysignResponse()
+                    resp.msg = messageToSign
+                    // MLDSA signature is stored as raw bytes in hex
+                    resp.derSignature = sig.toHexString()
+                    val keySignVerify = KeysignVerify(mediatorURL, sessionID, sessionApi)
+                    keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
+                    signatures[messageToSign] = resp
+                }
+            } finally {
+                mldsa_sign_session_free(handler)
+                handler.delete()
             }
         } catch (e: CancellationException) {
             throw e
