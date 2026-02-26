@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
@@ -91,6 +92,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             networkFeeFormatted = mapTokenValueToDecimalUiString(from.gasFees)
                     + " ${from.gasFees.unit}",
             totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue),
+            provider = provider.getSwapProviderId()
         )
     }
 

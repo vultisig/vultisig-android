@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.db.dao.FolderOrderDao
 import com.vultisig.wallet.data.db.dao.StakingDetailsDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
+import com.vultisig.wallet.data.db.dao.TransactionHistoryDao
 import com.vultisig.wallet.data.db.dao.VaultDao
 import com.vultisig.wallet.data.db.dao.VaultMetadataDao
 import com.vultisig.wallet.data.db.dao.VaultOrderDao
@@ -158,5 +159,11 @@ internal interface DatabaseModule {
         fun provideStakingDetailsDao(
             appDatabase: AppDatabase,
         ): StakingDetailsDao = appDatabase.stakingDetailsDao()
+
+        @Provides
+        @Singleton
+        fun provideTransactionHistoryDao(
+            appDatabase: AppDatabase,
+        ): TransactionHistoryDao = appDatabase.transactionHistoryDao()
     }
 }

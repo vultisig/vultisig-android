@@ -521,6 +521,14 @@ internal class VaultAccountsViewModel @Inject constructor(
         dismissBackupReminder()
     }
 
+    fun openHistory() {
+        vaultId?.let { vaultId ->
+            viewModelScope.launch {
+                navigator.route(Route.TransactionHistory(vaultId = vaultId))
+            }
+        }
+    }
+
     fun openSettings() {
         vaultId?.let { vaultId ->
             viewModelScope.launch {

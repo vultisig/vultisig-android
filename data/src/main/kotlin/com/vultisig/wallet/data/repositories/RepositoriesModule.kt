@@ -317,6 +317,12 @@ internal interface RepositoriesModule {
     fun bindKeyImportRepository(
         impl: KeyImportRepositoryImpl
     ): KeyImportRepository
+
+    @Binds
+    @Singleton
+    fun bindTransactionHistoryRepository(
+        impl: TransactionHistoryRepositoryImpl
+    ): TransactionHistoryRepository
 }
 
 @Qualifier

@@ -413,8 +413,8 @@ internal val MIGRATION_21_22 = object : Migration(21, 22) {
 }
 
 internal val MIGRATION_22_23 = object : Migration(22, 23) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        database.execSQL(
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `disabledCoin` (
                 `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -429,9 +429,9 @@ internal val MIGRATION_22_23 = object : Migration(22, 23) {
 }
 
 internal val MIGRATION_23_24 = object : Migration(23, 24) {
-    override fun migrate(database: SupportSQLiteDatabase) {
+    override fun migrate(db: SupportSQLiteDatabase) {
         // Create active_bonded_nodes table for storing bonded node information
-        database.execSQL(
+        db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `active_bonded_nodes` (
                 `id` TEXT PRIMARY KEY NOT NULL,
@@ -448,14 +448,14 @@ internal val MIGRATION_23_24 = object : Migration(23, 24) {
             """.trimIndent()
         )
 
-        database.execSQL(
+        db.execSQL(
             """
             CREATE INDEX IF NOT EXISTS `index_active_bonded_nodes_vault_id` 
             ON `active_bonded_nodes` (`vault_id`)
             """.trimIndent()
         )
 
-        database.execSQL(
+        db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `staking_details` (
                 `id` TEXT PRIMARY KEY NOT NULL,
@@ -472,7 +472,7 @@ internal val MIGRATION_23_24 = object : Migration(23, 24) {
             """.trimIndent()
         )
 
-        database.execSQL(
+        db.execSQL(
             """
             CREATE INDEX IF NOT EXISTS `index_staking_details_vault_id` 
             ON `staking_details` (`vault_id`)
@@ -482,9 +482,9 @@ internal val MIGRATION_23_24 = object : Migration(23, 24) {
 }
 
 internal val MIGRATION_24_25 = object : Migration(24, 25) {
-    override fun migrate(database: SupportSQLiteDatabase) {
+    override fun migrate(db: SupportSQLiteDatabase) {
         // Update price provider ID from matic-network to polygon-ecosystem-token
-        database.execSQL(
+        db.execSQL(
             """
             UPDATE coin
             SET priceProviderId = 'polygon-ecosystem-token'
@@ -507,5 +507,51 @@ internal val MIGRATION_25_26 = object : Migration(25, 26) {
             FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON UPDATE CASCADE ON DELETE CASCADE)
             """.trimIndent()
         )
+    }
+}
+
+internal val MIGRATION_26_27 = object : Migration(26, 27) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS transaction_history (
+                id TEXT PRIMARY KEY NOT NULL,
+                vaultId TEXT NOT NULL,
+                type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                chain TEXT NOT NULL,
+                timestamp INTEGER NOT NULL,
+                txHash TEXT NOT NULL,
+                explorerUrl TEXT NOT NULL,
+                fiatValue TEXT,
+                fromAddress TEXT,
+                toAddress TEXT,
+                amount TEXT,
+                token TEXT,
+                tokenLogo TEXT,
+                feeEstimate TEXT,
+                memo TEXT,
+                fromToken TEXT,
+                fromAmount TEXT,
+                fromChain TEXT,
+                fromTokenLogo TEXT,
+                toToken TEXT,
+                toAmount TEXT,
+                toChain TEXT,
+                toTokenLogo TEXT,
+                provider TEXT,
+                route TEXT,
+                confirmedAt INTEGER,
+                failureReason TEXT,
+                lastCheckedAt INTEGER,
+                FOREIGN KEY(vaultId) REFERENCES vault(id) ON DELETE CASCADE
+            )
+        """.trimIndent())
+
+        db.execSQL("CREATE INDEX index_transaction_history_vaultId ON transaction_history(vaultId)")
+        db.execSQL("CREATE UNIQUE INDEX index_transaction_history_txHash ON transaction_history(txHash)")
+        db.execSQL("CREATE INDEX index_transaction_history_status ON transaction_history(status)")
+        db.execSQL("CREATE INDEX index_transaction_history_type ON transaction_history(type)")
+        db.execSQL("CREATE INDEX index_transaction_history_chain ON transaction_history(chain)")
+        db.execSQL("CREATE INDEX index_transaction_history_timestamp ON transaction_history(timestamp)")
     }
 }

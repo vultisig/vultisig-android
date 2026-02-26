@@ -933,6 +933,17 @@
     <string name="transaction_status_checking_transaction">Checking transaction...</string>
     <string name="raw_transaction_data">Raw Transaction Data</string>
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
+    <!-- Transaction History Screen -->
+    <string name="transaction_history_title">History</string>
+    <string name="transaction_history_tab_overview">Overview</string>
+    <string name="transaction_history_tab_send">Send</string>
+    <string name="transaction_history_tab_swap">Swap</string>
+    <string name="transaction_history_empty_title">No transactions yet</string>
+    <string name="transaction_history_empty_desc">Your transaction history will appear here</string>
+    <string name="transaction_status_broadcasted_label">Broadcasted</string>
+    <string name="transaction_status_pending_label">Pending · %1$s</string>
+    <string name="transaction_status_confirmed_label">Confirmed</string>
+    <string name="transaction_status_failed_label">Failed</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Import Seed Phrase</string>

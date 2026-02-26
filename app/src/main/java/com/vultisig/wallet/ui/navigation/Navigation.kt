@@ -511,7 +511,8 @@ internal sealed class Route {
     @Serializable
     data class Details(val vaultId: String)
 
-
+    @Serializable
+    data class TransactionHistory(val vaultId: String)
 
     @Serializable
     data class SignMessage(
