@@ -286,14 +286,13 @@ class MldsaKeygen(
                     keyshare = Base64.encode(keyshareBytes)
                 )
                 Timber.d("MLDSA publicKey: ${publicKey.toHexString()}")
-                delay(500) // wait for the last message to be sent
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.d("Failed to generate MLDSA key, error: ${e.localizedMessage}")
+            Timber.e("Failed to generate MLDSA key, error: ${e.localizedMessage}")
             if (attempt < 3) {
-                Timber.d("mldsa keygen retry, attempt: $attempt")
+                Timber.e("mldsa keygen retry, attempt: $attempt")
                 mldsaKeygenWithRetry(attempt + 1)
             } else {
                 throw e

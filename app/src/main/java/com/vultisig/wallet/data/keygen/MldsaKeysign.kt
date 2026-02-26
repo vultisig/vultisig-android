@@ -44,13 +44,12 @@ class MldsaKeysign(
     val vault: Vault,
     val encryptionKeyHex: String,
     val isInitiateDevice: Boolean,
-    val publicKeyOverride: String? = null,
 
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
 ) {
     val localPartyID: String = vault.localPartyID
-    val publicKeyMldsa: String = publicKeyOverride ?: vault.pubKeyMldsa
+    val publicKeyMldsa: String = vault.pubKeyMLDSA
     private var messenger: TssMessenger? = null
     private val cache = mutableMapOf<String, Any>()
     val signatures = mutableMapOf<String, KeysignResponse>()
@@ -337,7 +336,7 @@ class MldsaKeysign(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.d("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
+            Timber.e("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
             if (attempt < 3) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)
             } else {
