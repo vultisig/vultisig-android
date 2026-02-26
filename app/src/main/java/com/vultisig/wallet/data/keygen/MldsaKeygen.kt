@@ -230,6 +230,7 @@ class MldsaKeygen(
     @Throws(Exception::class)
     suspend fun mldsaKeygenWithRetry(attempt: Int) {
         try {
+            this.cache.clear()
             val handler = Handle()
             try {
                 val keygenSetupMsg: ByteArray

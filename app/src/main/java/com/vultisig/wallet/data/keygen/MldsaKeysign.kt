@@ -265,6 +265,7 @@ class MldsaKeysign(
     }
 
     private suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
+        this.cache.clear()
         val msgHash = messageToSign.md5()
         val localMessenger = TssMessenger(
             mediatorURL, sessionID, encryptionKeyHex,
