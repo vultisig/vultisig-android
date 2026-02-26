@@ -309,19 +309,11 @@
     <string name="vault_settings_delete_vault_part">Kluisgedeelte:</string>
     <string name="vault_password_hint_to_long">De hint is te lang</string>
     <string name="vault_details_screen_vault_part_desc">Delen %1$s-van-%2$s</string>
-    <string name="settings_screen_register_your_vaults">Registreer uw kluizen!</string>
-    <string name="register_vault_screen_title">Registreer kluis</string>
-    <string name="register_vault_screen_step_3">Upload uw Vault-QR-code</string>
-    <string name="register_vault_screen_step_4">Houd uw VULTIES (Vault Points) bij!</string>
-    <string name="register_vault_screen_step_2_go_to">Ga naar</string>
-    <string name="register_vault_screen_step_2_vultisig_web">Vultisig Web</string>
-    <string name="register_vault_screen_step_1">Sla uw Vault-QR-code op</string>
     <string name="do_not_remind_me_again">Herinner me er niet meer aan</string>
     <string name="monthly_backup_reminder_title">Vergeet niet een back-up te maken van uw kluisshares en de volledigheid ervan te verifiëren.</string>
     <string name="transaction_complete_screen_title">Transactie voltooid</string>
     <string name="qr_address_screen_description">%1$s adres:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Verkeerde kluis geselecteerd</string>
-    <string name="register_vault_screen_save_qr_code">QR-code opslaan</string>
     <string name="verify_swap_screen_total_fees">Totale kosten</string>
     <string name="scan_qr_code_error_text">Niet-gerelateerde QR-code wordt gescand</string>
     <string name="scan_qr_code_error_button">Rug</string>
@@ -499,7 +491,6 @@
     <string name="referral_view_add_friend">Verwijzing van vriend toevoegen</string>
     <string name="referral_view_save">Opslaan</string>
     <string name="referral_view_on_swaps">nu bij swaps</string>
-    <string name="register_vault_screen_guide_title">Gids voor registreren</string>
     <string name="faq_settings_q7">Is Vultisig open source en wordt het gecontroleerd?</string>
     <string name="faq_settings_q8">Hoe gaat Vultisig om met privacy en gegevensbescherming?</string>
     <string name="faq_settings_q9">Hoe verhoudt Vultisig zich tot andere multisig-wallets?</string>

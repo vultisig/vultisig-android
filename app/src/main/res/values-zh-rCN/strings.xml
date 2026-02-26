@@ -543,15 +543,6 @@
     <string name="vault_details_screen_vault_part_desc">份额 %1$s-of-%2$s</string>
 
     <!-- Settings Screen -->
-    <string name="settings_screen_register_your_vaults">注册您的金库！</string>
-    
-    <!-- Register Vault Screen -->
-    <string name="register_vault_screen_title">注册金库</string>
-    <string name="register_vault_screen_step_3">上传您的金库二维码</string>
-    <string name="register_vault_screen_step_4">跟踪您的 VULTIES（金库积分）！</string>
-    <string name="register_vault_screen_step_2_go_to">前往</string>
-    <string name="register_vault_screen_step_2_vultisig_web">Vultisig 网站</string>
-    <string name="register_vault_screen_step_1">保存您的金库二维码</string>
     
     <!-- Do Not Remind -->
     <string name="do_not_remind_me_again">不再提醒我</string>
@@ -567,9 +558,6 @@
     
     <!-- Join Keysign -->
     <string name="join_keysign_wrong_vault">选择了错误的金库</string>
-    
-    <!-- Register Vault Screen -->
-    <string name="register_vault_screen_save_qr_code">保存金库二维码</string>
     
     <!-- Verify Swap Screen -->
     <string name="verify_swap_screen_total_fees">最大总费用</string>
@@ -755,9 +743,6 @@
     <string name="tcy_auto_compound_enable_subtitle">自动复利您的 TCY 奖励</string>
     <string name="tcy_auto_compound_unstake_title">取消质押自动复利 TCY</string>
     <string name="tcy_auto_compound_unstake_subtitle">从自动复利 TCY 存款中取消质押</string>
-    
-    <!-- Register Vault Screen -->
-    <string name="register_vault_screen_guide_title">注册指南</string>
     
     <!-- FAQ Settings -->
     <string name="faq_settings_q7">Vultisig 是开源和经过审计的吗？</string>

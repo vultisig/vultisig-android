@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.navigation.Route.VerifyDeposit
 import com.vultisig.wallet.ui.navigation.Route.VerifySend
 import com.vultisig.wallet.ui.navigation.Route.VerifySwap
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
+import com.vultisig.wallet.ui.screens.ChainDashboardScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.DeFiChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ImportFileScreen
@@ -58,7 +59,6 @@ import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
-import com.vultisig.wallet.ui.screens.ChainDashboardScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
 import com.vultisig.wallet.ui.screens.backup.VaultsToBackupScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
@@ -109,7 +109,6 @@ import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreen
 import com.vultisig.wallet.ui.screens.settings.FaqSettingScreen
 import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
-import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
 import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
@@ -279,9 +278,6 @@ internal fun SetupNavGraph(
             SecurityScannerEnableScreen(navController)
         }
 
-        composable<Route.RegisterVault> {
-            RegisterVaultScreen(navController)
-        }
 
         composable<Secret> {
             SecretScreen()

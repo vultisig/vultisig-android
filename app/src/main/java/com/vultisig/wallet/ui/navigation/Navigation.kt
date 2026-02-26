@@ -9,8 +9,10 @@ import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.ui.navigation.Route.*
+import com.vultisig.wallet.ui.navigation.Route.BackupVault
 import com.vultisig.wallet.ui.navigation.Route.SelectNetwork.Filters
+import com.vultisig.wallet.ui.navigation.Route.VaultInfo
+import com.vultisig.wallet.ui.navigation.Route.VaultList
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -566,10 +568,6 @@ internal sealed class Route {
     @Serializable
     data object OnChainSecurity
 
-    @Serializable
-    data class RegisterVault(
-        val vaultId: String,
-    )
 
     @Serializable
     data class ReferralOnboarding(
