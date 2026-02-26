@@ -35,6 +35,9 @@ android {
             srcDir("${project.rootProject.rootDir}/commondata/proto")
         }
     }
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
 }
 
 kotlin {
@@ -121,6 +124,9 @@ dependencies {
     // test
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.junit)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))
     
     androidTestImplementation(libs.junit)
