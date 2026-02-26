@@ -11,12 +11,27 @@ import com.vultisig.wallet.data.models.settings.AppLanguage
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
-import com.vultisig.wallet.ui.models.settings.SettingsItem.*
+import com.vultisig.wallet.ui.models.settings.SettingsItem.AddressBook
+import com.vultisig.wallet.ui.models.settings.SettingsItem.CheckForUpdates
+import com.vultisig.wallet.ui.models.settings.SettingsItem.Currency
+import com.vultisig.wallet.ui.models.settings.SettingsItem.Discord
+import com.vultisig.wallet.ui.models.settings.SettingsItem.DiscountTiers
+import com.vultisig.wallet.ui.models.settings.SettingsItem.Faq
+import com.vultisig.wallet.ui.models.settings.SettingsItem.Github
+import com.vultisig.wallet.ui.models.settings.SettingsItem.Language
+import com.vultisig.wallet.ui.models.settings.SettingsItem.PrivacyPolicy
+import com.vultisig.wallet.ui.models.settings.SettingsItem.ReferralCode
+import com.vultisig.wallet.ui.models.settings.SettingsItem.ShareTheApp
+import com.vultisig.wallet.ui.models.settings.SettingsItem.TermsOfService
+import com.vultisig.wallet.ui.models.settings.SettingsItem.Twitter
+import com.vultisig.wallet.ui.models.settings.SettingsItem.VaultSetting
+import com.vultisig.wallet.ui.models.settings.SettingsItem.Vult
+import com.vultisig.wallet.ui.models.settings.SettingsItem.VultisigEducation
+import com.vultisig.wallet.ui.models.settings.SettingsItem.VultisigWebsite
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
-import com.vultisig.wallet.ui.theme.v2.V2.colors
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -55,15 +70,6 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         )
     )
 
-    data object RegisterVault : SettingsItem(
-        SettingsItemUiModel(
-            title = UiText.StringResource(R.string.settings_screen_register_your_vaults),
-            backgroundColor = colors.buttons.tertiary,
-            leadingIcon = R.drawable.register,
-            trailingIcon = R.drawable.ic_small_caret_right,
-            leadingIconTint =  colors.text.primary,
-        )
-    )
 
     data class Language(val lang: String) :
         SettingsItem(
@@ -238,8 +244,7 @@ internal class SettingsViewModel @Inject constructor(
                 title = UiText.StringResource(R.string.vault),
                 items = listOf(
                     VaultSetting,
-                    DiscountTiers,
-                    RegisterVault
+                    DiscountTiers
                 )
             ),
             SettingsGroupUiModel(
@@ -330,13 +335,6 @@ internal class SettingsViewModel @Inject constructor(
 
             PrivacyPolicy -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.PRIVACY))
             ReferralCode -> onClickReferralCode()
-            RegisterVault -> {
-                viewModelScope.launch {
-                    navigator.route(
-                        Route.RegisterVault(vaultId)
-                    )
-                }
-            }
             ShareTheApp -> openShareLinkModalBottomSheet()
             TermsOfService -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TERMS_OF_SERVICE))
             Twitter -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TWITTER))

@@ -371,19 +371,11 @@
     <string name="vault_settings_delete_vault_part">Vault Share:</string>
     <string name="vault_password_hint_to_long">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc">Share %1$s-of-%2$s</string>
-    <string name="settings_screen_register_your_vaults">Register your Vaults!</string>
-    <string name="register_vault_screen_title">Register Vault</string>
-    <string name="register_vault_screen_step_3">Upload your Vault QR Code</string>
-    <string name="register_vault_screen_step_4">Track your VULTIES (Vault Points) !</string>
-    <string name="register_vault_screen_step_2_go_to">Go to</string>
-    <string name="register_vault_screen_step_2_vultisig_web">Vultisig Web</string>
-    <string name="register_vault_screen_step_1">"Save your Vault QR"</string>
     <string name="do_not_remind_me_again">Don\'t remind me again</string>
     <string name="monthly_backup_reminder_title">Don\'t forget to backup your vault shares and verify the completeness.</string>
     <string name="transaction_complete_screen_title">Transaction complete</string>
     <string name="qr_address_screen_description">%1$s address:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Wrong vault selected</string>
-    <string name="register_vault_screen_save_qr_code">Save Vault QR</string>
     <string name="verify_swap_screen_total_fees">Max. Total Fees</string>
     <string name="scan_qr_code_error_text">Unrelated QR code is scanned</string>
     <string name="scan_qr_code_error_button">Back</string>
@@ -709,7 +701,6 @@
     <string name="referral_view_add_friend">Add a Friends Referral</string>
     <string name="referral_view_save">Save</string>
     <string name="referral_view_on_swaps">on swaps now</string>
-    <string name="register_vault_screen_guide_title">Register guide</string>
     <string name="faq_settings_q7">Is Vultisig open source and audited?</string>
     <string name="faq_settings_q8">How does Vultisig handle privacy and data protection?</string>
     <string name="faq_settings_q9">How does Vultisig compare to other multisig wallets?</string>

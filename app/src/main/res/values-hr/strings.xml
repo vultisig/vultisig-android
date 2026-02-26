@@ -310,19 +310,11 @@
     <string name="vault_settings_delete_vault_part">Podijeli trezora:</string>
     <string name="vault_password_hint_to_long">Savjet je predug</string>
     <string name="vault_details_screen_vault_part_desc">Podijeli %1$s-od-%2$s</string>
-    <string name="settings_screen_register_your_vaults">Registrirajte svoje trezore!</string>
-    <string name="register_vault_screen_title">Registrirajte sef</string>
-    <string name="register_vault_screen_step_3">Učitajte svoj Vault QR kod</string>
-    <string name="register_vault_screen_step_4">Pratite svoje VULTIES (Vault bodove)!</string>
-    <string name="register_vault_screen_step_2_go_to">Idi na</string>
-    <string name="register_vault_screen_step_2_vultisig_web">Vultisig Web</string>
-    <string name="register_vault_screen_step_1">Spremite svoj Vault QR</string>
     <string name="do_not_remind_me_again">Nemoj me ponovno podsjećati</string>
     <string name="monthly_backup_reminder_title">Ne zaboravite sigurnosno kopirati svoje dionice trezora i provjeriti cjelovitost.</string>
     <string name="transaction_complete_screen_title">Transakcija dovršena</string>
     <string name="qr_address_screen_description">%1$s adresa:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Odabran je pogrešan trezor</string>
-    <string name="register_vault_screen_save_qr_code">Spremi QR kod</string>
     <string name="verify_swap_screen_total_fees">Ukupne naknade</string>
     <string name="scan_qr_code_error_text">Nepovezani QR kod se skenira</string>
     <string name="scan_qr_code_error_button">Nazad</string>
@@ -502,7 +494,6 @@
     <string name="referral_view_add_friend">Dodaj preporuku prijatelja</string>
     <string name="referral_view_save">Spremi</string>
     <string name="referral_view_on_swaps">na zamjenama sada</string>
-    <string name="register_vault_screen_guide_title">Vodič za registraciju</string>
     <string name="faq_settings_q7">Je li Vultisig otvorenog koda i revidiran?</string>
     <string name="faq_settings_q8">Kako Vultisig rješava privatnost i zaštitu podataka?</string>
     <string name="faq_settings_q9">Kako se Vultisig uspoređuje s drugim multisign novčanicima?</string>
