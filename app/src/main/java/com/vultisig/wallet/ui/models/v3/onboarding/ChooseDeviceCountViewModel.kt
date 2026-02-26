@@ -29,6 +29,7 @@ data class DeviceCountTip(
     val logo: Int,
     val title: UiText,
     val subTitle: UiText,
+    val subTitleHighlight: UiText? = null,
 )
 
 
@@ -76,24 +77,28 @@ internal class ChooseDeviceCountViewModel @Inject constructor(
     companion object {
         val Tips = listOf(
             DeviceCountTip(
-                logo = R.drawable.icon_shield_solid,
-                title = UiText.StringResource(R.string.faq_settings_q1),
-                subTitle = UiText.StringResource(R.string.faq_settings_a1),
+                logo = R.drawable.fast,
+                title = UiText.StringResource(R.string.welcome_fast_and_easy),
+                subTitle = UiText.StringResource(R.string.welcome_fast_and_easy_desc),
+                subTitleHighlight = UiText.StringResource(R.string.welcome_fast_and_easy_highlight),
             ),
             DeviceCountTip(
-                logo = R.drawable.icon_shield_solid,
-                title = UiText.StringResource(R.string.faq_settings_q2),
-                subTitle = UiText.StringResource(R.string.faq_settings_a2),
+                logo = R.drawable.shield,
+                title = UiText.StringResource(R.string.welcome_only_your_devices),
+                subTitle = UiText.StringResource(R.string.welcome_only_your_devices_desc),
+                subTitleHighlight = UiText.StringResource(R.string.welcome_only_your_devices_highlight),
             ),
             DeviceCountTip(
-                logo = R.drawable.icon_shield_solid,
-                title = UiText.StringResource(R.string.faq_settings_q3),
-                subTitle = UiText.StringResource(R.string.faq_settings_a3),
+                logo = R.drawable.balance,
+                title = UiText.StringResource(R.string.welcome_best_balance),
+                subTitle = UiText.StringResource(R.string.welcome_best_balance_desc),
+                subTitleHighlight = UiText.StringResource(R.string.welcome_best_balance_highlight),
             ),
             DeviceCountTip(
-                logo = R.drawable.icon_shield_solid,
-                title = UiText.StringResource(R.string.faq_settings_q4),
-                subTitle = UiText.StringResource(R.string.faq_settings_a4),
+                logo = R.drawable.maximun_security,
+                title = UiText.StringResource(R.string.welcome_maximum_security),
+                subTitle = UiText.StringResource(R.string.welcome_maximum_security_desc),
+                subTitleHighlight = UiText.StringResource(R.string.welcome_maximum_security_highlight)
             ),
         )
     }

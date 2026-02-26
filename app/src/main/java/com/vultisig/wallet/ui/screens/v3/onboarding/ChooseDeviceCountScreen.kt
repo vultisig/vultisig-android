@@ -22,7 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -137,13 +142,14 @@ private fun Tip() {
         modifier = Modifier.fillMaxWidth()
     ) {
         UiIcon(
-            drawableResId = R.drawable.logo, size = 16.dp
+            drawableResId = R.drawable.tip, size = 16.dp,
+            tint = Theme.v2.colors.alerts.info
         )
         UiSpacer(
             size = 8.dp
         )
         Text(
-            text = "Tip: You can use a browser as a device",
+            text = stringResource(R.string.welcome_tip) ,
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.secondary,
         )
@@ -212,9 +218,22 @@ private fun DeviceCountDescription(
                 size = 8.dp
             )
 
-            AnimatedContent(tips[selectedIndex].subTitle.asString()) {
+            AnimatedContent(tips[selectedIndex].subTitle.asString()) { subTitleText ->
+                val highlight = tips[selectedIndex].subTitleHighlight?.asString()
+                val annotatedText = buildAnnotatedString {
+                    val start = if (highlight != null) subTitleText.indexOf(highlight) else -1
+                    if (start >= 0) {
+                        append(subTitleText.substring(0, start))
+                        withStyle(SpanStyle(color = Theme.v2.colors.neutrals.n50, fontWeight = FontWeight.Bold)) {
+                            append(highlight)
+                        }
+                        append(subTitleText.substring(start + highlight!!.length))
+                    } else {
+                        append(subTitleText)
+                    }
+                }
                 Text(
-                    text = it,
+                    text = annotatedText,
                     color = Theme.v2.colors.text.tertiary,
                     style = Theme.brockmann.body.s.medium,
                 )

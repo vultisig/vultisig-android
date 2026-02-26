@@ -49,18 +49,31 @@ internal class SetupVaultInfoViewModel @Inject constructor(
         val state = when (deviceCount) {
             1 -> SetupVaultInfoUiState(
                 tips = Tips_1_Device,
+                title = UiText.DynamicString("Fast Vault"),
+                subTitle = UiText.DynamicString("2-device setup"),
+                headerLogo = R.drawable.fast
+
             )
 
             2 -> SetupVaultInfoUiState(
                 tips = Tips_2_Device,
+                title = UiText.DynamicString("Secure Vault"),
+                subTitle = UiText.DynamicString("2-device setup"),
+                headerLogo = R.drawable.secured_shield
             )
 
             3 -> SetupVaultInfoUiState(
                 tips = Tips_3_Device,
+                title = UiText.DynamicString("Secure Vault"),
+                subTitle = UiText.DynamicString("3-device setup"),
+                headerLogo = R.drawable.icon_shield_solid
             )
 
             4 -> SetupVaultInfoUiState(
                 tips = Tips_4_Device,
+                title = UiText.DynamicString("Secure Vault"),
+                subTitle = UiText.DynamicString("4+-device vault"),
+                headerLogo = R.drawable.icon_shield_solid
             )
 
             else -> error("is not possible")
@@ -99,26 +112,73 @@ internal class SetupVaultInfoViewModel @Inject constructor(
 
     companion object {
         private val Tips_1_Device = listOf(
-            SetupVaultInfoTip(),
-            SetupVaultInfoTip(),
-            SetupVaultInfoTip(),
+            SetupVaultInfoTip(
+                R.drawable.signing,
+                UiText.StringResource(R.string.vault_setup_1_device_signing),
+                UiText.StringResource(R.string.vault_setup_1_device_signing_desc),
+            ),
+            SetupVaultInfoTip(
+                R.drawable.tick_shield,
+                UiText.StringResource(R.string.vault_setup_fast_and_secure_setup),
+                UiText.StringResource(R.string.vault_setup_fast_and_secure_setup_desc),
+            ),
+            SetupVaultInfoTip(
+                R.drawable.lock,
+                UiText.StringResource(R.string.vault_setup_multisig_with_one_device),
+                UiText.StringResource(R.string.vault_setup_multisig_with_one_device_desc),
+            ),
         )
         private val Tips_2_Device = listOf(
-
-            SetupVaultInfoTip(),
-            SetupVaultInfoTip(),
-            SetupVaultInfoTip(),
+            SetupVaultInfoTip(
+                R.drawable.signing,
+                UiText.StringResource(R.string.vault_setup_2_device_signing),
+                UiText.StringResource(R.string.vault_setup_2_device_signing_desc),
+            ),
+            SetupVaultInfoTip(
+                R.drawable.tick_shield,
+                UiText.StringResource(R.string.vault_setup_no_single_point_of_failure),
+                UiText.StringResource(R.string.vault_setup_one_device_alone_cant_move_funds),
+            ),
+            SetupVaultInfoTip(
+                R.drawable.lock,
+                UiText.StringResource(R.string.vault_setup_ideal_for_simple_cold_storage),
+                UiText.StringResource(R.string.vault_setup_perfect_for_users_with_only_2_devices)
+            ),
         )
         private val Tips_3_Device = listOf(
 
-            SetupVaultInfoTip(),
-            SetupVaultInfoTip(),
-            SetupVaultInfoTip(),
+            SetupVaultInfoTip(
+                R.drawable.signing,
+                UiText.StringResource(R.string.vault_setup_2_device_signing),
+                UiText.StringResource(R.string.vault_setup_2_device_signing_desc),
+            ),
+            SetupVaultInfoTip(
+                R.drawable.tick_shield,
+                UiText.StringResource(R.string.vault_setup_no_single_point_of_failure),
+                UiText.StringResource(R.string.vault_setup_one_device_alone_cant_move_funds),
+            ),
+            SetupVaultInfoTip(
+                R.drawable.lock,
+                UiText.StringResource(R.string.vault_setup_ideal_for_simple_cold_storage),
+                UiText.StringResource(R.string.vault_setup_perfect_balance_desc)
+            ),
         )
         private val Tips_4_Device = listOf(
-            SetupVaultInfoTip(),
-            SetupVaultInfoTip(),
-            SetupVaultInfoTip(),
+            SetupVaultInfoTip(
+                R.drawable.signing,
+                UiText.StringResource(R.string.vault_setup_3_device_or_more_signing),
+                UiText.StringResource(R.string.vault_setup_3_device_or_more_signing_desc),
+            ),
+            SetupVaultInfoTip(
+                R.drawable.tick_shield,
+                UiText.StringResource(R.string.vault_setup_dynamic_device_management),
+                UiText.StringResource(R.string.vault_setup_add_as_many_devices_as_you_want),
+            ),
+            SetupVaultInfoTip(
+                R.drawable.lock,
+                UiText.StringResource(R.string.vault_setup_built_for_teams_and_treasuries),
+                UiText.StringResource(R.string.vault_setup_perfect_balance_desc)
+            ),
         )
     }
 

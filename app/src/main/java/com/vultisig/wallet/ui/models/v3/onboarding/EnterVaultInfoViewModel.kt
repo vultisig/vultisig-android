@@ -46,25 +46,27 @@ enum class StepType(
     val title: UiText,
     val description: UiText,
     val logo: Int,
-    val isPassword: Boolean
+    val isPassword: Boolean,
+    val descriptionHighlight: UiText? = null,
 ) {
     Name(
-        title = "Enter your Vault".asUiText(),
-        description = "This will only be used once to send your backup file, Vultisig doesn’t store any data.".asUiText(),
-        logo = R.drawable.logo,
+        title = UiText.StringResource(R.string.fast_vault_name_screen_title),
+        description =UiText.StringResource(R.string.vault_setup_no_inspiration),
+        logo = R.drawable.blue_feather,
         isPassword = false,
     ),
     Email(
-        title = "Enter your Email".asUiText(),
-        description = "This will only be used once to send your backup file, Vultisig doesn’t store any data.".asUiText(),
-        logo = R.drawable.logo,
+        title = UiText.StringResource(R.string.email_enter_your_email),
+        description =UiText.StringResource(R.string.email_only_used_once),
+        logo = R.drawable.mail,
         isPassword = false,
     ),
     Password(
-        title = "Enter your Password".asUiText(),
-        description = "This will only be used once to send your backup file, Vultisig doesn’t store any data.".asUiText(),
-        logo = R.drawable.logo,
+        title = UiText.StringResource(R.string.password_choose_a_password),
+        description =UiText.StringResource(R.string.password_extra_layer),
+        logo = R.drawable.center_lock,
         isPassword = true,
+        descriptionHighlight = UiText.StringResource(R.string.password_extra_layer_highlight),
     )
 }
 

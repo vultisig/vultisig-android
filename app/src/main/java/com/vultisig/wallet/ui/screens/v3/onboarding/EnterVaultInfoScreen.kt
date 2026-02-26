@@ -25,7 +25,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -101,8 +105,22 @@ internal fun EnterVaultInfoScreen(
             UiSpacer(
                 size = 12.dp
             )
+            val descText = uiState.activeStep.description.asString()
+            val descHighlight = uiState.activeStep.descriptionHighlight?.asString()
+            val descAnnotated = buildAnnotatedString {
+                val start = if (descHighlight != null) descText.indexOf(descHighlight) else -1
+                if (start >= 0) {
+                    append(descText.substring(0, start))
+                    withStyle(SpanStyle(color = Theme.v2.colors.neutrals.n50, fontWeight = FontWeight.Bold)) {
+                        append(descHighlight)
+                    }
+                    append(descText.substring(start + descHighlight!!.length))
+                } else {
+                    append(descText)
+                }
+            }
             Text(
-                text = uiState.activeStep.description.asString(),
+                text = descAnnotated,
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.body.s.medium,
                 textAlign = TextAlign.Center,

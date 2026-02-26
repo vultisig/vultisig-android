@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -20,7 +21,7 @@ fun SetupVaultGuideItem(
 ){
     Row {
         UiIcon(
-            drawableResId = R.drawable.icon_shield_solid,
+            drawableResId = logo,
             size = 24.dp,
             tint = Theme.v2.colors.alerts.info
         )
@@ -30,7 +31,7 @@ fun SetupVaultGuideItem(
 
         Column {
             Text(
-                text = "No single point of failure",
+                text = title,
                 style = Theme.brockmann.headings.subtitle,
                 color = Theme.v2.colors.neutrals.n50,
             )
@@ -38,7 +39,7 @@ fun SetupVaultGuideItem(
                 size = 8.dp
             )
             Text(
-                text = "One device alone can’t move funds. If one device is lost or exposed, it can’t approve on its own.",
+                text = subTitle,
                 style = Theme.brockmann.supplementary.footnote,
                 color = Theme.v2.colors.text.tertiary
             )
