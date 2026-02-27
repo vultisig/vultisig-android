@@ -281,6 +281,13 @@
     <string name="keysign_sign_transaction">Assinar transação</string>
     <string name="keysign_password_title">Palavra-passe</string>
     <string name="home_screen_import_vault">Importar cofre</string>
+    <string name="start_screen_new">NOVO</string>
+    <string name="start_screen_import_seedphrase">Importar frase-semente</string>
+    <string name="start_screen_import_seedphrase_desc">Introduza-a, crie um cofre, nunca mais olhe para trás.</string>
+    <string name="start_screen_import_vault_share">Importar partilha de cofre</string>
+    <string name="start_screen_import_vault_share_desc">Use uma partilha de cofre para recuperar o seu cofre.</string>
+    <string name="start_screen_import_vault_share_file_types">Tipos de ficheiro suportados: .bak &amp; .vult</string>
+    <string name="start_screen_recover_or_convert">Recupere o seu cofre ou converta a sua frase-semente num cofre</string>
     <string name="keysign_password_incorrect_password">A palavra-passe está incorreta</string>
     <string name="vault_list_part_n_of_t">Compartilhar %1$d-of-%2$d</string>
     <string name="vault_part_n_of_t">Compartilhar %1$d-de-%2$d</string>
@@ -956,6 +963,11 @@
     <string name="welcome_maximum_security_desc">A maior segurança, ideal para tesourarias ou DAOs. Assinar transações requer pelo menos 3 dispositivos.</string>
     <string name="welcome_maximum_security_highlight">pelo menos 3 dispositivos.</string>
     <string name="vault_setup_your_vault_setup">A configuração do seu cofre</string>
+    <string name="vault_setup_fast_vault">Cofre rápido</string>
+    <string name="vault_setup_secure_vault">Cofre seguro</string>
+    <string name="vault_setup_2_device_setup">Configuração de 2 dispositivos</string>
+    <string name="vault_setup_3_device_setup">Configuração de 3 dispositivos</string>
+    <string name="vault_setup_4plus_device_vault">Cofre 4+ dispositivos</string>
     <string name="vault_setup_1_device_signing">Assinatura com 1 dispositivo</string>
     <string name="vault_setup_1_device_signing_desc">Assinatura cómoda com um dispositivo em qualquer lugar. Ideal para transações diárias ou negociação de valores menores.</string>
     <string name="vault_setup_fast_and_secure_setup">Configuração rápida e segura</string>
@@ -983,6 +995,9 @@
     <string name="backup_send_to_email">Enviar para %1$s</string>
     <string name="backup_incorrect_code_try_again">Código incorreto. Tente novamente.</string>
     <string name="backup_save_backup_to_the_cloud">Guardar cópia de segurança na nuvem</string>
+    <string name="backup_vault_screen_export_prefix">Exporte este ficheiro de cópia de segurança e guarde-o na nuvem. Está</string>
+    <string name="backup_vault_screen_password_suffix">com a palavra-passe definida anteriormente para desbloquear o seu cofre.</string>
+    <string name="backup_vault_screen_cloud_tip">Use um serviço de nuvem ou conta diferente para cada cópia. Quando terminar, elimine o ficheiro deste dispositivo.</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Exporte este ficheiro de cópia de segurança e guarde-o na nuvem. Está encriptado com a palavra-passe definida anteriormente para desbloquear o seu cofre. Use um serviço de nuvem ou conta diferente para cada cópia. Quando terminar, elimine o ficheiro deste dispositivo.</string>
     <string name="backup_i_understand_how_to_save_this_backup">Percebo como guardar esta cópia de segurança</string>
     <string name="backup_congrats">Parabéns!</string>

@@ -210,7 +210,7 @@ private fun ChooseImportTypeBottomSheetContent(
             size = 24.dp
         )
         Text(
-            text = "Recover your vault or convert your seedphrase to a vault",
+            text = stringResource(R.string.start_screen_recover_or_convert),
             color = Theme.v2.colors.neutrals.n50,
             style = Theme.brockmann.headings.title3,
             textAlign = TextAlign.Center
@@ -224,8 +224,8 @@ private fun ChooseImportTypeBottomSheetContent(
             ChooseImportTypeButton(
                 isNew = true,
                 logo = R.drawable.logo,
-                title = "Import seedphrase",
-                description = "Enter it, create a vault, never look back.",
+                title = stringResource(R.string.start_screen_import_seedphrase),
+                description = stringResource(R.string.start_screen_import_seedphrase_desc),
                 subDescription = null,
                 onClick = onImportSeedphraseClick,
             )
@@ -236,9 +236,9 @@ private fun ChooseImportTypeBottomSheetContent(
         ChooseImportTypeButton(
             isNew = false,
             logo = R.drawable.wallet,
-            title = "Import vault share",
-            description = "Use a vault share to recover your vault.",
-            subDescription = "Supported file types: .bak & .vult",
+            title = stringResource(R.string.start_screen_import_vault_share),
+            description = stringResource(R.string.start_screen_import_vault_share_desc),
+            subDescription = stringResource(R.string.start_screen_import_vault_share_file_types),
             onClick = onImportVaultClick,
         )
     }
@@ -284,7 +284,7 @@ private fun ChooseImportTypeButton(
                     size = 4.dp
                 )
                 Text(
-                    text = "NEW",
+                    text = stringResource(R.string.start_screen_new),
                     color = Theme.v2.colors.alerts.warning,
                     style = Theme.brockmann.supplementary.caption
                 )

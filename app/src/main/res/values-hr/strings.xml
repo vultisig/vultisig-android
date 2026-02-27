@@ -282,6 +282,13 @@
     <string name="keysign_sign_transaction">Potpiši transakciju</string>
     <string name="keysign_password_title">Lozinka</string>
     <string name="home_screen_import_vault">Uvoz trezora</string>
+    <string name="start_screen_new">NOVO</string>
+    <string name="start_screen_import_seedphrase">Uvezi seed-frazu</string>
+    <string name="start_screen_import_seedphrase_desc">Unesi je, stvori trezor, ne osvrći se.</string>
+    <string name="start_screen_import_vault_share">Uvezi udio trezora</string>
+    <string name="start_screen_import_vault_share_desc">Koristi udio trezora za oporavak svog trezora.</string>
+    <string name="start_screen_import_vault_share_file_types">Podržane vrste datoteka: .bak &amp; .vult</string>
+    <string name="start_screen_recover_or_convert">Oporavi svoj trezor ili pretvori svoju seed-frazu u trezor</string>
     <string name="keysign_password_incorrect_password">Lozinka je netočna</string>
     <string name="vault_list_part_n_of_t">Podijeli %1$d-of-%2$d</string>
     <string name="vault_part_n_of_t">Podijeli %1$d-od-%2$d</string>
@@ -956,6 +963,11 @@
     <string name="welcome_maximum_security_desc">Najviša sigurnost, idealna za riznice ili DAO-ove. Potpisivanje transakcija zahtijeva najmanje 3 uređaja.</string>
     <string name="welcome_maximum_security_highlight">najmanje 3 uređaja.</string>
     <string name="vault_setup_your_vault_setup">Postavljanje vašeg trezora</string>
+    <string name="vault_setup_fast_vault">Brzi trezor</string>
+    <string name="vault_setup_secure_vault">Sigurni trezor</string>
+    <string name="vault_setup_2_device_setup">Postavljanje 2 uređaja</string>
+    <string name="vault_setup_3_device_setup">Postavljanje 3 uređaja</string>
+    <string name="vault_setup_4plus_device_vault">Trezor 4+ uređaja</string>
     <string name="vault_setup_1_device_signing">Potpisivanje s 1 uređajem</string>
     <string name="vault_setup_1_device_signing_desc">Praktično potpisivanje jednim uređajem u pokretu. Idealno za svakodnevne transakcije ili trgovanje manjim iznosima.</string>
     <string name="vault_setup_fast_and_secure_setup">Brzo i sigurno postavljanje</string>
@@ -983,6 +995,9 @@
     <string name="backup_send_to_email">Pošalji na %1$s</string>
     <string name="backup_incorrect_code_try_again">Netočan kôd. Pokušajte ponovo.</string>
     <string name="backup_save_backup_to_the_cloud">Spremi sigurnosnu kopiju u oblak</string>
+    <string name="backup_vault_screen_export_prefix">Izvezite ovu datoteku sigurnosne kopije, zatim je spremite u oblak. Ona je</string>
+    <string name="backup_vault_screen_password_suffix">lozinkom postavljenom ranije za otključavanje vašeg trezora.</string>
+    <string name="backup_vault_screen_cloud_tip">Koristite drugi oblak ili račun za svaku sigurnosnu kopiju. Kada završite, izbrišite datoteku s ovog uređaja.</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Izvezite ovu datoteku sigurnosne kopije, zatim je spremite u oblak. Šifrirana je lozinkom postavljenom ranije za otključavanje vašeg trezora. Koristite drugi oblak ili račun za svaku sigurnosnu kopiju. Kada završite, izbrišite datoteku s ovog uređaja.</string>
     <string name="backup_i_understand_how_to_save_this_backup">Razumijem kako spremiti ovu sigurnosnu kopiju</string>
     <string name="backup_congrats">Čestitamo!</string>

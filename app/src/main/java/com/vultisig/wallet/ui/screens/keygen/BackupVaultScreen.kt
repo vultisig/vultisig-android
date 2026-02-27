@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -91,7 +92,7 @@ private fun BackupVaultScreen(
                 UiSpacer(24.dp)
 
                 Text(
-                    text = "Save backup to the cloud",
+                    text = stringResource(R.string.backup_save_backup_to_the_cloud),
                     style = Theme.brockmann.headings.title2,
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
@@ -103,7 +104,7 @@ private fun BackupVaultScreen(
 
                 Text(
                     text = buildAnnotatedString {
-                        append("Export this backup file, then save it to the cloude. it is")
+                        append(stringResource(R.string.backup_vault_screen_export_prefix))
                         withStyle(
                             style = SpanStyle(
                                 fontWeight = FontWeight.Bold,
@@ -112,14 +113,17 @@ private fun BackupVaultScreen(
                         ) {
                             append(" encrypted ")
                         }
-                        append("with the password set earlier to unlock your Vault.\n")
+                        append(stringResource(R.string.backup_vault_screen_password_suffix))
+                        append("\n")
                         withStyle(
                             style = SpanStyle(
                                 fontWeight = FontWeight.Bold,
                                 color = Theme.v2.colors.text.secondary
                             )
                         ) {
-                            append(" Use a different cloud service or account for each backup. When you’re finished, delete the file from this device ")
+                            append(" ")
+                            append(stringResource(R.string.backup_vault_screen_cloud_tip))
+                            append(" ")
                         }
                     },
                     style = Theme.brockmann.body.s.medium,
@@ -138,7 +142,7 @@ private fun BackupVaultScreen(
                 VsCheckField(
                     modifier = Modifier
                         .testTag("SummaryScreen.agree"),
-                    title = "I understand how to save this backup",
+                    title = stringResource(R.string.backup_i_understand_how_to_save_this_backup),
                     isChecked = isNextEnabled,
                     onCheckedChange = {
                         isNextEnabled = it

@@ -130,26 +130,26 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
     companion object {
         val FastVaultBackupOnboardingTips = listOf(
             VaultBackupOnboardingTip(
-                title = "Your Device is the driver".asUiText(),
-                description = "The Device backup and password are the key. The server only co-signs and backup can be requested.".asUiText(),
+                title = UiText.StringResource(R.string.backup_your_device_is_the_driver),
+                description =UiText.StringResource(R.string.backup_device_backup_and_password_are_key),
                 logo = R.drawable.arrow_cloude,
             ),
             VaultBackupOnboardingTip(
-                title = "Store backups separately".asUiText(),
-                description = "Keep each backup in a different place. If one is compromised, your funds stay safe.".asUiText(),
+                title = UiText.StringResource(R.string.backup_store_backups_separately),
+                description = UiText.StringResource(R.string.backup_keep_each_backup_in_different_place),
                 logo = R.drawable.branches
             ),
         )
 
         val SecureVaultBackupOnboardingTips = listOf(
             VaultBackupOnboardingTip(
-                title = "Back up each device".asUiText(),
-                description = "You’ll create {N} backups in total. You will do this on each device.".asUiText(),
+                title = UiText.StringResource(R.string.vault_setup_back_up_each_device),
+                description = UiText.StringResource(R.string.vault_setup_you_ll_create_n_backups_in_total),
                 logo = R.drawable.arrow_cloude,
             ),
             VaultBackupOnboardingTip(
-                title = "Store backups separately".asUiText(),
-                description = "Save each backup in a different cloud service or with a different password. If one is exposed, your funds stay safe.".asUiText(),
+                title = UiText.StringResource(R.string.backup_store_backups_separately),
+                description = UiText.StringResource(R.string.vault_setup_save_each_backup_in_a_different_cloud_service),
                 logo = R.drawable.branches
             ),
         )

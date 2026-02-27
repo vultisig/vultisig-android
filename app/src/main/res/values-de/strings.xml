@@ -281,6 +281,13 @@
     <string name="keysign_sign_transaction">Transaktion unterschreiben</string>
     <string name="keysign_password_title">Passwort</string>
     <string name="home_screen_import_vault">Tresor importieren</string>
+    <string name="start_screen_new">NEU</string>
+    <string name="start_screen_import_seedphrase">Seed-Phrase importieren</string>
+    <string name="start_screen_import_seedphrase_desc">Gib sie ein, erstelle einen Tresor, schau nie zurück.</string>
+    <string name="start_screen_import_vault_share">Vault-Share importieren</string>
+    <string name="start_screen_import_vault_share_desc">Verwende einen Vault-Share, um deinen Tresor wiederherzustellen.</string>
+    <string name="start_screen_import_vault_share_file_types">Unterstützte Dateitypen: .bak &amp; .vult</string>
+    <string name="start_screen_recover_or_convert">Stelle deinen Tresor wieder her oder konvertiere deine Seed-Phrase in einen Tresor</string>
     <string name="keysign_password_incorrect_password">Das Passwort ist falsch</string>
     <string name="vault_list_part_n_of_t">Teilen %1$d-of-%2$d</string>
     <string name="vault_part_n_of_t">Teilen %1$d-von-%2$d</string>
@@ -957,6 +964,11 @@
     <string name="welcome_maximum_security_desc">Höchste Sicherheit, ideal für Schatzkammern oder DAOs. Das Signieren von Transaktionen erfordert mindestens 3 Geräte.</string>
     <string name="welcome_maximum_security_highlight">mindestens 3 Geräte.</string>
     <string name="vault_setup_your_vault_setup">Ihre Tresor-Einrichtung</string>
+    <string name="vault_setup_fast_vault">Schneller Tresor</string>
+    <string name="vault_setup_secure_vault">Sicherer Tresor</string>
+    <string name="vault_setup_2_device_setup">2-Gerät-Einrichtung</string>
+    <string name="vault_setup_3_device_setup">3-Gerät-Einrichtung</string>
+    <string name="vault_setup_4plus_device_vault">4+-Gerät-Tresor</string>
     <string name="vault_setup_1_device_signing">1-Gerät-Signierung</string>
     <string name="vault_setup_1_device_signing_desc">Bequemes Signieren mit einem Gerät unterwegs. Ideal für tägliche Transaktionen oder den Handel kleinerer Beträge.</string>
     <string name="vault_setup_fast_and_secure_setup">Schnelle und sichere Einrichtung</string>
@@ -984,6 +996,9 @@
     <string name="backup_send_to_email">An %1$s senden</string>
     <string name="backup_incorrect_code_try_again">Falscher Code. Bitte erneut versuchen.</string>
     <string name="backup_save_backup_to_the_cloud">Backup in der Cloud speichern</string>
+    <string name="backup_vault_screen_export_prefix">Exportieren Sie diese Backup-Datei und speichern Sie sie in der Cloud. Sie ist</string>
+    <string name="backup_vault_screen_password_suffix">mit dem zuvor festgelegten Passwort, um Ihren Tresor zu entsperren.</string>
+    <string name="backup_vault_screen_cloud_tip">Verwenden Sie für jedes Backup einen anderen Cloud-Dienst oder ein anderes Konto. Wenn Sie fertig sind, löschen Sie die Datei von diesem Gerät.</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Exportieren Sie diese Backup-Datei und speichern Sie sie in der Cloud. Sie ist mit dem zuvor festgelegten Passwort verschlüsselt, um Ihren Tresor zu entsperren. Verwenden Sie für jedes Backup einen anderen Cloud-Dienst oder ein anderes Konto. Wenn Sie fertig sind, löschen Sie die Datei von diesem Gerät.</string>
     <string name="backup_i_understand_how_to_save_this_backup">Ich verstehe, wie ich dieses Backup speichern soll</string>
     <string name="backup_congrats">Glückwunsch!</string>

@@ -341,6 +341,13 @@
     <string name="keysign_sign_transaction">Sign transaction</string>
     <string name="keysign_password_title">Password</string>
     <string name="home_screen_import_vault">Import Vault</string>
+    <string name="start_screen_new">NEW</string>
+    <string name="start_screen_import_seedphrase">Import seedphrase</string>
+    <string name="start_screen_import_seedphrase_desc">Enter it, create a vault, never look back.</string>
+    <string name="start_screen_import_vault_share">Import vault share</string>
+    <string name="start_screen_import_vault_share_desc">Use a vault share to recover your vault.</string>
+    <string name="start_screen_import_vault_share_file_types">Supported file types: .bak &amp; .vult</string>
+    <string name="start_screen_recover_or_convert">Recover your vault or convert your seedphrase to a vault</string>
     <string name="keysign_password_incorrect_password">Password is incorrect</string>
     <string name="vault_list_part_n_of_t">part %1$d-of-%2$d</string>
     <string name="vault_part_n_of_t">Share %1$d-of-%2$d</string>
@@ -1002,6 +1009,11 @@
     <string name="welcome_maximum_security_desc">Highest security and perfect for treasuries or DAOs. Signing transactions take at least 3 devices.</string>
     <string name="welcome_maximum_security_highlight">at least 3 devices.</string>
     <string name="vault_setup_your_vault_setup">Your vault setup</string>
+    <string name="vault_setup_fast_vault">Fast Vault</string>
+    <string name="vault_setup_secure_vault">Secure Vault</string>
+    <string name="vault_setup_2_device_setup">2-device setup</string>
+    <string name="vault_setup_3_device_setup">3-device setup</string>
+    <string name="vault_setup_4plus_device_vault">4+-device vault</string>
     <string name="vault_setup_1_device_signing">1-Device Signing</string>
     <string name="vault_setup_1_device_signing_desc">Convenient one-device signing on the go. Perfect for daily transactions or trading smaller amounts.</string>
     <string name="vault_setup_fast_and_secure_setup">Fast and Secure Setup</string>
@@ -1029,6 +1041,9 @@
     <string name="backup_send_to_email">Send to %1$s</string>
     <string name="backup_incorrect_code_try_again">Incorrect code. Try again.</string>
     <string name="backup_save_backup_to_the_cloud">Save backup to the cloud</string>
+    <string name="backup_vault_screen_export_prefix">Export this backup file, then save it to the cloud. It is</string>
+    <string name="backup_vault_screen_password_suffix">with the password set earlier to unlock your Vault.</string>
+    <string name="backup_vault_screen_cloud_tip">Use a different cloud service or account for each backup. When you\'re finished, delete the file from this device.</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Export this backup file, then save it to the cloud. It is encrypted with the password set earlier to unlock your Vault. Use a different cloud service or account for each backup. When you’re finished, delete the file from this device.</string>
     <string name="backup_i_understand_how_to_save_this_backup">I understand how to save this backup</string>
     <string name="backup_congrats">Congrats!</string>

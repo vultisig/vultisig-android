@@ -49,32 +49,32 @@ internal class SetupVaultInfoViewModel @Inject constructor(
         val state = when (deviceCount) {
             1 -> SetupVaultInfoUiState(
                 tips = Tips_1_Device,
-                title = UiText.DynamicString("Fast Vault"),
-                subTitle = UiText.DynamicString("2-device setup"),
+                title = UiText.StringResource(R.string.vault_setup_fast_vault),
+                subTitle = UiText.StringResource(R.string.vault_setup_2_device_setup),
                 headerLogo = R.drawable.fast,
                 rive = R.raw.riv_vault_setup_1device,
             )
 
             2 -> SetupVaultInfoUiState(
                 tips = Tips_2_Device,
-                title = UiText.DynamicString("Secure Vault"),
-                subTitle = UiText.DynamicString("2-device setup"),
+                title = UiText.StringResource(R.string.vault_setup_secure_vault),
+                subTitle = UiText.StringResource(R.string.vault_setup_2_device_setup),
                 headerLogo = R.drawable.secured_shield,
                 rive = R.raw.riv_vault_setup_2devices,
             )
 
             3 -> SetupVaultInfoUiState(
                 tips = Tips_3_Device,
-                title = UiText.DynamicString("Secure Vault"),
-                subTitle = UiText.DynamicString("3-device setup"),
+                title = UiText.StringResource(R.string.vault_setup_secure_vault),
+                subTitle = UiText.StringResource(R.string.vault_setup_3_device_setup),
                 headerLogo = R.drawable.icon_shield_solid,
                 rive = R.raw.riv_vault_setup_3devices,
             )
 
             4 -> SetupVaultInfoUiState(
                 tips = Tips_4_Device,
-                title = UiText.DynamicString("Secure Vault"),
-                subTitle = UiText.DynamicString("4+-device vault"),
+                title = UiText.StringResource(R.string.vault_setup_secure_vault),
+                subTitle = UiText.StringResource(R.string.vault_setup_4plus_device_vault),
                 headerLogo = R.drawable.icon_shield_solid,
                 rive = R.raw.riv_vault_setup_4devices,
             )

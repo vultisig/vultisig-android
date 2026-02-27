@@ -280,6 +280,13 @@
     <string name="keysign_sign_transaction">Подписать транзакцию</string>
     <string name="keysign_password_title">Пароль</string>
     <string name="home_screen_import_vault">Импортировать хранилище</string>
+    <string name="start_screen_new">НОВИНКА</string>
+    <string name="start_screen_import_seedphrase">Импортировать сид-фразу</string>
+    <string name="start_screen_import_seedphrase_desc">Введите её, создайте хранилище, не оглядывайтесь назад.</string>
+    <string name="start_screen_import_vault_share">Импортировать долю хранилища</string>
+    <string name="start_screen_import_vault_share_desc">Используйте долю хранилища для восстановления хранилища.</string>
+    <string name="start_screen_import_vault_share_file_types">Поддерживаемые типы файлов: .bak &amp; .vult</string>
+    <string name="start_screen_recover_or_convert">Восстановите хранилище или преобразуйте сид-фразу в хранилище</string>
     <string name="keysign_password_incorrect_password">Пароль неверный</string>
     <string name="vault_list_part_n_of_t">Поделиться %1$d-of-%2$d</string>
     <string name="vault_part_n_of_t">Поделиться %1$d-из-%2$d</string>
@@ -952,6 +959,11 @@
     <string name="welcome_maximum_security_desc">Наивысшая безопасность, идеально для казначейств или DAO. Для подписания транзакций требуется не менее 3 устройств.</string>
     <string name="welcome_maximum_security_highlight">не менее 3 устройств.</string>
     <string name="vault_setup_your_vault_setup">Настройка вашего хранилища</string>
+    <string name="vault_setup_fast_vault">Быстрое хранилище</string>
+    <string name="vault_setup_secure_vault">Безопасное хранилище</string>
+    <string name="vault_setup_2_device_setup">Настройка 2 устройств</string>
+    <string name="vault_setup_3_device_setup">Настройка 3 устройств</string>
+    <string name="vault_setup_4plus_device_vault">Хранилище 4+ устройств</string>
     <string name="vault_setup_1_device_signing">Подпись 1 устройством</string>
     <string name="vault_setup_1_device_signing_desc">Удобная подпись одним устройством в движении. Идеально для повседневных транзакций или торговли небольшими суммами.</string>
     <string name="vault_setup_fast_and_secure_setup">Быстрая и безопасная настройка</string>
@@ -979,6 +991,9 @@
     <string name="backup_send_to_email">Отправить на %1$s</string>
     <string name="backup_incorrect_code_try_again">Неверный код. Попробуйте снова.</string>
     <string name="backup_save_backup_to_the_cloud">Сохранить резервную копию в облаке</string>
+    <string name="backup_vault_screen_export_prefix">Экспортируйте этот файл резервной копии, затем сохраните его в облаке. Он</string>
+    <string name="backup_vault_screen_password_suffix">паролем, установленным ранее, для разблокировки вашего хранилища.</string>
+    <string name="backup_vault_screen_cloud_tip">Используйте разные облачные сервисы или аккаунты для каждой копии. Когда закончите, удалите файл с этого устройства.</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Экспортируйте этот файл резервной копии, затем сохраните его в облаке. Он зашифрован паролем, установленным ранее, для разблокировки вашего хранилища. Используйте разные облачные сервисы или аккаунты для каждой копии. Когда закончите, удалите файл с этого устройства.</string>
     <string name="backup_i_understand_how_to_save_this_backup">Я понимаю, как сохранить эту резервную копию</string>
     <string name="backup_congrats">Поздравляем!</string>

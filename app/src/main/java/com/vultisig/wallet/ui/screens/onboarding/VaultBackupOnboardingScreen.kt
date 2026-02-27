@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -31,6 +32,7 @@ import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingEvent
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingUiModel
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -92,8 +94,8 @@ internal fun VaultBackupOnboardingScreen(
                         )
                 ) {
                     GradientTitleText(
-                        gradientPart = "Backups",
-                        regularPart = ", your new recovery method",
+                        gradientPart = stringResource(R.string.backup_backups),
+                        regularPart = stringResource(R.string.backup_your_new_recovery_method),
                         style = Theme.brockmann.headings.title2
                     )
                     UiSpacer(
@@ -101,7 +103,7 @@ internal fun VaultBackupOnboardingScreen(
                     )
 
                     Text(
-                        text = "Backups power your vault. Each device has its own backup. A backup alone can’t move funds, it’s only for recovery. Import and recover any lost device",
+                        text = stringResource(R.string.backup_backups_power_your_vault),
                         style = Theme.brockmann.supplementary.footnote,
                         color = Theme.v2.colors.text.tertiary
                     )
@@ -150,7 +152,7 @@ internal fun VaultBackupOnboardingScreen(
                     )
 
                     VsButton(
-                        label = "I Understand",
+                        label = stringResource(R.string.vault_setup_i_understand),
                         onClick = {
                             onEvent(VaultBackupOnboardingEvent.Next)
                         },
