@@ -27,7 +27,6 @@ import com.vultisig.wallet.ui.screens.backup.PasswordViewModelDelegate
 import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
-import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,23 +49,23 @@ enum class StepType(
     val descriptionHighlight: UiText? = null,
 ) {
     Name(
-        title = UiText.StringResource(R.string.fast_vault_name_screen_title),
-        description =UiText.StringResource(R.string.vault_setup_no_inspiration),
+        title = StringResource(R.string.fast_vault_name_screen_title),
+        description = StringResource(R.string.vault_setup_no_inspiration),
         logo = R.drawable.blue_feather,
         isPassword = false,
     ),
     Email(
-        title = UiText.StringResource(R.string.email_enter_your_email),
-        description =UiText.StringResource(R.string.email_only_used_once),
+        title = StringResource(R.string.email_enter_your_email),
+        description = StringResource(R.string.email_only_used_once),
         logo = R.drawable.mail,
         isPassword = false,
     ),
     Password(
-        title = UiText.StringResource(R.string.password_choose_a_password),
-        description =UiText.StringResource(R.string.password_extra_layer),
+        title = StringResource(R.string.password_choose_a_password),
+        description = StringResource(R.string.password_extra_layer),
         logo = R.drawable.center_lock,
         isPassword = true,
-        descriptionHighlight = UiText.StringResource(R.string.password_extra_layer_highlight),
+        descriptionHighlight = StringResource(R.string.password_extra_layer_highlight),
     )
 }
 
@@ -74,11 +73,13 @@ enum class StepState(
     val backgroundColor: Color,
     val borderColor: Color,
     val borderWidth: Dp,
+    val logoTint: Color,
 ) {
     InProgress(
         backgroundColor = Color.Transparent,
         borderColor = V2.colors.neutrals.n50.copy(alpha = 0.2f),
         borderWidth = 3.dp,
+        logoTint = V2.colors.buttons.ctaPrimary,
     ),
     Done(
         backgroundColor = V2.colors.backgrounds.state.success.copy(
@@ -86,12 +87,14 @@ enum class StepState(
         ),
         borderColor = Color.Transparent,
         borderWidth = 0.dp,
+        logoTint = V2.colors.alerts.success,
     ),
 
     Inactive(
         backgroundColor = Color.Transparent,
         borderColor = V2.colors.text.button.disabled,
         borderWidth = 0.dp,
+        logoTint = V2.colors.text.button.disabled,
     ),
 
 }
@@ -449,6 +452,7 @@ internal class EnterVaultInfoViewModel @Inject constructor(
                     Route.Keygen.PeerDiscovery(
                         action = TssAction.KEYGEN,
                         vaultName = name,
+                        deviceCount = deviceCount,
                     )
                 )
             } else {
@@ -460,7 +464,6 @@ internal class EnterVaultInfoViewModel @Inject constructor(
                         password = password,
                         hint = null,
                         vaultId = null,
-                        deviceCount = deviceCount,
                     )
                 )
             }

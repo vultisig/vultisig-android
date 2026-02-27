@@ -73,7 +73,7 @@ private fun BackupVaultScreen(
                 UiSpacer(70.dp)
 
                 RiveAnimation(
-                    animation = R.raw.riv_backupvault_splash,
+                    animation = R.raw.riv_backup_vault_splash,
                     modifier = Modifier.size(
                         width = 266.dp,
                         height = 170.dp
@@ -85,7 +85,7 @@ private fun BackupVaultScreen(
 
                 V3Icon(
                     shinedBottom = Theme.v2.colors.alerts.info,
-                    logo = R.drawable.logo,
+                    logo = R.drawable.arrow_cloude,
                 )
 
                 UiSpacer(24.dp)
@@ -95,6 +95,10 @@ private fun BackupVaultScreen(
                     style = Theme.brockmann.headings.title2,
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
+                )
+
+                UiSpacer(
+                    size = 32.dp
                 )
 
                 Text(

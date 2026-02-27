@@ -51,29 +51,32 @@ internal class SetupVaultInfoViewModel @Inject constructor(
                 tips = Tips_1_Device,
                 title = UiText.DynamicString("Fast Vault"),
                 subTitle = UiText.DynamicString("2-device setup"),
-                headerLogo = R.drawable.fast
-
+                headerLogo = R.drawable.fast,
+                rive = R.raw.riv_vault_setup_1device,
             )
 
             2 -> SetupVaultInfoUiState(
                 tips = Tips_2_Device,
                 title = UiText.DynamicString("Secure Vault"),
                 subTitle = UiText.DynamicString("2-device setup"),
-                headerLogo = R.drawable.secured_shield
+                headerLogo = R.drawable.secured_shield,
+                rive = R.raw.riv_vault_setup_2devices,
             )
 
             3 -> SetupVaultInfoUiState(
                 tips = Tips_3_Device,
                 title = UiText.DynamicString("Secure Vault"),
                 subTitle = UiText.DynamicString("3-device setup"),
-                headerLogo = R.drawable.icon_shield_solid
+                headerLogo = R.drawable.icon_shield_solid,
+                rive = R.raw.riv_vault_setup_3devices,
             )
 
             4 -> SetupVaultInfoUiState(
                 tips = Tips_4_Device,
                 title = UiText.DynamicString("Secure Vault"),
                 subTitle = UiText.DynamicString("4+-device vault"),
-                headerLogo = R.drawable.icon_shield_solid
+                headerLogo = R.drawable.icon_shield_solid,
+                rive = R.raw.riv_vault_setup_4devices,
             )
 
             else -> error("is not possible")

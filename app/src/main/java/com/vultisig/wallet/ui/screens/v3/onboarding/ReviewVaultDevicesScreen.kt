@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.screens.v3.onboarding
 
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -23,7 +21,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,8 +31,8 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
-import com.vultisig.wallet.ui.models.v3.DeviceList
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesEvent
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesViewModel
@@ -94,9 +91,8 @@ private fun ReviewVaultDevicesScreen(
 
             ) {
 
-            Image(
-                painter = painterResource(id = R.drawable.vault_details),
-                contentDescription = "vault devices",
+            RiveAnimation(
+                animation = R.raw.riv_review_devices,
                 modifier = Modifier.width(244.dp)
             )
 
@@ -126,22 +122,16 @@ private fun ReviewVaultDevicesScreen(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                itemsIndexed(uiState.devices) { index, device ->
+                items(uiState.devices) { device ->
                     VaultDeviceItem(
-                        name = if (device.name == uiState.localPartyId) {
+                        label = if (device.equals(uiState.localPartyId, ignoreCase = true)) {
                             stringResource(
                                 R.string.review_vault_devices_this_device_label,
-                                device.name,
+                                device,
                             )
                         } else {
-                            device.name
+                            device
                         },
-                        label = stringResource(
-                            R.string.review_vault_devices_device_index,
-                            index + 1,
-                        ),
-                        device_image = device.device_image,
-                        id = device.id
                     )
                 }
             }
@@ -151,11 +141,8 @@ private fun ReviewVaultDevicesScreen(
 
 @Composable
 private fun VaultDeviceItem(
-    name: String,
     label: String,
-    id: String,
     modifier: Modifier = Modifier,
-    @DrawableRes device_image: Int
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -181,29 +168,18 @@ private fun VaultDeviceItem(
                 ),
         ) {
             UiIcon(
-                drawableResId = device_image,
+                drawableResId = R.drawable.device_backup,
                 size = 20.dp,
                 tint = Theme.v2.colors.alerts.info,
             )
         }
 
-        Column {
-            Text(
-                text = name,
-                style = Theme.brockmann.headings.subtitle,
-                color = Theme.v2.colors.neutrals.n50,
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "${label} - ${id}",
+        Text(
+            text = label,
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.secondary,
                 )
-            }
-        }
+
     }
 }
 
@@ -214,22 +190,10 @@ private fun ReviewVaultDevicesScreenPreview() {
         uiState = ReviewVaultDevicesUiState(
             localPartyId = "iPhone",
             devices = listOf(
-                DeviceList(
-                    name = "iPhone",
-                    device_image = R.drawable.iphone,
-                    id = "ABC123"
-                ),
-                DeviceList(
-                    name = "Extension",
-                    device_image = R.drawable.extension,
-                    id = "ABC123"
-                ),
-                DeviceList(
-                    name = "MacBook",
-                    device_image = R.drawable.mac_book,
-                    id = "ABC123"
-                )
-            )
+                "iPhone",
+                "Extension",
+                "MacBook",
+            ),
         ),
         onEvent = {},
 

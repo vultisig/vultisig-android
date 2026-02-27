@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.onboarding
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -22,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
@@ -113,11 +112,11 @@ internal fun VaultBackupOnboardingScreen(
                     uiState.tips.forEach { (title, description, logo) ->
 
                         Row {
-                            Image(
-                                painter = painterResource(logo),
+                            UiIcon(
+                                drawableResId =  logo,
                                 contentDescription = null,
-                                modifier = Modifier
-                                    .size(24.dp)
+                                size = 24.dp,
+                                tint = Theme.v2.colors.alerts.info,
                             )
                             UiSpacer(
                                 size = 16.dp

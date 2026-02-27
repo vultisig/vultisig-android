@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.v2.modifiers.shinedBottom
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -86,6 +87,46 @@ fun V3Icon(
             modifier = Modifier
                 .size(18.dp),
             contentDescription = null,
+        )
+    }
+}
+
+@Composable
+fun V3Icon(
+    backgroundColor: Color = Color.Transparent,
+    @DrawableRes logo: Int,
+    borderWidth: Dp = 1.dp,
+    borderColor: Color = Theme.v2.colors.border.light,
+    shinedBottom: Color? = Theme.v2.colors.neutrals.n50,
+    tintColor: Color,
+) {
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(
+                shape = CircleShape
+            )
+            .background(
+                color = backgroundColor
+            )
+            .then(
+                if (shinedBottom == null) Modifier
+                else Modifier.shinedBottom(
+                    color = shinedBottom
+                )
+            )
+            .border(
+                width = borderWidth,
+                color = borderColor,
+                shape = CircleShape
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+
+        UiIcon(
+            drawableResId = logo,
+            size = 18.dp,
+            tint = tintColor,
         )
     }
 }

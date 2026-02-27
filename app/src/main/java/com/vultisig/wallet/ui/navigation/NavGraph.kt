@@ -122,6 +122,7 @@ import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBo
 import com.vultisig.wallet.ui.screens.v2.receive.ReceiveBottomSheet
 import com.vultisig.wallet.ui.screens.v3.onboarding.ChooseDeviceCountScreen
 import com.vultisig.wallet.ui.screens.v3.onboarding.EnterVaultInfoScreen
+import com.vultisig.wallet.ui.screens.v3.onboarding.ReviewVaultDevicesScreen
 import com.vultisig.wallet.ui.screens.v3.onboarding.SetupVaultInfoScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
@@ -563,6 +564,10 @@ internal fun SetupNavGraph(
 
         composable<Route.VaultsToBackup> {
             VaultsToBackupScreen()
+        }
+
+        composable<Route.ReviewVaultDevices> {
+            ReviewVaultDevicesScreen()
         }
 
         composable<Route.ChooseVaultCount> {

@@ -288,6 +288,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                             email = null,
                             password = null,
                             hint = null,
+                            deviceCount = null,
                         ),
                         opts = NavigationOptions(
                             popUpToRoute = Route.Keygen.Join::class,

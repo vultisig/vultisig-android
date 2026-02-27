@@ -70,6 +70,7 @@ data class Backgrounds(
 
 data class BackgroundStates(
     val success: Color = Color(0xFF13C89D),
+    val neutral: Color = Color(0xFF061B3A)
 )
 
 data class Primary(

@@ -1,12 +1,12 @@
 package com.vultisig.wallet.ui.models.v3
 
-import androidx.annotation.DrawableRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.R
+import androidx.navigation.toRoute
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,14 +15,9 @@ import javax.inject.Inject
 
 internal data class ReviewVaultDevicesUiState(
     val localPartyId: String = "",
-    val devices: List<DeviceList> = emptyList(),
+    val devices: List<String> = emptyList(),
 )
 
-internal data class DeviceList(
-    val name: String = "",
-    @DrawableRes val device_image: Int = R.drawable.iphone,
-    val id: String = "",
-)
 
 internal sealed interface ReviewVaultDevicesEvent {
     data object LooksGood : ReviewVaultDevicesEvent
@@ -35,9 +30,12 @@ internal class ReviewVaultDevicesViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+    val args = savedStateHandle.toRoute<Route.ReviewVaultDevices>()
 
     val uiState = MutableStateFlow(
         ReviewVaultDevicesUiState(
+            devices = args.devices.orEmpty(),
+            localPartyId = args.localPartyId.orEmpty()
         )
     )
 
@@ -50,7 +48,20 @@ internal class ReviewVaultDevicesViewModel @Inject constructor(
     }
 
     private fun looksGood() {
-
+        viewModelScope.launch {
+            navigator.route(
+                route = Route.Onboarding.VaultBackup(
+                    vaultId = args.vaultId,
+                    pubKeyEcdsa = args.pubKeyEcdsa,
+                    email = args.email,
+                    vaultType = args.vaultType,
+                    action = args.action,
+                    vaultName = args.vaultName,
+                    password = args.password,
+                    deviceCount = args.devices?.size
+                ),
+            )
+        }
     }
 
     private fun back() {

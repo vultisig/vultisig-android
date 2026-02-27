@@ -5,8 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.TssAction
-import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.BackupPasswordTypeNavType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -59,17 +57,24 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
     )
 
     init {
+        val rive = when (args.deviceCount) {
+            1 -> R.raw.riv_backup_1device
+            2 -> R.raw.riv_backup_2devices
+            3 -> R.raw.riv_backup_3devices
+            4 -> R.raw.riv_backup_4devices
+            else -> error("not possible")
+        }
         when(args.vaultType){
             Route.VaultInfo.VaultType.Fast -> state.update {
                 VaultBackupOnboardingUiModel(
                     tips = FastVaultBackupOnboardingTips,
-                    rive = R.raw.riv_keygen,
+                    rive = rive,
                 )
             }
             Route.VaultInfo.VaultType.Secure -> state.update {
                 VaultBackupOnboardingUiModel(
                     tips = SecureVaultBackupOnboardingTips,
-                    rive = R.raw.riv_keygen,
+                    rive = rive,
                 )
             }
         }
@@ -84,7 +89,7 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
         }
     }
 
-    fun next() {
+    private fun next() {
         viewModelScope.launch {
 
         when (args.vaultType) {
@@ -127,12 +132,12 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
             VaultBackupOnboardingTip(
                 title = "Your Device is the driver".asUiText(),
                 description = "The Device backup and password are the key. The server only co-signs and backup can be requested.".asUiText(),
-                logo = R.drawable.wallet,
+                logo = R.drawable.arrow_cloude,
             ),
             VaultBackupOnboardingTip(
                 title = "Store backups separately".asUiText(),
                 description = "Keep each backup in a different place. If one is compromised, your funds stay safe.".asUiText(),
-                logo = R.drawable.iconwarning
+                logo = R.drawable.branches
             ),
         )
 
@@ -140,12 +145,12 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
             VaultBackupOnboardingTip(
                 title = "Back up each device".asUiText(),
                 description = "You’ll create {N} backups in total. You will do this on each device.".asUiText(),
-                logo = R.drawable.logo,
+                logo = R.drawable.arrow_cloude,
             ),
             VaultBackupOnboardingTip(
                 title = "Store backups separately".asUiText(),
                 description = "Save each backup in a different cloud service or with a different password. If one is exposed, your funds stay safe.".asUiText(),
-                logo = R.drawable.copy
+                logo = R.drawable.branches
             ),
         )
 

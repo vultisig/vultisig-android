@@ -70,6 +70,7 @@ internal sealed class Route {
             val action: TssAction,
             val vaultName: String,
             val password: String?,
+            val deviceCount: Int?,
         )
     }
 
@@ -328,6 +329,7 @@ internal sealed class Route {
             val email: String?,
             val password: String?,
             val hint: String?,
+            val deviceCount: Int?,
         )
 
     }
@@ -629,6 +631,19 @@ internal sealed class Route {
 
     @Serializable
     data object ChooseVaultCount
+
+    @Serializable
+    data class ReviewVaultDevices(
+        val vaultId: VaultId,
+        val pubKeyEcdsa: String,
+        val email: String?,
+        val vaultType: VaultInfo.VaultType,
+        val action: TssAction,
+        val vaultName: String,
+        val password: String?,
+        val devices: List<String>?,
+        val localPartyId: String?,
+    )
 
 
 }
