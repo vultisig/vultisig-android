@@ -117,6 +117,7 @@ internal sealed interface EnterVaultInfoEvent {
     object Back : EnterVaultInfoEvent
     object Referral : EnterVaultInfoEvent
     object ClearInput : EnterVaultInfoEvent
+    object ClearConfirmInput : EnterVaultInfoEvent
     object TogglePasswordVisibility : EnterVaultInfoEvent
     object ToggleConfirmPasswordVisibility : EnterVaultInfoEvent
 }
@@ -133,7 +134,7 @@ internal class EnterVaultInfoViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val deviceCount: Int = savedStateHandle.toRoute<Route.EnterVaultInfo>().count
+    private val deviceCount: Int = savedStateHandle.toRoute<Route.EnterVaultInfo>().count.coerceIn(1, 4)
     val isSecureVault = deviceCount != 1
 
     private val passwordDelegate = PasswordViewModelDelegate()
@@ -252,6 +253,7 @@ internal class EnterVaultInfoViewModel @Inject constructor(
             EnterVaultInfoEvent.Next -> next()
             EnterVaultInfoEvent.Referral -> referral()
             EnterVaultInfoEvent.ClearInput -> clearInput()
+            EnterVaultInfoEvent.ClearConfirmInput -> clearConfirmInput()
             EnterVaultInfoEvent.TogglePasswordVisibility -> togglePasswordVisibility()
             EnterVaultInfoEvent.ToggleConfirmPasswordVisibility -> toggleConfirmPasswordVisibility()
         }
@@ -271,6 +273,11 @@ internal class EnterVaultInfoViewModel @Inject constructor(
             StepType.Email -> emailTextFieldState.clearText()
             StepType.Password -> passwordTextFieldState.clearText()
         }
+    }
+
+    private fun clearConfirmInput() {
+              uiState.value.confirmPasswordTextFieldState.clearText()
+
     }
 
     private fun prev() {

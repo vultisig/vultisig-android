@@ -12,6 +12,7 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,7 +44,8 @@ internal class SetupVaultInfoViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val deviceCount = savedStateHandle.toRoute<Route.SetupVaultInfo>().count
-    val uiState = MutableStateFlow(SetupVaultInfoUiState())
+    private val _uiState = MutableStateFlow(SetupVaultInfoUiState())
+    val uiState = _uiState.asStateFlow()
 
     init {
         val state = when (deviceCount) {
@@ -82,7 +84,7 @@ internal class SetupVaultInfoViewModel @Inject constructor(
             else -> error("is not possible")
         }
 
-        uiState.update { state }
+        _uiState.update { state }
 
     }
 

@@ -160,7 +160,7 @@ internal fun EnterVaultInfoScreen(
                     trailingIcon = R.drawable.close_circle,
                     innerState = uiState.innerState,
                     onTrailingIconClick = {
-                        onEvent(EnterVaultInfoEvent.ClearInput)
+                        onEvent(EnterVaultInfoEvent.ClearConfirmInput)
                     },
                     imeAction = ImeAction.Go,
                     onKeyboardAction = {

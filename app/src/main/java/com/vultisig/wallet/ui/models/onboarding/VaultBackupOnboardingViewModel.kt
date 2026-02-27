@@ -57,7 +57,7 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
     )
 
     init {
-        val rive = when (args.deviceCount) {
+        val rive = when (args.deviceCount?.coerceIn(1..4)) {
             1 -> R.raw.riv_backup_1device
             2 -> R.raw.riv_backup_2devices
             3 -> R.raw.riv_backup_3devices
@@ -73,7 +73,7 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
             }
             Route.VaultInfo.VaultType.Secure -> state.update {
                 VaultBackupOnboardingUiModel(
-                    tips = SecureVaultBackupOnboardingTips,
+                    tips = secureVaultBackupOnboardingTips(args.deviceCount),
                     rive = rive,
                 )
             }
@@ -141,10 +141,13 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
             ),
         )
 
-        val SecureVaultBackupOnboardingTips = listOf(
+        fun secureVaultBackupOnboardingTips(deviceCount: Int) = listOf(
             VaultBackupOnboardingTip(
                 title = UiText.StringResource(R.string.vault_setup_back_up_each_device),
-                description = UiText.StringResource(R.string.vault_setup_you_ll_create_n_backups_in_total),
+                description = UiText.FormattedText(
+                    R.string.vault_setup_you_ll_create_n_backups_in_total,
+                    listOf(deviceCount)
+                ),
                 logo = R.drawable.arrow_cloude,
             ),
             VaultBackupOnboardingTip(

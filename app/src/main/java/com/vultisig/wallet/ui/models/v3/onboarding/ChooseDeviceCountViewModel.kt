@@ -10,6 +10,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -38,7 +39,8 @@ internal class ChooseDeviceCountViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    val uiState = MutableStateFlow(ChooseDeviceCountUiState())
+    private val _uiState = MutableStateFlow(ChooseDeviceCountUiState())
+    val uiState = _uiState.asStateFlow()
 
     fun handleEvent(
         event: ChooseDeviceCountUiEvent
@@ -51,24 +53,20 @@ internal class ChooseDeviceCountViewModel @Inject constructor(
     }
 
     private fun increaseCount() {
-        val vaultCount = uiState.value.deviceCount + 1
-        uiState.update {
-            it.copy(deviceCount = vaultCount)
-        }
+        val newCount = (_uiState.value.deviceCount + 1).coerceIn(1, 4)
+        _uiState.update { it.copy(deviceCount = newCount) }
     }
 
     private fun decreaseCount() {
-        val vaultCount = uiState.value.deviceCount - 1
-        uiState.update {
-            it.copy(deviceCount = vaultCount)
-        }
+        val newCount = (_uiState.value.deviceCount - 1).coerceIn(1, 4)
+        _uiState.update { it.copy(deviceCount = newCount) }
     }
 
     private fun next() {
         viewModelScope.launch {
             navigator.route(
                 Route.SetupVaultInfo(
-                    count = uiState.value.deviceCount
+                    count = _uiState.value.deviceCount
                 )
             )
         }

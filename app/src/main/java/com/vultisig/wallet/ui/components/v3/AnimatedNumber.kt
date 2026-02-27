@@ -6,6 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,31 +33,27 @@ fun <T> AnimatedNumber(
     Row(modifier = modifier) {
         val numberString = formatter(text)
         val oldNumberString = formatter(oldNumber)
-        for (i in numberString.indices) {
-            val oldChar = oldNumberString.getOrNull(i)
-            val newChar = numberString[i]
-
-            val char = if (oldChar == newChar) {
-                oldNumberString[i]
-            } else {
-                numberString[i]
-            }
-            AnimatedContent(
-                targetState = char,
-                transitionSpec = {
-                    if (text > oldNumber) {
-                        slideUp()
-                    } else {
-                        slideDown()
-                    }
-                },
-                label = "animatedNumberChar"
-            ) { targetChar ->
-                Text(
-                    text = targetChar.toString(),
-                    style = style,
-                    color = color,
-                )
+        val maxLen = maxOf(numberString.length, oldNumberString.length)
+        for (i in 0 until maxLen) {
+            val newChar = numberString.getOrNull(i) ?: ' '
+            key(i) {
+                AnimatedContent(
+                    targetState = newChar,
+                    transitionSpec = {
+                        if (text > oldNumber) {
+                            slideUp()
+                        } else {
+                            slideDown()
+                        }
+                    },
+                    label = "animatedNumberChar"
+                ) { targetChar ->
+                    Text(
+                        text = targetChar.toString(),
+                        style = style,
+                        color = color,
+                    )
+                }
             }
         }
     }
