@@ -970,7 +970,7 @@
     <string name="password_choose_a_password">Scegli una password</string>
     <string name="password_extra_layer">Se vuoi un ulteriore livello di sicurezza, scegli una password. La password non può essere recuperata.</string>
     <string name="password_extra_layer_highlight">La password non può essere recuperata.</string>
-    <string name="referral_enter_referral_code">Inserisci qui il tuo codice referral. Goditi uno sconto del 10% su ogni transazione.</string>
+    <string name="referral_enter_referral_code">Inserisci qui il tuo codice referral. Goditi uno sconto del 10%% su ogni transazione.</string>
     <string name="backup_backups">Backup,</string>
     <string name="backup_your_new_recovery_method">il tuo nuovo metodo di recupero</string>
     <string name="backup_backups_power_your_vault">I backup potenziano il tuo vault. Ogni dispositivo ha il proprio backup. Un backup da solo non può spostare fondi, serve solo per il recupero. Importa e recupera qualsiasi dispositivo perso.</string>
