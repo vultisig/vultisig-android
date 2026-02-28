@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.db.dao.VaultOrderDao
 import com.vultisig.wallet.data.db.models.ActiveBondedNodeEntity
 import com.vultisig.wallet.data.db.models.AddressBookEntryEntity
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
+import com.vultisig.wallet.data.db.models.ChainPublicKeyEntity
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.DisabledCoinEntity
 import com.vultisig.wallet.data.db.models.FolderEntity
@@ -29,7 +30,6 @@ import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.StakingDetailsEntity
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.db.models.TokenValueEntity
-import com.vultisig.wallet.data.db.models.ChainPublicKeyEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultMetadataEntity
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
@@ -53,7 +53,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         StakingDetailsEntity::class,
         ChainPublicKeyEntity::class,
     ],
-    version = 26,
+    version = 27,
     exportSchema = false,
 )
 @TypeConverters(
