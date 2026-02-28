@@ -509,3 +509,13 @@ internal val MIGRATION_25_26 = object : Migration(25, 26) {
         )
     }
 }
+
+internal val MIGRATION_26_27 = object : Migration(26, 27) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            ALTER TABLE vault ADD COLUMN pubKeyMldsa TEXT NOT NULL DEFAULT ''
+            """.trimIndent()
+        )
+    }
+}

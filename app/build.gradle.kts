@@ -16,8 +16,8 @@ android {
         applicationId = "com.vultisig.wallet"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 35
-        versionCode = 95
-        versionName = "1.0.95"
+        versionCode = 96
+        versionName = "1.0.96"
 
         testInstrumentationRunner = "com.vultisig.wallet.util.HiltTestRunner"
 
@@ -65,6 +65,7 @@ dependencies {
     implementation(files("libs/mobile-tss-lib.aar"))
     implementation(files("libs/dkls-release.aar"))
     implementation(files("libs/goschnorr-release.aar"))
+    implementation(files("libs/dilithium-release.aar"))
 
     // kotlinx
     implementation(libs.kotlinx.coroutines.core)

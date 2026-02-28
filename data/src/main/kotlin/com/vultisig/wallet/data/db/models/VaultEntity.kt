@@ -25,6 +25,8 @@ data class VaultEntity(
     val pubKeyEcdsa: String,
     @ColumnInfo("pubKeyEddsa")
     val pubKeyEddsa: String,
+    @ColumnInfo("pubKeyMldsa", defaultValue = "")
+    val pubKeyMldsa: String = "",
     @ColumnInfo("hexChainCode")
     val hexChainCode: String,
     @ColumnInfo("resharePrefix")
