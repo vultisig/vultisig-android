@@ -11,6 +11,7 @@ data class Vault(
     var name: String,
     var pubKeyECDSA: String = "",
     var pubKeyEDDSA: String = "",
+    var pubKeyMLDSA: String = "",
     var hexChainCode: String = "",
     var localPartyID: String = "",
     var signers: List<String> = listOf(),
