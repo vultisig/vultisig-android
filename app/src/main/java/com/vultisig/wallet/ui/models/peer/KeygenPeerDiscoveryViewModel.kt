@@ -41,8 +41,8 @@ import com.vultisig.wallet.data.repositories.SecretSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
-import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.CreateQrCodeSharingBitmapUseCase
+import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
@@ -150,7 +150,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private var hexChainCode: String = if (args.action == TssAction.KeyImport) {
         val mnemonic = keyImportRepository.get()?.mnemonic
             ?: error("KeyImport requires a mnemonic in KeyImportRepository")
-        extractMasterKeys(mnemonic).hexChainCode
+        extractMasterKeys(mnemonic)?.hexChainCode ?: ""
     } else {
         Utils.encryptionKeyHex
     }
@@ -403,7 +403,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 }
             )
         } catch (e: Exception) {
-            // TODO handle exceptions more precisely
+            Timber.e(e, "Failed to connect to Vultiserver")
             state.update {
                 it.copy(
                     error = ErrorUiModel(
@@ -675,6 +675,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 sessionId
             ).isNotEmpty()
         } catch (e: Exception) {
+            Timber.e(e, "Failed to get session participants, assuming session not started")
             false
         }
     }

@@ -18,7 +18,7 @@ data class MasterKeys(
 }
 
 fun interface ExtractMasterKeysUseCase {
-    operator fun invoke(mnemonic: String): MasterKeys
+    operator fun invoke(mnemonic: String): MasterKeys?
 }
 
 /**
@@ -28,7 +28,8 @@ fun interface ExtractMasterKeysUseCase {
  */
 internal class ExtractMasterKeysUseCaseImpl @Inject constructor() : ExtractMasterKeysUseCase {
 
-    override fun invoke(mnemonic: String): MasterKeys {
+    override fun invoke(mnemonic: String): MasterKeys? {
+        if (mnemonic.isBlank()) return null
         val wallet = HDWallet(mnemonic, "")
 
         val ecdsaMasterKey = wallet.getMasterKey(Curve.SECP256K1).data()

@@ -330,6 +330,9 @@ internal sealed class Route {
             val password: String?,
             val hint: String?,
             val deviceCount: Int?,
+
+            // key import chains
+            val chains: List<String> = emptyList(),
         )
 
     }

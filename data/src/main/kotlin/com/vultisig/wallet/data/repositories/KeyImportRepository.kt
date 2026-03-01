@@ -49,9 +49,7 @@ internal class KeyImportRepositoryImpl @Inject constructor() : KeyImportReposito
 
     override fun setChainSettings(settings: List<ChainImportSetting>) {
         synchronized(this) {
-            data = requireNotNull(data) {
-                "setMnemonic() must be called before setChainSettings()"
-            }.copy(chainSettings = settings)
+            data = data?.copy(chainSettings = settings) ?: KeyImportData("",chainSettings = settings)
         }
     }
 

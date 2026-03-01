@@ -24,7 +24,11 @@ import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
-import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.*
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.DuplicateVaultName
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.InvalidQr
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.UnknownError
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.UnknownTss
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.WrongResharePrefix
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -107,7 +111,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 val existingVaults = vaultRepository.getAll()
 
                 val session = when (val action = deepLink.getTssAction()) {
-                    TssAction.KEYGEN -> {
+                    TssAction.KEYGEN,TssAction.KeyImport -> {
                         val message = mapKeygenMessageFromProto(
                             protoBuf.decodeFromByteArray<KeygenMessageProto>(bytes)
                         )
@@ -119,10 +123,9 @@ internal class JoinKeygenViewModel @Inject constructor(
                         } else {
                             discoverMediator(message.serviceName)
                         }
-
                         Session(
                             sessionId = message.sessionID,
-                            action = TssAction.KEYGEN,
+                            action = action,
                             hexChainCode = message.hexChainCode,
                             serviceName = message.serviceName,
                             useVultisigRelay = message.useVultisigRelay,
@@ -134,6 +137,7 @@ internal class JoinKeygenViewModel @Inject constructor(
 
                             oldCommittee = emptyList(),
                             oldResharePrefix = "",
+                            chains = message.chains,
                         )
                     }
 
@@ -289,6 +293,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                             password = null,
                             hint = null,
                             deviceCount = null,
+                            chains = session.chains,
                         ),
                         opts = NavigationOptions(
                             popUpToRoute = Route.Keygen.Join::class,
@@ -322,6 +327,7 @@ internal class JoinKeygenViewModel @Inject constructor(
         val libType: SigningLibType,
         val localPartyId: String,
         val vaultId: VaultId? = null,
+        val chains: List<String> = emptyList(),
     )
 
 }

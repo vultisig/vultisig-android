@@ -15,12 +15,16 @@ import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.keygen.DKLSKeygen
 import com.vultisig.wallet.data.keygen.SchnorrKeygen
 import com.vultisig.wallet.data.mediator.MediatorService
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainPublicKey
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.models.TssKeyType
+import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.isFastVault
+import com.vultisig.wallet.data.repositories.ChainImportSetting
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -31,6 +35,7 @@ import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
+import com.vultisig.wallet.data.usecases.ChainKeyResult
 import com.vultisig.wallet.data.usecases.DeriveChainKeyUseCase
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.Encryption
@@ -172,6 +177,16 @@ internal class KeygenViewModel @Inject constructor(
             try {
                 if (isInitiatingDevice) {
                     startKeygen()
+                }
+
+                // For non-initiating devices in KeyImport, populate chain settings
+                // from the chains passed via the route args (originally from KeygenMessage).
+                if (action == TssAction.KeyImport && args.chains.isNotEmpty()) {
+                    val chainSettings = args.chains.mapNotNull { raw ->
+                        Chain.entries.find { it.raw == raw }
+                            ?.let { ChainImportSetting(chain = it) }
+                    }
+                    keyImportRepository.setChainSettings(chainSettings)
                 }
 
                 when (libType) {
@@ -329,7 +344,7 @@ internal class KeygenViewModel @Inject constructor(
                 encryption = encryption,
                 sessionApi = sessionApi,
                 hexChainCode = vault.hexChainCode,
-                localUi = masterKeys.ecdsaMasterKeyHex,
+                localUi = masterKeys?.ecdsaMasterKeyHex ?: "",
                 action = TssAction.KeyImport,
                 oldCommittee = oldCommittee,
                 vault = vault,
@@ -354,7 +369,7 @@ internal class KeygenViewModel @Inject constructor(
                 setupMessage = dklsKeygen.setupMessage,
                 isInitiatingDevice = isInitiatingDevice,
                 hexChainCode = vault.hexChainCode,
-                localUi = masterKeys.eddsaMasterKeyHex,
+                localUi = masterKeys?.eddsaMasterKeyHex ?: "",
             )
 
             schnorr.schnorrKeygenWithRetry(0)
@@ -385,14 +400,17 @@ internal class KeygenViewModel @Inject constructor(
             updateStep(KeygenState.KeygenChains)
 
             val chainSettings = keyImportData.chainSettings
+            var chainKeyResult : ChainKeyResult? = null
             for (chainSetting in chainSettings) {
-                val chainKeyResult = withContext(Dispatchers.IO) {
-                    deriveChainKey(mnemonic, chainSetting)
+                if (isInitiatingDevice) {
+                    chainKeyResult = withContext(Dispatchers.IO) {
+                        deriveChainKey(mnemonic, chainSetting)
+                    }
                 }
 
                 val chainName = chainSetting.chain.raw
 
-                if (chainKeyResult.isEddsa) {
+                if (chainSetting.chain.TssKeysignType == TssKeyType.EDDSA) {
                     // EdDSA chain: Schnorr keygen. setupMessage is empty because
                     // per-chain sessions create their own setup via getDklsKeyImportSetupMessage.
                     val chainSchnorr = SchnorrKeygen(
@@ -409,7 +427,7 @@ internal class KeygenViewModel @Inject constructor(
                         setupMessage = byteArrayOf(),
                         isInitiatingDevice = isInitiatingDevice,
                         hexChainCode = vault.hexChainCode,
-                        localUi = chainKeyResult.privateKeyHex,
+                        localUi =  if (isInitiatingDevice) chainKeyResult?.privateKeyHex ?: "" else "", // Non-initiating devices don't derive chain keys locally, so pass empty local
                     )
                     chainSchnorr.schnorrKeygenWithRetry(0, chainName)
 
@@ -435,7 +453,7 @@ internal class KeygenViewModel @Inject constructor(
                         encryption = encryption,
                         sessionApi = sessionApi,
                         hexChainCode = vault.hexChainCode,
-                        localUi = chainKeyResult.privateKeyHex,
+                        localUi = if(isInitiatingDevice) chainKeyResult?.privateKeyHex ?: "" else "",
                         action = TssAction.KeyImport,
                         oldCommittee = oldCommittee,
                         vault = vault,
