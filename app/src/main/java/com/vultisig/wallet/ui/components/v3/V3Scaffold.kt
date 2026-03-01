@@ -1,8 +1,10 @@
-package com.vultisig.wallet.ui.screens.v3.components
+package com.vultisig.wallet.ui.components.v3
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -12,6 +14,7 @@ import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun V3Scaffold(
@@ -20,6 +23,7 @@ internal fun V3Scaffold(
     onBackClick: (() -> Unit)? = null,
     applyDefaultPaddings: Boolean = true,
     applyScaffoldPaddings: Boolean = true,
+    applyGradientBackground: Boolean = false,
     bottomBar: @Composable () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
@@ -30,10 +34,12 @@ internal fun V3Scaffold(
         bottomBar = bottomBar,
         applyDefaultPaddings = applyDefaultPaddings,
         applyScaffoldPaddings = applyScaffoldPaddings,
+        applyGradientBackground = applyGradientBackground,
         topBar = {
             V3Topbar(
                 title = title,
                 onBackClick = onBackClick,
+                transparentBackground = applyGradientBackground,
             )
         }
     )
@@ -45,6 +51,7 @@ internal fun V3Scaffold(
     title: String? = null,
     applyDefaultPaddings: Boolean = true,
     applyScaffoldPaddings: Boolean = true,
+    applyGradientBackground: Boolean = false,
     onBackClick: (() -> Unit)?,
     actions: @Composable RowScope.() -> Unit,
     bottomBar: @Composable () -> Unit = {},
@@ -56,11 +63,13 @@ internal fun V3Scaffold(
         bottomBar = bottomBar,
         applyDefaultPaddings = applyDefaultPaddings,
         applyScaffoldPaddings = applyScaffoldPaddings,
+        applyGradientBackground = applyGradientBackground,
         topBar = {
             V3Topbar(
                 title = title,
                 onBackClick = onBackClick,
                 actions = actions,
+                transparentBackground = applyGradientBackground,
             )
         }
     )
@@ -72,6 +81,7 @@ internal fun V3Scaffold(
     title: String? = null,
     applyDefaultPaddings: Boolean = true,
     applyScaffoldPaddings: Boolean = true,
+    applyGradientBackground: Boolean = false,
     onBackClick: (() -> Unit)?,
     @DrawableRes rightIcon: Int?,
     onRightIconClick: (() -> Unit)?,
@@ -84,10 +94,12 @@ internal fun V3Scaffold(
         bottomBar = bottomBar,
         applyDefaultPaddings = applyDefaultPaddings,
         applyScaffoldPaddings = applyScaffoldPaddings,
+        applyGradientBackground = applyGradientBackground,
         topBar = {
             V3Topbar(
                 title = title,
                 onBackClick = onBackClick,
+                transparentBackground = applyGradientBackground,
                 actions = rightIcon?.let {
                     {
                         V3TopbarButton(
@@ -121,6 +133,7 @@ internal fun V3Scaffold(
     modifier: Modifier = Modifier,
     applyDefaultPaddings: Boolean,
     applyScaffoldPaddings: Boolean,
+    applyGradientBackground: Boolean,
     topBar: @Composable () -> Unit,
     bottomBar: @Composable () -> Unit = {},
     content: @Composable () -> Unit,
@@ -130,9 +143,18 @@ internal fun V3Scaffold(
         bottomBar = bottomBar,
         modifier = modifier,
     ) {
-        V3Background()
+        if(applyGradientBackground) {
+            V3Background()
+        }
         Box(
             modifier = Modifier
+                .then(
+                    if (applyGradientBackground)
+                        Modifier
+                    else Modifier.background(
+                        color = Theme.v2.colors.backgrounds.background
+                    )
+                )
                 .then(
                     if (applyScaffoldPaddings) {
                         Modifier.padding(it)

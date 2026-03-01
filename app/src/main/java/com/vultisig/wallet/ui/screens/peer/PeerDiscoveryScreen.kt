@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -76,7 +75,8 @@ import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
 import com.vultisig.wallet.ui.components.util.dashedBorder
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v3.V3Icon
+import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.peer.KeygenPeerDiscoveryViewModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
@@ -175,8 +175,9 @@ internal fun PeerDiscoveryScreen(
     val ordinalFormatter = remember { MessageFormat("{0,ordinal}") }
 
     var isExpanded by remember { mutableStateOf(false) }
-    V2Scaffold(
+    V3Scaffold(
         title = stringResource(R.string.peer_discovery_topbar_title),
+        applyGradientBackground = true,
         onBackClick = onBackClick,
         actions = {
             if (showHelp) {
@@ -324,7 +325,7 @@ internal fun PeerDiscoveryScreen(
                     UiSpacer(24.dp)
 
                     FlowRow(
-                        maxItemsInEachRow = 2,
+                        maxItemsInEachRow = 1,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
@@ -335,10 +336,10 @@ internal fun PeerDiscoveryScreen(
                             state = PeerDeviceState.ThisDevice,
                             modifier = Modifier
                                 .weight(1f)
-                                .animateContentSize()
+                                .animateContentSize(),
                         )
 
-                        state.devices.forEach { device ->
+                        state.devices.forEachIndexed {index, device ->
                             val nameParts = device.split("-")
                             val name = nameParts.take(nameParts.size - 1)
                                 .joinToString(separator = "")
@@ -355,7 +356,7 @@ internal fun PeerDiscoveryScreen(
                                 },
                                 modifier = Modifier
                                     .weight(1f)
-                                    .animateContentSize()
+                                    .animateContentSize(),
                             )
                         }
 
@@ -373,7 +374,7 @@ internal fun PeerDiscoveryScreen(
                                 state = PeerDeviceState.Waiting,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .animateContentSize()
+                                    .animateContentSize(),
                             )
 
                             // Spacer to preserve 2-column layout spacing
@@ -615,10 +616,10 @@ private fun PeerDeviceItem(
             .background(
                 color = when (state) {
                     PeerDeviceState.Selected, PeerDeviceState.ThisDevice ->
-                        Theme.v2.colors.backgrounds.success
+                        Theme.v2.colors.backgrounds.state.neutral
 
-                    PeerDeviceState.NotSelected -> Theme.v2.colors.backgrounds.secondary
-                    PeerDeviceState.Waiting -> Theme.v2.colors.backgrounds.primary
+                    PeerDeviceState.NotSelected ,PeerDeviceState.Waiting ->
+                        Theme.v2.colors.backgrounds.tertiary
                 },
                 shape = shape,
             )
@@ -626,19 +627,19 @@ private fun PeerDeviceItem(
                 when (state) {
                     PeerDeviceState.Selected -> Modifier.border(
                         width = 1.dp,
-                        color = Theme.v2.colors.alerts.success,
+                        color = Theme.v2.colors.border.light,
                         shape = shape,
                     )
 
                     PeerDeviceState.ThisDevice -> Modifier.border(
                         width = 1.dp,
-                        color = Color(0x4013C89D),
+                        color = Theme.v2.colors.border.light,
                         shape = shape,
                     )
 
                     PeerDeviceState.Waiting -> Modifier.dashedBorder(
                         width = 1.dp,
-                        color = Theme.v2.colors.border.normal,
+                        color = Theme.v2.colors.border.extraLight,
                         cornerRadius = 16.dp,
                         dashLength = 4.dp,
                         intervalLength = 4.dp,
@@ -659,11 +660,25 @@ private fun PeerDeviceItem(
     ) {
         if (state == PeerDeviceState.Waiting) {
             RiveAnimation(
-                animation = R.raw.riv_waiting_on_device,
+                animation = R.raw.riv_searching_device,
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(44.dp)
             )
         }
+
+        if (state == PeerDeviceState.Selected || state == PeerDeviceState.ThisDevice) {
+            V3Icon(
+                logo = R.drawable.device_backup,
+                borderColor = Theme.v2.colors.alerts.success,
+                borderWidth = 2.dp,
+                shinedBottom = Theme.v2.colors.alerts.success,
+                tintColor = Theme.v2.colors.alerts.success
+            )
+        }
+
+        UiSpacer(
+            size = 4.dp
+        )
 
         Column(
             modifier = Modifier
@@ -674,7 +689,7 @@ private fun PeerDeviceItem(
             Text(
                 text = title,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.v2.colors.neutrals.n50,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = titleLines,
                 minLines = titleLines,
@@ -686,41 +701,16 @@ private fun PeerDeviceItem(
                 Text(
                     text = caption,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.secondary,
+                    color = Theme.v2.colors.alerts.success,
                     maxLines = 1,
                 )
             }
         }
 
-        when (state) {
-            PeerDeviceState.Selected -> {
-                Icon(
-                    painter = painterResource(R.drawable.check),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .background(
-                            color = Theme.v2.colors.alerts.success,
-                            shape = CircleShape,
-                        )
-                        .padding(4.dp)
-                )
-            }
 
-            PeerDeviceState.NotSelected -> {
-                Spacer(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.border.light,
-                            shape = CircleShape,
-                        )
-                )
-            }
-
-            else -> Unit
-        }
+        UiSpacer(
+            weight = 1f,
+        )
     }
 }
 

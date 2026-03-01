@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.v3.components
+package com.vultisig.wallet.ui.components.v3
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.theme.Theme
 fun V3Topbar(
     title: String?,
     onBackClick: (() -> Unit)?,
+    transparentBackground: Boolean = false,
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
     CenterAlignedTopAppBar(
@@ -61,7 +62,10 @@ fun V3Topbar(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent,
+            containerColor =
+                if (transparentBackground)
+                    Color.Transparent
+                else Theme.v2.colors.backgrounds.background,
         ),
         windowInsets = WindowInsets(0.dp)
     )

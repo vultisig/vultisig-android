@@ -120,6 +120,10 @@ import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQr
 import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBottomSheet
 import com.vultisig.wallet.ui.screens.v2.receive.ReceiveBottomSheet
+import com.vultisig.wallet.ui.screens.v3.onboarding.ChooseDeviceCountScreen
+import com.vultisig.wallet.ui.screens.v3.onboarding.EnterVaultInfoScreen
+import com.vultisig.wallet.ui.screens.v3.onboarding.ReviewVaultDevicesScreen
+import com.vultisig.wallet.ui.screens.v3.onboarding.SetupVaultInfoScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
@@ -368,7 +372,7 @@ internal fun SetupNavGraph(
             VaultBackupOnboardingScreen()
         }
 
-        composable<FastVaultVerification> {
+        dialog <FastVaultVerification> {
             FastVaultVerificationScreen()
         }
 
@@ -560,6 +564,23 @@ internal fun SetupNavGraph(
 
         composable<Route.VaultsToBackup> {
             VaultsToBackupScreen()
+        }
+
+        composable<Route.ReviewVaultDevices> {
+            ReviewVaultDevicesScreen()
+        }
+
+        composable<Route.ChooseVaultCount> {
+             ChooseDeviceCountScreen()
+        }
+
+        composable<Route.SetupVaultInfo> {
+            SetupVaultInfoScreen()
+        }
+
+
+        composable<Route.EnterVaultInfo> {
+            EnterVaultInfoScreen()
         }
 
         dialog<Route.Receive> {

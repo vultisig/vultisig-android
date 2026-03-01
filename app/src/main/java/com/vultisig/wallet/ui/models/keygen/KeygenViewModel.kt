@@ -632,7 +632,7 @@ internal class KeygenViewModel @Inject constructor(
 
         navigator.route(
             route = when (action) {
-                TssAction.KEYGEN, TssAction.ReShare ->
+                TssAction.KEYGEN -> if (vault.isFastVault()) {
                     Route.Onboarding.VaultBackup(
                         vaultId = vaultId,
                         pubKeyEcdsa = vault.pubKeyECDSA,
@@ -641,6 +641,32 @@ internal class KeygenViewModel @Inject constructor(
                         action = action,
                         vaultName = args.vaultName,
                         password = args.password,
+                        deviceCount = args.deviceCount,
+                    )
+                } else {
+                    Route.ReviewVaultDevices(
+                        vaultId = vaultId,
+                        pubKeyEcdsa = vault.pubKeyECDSA,
+                        email = args.email,
+                        vaultType = vaultType,
+                        action = action,
+                        vaultName = args.vaultName,
+                        password = args.password,
+                        devices = keygenCommittee,
+                        localPartyId = vault.localPartyID,
+                    )
+                }
+
+                TssAction.ReShare ->
+                    Route.Onboarding.VaultBackup(
+                        vaultId = vaultId,
+                        pubKeyEcdsa = vault.pubKeyECDSA,
+                        email = args.email,
+                        vaultType = vaultType,
+                        action = action,
+                        vaultName = args.vaultName,
+                        password = args.password,
+                        deviceCount = args.deviceCount,
                     )
 
                 TssAction.Migrate, TssAction.KeyImport -> if (vault.isFastVault()) {
@@ -652,6 +678,7 @@ internal class KeygenViewModel @Inject constructor(
                         action = action,
                         vaultName = args.vaultName,
                         password = args.password,
+                        deviceCount = args.deviceCount,
                     )
                 } else {
                     Route.BackupVault(

@@ -10,6 +10,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -21,6 +22,7 @@ import com.vultisig.wallet.data.usecases.backup.toMimeType
 import com.vultisig.wallet.ui.navigation.BackupPasswordTypeNavType
 import com.vultisig.wallet.ui.navigation.BackupType
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
@@ -182,13 +184,29 @@ internal class BackupVaultViewModel @Inject constructor(
                     )
                 )
 
-                navigator.route(
-                    Route.VaultConfirmation(
-                        vaultId = vaultId,
-                        vaultType = requireNotNull(backupType.vaultType),
-                        action = backupType.action,
-                    )
-                )
+                when (backupType.action) {
+                    TssAction.Migrate -> {
+                        navigator.route(
+                            route = Route.Home(),
+                            opts = NavigationOptions(
+                                clearBackStack = true,
+                            )
+                        )
+                    }
+
+                    else -> {
+                        navigator.route(
+                            route = Route.VaultBackupSummary(
+                                vaultId = vaultId,
+                                vaultType = requireNotNull(backupType.vaultType),
+                            ),
+                            opts = NavigationOptions(
+                                popUpToRoute = Route.ChooseVaultType::class,
+                                inclusive = true,
+                            )
+                        )
+                    }
+                }
             } else {
                 navigateToPasswordRequestBackup()
             }

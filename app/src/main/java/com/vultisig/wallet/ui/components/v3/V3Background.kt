@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.v3.components
+package com.vultisig.wallet.ui.components.v3
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -37,7 +37,7 @@ fun V3Background(
                     drawCircle(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                shineSpotColor.copy(alpha = 1f),
+                                shineSpotColor.copy(alpha = 0.75f),
                                 Color.Transparent
                             ),
                             center = center,
@@ -50,7 +50,7 @@ fun V3Background(
                 drawRect(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            backgroundColor,
+                            backgroundColor.copy(alpha = 0.5f),
                             Color.Transparent
                         ),
                         endY = height / 4

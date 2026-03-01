@@ -26,7 +26,6 @@ internal fun VsCheckField(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
-            .fillMaxWidth()
             .padding(
                 horizontal = 4.dp,
                 vertical = 8.dp,

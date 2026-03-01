@@ -133,9 +133,12 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private val networkUtils: NetworkUtils,
 ) : ViewModel() {
 
-    val state = MutableStateFlow(PeerDiscoveryUiModel())
-
     private val args = savedStateHandle.toRoute<Route.Keygen.PeerDiscovery>()
+
+    val state = MutableStateFlow(PeerDiscoveryUiModel(
+        minimumDevices = args.deviceCount ?: MIN_KEYGEN_DEVICES,
+        minimumDevicesDisplayed = (args.deviceCount ?: (MIN_KEYGEN_DEVICES + 1)),
+    ))
 
     private val sessionId = Uuid.random().toHexString()
     private val serviceName = generateServiceName()
@@ -285,6 +288,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                         ?.filter { state.value.selectedDevices.contains(it) || it == localPartyId }
                         ?: emptyList(),
                     oldResharePrefix = existingVault?.resharePrefix ?: "",
+                    deviceCount = args.deviceCount,
                 ),
                 opts = NavigationOptions(
                     popUpToRoute = Route.Keygen.PeerDiscovery::class,

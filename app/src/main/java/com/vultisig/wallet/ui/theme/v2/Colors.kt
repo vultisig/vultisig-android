@@ -45,7 +45,7 @@ data class Buttons(
 
 data class Backgrounds(
     val primary: Color = Color(0xFF02122B),
-    val background: Color = Color(0x8002122B),
+    val background: Color = Color(0xFF02122B),
     val secondary: Color = Color(0xFF061B3A),
     val surface2: Color = Color(0xFF12284A),
     val tertiary: Color = Color(0xFF0B1A3A),
@@ -64,7 +64,13 @@ data class Backgrounds(
     val teal: Color = Color(0xFF15D7AC),
     val orange: Color = Color(0xffF7961B),
     val disabled: Color = Color(0x800B1A3A),
-    val dark: Color = Color(0xFF061C3C)
+    val dark: Color = Color(0xFF061C3C),
+    val state: BackgroundStates = BackgroundStates(),
+)
+
+data class BackgroundStates(
+    val success: Color = Color(0xFF13C89D),
+    val neutral: Color = Color(0xFF061B3A)
 )
 
 data class Primary(
