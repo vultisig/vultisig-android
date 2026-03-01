@@ -999,6 +999,7 @@
     <string name="backup_vault_screen_export_prefix">Exportieren Sie diese Backup-Datei und speichern Sie sie in der Cloud. Sie ist</string>
     <string name="backup_vault_screen_password_suffix">mit dem zuvor festgelegten Passwort, um Ihren Tresor zu entsperren.</string>
     <string name="backup_vault_screen_cloud_tip">Verwenden Sie für jedes Backup einen anderen Cloud-Dienst oder ein anderes Konto. Wenn Sie fertig sind, löschen Sie die Datei von diesem Gerät.</string>
+    <string name="backup_vault_screen_save_backup">Backup speichern</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Exportieren Sie diese Backup-Datei und speichern Sie sie in der Cloud. Sie ist mit dem zuvor festgelegten Passwort verschlüsselt, um Ihren Tresor zu entsperren. Verwenden Sie für jedes Backup einen anderen Cloud-Dienst oder ein anderes Konto. Wenn Sie fertig sind, löschen Sie die Datei von diesem Gerät.</string>
     <string name="backup_i_understand_how_to_save_this_backup">Ich verstehe, wie ich dieses Backup speichern soll</string>
     <string name="backup_congrats">Glückwunsch!</string>

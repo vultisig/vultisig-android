@@ -149,7 +149,7 @@ private fun BackupVaultScreen(
                     },
                 )
                 VsButton(
-                    label = "Save backup",
+                    label = stringResource(R.string.backup_vault_screen_save_backup),
                     iconLeft = R.drawable.ic_download,
                     onClick = onBackupClick,
                     state = VsButtonState.Enabled.takeIf { isNextEnabled }

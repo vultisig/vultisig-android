@@ -997,6 +997,7 @@
     <string name="backup_vault_screen_export_prefix">Exporta este archivo de copia de seguridad y guárdalo en la nube. Está</string>
     <string name="backup_vault_screen_password_suffix">con la contraseña establecida anteriormente para desbloquear tu bóveda.</string>
     <string name="backup_vault_screen_cloud_tip">Usa un servicio de nube o cuenta diferente para cada copia. Cuando termines, elimina el archivo de este dispositivo.</string>
+    <string name="backup_vault_screen_save_backup">Guardar copia de seguridad</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Exporta este archivo de copia de seguridad y guárdalo en la nube. Está cifrado con la contraseña establecida anteriormente para desbloquear tu bóveda. Usa un servicio de nube o cuenta diferente para cada copia. Cuando termines, elimina el archivo de este dispositivo.</string>
     <string name="backup_i_understand_how_to_save_this_backup">Entiendo cómo guardar esta copia de seguridad</string>
     <string name="backup_congrats">¡Enhorabuena!</string>

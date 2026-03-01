@@ -1336,6 +1336,7 @@
     <string name="backup_vault_screen_export_prefix">导出此备份文件，然后保存到云端。它是</string>
     <string name="backup_vault_screen_password_suffix">以之前设置的密码加密，用于解锁您的金库。</string>
     <string name="backup_vault_screen_cloud_tip">每份备份请使用不同的云服务或账户。完成后，请从此设备删除该文件。</string>
+    <string name="backup_vault_screen_save_backup">保存备份</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">导出此备份文件，然后保存到云端。它使用之前设置的密码加密以解锁您的金库。每份备份请使用不同的云服务或账户。完成后，请从此设备删除该文件。</string>
     <string name="backup_i_understand_how_to_save_this_backup">我了解如何保存此备份</string>
     <string name="backup_congrats">恭喜！</string>

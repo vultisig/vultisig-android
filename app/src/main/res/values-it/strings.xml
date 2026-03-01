@@ -999,6 +999,7 @@
     <string name="backup_vault_screen_export_prefix">Esporta questo file di backup, quindi salvalo sul cloud. È</string>
     <string name="backup_vault_screen_password_suffix">con la password impostata in precedenza per sbloccare il tuo vault.</string>
     <string name="backup_vault_screen_cloud_tip">Usa un servizio cloud o account diverso per ogni backup. Quando hai finito, elimina il file da questo dispositivo.</string>
+    <string name="backup_vault_screen_save_backup">Salva backup</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Esporta questo file di backup, quindi salvalo sul cloud. È crittografato con la password impostata in precedenza per sbloccare il tuo vault. Usa un servizio cloud o account diverso per ogni backup. Quando hai finito, elimina il file da questo dispositivo.</string>
     <string name="backup_i_understand_how_to_save_this_backup">Capisco come salvare questo backup</string>
     <string name="backup_congrats">Congratulazioni!</string>

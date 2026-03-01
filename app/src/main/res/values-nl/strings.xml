@@ -994,6 +994,7 @@
     <string name="backup_vault_screen_export_prefix">Exporteer dit back-upbestand en sla het op in de cloud. Het is</string>
     <string name="backup_vault_screen_password_suffix">met het eerder ingestelde wachtwoord om uw kluis te ontgrendelen.</string>
     <string name="backup_vault_screen_cloud_tip">Gebruik voor elke back-up een andere cloudservice of account. Wanneer u klaar bent, verwijdert u het bestand van dit apparaat.</string>
+    <string name="backup_vault_screen_save_backup">Back-up opslaan</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Exporteer dit back-upbestand en sla het op in de cloud. Het is versleuteld met het eerder ingestelde wachtwoord om uw kluis te ontgrendelen. Gebruik voor elke back-up een andere cloudservice of account. Wanneer u klaar bent, verwijdert u het bestand van dit apparaat.</string>
     <string name="backup_i_understand_how_to_save_this_backup">Ik begrijp hoe ik deze back-up moet opslaan</string>
     <string name="backup_congrats">Gefeliciteerd!</string>

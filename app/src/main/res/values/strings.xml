@@ -1044,6 +1044,7 @@
     <string name="backup_vault_screen_export_prefix">Export this backup file, then save it to the cloud. It is</string>
     <string name="backup_vault_screen_password_suffix">with the password set earlier to unlock your Vault.</string>
     <string name="backup_vault_screen_cloud_tip">Use a different cloud service or account for each backup. When you\'re finished, delete the file from this device.</string>
+    <string name="backup_vault_screen_save_backup">Save backup</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Export this backup file, then save it to the cloud. It is encrypted with the password set earlier to unlock your Vault. Use a different cloud service or account for each backup. When you’re finished, delete the file from this device.</string>
     <string name="backup_i_understand_how_to_save_this_backup">I understand how to save this backup</string>
     <string name="backup_congrats">Congrats!</string>

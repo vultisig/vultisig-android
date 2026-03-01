@@ -994,6 +994,7 @@
     <string name="backup_vault_screen_export_prefix">Экспортируйте этот файл резервной копии, затем сохраните его в облаке. Он</string>
     <string name="backup_vault_screen_password_suffix">паролем, установленным ранее, для разблокировки вашего хранилища.</string>
     <string name="backup_vault_screen_cloud_tip">Используйте разные облачные сервисы или аккаунты для каждой копии. Когда закончите, удалите файл с этого устройства.</string>
+    <string name="backup_vault_screen_save_backup">Сохранить резервную копию</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Экспортируйте этот файл резервной копии, затем сохраните его в облаке. Он зашифрован паролем, установленным ранее, для разблокировки вашего хранилища. Используйте разные облачные сервисы или аккаунты для каждой копии. Когда закончите, удалите файл с этого устройства.</string>
     <string name="backup_i_understand_how_to_save_this_backup">Я понимаю, как сохранить эту резервную копию</string>
     <string name="backup_congrats">Поздравляем!</string>

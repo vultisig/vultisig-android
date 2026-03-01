@@ -998,6 +998,7 @@
     <string name="backup_vault_screen_export_prefix">Exporte este ficheiro de cópia de segurança e guarde-o na nuvem. Está</string>
     <string name="backup_vault_screen_password_suffix">com a palavra-passe definida anteriormente para desbloquear o seu cofre.</string>
     <string name="backup_vault_screen_cloud_tip">Use um serviço de nuvem ou conta diferente para cada cópia. Quando terminar, elimine o ficheiro deste dispositivo.</string>
+    <string name="backup_vault_screen_save_backup">Guardar cópia de segurança</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Exporte este ficheiro de cópia de segurança e guarde-o na nuvem. Está encriptado com a palavra-passe definida anteriormente para desbloquear o seu cofre. Use um serviço de nuvem ou conta diferente para cada cópia. Quando terminar, elimine o ficheiro deste dispositivo.</string>
     <string name="backup_i_understand_how_to_save_this_backup">Percebo como guardar esta cópia de segurança</string>
     <string name="backup_congrats">Parabéns!</string>

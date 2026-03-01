@@ -998,6 +998,7 @@
     <string name="backup_vault_screen_export_prefix">Izvezite ovu datoteku sigurnosne kopije, zatim je spremite u oblak. Ona je</string>
     <string name="backup_vault_screen_password_suffix">lozinkom postavljenom ranije za otključavanje vašeg trezora.</string>
     <string name="backup_vault_screen_cloud_tip">Koristite drugi oblak ili račun za svaku sigurnosnu kopiju. Kada završite, izbrišite datoteku s ovog uređaja.</string>
+    <string name="backup_vault_screen_save_backup">Spremi sigurnosnu kopiju</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Izvezite ovu datoteku sigurnosne kopije, zatim je spremite u oblak. Šifrirana je lozinkom postavljenom ranije za otključavanje vašeg trezora. Koristite drugi oblak ili račun za svaku sigurnosnu kopiju. Kada završite, izbrišite datoteku s ovog uređaja.</string>
     <string name="backup_i_understand_how_to_save_this_backup">Razumijem kako spremiti ovu sigurnosnu kopiju</string>
     <string name="backup_congrats">Čestitamo!</string>
