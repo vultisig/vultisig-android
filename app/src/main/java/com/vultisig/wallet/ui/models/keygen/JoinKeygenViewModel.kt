@@ -58,13 +58,14 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration.Companion.seconds
 
 internal sealed class JoinKeygenError(val message: UiText) {
-    data object DuplicateVaultName : JoinKeygenError(R.string.join_key_gen_vault_with_duplicate_name_exists.asUiText())
+    data object DuplicateVaultName :
+        JoinKeygenError(R.string.join_key_gen_vault_with_duplicate_name_exists.asUiText())
+
     data object InvalidQr : JoinKeygenError(R.string.join_keysign_invalid_qr.asUiText())
     data object UnknownTss : JoinKeygenError(R.string.join_key_gen_unknown_tssaction.asUiText())
     data object WrongResharePrefix : JoinKeygenError(R.string.join_keysign_wrong_reshare.asUiText())
     data class UnknownError(val error: String) : JoinKeygenError(error.asUiText())
 }
-
 
 
 internal data class JoinKeygenUiModel(
@@ -111,7 +112,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 val existingVaults = vaultRepository.getAll()
 
                 val session = when (val action = deepLink.getTssAction()) {
-                    TssAction.KEYGEN,TssAction.KeyImport -> {
+                    TssAction.KEYGEN, TssAction.KeyImport -> {
                         val message = mapKeygenMessageFromProto(
                             protoBuf.decodeFromByteArray<KeygenMessageProto>(bytes)
                         )
@@ -200,12 +201,13 @@ internal class JoinKeygenViewModel @Inject constructor(
                 waitForKeygenToStart(session)
             } catch (e: Exception) {
                 Timber.e(e)
-                when(e){
-                    is JoinKeygenException-> {
+                when (e) {
+                    is JoinKeygenException -> {
                         state.update {
                             it.copy(error = e.error)
                         }
                     }
+
                     else -> {
                         state.update {
                             it.copy(
@@ -226,7 +228,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     }
 
 
-    fun navigateBack(){
+    fun navigateBack() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
@@ -375,7 +377,11 @@ class MediatorServiceDiscoveryListener(
                 @Suppress("DEPRECATION")
                 nsdManager.resolveService(
                     service,
-                    MediatorServiceDiscoveryListener(nsdManager, serviceName, onServerAddressDiscovered)
+                    MediatorServiceDiscoveryListener(
+                        nsdManager,
+                        serviceName,
+                        onServerAddressDiscovered
+                    )
                 )
             }
         }

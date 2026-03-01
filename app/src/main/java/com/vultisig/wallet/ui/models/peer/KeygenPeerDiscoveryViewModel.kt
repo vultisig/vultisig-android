@@ -126,7 +126,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private val qrHelperModalRepository: QrHelperModalRepository,
     private val vaultRepository: VaultRepository,
     private val keyImportRepository: KeyImportRepository,
-    private val extractMasterKeys: ExtractMasterKeysUseCase,
+    extractMasterKeys: ExtractMasterKeysUseCase,
 
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
@@ -150,7 +150,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private var hexChainCode: String = if (args.action == TssAction.KeyImport) {
         val mnemonic = keyImportRepository.get()?.mnemonic
             ?: error("KeyImport requires a mnemonic in KeyImportRepository")
-        extractMasterKeys(mnemonic)?.hexChainCode ?: ""
+        extractMasterKeys(mnemonic)?.hexChainCode ?: error("Failed to extract master chaincode from mnemonic for KeyImport")
     } else {
         Utils.encryptionKeyHex
     }
