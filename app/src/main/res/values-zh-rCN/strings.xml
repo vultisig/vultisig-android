@@ -1365,7 +1365,7 @@
     <string name="vault_setup_use_local_mode">使用本地模式</string>
     <string name="vault_setup_connected">已连接</string>
     <string name="vault_setup_local_mode_waiting_on_devices">本地模式，等待设备</string>
-    <string name="vault_setup_short_description_of_local_mode">本地模式的简短说明在此</string>
+    <string name="vault_setup_short_description_of_local_mode">在本地模式下，设备通过同一局域网连接，无需互联网服务器。</string>
     <string name="vault_setup_not_want_to_use_local_switch_back">不想使用本地模式？切换回去。</string>
     <string name="vault_setup_use_standard_mode">使用标准模式</string>
     <string name="vault_setup_review_your_vault_devices">查看您的金库设备</string>

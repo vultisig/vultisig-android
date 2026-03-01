@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -173,7 +174,7 @@ internal fun EnterVaultInfoScreen(
                 weight = 1f
             )
             VsButton(
-                label = "Next",
+                label = stringResource(R.string.enter_email_screen_next),
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag(EnterVaultInfoTags.NEXT_BUTTON)

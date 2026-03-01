@@ -99,7 +99,7 @@ private fun ChooseDeviceCountScreen(
             )
 
             VsButton(
-                label = "Get Started", modifier = Modifier.fillMaxWidth(), onClick = {
+                label = stringResource(R.string.referral_onboarding_get_started), modifier = Modifier.fillMaxWidth(), onClick = {
                     onEvent(ChooseDeviceCountUiEvent.Next)
                 }
             )
@@ -126,7 +126,7 @@ private fun Header() {
             size = 24.dp
         )
         Text(
-            text = "How many devices\n do you have?",
+            text = stringResource(R.string.welcome_preference_devices_title),
             style = Theme.brockmann.headings.title2,
             color = Theme.v2.colors.neutrals.n50,
             textAlign = TextAlign.Center,
