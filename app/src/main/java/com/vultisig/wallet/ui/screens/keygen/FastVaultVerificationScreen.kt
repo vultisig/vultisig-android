@@ -135,14 +135,14 @@ private fun FastVaultVerificationScreen(
                 )
 
                 Text(
-                    text = "4-digit code received\nvia email",
+                    text = stringResource(R.string.backup_4_digit_code_received_via_email),
                     style = Theme.brockmann.headings.title2,
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
                 )
                 UiSpacer(16.dp)
                 Text(
-                    text = "This will activate the co-signer",
+                    text = stringResource(R.string.backup_this_will_activate_the_co_signer),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary
                 )
@@ -258,9 +258,9 @@ private fun FastVaultVerificationScreen(
                                 )
 
                                 Text(
-                                    text = "Use a different email",
-                                    color = Theme.v2.colors.text.button.primary,
-                                    style = Theme.brockmann.button.semibold.medium,
+                                    text = stringResource(R.string.backup_use_a_different_email),
+                                    color = Theme.v2.colors.text.secondary,
+                                    style = Theme.brockmann.body.s.medium,
                                     modifier = Modifier
                                         .clip(
                                             shape = CircleShape

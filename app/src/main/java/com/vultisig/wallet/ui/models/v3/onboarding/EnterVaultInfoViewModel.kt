@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.v3.onboarding
 
+import android.content.Context
 import android.util.Patterns
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
@@ -26,9 +27,12 @@ import com.vultisig.wallet.ui.screens.backup.PasswordState
 import com.vultisig.wallet.ui.screens.backup.PasswordViewModelDelegate
 import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.UiText
+
 import com.vultisig.wallet.ui.utils.UiText.StringResource
+import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -131,6 +135,7 @@ internal class EnterVaultInfoViewModel @Inject constructor(
     private val isNameLengthValid: IsVaultNameValid,
     private val generateUniqueName: GenerateUniqueName,
 
+    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -189,7 +194,7 @@ internal class EnterVaultInfoViewModel @Inject constructor(
     private fun generateVaultName() {
         viewModelScope.launch {
             vaultNamesList = vaultRepository.getAll().map { it.name }
-            val proposeName = generateUniqueName("Secure Vault", vaultNamesList)
+            val proposeName = generateUniqueName(context.getString(R.string.nameing_saving_vault), vaultNamesList)
             nameTextFieldState.setTextAndPlaceCursorAtEnd(proposeName)
         }
     }
@@ -471,6 +476,7 @@ internal class EnterVaultInfoViewModel @Inject constructor(
                         password = password,
                         hint = null,
                         vaultId = null,
+                        deviceCount = deviceCount,
                     )
                 )
             }

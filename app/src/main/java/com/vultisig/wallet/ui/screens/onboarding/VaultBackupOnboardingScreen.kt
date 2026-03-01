@@ -95,7 +95,7 @@ internal fun VaultBackupOnboardingScreen(
                 ) {
                     GradientTitleText(
                         gradientPart = stringResource(R.string.backup_backups),
-                        regularPart = stringResource(R.string.backup_your_new_recovery_method),
+                        regularPart = " " + stringResource(R.string.backup_your_new_recovery_method),
                         style = Theme.brockmann.headings.title2
                     )
                     UiSpacer(

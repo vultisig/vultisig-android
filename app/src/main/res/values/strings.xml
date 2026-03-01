@@ -993,7 +993,7 @@
     <string name="welcome_preference_shared_title">Shared Vault</string>
     <string name="welcome_preference_personal_desc">A vault for personal funds. Sign transactions with your own devices.</string>
     <string name="welcome_preference_shared_desc">Co-sign with multiple people you trust (e.g. family vaults, your accountant, a combination…)</string>
-    <string name="welcome_preference_devices_title">How many devices do you have?</string>
+    <string name="welcome_preference_devices_title">How many devices\n do you have?</string>
     <string name="welcome_fast_and_easy">Fast &amp; easy</string>
     <string name="welcome_fast_and_easy_desc">Sign with only 1 device. Our secure server signs with you for multisig security.  Plugin compatible.</string>
     <string name="welcome_fast_and_easy_highlight">only 1 device.</string>
@@ -1035,7 +1035,7 @@
     <string name="backup_device_backup_and_password_are_key">The Device backup and password are the key. The server only co-signs and backup can be requested.</string>
     <string name="backup_store_backups_separately">Store backups separately</string>
     <string name="backup_keep_each_backup_in_different_place">Keep each backup in a different place. If one is compromised, your funds stay safe.</string>
-    <string name="backup_4_digit_code_received_via_email">4-digit code received via email</string>
+    <string name="backup_4_digit_code_received_via_email">4-digit code received\nvia email</string>
     <string name="backup_this_will_activate_the_co_signer">This will activate the co-signer</string>
     <string name="backup_use_a_different_email">Use a different email</string>
     <string name="backup_send_to_email">Send to %1$s</string>
