@@ -407,9 +407,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             state.update {
                 it.copy(
                     error = ErrorUiModel(
-                        description = UiText.DynamicString(
-                            e.message ?: context.getString(R.string.error_view_default_description)
-                        ),
+                        title = UiText.StringResource(R.string.error_view_default_title),
                         description = UiText.DynamicString(
                             e.message ?: context.getString(R.string.error_view_default_description)
                         ),
