@@ -124,13 +124,21 @@ internal fun KeygenPeerDiscoveryScreen(
                 file = riveFile,
                 source = ViewModelSource.Named("ViewModel").defaultInstance()
             )
+            
+            var showRive by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(300)
+                showRive = true
+            }
 
-            RiveAnimation(
-                file = riveFile,
-                viewModelInstance = vmi,
-                modifier = Modifier.fillMaxSize(),
-                fit = Fit.Cover()
-            )
+            if (showRive) {
+                RiveAnimation(
+                    file = riveFile,
+                    viewModelInstance = vmi,
+                    modifier = Modifier.fillMaxSize(),
+                    fit = Fit.Cover()
+                )
+            }
         }
 
         else -> {
