@@ -2,14 +2,14 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.CacaoProviderResponse
 import com.vultisig.wallet.data.api.models.MayaLatestBlockInfoResponse
-import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.MayaChainDepositCacaoResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.MAYA_STREAMING_INTERVAL
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
@@ -110,10 +110,8 @@ internal class MayaChainApiImp @Inject constructor(
         referralCode: String
     ): THORChainSwapQuoteDeserialized {
         try {
-            val affiliateParams = thorChainApi.buildAffiliateParams(
-                referralCode = referralCode,
-                discountBps = bpsDiscount,
-            )
+            val affiliateFeeRate =
+                maxOf(THORChainSwaps.AFFILIATE_FEE_RATE.toInt() - bpsDiscount, 0).toString()
 
             val response = httpClient
                 .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
@@ -122,14 +120,8 @@ internal class MayaChainApiImp @Inject constructor(
                     parameter("amount", amount)
                     parameter("destination", address)
                     parameter("streaming_interval", MAYA_STREAMING_INTERVAL)
-                    if (affiliateParams.isNotEmpty()) {
-                        affiliateParams.forEach { (key, value) ->
-                            when (key) {
-                                "affiliate" -> parameter("affiliate", value)
-                                "affiliate_bps" -> parameter("affiliate_bps", value)
-                            }
-                        }
-                    }
+                    parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+                    parameter("affiliate_bps", if (isAffiliate) affiliateFeeRate else "0")
                     header(xClientID, xClientIDValue)
                 }
             if (!response.status.isSuccess()) {
