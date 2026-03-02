@@ -35,7 +35,6 @@ import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
-import com.vultisig.wallet.data.usecases.ChainKeyResult
 import com.vultisig.wallet.data.usecases.DeriveChainKeyUseCase
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.Encryption
@@ -181,7 +180,10 @@ internal class KeygenViewModel @Inject constructor(
 
                 // For non-initiating devices in KeyImport, populate chain settings
                 // from the chains passed via the route args (originally from KeygenMessage).
-                if (action == TssAction.KeyImport && args.chains.isNotEmpty()) {
+                if (action == TssAction.KeyImport && !isInitiatingDevice && args.chains.isNotEmpty()) {
+                    // Clear any stale data from a previous KeyImport attempt
+                    // (e.g. app killed before finally block ran).
+                    keyImportRepository.clear()
                     val chainSettings = args.chains.mapNotNull { raw ->
                         Chain.entries.find { it.raw == raw }
                             ?.let { ChainImportSetting(chain = it) }
@@ -324,12 +326,15 @@ internal class KeygenViewModel @Inject constructor(
     private suspend fun startKeyImportKeygen() {
         val keyImportData = keyImportRepository.get()
             ?: error("No key import data found")
-        val mnemonic = keyImportData.mnemonic
 
         try {
-            val masterKeys = withContext(Dispatchers.IO) {
-                extractMasterKeys(mnemonic)
-            }
+            // Only the initiating device knows the mnemonic and derives keys.
+            // Non-initiating devices pass empty localUi; the TSS protocol handles distribution.
+            val masterKeys = if (isInitiatingDevice) {
+                withContext(Dispatchers.IO) {
+                    extractMasterKeys(keyImportData.mnemonic)
+                }
+            } else null
 
             // Phase 1: Root ECDSA keygen
             updateStep(KeygenState.KeygenECDSA)
@@ -344,7 +349,7 @@ internal class KeygenViewModel @Inject constructor(
                 encryption = encryption,
                 sessionApi = sessionApi,
                 hexChainCode = vault.hexChainCode,
-                localUi = masterKeys?.ecdsaMasterKeyHex ?: "",
+                localUi = masterKeys?.ecdsaMasterKeyHex.orEmpty(),
                 action = TssAction.KeyImport,
                 oldCommittee = oldCommittee,
                 vault = vault,
@@ -369,7 +374,7 @@ internal class KeygenViewModel @Inject constructor(
                 setupMessage = dklsKeygen.setupMessage,
                 isInitiatingDevice = isInitiatingDevice,
                 hexChainCode = vault.hexChainCode,
-                localUi = masterKeys?.eddsaMasterKeyHex ?: "",
+                localUi = masterKeys?.eddsaMasterKeyHex.orEmpty(),
             )
 
             schnorr.schnorrKeygenWithRetry(0)
@@ -379,16 +384,9 @@ internal class KeygenViewModel @Inject constructor(
 
             vault.pubKeyECDSA = keyshareEcdsa.pubKey
             vault.pubKeyEDDSA = keyshareEddsa.pubKey
-            // For KeyImport, keep the BIP32 chain code from ExtractMasterKeysUseCase.
-            // Don't overwrite with keyshareEcdsa.chaincode, as the DKLS protocol may
-            // produce a different chain code. The BIP32 chain code is needed for correct
-            // BIP32 derivation when adding chains that weren't in the initial import.
-            Timber.d("KeyImport: keeping BIP32 chain code (not overwriting with DKLS output)")
+            // Keep the BIP32 chain code from the mnemonic — don't overwrite with DKLS output,
+            // which may differ. The original chain code is needed for future BIP32 derivation.
 
-            // Track seen pubKeys to avoid duplicate keyshares in the DB.
-            // Chains sharing the same derivation path (e.g., all EVM chains use m/44'/60'/0'/0/0)
-            // produce the same pubKey. We only store one keyshare per unique pubKey,
-            // but record chainPublicKeys entries for all chains.
             val seenPubKeys = mutableSetOf(keyshareEcdsa.pubKey, keyshareEddsa.pubKey)
             val allKeyshares = mutableListOf(
                 KeyShare(pubKey = keyshareEcdsa.pubKey, keyShare = keyshareEcdsa.keyshare),
@@ -399,20 +397,18 @@ internal class KeygenViewModel @Inject constructor(
             // Phase 3: Per-chain keygen
             updateStep(KeygenState.KeygenChains)
 
-            val chainSettings = keyImportData.chainSettings
-            var chainKeyResult : ChainKeyResult? = null
-            for (chainSetting in chainSettings) {
-                if (isInitiatingDevice) {
-                    chainKeyResult = withContext(Dispatchers.IO) {
-                        deriveChainKey(mnemonic, chainSetting)
+            for (chainSetting in keyImportData.chainSettings) {
+                val chainKey = if (isInitiatingDevice) {
+                    withContext(Dispatchers.IO) {
+                        deriveChainKey(keyImportData.mnemonic, chainSetting)
                     }
-                }
+                } else null
 
                 val chainName = chainSetting.chain.raw
+                val isEddsa = chainSetting.chain.TssKeysignType == TssKeyType.EDDSA
+                val localUi = chainKey?.privateKeyHex.orEmpty()
 
-                if (chainSetting.chain.TssKeysignType == TssKeyType.EDDSA) {
-                    // EdDSA chain: Schnorr keygen. setupMessage is empty because
-                    // per-chain sessions create their own setup via getDklsKeyImportSetupMessage.
+                val chainKeyshare = if (isEddsa) {
                     val chainSchnorr = SchnorrKeygen(
                         localPartyId = vault.localPartyID,
                         keygenCommittee = keygenCommittee,
@@ -427,22 +423,11 @@ internal class KeygenViewModel @Inject constructor(
                         setupMessage = byteArrayOf(),
                         isInitiatingDevice = isInitiatingDevice,
                         hexChainCode = vault.hexChainCode,
-                        localUi =  if (isInitiatingDevice) chainKeyResult?.privateKeyHex ?: "" else "", // Non-initiating devices don't derive chain keys locally, so pass empty local
+                        localUi = localUi,
                     )
                     chainSchnorr.schnorrKeygenWithRetry(0, chainName)
-
-                    val chainKeyshare = chainSchnorr.keyshare!!
-                    if (seenPubKeys.add(chainKeyshare.pubKey)) {
-                        allKeyshares.add(
-                            KeyShare(pubKey = chainKeyshare.pubKey, keyShare = chainKeyshare.keyshare)
-                        )
-                    }
-                    chainPublicKeys.add(
-                        ChainPublicKey(chain = chainName, publicKey = chainKeyshare.pubKey, isEddsa = true)
-                    )
+                    chainSchnorr.keyshare!!
                 } else {
-                    // ECDSA chain: DKLS keygen. Each chain gets its own session with the
-                    // chain-specific private key injected via localUi.
                     val chainDkls = DKLSKeygen(
                         localPartyId = vault.localPartyID,
                         keygenCommittee = keygenCommittee,
@@ -453,23 +438,23 @@ internal class KeygenViewModel @Inject constructor(
                         encryption = encryption,
                         sessionApi = sessionApi,
                         hexChainCode = vault.hexChainCode,
-                        localUi = if(isInitiatingDevice) chainKeyResult?.privateKeyHex ?: "" else "",
+                        localUi = localUi,
                         action = TssAction.KeyImport,
                         oldCommittee = oldCommittee,
                         vault = vault,
                     )
                     chainDkls.dklsKeygenWithRetry(0, chainName)
+                    chainDkls.keyshare!!
+                }
 
-                    val chainKeyshare = chainDkls.keyshare!!
-                    if (seenPubKeys.add(chainKeyshare.pubKey)) {
-                        allKeyshares.add(
-                            KeyShare(pubKey = chainKeyshare.pubKey, keyShare = chainKeyshare.keyshare)
-                        )
-                    }
-                    chainPublicKeys.add(
-                        ChainPublicKey(chain = chainName, publicKey = chainKeyshare.pubKey, isEddsa = false)
+                if (seenPubKeys.add(chainKeyshare.pubKey)) {
+                    allKeyshares.add(
+                        KeyShare(pubKey = chainKeyshare.pubKey, keyShare = chainKeyshare.keyshare)
                     )
                 }
+                chainPublicKeys.add(
+                    ChainPublicKey(chain = chainName, publicKey = chainKeyshare.pubKey, isEddsa = isEddsa)
+                )
             }
 
             vault.keyshares = allKeyshares

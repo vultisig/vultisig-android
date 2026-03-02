@@ -49,7 +49,7 @@ internal class KeyImportRepositoryImpl @Inject constructor() : KeyImportReposito
 
     override fun setChainSettings(settings: List<ChainImportSetting>) {
         synchronized(this) {
-            data = data?.copy(chainSettings = settings) ?: KeyImportData("",chainSettings = settings)
+            data = data?.copy(chainSettings = settings) ?: KeyImportData("", chainSettings = settings)
         }
     }
 
