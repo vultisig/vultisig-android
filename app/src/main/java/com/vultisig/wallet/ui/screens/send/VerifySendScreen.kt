@@ -329,7 +329,9 @@ internal fun VerifySendScreen(
                 }
 
                 if (isConsentsEnabled) {
-                    Column {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         VsCheckField(
                             title = stringResource(R.string.verify_transaction_consent_address),
                             isChecked = state.consentAddress,
