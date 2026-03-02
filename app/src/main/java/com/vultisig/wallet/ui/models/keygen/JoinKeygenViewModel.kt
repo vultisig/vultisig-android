@@ -24,7 +24,11 @@ import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
-import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.*
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.DuplicateVaultName
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.InvalidQr
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.UnknownError
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.UnknownTss
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.WrongResharePrefix
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -54,14 +58,14 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration.Companion.seconds
 
 internal sealed class JoinKeygenError(val message: UiText) {
-    data object DuplicateVaultName : JoinKeygenError(R.string.join_key_gen_vault_with_duplicate_name_exists.asUiText())
+    data object DuplicateVaultName :
+        JoinKeygenError(R.string.join_key_gen_vault_with_duplicate_name_exists.asUiText())
+
     data object InvalidQr : JoinKeygenError(R.string.join_keysign_invalid_qr.asUiText())
     data object UnknownTss : JoinKeygenError(R.string.join_key_gen_unknown_tssaction.asUiText())
     data object WrongResharePrefix : JoinKeygenError(R.string.join_keysign_wrong_reshare.asUiText())
     data class UnknownError(val error: String) : JoinKeygenError(error.asUiText())
 }
-
-
 
 internal data class JoinKeygenUiModel(
     val isSuccess: Boolean = false,
@@ -107,7 +111,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 val existingVaults = vaultRepository.getAll()
 
                 val session = when (val action = deepLink.getTssAction()) {
-                    TssAction.KEYGEN -> {
+                    TssAction.KEYGEN, TssAction.KeyImport -> {
                         val message = mapKeygenMessageFromProto(
                             protoBuf.decodeFromByteArray<KeygenMessageProto>(bytes)
                         )
@@ -119,10 +123,9 @@ internal class JoinKeygenViewModel @Inject constructor(
                         } else {
                             discoverMediator(message.serviceName)
                         }
-
                         Session(
                             sessionId = message.sessionID,
-                            action = TssAction.KEYGEN,
+                            action = action,
                             hexChainCode = message.hexChainCode,
                             serviceName = message.serviceName,
                             useVultisigRelay = message.useVultisigRelay,
@@ -134,6 +137,7 @@ internal class JoinKeygenViewModel @Inject constructor(
 
                             oldCommittee = emptyList(),
                             oldResharePrefix = "",
+                            chains = message.chains,
                         )
                     }
 
@@ -162,7 +166,6 @@ internal class JoinKeygenViewModel @Inject constructor(
                         } else {
                             discoverMediator(message.serviceName)
                         }
-
 
                         Session(
                             sessionId = message.sessionID,
@@ -196,12 +199,13 @@ internal class JoinKeygenViewModel @Inject constructor(
                 waitForKeygenToStart(session)
             } catch (e: Exception) {
                 Timber.e(e)
-                when(e){
-                    is JoinKeygenException-> {
+                when (e) {
+                    is JoinKeygenException -> {
                         state.update {
                             it.copy(error = e.error)
                         }
                     }
+
                     else -> {
                         state.update {
                             it.copy(
@@ -216,13 +220,11 @@ internal class JoinKeygenViewModel @Inject constructor(
         }
     }
 
-
     private fun error(error: JoinKeygenError): Nothing {
         throw JoinKeygenException(error)
     }
 
-
-    fun navigateBack(){
+    fun navigateBack() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
@@ -267,7 +269,6 @@ internal class JoinKeygenViewModel @Inject constructor(
 
                     delay(1.5.seconds)
 
-
                     navigator.route(
                         route = Route.Keygen.Generating(
                             action = session.action,
@@ -289,6 +290,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                             password = null,
                             hint = null,
                             deviceCount = null,
+                            chains = session.chains,
                         ),
                         opts = NavigationOptions(
                             popUpToRoute = Route.Keygen.Join::class,
@@ -322,10 +324,10 @@ internal class JoinKeygenViewModel @Inject constructor(
         val libType: SigningLibType,
         val localPartyId: String,
         val vaultId: VaultId? = null,
+        val chains: List<String> = emptyList(),
     )
 
 }
-
 
 class MediatorServiceDiscoveryListener(
     private val nsdManager: NsdManager,
@@ -369,7 +371,11 @@ class MediatorServiceDiscoveryListener(
                 @Suppress("DEPRECATION")
                 nsdManager.resolveService(
                     service,
-                    MediatorServiceDiscoveryListener(nsdManager, serviceName, onServerAddressDiscovered)
+                    MediatorServiceDiscoveryListener(
+                        nsdManager,
+                        serviceName,
+                        onServerAddressDiscovered
+                    )
                 )
             }
         }
@@ -392,11 +398,11 @@ class MediatorServiceDiscoveryListener(
     }
 
     override fun onResolveFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-        Timber.d("Failed to resolve service: ${serviceInfo?.serviceName} , error: $errorCode")
+        Timber.d("Failed to resolve service: ${serviceInfo?.serviceName}, error: $errorCode")
     }
 
     override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
-        Timber.d("Service resolved: ${serviceInfo?.serviceName} ,address: ${serviceInfo?.host?.address.toString()} , port: ${serviceInfo?.port}")
+        Timber.d("Service resolved: ${serviceInfo?.serviceName}, address: ${serviceInfo?.host?.address.toString()}, port: ${serviceInfo?.port}")
 
         serviceInfo?.let { info ->
             val address =

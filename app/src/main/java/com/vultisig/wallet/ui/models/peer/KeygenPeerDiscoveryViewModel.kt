@@ -41,8 +41,8 @@ import com.vultisig.wallet.data.repositories.SecretSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
-import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.CreateQrCodeSharingBitmapUseCase
+import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
@@ -126,7 +126,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private val qrHelperModalRepository: QrHelperModalRepository,
     private val vaultRepository: VaultRepository,
     private val keyImportRepository: KeyImportRepository,
-    private val extractMasterKeys: ExtractMasterKeysUseCase,
+    extractMasterKeys: ExtractMasterKeysUseCase,
 
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
@@ -150,7 +150,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private var hexChainCode: String = if (args.action == TssAction.KeyImport) {
         val mnemonic = keyImportRepository.get()?.mnemonic
             ?: error("KeyImport requires a mnemonic in KeyImportRepository")
-        extractMasterKeys(mnemonic).hexChainCode
+        extractMasterKeys(mnemonic)?.hexChainCode ?: error("Failed to extract master chaincode from mnemonic for KeyImport")
     } else {
         Utils.encryptionKeyHex
     }
@@ -336,7 +336,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             }
 
             if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
-                // For active vault , we should present PeerDiscovery screen, so the other device can join
+                // For active vault, we should present PeerDiscovery screen, so the other device can join
                 // Also need to request the server to join the upgrade process
                 if (args.action == TssAction.Migrate && signers.count() > 2) {
                     startPeerDiscovery()
@@ -403,12 +403,14 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 }
             )
         } catch (e: Exception) {
-            // TODO handle exceptions more precisely
+            Timber.e(e, "Failed to connect to Vultiserver")
             state.update {
                 it.copy(
                     error = ErrorUiModel(
                         title = UiText.StringResource(R.string.error_view_default_title),
-                        description = UiText.StringResource(R.string.error_view_default_description),
+                        description = UiText.DynamicString(
+                            e.message ?: context.getString(R.string.error_view_default_description)
+                        ),
                     )
                 )
             }
@@ -449,7 +451,6 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             )
         }
     }
-
 
     private suspend fun loadQr(data: String) {
         val qrBitmap = withContext(Dispatchers.IO) {
@@ -675,9 +676,9 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 sessionId
             ).isNotEmpty()
         } catch (e: Exception) {
+            Timber.e(e, "Failed to get session participants, assuming session not started")
             false
         }
     }
-
 
 }
