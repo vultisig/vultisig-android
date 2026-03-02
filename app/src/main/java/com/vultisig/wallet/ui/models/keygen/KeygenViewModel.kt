@@ -80,7 +80,6 @@ internal sealed interface KeygenState {
     ) : KeygenState
 }
 
-
 internal data class KeygenUiModel(
     val progress: Float = 0f,
     val isSuccess: Boolean = false,
@@ -176,19 +175,6 @@ internal class KeygenViewModel @Inject constructor(
             try {
                 if (isInitiatingDevice) {
                     startKeygen()
-                }
-
-                // For non-initiating devices in KeyImport, populate chain settings
-                // from the chains passed via the route args (originally from KeygenMessage).
-                if (action == TssAction.KeyImport && !isInitiatingDevice && args.chains.isNotEmpty()) {
-                    // Clear any stale data from a previous KeyImport attempt
-                    // (e.g. app killed before finally block ran).
-                    keyImportRepository.clear()
-                    val chainSettings = args.chains.mapNotNull { raw ->
-                        Chain.entries.find { it.raw == raw }
-                            ?.let { ChainImportSetting(chain = it) }
-                    }
-                    keyImportRepository.setChainSettings(chainSettings)
                 }
 
                 when (libType) {
@@ -324,6 +310,17 @@ internal class KeygenViewModel @Inject constructor(
     }
 
     private suspend fun startKeyImportKeygen() {
+        // Non-initiating devices don't go through ImportSeedphrase/ChainsSetup screens,
+        // so populate chain settings from the route args (originally from the QR code).
+        if (!isInitiatingDevice) {
+            keyImportRepository.clear()
+            val chainSettings = args.chains.mapNotNull { raw ->
+                Chain.entries.find { it.raw == raw }
+                    ?.let { ChainImportSetting(chain = it) }
+            }
+            keyImportRepository.setChainSettings(chainSettings)
+        }
+
         val keyImportData = keyImportRepository.get()
             ?: error("No key import data found")
 
@@ -742,7 +739,6 @@ internal class KeygenViewModel @Inject constructor(
                     message.contains("failed to update from bytes to new local party")
         } ?: false
 
-
     private fun updateStep(step: KeygenState) {
         state.update { uiModel ->
             uiModel.copy(
@@ -752,8 +748,10 @@ internal class KeygenViewModel @Inject constructor(
                     is KeygenState.CreatingInstance -> 0.0f
                     is KeygenState.KeygenECDSA ->
                         if (libType == SigningLibType.KeyImport) 0.25f else 0.33f
+
                     is KeygenState.KeygenEdDSA ->
                         if (libType == SigningLibType.KeyImport) 0.50f else 0.66f
+
                     is KeygenState.KeygenChains -> 0.75f
                     is KeygenState.ReshareECDSA -> 0.33f
                     is KeygenState.ReshareEdDSA -> 0.66f

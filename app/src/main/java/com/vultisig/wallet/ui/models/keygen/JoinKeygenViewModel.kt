@@ -67,7 +67,6 @@ internal sealed class JoinKeygenError(val message: UiText) {
     data class UnknownError(val error: String) : JoinKeygenError(error.asUiText())
 }
 
-
 internal data class JoinKeygenUiModel(
     val isSuccess: Boolean = false,
     val error: JoinKeygenError? = null
@@ -168,7 +167,6 @@ internal class JoinKeygenViewModel @Inject constructor(
                             discoverMediator(message.serviceName)
                         }
 
-
                         Session(
                             sessionId = message.sessionID,
                             action = action,
@@ -222,11 +220,9 @@ internal class JoinKeygenViewModel @Inject constructor(
         }
     }
 
-
     private fun error(error: JoinKeygenError): Nothing {
         throw JoinKeygenException(error)
     }
-
 
     fun navigateBack() {
         viewModelScope.launch {
@@ -272,7 +268,6 @@ internal class JoinKeygenViewModel @Inject constructor(
                     state.update { it.copy(isSuccess = true) }
 
                     delay(1.5.seconds)
-
 
                     navigator.route(
                         route = Route.Keygen.Generating(
@@ -333,7 +328,6 @@ internal class JoinKeygenViewModel @Inject constructor(
     )
 
 }
-
 
 class MediatorServiceDiscoveryListener(
     private val nsdManager: NsdManager,
@@ -404,11 +398,11 @@ class MediatorServiceDiscoveryListener(
     }
 
     override fun onResolveFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-        Timber.d("Failed to resolve service: ${serviceInfo?.serviceName} , error: $errorCode")
+        Timber.d("Failed to resolve service: ${serviceInfo?.serviceName}, error: $errorCode")
     }
 
     override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
-        Timber.d("Service resolved: ${serviceInfo?.serviceName} ,address: ${serviceInfo?.host?.address.toString()} , port: ${serviceInfo?.port}")
+        Timber.d("Service resolved: ${serviceInfo?.serviceName}, address: ${serviceInfo?.host?.address.toString()}, port: ${serviceInfo?.port}")
 
         serviceInfo?.let { info ->
             val address =

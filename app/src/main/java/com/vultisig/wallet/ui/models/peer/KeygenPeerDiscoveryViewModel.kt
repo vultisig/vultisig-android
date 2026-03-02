@@ -336,7 +336,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             }
 
             if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
-                // For active vault , we should present PeerDiscovery screen, so the other device can join
+                // For active vault, we should present PeerDiscovery screen, so the other device can join
                 // Also need to request the server to join the upgrade process
                 if (args.action == TssAction.Migrate && signers.count() > 2) {
                     startPeerDiscovery()
@@ -408,7 +408,9 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 it.copy(
                     error = ErrorUiModel(
                         title = UiText.StringResource(R.string.error_view_default_title),
-                        description = UiText.StringResource(R.string.error_view_default_description),
+                        description = UiText.DynamicString(
+                            e.message ?: context.getString(R.string.error_view_default_description)
+                        ),
                     )
                 )
             }
@@ -449,7 +451,6 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             )
         }
     }
-
 
     private suspend fun loadQr(data: String) {
         val qrBitmap = withContext(Dispatchers.IO) {
@@ -679,6 +680,5 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             false
         }
     }
-
 
 }
