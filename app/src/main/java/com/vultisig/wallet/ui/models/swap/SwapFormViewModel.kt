@@ -96,7 +96,7 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.util.*
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -1157,7 +1157,7 @@ internal class SwapFormViewModel @Inject constructor(
                         }
 
                         val referral = referralCode.value
-                            ?: vaultId?.takeIf { srcToken.chain.id == Chain.ThorChain.id || srcToken.chain.id == Chain.MayaChain.id }
+                            ?: vaultId?.takeIf { srcToken.chain.id == Chain.ThorChain.id }
                                 ?.let { referralRepository.getExternalReferralBy(it) }
 
                         referral?.let { code ->
