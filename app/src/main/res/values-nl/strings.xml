@@ -1043,4 +1043,21 @@
     <string name="vault_setup_your_vault_is_ready_to_use">Uw kluis is klaar voor gebruik</string>
     <string name="scanning_qr_troubleshooting_scanning">Problemen met scannen? Als de QR-code niet meteen scant: Beweeg de telefoon iets dichter bij of verder van het scherm. Zorg ervoor dat het scherm goed verlicht is en vrij van schittering. Houd beide apparaten even stil.</string>
     <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">Met hoeveel mensen wilt u de kluis delen?</string>
+
+    <!-- Server Backup Screen -->
+    <string name="server_backup_title">Serverback-up</string>
+    <string name="server_backup_email_label">E-mail</string>
+    <string name="server_backup_email_description">Voer het e-mailadres in om de kluisshare te ontvangen.</string>
+    <string name="server_backup_email_error">Onjuist e-mailadres, controleer dit</string>
+    <string name="server_backup_password_label">Wachtwoord</string>
+    <string name="server_backup_password_description">Voer het wachtwoord in dat u hebt ingesteld bij het aanmaken van deze kluis.</string>
+    <string name="server_backup_name_label">Naam</string>
+    <string name="server_backup_get_started">Back-up</string>
+    <string name="server_backup_success_title">Back-upshare verzonden!</string>
+    <string name="server_backup_success_description">We hebben zojuist uw back-upshare naar uw e-mail gestuurd. Als u deze niet ziet, controleer dan uw spammap.</string>
+    <string name="server_backup_success_check_email">E-mail controleren</string>
+    <string name="server_backup_success_close">Sluiten</string>
+    <string name="server_backup_error_timeout">De server deed er te lang over om te reageren. Controleer uw internetverbinding en probeer het opnieuw.</string>
+    <string name="server_backup_error_too_many_requests">Te veel back-upverzoeken. Probeer het later opnieuw.</string>
+    <string name="server_backup_error_bad_request">Er is iets misgegaan. Controleer uw gegevens en probeer het opnieuw.</string>
 </resources>

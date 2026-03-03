@@ -6,6 +6,8 @@ import com.vultisig.wallet.data.usecases.backup.CreateZipVaultBackupFileNameUseC
 import com.vultisig.wallet.data.usecases.backup.CreateZipVaultBackupFileNameUseCaseImpl
 import com.vultisig.wallet.data.usecases.backup.IsVaultBackupFileExtensionValidUseCase
 import com.vultisig.wallet.data.usecases.backup.IsVaultBackupFileExtensionValidUseCaseImpl
+import com.vultisig.wallet.data.usecases.backup.RequestServerBackupUseCase
+import com.vultisig.wallet.data.usecases.backup.RequestServerBackupUseCaseImpl
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCaseImpl
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
@@ -189,6 +191,12 @@ internal interface DataUsecasesModule {
     fun bindIsVaultBackupFileExtensionValidUseCase(
         impl: IsVaultBackupFileExtensionValidUseCaseImpl
     ): IsVaultBackupFileExtensionValidUseCase
+
+    @Binds
+    @Singleton
+    fun bindRequestServerBackupUseCase(
+        impl: RequestServerBackupUseCaseImpl
+    ): RequestServerBackupUseCase
 
 
     @Binds

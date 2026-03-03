@@ -44,6 +44,7 @@ object VsBottomSheet {
 @Composable
 fun VsModalBottomSheet(
     onDismissRequest: () -> Unit,
+    showDragHandle: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(
@@ -54,9 +55,9 @@ fun VsModalBottomSheet(
     ModalBottomSheet(
         sheetState = sheetState,
         scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.8f),
-        dragHandle = {
-            VsBottomSheet.DragHandle()
-        },
+        dragHandle = if (showDragHandle) {
+            { VsBottomSheet.DragHandle() }
+        } else null,
         containerColor = Theme.v2.colors.backgrounds.primary,
         modifier = Modifier
             .statusBarsPadding(),

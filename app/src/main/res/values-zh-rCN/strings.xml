@@ -1385,4 +1385,21 @@
     <string name="vault_setup_your_vault_is_ready_to_use">您的金库已准备好使用</string>
     <string name="scanning_qr_troubleshooting_scanning">扫描遇到问题？如果二维码无法立即扫描：将手机稍微靠近或远离屏幕。确保屏幕光线充足且无眩光。让两台设备保持片刻稳定。</string>
     <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">您想与多少人共享金库？</string>
+
+    <!-- Server Backup Screen -->
+    <string name="server_backup_title">服务器备份</string>
+    <string name="server_backup_email_label">邮箱</string>
+    <string name="server_backup_email_description">输入接收金库份额的电子邮件地址。</string>
+    <string name="server_backup_email_error">电子邮件不正确，请检查</string>
+    <string name="server_backup_password_label">密码</string>
+    <string name="server_backup_password_description">输入您创建此金库时设置的密码。</string>
+    <string name="server_backup_name_label">名称</string>
+    <string name="server_backup_get_started">备份</string>
+    <string name="server_backup_success_title">备份份额已发送！</string>
+    <string name="server_backup_success_description">我们刚刚将您的备份份额发送到您的邮箱。如果您没有看到，请检查垃圾邮件文件夹。</string>
+    <string name="server_backup_success_check_email">查看邮箱</string>
+    <string name="server_backup_success_close">关闭</string>
+    <string name="server_backup_error_timeout">服务器响应时间过长，请检查您的网络连接并重试。</string>
+    <string name="server_backup_error_too_many_requests">备份请求过多。请稍后重试。</string>
+    <string name="server_backup_error_bad_request">出错了。请检查您的信息并重试。</string>
 </resources>

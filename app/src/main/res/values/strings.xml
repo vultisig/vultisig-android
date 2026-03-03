@@ -1094,4 +1094,20 @@
     <string name="scanning_qr_troubleshooting_scanning">Having trouble scanning? If the QR code isn’t scanning right away: Move the phone slightly closer or farther from the screen. Make sure the screen is well lit and free of glare. Keep both devices steady for a moment.</string>
     <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">With how many people do you want to share the vault?</string>
 
+    <!-- Server Backup Screen -->
+    <string name="server_backup_title">Server Backup</string>
+    <string name="server_backup_email_label">Email</string>
+    <string name="server_backup_email_description">Enter the email to receive the vault share.</string>
+    <string name="server_backup_email_error">Incorrect e-mail, please check</string>
+    <string name="server_backup_password_label">Password</string>
+    <string name="server_backup_password_description">Enter the password you set when creating this Vault.</string>
+    <string name="server_backup_name_label">Name</string>
+    <string name="server_backup_get_started">Backup</string>
+    <string name="server_backup_success_title">Backup share sent!</string>
+    <string name="server_backup_success_description">We just sent your backup share to your email. If you don\'t see it, check your spam folder.</string>
+    <string name="server_backup_success_check_email">Check email</string>
+    <string name="server_backup_success_close">Close</string>
+    <string name="server_backup_error_timeout">The server took too long to respond, please check your internet connection and try again.</string>
+    <string name="server_backup_error_too_many_requests">Too many backup requests. Please try again later.</string>
+    <string name="server_backup_error_bad_request">Something went wrong. Please check your details and try again.</string>
 </resources>

@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
 import com.vultisig.wallet.data.api.models.signer.MigrateRequest
+import com.vultisig.wallet.data.api.models.signer.RequestServerBackupRequest
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -26,9 +27,11 @@ internal interface VultiSignerApi {
     suspend fun createMldsa(
         request: CreateMldsaVaultRequestJson,
     )
+
     suspend fun joinKeyImport(
         request: JoinKeyImportRequest,
     )
+
     suspend fun joinKeysign(
         requestJson: JoinKeysignRequestJson,
     )
@@ -53,6 +56,16 @@ internal interface VultiSignerApi {
 
     suspend fun migrate(
         request: MigrateRequest,
+    )
+
+    /**
+     * Requests the server to resend the encrypted vault backup to the given [email].
+     * Calls `POST /vault/resend` with the public key, password, and email in the body.
+     */
+    suspend fun requestServerBackup(
+        publicKeyEcdsa: String,
+        email: String,
+        password: String,
     )
 
 }
@@ -122,6 +135,22 @@ internal class VultiSignerApiImpl @Inject constructor(
     override suspend fun migrate(request: MigrateRequest) {
         http.post("$URL/migrate") {
             setBody(request)
+        }.throwIfUnsuccessful()
+    }
+
+    override suspend fun requestServerBackup(
+        publicKeyEcdsa: String,
+        email: String,
+        password: String,
+    ) {
+        http.post("$URL/resend") {
+            setBody(
+                RequestServerBackupRequest(
+                    publicKeyEcdsa = publicKeyEcdsa,
+                    password = password,
+                    email = email,
+                )
+            )
         }.throwIfUnsuccessful()
     }
 

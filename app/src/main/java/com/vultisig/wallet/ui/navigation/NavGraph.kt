@@ -60,6 +60,7 @@ import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
+import com.vultisig.wallet.ui.screens.backup.ServerBackupScreen
 import com.vultisig.wallet.ui.screens.backup.VaultsToBackupScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
@@ -372,7 +373,7 @@ internal fun SetupNavGraph(
             VaultBackupOnboardingScreen()
         }
 
-        dialog <FastVaultVerification> {
+        dialog<FastVaultVerification> {
             FastVaultVerificationScreen()
         }
 
@@ -571,16 +572,19 @@ internal fun SetupNavGraph(
         }
 
         composable<Route.ChooseVaultCount> {
-             ChooseDeviceCountScreen()
+            ChooseDeviceCountScreen()
         }
 
         composable<Route.SetupVaultInfo> {
             SetupVaultInfoScreen()
         }
 
-
         composable<Route.EnterVaultInfo> {
             EnterVaultInfoScreen()
+        }
+
+        composable<Route.ServerBackup> {
+            ServerBackupScreen()
         }
 
         dialog<Route.Receive> {

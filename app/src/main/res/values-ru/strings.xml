@@ -1043,4 +1043,21 @@
     <string name="vault_setup_your_vault_is_ready_to_use">Ваше хранилище готово к использованию</string>
     <string name="scanning_qr_troubleshooting_scanning">Возникли проблемы со сканированием? Если QR-код не сканируется сразу: Немного приблизьте или отдалите телефон от экрана. Убедитесь, что экран хорошо освещён и без бликов. Держите оба устройства неподвижно на мгновение.</string>
     <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">С каким количеством людей вы хотите поделиться хранилищем?</string>
+
+    <!-- Server Backup Screen -->
+    <string name="server_backup_title">Резервное копирование сервера</string>
+    <string name="server_backup_email_label">Электронная почта</string>
+    <string name="server_backup_email_description">Введите адрес электронной почты для получения общего ресурса хранилища.</string>
+    <string name="server_backup_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>
+    <string name="server_backup_password_label">Пароль</string>
+    <string name="server_backup_password_description">Введите пароль, который вы установили при создании этого хранилища.</string>
+    <string name="server_backup_name_label">Имя</string>
+    <string name="server_backup_get_started">Резервное копирование</string>
+    <string name="server_backup_success_title">Резервная копия отправлена!</string>
+    <string name="server_backup_success_description">Мы только что отправили вашу резервную копию на вашу электронную почту. Если вы её не видите, проверьте папку спама.</string>
+    <string name="server_backup_success_check_email">Проверить почту</string>
+    <string name="server_backup_success_close">Закрыть</string>
+    <string name="server_backup_error_timeout">Сервер слишком долго отвечал. Проверьте подключение к интернету и попробуйте снова.</string>
+    <string name="server_backup_error_too_many_requests">Слишком много запросов на резервное копирование. Попробуйте позже.</string>
+    <string name="server_backup_error_bad_request">Что-то пошло не так. Проверьте свои данные и попробуйте снова.</string>
 </resources>

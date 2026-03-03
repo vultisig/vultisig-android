@@ -39,7 +39,6 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.reflect.typeOf
 
-
 @HiltViewModel
 internal class BackupVaultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -60,11 +59,11 @@ internal class BackupVaultViewModel @Inject constructor(
     val vultiServerPasswordType =
         args.passwordType as? BackupPasswordType.VultiServerPassword
 
-
     private val vault = MutableStateFlow<Vault?>(null)
 
     val createDocumentRequestFlow = MutableSharedFlow<String>()
 
+    val isBackupMethodSheetVisible = MutableStateFlow(false)
 
     fun backup() {
         viewModelScope.launch {
@@ -74,10 +73,28 @@ internal class BackupVaultViewModel @Inject constructor(
                 }
 
                 is BackupPasswordType.VultiServerPassword -> {
-                    backupWithVultiServerPassword()
+                    isBackupMethodSheetVisible.value = true
                 }
             }
         }
+    }
+
+    fun onDeviceBackupClick() {
+        onDismissBackupMethodSheet()
+        viewModelScope.launch {
+            backupWithVultiServerPassword()
+        }
+    }
+
+    fun onServerBackupClick() {
+        onDismissBackupMethodSheet()
+        viewModelScope.launch {
+            navigator.route(Route.ServerBackup(vaultId = args.vaultId))
+        }
+    }
+
+    fun onDismissBackupMethodSheet() {
+        isBackupMethodSheetVisible.value = false
     }
 
     private suspend fun backupWithVultiServerPassword() {
@@ -112,10 +129,12 @@ internal class BackupVaultViewModel @Inject constructor(
                 completeBackupVault(isSuccess)
             } else {
                 DocumentsContract.deleteDocument(context.contentResolver, uri)
-                showError(UiText.FormattedText(
-                    R.string.vault_settings_error_extension_backup_file,
-                    listOf(FILE_ALLOWED_EXTENSIONS.joinToString(", "))
-                ))
+                showError(
+                    UiText.FormattedText(
+                        R.string.vault_settings_error_extension_backup_file,
+                        listOf(FILE_ALLOWED_EXTENSIONS.joinToString(", "))
+                    )
+                )
             }
         }
     }
@@ -157,7 +176,6 @@ internal class BackupVaultViewModel @Inject constructor(
             message.asString(context)
         )
     }
-
 
     private fun completeBackupVault(backupSuccess: Boolean) {
         viewModelScope.launch {
@@ -212,6 +230,4 @@ internal class BackupVaultViewModel @Inject constructor(
             }
         }
     }
-
-
 }
