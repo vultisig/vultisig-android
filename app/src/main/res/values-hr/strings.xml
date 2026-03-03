@@ -1047,4 +1047,21 @@
     <string name="vault_setup_your_vault_is_ready_to_use">Vaš trezor je spreman za korištenje</string>
     <string name="scanning_qr_troubleshooting_scanning">Imate problema sa skeniranjem? Ako QR kôd ne skenira odmah: Malo pomaknite telefon bliže ili dalje od ekrana. Uvjerite se da je ekran dobro osvijetljen i bez odsjaja. Držite oba uređaja mirno trenutak.</string>
     <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">S koliko osoba želite dijeliti trezor?</string>
+
+    <!-- Server Backup Screen -->
+    <string name="server_backup_title">Sigurnosna kopija poslužitelja</string>
+    <string name="server_backup_email_label">E-pošta</string>
+    <string name="server_backup_email_description">Unesite e-adresu za primanje dijeljenja trezora.</string>
+    <string name="server_backup_email_error">Netočna e-pošta, molimo provjerite</string>
+    <string name="server_backup_password_label">Lozinka</string>
+    <string name="server_backup_password_description">Unesite lozinku koju ste postavili prilikom stvaranja ovog trezora.</string>
+    <string name="server_backup_name_label">Naziv</string>
+    <string name="server_backup_get_started">Sigurnosna kopija</string>
+    <string name="server_backup_success_title">Sigurnosna kopija poslana!</string>
+    <string name="server_backup_success_description">Upravo smo poslali vašu sigurnosnu kopiju na vašu e-adresu. Ako je ne vidite, provjerite mapu neželjene pošte.</string>
+    <string name="server_backup_success_check_email">Provjeri e-poštu</string>
+    <string name="server_backup_success_close">Zatvori</string>
+    <string name="server_backup_error_timeout">Poslužitelju je trebalo predugo za odgovor. Provjerite svoju internetsku vezu i pokušajte ponovno.</string>
+    <string name="server_backup_error_too_many_requests">Previše zahtjeva za sigurnosnu kopiju. Pokušajte ponovno kasnije.</string>
+    <string name="server_backup_error_bad_request">Nešto je pošlo po krivu. Provjerite svoje podatke i pokušajte ponovno.</string>
 </resources>

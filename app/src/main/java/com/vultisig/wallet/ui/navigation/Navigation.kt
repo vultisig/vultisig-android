@@ -379,6 +379,13 @@ internal sealed class Route {
     )
 
     @Serializable
+    data class ServerBackup(
+        val vaultId: VaultId,
+        val prefillEmail: String? = null,
+        val prefillName: String? = null,
+    )
+
+    @Serializable
     data class BackupPassword(
         val vaultId: VaultId,
         val backupType: BackupType = BackupType.CurrentVault(),

@@ -1048,4 +1048,21 @@
     <string name="vault_setup_your_vault_is_ready_to_use">Il tuo vault è pronto per l\'uso</string>
     <string name="scanning_qr_troubleshooting_scanning">Hai problemi con la scansione? Se il codice QR non viene scansionato immediatamente: Avvicina o allontana leggermente il telefono dallo schermo. Assicurati che lo schermo sia ben illuminato e senza riflessi. Tieni entrambi i dispositivi fermi per un momento.</string>
     <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">Con quante persone vuoi condividere il vault?</string>
+
+    <!-- Server Backup Screen -->
+    <string name="server_backup_title">Backup del server</string>
+    <string name="server_backup_email_label">Email</string>
+    <string name="server_backup_email_description">Inserisci l\'email per ricevere la condivisione della cassaforte.</string>
+    <string name="server_backup_email_error">E-mail errata, controllala</string>
+    <string name="server_backup_password_label">Password</string>
+    <string name="server_backup_password_description">Inserisci la password impostata durante la creazione di questa cassaforte.</string>
+    <string name="server_backup_name_label">Nome</string>
+    <string name="server_backup_get_started">Backup</string>
+    <string name="server_backup_success_title">Condivisione di backup inviata!</string>
+    <string name="server_backup_success_description">Abbiamo appena inviato la tua condivisione di backup alla tua email. Se non la vedi, controlla la cartella spam.</string>
+    <string name="server_backup_success_check_email">Controlla email</string>
+    <string name="server_backup_success_close">Chiudi</string>
+    <string name="server_backup_error_timeout">Il server ha impiegato troppo tempo per rispondere. Controlla la tua connessione Internet e riprova.</string>
+    <string name="server_backup_error_too_many_requests">Troppe richieste di backup. Riprova più tardi.</string>
+    <string name="server_backup_error_bad_request">Qualcosa è andato storto. Controlla i tuoi dati e riprova.</string>
 </resources>

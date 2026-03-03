@@ -1046,4 +1046,21 @@
     <string name="vault_setup_your_vault_is_ready_to_use">Tu bóveda está lista para usar</string>
     <string name="scanning_qr_troubleshooting_scanning">¿Tienes problemas para escanear? Si el código QR no se escanea de inmediato: Mueve el teléfono ligeramente más cerca o más lejos de la pantalla. Asegúrate de que la pantalla esté bien iluminada y sin reflejos. Mantén ambos dispositivos quietos por un momento.</string>
     <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">¿Con cuántas personas quieres compartir la bóveda?</string>
+
+    <!-- Server Backup Screen -->
+    <string name="server_backup_title">Copia de seguridad del servidor</string>
+    <string name="server_backup_email_label">Correo electrónico</string>
+    <string name="server_backup_email_description">Introduce el correo electrónico para recibir el recurso compartido de la bóveda.</string>
+    <string name="server_backup_email_error">Correo electrónico incorrecto, por favor verifique</string>
+    <string name="server_backup_password_label">Contraseña</string>
+    <string name="server_backup_password_description">Introduce la contraseña que estableciste al crear esta bóveda.</string>
+    <string name="server_backup_name_label">Nombre</string>
+    <string name="server_backup_get_started">Respaldo</string>
+    <string name="server_backup_success_title">¡Recurso compartido de respaldo enviado!</string>
+    <string name="server_backup_success_description">Acabamos de enviar tu recurso compartido de respaldo a tu correo electrónico. Si no lo ves, revisa tu carpeta de spam.</string>
+    <string name="server_backup_success_check_email">Revisar correo</string>
+    <string name="server_backup_success_close">Cerrar</string>
+    <string name="server_backup_error_timeout">El servidor tardó demasiado en responder. Verifique su conexión a Internet e inténtelo de nuevo.</string>
+    <string name="server_backup_error_too_many_requests">Demasiadas solicitudes de copia de seguridad. Inténtelo de nuevo más tarde.</string>
+    <string name="server_backup_error_bad_request">Algo salió mal. Verifique sus datos e inténtelo de nuevo.</string>
 </resources>

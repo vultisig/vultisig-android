@@ -1047,4 +1047,21 @@
     <string name="vault_setup_your_vault_is_ready_to_use">O seu cofre está pronto para utilizar</string>
     <string name="scanning_qr_troubleshooting_scanning">Com dificuldade em digitalizar? Se o código QR não digitalizar imediatamente: Mova o telemóvel ligeiramente mais perto ou mais longe do ecrã. Certifique-se de que o ecrã está bem iluminado e sem reflexos. Mantenha ambos os dispositivos imóveis por um momento.</string>
     <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">Com quantas pessoas quer partilhar o cofre?</string>
+
+    <!-- Server Backup Screen -->
+    <string name="server_backup_title">Backup do servidor</string>
+    <string name="server_backup_email_label">E-mail</string>
+    <string name="server_backup_email_description">Introduza o e-mail para receber a partilha do cofre.</string>
+    <string name="server_backup_email_error">E-mail incorreto, por favor verifique</string>
+    <string name="server_backup_password_label">Palavra-passe</string>
+    <string name="server_backup_password_description">Introduza a palavra-passe que definiu ao criar este cofre.</string>
+    <string name="server_backup_name_label">Nome</string>
+    <string name="server_backup_get_started">Backup</string>
+    <string name="server_backup_success_title">Partilha de backup enviada!</string>
+    <string name="server_backup_success_description">Acabamos de enviar a sua partilha de backup para o seu e-mail. Se não a vir, verifique a sua pasta de spam.</string>
+    <string name="server_backup_success_check_email">Verificar e-mail</string>
+    <string name="server_backup_success_close">Fechar</string>
+    <string name="server_backup_error_timeout">O servidor demorou demasiado a responder. Verifique a sua ligação à Internet e tente novamente.</string>
+    <string name="server_backup_error_too_many_requests">Demasiados pedidos de backup. Tente novamente mais tarde.</string>
+    <string name="server_backup_error_bad_request">Algo correu mal. Verifique os seus dados e tente novamente.</string>
 </resources>
