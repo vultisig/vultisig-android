@@ -81,18 +81,11 @@ private fun VultBackupSummaryScreen(
             )
         }
 
-        VsCheckField(
-            modifier = Modifier
-                .padding(20.dp)
-                .testTag("SummaryScreen.agree"),
-            title = stringResource(id = onboarding_summary_check),
-            isChecked = state.isConsentChecked,
-            onCheckedChange = onConsentToggleCheck,
-        )
 
+        //here
         VsButton(
             onClick = onNext,
-            label = stringResource(id = string.vault_backup_summary_start_using_vault),
+            label = stringResource(id = string.backup_go_to_wallet),
             state = if (state.isConsentChecked)
                 VsButtonState.Enabled else
                 VsButtonState.Disabled,
