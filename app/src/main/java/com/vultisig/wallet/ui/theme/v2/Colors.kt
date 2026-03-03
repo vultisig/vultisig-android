@@ -53,7 +53,7 @@ data class Backgrounds(
     val success: Color = Color(0xFF042436),
     val alert: Color = Color(0xFF362B17),
     val error: Color = Color(0xFF2B1111),
-    val neutral: Color = Color(0xFF061B3A),
+    val surface1: Color = Color(0xFF061B3A),
     val surface3: Color = Color(0xFF1B2430),
     val surface4: Color = Color(0xFF072C44),
     val light: Color = Color(0xFF11284B),
@@ -129,7 +129,8 @@ data class Variables(
     val backgroundsSurface1: Color = Color(0xFF061B3A),
     val bordersLight: Color = Color(0xFF11284A),
     val textPrimary: Color = Color(0xFFF0F4FC),
-    val buttonsCTAPrimary: Color = Color(0xFF0B4EFF)
+    val buttonsCTAPrimary: Color = Color(0xFF0B4EFF),
+
 )
 
 data class FillsColors(
