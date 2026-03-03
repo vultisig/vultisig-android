@@ -330,6 +330,9 @@ internal sealed class Route {
             val password: String?,
             val hint: String?,
             val deviceCount: Int?,
+
+            // key import chains
+            val chains: List<String> = emptyList(),
         )
 
     }
@@ -437,16 +440,16 @@ internal sealed class Route {
     @Serializable
     data class VaultList(
         val openType: OpenType,
-    ){
+    ) {
         @Serializable
         sealed interface OpenType {
             @Serializable
             data class DeepLink(
                 val sendDeepLinkData: SendDeeplinkData,
-            ): OpenType
+            ) : OpenType
 
             @Serializable
-            data class Home (val vaultId: VaultId): OpenType
+            data class Home(val vaultId: VaultId) : OpenType
         }
     }
 
@@ -513,7 +516,6 @@ internal sealed class Route {
 
     @Serializable
     data class Details(val vaultId: String)
-
 
 
     @Serializable
@@ -678,8 +680,6 @@ sealed interface ChainDashboardRoute {
         val vaultId: String,
     ) : ChainDashboardRoute
 }
-
-
 
 
 internal val BackupTypeNavType = createNavType<BackupType>()
