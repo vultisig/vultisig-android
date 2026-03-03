@@ -1792,7 +1792,23 @@ object Coins {
 
             )
 
-        val all = listOf(CACAO, MAYA)
+        val AZTEC = Coin(
+            chain = Chain.MayaChain,
+            ticker = "AZTEC",
+            logo = "aztec",
+            address = "",
+            decimal = 4,
+            hexPublicKey = "",
+            priceProviderID = "aztec",
+            contractAddress = "aztec",
+            isNativeToken = false,
+            )
+
+        val all = listOf(
+            CACAO,
+            MAYA,
+            AZTEC
+        )
     }
 
     object Noble {
