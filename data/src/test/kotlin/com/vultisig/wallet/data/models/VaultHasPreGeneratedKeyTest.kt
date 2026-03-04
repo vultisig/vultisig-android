@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.models
 
-import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
 class VaultHasPreGeneratedKeyTest {
 
@@ -63,6 +63,19 @@ class VaultHasPreGeneratedKeyTest {
             ),
         )
         assertFalse(keyImportVault.hasPreGeneratedKey(Chain.Ethereum))
+    }
+
+    @Test
+    fun `blank publicKey returns false for KeyImport`() {
+        val keyImportVault = vault.copy(
+            libType = SigningLibType.KeyImport,
+            chainPublicKeys = listOf(
+                ChainPublicKey(chain = "Ethereum", publicKey = "", isEddsa = false),
+                ChainPublicKey(chain = "Solana", publicKey = "   ", isEddsa = true),
+            ),
+        )
+        assertFalse(keyImportVault.hasPreGeneratedKey(Chain.Ethereum))
+        assertFalse(keyImportVault.hasPreGeneratedKey(Chain.Solana))
     }
 
     @Test

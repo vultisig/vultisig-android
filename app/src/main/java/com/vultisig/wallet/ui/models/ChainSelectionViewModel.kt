@@ -142,8 +142,10 @@ internal class ChainSelectionViewModel @Inject constructor(
 
     private fun loadChains() {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId)
-                ?: error("No vault with $vaultId")
+            val vault = vaultRepository.get(vaultId) ?: run {
+                navigator.back()
+                return@launch
+            }
             val isKeyImport = vault.libType == SigningLibType.KeyImport
 
             uiState.update { it.copy(isKeyImportVault = isKeyImport) }

@@ -143,7 +143,9 @@ fun Vault.hasPreGeneratedKey(chain: Chain): Boolean {
     if (libType != SigningLibType.KeyImport) return true
 
     val expectedIsEddsa = chain.TssKeysignType == TssKeyType.EDDSA
-    return chainPublicKeys.any { it.chain == chain.raw && it.isEddsa == expectedIsEddsa }
+    return chainPublicKeys.any {
+        it.chain == chain.raw && it.isEddsa == expectedIsEddsa && it.publicKey.isNotBlank()
+    }
 }
 
 fun Vault.getPubKeyByChain(chain: Chain): String {
