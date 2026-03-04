@@ -584,6 +584,7 @@
     <string name="chain_selection_select_chains">Selecteer ketens</string>
     <string name="chain_selection_select_defi_chains">Selecteer DeFi ketens</string>
     <string name="chain_selection_no_chains_found">Geen ketens gevonden</string>
+    <string name="chain_selection_key_import_warning">Vanwege technische beperkingen van sleutelimport en seed-gebaseerde wallets kunnen alleen vooraf gegenereerde ketens worden geselecteerd.</string>
     <string name="transaction_type_button_functions">Functies</string>
     <string name="copy_address">Kopieer adres</string>
     <string name="chain_tokens_qr_receive_label">Ontvang %1$s</string>

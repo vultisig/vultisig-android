@@ -588,6 +588,7 @@
     <string name="chain_selection_select_chains">Seleccionar cadenas</string>
     <string name="chain_selection_select_defi_chains">Seleccionar cadenas DeFi</string>
     <string name="chain_selection_no_chains_found">No se encontraron cadenas</string>
+    <string name="chain_selection_key_import_warning">Debido a limitaciones técnicas de la importación de claves y las billeteras basadas en semillas, solo se pueden seleccionar cadenas pregeneradas.</string>
     <string name="transaction_type_button_functions">Funciones</string>
     <string name="copy_address">Copiar dirección</string>
     <string name="chain_tokens_qr_receive_label">Recibir %1$s</string>

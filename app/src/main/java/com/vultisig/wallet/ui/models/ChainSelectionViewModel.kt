@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.hasPreGeneratedKey
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -28,6 +30,7 @@ import javax.inject.Inject
 
 internal data class ChainSelectionUiModel(
     val chains: List<ChainUiModel> = emptyList(),
+    val isKeyImportVault: Boolean = false,
 )
 
 internal data class ChainUiModel(
@@ -139,12 +142,21 @@ internal class ChainSelectionViewModel @Inject constructor(
 
     private fun loadChains() {
         viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId)
+                ?: error("No vault with $vaultId")
+            val isKeyImport = vault.libType == SigningLibType.KeyImport
+
+            uiState.update { it.copy(isKeyImportVault = isKeyImport) }
+
             combine(
                 tokenRepository.nativeTokens,
                 vaultRepository.getEnabledChains(vaultId),
                 searchTextFieldState.textAsFlow(),
             ) { tokens, enabledChains, query ->
                 tokens
+                    .filter { token ->
+                        !isKeyImport || vault.hasPreGeneratedKey(token.chain)
+                    }
                     .filter {
                         query.isBlank() ||
                                 it.ticker.contains(query, ignoreCase = true) ||

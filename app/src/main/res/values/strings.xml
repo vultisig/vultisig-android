@@ -794,6 +794,7 @@
     <string name="chain_selection_select_chains">Select chains</string>
     <string name="chain_selection_select_defi_chains">Select DeFi chains</string>
     <string name="chain_selection_no_chains_found">No chains found</string>
+    <string name="chain_selection_key_import_warning">Due to technical limitations of key import and seed-based wallets, only pre-generated chains can be selected.</string>
     <string name="transaction_type_button_send">Send</string>
     <string name="transaction_type_button_functions">Functions</string>
     <string name="copy_address">Copy Address</string>

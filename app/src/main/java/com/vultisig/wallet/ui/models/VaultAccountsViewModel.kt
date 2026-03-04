@@ -349,9 +349,7 @@ internal class VaultAccountsViewModel @Inject constructor(
                 it.copy(
                     vaultName = vault.name,
                     isFastVault = vault.isFastVault(),
-                    // KeyImport vaults have a fixed set of chains chosen during import,
-                    // so chain selection is disabled on the home screen
-                    isChainSelectionEnabled = vault.libType != SigningLibType.KeyImport,
+                    isChainSelectionEnabled = true,
                 )
             }
             val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()

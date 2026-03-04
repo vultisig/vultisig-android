@@ -1,17 +1,22 @@
 package com.vultisig.wallet.ui.screens
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.ui.components.banners.Banner
+import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.models.ChainSelectionUiModel
@@ -90,6 +95,15 @@ internal fun ChainSelectionScreen(
             }
         },
         onSetSearchText = onSetSearchText,
+        footerContent = if (state.isKeyImportVault) {
+            {
+                Banner(
+                    text = stringResource(R.string.chain_selection_key_import_warning),
+                    variant = BannerVariant.Warning,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+            }
+        } else null,
     )
 }
 

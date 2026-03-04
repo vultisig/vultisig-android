@@ -961,7 +961,8 @@
     <string name="chain_selection_select_chains">选择区块链</string>
     <string name="chain_selection_select_defi_chains">选择 DeFi 区块链</string>
     <string name="chain_selection_no_chains_found">未找到区块链</string>
-    
+    <string name="chain_selection_key_import_warning">由于密钥导入和基于助记词的钱包的技术限制，只能选择预生成的区块链。</string>
+
     <!-- Transaction Type -->
     <string name="transaction_type_button_send">发送</string>
     <string name="transaction_type_button_functions">功能</string>
