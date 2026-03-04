@@ -39,3 +39,6 @@ fastlane/report.xml
 
 # Crush AI assistant
 .crush/
+
+# ktlint binary (downloaded by /format skill)
+/.ktlint/
