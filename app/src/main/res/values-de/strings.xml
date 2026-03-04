@@ -976,7 +976,7 @@
     <string name="vault_setup_multisig_with_one_device">Multisig mit einem Gerät</string>
     <string name="vault_setup_multisig_with_one_device_desc">Ein Mitunterzeichner kann niemals Transaktionen initiieren; er hilft nur beim Signieren.</string>
     <string name="vault_setup_no_inspiration">Keine Inspiration? Sie können den Namen später jederzeit in den Einstellungen ändern.</string>
-    <string name="nameing_saving_vault">Tresor wird gespeichert</string>
+    <string name="naming_saving_vault">Tresor wird gespeichert</string>
     <string name="email_enter_your_email">Geben Sie Ihre E-Mail ein</string>
     <string name="email_only_used_once">Dies wird nur einmal verwendet, um Ihre Backup-Datei zu senden. Vultisig speichert keine Daten.</string>
     <string name="password_choose_a_password">Wählen Sie ein Passwort</string>

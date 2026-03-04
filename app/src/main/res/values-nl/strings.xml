@@ -971,7 +971,7 @@
     <string name="vault_setup_multisig_with_one_device">Multisig met één apparaat</string>
     <string name="vault_setup_multisig_with_one_device_desc">Een co-ondertekenaar kan nooit transacties initiëren; helpt alleen bij het ondertekenen ervan.</string>
     <string name="vault_setup_no_inspiration">Geen inspiratie? U kunt de naam later altijd wijzigen in de instellingen.</string>
-    <string name="nameing_saving_vault">Kluis opslaan</string>
+    <string name="naming_saving_vault">Kluis opslaan</string>
     <string name="email_enter_your_email">Voer uw e-mailadres in</string>
     <string name="email_only_used_once">Dit wordt slechts eenmaal gebruikt om uw back-upbestand te verzenden. Vultisig slaat geen gegevens op.</string>
     <string name="password_choose_a_password">Kies een wachtwoord</string>

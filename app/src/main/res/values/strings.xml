@@ -1021,7 +1021,7 @@
     <string name="vault_setup_multisig_with_one_device">Multisig with one device</string>
     <string name="vault_setup_multisig_with_one_device_desc">A co-signer can never initiate transactions; only assists with signing them.</string>
     <string name="vault_setup_no_inspiration">No inspiration? You can always change the name later in your settings.</string>
-    <string name="nameing_saving_vault">Saving vault</string>
+    <string name="naming_saving_vault">Saving vault</string>
     <string name="email_enter_your_email">Enter your email</string>
     <string name="email_only_used_once">This will only be used once to send your backup file, Vultisig doesn’t store any data.</string>
     <string name="password_choose_a_password">Choose a password</string>

@@ -41,6 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
@@ -119,7 +120,7 @@ private fun StartScreen(
                         .width(60.dp)
                         .scale(logoScale.value)
                 )
-                UiSpacer(16.dp)
+                UiSpacer(12.dp)
                 Text(
                     text = stringResource(R.string.create_new_vault_screen_vultisig),
                     color = Theme.v2.colors.text.primary,
@@ -133,15 +134,36 @@ private fun StartScreen(
                 Row {
 
                     VsButton(
-                        label = stringResource(R.string.home_screen_scan_qr_code),
                         variant = VsButtonVariant.Secondary,
                         onClick = onScanQrCodeClick,
-                        iconLeft = if (!hasVaults) R.drawable.scan_qr else null,
                         modifier = Modifier
                             .weight(1f)
                             .startScreenAnimations(
                                 delay = 350,
                             ),
+                        content = {
+                           Row(
+                               verticalAlignment = Alignment.CenterVertically
+                           ) {
+
+                               if(!hasVaults) {
+                                   UiIcon(
+                                       drawableResId = R.drawable.scan_qr,
+                                       size = 16.dp
+                                   )
+
+                                   UiSpacer(
+                                       size = 6.dp
+                                   )
+                               }
+
+                               Text(
+                                   text = stringResource(R.string.home_screen_scan_qr_code),
+                                   style = Theme.brockmann.button.medium.small,
+                                   color = Theme.v2.colors.text.button.primary,
+                               )
+                           }
+                        }
                     )
                     UiSpacer(
                         size = 8.dp

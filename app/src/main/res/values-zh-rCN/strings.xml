@@ -1313,7 +1313,7 @@
     <string name="vault_setup_multisig_with_one_device">单设备多签</string>
     <string name="vault_setup_multisig_with_one_device_desc">共同签署方永远无法发起交易；只能协助签署。</string>
     <string name="vault_setup_no_inspiration">没有灵感？您随时可以在设置中更改名称。</string>
-    <string name="nameing_saving_vault">正在保存金库</string>
+    <string name="naming_saving_vault">正在保存金库</string>
     <string name="email_enter_your_email">输入您的电子邮件</string>
     <string name="email_only_used_once">此邮件仅用于发送您的备份文件，Vultisig不存储任何数据。</string>
     <string name="password_choose_a_password">选择密码</string>

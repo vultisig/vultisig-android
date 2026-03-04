@@ -974,7 +974,7 @@
     <string name="vault_setup_multisig_with_one_device">Multisig con un dispositivo</string>
     <string name="vault_setup_multisig_with_one_device_desc">Un cofirmante nunca puede iniciar transacciones; solo ayuda a firmarlas.</string>
     <string name="vault_setup_no_inspiration">¿Sin inspiración? Siempre puedes cambiar el nombre más tarde en tus ajustes.</string>
-    <string name="nameing_saving_vault">Guardando bóveda</string>
+    <string name="naming_saving_vault">Guardando bóveda</string>
     <string name="email_enter_your_email">Introduce tu correo electrónico</string>
     <string name="email_only_used_once">Esto solo se usará una vez para enviar tu archivo de respaldo. Vultisig no almacena ningún dato.</string>
     <string name="password_choose_a_password">Elige una contraseña</string>

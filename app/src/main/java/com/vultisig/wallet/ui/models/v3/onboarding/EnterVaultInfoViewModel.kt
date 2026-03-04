@@ -29,7 +29,6 @@ import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.UiText
 
 import com.vultisig.wallet.ui.utils.UiText.StringResource
-import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -196,7 +195,7 @@ internal class EnterVaultInfoViewModel @Inject constructor(
     private fun generateVaultName() {
         viewModelScope.launch {
             vaultNamesList = vaultRepository.getAll().map { it.name }
-            val proposeName = generateUniqueName(context.getString(R.string.nameing_saving_vault), vaultNamesList)
+            val proposeName = generateUniqueName(context.getString(R.string.naming_saving_vault), vaultNamesList)
             nameTextFieldState.setTextAndPlaceCursorAtEnd(proposeName)
         }
     }
@@ -245,7 +244,7 @@ internal class EnterVaultInfoViewModel @Inject constructor(
                 }
 
                 val hint = when(activeStep) {
-                    StepType.Name -> StringResource(R.string.nameing_saving_vault)
+                    StepType.Name -> StringResource(R.string.naming_saving_vault)
                     StepType.Email -> StringResource(R.string.enter_email_screen_title)
                     StepType.Password -> StringResource(R.string.keysign_password_enter_your_password)
                 }
