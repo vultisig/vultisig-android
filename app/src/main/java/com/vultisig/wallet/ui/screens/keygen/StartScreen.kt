@@ -58,14 +58,14 @@ internal fun StartScreen(
     val state by model.state.collectAsState()
 
     StartScreen(
-        hasBackButton = state.hasBackButton,
+        hasBackButton = state.hasVaults,
         onBackClick = model::back,
         onCreateNewVaultClick = model::navigateToCreateVault,
         onScanQrCodeClick = model::navigateToScanQrCode,
         onImportVaultClick = model::navigateToImportVault,
         onImportSeedphraseClick = model::navigateToImportSeedphrase,
         isImportSeedphraseEnabled = IS_IMPORT_SEEDPHRASE_ENABLED,
-        hasVaults = state.hasBackButton
+        hasVaults = state.hasVaults
     )
 }
 
@@ -160,7 +160,7 @@ private fun StartScreen(
                             ),
                         content = {
                             Box(
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.fillMaxWidth()
                             ) {
 
                                 val icon = if (hasVaults.not())
@@ -168,15 +168,14 @@ private fun StartScreen(
 
                                 val offset = if (hasVaults.not()) 0.dp else -20.dp
 
-                                icon?.let { a ->
+                                icon?.let { iconRes ->
                                     UiIcon(
-                                        drawableResId = a,
+                                        drawableResId = iconRes,
                                         size = 20.dp,
                                         modifier = Modifier
-                                            .align(Alignment.CenterStart),
+                                            .align(Alignment.CenterStart)
                                     )
                                 }
-
 
                                 Text(
                                     text = stringResource(R.string.import_seedphrase_import_button),
@@ -185,7 +184,6 @@ private fun StartScreen(
                                     modifier = Modifier
                                         .align(Alignment.Center)
                                         .offset(x = offset)
-                                        .padding(horizontal = 16.dp)
                                 )
                                 if (hasVaults)
                                     NewBadge(

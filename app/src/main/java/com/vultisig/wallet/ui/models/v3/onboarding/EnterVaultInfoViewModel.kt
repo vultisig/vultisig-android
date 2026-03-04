@@ -108,6 +108,8 @@ internal data class EnterVaultInfoUiState(
     val activeStep: StepType = StepType.Name,
     val stepAndStates: Map<StepType, StepState> = emptyMap(),
     val inputTextFieldState: TextFieldState = TextFieldState(),
+    val textFieldHint: UiText = UiText.Empty,
+    val confirmPasswordTextFieldHint: UiText = UiText.Empty,
     val confirmPasswordTextFieldState: TextFieldState = TextFieldState(),
     val errorMessage: UiText? = null,
     val isNextButtonEnabled: Boolean = false,
@@ -242,10 +244,18 @@ internal class EnterVaultInfoViewModel @Inject constructor(
                     StepType.Password -> passwordTextFieldState
                 }
 
+                val hint = when(activeStep) {
+                    StepType.Name -> StringResource(R.string.nameing_saving_vault)
+                    StepType.Email -> StringResource(R.string.enter_email_screen_title)
+                    StepType.Password -> StringResource(R.string.keysign_password_enter_your_password)
+                }
+
                 uiState.update {
                     it.copy(
                         stepAndStates = map,
                         inputTextFieldState = textFieldState,
+                        textFieldHint = hint,
+                        confirmPasswordTextFieldHint = StringResource(R.string.fast_vault_password_screen_reenter_password_hint)
                     )
                 }
             }

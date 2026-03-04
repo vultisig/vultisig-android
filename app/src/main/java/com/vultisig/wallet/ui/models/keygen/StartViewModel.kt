@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.models.keygen
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -15,7 +14,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class StartUiModel(
-    val hasBackButton: Boolean = false,
+    val hasVaults: Boolean = false,
 )
 
 @HiltViewModel
@@ -30,7 +29,7 @@ internal class StartViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val hasVaults = vaultRepository.hasVaults()
-            state.update { it.copy(hasBackButton = hasVaults) }
+            state.update { it.copy(hasVaults = hasVaults) }
         }
     }
 
