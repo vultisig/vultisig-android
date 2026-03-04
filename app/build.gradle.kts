@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.serialization)
+    alias(libs.plugins.google.gms.google.services)
 
 }
 android {
@@ -91,6 +92,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.window)
     implementation(libs.androidx.appcompat)
+    implementation(libs.firebase.messaging)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     androidTestImplementation(libs.androidx.test.core.ktx)
