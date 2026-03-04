@@ -984,6 +984,7 @@
     <string name="backup_backups">Copias de seguridad,</string>
     <string name="backup_your_new_recovery_method">tu nuevo método de recuperación</string>
     <string name="backup_backups_power_your_vault">Las copias de seguridad potencian tu bóveda. Cada dispositivo tiene su propia copia de seguridad. Una copia sola no puede mover fondos, solo sirve para recuperación. Importa y recupera cualquier dispositivo perdido.</string>
+    <string name="backup_own_keyword">propia</string>
     <string name="backup_your_device_is_the_driver">Tu dispositivo es el conductor</string>
     <string name="backup_device_backup_and_password_are_key">La copia de seguridad del dispositivo y la contraseña son la clave. El servidor solo cofirma y se puede solicitar la copia de seguridad.</string>
     <string name="backup_store_backups_separately">Guarda las copias de seguridad por separado</string>

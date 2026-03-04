@@ -16,7 +16,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import com.vultisig.wallet.ui.components.v2.texts.highlightedText
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -101,9 +103,14 @@ internal fun VaultBackupOnboardingScreen(
                     )
 
                     Text(
-                        text = stringResource(R.string.backup_backups_power_your_vault),
-                        style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.v2.colors.text.tertiary
+                        text = highlightedText(
+                            mainText = stringResource(R.string.backup_backups_power_your_vault),
+                            highlightedWords = listOf(stringResource(R.string.backup_own_keyword)),
+                            mainTextStyle = Theme.brockmann.supplementary.footnote,
+                            mainTextColor = Theme.v2.colors.text.tertiary,
+                            highlightTextStyle = Theme.brockmann.supplementary.footnote.copy(fontWeight = FontWeight.Bold),
+                            highlightTextColor = Theme.v2.colors.alerts.info,
+                        ),
                     )
                     UiSpacer(
                         size = 32.dp

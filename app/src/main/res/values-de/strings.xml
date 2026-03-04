@@ -986,6 +986,7 @@
     <string name="backup_backups">Backups,</string>
     <string name="backup_your_new_recovery_method">Ihre neue Wiederherstellungsmethode</string>
     <string name="backup_backups_power_your_vault">Backups stärken Ihren Tresor. Jedes Gerät hat sein eigenes Backup. Ein Backup allein kann keine Gelder bewegen, es dient nur zur Wiederherstellung. Importieren und stellen Sie jedes verlorene Gerät wieder her.</string>
+    <string name="backup_own_keyword">eigenes</string>
     <string name="backup_your_device_is_the_driver">Ihr Gerät ist der Treiber</string>
     <string name="backup_device_backup_and_password_are_key">Das Geräte-Backup und das Passwort sind der Schlüssel. Der Server signiert nur mit und das Backup kann angefordert werden.</string>
     <string name="backup_store_backups_separately">Backups getrennt aufbewahren</string>

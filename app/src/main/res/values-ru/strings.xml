@@ -981,6 +981,7 @@
     <string name="backup_backups">Резервные копии,</string>
     <string name="backup_your_new_recovery_method">ваш новый метод восстановления</string>
     <string name="backup_backups_power_your_vault">Резервные копии усиливают ваше хранилище. Каждое устройство имеет собственную резервную копию. Резервная копия одна не может перемещать средства, она только для восстановления. Импортируйте и восстанавливайте любое потерянное устройство.</string>
+    <string name="backup_own_keyword">собственную</string>
     <string name="backup_your_device_is_the_driver">Ваше устройство является ведущим</string>
     <string name="backup_device_backup_and_password_are_key">Резервная копия устройства и пароль являются ключом. Сервер только со-подписывает и резервную копию можно запросить.</string>
     <string name="backup_store_backups_separately">Храните резервные копии отдельно</string>

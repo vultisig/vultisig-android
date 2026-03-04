@@ -1323,6 +1323,7 @@
     <string name="backup_backups">备份，</string>
     <string name="backup_your_new_recovery_method">您的新恢复方法</string>
     <string name="backup_backups_power_your_vault">备份为您的金库提供动力。每台设备都有自己的备份。单独的备份无法转移资金，仅用于恢复。导入并恢复任何丢失的设备。</string>
+    <string name="backup_own_keyword">自己</string>
     <string name="backup_your_device_is_the_driver">您的设备是主驱动</string>
     <string name="backup_device_backup_and_password_are_key">设备备份和密码是关键。服务器只负责共同签署，备份可被请求。</string>
     <string name="backup_store_backups_separately">分开存储备份</string>

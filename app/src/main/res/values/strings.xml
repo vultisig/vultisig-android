@@ -1031,6 +1031,7 @@
     <string name="backup_backups">Backups,</string>
     <string name="backup_your_new_recovery_method">your new recovery method</string>
     <string name="backup_backups_power_your_vault">Backups power your vault. Each device has its own backup. A backup alone can’t move funds, it’s only for recovery. Import and recover any lost device.</string>
+    <string name="backup_own_keyword">own</string>
     <string name="backup_your_device_is_the_driver">Your Device is the driver</string>
     <string name="backup_device_backup_and_password_are_key">The Device backup and password are the key. The server only co-signs and backup can be requested.</string>
     <string name="backup_store_backups_separately">Store backups separately</string>

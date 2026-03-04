@@ -117,20 +117,17 @@ private fun BackupVaultScreen(
                     text = buildAnnotatedString {
                         append(stringResource(R.string.backup_vault_screen_export_prefix))
                         withStyle(
-                            style = SpanStyle(
-                                fontWeight = FontWeight.Bold,
-                                color = Theme.v2.colors.neutrals.n50
-                            )
+                            style = Theme.brockmann.body.s.medium.toSpanStyle()
+                                .copy(color = Theme.v2.colors.neutrals.n50)
                         ) {
                             append(" encrypted ")
                         }
                         append(stringResource(R.string.backup_vault_screen_password_suffix))
                         append("\n")
                         withStyle(
-                            style = SpanStyle(
-                                fontWeight = FontWeight.Bold,
-                                color = Theme.v2.colors.text.secondary
-                            )
+                                style = Theme.brockmann.body.s.medium.toSpanStyle()
+                                    .copy(color = Theme.v2.colors.text.secondary),
+
                         ) {
                             append(" ")
                             append(stringResource(R.string.backup_vault_screen_cloud_tip))

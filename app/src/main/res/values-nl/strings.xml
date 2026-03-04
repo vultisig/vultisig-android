@@ -981,6 +981,7 @@
     <string name="backup_backups">Back-ups,</string>
     <string name="backup_your_new_recovery_method">uw nieuwe herstelmethode</string>
     <string name="backup_backups_power_your_vault">Back-ups versterken uw kluis. Elk apparaat heeft zijn eigen back-up. Een back-up alleen kan geen fondsen verplaatsen, het is alleen voor herstel. Importeer en herstel elk verloren apparaat.</string>
+    <string name="backup_own_keyword">eigen</string>
     <string name="backup_your_device_is_the_driver">Uw apparaat is de bestuurder</string>
     <string name="backup_device_backup_and_password_are_key">De back-up van het apparaat en het wachtwoord zijn de sleutel. De server co-ondertekent alleen en back-up kan worden aangevraagd.</string>
     <string name="backup_store_backups_separately">Sla back-ups apart op</string>

@@ -985,6 +985,7 @@
     <string name="backup_backups">Sigurnosne kopije,</string>
     <string name="backup_your_new_recovery_method">vaša nova metoda oporavka</string>
     <string name="backup_backups_power_your_vault">Sigurnosne kopije osnažuju vaš trezor. Svaki uređaj ima svoju vlastitu sigurnosnu kopiju. Sigurnosna kopija sama ne može premjestiti sredstva, služi samo za oporavak. Uvezite i oporavite bilo koji izgubljeni uređaj.</string>
+    <string name="backup_own_keyword">vlastitu</string>
     <string name="backup_your_device_is_the_driver">Vaš uređaj je pokretač</string>
     <string name="backup_device_backup_and_password_are_key">Sigurnosna kopija uređaja i lozinka su ključ. Poslužitelj samo supotpisuje i sigurnosna kopija može biti zatražena.</string>
     <string name="backup_store_backups_separately">Pohranite sigurnosne kopije odvojeno</string>
