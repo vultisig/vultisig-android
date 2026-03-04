@@ -21,7 +21,8 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onNewToken(token: String) {
-        Timber.d("FCM token refreshed")
+        Timber.d("FCM token refreshed : $token")
+
         serviceScope.launch {
             notificationTokenRepository.setToken(token)
         }
