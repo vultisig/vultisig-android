@@ -348,7 +348,6 @@ private fun ServerBackupSuccessBottomSheet(
 
     VsModalBottomSheet(
         onDismissRequest = onClose,
-        showDragHandle = false,
     ) {
         Column(
             modifier = Modifier

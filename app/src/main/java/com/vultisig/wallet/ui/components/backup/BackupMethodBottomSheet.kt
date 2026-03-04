@@ -36,7 +36,6 @@ internal fun BackupMethodBottomSheet(
 ) {
     VsModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        showDragHandle = false,
     ) {
         BackupMethodBottomSheetContent(
             onDeviceBackupClick = onDeviceBackupClick,
