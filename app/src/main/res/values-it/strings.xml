@@ -976,7 +976,7 @@
     <string name="vault_setup_multisig_with_one_device">Multisig con un dispositivo</string>
     <string name="vault_setup_multisig_with_one_device_desc">Un co-firmatario non può mai avviare transazioni; aiuta solo a firmarle.</string>
     <string name="vault_setup_no_inspiration">Nessuna ispirazione? Puoi sempre cambiare il nome in seguito nelle impostazioni.</string>
-    <string name="nameing_saving_vault">Salvataggio vault in corso</string>
+    <string name="naming_saving_vault">Salvataggio vault in corso</string>
     <string name="email_enter_your_email">Inserisci la tua email</string>
     <string name="email_only_used_once">Verrà utilizzata solo una volta per inviare il file di backup. Vultisig non conserva nessun dato.</string>
     <string name="password_choose_a_password">Scegli una password</string>
@@ -986,6 +986,7 @@
     <string name="backup_backups">Backup,</string>
     <string name="backup_your_new_recovery_method">il tuo nuovo metodo di recupero</string>
     <string name="backup_backups_power_your_vault">I backup potenziano il tuo vault. Ogni dispositivo ha il proprio backup. Un backup da solo non può spostare fondi, serve solo per il recupero. Importa e recupera qualsiasi dispositivo perso.</string>
+    <string name="backup_own_keyword">proprio</string>
     <string name="backup_your_device_is_the_driver">Il tuo dispositivo è il driver</string>
     <string name="backup_device_backup_and_password_are_key">Il backup del dispositivo e la password sono la chiave. Il server co-firma solo e il backup può essere richiesto.</string>
     <string name="backup_store_backups_separately">Conserva i backup separatamente</string>

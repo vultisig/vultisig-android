@@ -971,7 +971,7 @@
     <string name="vault_setup_multisig_with_one_device">Мультисиг с одним устройством</string>
     <string name="vault_setup_multisig_with_one_device_desc">Со-подписант никогда не может инициировать транзакции; только помогает их подписывать.</string>
     <string name="vault_setup_no_inspiration">Нет идей для названия? Вы всегда можете изменить имя позже в настройках.</string>
-    <string name="nameing_saving_vault">Сохранение хранилища</string>
+    <string name="naming_saving_vault">Сохранение хранилища</string>
     <string name="email_enter_your_email">Введите ваш e-mail</string>
     <string name="email_only_used_once">Это будет использовано только один раз для отправки вашего резервного файла. Vultisig не хранит никаких данных.</string>
     <string name="password_choose_a_password">Выберите пароль</string>
@@ -981,6 +981,7 @@
     <string name="backup_backups">Резервные копии,</string>
     <string name="backup_your_new_recovery_method">ваш новый метод восстановления</string>
     <string name="backup_backups_power_your_vault">Резервные копии усиливают ваше хранилище. Каждое устройство имеет собственную резервную копию. Резервная копия одна не может перемещать средства, она только для восстановления. Импортируйте и восстанавливайте любое потерянное устройство.</string>
+    <string name="backup_own_keyword">собственную</string>
     <string name="backup_your_device_is_the_driver">Ваше устройство является ведущим</string>
     <string name="backup_device_backup_and_password_are_key">Резервная копия устройства и пароль являются ключом. Сервер только со-подписывает и резервную копию можно запросить.</string>
     <string name="backup_store_backups_separately">Храните резервные копии отдельно</string>

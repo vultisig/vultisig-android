@@ -13,13 +13,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class StartUiModel(
-    val hasBackButton: Boolean = false,
+    val hasVaults: Boolean = false,
 )
 
 @HiltViewModel
 internal class StartViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
-    private val navigator: Navigator<Destination>
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
     val state = MutableStateFlow(StartUiModel())
@@ -27,7 +27,7 @@ internal class StartViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val hasVaults = vaultRepository.hasVaults()
-            state.update { it.copy(hasBackButton = hasVaults) }
+            state.update { it.copy(hasVaults = hasVaults) }
         }
     }
 

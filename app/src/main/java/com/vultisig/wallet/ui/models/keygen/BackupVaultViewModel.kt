@@ -43,7 +43,7 @@ import kotlin.reflect.typeOf
 internal class BackupVaultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val vaultRepository: VaultRepository,
     private val createVaultBackupFileName: CreateVaultBackupFileNameUseCase,
     private val isFileExtensionValid: IsVaultBackupFileExtensionValidUseCase,
@@ -63,8 +63,6 @@ internal class BackupVaultViewModel @Inject constructor(
 
     val createDocumentRequestFlow = MutableSharedFlow<String>()
 
-    val isBackupMethodSheetVisible = MutableStateFlow(false)
-
     fun backup() {
         viewModelScope.launch {
             when (args.passwordType) {
@@ -73,29 +71,18 @@ internal class BackupVaultViewModel @Inject constructor(
                 }
 
                 is BackupPasswordType.VultiServerPassword -> {
-                    isBackupMethodSheetVisible.value = true
+                    onDeviceBackupClick()
                 }
             }
         }
     }
 
     fun onDeviceBackupClick() {
-        onDismissBackupMethodSheet()
         viewModelScope.launch {
             backupWithVultiServerPassword()
         }
     }
 
-    fun onServerBackupClick() {
-        onDismissBackupMethodSheet()
-        viewModelScope.launch {
-            navigator.route(Route.ServerBackup(vaultId = args.vaultId))
-        }
-    }
-
-    fun onDismissBackupMethodSheet() {
-        isBackupMethodSheetVisible.value = false
-    }
 
     private suspend fun backupWithVultiServerPassword() {
         val vault = requireNotNull(vaultRepository.get(args.vaultId))

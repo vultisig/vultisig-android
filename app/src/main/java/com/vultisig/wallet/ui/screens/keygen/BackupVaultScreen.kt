@@ -9,7 +9,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,9 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,7 +28,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.usecases.backup.MimeType
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
-import com.vultisig.wallet.ui.components.backup.BackupMethodBottomSheet
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
@@ -45,8 +41,6 @@ import com.vultisig.wallet.ui.utils.file.RequestCreateDocument
 internal fun BackupVaultScreen(
     model: BackupVaultViewModel = hiltViewModel(),
 ) {
-    val isBackupMethodSheetVisible by model.isBackupMethodSheetVisible.collectAsState()
-
     RequestCreateDocument(
         mimeType = MimeType.OCTET_STREAM.value,
         onDocumentCreated = model::saveContentToUriResult,
@@ -56,14 +50,6 @@ internal fun BackupVaultScreen(
     BackupVaultScreen(
         onBackupClick = model::backup,
     )
-
-    if (isBackupMethodSheetVisible) {
-        BackupMethodBottomSheet(
-            onDismissRequest = model::onDismissBackupMethodSheet,
-            onDeviceBackupClick = model::onDeviceBackupClick,
-            onServerBackupClick = model::onServerBackupClick,
-        )
-    }
 }
 
 @Composable
@@ -117,20 +103,17 @@ private fun BackupVaultScreen(
                     text = buildAnnotatedString {
                         append(stringResource(R.string.backup_vault_screen_export_prefix))
                         withStyle(
-                            style = SpanStyle(
-                                fontWeight = FontWeight.Bold,
-                                color = Theme.v2.colors.neutrals.n50
-                            )
+                            style = Theme.brockmann.body.s.medium.toSpanStyle()
+                                .copy(color = Theme.v2.colors.neutrals.n50)
                         ) {
                             append(" encrypted ")
                         }
                         append(stringResource(R.string.backup_vault_screen_password_suffix))
                         append("\n")
                         withStyle(
-                            style = SpanStyle(
-                                fontWeight = FontWeight.Bold,
-                                color = Theme.v2.colors.text.secondary
-                            )
+                                style = Theme.brockmann.body.s.medium.toSpanStyle()
+                                    .copy(color = Theme.v2.colors.text.secondary),
+
                         ) {
                             append(" ")
                             append(stringResource(R.string.backup_vault_screen_cloud_tip))

@@ -62,6 +62,9 @@ private fun SetupVaultInfoScreen(
                         horizontal = V3Scaffold.PADDING_HORIZONTAL,
                     )
             ) {
+                UiSpacer(
+                    size = 20.dp
+                )
                 Text(
                     text = stringResource(R.string.vault_setup_your_vault_setup),
                     color = Theme.v2.colors.neutrals.n50,

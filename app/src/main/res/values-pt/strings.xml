@@ -975,7 +975,7 @@
     <string name="vault_setup_multisig_with_one_device">Multisig com um dispositivo</string>
     <string name="vault_setup_multisig_with_one_device_desc">Um co-signatário nunca pode iniciar transações; apenas ajuda a assiná-las.</string>
     <string name="vault_setup_no_inspiration">Sem inspiração? Pode sempre alterar o nome mais tarde nas definições.</string>
-    <string name="nameing_saving_vault">A guardar cofre</string>
+    <string name="naming_saving_vault">A guardar cofre</string>
     <string name="email_enter_your_email">Introduza o seu e-mail</string>
     <string name="email_only_used_once">Isto será usado apenas uma vez para enviar o seu ficheiro de cópia de segurança. O Vultisig não armazena quaisquer dados.</string>
     <string name="password_choose_a_password">Escolha uma palavra-passe</string>
@@ -985,6 +985,7 @@
     <string name="backup_backups">Cópias de segurança,</string>
     <string name="backup_your_new_recovery_method">o seu novo método de recuperação</string>
     <string name="backup_backups_power_your_vault">As cópias de segurança potenciam o seu cofre. Cada dispositivo tem a sua própria cópia de segurança. Uma cópia sozinha não pode mover fundos, serve apenas para recuperação. Importe e recupere qualquer dispositivo perdido.</string>
+    <string name="backup_own_keyword">própria</string>
     <string name="backup_your_device_is_the_driver">O seu dispositivo é o condutor</string>
     <string name="backup_device_backup_and_password_are_key">A cópia de segurança do dispositivo e a palavra-passe são a chave. O servidor apenas co-assina e a cópia de segurança pode ser solicitada.</string>
     <string name="backup_store_backups_separately">Guarde as cópias de segurança separadamente</string>

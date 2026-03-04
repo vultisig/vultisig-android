@@ -29,7 +29,6 @@ import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.UiText
 
 import com.vultisig.wallet.ui.utils.UiText.StringResource
-import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -108,6 +107,8 @@ internal data class EnterVaultInfoUiState(
     val activeStep: StepType = StepType.Name,
     val stepAndStates: Map<StepType, StepState> = emptyMap(),
     val inputTextFieldState: TextFieldState = TextFieldState(),
+    val textFieldHint: UiText = UiText.Empty,
+    val confirmPasswordTextFieldHint: UiText = UiText.Empty,
     val confirmPasswordTextFieldState: TextFieldState = TextFieldState(),
     val errorMessage: UiText? = null,
     val isNextButtonEnabled: Boolean = false,
@@ -194,7 +195,7 @@ internal class EnterVaultInfoViewModel @Inject constructor(
     private fun generateVaultName() {
         viewModelScope.launch {
             vaultNamesList = vaultRepository.getAll().map { it.name }
-            val proposeName = generateUniqueName(context.getString(R.string.nameing_saving_vault), vaultNamesList)
+            val proposeName = generateUniqueName(context.getString(R.string.naming_saving_vault), vaultNamesList)
             nameTextFieldState.setTextAndPlaceCursorAtEnd(proposeName)
         }
     }
@@ -242,10 +243,18 @@ internal class EnterVaultInfoViewModel @Inject constructor(
                     StepType.Password -> passwordTextFieldState
                 }
 
+                val hint = when(activeStep) {
+                    StepType.Name -> StringResource(R.string.naming_saving_vault)
+                    StepType.Email -> StringResource(R.string.enter_email_screen_title)
+                    StepType.Password -> StringResource(R.string.keysign_password_enter_your_password)
+                }
+
                 uiState.update {
                     it.copy(
                         stepAndStates = map,
                         inputTextFieldState = textFieldState,
+                        textFieldHint = hint,
+                        confirmPasswordTextFieldHint = StringResource(R.string.fast_vault_password_screen_reenter_password_hint)
                     )
                 }
             }

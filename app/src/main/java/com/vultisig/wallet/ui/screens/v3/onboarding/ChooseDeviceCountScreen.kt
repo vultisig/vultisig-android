@@ -83,10 +83,53 @@ private fun ChooseDeviceCountScreen(
             UiSpacer(
                 size = 32.dp
             )
+            if (uiState.deviceCount == 1) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.background(
+                        color = Theme.v2.colors.backgrounds.surface1,
+                        shape = RoundedCornerShape(
+                            size = 24.dp
+                        )
+                    )
+                ) {
+                    DeviceCountDescription(
+                        selectedIndex = uiState.deviceCount - 1,
+                        tips = uiState.tips
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(
+                            0.dp,
+                            Alignment.CenterHorizontally
+                        ),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
 
-            DeviceCountDescription(
-                selectedIndex = uiState.deviceCount - 1, tips = uiState.tips
-            )
+                            .padding(
+                                vertical = 14.dp
+                            )
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.appstore_style_icon),
+                            contentDescription = null,
+                            contentScale = ContentScale.None
+                        )
+                        UiSpacer(8.dp)
+                        Text(
+                            text = stringResource(R.string.welcome_plugin_compatible),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.v2.colors.text.primary,
+                        )
+                    }
+
+                }
+
+            } else
+                DeviceCountDescription(
+                    selectedIndex = uiState.deviceCount - 1,
+                    tips = uiState.tips
+                )
 
             UiSpacer(
                 weight = 1f
@@ -99,7 +142,9 @@ private fun ChooseDeviceCountScreen(
             )
 
             VsButton(
-                label = stringResource(R.string.referral_onboarding_get_started), modifier = Modifier.fillMaxWidth(), onClick = {
+                label = stringResource(R.string.referral_onboarding_get_started),
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
                     onEvent(ChooseDeviceCountUiEvent.Next)
                 }
             )
@@ -142,14 +187,15 @@ private fun Tip() {
         modifier = Modifier.fillMaxWidth()
     ) {
         UiIcon(
-            drawableResId = R.drawable.tip, size = 16.dp,
+            drawableResId = R.drawable.tip,
+            size = 16.dp,
             tint = Theme.v2.colors.alerts.info
         )
         UiSpacer(
             size = 8.dp
         )
         Text(
-            text = stringResource(R.string.welcome_tip) ,
+            text = stringResource(R.string.welcome_tip),
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.secondary,
         )
@@ -178,7 +224,9 @@ private fun DeviceCountDescription(
                 color = Theme.v2.colors.backgrounds.background
             )
             .border(
-                width = 1.dp, shape = shape, color = Theme.v2.colors.border.light
+                width = 1.dp,
+                shape = shape,
+                color = Theme.v2.colors.border.light
             )
             .padding(
                 horizontal = 20.dp,
@@ -223,8 +271,18 @@ private fun DeviceCountDescription(
                 val annotatedText = buildAnnotatedString {
                     val start = if (highlight != null) subTitleText.indexOf(highlight) else -1
                     if (start >= 0) {
-                        append(subTitleText.substring(0, start))
-                        withStyle(SpanStyle(color = Theme.v2.colors.neutrals.n50, fontWeight = FontWeight.Bold)) {
+                        append(
+                            subTitleText.substring(
+                                0,
+                                start
+                            )
+                        )
+                        withStyle(
+                            SpanStyle(
+                                color = Theme.v2.colors.neutrals.n50,
+                                fontWeight = FontWeight.Bold
+                            )
+                        ) {
                             append(highlight)
                         }
                         append(subTitleText.substring(start + highlight!!.length))

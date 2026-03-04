@@ -17,7 +17,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class VaultBackupSummaryUiModel(
-    val isConsentChecked: Boolean = false,
     val vaultType: Route.VaultInfo.VaultType,
     val vaultShares: Int = 0,
     val isChainSelectionEnabled: Boolean = true,
@@ -52,12 +51,8 @@ internal class VaultBackupSummaryViewModel @Inject constructor(
         }
     }
 
-    fun toggleCheck(isChecked: Boolean) {
-        state.update { it.copy(isConsentChecked = isChecked) }
-    }
 
     fun next() {
-        if (state.value.isConsentChecked) {
             viewModelScope.launch {
                 navigator.route(
                     route = Route.Home(),
@@ -66,11 +61,9 @@ internal class VaultBackupSummaryViewModel @Inject constructor(
                     ),
                 )
             }
-        }
     }
 
     fun chooseChains() {
-        if (state.value.isConsentChecked) {
             viewModelScope.launch {
                 navigator.route(
                     route = Route.AddChainAccount(
@@ -82,7 +75,6 @@ internal class VaultBackupSummaryViewModel @Inject constructor(
                     ),
                 )
             }
-        }
     }
 
 }

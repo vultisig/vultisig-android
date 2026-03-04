@@ -975,7 +975,7 @@
     <string name="vault_setup_multisig_with_one_device">Multisig s jednim uređajem</string>
     <string name="vault_setup_multisig_with_one_device_desc">Supotpisnik nikada ne može pokrenuti transakcije; samo pomaže pri potpisivanju.</string>
     <string name="vault_setup_no_inspiration">Nema inspiracije? Uvijek možete promijeniti naziv kasnije u postavkama.</string>
-    <string name="nameing_saving_vault">Sprema se trezor</string>
+    <string name="naming_saving_vault">Sprema se trezor</string>
     <string name="email_enter_your_email">Unesite svoju e-poštu</string>
     <string name="email_only_used_once">Ovo će se koristiti samo jednom za slanje vaše sigurnosne kopije. Vultisig ne pohranjuje nikakve podatke.</string>
     <string name="password_choose_a_password">Odaberite lozinku</string>
@@ -985,6 +985,7 @@
     <string name="backup_backups">Sigurnosne kopije,</string>
     <string name="backup_your_new_recovery_method">vaša nova metoda oporavka</string>
     <string name="backup_backups_power_your_vault">Sigurnosne kopije osnažuju vaš trezor. Svaki uređaj ima svoju vlastitu sigurnosnu kopiju. Sigurnosna kopija sama ne može premjestiti sredstva, služi samo za oporavak. Uvezite i oporavite bilo koji izgubljeni uređaj.</string>
+    <string name="backup_own_keyword">vlastitu</string>
     <string name="backup_your_device_is_the_driver">Vaš uređaj je pokretač</string>
     <string name="backup_device_backup_and_password_are_key">Sigurnosna kopija uređaja i lozinka su ključ. Poslužitelj samo supotpisuje i sigurnosna kopija može biti zatražena.</string>
     <string name="backup_store_backups_separately">Pohranite sigurnosne kopije odvojeno</string>

@@ -142,6 +142,7 @@ internal fun EnterVaultInfoScreen(
                 onKeyboardAction = {
                     onEvent(EnterVaultInfoEvent.Next)
                 },
+                hint = uiState.textFieldHint.asString()
             )
 
             if (uiState.activeStep.isPassword) {
@@ -167,6 +168,7 @@ internal fun EnterVaultInfoScreen(
                     onKeyboardAction = {
                         onEvent(EnterVaultInfoEvent.Next)
                     },
+                    hint = uiState.confirmPasswordTextFieldHint.asString()
                 )
             }
 

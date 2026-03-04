@@ -1313,7 +1313,7 @@
     <string name="vault_setup_multisig_with_one_device">单设备多签</string>
     <string name="vault_setup_multisig_with_one_device_desc">共同签署方永远无法发起交易；只能协助签署。</string>
     <string name="vault_setup_no_inspiration">没有灵感？您随时可以在设置中更改名称。</string>
-    <string name="nameing_saving_vault">正在保存金库</string>
+    <string name="naming_saving_vault">正在保存金库</string>
     <string name="email_enter_your_email">输入您的电子邮件</string>
     <string name="email_only_used_once">此邮件仅用于发送您的备份文件，Vultisig不存储任何数据。</string>
     <string name="password_choose_a_password">选择密码</string>
@@ -1323,6 +1323,7 @@
     <string name="backup_backups">备份，</string>
     <string name="backup_your_new_recovery_method">您的新恢复方法</string>
     <string name="backup_backups_power_your_vault">备份为您的金库提供动力。每台设备都有自己的备份。单独的备份无法转移资金，仅用于恢复。导入并恢复任何丢失的设备。</string>
+    <string name="backup_own_keyword">自己</string>
     <string name="backup_your_device_is_the_driver">您的设备是主驱动</string>
     <string name="backup_device_backup_and_password_are_key">设备备份和密码是关键。服务器只负责共同签署，备份可被请求。</string>
     <string name="backup_store_backups_separately">分开存储备份</string>
