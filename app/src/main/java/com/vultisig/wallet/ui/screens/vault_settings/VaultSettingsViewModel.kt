@@ -72,7 +72,7 @@ internal sealed class VaultSettingsItem(
     data object Rename : VaultSettingsItem(
         SettingsItemUiModel(
             title = UiText.StringResource(R.string.vault_settings_rename_title),
-            subTitle =UiText.StringResource(R.string.vault_settings_rename_subtitle),
+            subTitle = UiText.StringResource(R.string.vault_settings_rename_subtitle),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.reame
         )
@@ -87,6 +87,7 @@ internal sealed class VaultSettingsItem(
             ),
             enabled = isEnabled,
         )
+
     data object Security : VaultSettingsItem(
         value = SettingsItemUiModel(
             title = UiText.StringResource(R.string.vault_settings_security_screen_title),
@@ -135,10 +136,11 @@ internal sealed class VaultSettingsItem(
             leadingIcon = R.drawable.advanced
         )
     )
+
     data class Reshare(val isEnabled: Boolean) : VaultSettingsItem(
         value = SettingsItemUiModel(
             title = UiText.StringResource(R.string.vault_settings_reshare_title),
-            subTitle =  UiText.StringResource(R.string.vault_settings_reshare_subtitle),
+            subTitle = UiText.StringResource(R.string.vault_settings_reshare_subtitle),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.reshare
         ),
@@ -259,11 +261,13 @@ internal open class VaultSettingsViewModel @Inject constructor(
     private val vaultId: String =
         savedStateHandle.toRoute<Route.VaultSettings>().vaultId
 
+    private var hasFastSign: Boolean = false
+
     init {
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
             val hasMigration = vault?.libType == SigningLibType.GG20
-            val hasFastSign = isVaultHasFastSignById(vaultId) && vault?.signers?.count() == 2
+            hasFastSign = isVaultHasFastSignById(vaultId) && vault?.signers?.count() == 2
             val hasPassword = vaultPasswordRepository.getPassword(vaultId) != null
 
             val newItems = uiModel.value.settingGroups.map { group ->
@@ -343,13 +347,13 @@ internal open class VaultSettingsViewModel @Inject constructor(
             }
 
             is VaultSettingsItem.BackupVaultShare -> {
-//                uiModel.update {
-//                    it.copy(
-//                        isBackupVaultBottomSheetVisible = true
-//                    )
-//                }
-
-                navigateToBackupPasswordScreen()
+                if (hasFastSign) {
+                    uiModel.update {
+                        it.copy(isBackupVaultBottomSheetVisible = true)
+                    }
+                } else {
+                    navigateToBackupPasswordScreen()
+                }
             }
 
             is VaultSettingsItem.BiometricFastSign -> {
@@ -452,7 +456,10 @@ internal open class VaultSettingsViewModel @Inject constructor(
     }
 
     fun onServerBackupClick() {
-        //TODO: add server backup
+        onDismissBackupVaultBottomSheet()
+        viewModelScope.launch {
+            navigator.route(Route.ServerBackup(vaultId = vaultId))
+        }
     }
 
     fun onDismissBackupVaultBottomSheet() {

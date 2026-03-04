@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +31,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.usecases.backup.MimeType
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
+import com.vultisig.wallet.ui.components.backup.BackupMethodBottomSheet
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
@@ -43,9 +45,10 @@ import com.vultisig.wallet.ui.utils.file.RequestCreateDocument
 internal fun BackupVaultScreen(
     model: BackupVaultViewModel = hiltViewModel(),
 ) {
+    val isBackupMethodSheetVisible by model.isBackupMethodSheetVisible.collectAsState()
 
     RequestCreateDocument(
-        mimeType =  MimeType.OCTET_STREAM.value,
+        mimeType = MimeType.OCTET_STREAM.value,
         onDocumentCreated = model::saveContentToUriResult,
         createDocumentRequestFlow = model.createDocumentRequestFlow,
     )
@@ -53,6 +56,14 @@ internal fun BackupVaultScreen(
     BackupVaultScreen(
         onBackupClick = model::backup,
     )
+
+    if (isBackupMethodSheetVisible) {
+        BackupMethodBottomSheet(
+            onDismissRequest = model::onDismissBackupMethodSheet,
+            onDeviceBackupClick = model::onDeviceBackupClick,
+            onServerBackupClick = model::onServerBackupClick,
+        )
+    }
 }
 
 @Composable

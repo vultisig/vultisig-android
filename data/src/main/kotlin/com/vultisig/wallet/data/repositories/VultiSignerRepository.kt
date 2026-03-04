@@ -15,14 +15,32 @@ sealed class PasswordCheckResult {
     data class Error(val message: String) : PasswordCheckResult()
 }
 
+/**
+ * Result of a server backup request to the VultiSigner `/vault/resend` endpoint.
+ */
+sealed class ServerBackupResult {
+    data object Success : ServerBackupResult()
+    data class Error(val type: ErrorType) : ServerBackupResult()
+
+    enum class ErrorType {
+        INVALID_PASSWORD,
+        NETWORK_ERROR,
+        TOO_MANY_REQUESTS,
+        BAD_REQUEST,
+        UNKNOWN,
+    }
+}
+
 interface VultiSignerRepository {
 
     suspend fun joinKeygen(
         request: JoinKeygenRequestJson,
     )
+
     suspend fun joinKeyImport(
         request: JoinKeyImportRequest,
     )
+
     suspend fun joinKeysign(
         request: JoinKeysignRequestJson,
     )
@@ -34,11 +52,12 @@ interface VultiSignerRepository {
     suspend fun migrate(
         request: MigrateRequest,
     )
+
     suspend fun isPasswordValid(
         publicKeyEcdsa: String,
         password: String,
     ): Boolean
-    
+
     suspend fun checkPassword(
         publicKeyEcdsa: String,
         password: String,
@@ -52,6 +71,17 @@ interface VultiSignerRepository {
         publicKeyEcdsa: String,
         code: String,
     ): Boolean
+
+    /**
+     * Requests the server to resend the encrypted vault backup share to [email].
+     * The [password] is used server-side to decrypt and re-encrypt the backup.
+     * Returns [ServerBackupResult] indicating success or a typed error.
+     */
+    suspend fun requestServerBackup(
+        publicKeyEcdsa: String,
+        email: String,
+        password: String,
+    ): ServerBackupResult
 
 }
 
@@ -92,7 +122,7 @@ internal class VultiSignerRepositoryImpl @Inject constructor(
     } catch (e: Exception) {
         false
     }
-    
+
     override suspend fun checkPassword(
         publicKeyEcdsa: String,
         password: String,
@@ -101,22 +131,22 @@ internal class VultiSignerRepositoryImpl @Inject constructor(
         PasswordCheckResult.Valid
     } catch (e: Exception) {
         when {
-            e.message?.contains("401") == true || 
-            e.message?.contains("403") == true ||
-            e.message?.contains("500") == true ||
-            e.message?.contains("Unauthorized", ignoreCase = true) == true -> 
+            e.message?.contains("401") == true ||
+                    e.message?.contains("403") == true ||
+                    e.message?.contains("500") == true ||
+                    e.message?.contains("Unauthorized", ignoreCase = true) == true ->
                 PasswordCheckResult.Invalid
-                
+
             e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
-            e.message?.contains("UnknownHost", ignoreCase = true) == true ||
-            e is java.net.UnknownHostException ||
-            e is java.io.IOException && e.message?.contains("Network", ignoreCase = true) == true ->
+                    e.message?.contains("UnknownHost", ignoreCase = true) == true ||
+                    e is java.net.UnknownHostException ||
+                    e is java.io.IOException && e.message?.contains("Network", ignoreCase = true) == true ->
                 PasswordCheckResult.NetworkError()
-                
+
             e.message?.contains("timeout", ignoreCase = true) == true ||
-            e is java.net.SocketTimeoutException ->
+                    e is java.net.SocketTimeoutException ->
                 PasswordCheckResult.NetworkError("Connection timeout")
-                
+
             else -> PasswordCheckResult.Error(e.message ?: "Unknown error")
         }
     }
@@ -139,5 +169,36 @@ internal class VultiSignerRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             false
         }
+    }
+
+    override suspend fun requestServerBackup(
+        publicKeyEcdsa: String,
+        email: String,
+        password: String,
+    ): ServerBackupResult = try {
+        api.requestServerBackup(publicKeyEcdsa, email, password)
+        ServerBackupResult.Success
+    } catch (e: Exception) {
+        val message = e.message.orEmpty()
+        val errorType = when {
+            message.contains("401") || message.contains("403") ||
+                    message.contains("Unauthorized", ignoreCase = true) ->
+                ServerBackupResult.ErrorType.INVALID_PASSWORD
+
+            message.contains("429") || message.contains("Too Many", ignoreCase = true) ->
+                ServerBackupResult.ErrorType.TOO_MANY_REQUESTS
+
+            message.contains("400") || message.contains("Bad Request", ignoreCase = true) ->
+                ServerBackupResult.ErrorType.BAD_REQUEST
+
+            e is java.net.UnknownHostException ||
+                    e is java.net.SocketTimeoutException ||
+                    message.contains("timeout", ignoreCase = true) ||
+                    message.contains("Unable to resolve host", ignoreCase = true) ->
+                ServerBackupResult.ErrorType.NETWORK_ERROR
+
+            else -> ServerBackupResult.ErrorType.UNKNOWN
+        }
+        ServerBackupResult.Error(errorType)
     }
 }

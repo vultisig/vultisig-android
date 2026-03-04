@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="327dp"
+    android:height="254dp"
+    android:viewportWidth="327"
+    android:viewportHeight="254">
+
+    <!-- Dashed outer circle - 10 arc segments -->
+    <path
+        android:pathData="M265.0,126.7 A99.5,99.5 0 0,1 264.3,138.6 M246.3,184.7 A99.5,99.5 0 0,1 238.7,194.0 M197.3,221.0 A99.5,99.5 0 0,1 185.7,224.1 M136.3,221.8 A99.5,99.5 0 0,1 125.1,217.6 M86.2,186.8 A99.5,99.5 0 0,1 79.6,176.9 M66.0,129.3 A99.5,99.5 0 0,1 66.5,117.3 M83.1,70.8 A99.5,99.5 0 0,1 90.4,61.4 M131.2,33.2 A99.5,99.5 0 0,1 142.7,29.8 M192.2,30.8 A99.5,99.5 0 0,1 203.5,34.7 M243.3,64.6 A99.5,99.5 0 0,1 249.9,74.0"
+        android:fillColor="#00000000"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="165.5"
+                android:startY="-184.6"
+                android:endX="-141.2"
+                android:endY="35.8">
+                <item android:offset="0" android:color="#8034E6BF"/>
+                <item android:offset="0.333" android:color="#80377CDD"/>
+                <item android:offset="0.667" android:color="#80294772"/>
+                <item android:offset="1" android:color="#800E284D"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+</vector>

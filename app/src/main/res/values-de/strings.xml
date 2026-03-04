@@ -1048,4 +1048,21 @@
     <string name="vault_setup_your_vault_is_ready_to_use">Ihr Tresor ist einsatzbereit</string>
     <string name="scanning_qr_troubleshooting_scanning">Probleme beim Scannen? Wenn der QR-Code nicht sofort gescannt wird: Bewegen Sie das Telefon leicht näher oder weiter vom Bildschirm. Stellen Sie sicher, dass der Bildschirm gut beleuchtet und frei von Blendlicht ist. Halten Sie beide Geräte einen Moment lang ruhig.</string>
     <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">Mit wie vielen Personen möchten Sie den Tresor teilen?</string>
+
+    <!-- Server Backup Screen -->
+    <string name="server_backup_title">Serversicherung</string>
+    <string name="server_backup_email_label">E-Mail</string>
+    <string name="server_backup_email_description">Geben Sie die E-Mail-Adresse ein, um die Tresorfreigabe zu erhalten.</string>
+    <string name="server_backup_email_error">Falsche E-Mail, bitte überprüfen</string>
+    <string name="server_backup_password_label">Passwort</string>
+    <string name="server_backup_password_description">Geben Sie das Passwort ein, das Sie beim Erstellen dieses Tresors festgelegt haben.</string>
+    <string name="server_backup_name_label">Name</string>
+    <string name="server_backup_get_started">Sicherung</string>
+    <string name="server_backup_success_title">Sicherungsfreigabe gesendet!</string>
+    <string name="server_backup_success_description">Wir haben Ihre Sicherungsfreigabe an Ihre E-Mail-Adresse gesendet. Wenn Sie sie nicht sehen, überprüfen Sie Ihren Spam-Ordner.</string>
+    <string name="server_backup_success_check_email">E-Mail prüfen</string>
+    <string name="server_backup_success_close">Schließen</string>
+    <string name="server_backup_error_timeout">Der Server hat zu lange gebraucht, um zu antworten. Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</string>
+    <string name="server_backup_error_too_many_requests">Zu viele Sicherungsanfragen. Bitte versuchen Sie es später erneut.</string>
+    <string name="server_backup_error_bad_request">Etwas ist schiefgelaufen. Bitte überprüfen Sie Ihre Angaben und versuchen Sie es erneut.</string>
 </resources>
