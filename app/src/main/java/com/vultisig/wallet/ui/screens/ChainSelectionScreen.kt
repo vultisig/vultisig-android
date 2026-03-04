@@ -95,7 +95,7 @@ internal fun ChainSelectionScreen(
             }
         },
         onSetSearchText = onSetSearchText,
-        footerContent = if (state.isKeyImportVault) {
+        bannerContent = if (state.isKeyImportVault) {
             {
                 Banner(
                     text = stringResource(R.string.chain_selection_key_import_warning),

@@ -22,7 +22,6 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun NoChainFound(
     modifier: Modifier = Modifier,
-    isChainSelectionEnabled: Boolean = true,
     onChooseChains: () -> Unit,
 ) {
     Column(
@@ -62,20 +61,17 @@ internal fun NoChainFound(
             textAlign = TextAlign.Center,
         )
 
-        // Hidden for KeyImport vaults where chains are fixed at import time
-        if (isChainSelectionEnabled) {
-            UiSpacer(
-                size = 16.dp
-            )
+        UiSpacer(
+            size = 16.dp
+        )
 
-            VsButton(
-                variant = VsButtonVariant.Primary,
-                size = VsButtonSize.Mini,
-                iconLeft = R.drawable.write,
-                label = stringResource(R.string.no_chain_customize_chains),
-                onClick = onChooseChains
-            )
-        }
+        VsButton(
+            variant = VsButtonVariant.Primary,
+            size = VsButtonSize.Mini,
+            iconLeft = R.drawable.write,
+            label = stringResource(R.string.no_chain_customize_chains),
+            onClick = onChooseChains
+        )
     }
 }
 

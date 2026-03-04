@@ -18,7 +18,6 @@ import javax.inject.Inject
 internal data class VaultBackupSummaryUiModel(
     val vaultType: Route.VaultInfo.VaultType,
     val vaultShares: Int = 0,
-    val isChainSelectionEnabled: Boolean = true,
 )
 
 @HiltViewModel
@@ -42,7 +41,6 @@ internal class VaultBackupSummaryViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         vaultShares = vault.signers.size,
-                        isChainSelectionEnabled = true,
                     )
                 }
             }
