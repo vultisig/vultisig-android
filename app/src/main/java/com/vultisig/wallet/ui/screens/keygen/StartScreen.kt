@@ -181,22 +181,22 @@ private fun StartScreen(
                                 delay = 450,
                             ),
                         content = {
-                            Box(
-                                modifier = Modifier.fillMaxWidth()
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
                             ) {
 
                                 val icon = if (hasVaults.not())
                                     R.drawable.import_vault else null
 
-                                val offset = if (hasVaults.not()) 0.dp else -20.dp
 
                                 icon?.let { iconRes ->
                                     UiIcon(
                                         drawableResId = iconRes,
                                         size = 20.dp,
                                         modifier = Modifier
-                                            .align(Alignment.CenterStart)
                                     )
+                                    UiSpacer(6.dp)
                                 }
 
                                 Text(
@@ -204,13 +204,11 @@ private fun StartScreen(
                                     style = Theme.brockmann.button.medium.small,
                                     color = Theme.v2.colors.variables.textPrimary,
                                     modifier = Modifier
-                                        .align(Alignment.Center)
-                                        .offset(x = offset)
                                 )
                                 if (hasVaults)
                                     NewBadge(
                                         modifier = Modifier
-                                            .align(Alignment.CenterEnd)
+                                            .offset(x = 10.dp)
                                     )
 
                             }
@@ -388,6 +386,7 @@ private fun NewBadge(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
     ) {
         UiIcon(
             drawableResId = R.drawable.sparkles,
