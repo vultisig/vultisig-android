@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalStdlibApi::class)
+@file:OptIn(ExperimentalStdlibApi::class, ExperimentalMaterial3Api::class)
 
 package com.vultisig.wallet.ui.navigation
 
@@ -6,6 +6,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -399,7 +400,7 @@ internal fun SetupNavGraph(
         ) {
             BackupPasswordScreen()
         }
-        composable<VaultBackupSummary> {
+        dialog <VaultBackupSummary> {
             VaultBackupSummaryScreen()
         }
 

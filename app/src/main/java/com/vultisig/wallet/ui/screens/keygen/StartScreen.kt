@@ -8,7 +8,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,14 +33,15 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
@@ -80,7 +80,7 @@ private fun StartScreen(
     onImportSeedphraseClick: () -> Unit,
     onBackClick: () -> Unit,
     isImportSeedphraseEnabled: Boolean = false,
-    hasVaults: Boolean = false,
+    hasVaults: Boolean = true,
 ) {
     val logoScale = remember {
         Animatable(0f)
@@ -128,10 +128,8 @@ private fun StartScreen(
                 )
             }
 
-            Column(
-                horizontalAlignment = CenterHorizontally,
-            ) {
-                Row {
+
+            Row {
 
                     VsButton(
                         variant = VsButtonVariant.Secondary,
@@ -183,7 +181,8 @@ private fun StartScreen(
                         content = {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
 
                                 val icon = if (hasVaults.not())
@@ -204,18 +203,23 @@ private fun StartScreen(
                                     style = Theme.brockmann.button.medium.small,
                                     color = Theme.v2.colors.variables.textPrimary,
                                     modifier = Modifier
+                                        .alignByBaseline()
                                 )
                                 if (hasVaults)
                                     NewBadge(
                                         modifier = Modifier
-                                            .offset(x = 10.dp)
+                                            .offset(
+                                                x = 10.dp,
+                                            ),
+                                        starSize = 8.dp,
+                                        fontStyle = Theme.brockmann.supplementary.captionSmall
                                     )
 
                             }
                         },
                     )
                 }
-            }
+
 
             UiSpacer(
                 size = 16.dp
@@ -331,7 +335,10 @@ private fun ChooseImportTypeButton(
 
     ) {
         if (isNew) {
-            NewBadge()
+            NewBadge(
+                starSize = 12.dp,
+                fontStyle = Theme.brockmann.supplementary.caption,
+            )
             UiSpacer(
                 size = 12.dp
             )
@@ -381,7 +388,9 @@ private fun ChooseImportTypeButton(
 
 @Composable
 private fun NewBadge(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    starSize: Dp,
+    fontStyle: TextStyle,
 ) {
     Row(
         modifier = modifier,
@@ -390,7 +399,7 @@ private fun NewBadge(
     ) {
         UiIcon(
             drawableResId = R.drawable.sparkles,
-            size = 12.dp,
+            size = starSize,
             tint = Theme.v2.colors.alerts.warning
         )
         UiSpacer(
@@ -399,7 +408,7 @@ private fun NewBadge(
         Text(
             text = stringResource(R.string.start_screen_new),
             color = Theme.v2.colors.alerts.warning,
-            style = Theme.brockmann.supplementary.caption
+            style = fontStyle,
         )
     }
 }
