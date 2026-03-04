@@ -1797,7 +1797,7 @@ object Coins {
             ticker = "AZTEC",
             logo = "aztec",
             address = "",
-            decimal = 4,
+            decimal = 8,
             hexPublicKey = "",
             priceProviderID = "aztec",
             contractAddress = "aztec",
