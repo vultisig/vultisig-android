@@ -2,8 +2,8 @@ package com.vultisig.wallet.data.common
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.utils.Numeric
-import timber.log.Timber
 import java.math.BigInteger
+import timber.log.Timber
 
 fun String.toHexBytes(): ByteArray {
     return Numeric.hexStringToByteArray(this)
@@ -20,9 +20,11 @@ fun String.toByteString(): ByteString {
 fun String.toHexBytesInByteString(): ByteString {
     return ByteString.copyFrom(this.toHexBytes())
 }
+
 fun String.isHex(): Boolean {
     return this.matches(Regex("^(0x)?[0-9A-Fa-f]+$"))
 }
+
 fun String.toByteStringOrHex(): ByteString {
     return if (this.isHex()) {
         this.toHexBytesInByteString()
@@ -39,22 +41,17 @@ fun String.normalizeMessageFormat(): String {
                 return this
             }
             val bytes = this.toHexBytes()
-            String(
-                bytes,
-                Charsets.UTF_8
-            ).replace(
-                // Remove leading/trailing control characters
-                "^\\p{C}+|\\p{C}+$".toRegex(),
-                ""
-            )
+            String(bytes, Charsets.UTF_8)
+                .replace(
+                    // Remove leading/trailing control characters
+                    "^\\p{C}+|\\p{C}+$".toRegex(),
+                    "",
+                )
         } else {
             this
         }
     } catch (e: Exception) {
-        Timber.e(
-            e,
-            "failed to decode"
-        )
+        Timber.e(e, "failed to decode")
         this
     }
 }
@@ -68,7 +65,7 @@ internal fun String.stripHexPrefix(): String {
 }
 
 fun String.add0x(): String {
-    if (startsWith("0x")){
+    if (startsWith("0x")) {
         return this
     }
     return "0x$this"
@@ -92,10 +89,7 @@ fun String?.convertToBigIntegerOrZero(): BigInteger {
         BigInteger.ZERO
     } else {
         try {
-            BigInteger(
-                cleanedInput,
-                16
-            )
+            BigInteger(cleanedInput, 16)
         } catch (e: NumberFormatException) {
             BigInteger.ZERO
         }

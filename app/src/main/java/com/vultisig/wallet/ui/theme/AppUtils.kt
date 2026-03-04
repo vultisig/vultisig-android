@@ -16,18 +16,10 @@ internal fun AppUtils(
     content: @Composable () -> Unit,
 ) {
 
-    val appColor = remember {
-        appColor
-    }
-    val menloFamilyTypography = remember {
-        menloTypography
-    }
-    val montserratFamilyTypography = remember {
-        montserratTypography
-    }
-    val brockmannFamilyTypography = remember {
-        brockmannTypography
-    }
+    val appColor = remember { appColor }
+    val menloFamilyTypography = remember { menloTypography }
+    val montserratFamilyTypography = remember { montserratTypography }
+    val brockmannFamilyTypography = remember { brockmannTypography }
     CompositionLocalProvider(
         LocalAppColors provides appColor,
         LocalMenloFamilyTypography provides menloFamilyTypography,
@@ -36,19 +28,9 @@ internal fun AppUtils(
     ) {
         content()
     }
-
 }
 
-
-internal val LocalAppColors = compositionLocalOf {
-    colors
-}
-internal val LocalMenloFamilyTypography = compositionLocalOf {
-    menloTypography
-}
-internal val LocalMontserratFamilyTypography = compositionLocalOf {
-    montserratTypography
-}
-internal val LocalBrockmannFamilyTypography = compositionLocalOf {
-    brockmannTypography
-}
+internal val LocalAppColors = compositionLocalOf { colors }
+internal val LocalMenloFamilyTypography = compositionLocalOf { menloTypography }
+internal val LocalMontserratFamilyTypography = compositionLocalOf { montserratTypography }
+internal val LocalBrockmannFamilyTypography = compositionLocalOf { brockmannTypography }

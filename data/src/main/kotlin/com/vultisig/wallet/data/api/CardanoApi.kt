@@ -16,24 +16,26 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.path
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import timber.log.Timber
 
 interface CardanoApi {
     suspend fun getBalance(coin: Coin): BigInteger
+
     suspend fun getUTXOs(coin: Coin): List<UtxoInfo>
+
     suspend fun getTxStatus(txHash: String): CardanoTxStatusResponseJson?
+
     suspend fun calculateDynamicTTL(): ULong
+
     suspend fun broadcastTransaction(chain: String, signedTransaction: String): String?
 }
 
-internal class CardanoApiImpl @Inject constructor(
-    private val httpClient: HttpClient,
-) : CardanoApi {
+internal class CardanoApiImpl @Inject constructor(private val httpClient: HttpClient) : CardanoApi {
     private val url: String = "https://api.koios.rest"
     private val apiV1Path: String = "api/v1"
     private val url2 = "https://api.vultisig.com"
@@ -42,15 +44,11 @@ internal class CardanoApiImpl @Inject constructor(
     override suspend fun getBalance(coin: Coin): BigInteger {
 
         val requestBody = mapOf("_addresses" to listOf(coin.address))
-        val response = httpClient.post(url) {
-            url {
-                path(
-                    apiV1Path,
-                    "address_info"
-                )
+        val response =
+            httpClient.post(url) {
+                url { path(apiV1Path, "address_info") }
+                setBody(requestBody)
             }
-            setBody(requestBody)
-        }
         return try {
             val balances: List<CardanoBalanceResponseJson> = response.body()
             val balanceString = balances.firstOrNull()?.balance ?: "0"
@@ -63,15 +61,11 @@ internal class CardanoApiImpl @Inject constructor(
 
     override suspend fun getUTXOs(coin: Coin): List<UtxoInfo> {
         val requestBody = CardanoUtxoRequestJson(listOf(coin.address))
-        val response = httpClient.post(url) {
-            url {
-                path(
-                    apiV1Path,
-                    "address_utxos"
-                )
+        val response =
+            httpClient.post(url) {
+                url { path(apiV1Path, "address_utxos") }
+                setBody(requestBody)
             }
-            setBody(requestBody)
-        }
 
         return try {
             response.body<List<CardanoUtxoResponseJson>>().toUtxos()
@@ -85,7 +79,7 @@ internal class CardanoApiImpl @Inject constructor(
         UtxoInfo(
             hash = utxo.txHash ?: "",
             amount = utxo.value?.toLong() ?: 0L,
-            index = utxo.txIndex?.toUInt() ?: 0u
+            index = utxo.txIndex?.toUInt() ?: 0u,
         )
     }
 
@@ -94,27 +88,27 @@ internal class CardanoApiImpl @Inject constructor(
             val payload = buildJsonObject {
                 put("jsonrpc", "2.0")
                 put("method", "submitTransaction")
-                put("params", buildJsonObject {
-                    put("transaction", buildJsonObject {
-                        put("cbor", signedTransaction)
-                    })
-                })
+                put(
+                    "params",
+                    buildJsonObject {
+                        put("transaction", buildJsonObject { put("cbor", signedTransaction) })
+                    },
+                )
                 put("id", 1)
             }
-            
-            val response = httpClient.post(ogmiosUrl) {
-                setBody(payload)
-            }
+
+            val response = httpClient.post(ogmiosUrl) { setBody(payload) }
 
             when (response.status) {
                 HttpStatusCode.OK -> {
                     val ogmiosResponse = response.body<OgmiosTransactionResponse>()
-                    
-                    ogmiosResponse.result?.transaction?.id ?: run {
-                        val errorMessage = ogmiosResponse.error?.message ?: "Unknown error"
-                        Timber.e("Cardano transaction submission failed: $errorMessage")
-                        error("Failed to broadcast transaction: $errorMessage")
-                    }
+
+                    ogmiosResponse.result?.transaction?.id
+                        ?: run {
+                            val errorMessage = ogmiosResponse.error?.message ?: "Unknown error"
+                            Timber.e("Cardano transaction submission failed: $errorMessage")
+                            error("Failed to broadcast transaction: $errorMessage")
+                        }
                 }
 
                 HttpStatusCode.BadRequest -> {
@@ -173,14 +167,7 @@ internal class CardanoApiImpl @Inject constructor(
     } */
 
     private suspend fun getCurrentSlot(): ULong {
-        val response = httpClient.get(url) {
-            url {
-                path(
-                    apiV1Path,
-                    "tip"
-                )
-            }
-        }
+        val response = httpClient.get(url) { url { path(apiV1Path, "tip") } }
 
         if (response.status != HttpStatusCode.OK) {
             val responseString = response.bodyAsText()
@@ -198,17 +185,11 @@ internal class CardanoApiImpl @Inject constructor(
 
     override suspend fun getTxStatus(txHash: String): CardanoTxStatusResponseJson? {
         val requestBody = mapOf("_tx_hashes" to listOf(txHash))
-        val response = httpClient.post(url) {
-            url {
-                path(
-                    apiV1Path,
-                    "tx_status"
-                )
+        val response =
+            httpClient.post(url) {
+                url { path(apiV1Path, "tx_status") }
+                setBody(requestBody)
             }
-            setBody(requestBody)
-        }
         return response.body<List<CardanoTxStatusResponseJson>>().firstOrNull()
     }
 }
-
-

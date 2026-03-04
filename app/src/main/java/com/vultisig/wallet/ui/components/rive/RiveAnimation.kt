@@ -49,7 +49,7 @@ fun RiveAnimation(
                     )
                 }
             },
-            update = { view -> onInit(view) }
+            update = { view -> onInit(view) },
         )
     }
 }
@@ -82,16 +82,10 @@ fun RiveAnimation(
 fun rememberRiveResourceFile(@RawRes resId: Int): State<RiveFile?> {
     val riveWorker = rememberRiveWorkerOrNull()
 
-    val riveFileResult = riveWorker?.let {
-        rememberRiveFile(
-            RiveFileSource.RawRes.from(resId),
-            riveWorker
-        )
-    }
+    val riveFileResult =
+        riveWorker?.let { rememberRiveFile(RiveFileSource.RawRes.from(resId), riveWorker) }
 
     return remember(riveFileResult) {
-        derivedStateOf {
-            (riveFileResult as? Result.Success)?.value
-        }
+        derivedStateOf { (riveFileResult as? Result.Success)?.value }
     }
 }

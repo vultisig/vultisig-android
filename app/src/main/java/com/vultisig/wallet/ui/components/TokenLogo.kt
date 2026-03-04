@@ -19,37 +19,36 @@ internal fun TokenLogo(
     modifier: Modifier,
     errorLogoModifier: Modifier,
     logo: ImageModel,
-    title: String
+    title: String,
 ) {
     val context = LocalContext.current
 
-    val imageRequest = if (logo is String && logo.contains("ipfs.io", ignoreCase = true)) {
-        ImageRequest.Builder(context)
-            .data(logo)
-            .addHeader(USER_AGENT, DEFAULT_USER_AGENT)
-            .build()
-    } else {
-        logo
-    }
+    val imageRequest =
+        if (logo is String && logo.contains("ipfs.io", ignoreCase = true)) {
+            ImageRequest.Builder(context)
+                .data(logo)
+                .addHeader(USER_AGENT, DEFAULT_USER_AGENT)
+                .build()
+        } else {
+            logo
+        }
 
     SubcomposeAsyncImage(
         model = imageRequest,
         contentDescription = null,
-         modifier = modifier
-             .clip(CircleShape)
-             .background(Theme.v2.colors.backgrounds.transparent, CircleShape),
+        modifier =
+            modifier
+                .clip(CircleShape)
+                .background(Theme.v2.colors.backgrounds.transparent, CircleShape),
         error = {
-            Box(
-                modifier = errorLogoModifier,
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = errorLogoModifier, contentAlignment = Alignment.Center) {
                 Text(
                     text = if (title.isNotEmpty()) title.first().toString() else "",
                     color = Theme.v2.colors.backgrounds.secondary,
-                    style = Theme.montserrat.subtitle1
+                    style = Theme.montserrat.subtitle1,
                 )
             }
-        }
+        },
     )
 }
 

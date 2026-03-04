@@ -15,41 +15,25 @@ import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun ChainLogo(
-    name: String,
-    logo: ImageModel?
-) {
+internal fun ChainLogo(name: String, logo: ImageModel?) {
     SubcomposeAsyncImage(
         model = logo,
         contentDescription = null,
-        modifier = Modifier
-            .size(24.dp)
-            .clip(
-                RoundedCornerShape(
-                    size = 8.dp
-                )
-            ),
-
+        modifier = Modifier.size(24.dp).clip(RoundedCornerShape(size = 8.dp)),
         error = {
             Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(
-                        RoundedCornerShape(
-                            size = 8.dp
-                        )
-                    )
-                    .background(
-                        color = Theme.v2.colors.backgrounds.tertiary_2
-                    ),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier.size(24.dp)
+                        .clip(RoundedCornerShape(size = 8.dp))
+                        .background(color = Theme.v2.colors.backgrounds.tertiary_2),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = name.firstOrNull()?.toString() ?: "",
                     color = Theme.v2.colors.text.primary,
-                    style = Theme.brockmann.supplementary.caption
+                    style = Theme.brockmann.supplementary.caption,
                 )
             }
-        }
+        },
     )
 }

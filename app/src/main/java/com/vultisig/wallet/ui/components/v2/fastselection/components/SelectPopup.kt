@@ -49,9 +49,7 @@ internal fun <T> SelectPopup(
     LaunchedEffect(uiModel.isLongPressActive) {
         if (!uiModel.isLongPressActive && !shouldClose) {
             shouldClose = true
-            if (uiModel.items.isNotEmpty() &&
-                currentSelectionIndex in uiModel.items.indices
-            ) {
+            if (uiModel.items.isNotEmpty() && currentSelectionIndex in uiModel.items.indices) {
                 onItemSelected(uiModel.items[currentSelectionIndex])
             }
         }
@@ -81,12 +79,16 @@ internal fun <T> SelectPopup(
 
         // per-item derived from modal when mapping top->bottom
         val perItemFromModal =
-            if (itemsCount > 1 && innerHeight > 0f) innerHeight / (itemsCount - 1) else Float.MAX_VALUE
+            if (itemsCount > 1 && innerHeight > 0f) innerHeight / (itemsCount - 1)
+            else Float.MAX_VALUE
 
         // If modal-based per-item is small enough (<= max), use absolute mapping top->bottom.
-        // Otherwise (few items / large spacing), use delta mode with sensitivity capped to maxPerItemPx.
+        // Otherwise (few items / large spacing), use delta mode with sensitivity capped to
+        // maxPerItemPx.
         val useAbsoluteModalMapping =
-            perItemFromModal.isFinite() && perItemFromModal <= maxPerItemPx && itemsCount > visibleItems
+            perItemFromModal.isFinite() &&
+                perItemFromModal <= maxPerItemPx &&
+                itemsCount > visibleItems
 
         if (useAbsoluteModalMapping) {
             // absolute mapping: top+pad -> first, bottom-pad -> last
@@ -121,10 +123,11 @@ internal fun <T> SelectPopup(
                 accumulatedDragY += dy
                 val indexChange = (accumulatedDragY / sensitivityPx).toInt()
                 if (indexChange != 0) {
-                    val newIndex = (currentSelectionIndex - indexChange).coerceIn(
-                        0,
-                        (itemsCount.coerceAtLeast(1) - 1)
-                    )
+                    val newIndex =
+                        (currentSelectionIndex - indexChange).coerceIn(
+                            0,
+                            (itemsCount.coerceAtLeast(1) - 1),
+                        )
                     if (newIndex != currentSelectionIndex) {
                         currentSelectionIndex = newIndex
                         view.performHaptic()
@@ -136,31 +139,27 @@ internal fun <T> SelectPopup(
         }
     }
 
-
-
     Dialog(
         onDismissRequest = { /* prevent dismissal while gesture active */ },
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
-        )
+        properties =
+            DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false,
+            ),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             FastSelectionModalContent(
-                modifier = Modifier
-                    .align(alignment = Alignment.Center),
+                modifier = Modifier.align(alignment = Alignment.Center),
                 items = uiModel.items,
                 currentIndex = currentSelectionIndex,
                 pressPosition = uiModel.pressPosition,
                 visibleItemCount = visibleItems,
-                itemContent = { item, distanceFromCenter ->
-                    itemContent(item, distanceFromCenter)
-                },
+                itemContent = { item, distanceFromCenter -> itemContent(item, distanceFromCenter) },
                 onItemHeightMeasured = { height ->
                     if (measuredItemHeight == 0) measuredItemHeight = height
-                }
+                },
             )
         }
     }

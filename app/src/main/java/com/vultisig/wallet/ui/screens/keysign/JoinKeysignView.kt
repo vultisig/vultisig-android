@@ -36,9 +36,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun JoinKeysignView(
-    navController: NavHostController,
-) {
+internal fun JoinKeysignView(navController: NavHostController) {
     val viewModel: JoinKeysignViewModel = hiltViewModel()
     val context = LocalContext.current
     var keysignState: KeysignState by remember { mutableStateOf(KeysignState.CreatingInstance) }
@@ -50,28 +48,26 @@ internal fun JoinKeysignView(
     JoinKeysignScreen(
         isKeySignFinished = keysignState is KeysignState.KeysignFinished,
         onBack = viewModel::navigateToHome,
-        isError = state is Error
+        isError = state is Error,
     ) {
         when (state) {
             DiscoveringSessionID,
-            WaitingForKeysignStart,
-                -> {
-                val text = when (state) {
-                    DiscoveringSessionID -> stringResource(R.string.join_keysign_discovering_session_id)
-                    WaitingForKeysignStart -> stringResource(R.string.join_keysign_waiting_keysign_start)
-                    else -> ""
-                }
-                KeysignLoadingScreen(
-                    text = text,
-                )
+            WaitingForKeysignStart -> {
+                val text =
+                    when (state) {
+                        DiscoveringSessionID ->
+                            stringResource(R.string.join_keysign_discovering_session_id)
+                        WaitingForKeysignStart ->
+                            stringResource(R.string.join_keysign_waiting_keysign_start)
+                        else -> ""
+                    }
+                KeysignLoadingScreen(text = text)
             }
 
             DiscoverService -> {
                 val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
                 viewModel.discoveryMediator(nsdManager)
-                KeysignLoadingScreen(
-                    text = stringResource(R.string.join_keysign_discovery_service),
-                )
+                KeysignLoadingScreen(text = stringResource(R.string.join_keysign_discovery_service))
             }
 
             JoinKeysign -> {
@@ -105,7 +101,7 @@ internal fun JoinKeysignView(
                             state = model.model,
                             confirmTitle = stringResource(R.string.verify_swap_sign_button),
                             onFastSignClick = {},
-                            onConfirm = viewModel::joinKeysign
+                            onConfirm = viewModel::joinKeysign,
                         )
                     }
 
@@ -114,18 +110,19 @@ internal fun JoinKeysignView(
                             state = model.model,
                             confirmTitle = stringResource(R.string.verify_swap_sign_button),
                             onFastSignClick = {},
-                            onConfirm = viewModel::joinKeysign
+                            onConfirm = viewModel::joinKeysign,
                         )
                     }
                 }
             }
 
             Keysign -> {
-                val wrapperViewModel = hiltViewModel(
-                    creationCallback = { factory: KeySignWrapperViewModel.Factory ->
-                        factory.create(viewModel.keysignViewModel)
-                    }
-                )
+                val wrapperViewModel =
+                    hiltViewModel(
+                        creationCallback = { factory: KeySignWrapperViewModel.Factory ->
+                            factory.create(viewModel.keysignViewModel)
+                        }
+                    )
                 val keysignViewModel = wrapperViewModel.viewModel
                 val kState = keysignViewModel.currentState.collectAsState().value
                 keysignState = kState
@@ -136,13 +133,12 @@ internal fun JoinKeysignView(
                     transactionLink = keysignViewModel.txLink.collectAsState().value,
                     approveTransactionLink = keysignViewModel.approveTxLink.collectAsState().value,
                     progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
-                    onComplete = {
-                        navController.navigate(Route.Home())
-                    },
+                    onComplete = { navController.navigate(Route.Home()) },
                     onBack = keysignViewModel::navigateToHome,
                     transactionTypeUiModel = keysignViewModel.transactionTypeUiModel,
                     onAddToAddressBook = keysignViewModel::navigateToAddressBook,
-                    showSaveToAddressBook = keysignViewModel.showSaveToAddressBook.collectAsState().value,
+                    showSaveToAddressBook =
+                        keysignViewModel.showSaveToAddressBook.collectAsState().value,
                 )
             }
 
@@ -151,18 +147,22 @@ internal fun JoinKeysignView(
                 val buttonText: String
                 val infoText: String?
                 when (state.errorType) {
-                    is JoinKeysignError.WrongVaultShare, is JoinKeysignError.WrongVault -> {
+                    is JoinKeysignError.WrongVaultShare,
+                    is JoinKeysignError.WrongVault -> {
                         errorLabel = state.errorType.message.asString()
                         buttonText =
-                            stringResource(R.string.join_keysign_error_wrong_vault_share_try_again_button)
+                            stringResource(
+                                R.string.join_keysign_error_wrong_vault_share_try_again_button
+                            )
                         infoText = null
                     }
 
                     else -> {
-                        errorLabel = stringResource(
-                            R.string.signing_error_please_try_again_s,
-                            state.errorType.message.asString()
-                        )
+                        errorLabel =
+                            stringResource(
+                                R.string.signing_error_please_try_again_s,
+                                state.errorType.message.asString(),
+                            )
                         buttonText = stringResource(R.string.try_again)
                         infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen)
                     }
@@ -187,13 +187,15 @@ private fun JoinKeysignScreen(
 ) {
     BackHandler(onBack = onBack)
     V2Scaffold(
-        onBackClick = onBack.takeIf { isKeySignFinished.not() && isError.not()},
+        onBackClick = onBack.takeIf { isKeySignFinished.not() && isError.not() },
         rightIcon = R.drawable.big_close.takeIf { isError },
         onRightIconClick = onBack.takeIf { isError },
-        title =  stringResource(
-            id = if (isKeySignFinished.not()) R.string.keysign
-            else R.string.transaction_complete_screen_title
-        ),
+        title =
+            stringResource(
+                id =
+                    if (isKeySignFinished.not()) R.string.keysign
+                    else R.string.transaction_complete_screen_title
+            ),
         content = content,
     )
 }
@@ -210,6 +212,6 @@ private fun JoinKeysignViewPreview() {
                 buttonText = stringResource(R.string.try_again),
                 onButtonClick = {},
             )
-        }
+        },
     )
 }

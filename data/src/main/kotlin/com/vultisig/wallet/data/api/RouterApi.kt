@@ -11,16 +11,15 @@ import javax.inject.Inject
 
 interface RouterApi {
     suspend fun getPayload(serverURL: String, hash: String): String
+
     suspend fun uploadPayload(serverURL: String, payload: String): String
+
     suspend fun shouldUploadPayload(payload: String): Boolean
 }
 
-internal class RouterApiImp @Inject constructor(
-    private val httpClient: HttpClient,
-) : RouterApi {
+internal class RouterApiImp @Inject constructor(private val httpClient: HttpClient) : RouterApi {
     override suspend fun getPayload(serverURL: String, hash: String): String {
-        return httpClient.get("$serverURL/payload/$hash").throwIfUnsuccessful()
-            .body<String>()
+        return httpClient.get("$serverURL/payload/$hash").throwIfUnsuccessful().body<String>()
     }
 
     override suspend fun uploadPayload(serverURL: String, payload: String): String {
@@ -28,9 +27,7 @@ internal class RouterApiImp @Inject constructor(
             return ""
         }
         val hash = payload.sha256()
-        httpClient.post("$serverURL/payload/$hash") {
-            setBody(payload)
-        }.throwIfUnsuccessful()
+        httpClient.post("$serverURL/payload/$hash") { setBody(payload) }.throwIfUnsuccessful()
         return hash
     }
 

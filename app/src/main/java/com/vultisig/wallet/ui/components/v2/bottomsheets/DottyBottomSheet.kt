@@ -35,13 +35,9 @@ internal fun DottyBottomSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
 
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-    )
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    LaunchedEffect(Unit) {
-        sheetState.expand()
-    }
+    LaunchedEffect(Unit) { sheetState.expand() }
 
     LaunchedEffect(sheetState.currentValue) {
         if (sheetState.currentValue != SheetValue.Hidden) {
@@ -59,56 +55,42 @@ internal fun DottyBottomSheet(
         content = {
             Box {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(
-                            shape = RoundedCornerShape(
-                                topStart = 32.dp,
-                                topEnd = 32.dp,
-                            )
-                        )
-                        .background(Theme.v2.colors.backgrounds.primary)
-                        .drawWithCache {
-                            val dots = rememberDotsPath(
-                                stepSize = 72f,
-                                dotRadius = 2.5f,
-                                dotColor = Color(0xff172854)
-                            )
-                            val fadeBrush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    colors.backgrounds.secondary
-                                )
-                            )
-                            onDrawBehind {
-                                drawPath(dots.path, color = dots.color)
-                                drawRect(brush = fadeBrush)
-                            }
-                        },
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clip(shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
+                            .background(Theme.v2.colors.backgrounds.primary)
+                            .drawWithCache {
+                                val dots =
+                                    rememberDotsPath(
+                                        stepSize = 72f,
+                                        dotRadius = 2.5f,
+                                        dotColor = Color(0xff172854),
+                                    )
+                                val fadeBrush =
+                                    Brush.verticalGradient(
+                                        colors =
+                                            listOf(Color.Transparent, colors.backgrounds.secondary)
+                                    )
+                                onDrawBehind {
+                                    drawPath(dots.path, color = dots.color)
+                                    drawRect(brush = fadeBrush)
+                                }
+                            },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     content = content,
                 )
-                DragHandler(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .align(Alignment.TopCenter)
-                )
+                DragHandler(modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter))
             }
-
-        }
+        },
     )
 }
 
-
-private data class DotsPath(
-    val path: Path,
-    val color: Color,
-)
+private data class DotsPath(val path: Path, val color: Color)
 
 private fun CacheDrawScope.rememberDotsPath(
     stepSize: Float = 72f,
     dotRadius: Float = 2.5f,
-    dotColor: Color = colors.neutrals.n50
+    dotColor: Color = colors.neutrals.n50,
 ): DotsPath {
     val width = size.width
     val height = size.height

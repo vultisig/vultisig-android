@@ -7,9 +7,7 @@ import com.vultisig.wallet.ui.utils.waitUntilShown
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-class VaultBackupOnboardingPage(
-    private val compose: ComposeTestRule,
-) {
+class VaultBackupOnboardingPage(private val compose: ComposeTestRule) {
 
     fun waitUntilShown(timeout: Duration) {
         compose.waitUntilShown(OnboardingContentTags.NEXT, timeout)
@@ -28,5 +26,4 @@ class VaultBackupOnboardingPage(
     fun skipMigration() {
         compose.click(OnboardingContentTags.NEXT)
     }
-
 }

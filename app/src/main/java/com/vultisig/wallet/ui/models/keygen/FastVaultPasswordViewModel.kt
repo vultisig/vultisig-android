@@ -13,10 +13,10 @@ import com.vultisig.wallet.ui.screens.backup.PasswordState
 import com.vultisig.wallet.ui.screens.backup.PasswordViewModelDelegate
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class FastVaultPasswordUiModel(
     val isMoreInfoVisible: Boolean = false,
@@ -28,10 +28,10 @@ internal data class FastVaultPasswordUiModel(
 )
 
 @HiltViewModel
-internal class FastVaultPasswordViewModel @Inject constructor(
-    private val navigator: Navigator<Destination>,
-    savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+internal class FastVaultPasswordViewModel
+@Inject
+constructor(private val navigator: Navigator<Destination>, savedStateHandle: SavedStateHandle) :
+    ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VaultInfo.Password>()
 
@@ -44,45 +44,39 @@ internal class FastVaultPasswordViewModel @Inject constructor(
 
     private var isMoreInfoVisible: Boolean
         get() = state.value.isMoreInfoVisible
-        set(value) = state.update {
-            it.copy(isMoreInfoVisible = value)
-        }
+        set(value) = state.update { it.copy(isMoreInfoVisible = value) }
 
     private var isPasswordVisible: Boolean
         get() = state.value.isPasswordVisible
-        set(value) = state.update {
-            it.copy(isPasswordVisible = value)
-        }
+        set(value) = state.update { it.copy(isPasswordVisible = value) }
 
     private var isConfirmPasswordVisible: Boolean
         get() = state.value.isConfirmPasswordVisible
-        set(value) = state.update {
-            it.copy(isConfirmPasswordVisible = value)
-        }
-
+        set(value) = state.update { it.copy(isConfirmPasswordVisible = value) }
 
     init {
         viewModelScope.launch {
-            passwordDelegate.validatePasswords()
-                .collect { passwordState ->
-                    val errorMessage = if (passwordState is PasswordState.Mismatch) {
+            passwordDelegate.validatePasswords().collect { passwordState ->
+                val errorMessage =
+                    if (passwordState is PasswordState.Mismatch) {
                         UiText.StringResource(R.string.fast_vault_password_screen_error)
                     } else {
                         null
                     }
 
-                    state.update {
-                        it.copy(
-                            isNextButtonEnabled = passwordState is PasswordState.Valid,
-                            errorMessage = errorMessage,
-                            innerState = if (errorMessage != null) {
+                state.update {
+                    it.copy(
+                        isNextButtonEnabled = passwordState is PasswordState.Valid,
+                        errorMessage = errorMessage,
+                        innerState =
+                            if (errorMessage != null) {
                                 VsTextInputFieldInnerState.Error
                             } else {
                                 VsTextInputFieldInnerState.Default
-                            }
-                        )
-                    }
+                            },
+                    )
                 }
+            }
         }
     }
 
@@ -94,18 +88,16 @@ internal class FastVaultPasswordViewModel @Inject constructor(
         isMoreInfoVisible = false
     }
 
-
     fun togglePasswordVisibility() {
         isPasswordVisible = !isPasswordVisible
     }
-
 
     fun toggleConfirmPasswordVisibility() {
         isConfirmPasswordVisible = !isConfirmPasswordVisible
     }
 
     fun navigateToHint() {
-        if(!state.value.isNextButtonEnabled) {
+        if (!state.value.isNextButtonEnabled) {
             return
         }
         viewModelScope.launch {
@@ -116,15 +108,13 @@ internal class FastVaultPasswordViewModel @Inject constructor(
                     email = args.email,
                     password = enteredPassword,
                     tssAction = args.tssAction,
-                    vaultId = args.vaultId
+                    vaultId = args.vaultId,
                 )
             )
         }
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 }

@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
-
 class VerticalAnimatedPagerScope {
     val items = mutableListOf<@Composable () -> Unit>()
 
@@ -25,10 +24,8 @@ fun VerticalAnimatedPager(
     AnimatedContent(
         targetState = index,
         modifier = modifier,
-        transitionSpec = {
-            if (targetState > initialState) slideUp() else slideDown()
-        },
-        label = "VerticalAnimatedPager"
+        transitionSpec = { if (targetState > initialState) slideUp() else slideDown() },
+        label = "VerticalAnimatedPager",
     ) { currentIndex ->
         items.getOrNull(currentIndex)?.invoke()
     }

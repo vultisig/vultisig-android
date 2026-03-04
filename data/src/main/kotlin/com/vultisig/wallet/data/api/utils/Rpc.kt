@@ -13,12 +13,9 @@ import kotlinx.serialization.json.JsonElement
 
 @Serializable
 internal data class RpcResponseJson(
-    @SerialName("id")
-    val id: Int,
-    @SerialName("result")
-    val result: JsonElement? = null,
-    @SerialName("error")
-    val error: RpcError? = null,
+    @SerialName("id") val id: Int,
+    @SerialName("result") val result: JsonElement? = null,
+    @SerialName("error") val error: RpcError? = null,
 )
 
 internal suspend inline fun <reified T> HttpClient.postRpc(
@@ -26,12 +23,4 @@ internal suspend inline fun <reified T> HttpClient.postRpc(
     method: String,
     params: JsonArray,
     id: Int = 1,
-): T = post(url) {
-    setBody(
-        RpcPayload(
-            method = method,
-            params = params,
-            id = id
-        )
-    )
-}.body()
+): T = post(url) { setBody(RpcPayload(method = method, params = params, id = id)) }.body()

@@ -27,93 +27,70 @@ import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun SearchedTokenInfo(
-    token: Coin,
-) {
+internal fun SearchedTokenInfo(token: Coin) {
     TopShineContainer {
         Row(
             verticalAlignment = Alignment.Companion.CenterVertically,
-            modifier = Modifier.Companion
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp,
-                )
+            modifier = Modifier.Companion.padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
-
             Box {
                 TokenLogo(
                     logo = token.logo,
                     title = token.ticker,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .align(Alignment.Center),
-                    errorLogoModifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Theme.v2.colors.backgrounds.body),
+                    modifier = Modifier.size(36.dp).align(Alignment.Center),
+                    errorLogoModifier =
+                        Modifier.size(36.dp)
+                            .clip(CircleShape)
+                            .background(Theme.v2.colors.backgrounds.body),
                 )
 
                 Image(
                     painter = painterResource(id = token.chain.monoToneLogo),
                     contentDescription = null,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.backgrounds.secondary,
-                            shape = CircleShape
-                        )
-                        .background(
-                            Theme.v2.colors.neutrals.n200,
-                            CircleShape
-                        )
-                        .align(Alignment.BottomEnd)
+                    modifier =
+                        Modifier.size(16.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.backgrounds.secondary,
+                                shape = CircleShape,
+                            )
+                            .background(Theme.v2.colors.neutrals.n200, CircleShape)
+                            .align(Alignment.BottomEnd),
                 )
             }
 
-            UiSpacer(
-                size = 8.dp
-            )
+            UiSpacer(size = 8.dp)
 
             Column {
-                Row(
-                    verticalAlignment = Alignment.Companion.Top,
-                ) {
+                Row(verticalAlignment = Alignment.Companion.Top) {
                     Text(
                         text = token.ticker,
                         color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.body.m.medium,
                     )
 
-                    UiSpacer(
-                        size = 6.dp
-                    )
+                    UiSpacer(size = 6.dp)
 
                     Text(
                         text = token.chain.raw,
                         color = Theme.v2.colors.text.secondary,
                         style = Theme.brockmann.supplementary.captionSmall,
-                        modifier = Modifier.Companion
-                            .border(
-                                width = 1.dp,
-                                color = Theme.v2.colors.border.light,
-                                shape = CircleShape
-                            )
-                            .padding(
-                                horizontal = 12.dp,
-                                vertical = 8.dp
-                            )
+                        modifier =
+                            Modifier.Companion.border(
+                                    width = 1.dp,
+                                    color = Theme.v2.colors.border.light,
+                                    shape = CircleShape,
+                                )
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
                     )
                 }
-                UiSpacer(
-                    size = 6.dp
-                )
+                UiSpacer(size = 6.dp)
                 Text(
                     text = token.contractAddress,
                     color = Theme.v2.colors.text.tertiary,
                     style = Theme.brockmann.supplementary.caption,
                     maxLines = 1,
-                    overflow = TextOverflow.Companion.Ellipsis
+                    overflow = TextOverflow.Companion.Ellipsis,
                 )
             }
         }
@@ -123,7 +100,5 @@ internal fun SearchedTokenInfo(
 @Preview
 @Composable
 private fun SearchedTokenInfoPreview() {
-    SearchedTokenInfo(
-        token = Coins.Ethereum.GRT,
-    )
+    SearchedTokenInfo(token = Coins.Ethereum.GRT)
 }

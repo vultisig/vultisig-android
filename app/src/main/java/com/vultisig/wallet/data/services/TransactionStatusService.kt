@@ -14,25 +14,22 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.PollingTxStatusUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
 class TransactionStatusService : Service() {
 
-    @Inject
-    lateinit var pollingTxStatus: PollingTxStatusUseCase
+    @Inject lateinit var pollingTxStatus: PollingTxStatusUseCase
     private val binder = LocalBinder()
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var pollingJob: Job? = null
@@ -69,14 +66,13 @@ class TransactionStatusService : Service() {
                 val chain = Chain.fromRaw(chainName)
 
                 try {
-                    val notification = createNotification(
-                        contentText = getString(R.string.transaction_status_checking_transaction),
-                        ongoing = true
-                    )
-                    startForeground(
-                        NOTIFICATION_ID,
-                        notification
-                    )
+                    val notification =
+                        createNotification(
+                            contentText =
+                                getString(R.string.transaction_status_checking_transaction),
+                            ongoing = true,
+                        )
+                    startForeground(NOTIFICATION_ID, notification)
                     startPolling(txHash, chain)
                     START_STICKY
                 } catch (_: SecurityException) {
@@ -101,12 +97,12 @@ class TransactionStatusService : Service() {
     private fun startPolling(txHash: String, chain: Chain) {
         pollingJob?.cancel()
 
-        pollingJob = serviceScope.launch {
-            updateNotification(getString(R.string.transaction_status_pending), ongoing = true)
-            _statusFlow.emit(TransactionResult.Pending)
+        pollingJob =
+            serviceScope.launch {
+                updateNotification(getString(R.string.transaction_status_pending), ongoing = true)
+                _statusFlow.emit(TransactionResult.Pending)
 
-            pollingTxStatus(chain, txHash)
-                .collect { result ->
+                pollingTxStatus(chain, txHash).collect { result ->
                     _statusFlow.emit(result)
                     when (result) {
                         is TransactionResult.Confirmed,
@@ -114,7 +110,7 @@ class TransactionStatusService : Service() {
                         TransactionResult.NotFound -> {
                             updateNotification(
                                 contentText = result.toNotificationMessage(),
-                                ongoing = false
+                                ongoing = false,
                             )
                             stopPolling()
                             stopForegroundAndService(detachNotification = true)
@@ -122,12 +118,12 @@ class TransactionStatusService : Service() {
                         TransactionResult.Pending -> {
                             updateNotification(
                                 contentText = result.toNotificationMessage(),
-                                ongoing = true
+                                ongoing = true,
                             )
                         }
                     }
                 }
-        }
+            }
     }
 
     private fun stopPolling() {
@@ -145,7 +141,6 @@ class TransactionStatusService : Service() {
         stopSelf()
     }
 
-
     fun cancelPollingAndRemoveNotification() {
         stopPolling()
         notificationManager.cancel(NOTIFICATION_ID)
@@ -156,15 +151,17 @@ class TransactionStatusService : Service() {
     private fun createNotification(contentText: String, ongoing: Boolean): Notification {
         createNotificationChannel()
 
-        val openAppIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-        val openAppPendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            openAppIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        val openAppIntent =
+            packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+        val openAppPendingIntent =
+            PendingIntent.getActivity(
+                this,
+                0,
+                openAppIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.transaction_status_notification_title))
@@ -187,13 +184,13 @@ class TransactionStatusService : Service() {
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            getString(R.string.transaction_status_notification_title),
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Shows transaction status updates"
-        }
+        val channel =
+            NotificationChannel(
+                    CHANNEL_ID,
+                    getString(R.string.transaction_status_notification_title),
+                    NotificationManager.IMPORTANCE_LOW,
+                )
+                .apply { description = "Shows transaction status updates" }
         notificationManager.createNotificationChannel(channel)
     }
 
@@ -212,10 +209,11 @@ class TransactionStatusService : Service() {
         const val EXTRA_CHAIN = "chain"
     }
 
-    private fun TransactionResult.toNotificationMessage() = when (this) {
-        TransactionResult.Confirmed -> getString(R.string.transaction_status_confirmed)
-        is TransactionResult.Failed -> getString(R.string.transaction_status_failed)
-        TransactionResult.NotFound -> getString(R.string.transaction_status_not_found)
-        TransactionResult.Pending -> getString(R.string.transaction_status_pending)
-    }
+    private fun TransactionResult.toNotificationMessage() =
+        when (this) {
+            TransactionResult.Confirmed -> getString(R.string.transaction_status_confirmed)
+            is TransactionResult.Failed -> getString(R.string.transaction_status_failed)
+            TransactionResult.NotFound -> getString(R.string.transaction_status_not_found)
+            TransactionResult.Pending -> getString(R.string.transaction_status_pending)
+        }
 }

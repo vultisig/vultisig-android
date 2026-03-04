@@ -100,10 +100,12 @@ private fun ReferralCreateScreen(
 ) {
 
     if (state.error != null) {
-        val message = when (state.error) {
-            ReferralError.BALANCE_ERROR -> stringResource(R.string.referral_create_not_enough_balance)
-            else -> stringResource(R.string.referral_create_unknown_error)
-        }
+        val message =
+            when (state.error) {
+                ReferralError.BALANCE_ERROR ->
+                    stringResource(R.string.referral_create_not_enough_balance)
+                else -> stringResource(R.string.referral_create_unknown_error)
+            }
 
         UiAlertDialog(
             title = stringResource(R.string.dialog_default_error_title),
@@ -124,65 +126,111 @@ private fun ReferralCreateScreen(
                     onIconRightClick = onToggleInfoBox,
                 )
             },
-        content = { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .imePadding()
-                    .navigationBarsPadding()
-                    .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-            ) {
-                Text(
-                    color = Theme.v2.colors.text.primary,
-                    style = Theme.brockmann.body.s.medium,
-                    text = stringResource(R.string.referral_create_pick_referral_code),
-                    textAlign = TextAlign.Start,
-                )
-
-                UiSpacer(8.dp)
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
+            content = { paddingValues ->
+                Column(
+                    modifier =
+                        Modifier.fillMaxSize()
+                            .imePadding()
+                            .navigationBarsPadding()
+                            .padding(paddingValues)
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp)
                 ) {
-                    val isNotEmpty = searchTextFieldState.text.isNotEmpty()
-
-                    VsTextInputField(
-                        textFieldState = searchTextFieldState,
-                        innerState = state.getInnerState(),
-                        hint = stringResource(R.string.referral_screen_code_hint),
-                        focusRequester = null,
-                        trailingIcon = if (state.searchStatus.isError() && isNotEmpty) {
-                            R.drawable.x
-                        } else {
-                            null
-                        },
-                        onTrailingIconClick = {
-                            onCleanReferralClick()
-                        },
-                        imeAction = ImeAction.Go,
-                        keyboardType = KeyboardType.Text,
-                        modifier = Modifier.weight(1f)
+                    Text(
+                        color = Theme.v2.colors.text.primary,
+                        style = Theme.brockmann.body.s.medium,
+                        text = stringResource(R.string.referral_create_pick_referral_code),
+                        textAlign = TextAlign.Start,
                     )
 
                     UiSpacer(8.dp)
 
-                    VsButton(
-                        label = stringResource(R.string.referral_create_search),
-                        shape = RoundedCornerShape(percent = 20),
-                        variant = VsButtonVariant.Primary,
-                        state = VsButtonState.Enabled,
-                        size = VsButtonSize.Medium,
-                        onClick = onSearchClick,
-                        modifier = Modifier.fillMaxHeight(),
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        val isNotEmpty = searchTextFieldState.text.isNotEmpty()
+
+                        VsTextInputField(
+                            textFieldState = searchTextFieldState,
+                            innerState = state.getInnerState(),
+                            hint = stringResource(R.string.referral_screen_code_hint),
+                            focusRequester = null,
+                            trailingIcon =
+                                if (state.searchStatus.isError() && isNotEmpty) {
+                                    R.drawable.x
+                                } else {
+                                    null
+                                },
+                            onTrailingIconClick = { onCleanReferralClick() },
+                            imeAction = ImeAction.Go,
+                            keyboardType = KeyboardType.Text,
+                            modifier = Modifier.weight(1f),
+                        )
+
+                        UiSpacer(8.dp)
+
+                        VsButton(
+                            label = stringResource(R.string.referral_create_search),
+                            shape = RoundedCornerShape(percent = 20),
+                            variant = VsButtonVariant.Primary,
+                            state = VsButtonState.Enabled,
+                            size = VsButtonSize.Medium,
+                            onClick = onSearchClick,
+                            modifier = Modifier.fillMaxHeight(),
+                        )
+                    }
+
+                    UiSpacer(16.dp)
+
+                    if (state.searchStatus != SearchStatusType.DEFAULT) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                color = Theme.v2.colors.text.tertiary,
+                                style = Theme.brockmann.body.s.medium,
+                                text = stringResource(R.string.referral_create_status),
+                                textAlign = TextAlign.Start,
+                            )
+
+                            UiSpacer(1f)
+
+                            if (state.searchStatus == SearchStatusType.IS_SEARCHING) {
+                                UiPlaceholderLoader(modifier = Modifier.height(16.dp).width(80.dp))
+                            } else {
+                                SearchReferralTag(state.searchStatus)
+                            }
+                        }
+                    }
+
+                    UiSpacer(16.dp)
+
+                    UiGradientDivider(
+                        initialColor = Theme.v2.colors.backgrounds.primary,
+                        endColor = Theme.v2.colors.backgrounds.primary,
                     )
-                }
 
-                UiSpacer(16.dp)
+                    UiSpacer(16.dp)
 
-                if (state.searchStatus != SearchStatusType.DEFAULT) {
+                    Text(
+                        color = Theme.v2.colors.text.primary,
+                        style = Theme.brockmann.body.s.medium,
+                        text = stringResource(R.string.referral_create_set_expiration_years),
+                        textAlign = TextAlign.Start,
+                    )
+
+                    UiSpacer(16.dp)
+
+                    CounterYearExpiration(
+                        count = state.yearExpiration,
+                        onIncrement = onAddClick,
+                        onDecrement = onSubtractClick,
+                    )
+
+                    UiSpacer(16.dp)
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -190,133 +238,78 @@ private fun ReferralCreateScreen(
                         Text(
                             color = Theme.v2.colors.text.tertiary,
                             style = Theme.brockmann.body.s.medium,
-                            text = stringResource(R.string.referral_create_status),
+                            text = stringResource(R.string.referral_create_expiration_date),
                             textAlign = TextAlign.Start,
                         )
 
                         UiSpacer(1f)
 
-                        if (state.searchStatus == SearchStatusType.IS_SEARCHING) {
-                            UiPlaceholderLoader(
-                                modifier = Modifier
-                                    .height(16.dp)
-                                    .width(80.dp)
-                            )
-                        } else {
-                            SearchReferralTag(state.searchStatus)
-                        }
+                        Text(
+                            color = Theme.v2.colors.text.primary,
+                            style = Theme.brockmann.body.s.medium,
+                            text = state.formattedYearExpiration,
+                            textAlign = TextAlign.Start,
+                        )
                     }
-                }
 
-                UiSpacer(16.dp)
+                    UiSpacer(16.dp)
 
-                UiGradientDivider(
-                    initialColor = Theme.v2.colors.backgrounds.primary,
-                    endColor = Theme.v2.colors.backgrounds.primary,
-                )
-
-                UiSpacer(16.dp)
-
-                Text(
-                    color = Theme.v2.colors.text.primary,
-                    style = Theme.brockmann.body.s.medium,
-                    text = stringResource(R.string.referral_create_set_expiration_years),
-                    textAlign = TextAlign.Start,
-                )
-
-                UiSpacer(16.dp)
-
-                CounterYearExpiration(
-                    count = state.yearExpiration,
-                    onIncrement = onAddClick,
-                    onDecrement = onSubtractClick,
-                )
-
-                UiSpacer(16.dp)
-
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        color = Theme.v2.colors.text.tertiary,
-                        style = Theme.brockmann.body.s.medium,
-                        text = stringResource(R.string.referral_create_expiration_date),
-                        textAlign = TextAlign.Start,
+                    UiGradientDivider(
+                        initialColor = Theme.v2.colors.backgrounds.primary,
+                        endColor = Theme.v2.colors.backgrounds.primary,
                     )
 
-                    UiSpacer(1f)
+                    UiSpacer(16.dp)
 
-                    Text(
-                        color = Theme.v2.colors.text.primary,
-                        style = Theme.brockmann.body.s.medium,
-                        text = state.formattedYearExpiration,
-                        textAlign = TextAlign.Start,
+                    val fees = state.getFees()
+
+                    EstimatedNetworkFee(
+                        title = stringResource(R.string.referral_create_registration_fees),
+                        tokenGas = fees.tokenGas,
+                        fiatGas = fees.tokenPrice,
+                    )
+
+                    UiSpacer(16.dp)
+
+                    EstimatedNetworkFee(
+                        title = stringResource(R.string.referral_create_cost),
+                        tokenGas = fees.costGas,
+                        fiatGas = fees.costPrice,
                     )
                 }
-
-                UiSpacer(16.dp)
-
-                UiGradientDivider(
-                    initialColor = Theme.v2.colors.backgrounds.primary,
-                    endColor = Theme.v2.colors.backgrounds.primary,
+            },
+            bottomBar = {
+                VsButton(
+                    label = stringResource(R.string.referral_create_create_referral_code),
+                    modifier =
+                        Modifier.padding(horizontal = 16.dp, vertical = 32.dp).fillMaxWidth(),
+                    variant = VsButtonVariant.Primary,
+                    state =
+                        if (state.searchStatus == SearchStatusType.SUCCESS) {
+                            VsButtonState.Enabled
+                        } else {
+                            VsButtonState.Disabled
+                        },
+                    onClick = onCreateReferral,
                 )
-
-                UiSpacer(16.dp)
-
-                val fees = state.getFees()
-
-                EstimatedNetworkFee(
-                    title = stringResource(R.string.referral_create_registration_fees),
-                    tokenGas = fees.tokenGas,
-                    fiatGas = fees.tokenPrice,
-                )
-
-                UiSpacer(16.dp)
-
-                EstimatedNetworkFee(
-                    title = stringResource(R.string.referral_create_cost),
-                    tokenGas = fees.costGas,
-                    fiatGas = fees.costPrice,
-                )
-            }
-        },
-        bottomBar = {
-            VsButton(
-                label = stringResource(R.string.referral_create_create_referral_code),
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 32.dp)
-                    .fillMaxWidth(),
-                variant = VsButtonVariant.Primary,
-                state = if (state.searchStatus == SearchStatusType.SUCCESS) {
-                    VsButtonState.Enabled
-                } else {
-                    VsButtonState.Disabled
-                },
-                onClick = onCreateReferral,
-                )
-            }
+            },
         )
 
-        ShowInfoDialog(
-            isVisible = state.showInfoBox,
-            onHideInfoBox = onHideInfoBox,
-        )
+        ShowInfoDialog(isVisible = state.showInfoBox, onHideInfoBox = onHideInfoBox)
     }
 }
 
 private fun CreateReferralUiState.getFees() =
     if (this.fees is FeesReferral.Result) {
         FeesUiModel(
-        tokenGas = this.fees.registrationFeesToken,
-        tokenPrice = this.fees.registrationFeesPrice,
-        costGas = this.fees.costFeesToken,
-        costPrice = this.fees.costFeesPrice,
-    )
-} else {
-    FeesUiModel()
-}
+            tokenGas = this.fees.registrationFeesToken,
+            tokenPrice = this.fees.registrationFeesPrice,
+            costGas = this.fees.costFeesToken,
+            costPrice = this.fees.costFeesPrice,
+        )
+    } else {
+        FeesUiModel()
+    }
 
 private fun CreateReferralUiState.getInnerState() =
     when {
@@ -326,59 +319,51 @@ private fun CreateReferralUiState.getInnerState() =
     }
 
 @Composable
-private fun ShowInfoDialog(
-    isVisible: Boolean,
-    onHideInfoBox: () -> Unit,
-) {
+private fun ShowInfoDialog(isVisible: Boolean, onHideInfoBox: () -> Unit) {
     val statusBarHeightPx = WindowInsets.statusBars.getTop(LocalDensity.current)
     HintBox(
         isVisible = isVisible,
         message = stringResource(R.string.referral_create_info_content),
         title = stringResource(R.string.referral_create_info_title),
         onDismissClick = onHideInfoBox,
-        offset = IntOffset(
-            x = 0, y = statusBarHeightPx,
-        ),
+        offset = IntOffset(x = 0, y = statusBarHeightPx),
         pointerAlignment = Alignment.End,
-        modifier = Modifier
-            .padding(
-                start = 62.dp,
-                end = 8.dp,
-                top = 8.dp
-            )
+        modifier = Modifier.padding(start = 62.dp, end = 8.dp, top = 8.dp),
     )
 }
 
 @Composable
-private fun SearchReferralTag(
-    type: SearchStatusType,
-) {
-    val (color, text) = when (type) {
-        SearchStatusType.VALIDATION_ERROR -> Pair(Theme.v2.colors.alerts.error, stringResource(R.string.referral_create_invalid))
-        SearchStatusType.SUCCESS -> Pair(Theme.v2.colors.alerts.success, stringResource(R.string.referral_create_available))
-        SearchStatusType.ERROR -> Pair(Theme.v2.colors.alerts.error, stringResource(R.string.referral_create_taken))
-        else -> Pair(Theme.v2.colors.alerts.error, stringResource(R.string.referral_create_unknown))
-    }
+private fun SearchReferralTag(type: SearchStatusType) {
+    val (color, text) =
+        when (type) {
+            SearchStatusType.VALIDATION_ERROR ->
+                Pair(Theme.v2.colors.alerts.error, stringResource(R.string.referral_create_invalid))
+            SearchStatusType.SUCCESS ->
+                Pair(
+                    Theme.v2.colors.alerts.success,
+                    stringResource(R.string.referral_create_available),
+                )
+            SearchStatusType.ERROR ->
+                Pair(Theme.v2.colors.alerts.error, stringResource(R.string.referral_create_taken))
+            else ->
+                Pair(Theme.v2.colors.alerts.error, stringResource(R.string.referral_create_unknown))
+        }
 
     Box(
-        modifier = Modifier
-            .background(
-                color = Theme.v2.colors.backgrounds.secondary,
-                shape = RoundedCornerShape(50)
-            )
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.light,
-                shape = RoundedCornerShape(50)
-            )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier.background(
+                    color = Theme.v2.colors.backgrounds.secondary,
+                    shape = RoundedCornerShape(50),
+                )
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = RoundedCornerShape(50),
+                )
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = text,
-            color = color,
-            style = Theme.brockmann.supplementary.footnote,
-        )
+        Text(text = text, color = color, style = Theme.brockmann.supplementary.footnote)
     }
 }
 
@@ -391,35 +376,37 @@ fun CounterYearExpiration(
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Button(
             onClick = { if (count != defaultInitCounter) onDecrement() },
             shape = RoundedCornerShape(12.dp),
             enabled = count != defaultInitCounter,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Theme.v2.colors.backgrounds.secondary,
-                contentColor = Theme.v2.colors.text.primary,
-                disabledContainerColor = Theme.v2.colors.backgrounds.secondary.copy(alpha = 0.5f),
-                disabledContentColor = Theme.v2.colors.text.primary.copy(alpha = 0.5f),
-            ),
-            modifier = Modifier
-                .weight(1f)
-                .height(height = 60.dp)
-                .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = Theme.v2.colors.backgrounds.secondary,
+                    contentColor = Theme.v2.colors.text.primary,
+                    disabledContainerColor =
+                        Theme.v2.colors.backgrounds.secondary.copy(alpha = 0.5f),
+                    disabledContentColor = Theme.v2.colors.text.primary.copy(alpha = 0.5f),
+                ),
+            modifier =
+                Modifier.weight(1f)
+                    .height(height = 60.dp)
+                    .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
         ) {
             Icon(
                 painter = painterResource(R.drawable.circle_minus),
-                contentDescription = "Decrease"
+                contentDescription = "Decrease",
             )
         }
 
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(height = 60.dp)
-                .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
-            contentAlignment = Alignment.Center
+            modifier =
+                Modifier.weight(1f)
+                    .height(height = 60.dp)
+                    .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = count.toString(),
@@ -431,55 +418,35 @@ fun CounterYearExpiration(
         Button(
             onClick = { if (count < 100) onIncrement() },
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Theme.v2.colors.backgrounds.secondary,
-                contentColor = Theme.v2.colors.text.primary
-            ),
-            modifier = Modifier
-                .weight(1f)
-                .height(height = 60.dp)
-                .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = Theme.v2.colors.backgrounds.secondary,
+                    contentColor = Theme.v2.colors.text.primary,
+                ),
+            modifier =
+                Modifier.weight(1f)
+                    .height(height = 60.dp)
+                    .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
         ) {
-            Icon(
-                painter = painterResource(R.drawable.circle_plus),
-                contentDescription = "Increase"
-            )
+            Icon(painter = painterResource(R.drawable.circle_plus), contentDescription = "Increase")
         }
     }
 }
 
 @Composable
-internal fun EstimatedNetworkFee(
-    title: String,
-    tokenGas: String,
-    fiatGas: String,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+internal fun EstimatedNetworkFee(title: String, tokenGas: String, fiatGas: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.tertiary,
         )
 
-        Column(
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier
-                .weight(1f),
-        ) {
+        Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
             if (tokenGas.isEmpty()) {
-                UiPlaceholderLoader(
-                    modifier = Modifier
-                        .height(16.dp)
-                        .width(80.dp)
-                )
+                UiPlaceholderLoader(modifier = Modifier.height(16.dp).width(80.dp))
 
-                UiPlaceholderLoader(
-                    modifier = Modifier
-                        .height(16.dp)
-                        .width(80.dp)
-                )
+                UiPlaceholderLoader(modifier = Modifier.height(16.dp).width(80.dp))
             } else {
                 Text(
                     text = tokenGas,
@@ -501,21 +468,23 @@ internal fun EstimatedNetworkFee(
 @Composable
 private fun ReferralCreateScreenPreview() {
     val searchTextFieldState = TextFieldState("VULTISIG-REF")
-    
+
     ReferralCreateScreen(
-        state = CreateReferralUiState(
-            searchStatus = SearchStatusType.SUCCESS,
-            yearExpiration = 2,
-            formattedYearExpiration = "December 31, 2026",
-            fees = FeesReferral.Result(
-                registrationFeesToken = "0.02 RUNE",
-                registrationFeesPrice = "$1.50",
-                costFeesToken = "0.04 RUNE",
-                costFeesTokenAmount = "0.04",
-                costFeesPrice = "$3.00"
+        state =
+            CreateReferralUiState(
+                searchStatus = SearchStatusType.SUCCESS,
+                yearExpiration = 2,
+                formattedYearExpiration = "December 31, 2026",
+                fees =
+                    FeesReferral.Result(
+                        registrationFeesToken = "0.02 RUNE",
+                        registrationFeesPrice = "$1.50",
+                        costFeesToken = "0.04 RUNE",
+                        costFeesTokenAmount = "0.04",
+                        costFeesPrice = "$3.00",
+                    ),
+                error = null,
             ),
-            error = null
-        ),
         searchTextFieldState = searchTextFieldState,
         onBackPressed = {},
         onSearchClick = {},
@@ -533,13 +502,14 @@ private fun ReferralCreateScreenPreview() {
 @Composable
 private fun ReferralCreateScreenLoadingPreview() {
     ReferralCreateScreen(
-        state = CreateReferralUiState(
-            searchStatus = SearchStatusType.IS_SEARCHING,
-            yearExpiration = 1,
-            formattedYearExpiration = "December 31, 2025",
-            fees = FeesReferral.Loading,
-            error = null
-        ),
+        state =
+            CreateReferralUiState(
+                searchStatus = SearchStatusType.IS_SEARCHING,
+                yearExpiration = 1,
+                formattedYearExpiration = "December 31, 2025",
+                fees = FeesReferral.Loading,
+                error = null,
+            ),
         searchTextFieldState = TextFieldState(),
         onBackPressed = {},
         onSearchClick = {},

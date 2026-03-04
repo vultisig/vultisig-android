@@ -1,11 +1,13 @@
 package com.vultisig.wallet.data.usecases
 
-import wallet.core.jni.Mnemonic
 import javax.inject.Inject
+import wallet.core.jni.Mnemonic
 
 sealed class MnemonicValidationResult {
     data object Valid : MnemonicValidationResult()
+
     data class InvalidWordCount(val actual: Int) : MnemonicValidationResult()
+
     data object InvalidPhrase : MnemonicValidationResult()
 }
 

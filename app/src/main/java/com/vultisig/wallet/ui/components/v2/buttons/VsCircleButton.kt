@@ -22,23 +22,27 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.modifiers.shinedBottom
 import com.vultisig.wallet.ui.theme.Theme
 
-
 internal sealed class VsCircleButtonSize {
     object Small : VsCircleButtonSize()
+
     object Medium : VsCircleButtonSize()
+
     data class Custom(val size: Dp) : VsCircleButtonSize()
 }
 
-
 internal sealed class VsCircleButtonType {
     object Primary : VsCircleButtonType()
+
     object Secondary : VsCircleButtonType()
+
     object Tertiary : VsCircleButtonType()
+
     data class Custom(val color: Color) : VsCircleButtonType()
 }
 
 enum class DesignType {
-    Shined, Solid,
+    Shined,
+    Solid,
 }
 
 @Composable
@@ -51,68 +55,59 @@ internal fun VsCircleButton(
     designType: DesignType = DesignType.Solid,
     hasBorder: Boolean = false,
 ) {
-    val sizeInDp = when (size) {
-        is VsCircleButtonSize.Custom -> size.size
-        VsCircleButtonSize.Medium -> 64.dp
-        VsCircleButtonSize.Small -> 44.dp
-    }
+    val sizeInDp =
+        when (size) {
+            is VsCircleButtonSize.Custom -> size.size
+            VsCircleButtonSize.Medium -> 64.dp
+            VsCircleButtonSize.Small -> 44.dp
+        }
 
-    val backgroundColor = when (type) {
-        VsCircleButtonType.Primary -> Theme.v2.colors.primary.accent3
-        VsCircleButtonType.Secondary -> Theme.v2.colors.backgrounds.tertiary_2
-        VsCircleButtonType.Tertiary -> Theme.v2.colors.fills.primary.copy(alpha = 0.32f)
-        is VsCircleButtonType.Custom -> type.color
-    }
+    val backgroundColor =
+        when (type) {
+            VsCircleButtonType.Primary -> Theme.v2.colors.primary.accent3
+            VsCircleButtonType.Secondary -> Theme.v2.colors.backgrounds.tertiary_2
+            VsCircleButtonType.Tertiary -> Theme.v2.colors.fills.primary.copy(alpha = 0.32f)
+            is VsCircleButtonType.Custom -> type.color
+        }
 
-    val brushColors = listOf(
-        Theme.v2.colors.neutrals.n100,
-        Color.Transparent,
-        Color.Transparent,
-        Theme.v2.colors.neutrals.n100,
-    )
-
+    val brushColors =
+        listOf(
+            Theme.v2.colors.neutrals.n100,
+            Color.Transparent,
+            Color.Transparent,
+            Theme.v2.colors.neutrals.n100,
+        )
 
     Box(
-        modifier = modifier
-            .size(sizeInDp)
-            .clip(CircleShape)
-            .clickOnce(onClick = onClick)
-            .background(
-                color = backgroundColor
-            )
-            .then(
-                if (designType == DesignType.Shined) {
-                    Modifier
-                        .shinedBottom()
-                        .border(
-                            width = 1.dp,
-                            brush = Brush.linearGradient(
-                                colors = brushColors
-                            ),
-                            shape = CircleShape
-                        )
-                } else {
-                    if (hasBorder) {
-                        Modifier.border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.1f),
-                            shape = CircleShape
-                        )
-                    } else
-                        Modifier
-                }
-
-            ),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .size(sizeInDp)
+                .clip(CircleShape)
+                .clickOnce(onClick = onClick)
+                .background(color = backgroundColor)
+                .then(
+                    if (designType == DesignType.Shined) {
+                        Modifier.shinedBottom()
+                            .border(
+                                width = 1.dp,
+                                brush = Brush.linearGradient(colors = brushColors),
+                                shape = CircleShape,
+                            )
+                    } else {
+                        if (hasBorder) {
+                            Modifier.border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.1f),
+                                shape = CircleShape,
+                            )
+                        } else Modifier
+                    }
+                ),
+        contentAlignment = Alignment.Center,
     ) {
-        UiIcon(
-            drawableResId = icon,
-            tint = Theme.v2.colors.neutrals.n100,
-            size = 20.dp
-        )
+        UiIcon(drawableResId = icon, tint = Theme.v2.colors.neutrals.n100, size = 20.dp)
     }
 }
-
 
 @Composable
 internal fun VsCircleButton(
@@ -124,50 +119,48 @@ internal fun VsCircleButton(
     hasBorder: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val sizeInDp = when (size) {
-        is VsCircleButtonSize.Custom -> size.size
-        VsCircleButtonSize.Medium -> 64.dp
-        VsCircleButtonSize.Small -> 44.dp
-    }
+    val sizeInDp =
+        when (size) {
+            is VsCircleButtonSize.Custom -> size.size
+            VsCircleButtonSize.Medium -> 64.dp
+            VsCircleButtonSize.Small -> 44.dp
+        }
 
-    val backgroundColor = when (type) {
-        VsCircleButtonType.Primary -> Theme.v2.colors.primary.accent3
-        VsCircleButtonType.Secondary -> Theme.v2.colors.backgrounds.tertiary_2
-        VsCircleButtonType.Tertiary -> Theme.v2.colors.fills.primary.copy(alpha = 0.32f)
-        is VsCircleButtonType.Custom -> type.color
-    }
+    val backgroundColor =
+        when (type) {
+            VsCircleButtonType.Primary -> Theme.v2.colors.primary.accent3
+            VsCircleButtonType.Secondary -> Theme.v2.colors.backgrounds.tertiary_2
+            VsCircleButtonType.Tertiary -> Theme.v2.colors.fills.primary.copy(alpha = 0.32f)
+            is VsCircleButtonType.Custom -> type.color
+        }
 
     Box(
-        modifier = modifier
-            .clickOnce(onClick = onClick)
-            .size(sizeInDp)
-            .clip(CircleShape)
-            .background(
-                color = backgroundColor
-            )
-            .then(
-                if (designType == DesignType.Shined) {
-                    Modifier
-                        .shinedBottom()
-                        .border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.1f),
-                            shape = CircleShape
-                        )
-                } else {
-                    if (hasBorder) {
-                        Modifier.border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.1f),
-                            shape = CircleShape
-                        )
-                    } else
-                        Modifier
-                }
-
-            ),
+        modifier =
+            modifier
+                .clickOnce(onClick = onClick)
+                .size(sizeInDp)
+                .clip(CircleShape)
+                .background(color = backgroundColor)
+                .then(
+                    if (designType == DesignType.Shined) {
+                        Modifier.shinedBottom()
+                            .border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.1f),
+                                shape = CircleShape,
+                            )
+                    } else {
+                        if (hasBorder) {
+                            Modifier.border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.1f),
+                                shape = CircleShape,
+                            )
+                        } else Modifier
+                    }
+                ),
         contentAlignment = Alignment.Center,
-        content = content
+        content = content,
     )
 }
 
@@ -190,13 +183,7 @@ internal fun VsCircleButton(
         designType = designType,
         type = type,
         hasBorder = hasBorder,
-        content = {
-            UiIcon(
-                drawableResId = drawableResId,
-                tint = tint,
-                size = iconSize
-            )
-        }
+        content = { UiIcon(drawableResId = drawableResId, tint = tint, size = iconSize) },
     )
 }
 
@@ -207,7 +194,7 @@ private fun PreviewVsCircleButton() {
         onClick = {},
         size = VsCircleButtonSize.Medium,
         icon = R.drawable.camera,
-        designType = DesignType.Shined
+        designType = DesignType.Shined,
     )
 }
 
@@ -230,7 +217,7 @@ private fun PreviewVsCircleButton3() {
         size = VsCircleButtonSize.Medium,
         icon = R.drawable.camera,
         type = VsCircleButtonType.Secondary,
-        designType = DesignType.Shined
+        designType = DesignType.Shined,
     )
 }
 
@@ -242,10 +229,9 @@ private fun PreviewVsCircleButton4() {
         size = VsCircleButtonSize.Small,
         icon = R.drawable.camera,
         type = VsCircleButtonType.Tertiary,
-        designType = DesignType.Shined
+        designType = DesignType.Shined,
     )
 }
-
 
 @Preview
 @Composable

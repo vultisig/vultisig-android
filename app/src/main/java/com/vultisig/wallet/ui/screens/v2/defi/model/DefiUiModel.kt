@@ -25,13 +25,9 @@ data class DefiUiModel(
         val totalDepositCurrency: String = "$0",
     ) {
         fun hasActiveDeposit(): Boolean {
-            return totalDeposit
-                .trim()
-                .split(" ")
-                .firstOrNull()
-                ?.toBigDecimalOrNull()
-                ?.let { it > BigDecimal.ZERO }
-                ?: false
+            return totalDeposit.trim().split(" ").firstOrNull()?.toBigDecimalOrNull()?.let {
+                it > BigDecimal.ZERO
+            } ?: false
         }
     }
 }

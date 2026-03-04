@@ -6,9 +6,8 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import javax.inject.Inject
 
-class EvmStatusProvider @Inject constructor(
-    private val evmApiFactory: EvmApiFactory,
-) : TransactionStatusProvider {
+class EvmStatusProvider @Inject constructor(private val evmApiFactory: EvmApiFactory) :
+    TransactionStatusProvider {
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
@@ -26,7 +25,6 @@ class EvmStatusProvider @Inject constructor(
                     else -> TransactionResult.Pending
                 }
             }
-
         } catch (_: Exception) {
             TransactionResult.NotFound
         }

@@ -19,23 +19,17 @@ import com.vultisig.wallet.ui.components.library.form.BasicFormTextField
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun VsSearchTextField(
-    fieldState: TextFieldState,
-) {
+internal fun VsSearchTextField(fieldState: TextFieldState) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier
-            .padding(
-                all = 16.dp,
-            )
-            .background(
-                color = Theme.v2.colors.fills.primary,
-                shape = RoundedCornerShape(10.dp)
-            )
-            .padding(
-                all = 8.dp,
-            )
+        modifier =
+            Modifier.padding(all = 16.dp)
+                .background(
+                    color = Theme.v2.colors.fills.primary,
+                    shape = RoundedCornerShape(10.dp),
+                )
+                .padding(all = 8.dp),
     ) {
         UiIcon(
             drawableResId = R.drawable.ic_search,
@@ -50,8 +44,7 @@ internal fun VsSearchTextField(
             hint = stringResource(R.string.token_selection_search_hint),
             keyboardType = KeyboardType.Text,
             onLostFocus = { /* no-op */ },
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

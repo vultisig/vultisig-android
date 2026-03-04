@@ -1,46 +1,41 @@
 package com.vultisig.wallet.data.blockchain.polkadot
 
 import com.vultisig.wallet.data.api.PolkadotApi
-import com.vultisig.wallet.data.blockchain.model.BasicFee
-import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
+import com.vultisig.wallet.data.blockchain.model.BasicFee
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
+import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 /**
  * Fee service for the Polkadot blockchain.
  *
  * Polkadot transaction fees are calculated using a weight-based fee model:
- *   - Base fee: fixed minimum charged for every transaction
- *   - Weight fee: proportional to the transaction's computational cost
- *   - Length fee: proportional to the transaction's size in bytes
- *   - Tip: optional, paid by user to prioritize transaction inclusion
+ * - Base fee: fixed minimum charged for every transaction
+ * - Weight fee: proportional to the transaction's computational cost
+ * - Length fee: proportional to the transaction's size in bytes
+ * - Tip: optional, paid by user to prioritize transaction inclusion
  *
- * Formula (simplified):
- *   final_fee = base_fee + (weight * coeff) + (length * coeff) + tip
+ * Formula (simplified): final_fee = base_fee + (weight * coeff) + (length * coeff) + tip
  *
  * In this implementation:
- *   - We prepare a valid Polkadot transaction payload.
- *   - We can call `queryInfo` on the payload to get the chain-calculated dynamic fee.
- *   - Get the real fee from partialFee (RPC Endpoint already calculate everything for us)
+ * - We prepare a valid Polkadot transaction payload.
+ * - We can call `queryInfo` on the payload to get the chain-calculated dynamic fee.
+ * - Get the real fee from partialFee (RPC Endpoint already calculate everything for us)
  *
  * https://docs.polkadot.com/polkadot-protocol/parachain-basics/blocks-transactions-fees/fees/
  */
-class PolkadotFeeService @Inject constructor(
-    private val polkadotApi: PolkadotApi,
-): FeeService {
-    override suspend fun calculateFees(
-        transaction: BlockchainTransaction,
-    ): Fee {
+class PolkadotFeeService @Inject constructor(private val polkadotApi: PolkadotApi) : FeeService {
+    override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
         require(transaction is Transfer) {
             "Invalid Transaction type: ${transaction::class.simpleName}"
         }
@@ -50,11 +45,8 @@ class PolkadotFeeService @Inject constructor(
         val valHexPublicKey = transaction.vault.vaultHexPublicKey
         val amount = transaction.amount
 
-        val keySignPayload = buildPolkadotSpecific(
-            fromAddress = fromAddress,
-            toAddress = toAddress,
-            amount = amount,
-        )
+        val keySignPayload =
+            buildPolkadotSpecific(fromAddress = fromAddress, toAddress = toAddress, amount = amount)
 
         val serializedTransaction =
             PolkadotHelper(valHexPublicKey).getZeroSignedTransaction(keySignPayload)
@@ -66,12 +58,12 @@ class PolkadotFeeService @Inject constructor(
 
     private suspend fun buildPolkadotSpecific(
         fromAddress: String,
-        toAddress:String,
+        toAddress: String,
         amount: BigInteger,
     ): KeysignPayload = coroutineScope {
-        val polkadotCoin = Coins.coins[Chain.Polkadot]
-            ?.first { it.isNativeToken }
-            ?: error("Polkadot Coin not found")
+        val polkadotCoin =
+            Coins.coins[Chain.Polkadot]?.first { it.isNativeToken }
+                ?: error("Polkadot Coin not found")
 
         val runtimeVersionDeferred = async { polkadotApi.getRuntimeVersion() }
         val blockHashDeferred = async { polkadotApi.getBlockHash() }
@@ -85,15 +77,16 @@ class PolkadotFeeService @Inject constructor(
             coin = polkadotCoin,
             toAddress = toAddress,
             toAmount = amount,
-            blockChainSpecific = BlockChainSpecific.Polkadot(
-                recentBlockHash = blockHashDeferred.await(),
-                nonce = nonceDeferred.await(),
-                currentBlockNumber = blockHeaderDeferred.await(),
-                specVersion = specVersion.toLong().toUInt(),
-                transactionVersion = transactionVersion.toLong().toUInt(),
-                genesisHash = genesisHashDeferred.await(),
-                gas = POLKADOT_DEFAULT_FEE.toString().toULong(), // no need for Fee
-            ),
+            blockChainSpecific =
+                BlockChainSpecific.Polkadot(
+                    recentBlockHash = blockHashDeferred.await(),
+                    nonce = nonceDeferred.await(),
+                    currentBlockNumber = blockHeaderDeferred.await(),
+                    specVersion = specVersion.toLong().toUInt(),
+                    transactionVersion = transactionVersion.toLong().toUInt(),
+                    genesisHash = genesisHashDeferred.await(),
+                    gas = POLKADOT_DEFAULT_FEE.toString().toULong(), // no need for Fee
+                ),
             vaultPublicKeyECDSA = "",
             vaultLocalPartyID = "",
             libType = null,

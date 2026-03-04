@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,7 +41,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import javax.inject.Inject
 
 internal data class ShareVaultQrState(
     val shareVaultQrModel: ShareVaultQrModel = ShareVaultQrModel("", "", "", "", ""),
@@ -59,7 +59,9 @@ internal data class ShareVaultQrModel(
 )
 
 @HiltViewModel
-internal class ShareVaultQrViewModel @Inject constructor(
+internal class ShareVaultQrViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
@@ -75,12 +77,13 @@ internal class ShareVaultQrViewModel @Inject constructor(
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
-
-    private var hasWritePermission by mutableStateOf(
-        ContextCompat.checkSelfPermission(
-            context, Manifest.permission.WRITE_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
-    )
+    private var hasWritePermission by
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            ) == PackageManager.PERMISSION_GRANTED
+        )
 
     private val permissionChannel = Channel<Boolean>()
     val permissionFlow = permissionChannel.receiveAsFlow()
@@ -90,19 +93,22 @@ internal class ShareVaultQrViewModel @Inject constructor(
             vaultRepository.get(requireNotNull(vaultId))?.let { vault ->
                 val uid =
                     ("${vault.name} - ${vault.pubKeyECDSA} - " +
-                            "${vault.pubKeyEDDSA} - ${vault.hexChainCode}").sha256()
-                val shareVaultQrModel = ShareVaultQrModel(
-                    name = vault.name,
-                    publicKeyEcdsa = vault.pubKeyECDSA,
-                    publicKeyEddsa = vault.pubKeyEDDSA,
-                    hexChainCode = vault.hexChainCode,
-                    uid = uid
-                )
+                            "${vault.pubKeyEDDSA} - ${vault.hexChainCode}")
+                        .sha256()
+                val shareVaultQrModel =
+                    ShareVaultQrModel(
+                        name = vault.name,
+                        publicKeyEcdsa = vault.pubKeyECDSA,
+                        publicKeyEddsa = vault.pubKeyEDDSA,
+                        hexChainCode = vault.hexChainCode,
+                        uid = uid,
+                    )
                 state.update {
                     it.copy(
                         shareVaultQrModel = shareVaultQrModel,
                         shareVaultQrString = json.encodeToString(shareVaultQrModel),
-                        fileName = "VultisigQR-${vault.name}-${shareVaultQrModel.uid.takeLast(3)}.png"
+                        fileName =
+                            "VultisigQR-${vault.name}-${shareVaultQrModel.uid.takeLast(3)}.png",
                     )
                 }
                 if (!hasWritePermission) {
@@ -112,40 +118,38 @@ internal class ShareVaultQrViewModel @Inject constructor(
         }
     }
 
-    internal fun loadQrCodePainter(
-        mainColor: Color,
-        backgroundColor: Color,
-        logo: Bitmap? = null,
-    ) {
+    internal fun loadQrCodePainter(mainColor: Color, backgroundColor: Color, logo: Bitmap? = null) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val qrBitmap = generateBitmap(
-                    logo = logo, mainColor = mainColor, backgroundColor = backgroundColor
-                ) ?: createBitmap(1, 1)
+                val qrBitmap =
+                    generateBitmap(
+                        logo = logo,
+                        mainColor = mainColor,
+                        backgroundColor = backgroundColor,
+                    ) ?: createBitmap(1, 1)
 
-                val bitmapPainter = BitmapPainter(
-                    qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
-                )
+                val bitmapPainter =
+                    BitmapPainter(qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None)
                 qrBitmapPainter.value = bitmapPainter
                 logo?.recycle()
             }
         }
     }
 
-    private fun generateBitmap(
-        logo: Bitmap?,
-        mainColor: Color,
-        backgroundColor: Color,
-    ): Bitmap? {
-        val qrBitmap = try {
-            if (logo != null && state.value.shareVaultQrString != null) {
-                generateQrBitmap(
-                    requireNotNull(state.value.shareVaultQrString), mainColor, backgroundColor, logo
-                )
-            } else null
-        } catch (ex: WriterException) {
-            null
-        }
+    private fun generateBitmap(logo: Bitmap?, mainColor: Color, backgroundColor: Color): Bitmap? {
+        val qrBitmap =
+            try {
+                if (logo != null && state.value.shareVaultQrString != null) {
+                    generateQrBitmap(
+                        requireNotNull(state.value.shareVaultQrString),
+                        mainColor,
+                        backgroundColor,
+                        logo,
+                    )
+                } else null
+            } catch (ex: WriterException) {
+                null
+            }
         return qrBitmap
     }
 
@@ -175,27 +179,21 @@ internal class ShareVaultQrViewModel @Inject constructor(
     private fun saveBitmap(toShare: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val uri = context.saveBitmapToDownloads(
-                    requireNotNull(shareQrBitmap.value),
-                    requireNotNull(state.value.fileName)
-                )
+                val uri =
+                    context.saveBitmapToDownloads(
+                        requireNotNull(shareQrBitmap.value),
+                        requireNotNull(state.value.fileName),
+                    )
                 shareQrBitmap.value?.recycle()
                 if (toShare) {
-                    state.update {
-                        it.copy(
-                            fileUri = uri
-                        )
-                    }
+                    state.update { it.copy(fileUri = uri) }
                 } else if (uri != null) {
                     showSnackbarMessage()
                     navigator.navigate(Destination.Back)
                 }
             } catch (e: Exception) {
                 snackbarFlow.showMessage(
-                    context.getString(
-                        R.string.error_saving_qr_code,
-                        e.localizedMessage ?: ""
-                    )
+                    context.getString(R.string.error_saving_qr_code, e.localizedMessage ?: "")
                 )
             }
         }
@@ -205,14 +203,12 @@ internal class ShareVaultQrViewModel @Inject constructor(
         snackbarFlow.showMessage(
             context.getString(
                 R.string.vault_settings_success_backup_file,
-                "$QRCODE_DIRECTORY_NAME_FULL/${state.value.fileName}"
+                "$QRCODE_DIRECTORY_NAME_FULL/${state.value.fileName}",
             )
         )
     }
 
     internal fun showSnackbarSavedMessage() {
-        viewModelScope.launch {
-            showSnackbarMessage()
-        }
+        viewModelScope.launch { showSnackbarMessage() }
     }
 }

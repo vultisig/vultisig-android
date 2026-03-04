@@ -33,11 +33,7 @@ internal fun VsBasicTextField(
 ) {
     BasicTextField(
         state = textFieldState,
-        textStyle = style
-            .copy(
-                color = color,
-                textAlign = textAlign,
-            ),
+        textStyle = style.copy(color = color, textAlign = textAlign),
         cursorBrush = Theme.cursorBrush,
         lineLimits = lineLimits,
         keyboardOptions = keyboardOptions,
@@ -49,8 +45,7 @@ internal fun VsBasicTextField(
                     color = hintColor,
                     style = hintStyle,
                     textAlign = textAlign,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
 

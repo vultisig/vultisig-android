@@ -16,8 +16,8 @@ data class DepositTransaction(
     val estimateFeesFiat: String,
     val blockChainSpecific: BlockChainSpecific,
     val wasmExecuteContractPayload: WasmExecuteContractPayload? = null,
-    val operation: String  = "",
-    val thorAddress : String  = "",
+    val operation: String = "",
+    val thorAddress: String = "",
     val utxos: List<UtxoInfo> = emptyList(),
 )
 

@@ -46,9 +46,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun KeysignPasswordScreen(
-    model: KeysignPasswordViewModel = hiltViewModel(),
-) {
+internal fun KeysignPasswordScreen(model: KeysignPasswordViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     InputPasswordScreen(
@@ -94,15 +92,9 @@ fun KeysignPasswordBottomSheet(
     onContinueClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    V2BottomSheet(
-        onDismissRequest = onBackClick,
-    ) {
+    V2BottomSheet(onDismissRequest = onBackClick) {
         KeysignPasswordSheetContent(
-            modifier = Modifier
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp,
-                ),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             title = title,
             subtitle = subtitle,
             confirmButtonLabel = confirmButtonLabel,
@@ -113,9 +105,7 @@ fun KeysignPasswordBottomSheet(
             onBackClick = onBackClick,
         )
     }
-
 }
-
 
 @Composable
 fun KeysignPasswordSheetContent(
@@ -130,21 +120,16 @@ fun KeysignPasswordSheetContent(
     onBackClick: () -> Unit,
 ) {
     Column(modifier = modifier) {
-        UiSpacer(
-            size = 32.dp
-        )
+        UiSpacer(size = 32.dp)
 
         UiIcon(
             drawableResId = R.drawable.focus_lock,
             size = 24.dp,
-            modifier = Modifier
-                .align(alignment = Alignment.CenterHorizontally),
+            modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
             tint = Theme.v2.colors.primary.accent4,
         )
 
-        UiSpacer(
-            size = 20.dp
-        )
+        UiSpacer(size = 20.dp)
 
         if (title != null) {
             Text(
@@ -157,18 +142,14 @@ fun KeysignPasswordSheetContent(
         }
 
         FadingHorizontalDivider()
-        UiSpacer(
-            size = 20.dp
-        )
+        UiSpacer(size = 20.dp)
 
         if (subtitle != null) {
             Text(
                 text = subtitle,
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption,
-                modifier = Modifier
-                    .width(211.dp)
-                    .align(Alignment.CenterHorizontally),
+                modifier = Modifier.width(211.dp).align(Alignment.CenterHorizontally),
                 textAlign = TextAlign.Center,
             )
             UiSpacer(16.dp)
@@ -176,66 +157,55 @@ fun KeysignPasswordSheetContent(
 
         val focusRequester = remember { FocusRequester() }
 
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-        }
+        LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
         VsTextInputField(
             textFieldState = passwordFieldState,
             hint = stringResource(R.string.backup_password_screen_enter_password),
-            type = VsTextInputFieldType.Password(
-                isVisible = state.isPasswordVisible,
-                onVisibilityClick = onPasswordVisibilityToggle,
-            ),
+            type =
+                VsTextInputFieldType.Password(
+                    isVisible = state.isPasswordVisible,
+                    onVisibilityClick = onPasswordVisibilityToggle,
+                ),
             focusRequester = focusRequester,
             imeAction = ImeAction.Go,
-            onKeyboardAction = {
-                onContinueClick()
-            },
-            innerState = if (state.passwordError != null)
-                VsTextInputFieldInnerState.Error
-            else VsTextInputFieldInnerState.Default,
+            onKeyboardAction = { onContinueClick() },
+            innerState =
+                if (state.passwordError != null) VsTextInputFieldInnerState.Error
+                else VsTextInputFieldInnerState.Default,
             footNote = state.passwordError?.asString(),
             invisibleIcon = R.drawable.eye_closed,
-            modifier = Modifier
-                .testTag("InputPasswordScreen.password")
+            modifier = Modifier.testTag("InputPasswordScreen.password"),
         )
 
         UiSpacer(size = 10.dp)
 
         if (state.passwordHint != null) {
 
-            var isHintVisible by remember {
-                mutableStateOf(false)
-            }
+            var isHintVisible by remember { mutableStateOf(false) }
 
             val caretRotationDegree by animateFloatAsState(if (isHintVisible) -90f else 90f)
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = {
-                        isHintVisible = !isHintVisible
-                    })
-                    .wrapContentWidth(align = Alignment.Start),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .clickable(onClick = { isHintVisible = !isHintVisible })
+                        .wrapContentWidth(align = Alignment.Start),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = if (isHintVisible) stringResource(R.string.keysign_password_hide_hint) else stringResource(
-                        R.string.keysign_password_show_hint
-                    ),
+                    text =
+                        if (isHintVisible) stringResource(R.string.keysign_password_hide_hint)
+                        else stringResource(R.string.keysign_password_show_hint),
                     color = Theme.v2.colors.text.secondary,
                     style = Theme.brockmann.supplementary.footnote,
                 )
 
-                UiSpacer(
-                    size = 4.dp
-                )
+                UiSpacer(size = 4.dp)
 
                 UiIcon(
                     drawableResId = R.drawable.ic_small_caret_right,
-                    modifier = Modifier
-                        .rotate(degrees = caretRotationDegree),
+                    modifier = Modifier.rotate(degrees = caretRotationDegree),
                     size = 12.dp,
                     tint = Theme.v2.colors.text.secondary,
                 )
@@ -243,9 +213,7 @@ fun KeysignPasswordSheetContent(
 
             AnimatedVisibility(visible = isHintVisible) {
                 Column {
-                    UiSpacer(
-                        size = 8.dp
-                    )
+                    UiSpacer(size = 8.dp)
                     Text(
                         text = state.passwordHint.asString(),
                         color = Theme.v2.colors.text.secondary,
@@ -261,9 +229,7 @@ fun KeysignPasswordSheetContent(
         VsButton(
             label = confirmButtonLabel,
             onClick = onContinueClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("InputPasswordScreen.next")
+            modifier = Modifier.fillMaxWidth().testTag("InputPasswordScreen.next"),
         )
     }
 }

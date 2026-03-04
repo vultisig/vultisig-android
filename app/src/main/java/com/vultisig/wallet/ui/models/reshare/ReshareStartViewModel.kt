@@ -10,11 +10,13 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @HiltViewModel
-internal class ReshareStartViewModel @Inject constructor(
+internal class ReshareStartViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
@@ -37,8 +39,6 @@ internal class ReshareStartViewModel @Inject constructor(
     }
 
     fun join() {
-        viewModelScope.launch {
-            navigator.route(Route.ScanQr())
-        }
+        viewModelScope.launch { navigator.route(Route.ScanQr()) }
     }
 }

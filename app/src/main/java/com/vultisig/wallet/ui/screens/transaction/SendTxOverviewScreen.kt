@@ -67,41 +67,32 @@ internal fun SendTxOverviewScreen(
                 label = stringResource(R.string.transaction_done_title),
                 variant = VsButtonVariant.Primary,
                 size = VsButtonSize.Small,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 12.dp,
-                    ),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
                 onClick = onComplete,
             )
         },
         tokenContent = {
-            val tokenTitle = if (tx.type == UiTransactionInfoType.Send) {
-                stringResource(R.string.tx_overview_screen_tx_send)
-            } else {
-                stringResource(R.string.tx_overview_screen_tx_deposit)
-            }
+            val tokenTitle =
+                if (tx.type == UiTransactionInfoType.Send) {
+                    stringResource(R.string.tx_overview_screen_tx_send)
+                } else {
+                    stringResource(R.string.tx_overview_screen_tx_deposit)
+                }
             VsOverviewToken(
                 header = tokenTitle,
                 valuedToken = tx.token,
                 shape = RoundedCornerShape(24.dp),
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
             )
         },
         detailContent = {
             Column {
-
                 TextDetails(
                     title = stringResource(R.string.tx_overview_screen_tx_from),
                     subtitle = tx.from,
                 )
 
-                VerifyCardDivider(
-                    size = 1.dp,
-                )
-
+                VerifyCardDivider(size = 1.dp)
 
                 if (showSaveToAddressBook) {
                     Column {
@@ -110,18 +101,13 @@ internal fun SendTxOverviewScreen(
                             subtitle = tx.to,
                         )
 
-                        UiSpacer(
-                            8.dp
-                        )
+                        UiSpacer(8.dp)
 
                         AddToAddressBookButton(
-                            modifier = Modifier
-                                .align(Alignment.End),
-                            onClick = onAddToAddressBook
+                            modifier = Modifier.align(Alignment.End),
+                            onClick = onAddToAddressBook,
                         )
-                        UiSpacer(
-                            size = 12.dp
-                        )
+                        UiSpacer(size = 12.dp)
                     }
                 } else {
                     TextDetails(
@@ -131,49 +117,40 @@ internal fun SendTxOverviewScreen(
                 }
 
                 if (tx.memo.isNotEmpty()) {
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
+                    VerifyCardDivider(size = 1.dp)
 
                     TextDetails(
                         title = stringResource(R.string.tx_overview_screen_tx_memo),
                         subtitle = tx.memo,
-                        showAllContent = true
+                        showAllContent = true,
                     )
                 }
 
-                if (tx.token.value.isNotEmpty() && try {
-                        tx.token.value.toBigInteger() > BigInteger.ZERO
-                    } catch (e: Exception) {
-                        false
-                    }
+                if (
+                    tx.token.value.isNotEmpty() &&
+                        try {
+                            tx.token.value.toBigInteger() > BigInteger.ZERO
+                        } catch (e: Exception) {
+                            false
+                        }
                 ) {
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
+                    VerifyCardDivider(size = 1.dp)
 
                     TextDetails(
                         title = stringResource(R.string.deposit_screen_amount_title),
-                        subtitle = tx.token.value
+                        subtitle = tx.token.value,
                     )
                 }
 
-                VerifyCardDivider(
-                    size = 1.dp,
-                )
+                VerifyCardDivider(size = 1.dp)
 
                 Details(
-                    modifier = Modifier.padding(
-                        vertical = 12.dp,
-                    ),
-                    title = stringResource(R.string.tx_overview_screen_tx_network)
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    title = stringResource(R.string.tx_overview_screen_tx_network),
                 ) {
                     Row(
                         modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            4.dp,
-                            Alignment.End
-                        ),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         val chain = tx.token.token.chain
@@ -181,8 +158,7 @@ internal fun SendTxOverviewScreen(
                         Image(
                             painter = painterResource(chain.logo),
                             contentDescription = null,
-                            modifier = Modifier
-                                .size(16.dp),
+                            modifier = Modifier.size(16.dp),
                         )
 
                         Text(
@@ -196,9 +172,7 @@ internal fun SendTxOverviewScreen(
                     }
                 }
 
-                VerifyCardDivider(
-                    size = 1.dp,
-                )
+                VerifyCardDivider(size = 1.dp)
 
                 UiSpacer(12.dp)
 
@@ -207,46 +181,24 @@ internal fun SendTxOverviewScreen(
                     fiatGas = tx.networkFeeFiatValue,
                 )
             }
-        }
+        },
     )
 }
 
 @Composable
-private fun AddToAddressBookButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
-) {
+private fun AddToAddressBookButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(
-            4.dp,
-            Alignment.End
-        ),
-        modifier = modifier
-            .clip(CircleShape)
-            .background(
-                color = Theme.v2.colors.backgrounds.success,
-                shape = CircleShape
-            )
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.alerts.success,
-                shape = CircleShape
-            )
-            .clickOnce(
-                onClick = onClick
-            )
-            .padding(
-                vertical = 8.dp,
-                horizontal = 10.dp
-            ),
+        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+        modifier =
+            modifier
+                .clip(CircleShape)
+                .background(color = Theme.v2.colors.backgrounds.success, shape = CircleShape)
+                .border(width = 1.dp, color = Theme.v2.colors.alerts.success, shape = CircleShape)
+                .clickOnce(onClick = onClick)
+                .padding(vertical = 8.dp, horizontal = 10.dp),
     ) {
-        UiIcon(
-            drawableResId = R.drawable.plus,
-            size = 16.dp,
-            tint = Theme.v2.colors.alerts.success,
-        )
-
+        UiIcon(drawableResId = R.drawable.plus, size = 16.dp, tint = Theme.v2.colors.alerts.success)
 
         Text(
             text = stringResource(R.string.send_tx_overview_add_to_address_book),
@@ -266,10 +218,7 @@ internal fun TxDetails(
 ) {
     val uriHandler = VsUriHandler()
 
-    Details(
-        modifier = modifier,
-        title = title
-    ) {
+    Details(modifier = modifier, title = title) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -280,15 +229,10 @@ internal fun TxDetails(
                 color = Theme.v2.colors.text.primary,
                 overflow = TextOverflow.MiddleEllipsis,
                 maxLines = 1,
-                modifier = Modifier
-                    .widthIn(max = 100.dp),
+                modifier = Modifier.widthIn(max = 100.dp),
             )
 
-            CopyIcon(
-                textToCopy = link,
-                size = 12.dp,
-                onCopyCompleted = onTxHashCopied
-            )
+            CopyIcon(textToCopy = link, size = 12.dp, onCopyCompleted = onTxHashCopied)
 
             UiSpacer(4.dp)
 
@@ -296,9 +240,7 @@ internal fun TxDetails(
                 drawableResId = R.drawable.ic_square_arrow_top_right,
                 size = 16.dp,
                 tint = Theme.v2.colors.text.primary,
-                onClick = {
-                    uriHandler.openUri(link)
-                }
+                onClick = { uriHandler.openUri(link) },
             )
         }
     }
@@ -312,17 +254,20 @@ private fun PreviewSendTxOverviewScreen() {
         transactionLink = "",
         onComplete = {},
         onAddToAddressBook = {},
-        tx = TransactionTypeUiModel.Deposit(
-            depositTransactionUiModel = DepositTransactionUiModel(
-                token = ValuedToken.Empty,
-                srcAddress = "abx123abx123abx123abx123ab",
-                networkFeeFiatValue = "",
-                memo = "sdfsdfsdfsdfs",
-                dstAddress = "abx123abx123abx123abx123ab"
-            )
-        ).toUiTransactionInfo(),
+        tx =
+            TransactionTypeUiModel.Deposit(
+                    depositTransactionUiModel =
+                        DepositTransactionUiModel(
+                            token = ValuedToken.Empty,
+                            srcAddress = "abx123abx123abx123abx123ab",
+                            networkFeeFiatValue = "",
+                            memo = "sdfsdfsdfsdfs",
+                            dstAddress = "abx123abx123abx123abx123ab",
+                        )
+                )
+                .toUiTransactionInfo(),
         showSaveToAddressBook = true,
-        transactionStatus = TransactionStatus.Broadcasted
+        transactionStatus = TransactionStatus.Broadcasted,
     )
 }
 
@@ -337,4 +282,9 @@ internal data class UiTransactionInfo(
     val signMethod: String = "",
 )
 
-internal enum class UiTransactionInfoType { Send, Deposit, Swap, SignMessage }
+internal enum class UiTransactionInfoType {
+    Send,
+    Deposit,
+    Swap,
+    SignMessage,
+}

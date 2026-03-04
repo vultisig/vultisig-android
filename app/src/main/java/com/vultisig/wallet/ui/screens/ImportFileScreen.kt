@@ -54,18 +54,14 @@ import com.vultisig.wallet.ui.utils.ActivityResultContractsGetContentWithMimeTyp
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun ImportFileScreen(
-    viewModel: ImportFileViewModel = hiltViewModel(),
-) {
+internal fun ImportFileScreen(viewModel: ImportFileViewModel = hiltViewModel()) {
     val uiModel by viewModel.uiModel.collectAsState()
     val snackBarHostState = rememberVsSnackbarState()
     val context = LocalContext.current
 
     LaunchedEffect(key1 = Unit) {
         viewModel.snackBarChannelFlow.collect { snackBarMessage ->
-            snackBarMessage?.let {
-                snackBarHostState.show(it.asString(context))
-            }
+            snackBarMessage?.let { snackBarHostState.show(it.asString(context)) }
         }
     }
 
@@ -79,19 +75,16 @@ internal fun ImportFileScreen(
     ImportFileScreen(
         uiModel = uiModel,
         passwordTextFieldState = viewModel.passwordTextFieldState,
-        onImportFile = {
-            launcher.launch("*/*")
-        },
+        onImportFile = { launcher.launch("*/*") },
         onContinue = viewModel::saveFileToAppDir,
         snackBarHostState = snackBarHostState,
         onHidePasswordPromptDialog = viewModel::hidePasswordPromptDialog,
         onConfirmPasswordClick = viewModel::decryptVaultData,
         onTogglePasswordVisibilityClick = viewModel::togglePasswordVisibility,
         onBackClick = viewModel::back,
-        onImportVult = viewModel::importVult
+        onImportVult = viewModel::importVult,
     )
 }
-
 
 @Composable
 private fun ImportFileScreen(
@@ -104,16 +97,17 @@ private fun ImportFileScreen(
     passwordTextFieldState: TextFieldState = TextFieldState(),
     onTogglePasswordVisibilityClick: () -> Unit = {},
     onConfirmPasswordClick: () -> Unit = {},
-    snackBarHostState: VSSnackbarState = rememberVsSnackbarState()
+    snackBarHostState: VSSnackbarState = rememberVsSnackbarState(),
 ) {
     if (uiModel.showPasswordPrompt) {
         KeysignPasswordBottomSheet(
             subtitle = stringResource(R.string.import_file_screen_enter_password_sub),
             confirmButtonLabel = stringResource(R.string.fast_vault_password_screen_next),
-            state = KeysignPasswordUiModel(
-                isPasswordVisible = !uiModel.isPasswordObfuscated,
-                passwordError = uiModel.passwordErrorHint
-            ),
+            state =
+                KeysignPasswordUiModel(
+                    isPasswordVisible = !uiModel.isPasswordObfuscated,
+                    passwordError = uiModel.passwordErrorHint,
+                ),
             passwordFieldState = passwordTextFieldState,
             onPasswordVisibilityToggle = onTogglePasswordVisibilityClick,
             onContinueClick = onConfirmPasswordClick,
@@ -128,83 +122,78 @@ private fun ImportFileScreen(
             if (uiModel.isZip == false)
                 VsButton(
                     label = stringResource(R.string.send_continue_button),
-                    state = if (uiModel.fileName.isNullOrBlank())
-                        VsButtonState.Disabled
-                    else VsButtonState.Enabled,
+                    state =
+                        if (uiModel.fileName.isNullOrBlank()) VsButtonState.Disabled
+                        else VsButtonState.Enabled,
                     onClick = onContinue,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            vertical = 16.dp,
-                            horizontal = 12.dp,
-                        )
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 12.dp),
                 )
-        }
+        },
     ) {
         Box {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxSize(),
-            ) {
-
+            Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize()) {
                 Column(
                     horizontalAlignment = CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            color = when {
-                                uiModel.error != null -> Theme.v2.colors.backgrounds.error
-                                !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.backgrounds.success
-                                else -> Theme.v2.colors.backgrounds.secondary
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .dashedBorder(
-                            width = 1.dp,
-                            color = when {
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .background(
+                                color =
+                                    when {
+                                        uiModel.error != null -> Theme.v2.colors.backgrounds.error
+                                        !uiModel.fileName.isNullOrBlank() ->
+                                            Theme.v2.colors.backgrounds.success
+                                        else -> Theme.v2.colors.backgrounds.secondary
+                                    },
+                                shape = RoundedCornerShape(12.dp),
+                            )
+                            .dashedBorder(
+                                width = 1.dp,
+                                color =
+                                    when {
+                                        uiModel.error != null -> Theme.v2.colors.alerts.error
+                                        !uiModel.fileName.isNullOrBlank() ->
+                                            Theme.v2.colors.alerts.success
+                                        else -> Theme.v2.colors.border.normal
+                                    },
+                                cornerRadius = 12.dp,
+                                dashLength = 4.dp,
+                                intervalLength = 4.dp,
+                            )
+                            .padding(horizontal = 16.dp, vertical = 48.dp)
+                            .clickable(onClick = onImportFile),
+                ) {
+                    Icon(
+                        painter =
+                            painterResource(
+                                id =
+                                    when {
+                                        !uiModel.fileName.isNullOrBlank() ->
+                                            R.drawable.ic_page_check
+                                        else -> R.drawable.ic_cloud_upload
+                                    }
+                            ),
+                        contentDescription = null,
+                        tint =
+                            when {
                                 uiModel.error != null -> Theme.v2.colors.alerts.error
                                 !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
-                                else -> Theme.v2.colors.border.normal
+                                else -> Theme.v2.colors.primary.accent4
                             },
-                            cornerRadius = 12.dp,
-                            dashLength = 4.dp,
-                            intervalLength = 4.dp,
-                        )
-                        .padding(
-                            horizontal = 16.dp,
-                            vertical = 48.dp,
-                        )
-                        .clickable(onClick = onImportFile)
-                ) {
-
-                    Icon(
-                        painter = painterResource(
-                            id = when {
-                                !uiModel.fileName.isNullOrBlank() -> R.drawable.ic_page_check
-                                else -> R.drawable.ic_cloud_upload
-                            }
-                        ),
-                        contentDescription = null,
-                        tint = when {
-                            uiModel.error != null -> Theme.v2.colors.alerts.error
-                            !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
-                            else -> Theme.v2.colors.primary.accent4
-                        },
-                        modifier = Modifier
-                            .size(48.dp)
+                        modifier = Modifier.size(48.dp),
                     )
 
                     Text(
-                        text = uiModel.error?.asString()
-                            ?: uiModel.fileName
-                            ?: stringResource(R.string.import_file_import_your_vault_share),
-                        color = when {
-                            uiModel.error != null -> Theme.v2.colors.alerts.error
-                            !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
-                            else -> Theme.v2.colors.text.secondary
-                        },
+                        text =
+                            uiModel.error?.asString()
+                                ?: uiModel.fileName
+                                ?: stringResource(R.string.import_file_import_your_vault_share),
+                        color =
+                            when {
+                                uiModel.error != null -> Theme.v2.colors.alerts.error
+                                !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
+                                else -> Theme.v2.colors.text.secondary
+                            },
                         style = Theme.brockmann.headings.subtitle,
                         textAlign = TextAlign.Center,
                     )
@@ -214,42 +203,33 @@ private fun ImportFileScreen(
 
                 if (uiModel.fileName.isNullOrBlank()) {
                     Text(
-                        text = stringResource(R.string.import_file_supported_file_types_dat_bak_vult),
+                        text =
+                            stringResource(R.string.import_file_supported_file_types_dat_bak_vult),
                         color = Theme.v2.colors.text.tertiary,
                         style = Theme.brockmann.supplementary.footnote,
                     )
                 }
 
                 if (uiModel.isZip == true) {
-                    ZipOutput(
-                        zipOutputs = uiModel.zipOutputs,
-                        onImportVult = onImportVult
-                    )
+                    ZipOutput(zipOutputs = uiModel.zipOutputs, onImportVult = onImportVult)
                 }
-
             }
 
             VsSnackBar(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                snackbarState = snackBarHostState
+                snackbarState = snackBarHostState,
             )
         }
-
     }
 }
 
 @Composable
-private fun ZipOutput(
-    zipOutputs: List<AppZipEntry>,
-    onImportVult: (AppZipEntry) -> Unit,
-) {
+private fun ZipOutput(zipOutputs: List<AppZipEntry>, onImportVult: (AppZipEntry) -> Unit) {
     LazyColumn {
         itemsIndexed(zipOutputs) { index, zipOutput ->
             Column {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -257,15 +237,11 @@ private fun ZipOutput(
                         color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.supplementary.footnote,
                     )
-                    UiSpacer(
-                        weight = 1f
-                    )
+                    UiSpacer(weight = 1f)
                     VsButton(
                         label = stringResource(R.string.import_file_screen_title),
                         size = VsButtonSize.Mini,
-                        onClick = {
-                            onImportVult(zipOutput)
-                        },
+                        onClick = { onImportVult(zipOutput) },
                     )
                 }
 
@@ -274,17 +250,15 @@ private fun ZipOutput(
                 }
             }
         }
-
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
 private fun ImportFilePreview() {
     ImportFileScreen(
         uiModel = ImportFileState(isZip = true),
-        snackBarHostState = rememberVsSnackbarState()
+        snackBarHostState = rememberVsSnackbarState(),
     )
 }
 
@@ -293,6 +267,6 @@ private fun ImportFilePreview() {
 private fun ImportFilePasswordPromptPreview() {
     ImportFileScreen(
         uiModel = ImportFileState(showPasswordPrompt = true),
-        snackBarHostState = rememberVsSnackbarState()
+        snackBarHostState = rememberVsSnackbarState(),
     )
 }

@@ -34,21 +34,20 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun VerifySignMessageScreen(
-    viewModel: VerifySignMessageViewModel = hiltViewModel(),
-) {
+internal fun VerifySignMessageScreen(viewModel: VerifySignMessageViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val promptTitle = stringResource(R.string.biometry_keysign_login_button)
 
-    val authorize: () -> Unit = remember(context) {
-        {
-            context.launchBiometricPrompt(
-                promptTitle = promptTitle,
-                onAuthorizationSuccess = viewModel::authFastSign,
-            )
+    val authorize: () -> Unit =
+        remember(context) {
+            {
+                context.launchBiometricPrompt(
+                    promptTitle = promptTitle,
+                    onAuthorizationSuccess = viewModel::authFastSign,
+                )
+            }
         }
-    }
 
     val errorText = state.errorText
     if (errorText != null) {
@@ -99,20 +98,14 @@ private fun VerifySignMessageScreen(
     onConfirm: () -> Unit,
 ) {
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 16.dp)
-            ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(all = 16.dp)) {
                 if (hasFastSign) {
                     VsButton(
                         label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
                         onClick = onFastSignClick,
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                     )
 
                     UiSpacer(size = 16.dp)
@@ -121,36 +114,29 @@ private fun VerifySignMessageScreen(
                         label = confirmTitle,
                         onClick = onConfirm,
                         variant = VsButtonVariant.Secondary,
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 } else {
                     VsButton(
                         label = confirmTitle,
                         onClick = onConfirm,
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
-        }
+        },
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier
-                .padding(it)
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp
-                )
-                .verticalScroll(rememberScrollState()),
+            modifier =
+                Modifier.padding(it)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .verticalScroll(rememberScrollState()),
         ) {
-
             SignMessageBox(
                 title = stringResource(R.string.verify_sign_message_signing_method),
                 value = method,
             )
-
 
             SignMessageBox(
                 title = stringResource(R.string.verify_sign_message_message_sign),
@@ -160,45 +146,34 @@ private fun VerifySignMessageScreen(
     }
 }
 
-
 @Composable
-private fun SignMessageBox(
-    title: String,
-    value: String,
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
+private fun SignMessageBox(title: String, value: String) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = title,
             color = Theme.v2.colors.text.tertiary,
-            style = Theme.brockmann.supplementary.caption
+            style = Theme.brockmann.supplementary.caption,
         )
 
         Text(
             text = value,
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .background(
-                    Theme.v2.colors.backgrounds.disabled,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .padding(
-                    horizontal = 24.dp,
-                    vertical = 20.dp,
-                ),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.border.light,
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .background(
+                        Theme.v2.colors.backgrounds.disabled,
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
             color = Theme.v2.colors.text.tertiary,
-            style = Theme.brockmann.body.s.medium
+            style = Theme.brockmann.body.s.medium,
         )
     }
 }
-
 
 @Preview
 @Composable

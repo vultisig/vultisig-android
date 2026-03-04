@@ -13,11 +13,13 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.util.password.InputPasswordViewModelDelegate
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @HiltViewModel
-internal class MigrationPasswordViewModel @Inject constructor(
+internal class MigrationPasswordViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vultiSignerRepository: VultiSignerRepository,
@@ -27,13 +29,14 @@ internal class MigrationPasswordViewModel @Inject constructor(
 
     private val args = savedStateHandle.toRoute<Route.Migration.Password>()
 
-    private val delegate = InputPasswordViewModelDelegate(
-        vaultId = args.vaultId,
-        navigator = navigator,
-        vultiSignerRepository = vultiSignerRepository,
-        vaultRepository = vaultRepository,
-        vaultDataStoreRepository = vaultDataStoreRepository,
-    )
+    private val delegate =
+        InputPasswordViewModelDelegate(
+            vaultId = args.vaultId,
+            navigator = navigator,
+            vultiSignerRepository = vultiSignerRepository,
+            vaultRepository = vaultRepository,
+            vaultDataStoreRepository = vaultDataStoreRepository,
+        )
 
     val state = delegate.state
     val passwordFieldState = delegate.passwordFieldState
@@ -49,8 +52,9 @@ internal class MigrationPasswordViewModel @Inject constructor(
     fun proceed() {
         viewModelScope.launch {
             if (delegate.checkIfPasswordIsValid()) {
-                val vault = vaultRepository.get(args.vaultId)
-                    ?: error("No vault with id ${args.vaultId} exists")
+                val vault =
+                    vaultRepository.get(args.vaultId)
+                        ?: error("No vault with id ${args.vaultId} exists")
 
                 navigator.route(
                     Route.VaultInfo.Email(
@@ -63,5 +67,4 @@ internal class MigrationPasswordViewModel @Inject constructor(
             }
         }
     }
-
 }

@@ -24,30 +24,26 @@ import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun TokenNotFoundError(
-    onRetryClick: () -> Unit,
-) {
+internal fun TokenNotFoundError(onRetryClick: () -> Unit) {
     V2Container(
         type = ContainerType.SECONDARY,
         cornerType = CornerType.RoundedCornerShape(size = 12.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Image(
                 painter = painterResource(id = R.drawable.crypto_outline),
                 contentDescription = "token not found",
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
             UiSpacer(size = 12.dp)
             Text(
                 text = stringResource(R.string.custom_token_token_not_found),
                 color = Theme.v2.colors.text.primary,
-                style = Theme.brockmann.headings.title3
+                style = Theme.brockmann.headings.title3,
             )
             UiSpacer(size = 8.dp)
             Text(
@@ -55,23 +51,16 @@ internal fun TokenNotFoundError(
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.footnote,
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(
-                        horizontal = 50.dp
-                    )
+                modifier = Modifier.padding(horizontal = 50.dp),
             )
-            UiSpacer(
-                size = 16.dp
-            )
+            UiSpacer(size = 16.dp)
 
             VsButton(
                 label = stringResource(R.string.retry),
                 modifier = Modifier.fillMaxWidth(),
-                onClick = onRetryClick
+                onClick = onRetryClick,
             )
-            UiSpacer(
-                size = 4.dp
-            )
+            UiSpacer(size = 4.dp)
         }
     }
 }
@@ -79,7 +68,5 @@ internal fun TokenNotFoundError(
 @Preview
 @Composable
 private fun TokenNotFoundErrorPreview() {
-    TokenNotFoundError(
-        onRetryClick = {}
-    )
+    TokenNotFoundError(onRetryClick = {})
 }

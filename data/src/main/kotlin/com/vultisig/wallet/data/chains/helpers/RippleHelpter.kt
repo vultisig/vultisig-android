@@ -25,81 +25,77 @@ object RippleHelper {
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Ripple) { "Coin is not XRP" }
 
+        val (sequence, gas, lastLedgerSequence) =
+            keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple
+                ?: error("getPreSignedInputData: fail to get account number and sequence")
 
-        val (sequence, gas,lastLedgerSequence) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple
-            ?: error("getPreSignedInputData: fail to get account number and sequence")
-
-        val publicKey = PublicKey(
-            keysignPayload.coin.hexPublicKey.hexToByteArray(),
-            PublicKeyType.SECP256K1
-        )
-
+        val publicKey =
+            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
 
         val memoValue = keysignPayload.memo
 
-        val input = Ripple.SigningInput.newBuilder()
-            .setFee(gas.toLong())
-            .setSequence(sequence.toInt())
-            .setAccount(keysignPayload.coin.address)
-            .setPublicKey(ByteString.copyFrom(publicKey.data()))
-            .setLastLedgerSequence(lastLedgerSequence.toInt())
-        
-        val operation = Ripple.OperationPayment.newBuilder()
-            .setDestination(keysignPayload.toAddress)
-            .setAmount(keysignPayload.toAmount.toLong())
+        val input =
+            Ripple.SigningInput.newBuilder()
+                .setFee(gas.toLong())
+                .setSequence(sequence.toInt())
+                .setAccount(keysignPayload.coin.address)
+                .setPublicKey(ByteString.copyFrom(publicKey.data()))
+                .setLastLedgerSequence(lastLedgerSequence.toInt())
+
+        val operation =
+            Ripple.OperationPayment.newBuilder()
+                .setDestination(keysignPayload.toAddress)
+                .setAmount(keysignPayload.toAmount.toLong())
 
         if (!memoValue.isNullOrBlank()) {
             val memoAsLong = memoValue.toLongOrNull()
             if (memoAsLong != null) {
-                operation
-                    .setDestinationTag(memoAsLong)
-                    .build()
-                input
-                    .setOpPayment(operation)
+                operation.setDestinationTag(memoAsLong).build()
+                input.setOpPayment(operation)
             } else {
-                val txJson: MutableMap<String, Any> = mutableMapOf(
-                    "TransactionType" to "Payment",
-                    "Account" to keysignPayload.coin.address,
-                    "Destination" to keysignPayload.toAddress,
-                    "Amount" to keysignPayload.toAmount.toString(),
-                    "Fee" to gas.toString(),
-                    "Sequence" to sequence,
-                    "LastLedgerSequence" to lastLedgerSequence,
-                    "Memos" to listOf(
-                        mapOf(
-                            "Memo" to mapOf(
-                                "MemoData" to memoValue.toByteArray(Charsets.UTF_8)
-                                    .joinToString("") { "%02x".format(it) }
-                            )
-                        )
+                val txJson: MutableMap<String, Any> =
+                    mutableMapOf(
+                        "TransactionType" to "Payment",
+                        "Account" to keysignPayload.coin.address,
+                        "Destination" to keysignPayload.toAddress,
+                        "Amount" to keysignPayload.toAmount.toString(),
+                        "Fee" to gas.toString(),
+                        "Sequence" to sequence,
+                        "LastLedgerSequence" to lastLedgerSequence,
+                        "Memos" to
+                            listOf(
+                                mapOf(
+                                    "Memo" to
+                                        mapOf(
+                                            "MemoData" to
+                                                memoValue.toByteArray(Charsets.UTF_8).joinToString(
+                                                    ""
+                                                ) {
+                                                    "%02x".format(it)
+                                                }
+                                        )
+                                )
+                            ),
                     )
-                )
-                val jsonData = try {
-                    org.json.JSONObject(txJson).toString()
-                } catch (e: Exception) {
-                    Timber.e("Failed to create JSON string ${e.message}")
-                    error("Failed to create JSON string ${e.message}")
-                }
-                input
-                    .setRawJson(jsonData)
+                val jsonData =
+                    try {
+                        org.json.JSONObject(txJson).toString()
+                    } catch (e: Exception) {
+                        Timber.e("Failed to create JSON string ${e.message}")
+                        error("Failed to create JSON string ${e.message}")
+                    }
+                input.setRawJson(jsonData)
             }
-
         } else {
-            input
-                .setOpPayment(operation)
+            input.setOpPayment(operation)
         }
         return input.build().toByteArray()
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
-        val inputData = getPreSignedInputData(
-            keysignPayload
-        )
+        val inputData = getPreSignedInputData(keysignPayload)
 
-        val hashes = TransactionCompiler.preImageHashes(
-            CoinType.XRP,
-            inputData
-        )
+        val hashes = TransactionCompiler.preImageHashes(CoinType.XRP, inputData)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
                 .checkError()
@@ -110,33 +106,25 @@ object RippleHelper {
         keysignPayload: KeysignPayload,
         signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
-        val publicKey = PublicKey(
-            keysignPayload.coin.hexPublicKey.hexToByteArray(),
-            PublicKeyType.SECP256K1
-        )
+        val publicKey =
+            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
 
-        val inputData = getPreSignedInputData(
-            keysignPayload = keysignPayload,
-        )
-        val hashes = TransactionCompiler.preImageHashes(
-            CoinType.XRP,
-            inputData
-        )
-        val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
-            .parseFrom(hashes)
-            .checkError()
+        val inputData = getPreSignedInputData(keysignPayload = keysignPayload)
+        val hashes = TransactionCompiler.preImageHashes(CoinType.XRP, inputData)
+        val preSigningOutput =
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+                .checkError()
 
         val allSignatures = DataVector()
         val publicKeys = DataVector()
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
-        signatures[key]
-            ?.getSignature()
-            ?: error("Signature not found")
+        signatures[key]?.getSignature() ?: error("Signature not found")
 
         signatures[key]?.let {
-            if (!publicKey.verify(
+            if (
+                !publicKey.verify(
                     it.getSignatureWithRecoveryID(),
-                    preSigningOutput.dataHash.toByteArray()
+                    preSigningOutput.dataHash.toByteArray(),
                 )
             ) {
                 Timber.e("Invalid signature")
@@ -146,16 +134,15 @@ object RippleHelper {
             publicKeys.add(publicKey.data())
         }
 
+        val compileWithSignature =
+            TransactionCompiler.compileWithSignatures(
+                CoinType.XRP,
+                inputData,
+                allSignatures,
+                publicKeys,
+            )
 
-        val compileWithSignature = TransactionCompiler.compileWithSignatures(
-            CoinType.XRP,
-            inputData,
-            allSignatures,
-            publicKeys
-        )
-
-        val output = Ripple.SigningOutput
-            .parseFrom(compileWithSignature)
+        val output = Ripple.SigningOutput.parseFrom(compileWithSignature)
 
         if (output.errorMessage.isNotEmpty()) {
             val errorMessage = output.errorMessage
@@ -165,8 +152,7 @@ object RippleHelper {
 
         return SignedTransactionResult(
             rawTransaction = output.encoded.toByteArray().toHexString(),
-            transactionHash = ""
+            transactionHash = "",
         )
     }
-
 }

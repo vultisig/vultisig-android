@@ -17,26 +17,24 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
-import kotlinx.serialization.json.Json
-import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.serialization.json.Json
+import timber.log.Timber
 
 interface BlockChairApi {
-    suspend fun getAddressInfo(
-        chain: Chain,
-        address: String,
-    ): BlockChairInfo?
+    suspend fun getAddressInfo(chain: Chain, address: String): BlockChairInfo?
 
     suspend fun getBlockChairStats(chain: Chain): BigInteger
+
     suspend fun broadcastTransaction(chain: Chain, signedTransaction: String): String
-    suspend fun getTsStatus(
-        chain: Chain,
-        txHash: String,
-    ): BlockChainStatusDeserialized?
+
+    suspend fun getTsStatus(chain: Chain, txHash: String): BlockChainStatusDeserialized?
 }
 
-internal class BlockChairApiImp @Inject constructor(
+internal class BlockChairApiImp
+@Inject
+constructor(
     private val json: Json,
     private val httpClient: HttpClient,
     private val utxoStatusResponseSerializer: UTXOStatusResponseSerializer,
@@ -45,24 +43,24 @@ internal class BlockChairApiImp @Inject constructor(
         private const val BASE_URL = "https://api.vultisig.com/blockchair"
     }
 
-    private fun getChainName(chain: Chain): String = when (chain) {
-        Chain.Bitcoin -> "bitcoin"
-        Chain.BitcoinCash -> "bitcoin-cash"
-        Chain.Litecoin -> "litecoin"
-        Chain.Dogecoin -> "dogecoin"
-        Chain.Dash -> "dash"
-        Chain.Zcash -> "zcash"
-        Chain.Cardano -> "cardano"
-        else -> throw IllegalArgumentException("Unsupported chain $chain")
-    }
+    private fun getChainName(chain: Chain): String =
+        when (chain) {
+            Chain.Bitcoin -> "bitcoin"
+            Chain.BitcoinCash -> "bitcoin-cash"
+            Chain.Litecoin -> "litecoin"
+            Chain.Dogecoin -> "dogecoin"
+            Chain.Dash -> "dash"
+            Chain.Zcash -> "zcash"
+            Chain.Cardano -> "cardano"
+            else -> throw IllegalArgumentException("Unsupported chain $chain")
+        }
 
-    override suspend fun getAddressInfo(
-        chain: Chain,
-        address: String,
-    ): BlockChairInfo? {
+    override suspend fun getAddressInfo(chain: Chain, address: String): BlockChairInfo? {
         try {
             val response =
-                httpClient.get("$BASE_URL/${getChainName(chain)}/dashboards/address/${address}?state=latest") {
+                httpClient.get(
+                    "$BASE_URL/${getChainName(chain)}/dashboards/address/${address}?state=latest"
+                ) {
                     header("Content-Type", "application/json")
                 }
             val responseData = response.body<BlockChairInfoJson>()
@@ -84,10 +82,11 @@ internal class BlockChairApiImp @Inject constructor(
 
     suspend fun broadcastTransactionMempool(signedTransaction: String): String {
         try {
-            val response = httpClient.post("https://api.vultisig.com/bitcoin/") {
-                header("Content-Type", "text/plain")
-                setBody(signedTransaction)
-            }
+            val response =
+                httpClient.post("https://api.vultisig.com/bitcoin/") {
+                    header("Content-Type", "text/plain")
+                    setBody(signedTransaction)
+                }
             if (response.status != HttpStatusCode.OK) {
                 Timber.e("Failed to broadcast transaction: ${response.bodyAsText()}")
                 throw Exception("Failed to broadcast transaction")
@@ -98,15 +97,15 @@ internal class BlockChairApiImp @Inject constructor(
             throw e
         }
     }
+
     override suspend fun broadcastTransaction(chain: Chain, signedTransaction: String): String {
         when (chain) {
             Chain.Bitcoin -> {
                 return broadcastTransactionMempool(signedTransaction)
             }
             else -> {
-                val bodyContent = json.encodeToString(
-                    TransactionHashRequestBodyJson(signedTransaction)
-                )
+                val bodyContent =
+                    json.encodeToString(TransactionHashRequestBodyJson(signedTransaction))
                 Timber.d("bodyContent:$bodyContent")
                 val response =
                     httpClient.post("$BASE_URL/${getChainName(chain)}/push/transaction") {
@@ -124,10 +123,7 @@ internal class BlockChairApiImp @Inject constructor(
         }
     }
 
-    override suspend fun getTsStatus(
-        chain: Chain,
-        txHash: String,
-    ): BlockChainStatusDeserialized? {
+    override suspend fun getTsStatus(chain: Chain, txHash: String): BlockChainStatusDeserialized? {
         val response =
             httpClient.get("$BASE_URL/${getChainName(chain)}/dashboards/transaction/${txHash}")
 
@@ -140,9 +136,6 @@ internal class BlockChairApiImp @Inject constructor(
                 .e("Failed to get tx status: ${response.status} for $txHash")
             return null
         }
-        return json.decodeFromString(
-            utxoStatusResponseSerializer,
-            response.bodyAsText()
-        )
+        return json.decodeFromString(utxoStatusResponseSerializer, response.bodyAsText())
     }
 }

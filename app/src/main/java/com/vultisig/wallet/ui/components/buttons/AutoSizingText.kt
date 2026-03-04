@@ -3,8 +3,6 @@ package com.vultisig.wallet.ui.components.buttons
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -13,7 +11,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
-
 
 @Composable
 internal fun AutoSizingText(
@@ -32,28 +29,20 @@ internal fun AutoSizingText(
         }
 
         // First, try to measure at original font size
-        val originalMeasurable = subcompose("originalText") {
-            Text(
-                text = text,
-                style = style,
-                color = color,
-                maxLines = 1,
-                softWrap = false,
-            )
-        }
+        val originalMeasurable =
+            subcompose("originalText") {
+                Text(text = text, style = style, color = color, maxLines = 1, softWrap = false)
+            }
 
-        val originalPlaceables = originalMeasurable.map {
-            it.measure(Constraints(maxWidth = Constraints.Infinity))
-        }
+        val originalPlaceables =
+            originalMeasurable.map { it.measure(Constraints(maxWidth = Constraints.Infinity)) }
         val originalWidth = originalPlaceables.firstOrNull()?.width ?: 0
 
         // If it fits, use original size
         if (originalWidth <= maxWidth) {
             val finalPlaceable = originalPlaceables.firstOrNull()
             if (finalPlaceable != null) {
-                layout(finalPlaceable.width, finalPlaceable.height) {
-                    finalPlaceable.place(0, 0)
-                }
+                layout(finalPlaceable.width, finalPlaceable.height) { finalPlaceable.place(0, 0) }
             } else {
                 layout(0, 0) {}
             }
@@ -68,19 +57,19 @@ internal fun AutoSizingText(
             val mid = (low + high) / 2
             val testStyle = style.copy(fontSize = mid.sp)
 
-            val measurable = subcompose("text_$iteration") {
-                Text(
-                    text = text,
-                    style = testStyle,
-                    color = color,
-                    maxLines = 1,
-                    softWrap = false,
-                )
-            }
+            val measurable =
+                subcompose("text_$iteration") {
+                    Text(
+                        text = text,
+                        style = testStyle,
+                        color = color,
+                        maxLines = 1,
+                        softWrap = false,
+                    )
+                }
 
-            val placeables = measurable.map {
-                it.measure(Constraints(maxWidth = Constraints.Infinity))
-            }
+            val placeables =
+                measurable.map { it.measure(Constraints(maxWidth = Constraints.Infinity)) }
             val textWidth = placeables.firstOrNull()?.width ?: 0
 
             if (textWidth <= maxWidth) {
@@ -93,25 +82,17 @@ internal fun AutoSizingText(
             if ((high - low) < 0.5f) return@repeat
         }
 
-        val finalMeasurable = subcompose("finalText") {
-            Text(
-                text = text,
-                style = bestStyle,
-                color = color,
-                maxLines = 1,
-                softWrap = false,
-            )
-        }
+        val finalMeasurable =
+            subcompose("finalText") {
+                Text(text = text, style = bestStyle, color = color, maxLines = 1, softWrap = false)
+            }
 
-        val placeables = finalMeasurable.map {
-            it.measure(Constraints(maxWidth = maxWidth.toInt()))
-        }
+        val placeables =
+            finalMeasurable.map { it.measure(Constraints(maxWidth = maxWidth.toInt())) }
         val placeable = placeables.firstOrNull()
 
         if (placeable != null) {
-            layout(placeable.width, placeable.height) {
-                placeable.place(0, 0)
-            }
+            layout(placeable.width, placeable.height) { placeable.place(0, 0) }
         } else {
             layout(0, 0) {}
         }

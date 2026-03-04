@@ -12,7 +12,5 @@ interface VaultMetadataDao {
     @Query("SELECT * FROM vaultMetadata WHERE vaultId = :vaultId")
     suspend fun getBy(vaultId: VaultId): VaultMetadataEntity?
 
-    @Upsert
-    suspend fun upsert(entity: VaultMetadataEntity)
-
+    @Upsert suspend fun upsert(entity: VaultMetadataEntity)
 }

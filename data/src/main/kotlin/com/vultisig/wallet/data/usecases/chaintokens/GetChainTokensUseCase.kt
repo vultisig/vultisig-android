@@ -8,36 +8,29 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.SplTokenRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.OneInchToCoinsUseCase
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import javax.inject.Inject
 
+interface GetChainTokensUseCase : (Chain, Vault) -> Flow<List<Coin>>
 
-interface GetChainTokensUseCase:(Chain, Vault) ->  Flow<List<Coin>>
-
-internal class GetChainTokensUseCaseImpl @Inject constructor(
+internal class GetChainTokensUseCaseImpl
+@Inject
+constructor(
     private val tokenRepository: TokenRepository,
     private val splTokenRepository: SplTokenRepository,
     private val oneInchApi: OneInchApi,
     private val oneInchToCoins: OneInchToCoinsUseCase,
 ) : GetChainTokensUseCase {
 
-
-    override fun invoke(
-        chain: Chain,
-        vault: Vault,
-    ): Flow<List<Coin>> = flow {
-
+    override fun invoke(chain: Chain, vault: Vault): Flow<List<Coin>> = flow {
         val builtInTokens = tokenRepository.builtInTokens.first().filter { it.chain == chain }
         emitUniqueTokens(builtInTokens)
 
         val refreshedTokens = tokenRepository.getRefreshTokens(chain, vault)
-        emitUniqueTokens(
-            builtInTokens,
-            refreshedTokens
-        )
+        emitUniqueTokens(builtInTokens, refreshedTokens)
 
         when (chain.standard) {
             TokenStandard.EVM -> {
@@ -60,18 +53,10 @@ internal class GetChainTokensUseCaseImpl @Inject constructor(
                 emitUniqueTokens(
                     refreshedTokens,
                     builtInTokens,
-                    oneInchToCoins(
-                        oneInchTokens.tokens,
-                        chain
-                    ),
+                    oneInchToCoins(oneInchTokens.tokens, chain),
                 )
             }
-            .onFailure {
-                emitUniqueTokens(
-                    refreshedTokens,
-                    builtInTokens,
-                )
-            }
+            .onFailure { emitUniqueTokens(refreshedTokens, builtInTokens) }
     }
 
     private suspend fun FlowCollector<List<Coin>>.emitSolTokens(
@@ -80,48 +65,38 @@ internal class GetChainTokensUseCaseImpl @Inject constructor(
         refreshedTokens: List<Coin>,
         builtInTokens: List<Coin>,
     ) {
-        val address = vault.coins.firstOrNull { it.chain == chain }?.address ?: run {
-            emitUniqueTokens(
-                refreshedTokens,
-                builtInTokens,
-            )
-            return
-        }
-        val tokens = runCatching { splTokenRepository.getTokens(address) }
-            .getOrElse { emptyList() }
-        emitUniqueTokens(
-            refreshedTokens,
-            builtInTokens,
-            tokens,
-        )
+        val address =
+            vault.coins.firstOrNull { it.chain == chain }?.address
+                ?: run {
+                    emitUniqueTokens(refreshedTokens, builtInTokens)
+                    return
+                }
+        val tokens = runCatching { splTokenRepository.getTokens(address) }.getOrElse { emptyList() }
+        emitUniqueTokens(refreshedTokens, builtInTokens, tokens)
 
-        val jupiterTokens = runCatching { splTokenRepository.getJupiterTokens() }
-            .getOrElse { emptyList() }
-        emitUniqueTokens(
-            refreshedTokens,
-            builtInTokens,
-            tokens,
-            jupiterTokens
-        )
+        val jupiterTokens =
+            runCatching { splTokenRepository.getJupiterTokens() }.getOrElse { emptyList() }
+        emitUniqueTokens(refreshedTokens, builtInTokens, tokens, jupiterTokens)
     }
 
     private suspend fun FlowCollector<List<Coin>>.emitUniqueTokens(vararg items: List<Coin>) {
-        val coins = items.toList()
-            .flatten()
-            .asSequence()
-            .distinctBy { it.contractAddress to it.chain.id }
-            .toList()
-            .modifyIfNeeded()
+        val coins =
+            items
+                .toList()
+                .flatten()
+                .asSequence()
+                .distinctBy { it.contractAddress to it.chain.id }
+                .toList()
+                .modifyIfNeeded()
         emit(coins)
     }
 
-    private fun List<Coin>.modifyIfNeeded() = this.map {
-        val isLinkToken = it.ticker == LINK_TICKER
-        when {
-            isLinkToken -> LinkCoinStrategy.modify(it)
-            else -> it
+    private fun List<Coin>.modifyIfNeeded() =
+        this.map {
+            val isLinkToken = it.ticker == LINK_TICKER
+            when {
+                isLinkToken -> LinkCoinStrategy.modify(it)
+                else -> it
+            }
         }
-    }
-
-
 }

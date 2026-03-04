@@ -50,9 +50,7 @@ internal fun ReferralVaultListScreen(
         state = state,
         onBackPress = navController::popBackStack,
         onVaultClicked = { vaultId ->
-            navController.previousBackStackEntry
-                ?.savedStateHandle
-                ?.set(VAULT_ID_SELECTED, vaultId)
+            navController.previousBackStackEntry?.savedStateHandle?.set(VAULT_ID_SELECTED, vaultId)
             model.onVaultClick(vaultId)
         },
     )
@@ -70,11 +68,11 @@ internal fun ReferralVaultListContentScreen(
         onBackClick = onBackPress,
         content = {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Theme.v2.colors.backgrounds.primary)
-                    .imePadding()
-                    .navigationBarsPadding()
+                modifier =
+                    Modifier.fillMaxSize()
+                        .background(Theme.v2.colors.backgrounds.primary)
+                        .imePadding()
+                        .navigationBarsPadding()
             ) {
                 Text(
                     style = Theme.brockmann.body.m.medium,
@@ -86,8 +84,11 @@ internal fun ReferralVaultListContentScreen(
                 UiSpacer(16.dp)
 
                 LazyColumn(
-                    modifier = Modifier
-                        .background(Theme.v2.colors.backgrounds.secondary, shape = RoundedCornerShape(12.dp)),
+                    modifier =
+                        Modifier.background(
+                            Theme.v2.colors.backgrounds.secondary,
+                            shape = RoundedCornerShape(12.dp),
+                        )
                 ) {
                     items(state.vaults.size) { index ->
                         val vault = state.vaults[index]
@@ -110,10 +111,10 @@ internal fun ReferralVaultListContentScreen(
 @Composable
 internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onVaultClicked(vault.id) }
-            .padding(horizontal = 18.dp, vertical = 12.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clickable { onVaultClicked(vault.id) }
+                .padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -128,24 +129,24 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
         UiSpacer(8.dp)
 
         Row(
-            modifier = Modifier
-                .background(Theme.v2.colors.backgrounds.secondary, shape = RoundedCornerShape(20.dp))
-                .border(
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.light
-                    ),
-                    shape = RoundedCornerShape(20.dp)
-                )
-                .padding(horizontal = 10.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier.background(
+                        Theme.v2.colors.backgrounds.secondary,
+                        shape = RoundedCornerShape(20.dp),
+                    )
+                    .border(
+                        border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
+                        shape = RoundedCornerShape(20.dp),
+                    )
+                    .padding(horizontal = 10.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             if (vault.isFastVault) {
                 Icon(
                     painter = painterResource(id = R.drawable.biomatrics_fast),
                     contentDescription = null,
                     tint = Theme.v2.colors.backgrounds.orange,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(14.dp),
                 )
             } else {
                 Icon(
@@ -188,39 +189,37 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
 @Preview(showBackground = true)
 @Composable
 private fun ReferralVaultListScreenPreview() {
-    val state = ReferralVaultListUiState(
-        vaults = listOf(
-            VaultItem(
-                id = "1",
-                name = "My Main Vault",
-                isSelected = true,
-                signingInfo = "Part 1 of 3"
-            ),
-            VaultItem(
-                id = "2",
-                name = "Trading Vault",
-                isSelected = false,
-                signingInfo = "Part 2 of 3"
-            ),
-            VaultItem(
-                id = "3",
-                name = "Savings Vault",
-                isSelected = false,
-                signingInfo = "Part 1 of 2"
-            ),
-            VaultItem(
-                id = "4",
-                name = "DeFi Vault",
-                isSelected = false,
-                signingInfo = "Part 3 of 5"
-            ),
-        ),
-        error = null
-    )
+    val state =
+        ReferralVaultListUiState(
+            vaults =
+                listOf(
+                    VaultItem(
+                        id = "1",
+                        name = "My Main Vault",
+                        isSelected = true,
+                        signingInfo = "Part 1 of 3",
+                    ),
+                    VaultItem(
+                        id = "2",
+                        name = "Trading Vault",
+                        isSelected = false,
+                        signingInfo = "Part 2 of 3",
+                    ),
+                    VaultItem(
+                        id = "3",
+                        name = "Savings Vault",
+                        isSelected = false,
+                        signingInfo = "Part 1 of 2",
+                    ),
+                    VaultItem(
+                        id = "4",
+                        name = "DeFi Vault",
+                        isSelected = false,
+                        signingInfo = "Part 3 of 5",
+                    ),
+                ),
+            error = null,
+        )
 
-    ReferralVaultListContentScreen(
-        state = state,
-        onBackPress = {},
-        onVaultClicked = {}
-    )
+    ReferralVaultListContentScreen(state = state, onBackPress = {}, onVaultClicked = {})
 }

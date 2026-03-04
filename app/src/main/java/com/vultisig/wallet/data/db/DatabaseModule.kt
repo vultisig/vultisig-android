@@ -54,15 +54,13 @@ internal interface DatabaseModule {
 
         @Provides
         @Singleton
-        fun provideAppDatabase(
-            @ApplicationContext appContext: Context,
-        ): AppDatabase =
+        fun provideAppDatabase(@ApplicationContext appContext: Context): AppDatabase =
             /* never enable destructive migrations in production */
             Room.databaseBuilder(
-                context = appContext,
-                klass = AppDatabase::class.java,
-                name = DB_NAME,
-            )
+                    context = appContext,
+                    klass = AppDatabase::class.java,
+                    name = DB_NAME,
+                )
                 .addMigrations(
                     MIGRATION_1_2,
                     MIGRATION_2_3,
@@ -97,68 +95,55 @@ internal interface DatabaseModule {
 
         @Provides
         @Singleton
-        fun provideVaultDao(
-            appDatabase: AppDatabase,
-        ): VaultDao = appDatabase.vaultDao()
+        fun provideVaultDao(appDatabase: AppDatabase): VaultDao = appDatabase.vaultDao()
 
         @Provides
         @Singleton
-        fun provideVaultOrderDao(
-            appDatabase: AppDatabase,
-        ): VaultOrderDao = appDatabase.vaultOrderDao()
+        fun provideVaultOrderDao(appDatabase: AppDatabase): VaultOrderDao =
+            appDatabase.vaultOrderDao()
 
         @Provides
         @Singleton
-        fun provideFolderOrderDao(
-            appDatabase: AppDatabase,
-        ): FolderOrderDao = appDatabase.folderOrderDao()
+        fun provideFolderOrderDao(appDatabase: AppDatabase): FolderOrderDao =
+            appDatabase.folderOrderDao()
 
         @Provides
         @Singleton
-        fun provideTokenValueDao(
-            appDatabase: AppDatabase,
-        ): TokenValueDao = appDatabase.tokenValueDao()
+        fun provideTokenValueDao(appDatabase: AppDatabase): TokenValueDao =
+            appDatabase.tokenValueDao()
 
         @Provides
         @Singleton
-        fun provideTokenPriceDao(
-            appDatabase: AppDatabase,
-        ): TokenPriceDao = appDatabase.tokenPriceDao()
+        fun provideTokenPriceDao(appDatabase: AppDatabase): TokenPriceDao =
+            appDatabase.tokenPriceDao()
 
         @Provides
         @Singleton
-        fun provideFolderDao(
-            appDatabase: AppDatabase,
-        ): FolderDao = appDatabase.folderDao()
+        fun provideFolderDao(appDatabase: AppDatabase): FolderDao = appDatabase.folderDao()
 
         @Provides
         @Singleton
-        fun provideAddressBookEntryDao(
-            appDatabase: AppDatabase,
-        ): AddressBookEntryDao = appDatabase.addressBookEntryDao()
+        fun provideAddressBookEntryDao(appDatabase: AppDatabase): AddressBookEntryDao =
+            appDatabase.addressBookEntryDao()
 
         @Provides
         @Singleton
-        fun provideAddressBookOrderDao(
-            appDatabase: AppDatabase,
-        ): AddressBookOrderDao = appDatabase.addressBookOrderDao()
+        fun provideAddressBookOrderDao(appDatabase: AppDatabase): AddressBookOrderDao =
+            appDatabase.addressBookOrderDao()
 
         @Provides
         @Singleton
-        fun provideVaultMetadataDao(
-            appDatabase: AppDatabase,
-        ): VaultMetadataDao = appDatabase.vaultMetadataDao()
+        fun provideVaultMetadataDao(appDatabase: AppDatabase): VaultMetadataDao =
+            appDatabase.vaultMetadataDao()
 
         @Provides
         @Singleton
-        fun provideActiveBondedNodeDao(
-            appDatabase: AppDatabase,
-        ): ActiveBondedNodeDao = appDatabase.activeBondedNodeDao()
+        fun provideActiveBondedNodeDao(appDatabase: AppDatabase): ActiveBondedNodeDao =
+            appDatabase.activeBondedNodeDao()
 
         @Provides
         @Singleton
-        fun provideStakingDetailsDao(
-            appDatabase: AppDatabase,
-        ): StakingDetailsDao = appDatabase.stakingDetailsDao()
+        fun provideStakingDetailsDao(appDatabase: AppDatabase): StakingDetailsDao =
+            appDatabase.stakingDetailsDao()
     }
 }

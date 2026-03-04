@@ -35,7 +35,7 @@ fun MiddleEllipsisText(
     onTextLayout: (TextLayoutResult) -> Unit = {},
     style: TextStyle = LocalTextStyle.current,
     ellipsisChar: Char = '.',
-    ellipsisCharCount: Int = 3
+    ellipsisCharCount: Int = 3,
 ) {
     if (text.isEmpty()) {
         Text(
@@ -51,7 +51,7 @@ fun MiddleEllipsisText(
             lineHeight = lineHeight,
             softWrap = softWrap,
             onTextLayout = onTextLayout,
-            style = style
+            style = style,
         )
     } else {
         val breakIterator: BreakIterator = getBreakIterator()
@@ -66,132 +66,164 @@ fun MiddleEllipsisText(
         }
         SubcomposeLayout(modifier) { constraints ->
             subcompose("MiddleEllipsisText_calculate") {
-                Text(
-                    text = text + ellipsisChar,
-                    color = color,
-                    fontSize = fontSize,
-                    fontStyle = fontStyle,
-                    fontWeight = fontWeight,
-                    fontFamily = fontFamily,
-                    letterSpacing = letterSpacing,
-                    textDecoration = textDecoration,
-                    textAlign = textAlign,
-                    lineHeight = lineHeight,
-                    softWrap = softWrap,
-                    onTextLayout = { textLayoutResult = it },
-                    style = style
-                )
-            }[0].measure(Constraints())
+                    Text(
+                        text = text + ellipsisChar,
+                        color = color,
+                        fontSize = fontSize,
+                        fontStyle = fontStyle,
+                        fontWeight = fontWeight,
+                        fontFamily = fontFamily,
+                        letterSpacing = letterSpacing,
+                        textDecoration = textDecoration,
+                        textAlign = textAlign,
+                        lineHeight = lineHeight,
+                        softWrap = softWrap,
+                        onTextLayout = { textLayoutResult = it },
+                        style = style,
+                    )
+                }[0]
+                .measure(Constraints())
 
             textLayoutResult ?: return@SubcomposeLayout layout(0, 0) {}
 
-            val placeable = subcompose("MiddleEllipsisText_apply") {
-                val combinedText = remember(text, ellipsisText, textLayoutResult) {
-                    if (textLayoutResult!!.getBoundingBox(text.lastIndex).right <= constraints.maxWidth) {
-                        text
-                    } else {
-                        val ellipsisCharWidth =
-                            textLayoutResult!!.getBoundingBox(text.lastIndex + 1).width
-                        val ellipsisTextWidth: Float = ellipsisCharWidth * ellipsisCharCount
-                        val remainingWidth = constraints.maxWidth - ellipsisTextWidth
-                        var leftPoint = 0
-                        var rightPoint = text.lastIndex
-                        var leftTextWidth = 0F
-                        var rightTextWidth = 0F
-                        var realLeftIndex = 0
-                        var realRightIndex = charSplitIndexList.lastIndex
-
-                        val textFromStart = mutableListOf<Char>()
-                        val textFromEnd = mutableListOf<Char>()
-
-                        kotlin.run {
-                            repeat(charSplitIndexList.size) {
-                                if (leftPoint >= rightPoint) {
-                                    return@run
-                                }
-
-                                val leftTextBoundingBox =
-                                    textLayoutResult!!.getBoundingBox(leftPoint)
-                                val rightTextBoundingBox =
-                                    textLayoutResult!!.getBoundingBox(rightPoint)
-
-                                // For multibyte string handling
-                                if (leftTextWidth <= rightTextWidth && leftTextWidth + leftTextBoundingBox.width + rightTextWidth <= remainingWidth) {
-                                    val remainingTargetCodePoints = if (realLeftIndex == 0) {
-                                        charSplitIndexList[realLeftIndex]
-                                    } else {
-                                        charSplitIndexList[realLeftIndex] - charSplitIndexList[realLeftIndex - 1]
-                                    }
-                                    val targetText = mutableListOf<Char>()
-                                    // multiple code points handling (e.g. flag emoji)
-                                    repeat(remainingTargetCodePoints) {
-                                        kotlin.runCatching {
-                                            targetText.add(text[leftPoint])
-                                            val leftTextBoundingBoxWidth =
-                                                textLayoutResult!!.getBoundingBox(leftPoint).width
-                                            leftTextWidth += leftTextBoundingBoxWidth
-                                            leftPoint += 1
-                                        }.onFailure {
-                                            return@run
-                                        }
-                                    }
-                                    if (leftTextWidth + rightTextWidth <= remainingWidth) {
-                                        textFromStart.addAll(targetText)
-                                        realLeftIndex += 1
-                                    }
-                                } else if (leftTextWidth >= rightTextWidth && leftTextWidth + rightTextWidth + rightTextBoundingBox.width <= remainingWidth) {
-                                    val remainingTargetCodePoints =
-                                        charSplitIndexList[realRightIndex] - charSplitIndexList[realRightIndex - 1]
-                                    val targetText = mutableListOf<Char>()
-                                    // multiple code points handling (e.g. flag emoji)
-                                    repeat(remainingTargetCodePoints) {
-                                        kotlin.runCatching {
-                                            targetText.add(0, text[rightPoint])
-                                            val rightTextBoundingBoxWidth =
-                                                textLayoutResult!!.getBoundingBox(rightPoint).width
-                                            rightTextWidth += rightTextBoundingBoxWidth
-                                            rightPoint -= 1
-                                        }.onFailure {
-                                            return@run
-                                        }
-                                    }
-                                    if (leftTextWidth + rightTextWidth <= remainingWidth) {
-                                        textFromEnd.addAll(0, targetText)
-                                        realRightIndex -= 1
-                                    }
+            val placeable =
+                subcompose("MiddleEllipsisText_apply") {
+                        val combinedText =
+                            remember(text, ellipsisText, textLayoutResult) {
+                                if (
+                                    textLayoutResult!!.getBoundingBox(text.lastIndex).right <=
+                                        constraints.maxWidth
+                                ) {
+                                    text
                                 } else {
-                                    return@run
+                                    val ellipsisCharWidth =
+                                        textLayoutResult!!.getBoundingBox(text.lastIndex + 1).width
+                                    val ellipsisTextWidth: Float =
+                                        ellipsisCharWidth * ellipsisCharCount
+                                    val remainingWidth = constraints.maxWidth - ellipsisTextWidth
+                                    var leftPoint = 0
+                                    var rightPoint = text.lastIndex
+                                    var leftTextWidth = 0F
+                                    var rightTextWidth = 0F
+                                    var realLeftIndex = 0
+                                    var realRightIndex = charSplitIndexList.lastIndex
+
+                                    val textFromStart = mutableListOf<Char>()
+                                    val textFromEnd = mutableListOf<Char>()
+
+                                    kotlin.run {
+                                        repeat(charSplitIndexList.size) {
+                                            if (leftPoint >= rightPoint) {
+                                                return@run
+                                            }
+
+                                            val leftTextBoundingBox =
+                                                textLayoutResult!!.getBoundingBox(leftPoint)
+                                            val rightTextBoundingBox =
+                                                textLayoutResult!!.getBoundingBox(rightPoint)
+
+                                            // For multibyte string handling
+                                            if (
+                                                leftTextWidth <= rightTextWidth &&
+                                                    leftTextWidth +
+                                                        leftTextBoundingBox.width +
+                                                        rightTextWidth <= remainingWidth
+                                            ) {
+                                                val remainingTargetCodePoints =
+                                                    if (realLeftIndex == 0) {
+                                                        charSplitIndexList[realLeftIndex]
+                                                    } else {
+                                                        charSplitIndexList[realLeftIndex] -
+                                                            charSplitIndexList[realLeftIndex - 1]
+                                                    }
+                                                val targetText = mutableListOf<Char>()
+                                                // multiple code points handling (e.g. flag emoji)
+                                                repeat(remainingTargetCodePoints) {
+                                                    kotlin
+                                                        .runCatching {
+                                                            targetText.add(text[leftPoint])
+                                                            val leftTextBoundingBoxWidth =
+                                                                textLayoutResult!!
+                                                                    .getBoundingBox(leftPoint)
+                                                                    .width
+                                                            leftTextWidth +=
+                                                                leftTextBoundingBoxWidth
+                                                            leftPoint += 1
+                                                        }
+                                                        .onFailure {
+                                                            return@run
+                                                        }
+                                                }
+                                                if (
+                                                    leftTextWidth + rightTextWidth <= remainingWidth
+                                                ) {
+                                                    textFromStart.addAll(targetText)
+                                                    realLeftIndex += 1
+                                                }
+                                            } else if (
+                                                leftTextWidth >= rightTextWidth &&
+                                                    leftTextWidth +
+                                                        rightTextWidth +
+                                                        rightTextBoundingBox.width <= remainingWidth
+                                            ) {
+                                                val remainingTargetCodePoints =
+                                                    charSplitIndexList[realRightIndex] -
+                                                        charSplitIndexList[realRightIndex - 1]
+                                                val targetText = mutableListOf<Char>()
+                                                // multiple code points handling (e.g. flag emoji)
+                                                repeat(remainingTargetCodePoints) {
+                                                    kotlin
+                                                        .runCatching {
+                                                            targetText.add(0, text[rightPoint])
+                                                            val rightTextBoundingBoxWidth =
+                                                                textLayoutResult!!
+                                                                    .getBoundingBox(rightPoint)
+                                                                    .width
+                                                            rightTextWidth +=
+                                                                rightTextBoundingBoxWidth
+                                                            rightPoint -= 1
+                                                        }
+                                                        .onFailure {
+                                                            return@run
+                                                        }
+                                                }
+                                                if (
+                                                    leftTextWidth + rightTextWidth <= remainingWidth
+                                                ) {
+                                                    textFromEnd.addAll(0, targetText)
+                                                    realRightIndex -= 1
+                                                }
+                                            } else {
+                                                return@run
+                                            }
+                                        }
+                                    }
+
+                                    textFromStart.joinToString(separator = "") +
+                                        ellipsisText +
+                                        textFromEnd.joinToString(separator = "")
                                 }
                             }
-                        }
+                        Text(
+                            text = combinedText,
+                            color = color,
+                            fontSize = fontSize,
+                            fontStyle = fontStyle,
+                            fontWeight = fontWeight,
+                            fontFamily = fontFamily,
+                            letterSpacing = letterSpacing,
+                            textDecoration = textDecoration,
+                            textAlign = textAlign,
+                            lineHeight = lineHeight,
+                            softWrap = softWrap,
+                            maxLines = 1,
+                            onTextLayout = onTextLayout,
+                            style = style,
+                        )
+                    }[0]
+                    .measure(constraints)
 
-                        textFromStart.joinToString(separator = "") + ellipsisText + textFromEnd
-                            .joinToString(
-                                separator = ""
-                            )
-                    }
-                }
-                Text(
-                    text = combinedText,
-                    color = color,
-                    fontSize = fontSize,
-                    fontStyle = fontStyle,
-                    fontWeight = fontWeight,
-                    fontFamily = fontFamily,
-                    letterSpacing = letterSpacing,
-                    textDecoration = textDecoration,
-                    textAlign = textAlign,
-                    lineHeight = lineHeight,
-                    softWrap = softWrap,
-                    maxLines = 1,
-                    onTextLayout = onTextLayout,
-                    style = style
-                )
-            }[0].measure(constraints)
-
-            layout(placeable.width, placeable.height) {
-                placeable.place(0, 0)
-            }
+            layout(placeable.width, placeable.height) { placeable.place(0, 0) }
         }
     }
 }

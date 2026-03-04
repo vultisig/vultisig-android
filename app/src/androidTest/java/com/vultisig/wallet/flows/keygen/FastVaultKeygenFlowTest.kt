@@ -9,27 +9,28 @@ import com.vultisig.wallet.util.CleanTest
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
+import javax.inject.Inject
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import javax.inject.Inject
 
 @UninstallModules(FastVaultModule::class)
 @HiltAndroidTest
 @Ignore
 class FastVaultKeygenFlowTest : CleanTest() {
 
-    @get:Rule(order = LAST_ORDER_INDEX + 1)
-    val intents = IntentsRule()
+    @get:Rule(order = LAST_ORDER_INDEX + 1) val intents = IntentsRule()
 
-    @Inject
-    lateinit var secrets: SecretSettingsRepository
+    @Inject lateinit var secrets: SecretSettingsRepository
 
-    @BindValue @JvmField
+    @BindValue
+    @JvmField
     val verifyFastVaultBackupCodeUseCase: VerifyFastVaultBackupCodeUseCase =
-        VerifyFastVaultBackupCodeUseCase { _, _ -> true }
+        VerifyFastVaultBackupCodeUseCase { _, _ ->
+            true
+        }
 
     private var isDklsEnabled = false
         set(value) {
@@ -46,16 +47,13 @@ class FastVaultKeygenFlowTest : CleanTest() {
     fun testDklsKeygenStartingFromOnboarding() {
         isDklsEnabled = true
 
-        FastVaultKeygenFlow(compose)
-            .execute()
+        FastVaultKeygenFlow(compose).execute()
     }
 
     @Test
     fun testGg20KeygenStartingFromOnboarding() {
         isDklsEnabled = false
 
-        FastVaultKeygenFlow(compose)
-            .execute()
+        FastVaultKeygenFlow(compose).execute()
     }
-
 }

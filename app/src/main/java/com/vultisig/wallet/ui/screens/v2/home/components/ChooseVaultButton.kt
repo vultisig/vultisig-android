@@ -20,7 +20,6 @@ import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.theme.Theme
 
-
 @Composable
 internal fun ChooseVaultButton(
     modifier: Modifier = Modifier,
@@ -32,29 +31,26 @@ internal fun ChooseVaultButton(
         modifier = modifier.clickOnce(onClick = onClick),
         cornerType = CornerType.Circular,
         borderType = Bordered(),
-        type = SECONDARY
+        type = SECONDARY,
     ) {
         Row(
-            modifier = Modifier
-                .padding(
-                    horizontal = 14.dp,
-                    vertical = 12.dp,
-                ),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             UiIcon(
-                drawableResId = if (isFastVault) {
-                    R.drawable.thunder
-                } else {
-                    R.drawable.ic_shield
-                },
+                drawableResId =
+                    if (isFastVault) {
+                        R.drawable.thunder
+                    } else {
+                        R.drawable.ic_shield
+                    },
                 contentDescription = "vault type logo",
                 size = 16.dp,
-                tint = if (isFastVault) Theme.v2.colors.alerts.warning else Theme.v2.colors.alerts.success,
+                tint =
+                    if (isFastVault) Theme.v2.colors.alerts.warning
+                    else Theme.v2.colors.alerts.success,
             )
-            UiSpacer(
-                size = 6.dp
-            )
+            UiSpacer(size = 6.dp)
             Text(
                 text = vaultName,
                 style = Theme.brockmann.body.s.medium,
@@ -63,13 +59,8 @@ internal fun ChooseVaultButton(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.widthIn(max = 138.dp),
             )
-            UiSpacer(
-                size = 4.dp
-            )
-            UiIcon(
-                drawableResId = R.drawable.ic_chevron_down_small,
-                size = 16.dp
-            )
+            UiSpacer(size = 4.dp)
+            UiIcon(drawableResId = R.drawable.ic_chevron_down_small, size = 16.dp)
         }
     }
 }
@@ -77,19 +68,11 @@ internal fun ChooseVaultButton(
 @Preview
 @Composable
 private fun PreviewChooseVaultButton() {
-    ChooseVaultButton(
-        vaultName = "Main vault",
-        isFastVault = false,
-        onClick = {}
-    )
+    ChooseVaultButton(vaultName = "Main vault", isFastVault = false, onClick = {})
 }
 
 @Preview
 @Composable
 private fun PreviewChooseVaultButton2() {
-    ChooseVaultButton(
-        vaultName = "Main vault very long name",
-        isFastVault = false,
-        onClick = {}
-    )
+    ChooseVaultButton(vaultName = "Main vault very long name", isFastVault = false, onClick = {})
 }

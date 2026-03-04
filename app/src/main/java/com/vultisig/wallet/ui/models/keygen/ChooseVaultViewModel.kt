@@ -10,10 +10,10 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class SelectVaultTypeUiModel(
     val vaultType: VaultType = VaultType.Fast,
@@ -26,44 +26,45 @@ internal sealed class VaultType(
     val desc2: UiText,
     val desc3: UiText,
 ) {
-    data object Secure : VaultType(
-        title = UiText.StringResource(R.string.select_vault_type_secure_title),
-        desc1 = UiText.StringResource(R.string.select_vault_type_secure_desc_1),
-        desc2 = UiText.StringResource(R.string.select_vault_type_secure_desc_2),
-        desc3 = UiText.StringResource(R.string.select_vault_type_secure_desc_3),
-    )
+    data object Secure :
+        VaultType(
+            title = UiText.StringResource(R.string.select_vault_type_secure_title),
+            desc1 = UiText.StringResource(R.string.select_vault_type_secure_desc_1),
+            desc2 = UiText.StringResource(R.string.select_vault_type_secure_desc_2),
+            desc3 = UiText.StringResource(R.string.select_vault_type_secure_desc_3),
+        )
 
-    data object Fast : VaultType(
-        title = UiText.StringResource(R.string.select_vault_type_fast_title),
-        desc1 = UiText.StringResource(R.string.select_vault_type_fast_desc_1),
-        desc2 = UiText.StringResource(R.string.select_vault_type_fast_desc_2),
-        desc3 = UiText.StringResource(R.string.select_vault_type_fast_desc_3),
-    )
+    data object Fast :
+        VaultType(
+            title = UiText.StringResource(R.string.select_vault_type_fast_title),
+            desc1 = UiText.StringResource(R.string.select_vault_type_fast_desc_1),
+            desc2 = UiText.StringResource(R.string.select_vault_type_fast_desc_2),
+            desc3 = UiText.StringResource(R.string.select_vault_type_fast_desc_3),
+        )
 }
 
 @HiltViewModel
-internal class ChooseVaultViewModel @Inject constructor(
-    private val navigator: Navigator<Destination>,
-) : ViewModel() {
+internal class ChooseVaultViewModel
+@Inject
+constructor(private val navigator: Navigator<Destination>) : ViewModel() {
 
     val state = MutableStateFlow(SelectVaultTypeUiModel())
+
     fun selectTab(type: VaultType) {
-        if (type == state.value.vaultType)
-            return
+        if (type == state.value.vaultType) return
         clickOnce(coolDownPeriod = 1500L) {
-            state.update {
-                it.copy(
-                    vaultType = type,
-                    animate = { it.fireState("State Machine 1", "Switch") }
-                )
+                state.update {
+                    it.copy(
+                        vaultType = type,
+                        animate = { it.fireState("State Machine 1", "Switch") },
+                    )
+                }
             }
-        }.invoke()
+            .invoke()
     }
 
     fun navigateToBack() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     fun start() {
@@ -78,5 +79,4 @@ internal class ChooseVaultViewModel @Inject constructor(
             )
         }
     }
-
 }

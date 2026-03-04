@@ -1,14 +1,16 @@
 package com.vultisig.wallet.data.usecases.txstatus
 
-
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import javax.inject.Inject
 
 sealed class TransactionResult {
     object Confirmed : TransactionResult()
+
     object Pending : TransactionResult()
+
     object NotFound : TransactionResult()
+
     data class Failed(val reason: String) : TransactionResult()
 }
 
@@ -16,7 +18,9 @@ interface TransactionStatusRepository {
     suspend fun checkTransactionStatus(txHash: String, chain: Chain): TransactionResult
 }
 
-internal class TransactionStatusRepositoryImpl @Inject constructor(
+internal class TransactionStatusRepositoryImpl
+@Inject
+constructor(
     @param:EvmTxStatus private val evmProvider: TransactionStatusProvider,
     @param:UtxoTxStatus private val utxoProvider: TransactionStatusProvider,
     @param:CosmosTxStatus private val cosmosProvider: TransactionStatusProvider,
@@ -29,39 +33,29 @@ internal class TransactionStatusRepositoryImpl @Inject constructor(
     @param:RippleTxStatus private val rippleProvider: TransactionStatusProvider,
     @param:TronTxStatus private val tronProvider: TransactionStatusProvider,
 ) : TransactionStatusRepository {
-    private fun getProvider(chain: Chain) = when (chain.standard) {
-        TokenStandard.EVM -> evmProvider
-        TokenStandard.UTXO -> {
-            if (chain == Chain.Cardano)
-                cardanoProvider
-            else
-                utxoProvider
+    private fun getProvider(chain: Chain) =
+        when (chain.standard) {
+            TokenStandard.EVM -> evmProvider
+            TokenStandard.UTXO -> {
+                if (chain == Chain.Cardano) cardanoProvider else utxoProvider
+            }
+
+            TokenStandard.COSMOS -> cosmosProvider
+            TokenStandard.THORCHAIN -> thorChainProvider
+            TokenStandard.SOL -> solanaProvider
+            TokenStandard.SUBSTRATE -> polkadotProvider
+            TokenStandard.SUI -> suiProvider
+            TokenStandard.TON -> tonProvider
+            TokenStandard.RIPPLE -> rippleProvider
+            TokenStandard.TRC20 -> tronProvider
         }
 
-        TokenStandard.COSMOS -> cosmosProvider
-        TokenStandard.THORCHAIN -> thorChainProvider
-        TokenStandard.SOL -> solanaProvider
-        TokenStandard.SUBSTRATE -> polkadotProvider
-        TokenStandard.SUI -> suiProvider
-        TokenStandard.TON -> tonProvider
-        TokenStandard.RIPPLE -> rippleProvider
-        TokenStandard.TRC20 -> tronProvider
-    }
-
-    override suspend fun checkTransactionStatus(
-        txHash: String,
-        chain: Chain
-    ): TransactionResult {
+    override suspend fun checkTransactionStatus(txHash: String, chain: Chain): TransactionResult {
         val provider = getProvider(chain)
-        return provider.checkStatus(
-            txHash = txHash,
-            chain = chain
-        )
+        return provider.checkStatus(txHash = txHash, chain = chain)
     }
 }
 
 interface TransactionStatusProvider {
     suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult
 }
-
-

@@ -30,83 +30,68 @@ import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun VaultConfirmationScreen(
-    model: VaultConfirmationViewModel = hiltViewModel(),
-) {
+internal fun VaultConfirmationScreen(model: VaultConfirmationViewModel = hiltViewModel()) {
     BlockBackClick()
 
     val state by model.state.collectAsState()
 
-    VaultConfirmationScreen(
-        vaultInfo = state.vaultInfo,
-        action = state.action,
-    )
+    VaultConfirmationScreen(vaultInfo = state.vaultInfo, action = state.action)
 }
 
 @Composable
-private fun VaultConfirmationScreen(
-    vaultInfo: VaultType,
-    action: TssAction?,
-) {
+private fun VaultConfirmationScreen(vaultInfo: VaultType, action: TssAction?) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.primary),
+        modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
     ) {
         RiveAnimation(
-            animation = when (action) {
-                TssAction.Migrate -> R.raw.riv_upgrade_succes
-                else -> when (vaultInfo) {
-                    VaultType.Secure -> R.raw.riv_fastvault_backup_succes
-                    VaultType.Fast -> R.raw.riv_fastvault_backup_succes
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+            animation =
+                when (action) {
+                    TssAction.Migrate -> R.raw.riv_upgrade_succes
+                    else ->
+                        when (vaultInfo) {
+                            VaultType.Secure -> R.raw.riv_fastvault_backup_succes
+                            VaultType.Fast -> R.raw.riv_fastvault_backup_succes
+                        }
+                },
+            modifier = Modifier.fillMaxWidth().weight(1f),
         )
 
-        val wellDoneText = when (action) {
-            TssAction.Migrate -> buildAnnotatedString {
-                appendLine(stringResource(R.string.vault_confirmation_vault_upgraded))
-                withStyle(
-                    SpanStyle(
-                        brush = Theme.v2.colors.gradients.primary,
-                    )
-                ) {
-                    append(stringResource(R.string.vault_created_success_part_2))
-                }
-            }
+        val wellDoneText =
+            when (action) {
+                TssAction.Migrate ->
+                    buildAnnotatedString {
+                        appendLine(stringResource(R.string.vault_confirmation_vault_upgraded))
+                        withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
+                            append(stringResource(R.string.vault_created_success_part_2))
+                        }
+                    }
 
-            else -> buildAnnotatedString {
-                withStyle(
-                    SpanStyle(
-                        brush = Theme.v2.colors.gradients.primary,
-                    )
-                ) {
-                    appendLine(stringResource(R.string.vault_confirmation_well_done))
-                }
-                append(stringResource(R.string.vault_confirmation_you_re_ready_to_use_a_new_wallet_standard))
+                else ->
+                    buildAnnotatedString {
+                        withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
+                            appendLine(stringResource(R.string.vault_confirmation_well_done))
+                        }
+                        append(
+                            stringResource(
+                                R.string
+                                    .vault_confirmation_you_re_ready_to_use_a_new_wallet_standard
+                            )
+                        )
+                    }
             }
-        }
 
         Text(
             text = wellDoneText,
             style = Theme.brockmann.headings.largeTitle,
             color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(all = 24.dp),
+            modifier = Modifier.padding(all = 24.dp),
         )
 
         UiSpacer(36.dp)
 
-        RiveAnimation(
-            animation = R.raw.riv_connecting_with_server,
-            modifier = Modifier
-                .size(36.dp)
-        )
+        RiveAnimation(animation = R.raw.riv_connecting_with_server, modifier = Modifier.size(36.dp))
 
         UiSpacer(70.dp)
     }
@@ -115,9 +100,5 @@ private fun VaultConfirmationScreen(
 @Preview
 @Composable
 private fun VaultConfirmationScreenPreview() {
-    VaultConfirmationScreen(
-        vaultInfo = VaultType.Secure,
-        action = TssAction.Migrate,
-    )
+    VaultConfirmationScreen(vaultInfo = VaultType.Secure, action = TssAction.Migrate)
 }
-

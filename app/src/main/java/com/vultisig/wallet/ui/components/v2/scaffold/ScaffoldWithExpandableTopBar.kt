@@ -18,7 +18,6 @@ import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.theme.Theme
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ScaffoldWithExpandableTopBar(
@@ -28,23 +27,17 @@ internal fun ScaffoldWithExpandableTopBar(
     topBarExpandedContent: @Composable BoxScope.() -> Unit,
     topBarCollapsedContent: (@Composable BoxScope.() -> Unit)? = null,
     scrollBehavior: TopAppBarScrollBehavior =
-        if (topBarCollapsedContent == null)
-            TopAppBarDefaults.pinnedScrollBehavior()
-        else
-            TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
+        if (topBarCollapsedContent == null) TopAppBarDefaults.pinnedScrollBehavior()
+        else TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
     bottomBarContent: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
 ) {
 
-    PullToRefreshBox(
-        onRefresh = onRefresh,
-        isRefreshing = isRefreshing,
-    ) {
+    PullToRefreshBox(onRefresh = onRefresh, isRefreshing = isRefreshing) {
         Scaffold(
-            modifier = modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 if (topBarCollapsedContent != null) {
                     VsExpandableTopBar(
@@ -54,20 +47,15 @@ internal fun ScaffoldWithExpandableTopBar(
                         backgroundColor = backgroundColor,
                     )
                 } else {
-                    Box(
-                        content = topBarExpandedContent
-                    )
+                    Box(content = topBarExpandedContent)
                 }
             },
             bottomBar = bottomBarContent,
-            content = content
+            content = content,
         )
         VsSnackBar(
             snackbarState = snackbarState,
-            modifier = Modifier
-                .align(alignment = Alignment.BottomCenter)
+            modifier = Modifier.align(alignment = Alignment.BottomCenter),
         )
     }
 }
-
-

@@ -25,18 +25,15 @@ import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import timber.log.Timber
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
-data class MldsaKeyshare(
-    val pubKey: String,
-    val keyshare: String
-)
+data class MldsaKeyshare(val pubKey: String, val keyshare: String)
 
 class MldsaKeygen(
     val localPartyId: String,
@@ -45,19 +42,19 @@ class MldsaKeygen(
     val sessionID: String,
     val encryptionKeyHex: String,
     val isInitiateDevice: Boolean,
-
     private val encryption: Encryption,
     private val sessionApi: SessionApi,
 ) {
-    private val messenger: TssMessenger = TssMessenger(
-        serverAddress = mediatorURL,
-        sessionID = sessionID,
-        encryptionHex = encryptionKeyHex,
-        sessionApi = sessionApi,
-        coroutineScope = CoroutineScope(Dispatchers.IO),
-        encryption = encryption,
-        isEncryptionGCM = true
-    )
+    private val messenger: TssMessenger =
+        TssMessenger(
+            serverAddress = mediatorURL,
+            sessionID = sessionID,
+            encryptionHex = encryptionKeyHex,
+            sessionApi = sessionApi,
+            coroutineScope = CoroutineScope(Dispatchers.IO),
+            encryption = encryption,
+            isEncryptionGCM = true,
+        )
 
     private val cache = mutableMapOf<String, Any>()
     var setupMessage: ByteArray = byteArrayOf()
@@ -71,13 +68,8 @@ class MldsaKeygen(
             val byteArray = DklsHelper.arrayToBytes(keygenCommittee)
             val ids = go_slice()
             BufferUtilJNI.set_bytes_on_go_slice(ids, byteArray)
-            val err = mldsa_keygen_setupmsg_new(
-                MldsaSecurityLevel.MlDsa44,
-                threshold,
-                null,
-                ids,
-                buf
-            )
+            val err =
+                mldsa_keygen_setupmsg_new(MldsaSecurityLevel.MlDsa44, threshold, null, ids, buf)
             if (err != LIB_OK) {
                 error("fail to setup mldsa keygen message, error: $err")
             }
@@ -105,16 +97,12 @@ class MldsaKeygen(
     private fun getOutboundMessageReceiver(
         handle: Handle,
         message: go_slice,
-        idx: Long
+        idx: Long,
     ): ByteArray {
         val bufReceiver = tss_buffer()
         try {
-            val receiverResult = mldsa_keygen_session_message_receiver(
-                handle,
-                message,
-                idx,
-                bufReceiver
-            )
+            val receiverResult =
+                mldsa_keygen_session_message_receiver(handle, message, idx, bufReceiver)
             if (receiverResult != LIB_OK) {
                 Timber.d("fail to get receiver message, error: $receiverResult")
                 return byteArrayOf()
@@ -193,20 +181,17 @@ class MldsaKeygen(
                 continue
             }
             Timber.d("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
-            val decryptedBody = encryption.decrypt(
-                Base64.decode(msg.body),
-                Numeric.hexStringToByteArray(encryptionKeyHex)
-            ) ?: error("fail to decrypt message body")
+            val decryptedBody =
+                encryption.decrypt(
+                    Base64.decode(msg.body),
+                    Numeric.hexStringToByteArray(encryptionKeyHex),
+                ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
 
             val decryptedBodySlice = decodedMsg.toGoSlice()
 
             val isFinished = intArrayOf(0)
-            val result = mldsa_keygen_session_input_message(
-                handle,
-                decryptedBodySlice,
-                isFinished
-            )
+            val result = mldsa_keygen_session_input_message(handle, decryptedBodySlice, isFinished)
 
             if (result != LIB_OK) {
                 error("fail to apply message to mldsa, $result")
@@ -239,24 +224,26 @@ class MldsaKeygen(
                     sessionApi.uploadSetupMessage(
                         serverUrl = mediatorURL,
                         sessionId = sessionID,
-                        message = Base64.encode(
-                            encryption.encrypt(
-                                Base64.encodeToByteArray(keygenSetupMsg),
-                                Numeric.hexStringToByteArray(encryptionKeyHex)
-                            )
-                        ),
+                        message =
+                            Base64.encode(
+                                encryption.encrypt(
+                                    Base64.encodeToByteArray(keygenSetupMsg),
+                                    Numeric.hexStringToByteArray(encryptionKeyHex),
+                                )
+                            ),
                         messageId = "mldsa",
                     )
                 } else {
-                    keygenSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, "mldsa")
-                        .let {
-                            encryption.decrypt(
-                                Base64.decode(it),
-                                Numeric.hexStringToByteArray(encryptionKeyHex)
-                            ) ?: error("fail to decrypt MLDSA keygen setup message")
-                        }.let {
-                            Base64.decode(it)
-                        }
+                    keygenSetupMsg =
+                        sessionApi
+                            .getSetupMessage(mediatorURL, sessionID, "mldsa")
+                            .let {
+                                encryption.decrypt(
+                                    Base64.decode(it),
+                                    Numeric.hexStringToByteArray(encryptionKeyHex),
+                                ) ?: error("fail to decrypt MLDSA keygen setup message")
+                            }
+                            .let { Base64.decode(it) }
                 }
 
                 setupMessage = keygenSetupMsg
@@ -264,12 +251,13 @@ class MldsaKeygen(
                 val localPartyIDArr = localPartyId.toByteArray()
                 val localPartySlice = localPartyIDArr.toGoSlice()
 
-                val result = mldsa_keygen_session_from_setup(
-                    MldsaSecurityLevel.MlDsa44,
-                    decodedSetupMsg,
-                    localPartySlice,
-                    handler
-                )
+                val result =
+                    mldsa_keygen_session_from_setup(
+                        MldsaSecurityLevel.MlDsa44,
+                        decodedSetupMsg,
+                        localPartySlice,
+                        handler,
+                    )
                 if (result != LIB_OK) {
                     error("fail to create mldsa session from setup message, error: $result")
                 }
@@ -285,10 +273,11 @@ class MldsaKeygen(
                         }
                         val keyshareBytes = getKeyshareBytes(keyshareHandler)
                         val publicKey = getPublicKeyBytes(keyshareHandler)
-                        keyshare = MldsaKeyshare(
-                            pubKey = publicKey.toHexString(),
-                            keyshare = Base64.encode(keyshareBytes)
-                        )
+                        keyshare =
+                            MldsaKeyshare(
+                                pubKey = publicKey.toHexString(),
+                                keyshare = Base64.encode(keyshareBytes),
+                            )
                         Timber.d("MLDSA publicKey: ${publicKey.toHexString()}")
                     } finally {
                         mldsa_keyshare_free(keyshareHandler)

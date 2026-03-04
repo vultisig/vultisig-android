@@ -37,7 +37,6 @@ import com.vultisig.wallet.ui.screens.itemModifier
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 
-
 @Composable
 internal fun ConfirmDeleteScreen(navHostController: NavHostController) {
     val viewModel = hiltViewModel<ConfirmDeleteViewModel>()
@@ -47,11 +46,9 @@ internal fun ConfirmDeleteScreen(navHostController: NavHostController) {
         checkedCautionIndexes = uiModel.checkedCautionIndexes,
         isDeleteButtonActive = uiModel.isDeleteButtonEnabled,
         vaultDeleteUiModel = uiModel.vaultDeleteUiModel,
-        onBackClick = {
-            navHostController.popBackStack()
-        },
+        onBackClick = { navHostController.popBackStack() },
         onItemCheckChangeClick = viewModel::changeCheckCaution,
-        onConfirmClick = viewModel::delete
+        onConfirmClick = viewModel::delete,
     )
 }
 
@@ -70,32 +67,27 @@ private fun ConfirmDeleteScreen(
             VsTopAppBar(
                 title = stringResource(R.string.vault_settings_delete_title),
                 iconLeft = R.drawable.ic_caret_left,
-                onIconLeftClick = onBackClick
+                onIconLeftClick = onBackClick,
             )
         },
         bottomBar = {
             VsButton(
                 onClick = onConfirmClick,
-                state = if (isDeleteButtonActive.not()) VsButtonState.Disabled else
-                    VsButtonState.Enabled,
+                state =
+                    if (isDeleteButtonActive.not()) VsButtonState.Disabled
+                    else VsButtonState.Enabled,
                 label = stringResource(R.string.confirm_delete_delete_vault),
                 variant = VsButtonVariant.Error,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 24.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
             )
-        }
+        },
     ) {
-
         Column(
-            modifier = Modifier
-                .padding(it)
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp,
-                )
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+            modifier =
+                Modifier.padding(it)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
         ) {
             DeleteVaultBanner()
             UiSpacer(14.dp)
@@ -112,203 +104,158 @@ private fun ConfirmDeleteScreen(
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .height(intrinsicSize = IntrinsicSize.Min)
+                modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min),
             ) {
                 VerticalVaultInfo(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                     key = stringResource(R.string.vault_settings_delete_vault_part),
-                    value = stringResource(
-                        id = R.string.vault_part_n_of_t,
-                        vaultDeleteUiModel.vaultPart,
-                        vaultDeleteUiModel.deviceList.size,
-                    )
+                    value =
+                        stringResource(
+                            id = R.string.vault_part_n_of_t,
+                            vaultDeleteUiModel.vaultPart,
+                            vaultDeleteUiModel.deviceList.size,
+                        ),
                 )
 
                 VerticalVaultInfo(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                     key = stringResource(R.string.vault_settings_delete_vault_id),
-                    value = vaultDeleteUiModel.localPartyId
+                    value = vaultDeleteUiModel.localPartyId,
                 )
             }
 
             UiSpacer(12.dp)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .height(intrinsicSize = IntrinsicSize.Min)
+                modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min),
             ) {
                 VerticalVaultInfo2(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                     key = stringResource(R.string.vault_settings_delete_vault_ecdsa_key),
                     value = vaultDeleteUiModel.pubKeyECDSA,
                 )
 
                 VerticalVaultInfo2(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                     key = stringResource(R.string.vault_settings_delete_vault_eddsa_key),
-                    value = vaultDeleteUiModel.pubKeyEDDSA
+                    value = vaultDeleteUiModel.pubKeyEDDSA,
                 )
             }
-
 
             UiSpacer(weight = 1f)
             UiSpacer(size = 16.dp)
 
             cautions.forEachIndexed { index, resId ->
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .toggleable(
-                            value = checkedCautionIndexes.contains(index),
-                            onValueChange = { checked ->
-                                onItemCheckChangeClick(
-                                    index,
-                                    checked
-                                )
-                            },
-                        )
-                        .padding(8.dp),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .toggleable(
+                                value = checkedCautionIndexes.contains(index),
+                                onValueChange = { checked ->
+                                    onItemCheckChangeClick(index, checked)
+                                },
+                            )
+                            .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     VsUiCheckbox(checked = checkedCautionIndexes.contains(index)) { checked ->
-                        onItemCheckChangeClick(
-                            index,
-                            checked
-                        )
+                        onItemCheckChangeClick(index, checked)
                     }
 
                     Text(
                         text = stringResource(resId),
                         style = Theme.brockmann.supplementary.caption,
-                        color = colors.text.secondary
+                        color = colors.text.secondary,
                     )
                 }
             }
 
             UiSpacer(size = 16.dp)
         }
-
     }
 }
 
-
 @Composable
-private fun VerticalVaultInfo(
-    modifier: Modifier = Modifier,
-    key: String,
-    value: String
-) {
-    Column(
-        modifier = modifier.itemModifier(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
+private fun VerticalVaultInfo(modifier: Modifier = Modifier, key: String, value: String) {
+    Column(modifier = modifier.itemModifier(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = key,
             style = Theme.brockmann.supplementary.footnote,
-            color = colors.text.primary
+            color = colors.text.primary,
         )
         Text(
             text = value,
             style = Theme.brockmann.supplementary.footnote,
-            color = colors.text.primary
+            color = colors.text.primary,
         )
     }
 }
 
-
 @Composable
-private fun VerticalVaultInfo2(
-    modifier: Modifier = Modifier,
-    key: String,
-    value: String
-) {
-    Column(
-        modifier = modifier.itemModifier(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
+private fun VerticalVaultInfo2(modifier: Modifier = Modifier, key: String, value: String) {
+    Column(modifier = modifier.itemModifier(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = key,
             style = Theme.brockmann.supplementary.footnote,
-            color = colors.text.primary
+            color = colors.text.primary,
         )
         Text(
             text = value,
             style = Theme.brockmann.supplementary.caption,
-            color = colors.text.tertiary
+            color = colors.text.tertiary,
         )
     }
 }
 
 @Composable
 private fun DeleteVaultBanner() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        UiSpacer(
-            size = 24.dp
-        )
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        UiSpacer(size = 24.dp)
         UiIcon(
             drawableResId = R.drawable.ic_warning,
             contentDescription = "warning",
             size = 24.dp,
-            tint = colors.alerts.error
+            tint = colors.alerts.error,
         )
 
-        UiSpacer(
-            size = 14.dp
-        )
+        UiSpacer(size = 14.dp)
 
         Text(
             text = stringResource(R.string.vault_settings_delete_title),
             style = Theme.brockmann.headings.title2,
-            color = colors.alerts.error
+            color = colors.alerts.error,
         )
 
-        UiSpacer(
-            size = 8.dp
-        )
+        UiSpacer(size = 8.dp)
 
         Text(
             text = stringResource(R.string.confirm_delete_permanent_delete_message),
             style = Theme.brockmann.supplementary.footnote,
-            color = colors.text.tertiary
+            color = colors.text.tertiary,
         )
     }
 }
+
 @Preview
 @Composable
 private fun ConfirmDeleteScreenPreview() {
     ConfirmDeleteScreen(
-        cautions = listOf(
-            com.vultisig.wallet.R.string.confirm_delete_delete_vault,
-        ),
+        cautions = listOf(com.vultisig.wallet.R.string.confirm_delete_delete_vault),
         checkedCautionIndexes = listOf(0, 1),
         isDeleteButtonActive = false,
-        vaultDeleteUiModel = VaultDeleteUiModel(
-            name = "My Vault",
-            totalFiatValue = "$12,345.67",
-            vaultPart = 2,
-            deviceList = listOf("Device 1", "Device 2", "Device 3"),
-            localPartyId = "123e4567-e89b-12d3-a456-426614174000",
-            pubKeyECDSA = "04bfcabf...9c3d1e5f",
-            pubKeyEDDSA = "ed25519:3b6a27bc...",
-        ),
+        vaultDeleteUiModel =
+            VaultDeleteUiModel(
+                name = "My Vault",
+                totalFiatValue = "$12,345.67",
+                vaultPart = 2,
+                deviceList = listOf("Device 1", "Device 2", "Device 3"),
+                localPartyId = "123e4567-e89b-12d3-a456-426614174000",
+                pubKeyECDSA = "04bfcabf...9c3d1e5f",
+                pubKeyEDDSA = "ed25519:3b6a27bc...",
+            ),
         onItemCheckChangeClick = { _, _ -> },
         onConfirmClick = {},
-        onBackClick = {}
+        onBackClick = {},
     )
 }
-
-
-

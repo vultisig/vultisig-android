@@ -5,14 +5,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CreateMldsaVaultRequestJson(
-    @SerialName("public_key")
-    val publicKey: String,
-    @SerialName("session_id")
-    val sessionId: String,
-    @SerialName("hex_encryption_key")
-    val hexEncryptionKey: String,
-    @SerialName("encryption_password")
-    val encryptionPassword: String,
-    @SerialName("email")
-    val email: String,
+    @SerialName("public_key") val publicKey: String,
+    @SerialName("session_id") val sessionId: String,
+    @SerialName("hex_encryption_key") val hexEncryptionKey: String,
+    @SerialName("encryption_password") val encryptionPassword: String,
+    @SerialName("email") val email: String,
 )

@@ -46,8 +46,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
-import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlinx.coroutines.launch
 
 internal val FAST_SELECTION_MODAL_WIDTH = 300.dp
 
@@ -75,17 +75,18 @@ internal fun <T> FastSelectionModalContent(
     val modalHeight = itemHeightPx * visibleItemCount
     val centerOffset = (modalHeight / 2 - itemHeightPx / 2)
 
-    val maximumXOffset = (configuration.screenWidthDp * density.density - modalWidth).coerceAtLeast(0f)
-    val xOffset = if (modalWidth > 0) {
-        (pressPosition.x - modalWidth / 2)
-            .coerceIn(0f, maximumXOffset)
-    } else 0f
+    val maximumXOffset =
+        (configuration.screenWidthDp * density.density - modalWidth).coerceAtLeast(0f)
+    val xOffset =
+        if (modalWidth > 0) {
+            (pressPosition.x - modalWidth / 2).coerceIn(0f, maximumXOffset)
+        } else 0f
 
     val maximumYOffset = configuration.screenHeightDp * density.density - modalHeight
-    val yOffset = if (modalHeight > 0) {
-        (pressPosition.y - modalHeight / 2)
-            .coerceIn(0f, maximumYOffset)
-    } else 0f
+    val yOffset =
+        if (modalHeight > 0) {
+            (pressPosition.y - modalHeight / 2).coerceIn(0f, maximumYOffset)
+        } else 0f
 
     LaunchedEffect(currentIndex, isHeightMeasured) {
         if (currentIndex in items.indices && isHeightMeasured) {
@@ -93,7 +94,7 @@ internal fun <T> FastSelectionModalContent(
                 val paddingItems = visibleItemCount / 2
                 listState.animateScrollToItem(
                     index = currentIndex + paddingItems,
-                    scrollOffset = -centerOffset
+                    scrollOffset = -centerOffset,
                 )
             }
         }
@@ -104,43 +105,41 @@ internal fun <T> FastSelectionModalContent(
             val paddingItems = visibleItemCount / 2
             listState.scrollToItem(
                 index = currentIndex + paddingItems,
-                scrollOffset = -centerOffset
+                scrollOffset = -centerOffset,
             )
         }
     }
 
-    Box(
-        modifier = modifier
-    ) {
+    Box(modifier = modifier) {
         AnimatedVisibility(
             visible = true,
-            enter = scaleIn(
-                initialScale = 0.8f,
-                transformOrigin = TransformOrigin.Center,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeIn(animationSpec = tween(durationMillis = 200)),
-            exit = scaleOut(
-                targetScale = 0.8f,
-                animationSpec = tween(durationMillis = 150)
-            ) + fadeOut(animationSpec = tween(durationMillis = 150))
+            enter =
+                scaleIn(
+                    initialScale = 0.8f,
+                    transformOrigin = TransformOrigin.Center,
+                    animationSpec =
+                        spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium,
+                        ),
+                ) + fadeIn(animationSpec = tween(durationMillis = 200)),
+            exit =
+                scaleOut(targetScale = 0.8f, animationSpec = tween(durationMillis = 150)) +
+                    fadeOut(animationSpec = tween(durationMillis = 150)),
         ) {
             Box(
-                modifier = Modifier
-
-                    .then(
-                        if (isHeightMeasured) {
-                            Modifier.height(with(density) { modalHeight.toDp() })
-                        } else {
-                            Modifier.wrapContentHeight()
-                        }
-                    )
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(
-                        color = Theme.v2.colors.backgrounds.tertiary_2.copy(alpha = 0.5f)
-                    )
+                modifier =
+                    Modifier.then(
+                            if (isHeightMeasured) {
+                                Modifier.height(with(density) { modalHeight.toDp() })
+                            } else {
+                                Modifier.wrapContentHeight()
+                            }
+                        )
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(
+                            color = Theme.v2.colors.backgrounds.tertiary_2.copy(alpha = 0.5f)
+                        )
             ) {
                 val paddingItems = visibleItemCount / 2
                 val paddedItems = buildList {
@@ -151,21 +150,23 @@ internal fun <T> FastSelectionModalContent(
 
                 LazyColumn(
                     state = listState,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-                        .drawWithContent {
-                            drawContent()
-                            drawRect(
-                                brush = Brush.verticalGradient(
-                                    0f to Color.Transparent,
-                                    0.5f to Color.Black,
-                                    1f to Color.Transparent
-                                ), blendMode = BlendMode.DstIn
-                            )
-                        },
+                    modifier =
+                        Modifier.fillMaxHeight()
+                            .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                            .drawWithContent {
+                                drawContent()
+                                drawRect(
+                                    brush =
+                                        Brush.verticalGradient(
+                                            0f to Color.Transparent,
+                                            0.5f to Color.Black,
+                                            1f to Color.Transparent,
+                                        ),
+                                    blendMode = BlendMode.DstIn,
+                                )
+                            },
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    userScrollEnabled = false
+                    userScrollEnabled = false,
                 ) {
                     itemsIndexed(paddedItems) { index, item ->
                         val actualIndex = index - paddingItems
@@ -174,8 +175,8 @@ internal fun <T> FastSelectionModalContent(
                             val distanceFromCenter = abs(actualIndex - currentIndex)
 
                             Box(
-                                modifier = Modifier
-                                    .onGloballyPositioned { coordinates ->
+                                modifier =
+                                    Modifier.onGloballyPositioned { coordinates ->
                                         if (!isHeightMeasured && coordinates.size.height > 0) {
                                             itemHeightPx = coordinates.size.height
                                             onItemHeightMeasured(coordinates.size.height)
@@ -188,7 +189,10 @@ internal fun <T> FastSelectionModalContent(
                             }
                         } else {
                             if (isHeightMeasured) {
-                                Spacer(modifier = Modifier.height(with(density) { itemHeightPx.toDp() }))
+                                Spacer(
+                                    modifier =
+                                        Modifier.height(with(density) { itemHeightPx.toDp() })
+                                )
                             } else {
                                 Spacer(modifier = Modifier.height(16.dp))
                             }
@@ -196,24 +200,20 @@ internal fun <T> FastSelectionModalContent(
                     }
                 }
 
-
                 val itemHeight = with(density) { itemHeightPx.toDp() }
 
                 FadingHorizontalDivider(
-                    modifier = Modifier
-                        .width(FAST_SELECTION_MODAL_WIDTH)
-                        .align(Alignment.Center)
-                        .offset(y = -itemHeight / 2)
-
+                    modifier =
+                        Modifier.width(FAST_SELECTION_MODAL_WIDTH)
+                            .align(Alignment.Center)
+                            .offset(y = -itemHeight / 2)
                 )
                 FadingHorizontalDivider(
-                    modifier = Modifier
-                        .width(FAST_SELECTION_MODAL_WIDTH)
-                        .align(Alignment.Center)
-                        .offset(y = itemHeight / 2)
-
+                    modifier =
+                        Modifier.width(FAST_SELECTION_MODAL_WIDTH)
+                            .align(Alignment.Center)
+                            .offset(y = itemHeight / 2)
                 )
-
             }
         }
     }

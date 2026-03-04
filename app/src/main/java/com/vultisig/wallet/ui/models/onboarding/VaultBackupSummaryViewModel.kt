@@ -11,10 +11,10 @@ import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class VaultBackupSummaryUiModel(
     val vaultType: Route.VaultInfo.VaultType,
@@ -23,7 +23,9 @@ internal data class VaultBackupSummaryUiModel(
 )
 
 @HiltViewModel
-internal class VaultBackupSummaryViewModel @Inject constructor(
+internal class VaultBackupSummaryViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
@@ -31,11 +33,7 @@ internal class VaultBackupSummaryViewModel @Inject constructor(
 
     private val args = savedStateHandle.toRoute<Route.VaultBackupSummary>()
 
-    val state = MutableStateFlow(
-        VaultBackupSummaryUiModel(
-            vaultType = args.vaultType
-        )
-    )
+    val state = MutableStateFlow(VaultBackupSummaryUiModel(vaultType = args.vaultType))
 
     init {
         viewModelScope.launch {
@@ -51,30 +49,18 @@ internal class VaultBackupSummaryViewModel @Inject constructor(
         }
     }
 
-
     fun next() {
-            viewModelScope.launch {
-                navigator.route(
-                    route = Route.Home(),
-                    opts = NavigationOptions(
-                        clearBackStack = true,
-                    ),
-                )
-            }
+        viewModelScope.launch {
+            navigator.route(route = Route.Home(), opts = NavigationOptions(clearBackStack = true))
+        }
     }
 
     fun chooseChains() {
-            viewModelScope.launch {
-                navigator.route(
-                    route = Route.AddChainAccount(
-                        vaultId = args.vaultId,
-                        routeFromInitVault = true
-                    ),
-                    opts = NavigationOptions(
-                        clearBackStack = true,
-                    ),
-                )
-            }
+        viewModelScope.launch {
+            navigator.route(
+                route = Route.AddChainAccount(vaultId = args.vaultId, routeFromInitVault = true),
+                opts = NavigationOptions(clearBackStack = true),
+            )
+        }
     }
-
 }

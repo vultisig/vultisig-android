@@ -74,43 +74,32 @@ data class ResourceState(
 )
 
 @Composable
-fun ResourceTwoCardsRow(
-    resourceUsage: ResourceUsage,
-    modifier: Modifier = Modifier,
-) {
+fun ResourceTwoCardsRow(resourceUsage: ResourceUsage, modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(96.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .border(
-                1.dp,
-                colors.variables.bordersLight,
-                RoundedCornerShape(12.dp)
-            ),
-        color = colors.variables.backgroundsSurface1
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(96.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .border(1.dp, colors.variables.bordersLight, RoundedCornerShape(12.dp)),
+        color = colors.variables.backgroundsSurface1,
     ) {
         var display by remember { mutableStateOf(false) }
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
             ResourceCard(
                 ResourceState(
                     available = resourceUsage.availableBandwidth,
                     total = resourceUsage.totalBandwidth,
                     title = stringResource(R.string.bandwidth),
                     accentColor = colors.alerts.success,
-                    icon = R.drawable.bandwidth
+                    icon = R.drawable.bandwidth,
                 ),
                 Modifier.weight(1f),
-                containerBg = colors.backgrounds.surface4
+                containerBg = colors.backgrounds.surface4,
             )
             Box(
-                modifier = Modifier
-                    .width(1.dp)
-                    .fillMaxHeight()
-                    .background(colors.variables.bordersLight)
+                modifier =
+                    Modifier.width(1.dp).fillMaxHeight().background(colors.variables.bordersLight)
             )
             ResourceCard(
                 ResourceState(
@@ -119,20 +108,16 @@ fun ResourceTwoCardsRow(
                     title = stringResource(R.string.energy),
                     accentColor = colors.alerts.warning,
                     icon = R.drawable.energy,
-                    showInfo = true
+                    showInfo = true,
                 ),
                 Modifier.weight(1f),
                 containerBg = colors.backgrounds.surface3,
-                onDisplayTronLegacy = { newDisplay ->
-
-                    display = newDisplay
-                }
+                onDisplayTronLegacy = { newDisplay -> display = newDisplay },
             )
         }
 
         if (display) {
-            BandwidthEnergyBottomSheet(
-                onDismissRequest = { display = false })
+            BandwidthEnergyBottomSheet(onDismissRequest = { display = false })
         }
     }
 }
@@ -142,21 +127,14 @@ fun ResourceCard(
     state: ResourceState,
     modifier: Modifier = Modifier,
     containerBg: Color,
-    onDisplayTronLegacy: (Boolean) -> Unit = { },
-
-
-    ) {
-    Row(
-        modifier = modifier.padding(
-            16.dp
-        ),
-        verticalAlignment = Alignment.Top
-    ) {
+    onDisplayTronLegacy: (Boolean) -> Unit = {},
+) {
+    Row(modifier = modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
         Column(modifier = Modifier.fillMaxHeight()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
                     text = state.title,
@@ -166,12 +144,12 @@ fun ResourceCard(
                 if (state.showInfo) {
                     IconButton(
                         onClick = { onDisplayTronLegacy(true) },
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.circleinfo),
                             contentDescription = "info",
-                            tint = colors.text.tertiary
+                            tint = colors.text.tertiary,
                         )
                     }
                 }
@@ -181,17 +159,15 @@ fun ResourceCard(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(containerBg),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(containerBg),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Image(
                         painter = painterResource(state.icon),
                         contentDescription = "${state.title} icon",
                         modifier = Modifier.size(16.dp),
-                        contentScale = ContentScale.Fit
+                        contentScale = ContentScale.Fit,
                     )
                 }
 
@@ -205,8 +181,10 @@ fun ResourceCard(
                     )
                     Spacer(modifier = Modifier.height(7.dp))
                     AnimatedProgressBar(
-                        value = if (state.total > 0) state.available.toFloat() / state.total.toFloat() else 0f,
-                        accent = state.accentColor
+                        value =
+                            if (state.total > 0) state.available.toFloat() / state.total.toFloat()
+                            else 0f,
+                        accent = state.accentColor,
                     )
                 }
             }
@@ -216,29 +194,24 @@ fun ResourceCard(
 
 @Composable
 fun AnimatedProgressBar(value: Float, accent: Color, height: Dp = 8.dp) {
-    val animated by animateFloatAsState(
-        targetValue = value.coerceIn(
-            0f,
-            1f
-        ),
-        animationSpec = tween(
-            durationMillis = 700,
-            easing = LinearOutSlowInEasing
+    val animated by
+        animateFloatAsState(
+            targetValue = value.coerceIn(0f, 1f),
+            animationSpec = tween(durationMillis = 700, easing = LinearOutSlowInEasing),
         )
-    )
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(height)
-            .clip(RoundedCornerShape(8.dp))
-            .background(colors.backgrounds.light)
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(height)
+                .clip(RoundedCornerShape(8.dp))
+                .background(colors.backgrounds.light)
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth(animated)
-                .clip(RoundedCornerShape(8.dp))
-                .background(accent)
+            modifier =
+                Modifier.fillMaxHeight()
+                    .fillMaxWidth(animated)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(accent)
         )
     }
 }
@@ -247,28 +220,24 @@ fun AnimatedProgressBar(value: Float, accent: Color, height: Dp = 8.dp) {
 @Composable
 fun PreviewResourceTwoCards() {
     ResourceTwoCardsRow(
-        resourceUsage = ResourceUsage(
-            availableBandwidth = 1500,
-            totalBandwidth = 3000,
-            availableEnergy = 800,
-            totalEnergy = 2000
-        ),
-        modifier = Modifier.padding(16.dp)
+        resourceUsage =
+            ResourceUsage(
+                availableBandwidth = 1500,
+                totalBandwidth = 3000,
+                availableEnergy = 800,
+                totalEnergy = 2000,
+            ),
+        modifier = Modifier.padding(16.dp),
     )
 }
 
 @Composable
-internal fun BandwidthEnergyBottomSheet(
-    onDismissRequest: () -> Unit,
-) {
-    VsModalBottomSheet(onDismissRequest = onDismissRequest) {
-        BandwidthEnergyContent()
-    }
+internal fun BandwidthEnergyBottomSheet(onDismissRequest: () -> Unit) {
+    VsModalBottomSheet(onDismissRequest = onDismissRequest) { BandwidthEnergyContent() }
 }
 
 @Composable
-fun BandwidthEnergyContent(
-) {
+fun BandwidthEnergyContent() {
     var expandByItem by remember { mutableStateOf<Int?>(null) }
     Scaffold(
         modifier = Modifier.padding(24.dp),
@@ -276,21 +245,22 @@ fun BandwidthEnergyContent(
         topBar = {
             Column(
                 modifier = Modifier.padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(
-                        space = 8.dp,
-                        alignment = Alignment.CenterHorizontally
-                    ),
+                    horizontalArrangement =
+                        Arrangement.spacedBy(
+                            space = 8.dp,
+                            alignment = Alignment.CenterHorizontally,
+                        ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(colors.backgrounds.red),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier.size(24.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(colors.backgrounds.red),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.tron_mono),
@@ -311,17 +281,16 @@ fun BandwidthEnergyContent(
                     style = Theme.brockmann.headings.title2,
                     color = colors.variables.textPrimary,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
         },
         content = { contentPadding ->
             Column(
                 modifier = Modifier.padding(contentPadding),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 UiSpacer(20.dp)
-
 
                 BandwidthEnergyItem(
                     title = R.string.bandwidth,
@@ -330,9 +299,7 @@ fun BandwidthEnergyContent(
                     containerBg = colors.backgrounds.surface4,
                     icon = R.drawable.bandwidth,
                     isExpanded = expandByItem == 0,
-                    onExpandedChange = { isExpanded ->
-                        expandByItem = if (isExpanded) 0 else null
-                    }
+                    onExpandedChange = { isExpanded -> expandByItem = if (isExpanded) 0 else null },
                 )
                 UiSpacer(12.dp)
 
@@ -343,9 +310,7 @@ fun BandwidthEnergyContent(
                     containerBg = colors.backgrounds.surface3,
                     icon = R.drawable.energy,
                     isExpanded = expandByItem == 1,
-                    onExpandedChange = { isExpanded ->
-                        expandByItem = if (isExpanded) 1 else null
-                    }
+                    onExpandedChange = { isExpanded -> expandByItem = if (isExpanded) 1 else null },
                 )
             }
         },
@@ -355,14 +320,12 @@ fun BandwidthEnergyContent(
                 label = stringResource(R.string.feature_item_learn_more),
                 variant = VsButtonVariant.Secondary,
                 state = VsButtonState.Default,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 5.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 5.dp),
                 onClick = {
                     vsUriHandler.openUri("https://developers.tron.network/docs/resource-model")
-                }
+                },
             )
-        }
+        },
     )
 }
 
@@ -377,44 +340,28 @@ fun BandwidthEnergyItem(
     onExpandedChange: (Boolean) -> Unit,
 ) {
     val colors = colors
-    val rotation = animateFloatAsState(
-        targetValue = if (isExpanded) 90f else 0f
-    )
-    V2Container(
-        type = ContainerType.SECONDARY,
-        borderType = ContainerBorderType.Bordered()
-    ) {
-        LazyColumn(
-            contentPadding = PaddingValues(
-                horizontal = 20.dp,
-                vertical = 16.dp
-            )
-        ) {
+    val rotation = animateFloatAsState(targetValue = if (isExpanded) 90f else 0f)
+    V2Container(type = ContainerType.SECONDARY, borderType = ContainerBorderType.Bordered()) {
+        LazyColumn(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)) {
             item {
-                Column(
-                    modifier = Modifier.animateContentSize()
-                ) {
+                Column(modifier = Modifier.animateContentSize()) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onExpandedChange(!isExpanded)
-                            },
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier =
+                            Modifier.fillMaxWidth().clickable { onExpandedChange(!isExpanded) },
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-
                         Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(containerBg),
-                            contentAlignment = Alignment.Center
+                            modifier =
+                                Modifier.size(32.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(containerBg),
+                            contentAlignment = Alignment.Center,
                         ) {
                             Image(
                                 painter = painterResource(icon),
                                 contentDescription = stringResource(title),
                                 modifier = Modifier.size(16.dp),
-                                contentScale = ContentScale.Fit
+                                contentScale = ContentScale.Fit,
                             )
                         }
                         UiSpacer(8.dp)
@@ -422,7 +369,7 @@ fun BandwidthEnergyItem(
                             text = stringResource(title),
                             color = accentColor,
                             style = Theme.brockmann.headings.subtitle,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         )
                         UiSpacer(1f)
                         Icon(
@@ -434,8 +381,7 @@ fun BandwidthEnergyItem(
                     }
                     if (isExpanded) {
                         FadingHorizontalDivider(
-                            Modifier
-                                .padding(vertical = 20.dp)
+                            Modifier.padding(vertical = 20.dp)
                                 .background(color = colors.variables.bordersLight)
                         )
                         Text(
@@ -454,8 +400,5 @@ fun BandwidthEnergyItem(
 @Composable
 @Preview
 fun BandwidthEnergyContentPreview() {
-    BandwidthEnergyContent(
-
-    )
+    BandwidthEnergyContent()
 }
-

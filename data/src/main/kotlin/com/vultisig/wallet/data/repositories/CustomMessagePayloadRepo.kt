@@ -1,12 +1,12 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.models.VaultId
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import vultisig.keysign.v1.CustomMessagePayload
-import javax.inject.Inject
 
 data class CustomMessagePayloadDto(
     val id: String,
@@ -16,6 +16,7 @@ data class CustomMessagePayloadDto(
 
 interface CustomMessagePayloadRepo {
     fun add(payload: CustomMessagePayloadDto)
+
     suspend fun get(id: String): CustomMessagePayloadDto
 }
 
@@ -30,4 +31,3 @@ internal class CustomMessagePayloadRepoImpl @Inject constructor() : CustomMessag
         return _payloads.mapNotNull { it[id] }.first()
     }
 }
-

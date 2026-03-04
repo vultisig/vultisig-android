@@ -9,9 +9,12 @@ import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import javax.inject.Inject
 
-internal interface AccountToTokenBalanceUiModelMapper : SuspendMapperFunc<SendSrc, TokenBalanceUiModel>
+internal interface AccountToTokenBalanceUiModelMapper :
+    SuspendMapperFunc<SendSrc, TokenBalanceUiModel>
 
-internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor(
+internal class AccountToTokenBalanceUiModelMapperImpl
+@Inject
+constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val mapFiatValueToString: FiatValueToStringMapper,
 ) : AccountToTokenBalanceUiModelMapper {
@@ -19,7 +22,7 @@ internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor(
     override suspend fun invoke(from: SendSrc): TokenBalanceUiModel {
         val (_, fromAccount) = from
         val tokenValue = fromAccount.tokenValue
-        
+
         return TokenBalanceUiModel(
             title = fromAccount.token.ticker,
             balance = tokenValue?.let(mapTokenValueToDecimalUiString),
@@ -34,9 +37,10 @@ internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor(
     }
 
     private val Chain.tokenStandard: String?
-        get() = when (this) {
-            Chain.Ethereum -> "ERC20"
-            Chain.BscChain -> "BEP20"
-            else -> null
-        }
+        get() =
+            when (this) {
+                Chain.Ethereum -> "ERC20"
+                Chain.BscChain -> "BEP20"
+                else -> null
+            }
 }

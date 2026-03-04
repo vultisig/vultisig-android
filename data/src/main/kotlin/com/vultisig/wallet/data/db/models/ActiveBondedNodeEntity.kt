@@ -12,53 +12,33 @@ import java.util.Date
 
 @Entity(
     tableName = "active_bonded_nodes",
-    indices = [
-        Index(value = ["vault_id"], name = "index_active_bonded_nodes_vault_id"),
-    ],
-    foreignKeys = [
-        ForeignKey(
-            entity = VaultEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["vault_id"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.CASCADE,
-        )
-    ]
+    indices = [Index(value = ["vault_id"], name = "index_active_bonded_nodes_vault_id")],
+    foreignKeys =
+        [
+            ForeignKey(
+                entity = VaultEntity::class,
+                parentColumns = ["id"],
+                childColumns = ["vault_id"],
+                onDelete = ForeignKey.CASCADE,
+                onUpdate = ForeignKey.CASCADE,
+            )
+        ],
 )
 @TypeConverters(ActiveBondedNodeConverters::class)
 data class ActiveBondedNodeEntity(
-    @PrimaryKey
-    @ColumnInfo("id")
-    val id: String,
-
-    @Embedded(prefix = "node_")
-    val node: BondedNodeEntity,
-
-    @ColumnInfo(name = "coin_id")
-    val coinId: String,
-
-    @ColumnInfo(name = "vault_id")
-    val vaultId: String, // foreign key to vault
-
-    @ColumnInfo(name = "amount")
-    val amount: String,
-
-    @ColumnInfo(name = "apy")
-    val apy: Double,
-
-    @ColumnInfo(name = "next_reward")
-    val nextReward: Double,
-
-    @ColumnInfo(name = "next_churn")
-    val nextChurn: Date?,
+    @PrimaryKey @ColumnInfo("id") val id: String,
+    @Embedded(prefix = "node_") val node: BondedNodeEntity,
+    @ColumnInfo(name = "coin_id") val coinId: String,
+    @ColumnInfo(name = "vault_id") val vaultId: String, // foreign key to vault
+    @ColumnInfo(name = "amount") val amount: String,
+    @ColumnInfo(name = "apy") val apy: Double,
+    @ColumnInfo(name = "next_reward") val nextReward: Double,
+    @ColumnInfo(name = "next_churn") val nextChurn: Date?,
 )
 
 data class BondedNodeEntity(
-    @ColumnInfo(name = "address")
-    val address: String,
-
-    @ColumnInfo(name = "state")
-    val state: String,
+    @ColumnInfo(name = "address") val address: String,
+    @ColumnInfo(name = "state") val state: String,
 )
 
 class ActiveBondedNodeConverters {

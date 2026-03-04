@@ -24,22 +24,12 @@ internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         val hintMap = mapOf(EncodeHintType.MARGIN to 0)
 
         val qrCodeWriter = QRCodeWriter()
-        val bitmapMatrix = qrCodeWriter.encode(
-            qrCodeContent,
-            BarcodeFormat.QR_CODE,
-            0,
-            0,
-            hintMap
-        )
+        val bitmapMatrix = qrCodeWriter.encode(qrCodeContent, BarcodeFormat.QR_CODE, 0, 0, hintMap)
 
         val matrixWidth = bitmapMatrix.width
         val matrixHeight = bitmapMatrix.height
 
-        val bitmap = Bitmap.createBitmap(
-            matrixWidth,
-            matrixHeight,
-            Bitmap.Config.ARGB_8888,
-        )
+        val bitmap = Bitmap.createBitmap(matrixWidth, matrixHeight, Bitmap.Config.ARGB_8888)
 
         if (bitmapMatrix == null) {
             return bitmap

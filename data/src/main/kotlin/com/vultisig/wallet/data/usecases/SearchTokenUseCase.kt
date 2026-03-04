@@ -6,47 +6,38 @@ import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenStandard.EVM
 import com.vultisig.wallet.data.models.TokenStandard.SOL
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
-import kotlinx.coroutines.flow.first
 import java.math.BigDecimal
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
 
-data class CoinAndPrice(
-    val coin: Coin,
-    val price: BigDecimal
-)
+data class CoinAndPrice(val coin: Coin, val price: BigDecimal)
 
-data class CoinAndFiatValue(
-    val coin: Coin,
-    val fiatValue: FiatValue
-)
+data class CoinAndFiatValue(val coin: Coin, val fiatValue: FiatValue)
 
 interface SearchTokenUseCase : suspend (String, String) -> CoinAndFiatValue?
 
-internal class SearchTokenUseCaseImpl @Inject constructor(
+internal class SearchTokenUseCaseImpl
+@Inject
+constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val searchEvmToken: SearchEvmTokenUseCase,
     private val searchSolToken: SearchSolTokenUseCase,
     private val searchKujiToken: SearchKujiraTokenUseCase,
 ) : SearchTokenUseCase {
-    override suspend fun invoke(
-        chainId: String,
-        contractAddress: String
-    ): CoinAndFiatValue? {
+    override suspend fun invoke(chainId: String, contractAddress: String): CoinAndFiatValue? {
         val chain = Chain.fromRaw(chainId)
-        val searchedToken = when {
-            chain.standard == EVM -> searchEvmToken(chainId, contractAddress)
-            chain.standard == SOL -> searchSolToken(contractAddress)
-            chain == Chain.Kujira -> searchKujiToken(contractAddress)
-            else -> return null
-        } ?: return null
+        val searchedToken =
+            when {
+                chain.standard == EVM -> searchEvmToken(chainId, contractAddress)
+                chain.standard == SOL -> searchSolToken(contractAddress)
+                chain == Chain.Kujira -> searchKujiToken(contractAddress)
+                else -> return null
+            } ?: return null
 
         val rawPrice = searchedToken.price
 
         val currency = appCurrencyRepository.currency.first()
-        val tokenFiatValue = FiatValue(
-            rawPrice,
-            currency.ticker
-        )
+        val tokenFiatValue = FiatValue(rawPrice, currency.ticker)
         return CoinAndFiatValue(searchedToken.coin, tokenFiatValue)
     }
 }

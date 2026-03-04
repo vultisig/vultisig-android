@@ -63,26 +63,24 @@ import com.vultisig.wallet.ui.utils.addWhiteBorder
 import com.vultisig.wallet.ui.utils.setupCamera
 import com.vultisig.wallet.ui.utils.unbindCameraListener
 import com.vultisig.wallet.ui.utils.uriToBitmap
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ScanQrScreen(
-    viewModel: ScanQrViewModel = hiltViewModel(),
-) {
+internal fun ScanQrScreen(viewModel: ScanQrViewModel = hiltViewModel()) {
     val uiModel by viewModel.uiState.collectAsState()
     V2BottomSheet(onDismissRequest = viewModel::back) {
         ScanQrScreen(
             uiModel = uiModel,
             onDismiss = viewModel::back,
             onScanSuccess = viewModel::process,
-            onError = viewModel::handleError
+            onError = viewModel::handleError,
         )
     }
 }
@@ -109,12 +107,7 @@ internal fun ScanQrScreen(
                 isScanned = true
                 val barcode = barcodes.first()
                 val barcodeValue = barcode.rawValue
-                Timber.d(
-                    context.getString(
-                        R.string.successfully_scanned_barcode,
-                        barcodeValue
-                    )
-                )
+                Timber.d(context.getString(R.string.successfully_scanned_barcode, barcodeValue))
                 if (barcodeValue != null) {
                     onScanSuccess(barcodeValue)
                 }
@@ -126,54 +119,33 @@ internal fun ScanQrScreen(
 
     val executor = remember { Executors.newSingleThreadExecutor() }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            executor.shutdownNow()
-        }
-    }
+    DisposableEffect(Unit) { onDispose { executor.shutdownNow() } }
 
-    val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
-        coroutineScope.launch {
-            if (uri != null) {
-                try {
-                    val result = scanImage(
-                        InputImage.fromFilePath(
-                            context,
-                            uri
-                        ),
-                        onError
-                    )
-                    val barcodes = result.ifEmpty {
-                        val bitmap = requireNotNull(
-                            uriToBitmap(
-                                context.contentResolver,
-                                uri
-                            )
-                        )
-                            .addWhiteBorder(2F)
-                        val inputImage = InputImage.fromBitmap(
-                            bitmap,
-                            0
-                        )
-                        val resultBarcodes = scanImage(
-                            inputImage,
-                            onError
-                        )
-                        bitmap.recycle()
-                        resultBarcodes
+    val pickMedia =
+        rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+            coroutineScope.launch {
+                if (uri != null) {
+                    try {
+                        val result = scanImage(InputImage.fromFilePath(context, uri), onError)
+                        val barcodes =
+                            result.ifEmpty {
+                                val bitmap =
+                                    requireNotNull(uriToBitmap(context.contentResolver, uri))
+                                        .addWhiteBorder(2F)
+                                val inputImage = InputImage.fromBitmap(bitmap, 0)
+                                val resultBarcodes = scanImage(inputImage, onError)
+                                bitmap.recycle()
+                                resultBarcodes
+                            }
+                        onSuccess(barcodes)
+                    } catch (e: Exception) {
+                        Timber.e(e)
                     }
-                    onSuccess(barcodes)
-                } catch (e: Exception) {
-                    Timber.e(e)
                 }
             }
         }
-    }
 
-    V2Scaffold(
-        onBackClick = onDismiss,
-        title = stringResource(R.string.scan_qr_screen_title)
-    ) {
+    V2Scaffold(onBackClick = onDismiss, title = stringResource(R.string.scan_qr_screen_title)) {
         Box {
             if (cameraPermissionState.status.isGranted) {
                 QrCameraScreen(
@@ -186,20 +158,17 @@ internal fun ScanQrScreen(
                             delay(300)
                             isFrameHighlighted = false
                         }
-                    }
+                    },
                 )
 
-
                 Image(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .fillMaxWidth()
-                        .padding(40.dp),
-                    painter = if (isFrameHighlighted) {
-                        painterResource(id = R.drawable.vs_camera_frame_highlight)
-                    } else {
-                        painterResource(id = R.drawable.vs_camera_frame)
-                    },
+                    modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(40.dp),
+                    painter =
+                        if (isFrameHighlighted) {
+                            painterResource(id = R.drawable.vs_camera_frame_highlight)
+                        } else {
+                            painterResource(id = R.drawable.vs_camera_frame)
+                        },
                     contentDescription = null,
                 )
 
@@ -207,27 +176,20 @@ internal fun ScanQrScreen(
                     Banner(
                         text = uiModel.error.orEmpty(),
                         variant = BannerVariant.Warning,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.TopStart)
+                        modifier = Modifier.fillMaxWidth().align(Alignment.TopStart),
                     )
                 }
-            } else if (cameraPermissionState.status.shouldShowRationale ||
-                cameraPermissionState.status.isGranted.not()
+            } else if (
+                cameraPermissionState.status.shouldShowRationale ||
+                    cameraPermissionState.status.isGranted.not()
             ) {
-                SideEffect {
-                    cameraPermissionState.launchPermissionRequest()
-                }
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                SideEffect { cameraPermissionState.launchPermissionRequest() }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
                         Image(
                             painter = painterResource(id = R.drawable.danger),
                             contentDescription = null,
-                            Modifier.width(65.dp)
+                            Modifier.width(65.dp),
                         )
 
                         UiSpacer(size = 16.dp)
@@ -236,40 +198,31 @@ internal fun ScanQrScreen(
                             textAlign = TextAlign.Center,
                             color = Theme.v2.colors.neutrals.n100,
                             style = Theme.montserrat.subtitle1,
-                            modifier = Modifier.fillMaxWidth(0.5f)
+                            modifier = Modifier.fillMaxWidth(0.5f),
                         )
                     }
                 }
             }
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .padding(
-                        vertical = 16.dp
-                    )
+                modifier =
+                    Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(vertical = 16.dp)
             ) {
                 if (cameraPermissionState.status.isGranted.not()) {
                     VsButton(
                         label = stringResource(id = R.string.scan_qr_screen_return_vault),
                         onClick = onDismiss,
-                        modifier = Modifier
-                            .fillMaxWidth()
-
+                        modifier = Modifier.fillMaxWidth(),
                     )
-                    UiSpacer(
-                        size = 12.dp
-                    )
+                    UiSpacer(size = 12.dp)
                 }
 
                 VsButton(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     onClick = {
                         pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
                     },
                     label = stringResource(id = R.string.scan_qr_upload_from_gallery),
-                    iconLeft = R.drawable.ic_qr_upload
+                    iconLeft = R.drawable.ic_qr_upload,
                 )
             }
         }
@@ -287,14 +240,10 @@ private fun QrCameraScreen(
     val localContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    val cameraProviderFuture = remember {
-        ProcessCameraProvider.getInstance(localContext)
-    }
+    val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(localContext) }
 
     // Key to force AndroidView recreation when returning from background
-    var viewKey by remember {
-        mutableIntStateOf(0)
-    }
+    var viewKey by remember { mutableIntStateOf(0) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -317,9 +266,7 @@ private fun QrCameraScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            localContext.unbindCameraListener(
-                cameraProviderFuture,
-            )
+            localContext.unbindCameraListener(cameraProviderFuture)
         }
     }
 
@@ -335,17 +282,15 @@ private fun QrCameraScreen(
                     onError,
                     onAutoFocusTriggered,
                 )
-            }
+            },
         )
     }
 }
 
-
-fun createScanner() = BarcodeScanning.getClient(
-    BarcodeScannerOptions.Builder()
-        .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-        .build()
-)
+fun createScanner() =
+    BarcodeScanning.getClient(
+        BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
+    )
 
 private suspend fun scanImage(inputImage: InputImage, onError: (String) -> Unit) =
     suspendCoroutine { continuation ->
@@ -354,19 +299,16 @@ private suspend fun scanImage(inputImage: InputImage, onError: (String) -> Unit)
                 .process(inputImage)
                 .addOnSuccessListener { barcodes -> continuation.resume(barcodes) }
                 .addOnFailureListener { error ->
-                    Timber.e(
-                        error,
-                        "Failed to scan image for barcodes"
-                    )
-                    val errorMessage = when (error) {
-                        is IllegalArgumentException -> "Unsupported image format"
-                        is IllegalStateException -> "ML Kit scanner not initialized"
-                        else -> error.message ?: error.toString()
-                    }
+                    Timber.e(error, "Failed to scan image for barcodes")
+                    val errorMessage =
+                        when (error) {
+                            is IllegalArgumentException -> "Unsupported image format"
+                            is IllegalStateException -> "ML Kit scanner not initialized"
+                            else -> error.message ?: error.toString()
+                        }
                     onError(errorMessage)
                     continuation.resume(emptyList())
                 }
-
         } catch (e: Exception) {
             onError("Barcode scanner unavailable: ${e.message}")
             continuation.resume(emptyList())

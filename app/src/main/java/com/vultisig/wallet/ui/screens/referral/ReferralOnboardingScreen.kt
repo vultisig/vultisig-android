@@ -32,38 +32,25 @@ import com.vultisig.wallet.ui.models.referral.OnBoardingReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun ReferralOnboardingScreen(
-    model: OnBoardingReferralViewModel = hiltViewModel(),
-) {
-    ReferralOnboardingScreen(
-        onGetStarted = model::onClickGetStarted,
-        onBackClick = model::back
-    )
+internal fun ReferralOnboardingScreen(model: OnBoardingReferralViewModel = hiltViewModel()) {
+    ReferralOnboardingScreen(onGetStarted = model::onClickGetStarted, onBackClick = model::back)
 }
 
-
 @Composable
-private fun ReferralOnboardingScreen(
-    onGetStarted: () -> Unit,
-    onBackClick: () -> Unit,
-){
+private fun ReferralOnboardingScreen(onGetStarted: () -> Unit, onBackClick: () -> Unit) {
     V2Scaffold(
         title = stringResource(R.string.referral_onboarding_title),
         onBackClick = onBackClick,
         content = {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-            ) {
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 ReferralTag()
                 Row(modifier = Modifier.height(IntrinsicSize.Min)) {
                     Box(
-                        modifier = Modifier
-                            .padding(start = 24.dp)
-                            .width(1.dp)
-                            .fillMaxHeight(0.92f)
-                            .background(Theme.v2.colors.border.light)
+                        modifier =
+                            Modifier.padding(start = 24.dp)
+                                .width(1.dp)
+                                .fillMaxHeight(0.92f)
+                                .background(Theme.v2.colors.border.light)
                     )
 
                     Column {
@@ -74,25 +61,17 @@ private fun ReferralOnboardingScreen(
                 }
             }
         },
-        bottomBar = {
-            FooterButton(onGetStarted = onGetStarted)
-        }
+        bottomBar = { FooterButton(onGetStarted = onGetStarted) },
     )
 }
 
 @Composable
 private fun FooterButton(onGetStarted: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .navigationBarsPadding()
-            .padding(bottom = 24.dp)
-    ) {
+    Column(modifier = Modifier.navigationBarsPadding().padding(bottom = 24.dp)) {
         VsButton(
             onClick = onGetStarted,
             label = stringResource(R.string.referral_onboarding_get_started),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         )
     }
 }
@@ -145,26 +124,11 @@ private fun TimeLineList() {
 }
 
 @Composable
-private fun TimeLineItem(
-    content: @Composable () -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Box(
-            modifier = Modifier
-                .width(24.dp)
-                .height(1.dp)
-                .background(Theme.v2.colors.border.light)
-        )
+private fun TimeLineItem(content: @Composable () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.width(24.dp).height(1.dp).background(Theme.v2.colors.border.light))
 
-        Box(
-            modifier = Modifier
-                .weight(1f)
-        ) {
-            content()
-        }
+        Box(modifier = Modifier.weight(1f)) { content() }
     }
 }
 
@@ -173,7 +137,7 @@ private fun ReferralTag() {
     Box {
         VsPromoTag(
             icon = R.drawable.ic_trumpet,
-            text = stringResource(R.string.referral_program_tag)
+            text = stringResource(R.string.referral_program_tag),
         )
     }
 }
@@ -185,7 +149,7 @@ private fun HowItWorksTitle() {
             text = stringResource(R.string.referral_how_it_works),
             style = Theme.brockmann.headings.largeTitle,
             color = Theme.v2.colors.text.primary,
-            modifier = Modifier.padding(top = 32.dp, bottom = 32.dp, start = 48.dp)
+            modifier = Modifier.padding(top = 32.dp, bottom = 32.dp, start = 48.dp),
         )
     }
 }
@@ -193,8 +157,5 @@ private fun HowItWorksTitle() {
 @Preview(showBackground = true)
 @Composable
 private fun ReferralOnboardingScreenPreview() {
-    ReferralOnboardingScreen(
-        onGetStarted = {},
-        onBackClick = {}
-    )
+    ReferralOnboardingScreen(onGetStarted = {}, onBackClick = {})
 }

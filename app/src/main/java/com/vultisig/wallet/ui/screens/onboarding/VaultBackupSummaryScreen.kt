@@ -35,9 +35,7 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @ExperimentalMaterial3Api
 @Composable
-internal fun VaultBackupSummaryScreen(
-    model: VaultBackupSummaryViewModel = hiltViewModel(),
-) {
+internal fun VaultBackupSummaryScreen(model: VaultBackupSummaryViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     BlockBackClick()
@@ -53,7 +51,6 @@ internal fun VaultBackupSummaryScreen(
             onChooseChains = model::chooseChains,
         )
     }
-
 }
 
 @Composable
@@ -62,50 +59,35 @@ private fun VultBackupSummaryScreen(
     onNext: () -> Unit,
     onChooseChains: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .fillMaxSize(),
-    ) {
+    Column(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize()) {
         Column(
-            modifier = Modifier
-                .background(Theme.v2.colors.backgrounds.primary)
-                .weight(1f)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier =
+                Modifier.background(Theme.v2.colors.backgrounds.primary).weight(1f).fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             RiveAnimation(
-                modifier = Modifier
-                    .height(325.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.height(325.dp).fillMaxWidth(),
                 animation = R.raw.riv_onboarding_success,
             )
 
-            UiSpacer(
-                size = 14.dp
-            )
+            UiSpacer(size = 14.dp)
 
             V3Icon(
                 logo = R.drawable.tick_shield,
                 shinedBottom = Theme.v2.colors.alerts.success,
                 tintColor = Theme.v2.colors.alerts.success,
-                borderWidth = 2.dp
+                borderWidth = 2.dp,
             )
 
-            UiSpacer(
-                size = 24.dp
-            )
+            UiSpacer(size = 24.dp)
 
             Text(
                 text = stringResource(R.string.backup_congrats),
-                style = Theme.brockmann.headings.title2.copy(
-                    brush = Theme.v2.colors.gradients.primary
-                ),
+                style =
+                    Theme.brockmann.headings.title2.copy(brush = Theme.v2.colors.gradients.primary),
             )
 
-            UiSpacer(
-                size = 8.dp
-            )
+            UiSpacer(size = 8.dp)
 
             Text(
                 text = stringResource(R.string.backup_your_vault_is_ready_to_use),
@@ -113,50 +95,37 @@ private fun VultBackupSummaryScreen(
                 color = Theme.v2.colors.text.primary,
             )
 
-            UiSpacer(
-                size = 12.dp
-            )
+            UiSpacer(size = 12.dp)
 
             Text(
                 text = stringResource(R.string.backup_you_re_all_set),
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.body.s.medium,
-                modifier = Modifier
-                    .padding(
-                        horizontal = 48.dp
-                    ),
-                textAlign = TextAlign.Center
+                modifier = Modifier.padding(horizontal = 48.dp),
+                textAlign = TextAlign.Center,
             )
 
-            UiSpacer(
-                weight = 1f
-            )
+            UiSpacer(weight = 1f)
         }
-
-
 
         VsButton(
             onClick = onNext,
             label = stringResource(id = string.backup_go_to_wallet),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .testTag("SummaryScreen.continue")
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .testTag("SummaryScreen.continue"),
         )
 
         // Hidden for KeyImport vaults where chains are fixed at import time
         if (state.isChainSelectionEnabled) {
-            UiSpacer(
-                size = 16.dp
-            )
+            UiSpacer(size = 16.dp)
 
             VsButton(
                 onClick = onChooseChains,
                 label = stringResource(id = string.vault_backup_summary_choose_chains),
                 variant = VsButtonVariant.Secondary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             )
         }
 
@@ -166,12 +135,9 @@ private fun VultBackupSummaryScreen(
 
 @Preview
 @Composable
-private fun VultBackupSummaryScreenPreview(){
+private fun VultBackupSummaryScreenPreview() {
     VultBackupSummaryScreen(
-        state = VaultBackupSummaryUiModel(
-            vaultType = VaultType.Secure,
-            vaultShares = 3,
-        ),
+        state = VaultBackupSummaryUiModel(vaultType = VaultType.Secure, vaultShares = 3),
         onChooseChains = {},
         onNext = {},
     )

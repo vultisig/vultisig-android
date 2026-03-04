@@ -25,74 +25,43 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
-
 @Composable
-internal fun UpgradeBanner(
-    modifier: Modifier = Modifier,
-    onUpgradeClick: () -> Unit = {},
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(
-                    all = 24.dp
-                )
-        ) {
+internal fun UpgradeBanner(modifier: Modifier = Modifier, onUpgradeClick: () -> Unit = {}) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.padding(all = 24.dp)) {
             Text(
                 text = stringResource(R.string.upgrade_banner_sign_faster),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.tertiary,
             )
-            UiSpacer(
-                size = 2.dp
-            )
+            UiSpacer(size = 2.dp)
             Text(
                 text = stringResource(R.string.upgrade_banner_upgrade_your),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
             )
-            UiSpacer(
-                size = 16.dp
-            )
-
+            UiSpacer(size = 16.dp)
 
             Text(
                 text = stringResource(R.string.upgrade_banner_upgrade_now),
                 style = Theme.brockmann.button.medium.medium,
                 color = Theme.v2.colors.backgrounds.primary,
-                modifier = Modifier
-                    .clip(shape = CircleShape)
-                    .clickOnce(onClick = onUpgradeClick)
-                    .background(
-                        color =  Theme.v2.colors.buttons.primary
-                    )
-                    .padding(
-                        vertical = 8.dp,
-                        horizontal = 16.dp
-                    )
+                modifier =
+                    Modifier.clip(shape = CircleShape)
+                        .clickOnce(onClick = onUpgradeClick)
+                        .background(color = Theme.v2.colors.buttons.primary)
+                        .padding(vertical = 8.dp, horizontal = 16.dp),
             )
         }
 
-        UiSpacer(
-            weight = 1f
-        )
+        UiSpacer(weight = 1f)
 
-        Box(
-            modifier = Modifier
-                .wrapContentSize(align = Alignment.BottomEnd)
-        ) {
+        Box(modifier = Modifier.wrapContentSize(align = Alignment.BottomEnd)) {
             Image(
-                painter = painterResource(
-                    id = R.drawable.upgrade_vault_v2
-                ),
+                painter = painterResource(id = R.drawable.upgrade_vault_v2),
                 contentDescription = null,
                 contentScale = ContentScale.FillHeight,
-                modifier = Modifier
-                    .size(140.dp)
-                    .align(alignment = Alignment.BottomEnd)
+                modifier = Modifier.size(140.dp).align(alignment = Alignment.BottomEnd),
             )
         }
     }
@@ -101,11 +70,5 @@ internal fun UpgradeBanner(
 @Preview
 @Composable
 private fun PreviewUpgradeBanner() {
-    Box(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-    ) {
-        UpgradeBanner()
-    }
+    Box(modifier = Modifier.fillMaxWidth()) { UpgradeBanner() }
 }

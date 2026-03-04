@@ -6,23 +6,17 @@ import com.vultisig.wallet.ui.components.textField
 import com.vultisig.wallet.ui.utils.click
 import com.vultisig.wallet.ui.utils.waitUntilShown
 
-internal class NameVaultPage(
-    private val rule: ComposeTestRule
-) {
+internal class NameVaultPage(private val rule: ComposeTestRule) {
 
     fun waitUntilShown() {
         rule.waitUntilShown("NameVaultScreen.nameField")
     }
 
     fun inputName(name: String) {
-        rule.textField("NameVaultScreen.nameField")
-            .performTextInput(name)
+        rule.textField("NameVaultScreen.nameField").performTextInput(name)
     }
 
     fun next() {
         rule.click("NameVaultScreen.continue")
     }
-
 }
-
-

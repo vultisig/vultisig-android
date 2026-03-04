@@ -42,10 +42,7 @@ internal fun FolderScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(folderId) {
-        viewModel.init(folderId)
-    }
-
+    LaunchedEffect(folderId) { viewModel.init(folderId) }
 
     FolderScreen(
         vaultId = vaultId,
@@ -53,13 +50,7 @@ internal fun FolderScreen(
         onMove = viewModel::onMoveVaults,
         onSelectVault = viewModel::selectVault,
         onBackClick = navController::popBackStack,
-        onEditClick = {
-            navController.navigate(
-                Route.CreateFolder(
-                    folderId = folderId
-                )
-            )
-        }
+        onEditClick = { navController.navigate(Route.CreateFolder(folderId = folderId)) },
     )
 }
 
@@ -72,16 +63,8 @@ internal fun FolderScreen(
     onBackClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
 ) {
-    Column(
-        modifier = Modifier
-            .padding(
-                all = 16.dp,
-            )
-    ) {
-
-        UiSpacer(
-            size = 12.dp
-        )
+    Column(modifier = Modifier.padding(all = 16.dp)) {
+        UiSpacer(size = 12.dp)
 
         Row {
             VsCircleButton(
@@ -92,19 +75,15 @@ internal fun FolderScreen(
                 hasBorder = true,
             )
 
-            UiSpacer(
-                size = 16.dp
-            )
+            UiSpacer(size = 16.dp)
 
             VaultInfo(
-                vaultName = state.folder?.name?: stringResource(R.string.folder),
+                vaultName = state.folder?.name ?: stringResource(R.string.folder),
                 vaultCounts = state.vaults.size,
                 totalBalance = state.totalBalance,
             )
 
-            UiSpacer(
-                weight = 1f
-            )
+            UiSpacer(weight = 1f)
 
             VsCircleButton(
                 icon = R.drawable.pen_v2,
@@ -114,13 +93,9 @@ internal fun FolderScreen(
                 designType = DesignType.Shined,
                 hasBorder = true,
             )
-
         }
 
-        UiSpacer(
-            size = 20.dp
-        )
-
+        UiSpacer(size = 20.dp)
 
         VerticalReorderList(
             onMove = onMove,
@@ -131,15 +106,16 @@ internal fun FolderScreen(
             val (vault, balance) = vaultAndBalance
 
             VaultCeil(
-                model = VaultCeilUiModel(
-                    id = vault.id,
-                    name = vault.name,
-                    isFolder = false,
-                    isFastVault = vault.isFastVault(),
-                    vaultPart = vault.getVaultPart(),
-                    signersSize = vault.signers.size,
-                    balance = balance,
-                ),
+                model =
+                    VaultCeilUiModel(
+                        id = vault.id,
+                        name = vault.name,
+                        isFolder = false,
+                        isFastVault = vault.isFastVault(),
+                        vaultPart = vault.getVaultPart(),
+                        signersSize = vault.signers.size,
+                        balance = balance,
+                    ),
                 isInEditMode = false,
                 onSelect = onSelectVault,
                 isSelected = vault.id == vaultId,
@@ -148,11 +124,8 @@ internal fun FolderScreen(
             )
         }
 
-        UiSpacer(
-            size = 12.dp
-        )
+        UiSpacer(size = 12.dp)
     }
-
 }
 
 @Preview
@@ -160,20 +133,22 @@ internal fun FolderScreen(
 fun FolderScreenPreview() {
     FolderScreen(
         vaultId = "2",
-        state = FolderUiModel(
-            vaults = listOf(
-                VaultAndBalance(
-                    vault = generateFakeVault(),
-                    balance = "$2",
-                    balanceFiatValue = null,
-                ),
-                VaultAndBalance(
-                    vault = generateFakeVault(),
-                    balance = "$2",
-                    balanceFiatValue = null,
-                )
-            )
-        ),
+        state =
+            FolderUiModel(
+                vaults =
+                    listOf(
+                        VaultAndBalance(
+                            vault = generateFakeVault(),
+                            balance = "$2",
+                            balanceFiatValue = null,
+                        ),
+                        VaultAndBalance(
+                            vault = generateFakeVault(),
+                            balance = "$2",
+                            balanceFiatValue = null,
+                        ),
+                    )
+            ),
         onMove = { _, _ -> },
         onSelectVault = {},
     )

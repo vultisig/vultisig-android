@@ -34,17 +34,11 @@ import com.vultisig.wallet.ui.models.defi.LpTabUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun LpTabContent(
-    state: LpTabUiModel,
-    onClickAdd: () -> Unit,
-    onClickRemove: () -> Unit,
-) {
+internal fun LpTabContent(state: LpTabUiModel, onClickAdd: () -> Unit, onClickRemove: () -> Unit) {
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         state.positions.forEach { lpPosition ->
             LpWidget(
@@ -65,22 +59,22 @@ internal fun LpWidget(
     onClickRemove: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.normal,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(16.dp)
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
                 painter = painterResource(id = state.icon),
                 contentDescription = null,
-                modifier = Modifier.size(46.dp)
+                modifier = Modifier.size(46.dp),
             )
 
             UiSpacer(12.dp)
@@ -95,11 +89,7 @@ internal fun LpWidget(
                 UiSpacer(4.dp)
 
                 if (isLoading) {
-                    UiPlaceholderLoader(
-                        modifier = Modifier
-                            .width(120.dp)
-                            .height(28.dp)
-                    )
+                    UiPlaceholderLoader(modifier = Modifier.width(120.dp).height(28.dp))
                 } else {
                     Text(
                         text = state.totalPriceLp,
@@ -117,9 +107,7 @@ internal fun LpWidget(
         UiSpacer(16.dp)
 
         if (state.apr != null) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 InfoItem(
                     icon = R.drawable.ic_icon_percentage,
                     label = stringResource(R.string.apy),
@@ -149,10 +137,7 @@ internal fun LpWidget(
 
             if (isLoading) {
                 UiPlaceholderLoader(
-                    modifier = Modifier
-                        .width(180.dp)
-                        .height(24.dp)
-                        .padding(top = 4.dp)
+                    modifier = Modifier.width(180.dp).height(24.dp).padding(top = 4.dp)
                 )
             } else {
                 Text(
@@ -166,7 +151,7 @@ internal fun LpWidget(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ActionButton(
                 title = stringResource(R.string.remove),
@@ -177,7 +162,7 @@ internal fun LpWidget(
                 onClick = onClickRemove,
                 modifier = Modifier.weight(1f),
                 enabled = true,
-                iconCircleColor = Theme.v2.colors.text.tertiary
+                iconCircleColor = Theme.v2.colors.text.tertiary,
             )
 
             ActionButton(
@@ -188,7 +173,7 @@ internal fun LpWidget(
                 onClick = onClickAdd,
                 modifier = Modifier.weight(1f),
                 enabled = true,
-                iconCircleColor = Theme.v2.colors.primary.accent4
+                iconCircleColor = Theme.v2.colors.primary.accent4,
             )
         }
     }
@@ -199,16 +184,17 @@ internal fun LpWidget(
 private fun LpWidgetPreview() {
 
     LpWidget(
-        state = LpPositionUiModel(
-            titleLp = "ETH/USDC",
-            totalPriceLp = "$4,300",
-            icon = R.drawable.ethereum,
-            apr = "12.5%",
-            position = "0.5 ETH / 1500 USDC"
-        ),
+        state =
+            LpPositionUiModel(
+                titleLp = "ETH/USDC",
+                totalPriceLp = "$4,300",
+                icon = R.drawable.ethereum,
+                apr = "12.5%",
+                position = "0.5 ETH / 1500 USDC",
+            ),
         isLoading = false,
         onClickAdd = {},
-        onClickRemove = {}
+        onClickRemove = {},
     )
 }
 
@@ -216,15 +202,16 @@ private fun LpWidgetPreview() {
 @Composable
 private fun LpWidgetLoadingPreview() {
     LpWidget(
-        state = LpPositionUiModel(
-            titleLp = "BTC/USDT",
-            totalPriceLp = "$0",
-            icon = R.drawable.ethereum,
-            apr = null,
-            position = "Loading..."
-        ),
+        state =
+            LpPositionUiModel(
+                titleLp = "BTC/USDT",
+                totalPriceLp = "$0",
+                icon = R.drawable.ethereum,
+                apr = null,
+                position = "Loading...",
+            ),
         isLoading = true,
         onClickAdd = {},
-        onClickRemove = {}
+        onClickRemove = {},
     )
 }

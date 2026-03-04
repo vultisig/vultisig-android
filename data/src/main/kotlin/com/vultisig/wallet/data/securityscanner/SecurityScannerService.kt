@@ -3,8 +3,8 @@ package com.vultisig.wallet.data.securityscanner
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.OnChainSecurityScannerRepository
-import timber.log.Timber
 import java.util.concurrent.ConcurrentSkipListSet
+import timber.log.Timber
 
 class SecurityScannerService(
     private val providers: List<ProviderScannerServiceContract>,
@@ -13,17 +13,16 @@ class SecurityScannerService(
 ) : SecurityScannerContract {
     private val disabledProvidersNames: MutableSet<String> = ConcurrentSkipListSet()
 
-    override suspend fun scanTransaction(transaction: SecurityScannerTransaction): SecurityScannerResult {
+    override suspend fun scanTransaction(
+        transaction: SecurityScannerTransaction
+    ): SecurityScannerResult {
         val enabledProviders = providers.filter { it.getProviderName() !in disabledProvidersNames }
         return enabledProviders.firstOrNull()?.scanTransaction(transaction)
             ?: run {
                 val errorMessage =
                     "SecurityScanner: No enabled provider available for scanning ${transaction.chain.name} tx"
                 Timber.w(errorMessage)
-                throw SecurityScannerException(
-                    message = errorMessage,
-                    chain = transaction.chain
-                )
+                throw SecurityScannerException(message = errorMessage, chain = transaction.chain)
             }
     }
 
@@ -31,11 +30,15 @@ class SecurityScannerService(
         return repository.getSecurityScannerStatus()
     }
 
-    override suspend fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
+    override suspend fun createSecurityScannerTransaction(
+        transaction: Transaction
+    ): SecurityScannerTransaction {
         return factory.createSecurityScannerTransaction(transaction)
     }
 
-    override suspend fun createSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
+    override suspend fun createSecurityScannerTransaction(
+        transaction: SwapTransaction
+    ): SecurityScannerTransaction {
         return factory.createSecurityScannerTransaction(transaction)
     }
 
@@ -55,9 +58,8 @@ class SecurityScannerService(
             Timber.w("SecurityScanner: Invalid provider names: ${invalidProviders.joinToString()}")
         }
 
-        val disabledCount = validProviders.count { providerName ->
-            disabledProvidersNames.add(providerName)
-        }
+        val disabledCount =
+            validProviders.count { providerName -> disabledProvidersNames.add(providerName) }
         if (disabledCount > 0) {
             Timber.i("SecurityScanner: Disabled $disabledCount providers.")
         } else {
@@ -66,9 +68,8 @@ class SecurityScannerService(
     }
 
     override fun enableProviders(providersToEnable: List<String>) {
-        val enabledCount = providersToEnable.count { providerName ->
-            disabledProvidersNames.remove(providerName)
-        }
+        val enabledCount =
+            providersToEnable.count { providerName -> disabledProvidersNames.remove(providerName) }
         if (enabledCount > 0) {
             Timber.i("SecurityScanner: Enabled $enabledCount providers.")
         } else {
@@ -80,12 +81,10 @@ class SecurityScannerService(
         return providers.map { provider ->
             SecurityScannerSupport(
                 provider = provider.getProviderName(),
-                feature = provider.getSupportedChains().map { (featureType, chains) ->
-                    SecurityScannerSupport.Feature(
-                        chains = chains,
-                        featureType = featureType
-                    )
-                }
+                feature =
+                    provider.getSupportedChains().map { (featureType, chains) ->
+                        SecurityScannerSupport.Feature(chains = chains, featureType = featureType)
+                    },
             )
         }
     }

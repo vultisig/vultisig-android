@@ -20,39 +20,28 @@ import com.vultisig.wallet.ui.models.SecretUiModel
 import com.vultisig.wallet.ui.models.SecretViewModel
 
 @Composable
-internal fun SecretScreen(
-    model: SecretViewModel = hiltViewModel()
-) {
+internal fun SecretScreen(model: SecretViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
-    SecretScreen(
-        state = state,
-        onBackClick = model::back,
-        onToggleDkls = model::toggleDkls,
-    )
+    SecretScreen(state = state, onBackClick = model::back, onToggleDkls = model::toggleDkls)
 }
 
 @Composable
 private fun SecretScreen(
     state: SecretUiModel,
-    onBackClick: ()-> Unit,
-    onToggleDkls: (Boolean) -> Unit
+    onBackClick: () -> Unit,
+    onToggleDkls: (Boolean) -> Unit,
 ) {
 
-    V2Scaffold(
-        title = stringResource(R.string.vault_settings_title),
-        onBackClick = onBackClick,
-    ) {
+    V2Scaffold(title = stringResource(R.string.vault_settings_title), onBackClick = onBackClick) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             SelectionItem(
                 title = stringResource(R.string.secret_enable_dkls),
                 isChecked = state.isDklsEnabled,
-                onCheckedChange = onToggleDkls
+                onCheckedChange = onToggleDkls,
             )
         }
     }
@@ -61,9 +50,5 @@ private fun SecretScreen(
 @Preview
 @Composable
 private fun SecretScreenPreview() {
-    SecretScreen(
-        state = SecretUiModel(),
-        onBackClick = {},
-        onToggleDkls = {}
-    )
+    SecretScreen(state = SecretUiModel(), onBackClick = {}, onToggleDkls = {})
 }

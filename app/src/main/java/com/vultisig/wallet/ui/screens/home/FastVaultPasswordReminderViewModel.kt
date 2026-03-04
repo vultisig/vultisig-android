@@ -16,13 +16,13 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
-import javax.inject.Inject
 
 internal data class FastVaultPasswordReminderUiModel(
     val isPasswordVisible: Boolean = false,
@@ -30,7 +30,9 @@ internal data class FastVaultPasswordReminderUiModel(
 )
 
 @HiltViewModel
-internal class FastVaultPasswordReminderViewModel @Inject constructor(
+internal class FastVaultPasswordReminderViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vultiSignerRepository: VultiSignerRepository,
@@ -54,20 +56,17 @@ internal class FastVaultPasswordReminderViewModel @Inject constructor(
     }
 
     fun togglePasswordVisibility() {
-        state.update {
-            it.copy(isPasswordVisible = !it.isPasswordVisible)
-        }
+        state.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
     }
 
     fun verify() {
         val password = passwordFieldState.text.toString()
 
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId)
-                ?: return@launch
+            val vault = vaultRepository.get(vaultId) ?: return@launch
 
             val result = vultiSignerRepository.checkPassword(vault.pubKeyECDSA, password)
-            
+
             when (result) {
                 is PasswordCheckResult.Valid -> {
                     back()
@@ -83,9 +82,7 @@ internal class FastVaultPasswordReminderViewModel @Inject constructor(
                     }
                 }
                 is PasswordCheckResult.Error -> {
-                    state.update {
-                        it.copy(error = UiText.DynamicString(result.message))
-                    }
+                    state.update { it.copy(error = UiText.DynamicString(result.message)) }
                 }
             }
         }
@@ -94,10 +91,7 @@ internal class FastVaultPasswordReminderViewModel @Inject constructor(
     private suspend fun updatePasswordNextReminderTime() {
         vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
             vaultId = vaultId,
-            date = Clock.System.todayIn(
-                TimeZone.currentSystemDefault()
-            )
+            date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
         )
     }
-
 }

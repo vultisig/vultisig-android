@@ -22,8 +22,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import io.ktor.http.path
-import kotlinx.serialization.json.Json
 import javax.inject.Inject
+import kotlinx.serialization.json.Json
 
 interface KyberApi {
 
@@ -45,13 +45,14 @@ interface KyberApi {
     ): KyberSwapQuoteJson
 }
 
-class KyberApiImpl @Inject constructor(
+class KyberApiImpl
+@Inject
+constructor(
     private val httpClient: HttpClient,
     private val kyberSwapQuoteResponseJsonSerializer: KyberSwapQuoteResponseJsonSerializer,
     private val json: Json,
 ) : KyberApi {
     private val aggregatorApiBaseUrl = "https://aggregator-api.kyberswap.com"
-
 
     override suspend fun getSwapQuote(
         chain: Chain,
@@ -62,87 +63,56 @@ class KyberApiImpl @Inject constructor(
         isAffiliate: Boolean,
     ): KyberSwapQuoteDeserialized {
         try {
-            val sourceAddress =
-                srcTokenContractAddress.ifEmpty { NULL_ADDRESS }
-            val destinationAddress =
-                dstTokenContractAddress.ifEmpty { NULL_ADDRESS }
+            val sourceAddress = srcTokenContractAddress.ifEmpty { NULL_ADDRESS }
+            val destinationAddress = dstTokenContractAddress.ifEmpty { NULL_ADDRESS }
 
-            val response = httpClient.get(aggregatorApiBaseUrl) {
-                url {
-                    path(
-                        chain.raw.lowercase(),
-                        "api/v1/routes",
-                    )
-                    parameters.apply {
-                        append(
-                            "tokenIn",
-                            sourceAddress
-                        )
-                        append(
-                            "tokenOut",
-                            destinationAddress
-                        )
-                        append(
-                            "amountIn",
-                            amount
-                        )
-                        append(
-                            "saveGas",
-                            "false"
-                        )
-                        append(
-                            "gasInclude",
-                            "true"
-                        )
-                        append(
-                            "slippageTolerance",
-                            SLIPPAGE_TOLERANCE.toString()
-                        )
-                        append(
-                            "isAffiliate",
-                            isAffiliate.toString()
-                        )
-                        parameter(
-                            "sourceIdentifier",
-                            if (isAffiliate) CLIENT_ID else null
-                        )
-                        parameter(
-                            "referrerAddress",
-                            if (isAffiliate) REFERRER_ADDRESS else null
-                        )
-                    }
+            val response =
+                httpClient.get(aggregatorApiBaseUrl) {
+                    url {
+                        path(chain.raw.lowercase(), "api/v1/routes")
+                        parameters.apply {
+                            append("tokenIn", sourceAddress)
+                            append("tokenOut", destinationAddress)
+                            append("amountIn", amount)
+                            append("saveGas", "false")
+                            append("gasInclude", "true")
+                            append("slippageTolerance", SLIPPAGE_TOLERANCE.toString())
+                            append("isAffiliate", isAffiliate.toString())
+                            parameter("sourceIdentifier", if (isAffiliate) CLIENT_ID else null)
+                            parameter(
+                                "referrerAddress",
+                                if (isAffiliate) REFERRER_ADDRESS else null,
+                            )
+                        }
 
-                    headers {
-                        accept(ContentType.Application.Json)
-                        append(
-                            "x-client-id",
-                            CLIENT_ID
-                        )
+                        headers {
+                            accept(ContentType.Application.Json)
+                            append("x-client-id", CLIENT_ID)
+                        }
                     }
                 }
 
-            }
-
             if (!response.status.isSuccess()) {
-                val errorResponse = runCatching {
-                    json.decodeFromString<KyberSwapErrorResponse>(response.body<String>())
-                }.getOrNull()
+                val errorResponse =
+                    runCatching {
+                            json.decodeFromString<KyberSwapErrorResponse>(response.body<String>())
+                        }
+                        .getOrNull()
                 return KyberSwapQuoteDeserialized.Error(
-                    errorResponse ?: KyberSwapErrorResponse(
-                        message = HttpStatusCode.fromValue(response.status.value).description
-                    )
+                    errorResponse
+                        ?: KyberSwapErrorResponse(
+                            message = HttpStatusCode.fromValue(response.status.value).description
+                        )
                 )
             }
 
             return json.decodeFromString(
                 kyberSwapQuoteResponseJsonSerializer,
-                response.body<String>()
+                response.body<String>(),
             )
         } catch (e: Exception) {
             return KyberSwapQuoteDeserialized.Error(
-                KyberSwapErrorResponse(
-                    message = e.message ?: "Unknown error"
-                )
+                KyberSwapErrorResponse(message = e.message ?: "Unknown error")
             )
         }
     }
@@ -156,52 +126,52 @@ class KyberApiImpl @Inject constructor(
     ): KyberSwapQuoteJson {
 
         try {
-            val request = KyberSwapBuildRequest(
-                routeSummary = routeSummary,
-                sender = from,
-                recipient = from,
-                slippageTolerance = SLIPPAGE_TOLERANCE,
-                deadline = (System.currentTimeMillis() / 1000L + 1200).toInt(),
-                enableGasEstimation = enableGasEstimation,
-                source = CLIENT_ID,
-                referral = if (isAffiliate) REFERRER_ADDRESS else null,
-                ignoreCappedSlippage = false
-            )
+            val request =
+                KyberSwapBuildRequest(
+                    routeSummary = routeSummary,
+                    sender = from,
+                    recipient = from,
+                    slippageTolerance = SLIPPAGE_TOLERANCE,
+                    deadline = (System.currentTimeMillis() / 1000L + 1200).toInt(),
+                    enableGasEstimation = enableGasEstimation,
+                    source = CLIENT_ID,
+                    referral = if (isAffiliate) REFERRER_ADDRESS else null,
+                    ignoreCappedSlippage = false,
+                )
 
-            val response = httpClient.post(aggregatorApiBaseUrl) {
-                url {
-                    path(
-                        chain.raw.lowercase(),
-                        "api/v1/route/build",
-                    )
+            val response =
+                httpClient.post(aggregatorApiBaseUrl) {
+                    url {
+                        path(chain.raw.lowercase(), "api/v1/route/build")
 
-                    headers {
-                        accept(ContentType.Application.Json)
-                        append(
-                            "x-client-id",
-                            CLIENT_ID
-                        )
+                        headers {
+                            accept(ContentType.Application.Json)
+                            append("x-client-id", CLIENT_ID)
+                        }
                     }
+                    setBody(json.encodeToString(request))
                 }
-                setBody(json.encodeToString(request))
-            }
-            if (response.bodyAsText().contains("TransferHelper") && response.bodyAsText()
-                    .contains("execution reverted")
+            if (
+                response.bodyAsText().contains("TransferHelper") &&
+                    response.bodyAsText().contains("execution reverted")
             ) {
                 return getKyberSwapQuote(
                     chain = chain,
                     routeSummary = routeSummary,
                     from = from,
                     enableGasEstimation = false,
-                    isAffiliate = isAffiliate
+                    isAffiliate = isAffiliate,
                 )
             }
             if (!response.status.isSuccess()) {
-                val errorResponse = runCatching {
-                    json.decodeFromString<KyberSwapErrorResponse>(response.bodyAsText())
-                }.getOrNull() ?: KyberSwapErrorResponse(
-                    message = HttpStatusCode.fromValue(response.status.value).description
-                )
+                val errorResponse =
+                    runCatching {
+                            json.decodeFromString<KyberSwapErrorResponse>(response.bodyAsText())
+                        }
+                        .getOrNull()
+                        ?: KyberSwapErrorResponse(
+                            message = HttpStatusCode.fromValue(response.status.value).description
+                        )
                 throw SwapException.handleSwapException(errorResponse.message)
             }
             return response.bodyOrThrow<KyberSwapQuoteJson>()
@@ -209,7 +179,6 @@ class KyberApiImpl @Inject constructor(
             throw SwapException.handleSwapException(e.message.toString())
         }
     }
-
 
     companion object {
         private const val REFERRER_ADDRESS = "0x8E247a480449c84a5fDD25974A8501f3EFa4ABb9"

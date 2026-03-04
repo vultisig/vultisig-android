@@ -31,28 +31,20 @@ internal fun SummaryScreen(
     onButtonClicked: () -> Unit,
     onAnimationInit: (RiveAnimationView) -> Unit = {},
 ) {
-    Column(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .fillMaxSize(),
-    ) {
+    Column(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize()) {
         Box(
-            modifier = Modifier
-                .background(Theme.v2.colors.backgrounds.primary)
-                .weight(1f)
-                .fillMaxSize(),
+            modifier =
+                Modifier.background(Theme.v2.colors.backgrounds.primary).weight(1f).fillMaxSize()
         ) {
             RiveAnimation(
-                modifier = Modifier
-                    .align(Alignment.Center),
+                modifier = Modifier.align(Alignment.Center),
                 animation = animationRes,
-                onInit = onAnimationInit
+                onInit = onAnimationInit,
             )
         }
 
         VsCheckField(
-            modifier = Modifier.padding(20.dp)
-                .testTag("SummaryScreen.agree"),
+            modifier = Modifier.padding(20.dp).testTag("SummaryScreen.agree"),
             title = stringResource(id = R.string.onboarding_summary_check),
             isChecked = checkState,
             onCheckedChange = onCheckChange,
@@ -62,10 +54,10 @@ internal fun SummaryScreen(
             onClick = onButtonClicked,
             label = stringResource(id = buttonText),
             state = if (checkState) VsButtonState.Enabled else VsButtonState.Disabled,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .testTag("SummaryScreen.continue")
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .testTag("SummaryScreen.continue"),
         )
 
         UiSpacer(32.dp)

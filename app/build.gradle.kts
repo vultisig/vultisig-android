@@ -7,8 +7,11 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.google.gms.google.services)
-
+    alias(libs.plugins.ktfmt)
 }
+
+ktfmt { kotlinLangStyle() }
+
 android {
     namespace = "com.vultisig.wallet"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -22,9 +25,7 @@ android {
 
         testInstrumentationRunner = "com.vultisig.wallet.util.HiltTestRunner"
 
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+        vectorDrawables { useSupportLibrary = true }
     }
 
     buildTypes {
@@ -32,7 +33,7 @@ android {
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -46,9 +47,7 @@ android {
             excludes += "/META-INF/LICENSE*.md"
         }
     }
-    tasks.withType<Test> {
-        useJUnitPlatform()
-    }
+    tasks.withType<Test> { useJUnitPlatform() }
     lint {
         abortOnError = true
         absolutePaths = false
@@ -56,9 +55,7 @@ android {
     }
 }
 
-kotlin {
-    jvmToolchain(21)
-}
+kotlin { jvmToolchain(21) }
 
 dependencies {
     implementation(project(":data"))
@@ -142,7 +139,6 @@ dependencies {
     // animation
     implementation(libs.lottie.compose)
     implementation(libs.rive)
-
 
     // test
     testImplementation(libs.junit)

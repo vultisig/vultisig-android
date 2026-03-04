@@ -44,77 +44,44 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun FaqSettingScreen(navController: NavHostController) {
     val viewModel = hiltViewModel<FAQSettingViewModel>()
     val state by viewModel.state.collectAsState()
-    FaqSettingScreen(
-        onBackClick = {
-            navController.popBackStack()
-        },
-        state = state
-    )
+    FaqSettingScreen(onBackClick = { navController.popBackStack() }, state = state)
 }
 
 @Composable
-private fun FaqSettingScreen(
-    onBackClick: () -> Unit,
-    state: FAQSettingUiModel
-) {
+private fun FaqSettingScreen(onBackClick: () -> Unit, state: FAQSettingUiModel) {
 
     V2Scaffold(
         title = stringResource(R.string.faq_setting_screen_title),
-        onBackClick = onBackClick
+        onBackClick = onBackClick,
     ) {
-
-        V2Container(
-            type = ContainerType.SECONDARY
-        ) {
-            LazyColumn(
-                contentPadding = PaddingValues(
-                    horizontal = 20.dp,
-                    vertical = 16.dp
-                )
-            ) {
+        V2Container(type = ContainerType.SECONDARY) {
+            LazyColumn(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)) {
                 itemsIndexed(state.questions) { index, faq ->
-                    FAQSettingItem(
-                        faq = faq,
-                        isLastItem = index == state.questions.lastIndex
-                    )
+                    FAQSettingItem(faq = faq, isLastItem = index == state.questions.lastIndex)
                 }
             }
         }
-
-
     }
 }
-
 
 @Composable
 private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
     val colors = Theme.v2.colors
-    var isExpanded by remember {
-        mutableStateOf(false)
-    }
-    val rotation = animateFloatAsState(
-        targetValue = if (isExpanded) 90f else 0f, label = "arrow angle"
-    )
-    Column(
-        modifier = Modifier
-            .animateContentSize(),
-    ) {
+    var isExpanded by remember { mutableStateOf(false) }
+    val rotation =
+        animateFloatAsState(targetValue = if (isExpanded) 90f else 0f, label = "arrow angle")
+    Column(modifier = Modifier.animateContentSize()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    isExpanded = !isExpanded
-                },
+            modifier = Modifier.fillMaxWidth().clickable { isExpanded = !isExpanded },
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-
             Text(
                 text = faq.question,
                 color = Theme.v2.colors.text.secondary,
                 style = Theme.brockmann.body.s.medium,
                 lineHeight = 20.sp,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
 
             UiSpacer(16.dp)
@@ -140,7 +107,6 @@ private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
         if (isLastItem.not()) {
             FadingHorizontalDivider(Modifier.padding(vertical = 16.dp))
         }
-
     }
 }
 
@@ -148,21 +114,27 @@ private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
 @Composable
 private fun FaqSettingScreenPreview() {
     FaqSettingScreen(
-        onBackClick = {}, state = FAQSettingUiModel(
-            questions = listOf(
-                Faq(
-                    question = "What is Vultisig?",
-                    answer = "It is a secure, multi-authentication wallet based on MPC technology that is used to manage digital assets. Transactions require approval from multiple devices."
-                ),
-                Faq(
-                    question = "What are the benefits of using Vultisig?",
-                    answer = "Vultisig offers enhanced security with multi-device authentication, support for many blockchains, easy recovery options, and no seed phrases or user tracking."
-                ),
-                Faq(
-                    question = "Can I recover my assets if I lose a device?",
-                    answer = "Yes, as long as you saved and have access to your backups when creating the vault. You can import these backups on a new device to regain access to your assets."
-                )
-            )
-        )
+        onBackClick = {},
+        state =
+            FAQSettingUiModel(
+                questions =
+                    listOf(
+                        Faq(
+                            question = "What is Vultisig?",
+                            answer =
+                                "It is a secure, multi-authentication wallet based on MPC technology that is used to manage digital assets. Transactions require approval from multiple devices.",
+                        ),
+                        Faq(
+                            question = "What are the benefits of using Vultisig?",
+                            answer =
+                                "Vultisig offers enhanced security with multi-device authentication, support for many blockchains, easy recovery options, and no seed phrases or user tracking.",
+                        ),
+                        Faq(
+                            question = "Can I recover my assets if I lose a device?",
+                            answer =
+                                "Yes, as long as you saved and have access to your backups when creating the vault. You can import these backups on a new device to regain access to your assets.",
+                        ),
+                    )
+            ),
     )
 }

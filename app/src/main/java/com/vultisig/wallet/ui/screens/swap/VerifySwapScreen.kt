@@ -69,21 +69,20 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun VerifySwapScreen(
-    viewModel: VerifySwapViewModel = hiltViewModel(),
-) {
+internal fun VerifySwapScreen(viewModel: VerifySwapViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val promptTitle = stringResource(R.string.biometry_keysign_login_button)
 
-    val authorize: () -> Unit = remember(context) {
-        {
-            context.launchBiometricPrompt(
-                promptTitle = promptTitle,
-                onAuthorizationSuccess = viewModel::authFastSign,
-            )
+    val authorize: () -> Unit =
+        remember(context) {
+            {
+                context.launchBiometricPrompt(
+                    promptTitle = promptTitle,
+                    onAuthorizationSuccess = viewModel::authFastSign,
+                )
+            }
         }
-    }
 
     val errorText = state.errorText
     if (errorText != null) {
@@ -185,23 +184,19 @@ private fun VerifySwapScreen(
         content = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             ) {
                 Column(modifier = Modifier.align(alignment = Alignment.CenterHorizontally)) {
                     SecurityScannerBadget(scanStatus)
                 }
 
                 Column(
-                    modifier = Modifier
-                        .background(
-                            color = Theme.v2.colors.backgrounds.secondary,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(
-                            all = 24.dp,
-                        )
+                    modifier =
+                        Modifier.background(
+                                color = Theme.v2.colors.backgrounds.secondary,
+                                shape = RoundedCornerShape(16.dp),
+                            )
+                            .padding(all = 24.dp)
                 ) {
                     Text(
                         text = stringResource(R.string.verify_swap_youre_swapping_title),
@@ -211,43 +206,36 @@ private fun VerifySwapScreen(
 
                     UiSpacer(24.dp)
 
-                    SwapToken(
-                        valuedToken = tx.src,
-                        isSwap = true,
-                    )
+                    SwapToken(valuedToken = tx.src, isSwap = true)
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(20.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             VerticalDivider(
                                 thickness = 1.dp,
                                 color = Theme.v2.colors.border.light,
-                                modifier = Modifier
-                                    .height(16.dp)
+                                modifier = Modifier.height(16.dp),
                             )
 
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrow_down),
                                 contentDescription = null,
                                 tint = Theme.v2.colors.primary.accent4,
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .background(
-                                        color = Theme.v2.colors.backgrounds.tertiary_2,
-                                        shape = CircleShape,
-                                    )
-                                    .padding(6.dp)
+                                modifier =
+                                    Modifier.size(24.dp)
+                                        .background(
+                                            color = Theme.v2.colors.backgrounds.tertiary_2,
+                                            shape = CircleShape,
+                                        )
+                                        .padding(6.dp),
                             )
 
                             VerticalDivider(
                                 thickness = 1.dp,
                                 color = Theme.v2.colors.border.light,
-                                modifier = Modifier
-                                    .height(16.dp)
+                                modifier = Modifier.height(16.dp),
                             )
                         }
 
@@ -257,22 +245,12 @@ private fun VerifySwapScreen(
                             color = Theme.v2.colors.text.tertiary,
                         )
 
-                        HorizontalDivider(
-                            thickness = 1.dp,
-                            color = Theme.v2.colors.border.light,
-                        )
+                        HorizontalDivider(thickness = 1.dp, color = Theme.v2.colors.border.light)
                     }
 
+                    SwapToken(valuedToken = tx.dst, isSwap = true, isDestinationToken = true)
 
-                    SwapToken(
-                        valuedToken = tx.dst,
-                        isSwap = true,
-                        isDestinationToken = true,
-                    )
-
-                    VerifyCardDivider(
-                        size = 20.dp,
-                    )
+                    VerifyCardDivider(size = 20.dp)
 
                     VerifyVaultDetails(
                         title = stringResource(R.string.swap_form_vault),
@@ -280,9 +258,7 @@ private fun VerifySwapScreen(
                         metadata = tx.src.token.address,
                     )
 
-                    VerifyCardDivider(
-                        size = 20.dp,
-                    )
+                    VerifyCardDivider(size = 20.dp)
 
                     EstimatedNetworkFee(
                         tokenGas = tx.networkFeeFormatted,
@@ -294,9 +270,7 @@ private fun VerifySwapScreen(
                         subtitle = tx.providerFee.fiatValue,
                     )
 
-                    VerifyCardDivider(
-                        size = 10.dp,
-                    )
+                    VerifyCardDivider(size = 10.dp)
 
                     VerifyCardDetails(
                         title = stringResource(R.string.verify_swap_screen_total_fees),
@@ -333,16 +307,9 @@ private fun VerifySwapScreen(
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 12.dp,
-                    )
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
             ) {
-
-                if (hasToShowWarningScanning &&
-                    scanStatus is TransactionScanStatus.Scanned
-                ) {
+                if (hasToShowWarningScanning && scanStatus is TransactionScanStatus.Scanned) {
                     SecurityScannerBottomSheet(
                         securityScannerModel = scanStatus.result,
                         onContinueAnyway = onContinueAnyway,
@@ -360,23 +327,23 @@ private fun VerifySwapScreen(
 
                     VsHoldableButton(
                         label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = onFastSignClick,
                         onLongClick = onConfirm,
-                        enabled = if (isConsentsEnabled && !hasAllConsents) {
-                            VsButtonState.Disabled
-                        } else {
-                            VsButtonState.Enabled
-                        }
+                        enabled =
+                            if (isConsentsEnabled && !hasAllConsents) {
+                                VsButtonState.Disabled
+                            } else {
+                                VsButtonState.Enabled
+                            },
                     )
                 } else {
                     VsButton(
                         label = confirmTitle,
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        state = if (isConsentsEnabled && !hasAllConsents)
-                            VsButtonState.Disabled else VsButtonState.Enabled,
+                        modifier = Modifier.fillMaxWidth(),
+                        state =
+                            if (isConsentsEnabled && !hasAllConsents) VsButtonState.Disabled
+                            else VsButtonState.Enabled,
                         onClick = onConfirm,
                     )
                 }
@@ -394,8 +361,7 @@ internal fun SwapToken(
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
-    val shouldShowOnChainLogo = isSwap
-            && (!token.isNativeToken || token.chain.isLayer2)
+    val shouldShowOnChainLogo = isSwap && (!token.isNativeToken || token.chain.isLayer2)
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -404,30 +370,20 @@ internal fun SwapToken(
         TokenLogo(
             logo = getCoinLogo(token.logo),
             title = token.ticker,
-            errorLogoModifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(Theme.v2.colors.neutrals.n200),
-            modifier = Modifier
-                .size(24.dp)
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.light,
-                    shape = CircleShape,
-                ),
+            errorLogoModifier =
+                Modifier.size(24.dp).clip(CircleShape).background(Theme.v2.colors.neutrals.n200),
+            modifier =
+                Modifier.size(24.dp)
+                    .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = CircleShape),
         )
 
         val text = buildAnnotatedString {
             append(value)
             append(" ")
-            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
-                append(token.ticker)
-            }
+            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(token.ticker) }
         }
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             if (isDestinationToken) {
                 Text(
                     text = stringResource(R.string.swap_form_min_pay),
@@ -437,17 +393,9 @@ internal fun SwapToken(
             }
 
             if (isLoading) {
-                UiPlaceholderLoader(
-                    modifier = Modifier
-                        .height(20.dp)
-                        .width(150.dp)
-                )
+                UiPlaceholderLoader(modifier = Modifier.height(20.dp).width(150.dp))
 
-                UiPlaceholderLoader(
-                    modifier = Modifier
-                        .height(20.dp)
-                        .width(150.dp)
-                )
+                UiPlaceholderLoader(modifier = Modifier.height(20.dp).width(150.dp))
             } else {
                 Text(
                     text = text,
@@ -470,28 +418,25 @@ internal fun SwapToken(
                 TokenLogo(
                     logo = token.chain.logo,
                     title = token.ticker,
-                    errorLogoModifier = Modifier
-                        .size(16.dp),
-                    modifier = Modifier
-                        .size(16.dp)
-                        .border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.border.light,
-                            shape = CircleShape,
-                        )
+                    errorLogoModifier = Modifier.size(16.dp),
+                    modifier =
+                        Modifier.size(16.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.border.light,
+                                shape = CircleShape,
+                            ),
                 )
 
                 UiSpacer(8.dp)
 
                 if (isLoading) {
-                    UiPlaceholderLoader(
-                        modifier = Modifier
-                            .height(20.dp)
-                            .width(150.dp)
-                    )
+                    UiPlaceholderLoader(modifier = Modifier.height(20.dp).width(150.dp))
                 } else {
                     Text(
-                        text = stringResource(R.string.swap_form_on_chain) + " ${token.chain.swapAssetName()}",
+                        text =
+                            stringResource(R.string.swap_form_on_chain) +
+                                " ${token.chain.swapAssetName()}",
                         style = Theme.brockmann.supplementary.footnote,
                         color = Theme.v2.colors.text.tertiary,
                     )
@@ -502,16 +447,11 @@ internal fun SwapToken(
 }
 
 @Composable
-internal fun VerifyCardDivider(
-    size: Dp,
-) {
+internal fun VerifyCardDivider(size: Dp) {
     HorizontalDivider(
         thickness = 1.dp,
         color = Theme.v2.colors.border.light,
-        modifier = Modifier
-            .padding(
-                vertical = size,
-            )
+        modifier = Modifier.padding(vertical = size),
     )
 }
 
@@ -524,11 +464,7 @@ internal fun VerifyCardDetails(
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                vertical = 12.dp,
-            )
+        modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
     ) {
         Text(
             text = title,
@@ -537,17 +473,15 @@ internal fun VerifyCardDetails(
             maxLines = 1,
         )
 
-        UiSpacer(
-            weight = 1f
-        )
+        UiSpacer(weight = 1f)
 
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.End,
-            modifier = if (showAllContent) Modifier.fillMaxWidth()
-            else Modifier.widthIn(max = 100.dp),
+            modifier =
+                if (showAllContent) Modifier.fillMaxWidth() else Modifier.widthIn(max = 100.dp),
             maxLines = if (showAllContent) 5 else 1,
             overflow = TextOverflow.MiddleEllipsis,
         )
@@ -561,10 +495,7 @@ internal fun VerifyVaultDetails(
     metadata: String,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-    ) {
+    Row(modifier = modifier.fillMaxWidth()) {
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
@@ -576,7 +507,7 @@ internal fun VerifyVaultDetails(
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.widthIn(max = 200.dp)
+            modifier = Modifier.widthIn(max = 200.dp),
         ) {
             Text(
                 text = subtitle,
@@ -590,11 +521,12 @@ internal fun VerifyVaultDetails(
             if (metadata.isNotEmpty()) {
                 Spacer(modifier = Modifier.width(4.dp))
 
-                val display = when {
-                    metadata.length > 8 -> "(${metadata.take(4)}...${metadata.takeLast(4)})"
-                    metadata.isNotEmpty() -> "($metadata)"
-                    else -> ""
-                }
+                val display =
+                    when {
+                        metadata.length > 8 -> "(${metadata.take(4)}...${metadata.takeLast(4)})"
+                        metadata.isNotEmpty() -> "($metadata)"
+                        else -> ""
+                    }
 
                 Text(
                     text = display,
@@ -608,18 +540,10 @@ internal fun VerifyVaultDetails(
 }
 
 @Composable
-internal fun VerifyCardJsonDetails(
-    title: String,
-    subtitle: String,
-    modifier: Modifier = Modifier,
-) {
+internal fun VerifyCardJsonDetails(title: String, subtitle: String, modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                vertical = 12.dp,
-            )
+        modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
     ) {
         Text(
             text = title,
@@ -649,10 +573,7 @@ private fun VerifySwapScreenPreview() {
         scanStatus = TransactionScanStatus.NotStarted,
         consentAmount = true,
         consentReceiveAmount = false,
-        tx = SwapTransactionUiModel(
-            totalFee = "1.00$",
-            hasConsentAllowance = true,
-        ),
+        tx = SwapTransactionUiModel(totalFee = "1.00$", hasConsentAllowance = true),
         consentAllowance = true,
         confirmTitle = "Sign",
         hasFastSign = false,

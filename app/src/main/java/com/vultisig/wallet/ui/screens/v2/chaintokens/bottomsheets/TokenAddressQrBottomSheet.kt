@@ -35,9 +35,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
 
 @Composable
-internal fun TokenAddressQrBottomSheet(
-    viewModel: TokenAddressQrViewModel = hiltViewModel(),
-) {
+internal fun TokenAddressQrBottomSheet(viewModel: TokenAddressQrViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val graphicsLayer = rememberGraphicsLayer()
@@ -50,18 +48,12 @@ internal fun TokenAddressQrBottomSheet(
         onDismiss = viewModel::back,
         onBottomSheetExpanded = viewModel::loadData,
         onShareQrClick = {
-            viewModel.shareQRCode(
-                graphicsLayer = graphicsLayer,
-                context = context
-            )
+            viewModel.shareQRCode(graphicsLayer = graphicsLayer, context = context)
         },
         onCopyAddressClick = {
-            VsClipboardService.copy(
-                context,
-                uiState.chainAddress
-            )
+            VsClipboardService.copy(context, uiState.chainAddress)
             viewModel.copy()
-        }
+        },
     )
 }
 
@@ -78,20 +70,16 @@ private fun TokenAddressQrBottomSheet(
     onCopyAddressClick: () -> Unit = {},
 ) {
 
-    DottyBottomSheet(
-        onExpand = onBottomSheetExpanded,
-        onDismiss = onDismiss
-    ) {
+    DottyBottomSheet(onExpand = onBottomSheetExpanded, onDismiss = onDismiss) {
         TokenAddressQrContent(
             chainName = chainName,
             qrBitmapPainter = qrBitmapPainter,
             graphicsLayer = graphicsLayer,
             chainAddress = chainAddress,
             onShareQrClick = onShareQrClick,
-            onCopyAddressClick = onCopyAddressClick
+            onCopyAddressClick = onCopyAddressClick,
         )
     }
-
 }
 
 @Composable
@@ -103,37 +91,27 @@ private fun TokenAddressQrContent(
     onShareQrClick: () -> Unit,
     onCopyAddressClick: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .padding(horizontal = 16.dp)
-    ) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Column(
-            modifier = Modifier
-                .drawWithContent {
-                    graphicsLayer.record {
-                        this@drawWithContent.drawContent()
+            modifier =
+                Modifier.drawWithContent {
+                        graphicsLayer.record { this@drawWithContent.drawContent() }
+                        drawLayer(graphicsLayer)
                     }
-                    drawLayer(graphicsLayer)
-                }
-                .fillMaxWidth()
-                .padding(24.dp),
+                    .fillMaxWidth()
+                    .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-        )  {
-            QrContainer(
-                chainName = chainName,
-                qrCode = qrBitmapPainter
-            )
+        ) {
+            QrContainer(chainName = chainName, qrCode = qrBitmapPainter)
 
-            UiSpacer(
-                size = 24.dp
-            )
+            UiSpacer(size = 24.dp)
 
             Text(
                 text = chainAddress,
                 style = Theme.brockmann.supplementary.footnote,
                 color = Theme.v2.colors.text.primary,
                 modifier = Modifier.width(232.dp),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
 
@@ -143,26 +121,19 @@ private fun TokenAddressQrContent(
                 size = VsButtonSize.Small,
                 label = stringResource(R.string.share_vault_qr_share),
                 onClick = onShareQrClick,
-                modifier = Modifier
-                    .weight(1f)
+                modifier = Modifier.weight(1f),
             )
-            UiSpacer(
-                size = 4.dp
-            )
+            UiSpacer(size = 4.dp)
             VsButton(
                 variant = VsButtonVariant.Primary,
                 size = VsButtonSize.Small,
                 label = stringResource(R.string.copy_address),
                 onClick = onCopyAddressClick,
-                modifier = Modifier
-                    .weight(1f)
+                modifier = Modifier.weight(1f),
             )
-
         }
 
-        UiSpacer(
-            size = 24.dp
-        )
+        UiSpacer(size = 24.dp)
     }
 }
 
@@ -175,6 +146,6 @@ private fun TokenAddressQrContentPreview() {
         graphicsLayer = rememberGraphicsLayer(),
         qrBitmapPainter = null,
         onShareQrClick = {},
-        onCopyAddressClick = {}
+        onCopyAddressClick = {},
     )
 }

@@ -16,7 +16,6 @@ internal fun MergeFunctionScreen(
     selectedToken: TokenMergeInfo,
     coinList: List<TokenMergeInfo>,
     onSelectCoin: (TokenMergeInfo) -> Unit,
-
     balance: UiText,
     amountFieldState: TextFieldState,
     onAmountLostFocus: () -> Unit,
@@ -29,12 +28,8 @@ internal fun MergeFunctionScreen(
         mapTypeToString = { it.denom.uppercase() },
     )
 
-
     FormTextFieldCard(
-        title = stringResource(
-            R.string.deposit_form_amount_title,
-            balance.asString()
-        ),
+        title = stringResource(R.string.deposit_form_amount_title, balance.asString()),
         hint = stringResource(R.string.send_amount_currency_hint),
         keyboardType = KeyboardType.Number,
         textFieldState = amountFieldState,

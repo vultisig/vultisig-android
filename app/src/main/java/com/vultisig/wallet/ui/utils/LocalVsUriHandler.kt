@@ -24,31 +24,20 @@ internal fun VsUriHandler(): UriHandler {
     }
 }
 
-private class VsUriHandler(
-    private val activity: Activity,
-    private val uriHandler: UriHandler,
-) : UriHandler {
+private class VsUriHandler(private val activity: Activity, private val uriHandler: UriHandler) :
+    UriHandler {
 
-    override fun openUri(
-        uri: String,
-    ) = if (uri.isCctLink)
-        activity.openCct(uri.toUri())
-    else
-        uriHandler.openUri(uri)
-
+    override fun openUri(uri: String) =
+        if (uri.isCctLink) activity.openCct(uri.toUri()) else uriHandler.openUri(uri)
 
     private val String.isCctLink: Boolean
-        get() = listOf(
-            VsAuxiliaryLinks.PRIVACY,
-            VsAuxiliaryLinks.TERMS_OF_SERVICE,
-            VsAuxiliaryLinks.VULT_TOKEN,
-            VsAuxiliaryLinks.VULT_TOKEN_DOCS,
-            VsAuxiliaryLinks.VULT_WEBSITE,
-        ).contains(this) || this.startsWith(BANXA_URL)
-
+        get() =
+            listOf(
+                    VsAuxiliaryLinks.PRIVACY,
+                    VsAuxiliaryLinks.TERMS_OF_SERVICE,
+                    VsAuxiliaryLinks.VULT_TOKEN,
+                    VsAuxiliaryLinks.VULT_TOKEN_DOCS,
+                    VsAuxiliaryLinks.VULT_WEBSITE,
+                )
+                .contains(this) || this.startsWith(BANXA_URL)
 }
-
-
-
-
-

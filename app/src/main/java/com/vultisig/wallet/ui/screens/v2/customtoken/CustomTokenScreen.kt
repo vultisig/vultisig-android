@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens.v2.customtoken
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -33,11 +32,8 @@ import com.vultisig.wallet.ui.screens.v2.customtoken.components.TokenNotFoundErr
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
 
-
 @Composable
-internal fun CustomTokenScreen(
-    viewModel: CustomTokenViewModel = hiltViewModel(),
-) {
+internal fun CustomTokenScreen(viewModel: CustomTokenViewModel = hiltViewModel()) {
     val uiModel by viewModel.uiModel.collectAsState()
     val textToPaste by VsClipboardService.getClipboardData()
     CustomTokenScreen(
@@ -47,7 +43,7 @@ internal fun CustomTokenScreen(
         onSearchClick = viewModel::searchCustomToken,
         onAddTokenClick = viewModel::addCoinToTempRepo,
         onBackClick = viewModel::back,
-        onCloseClick = viewModel::close
+        onCloseClick = viewModel::close,
     )
 }
 
@@ -72,36 +68,24 @@ private fun CustomTokenScreen(
             )
         },
     ) {
-
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-        ) {
-            UiSpacer(
-                size = 24.dp
-            )
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            UiSpacer(size = 24.dp)
             Text(
                 text = stringResource(R.string.custom_token_screen_title),
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.headings.title2,
             )
 
-            UiSpacer(
-                size = 16.dp
-            )
-
+            UiSpacer(size = 16.dp)
 
             CustomTokenSearchBar(
                 initialDisplay = state.isInitial,
                 onSearchClick = onSearchClick,
                 onPasteClick = onPasteClick,
                 state = searchFieldState,
-                onCloseClick = onCloseClick
+                onCloseClick = onCloseClick,
             )
-            UiSpacer(
-                size = 16.dp
-            )
+            UiSpacer(size = 16.dp)
 
             TopShineContainer {
                 when {
@@ -110,16 +94,11 @@ private fun CustomTokenScreen(
                     }
 
                     state.hasError -> {
-                        TokenNotFoundError(
-                            onRetryClick = onSearchClick
-                        )
+                        TokenNotFoundError(onRetryClick = onSearchClick)
                     }
 
                     state.token != null -> {
-                        SearchTokenResult(
-                            token = state.token,
-                            onAddTokenClick = onAddTokenClick,
-                        )
+                        SearchTokenResult(token = state.token, onAddTokenClick = onAddTokenClick)
                     }
                 }
             }
@@ -127,23 +106,22 @@ private fun CustomTokenScreen(
     }
 }
 
-
-
-
 @Composable
 @Preview
 private fun CustomTokenScreenPreview() {
     CustomTokenScreen(
-        state = CustomTokenUiModel(
-            chainLogo = R.drawable.chainflip, isLoading = false,
-            token = Coins.Ethereum.GRT,
-            hasError = false
-        ),
+        state =
+            CustomTokenUiModel(
+                chainLogo = R.drawable.chainflip,
+                isLoading = false,
+                token = Coins.Ethereum.GRT,
+                hasError = false,
+            ),
         searchFieldState = rememberTextFieldState(),
         onPasteClick = {},
         onSearchClick = {},
         onAddTokenClick = {},
         onCloseClick = {},
-        onBackClick = {}
+        onBackClick = {},
     )
 }

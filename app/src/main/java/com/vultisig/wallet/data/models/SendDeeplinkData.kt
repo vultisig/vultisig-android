@@ -11,7 +11,8 @@ data class SendDeeplinkData(
     val memo: String?,
 ) {
     val isValid: Boolean
-        get() = !assetChain.isNullOrBlank() &&
+        get() =
+            !assetChain.isNullOrBlank() &&
                 !assetTicker.isNullOrBlank() &&
                 !toAddress.isNullOrBlank()
 }

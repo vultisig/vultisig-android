@@ -47,16 +47,11 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun ChooseDeviceCountScreen(
-    viewModel: ChooseDeviceCountViewModel = hiltViewModel()
-) {
+internal fun ChooseDeviceCountScreen(viewModel: ChooseDeviceCountViewModel = hiltViewModel()) {
 
     val uiState by viewModel.uiState.collectAsState()
 
-    ChooseDeviceCountScreen(
-        uiState = uiState,
-        onEvent = viewModel::handleEvent
-    )
+    ChooseDeviceCountScreen(uiState = uiState, onEvent = viewModel::handleEvent)
 }
 
 @Composable
@@ -64,56 +59,40 @@ private fun ChooseDeviceCountScreen(
     uiState: ChooseDeviceCountUiState,
     onEvent: (ChooseDeviceCountUiEvent) -> Unit,
 ) {
-    V3Scaffold(
-        applyGradientBackground = true,
-    ) {
+    V3Scaffold(applyGradientBackground = true) {
         Column {
             Header()
 
             DeviceCountSelector(
                 count = uiState.deviceCount,
-                onIncrease = {
-                    onEvent(ChooseDeviceCountUiEvent.IncreaseCount)
-                },
-                onDecrease = {
-                    onEvent(ChooseDeviceCountUiEvent.DecreaseCount)
-                },
+                onIncrease = { onEvent(ChooseDeviceCountUiEvent.IncreaseCount) },
+                onDecrease = { onEvent(ChooseDeviceCountUiEvent.DecreaseCount) },
             )
 
-            UiSpacer(
-                size = 32.dp
-            )
+            UiSpacer(size = 32.dp)
             if (uiState.deviceCount == 1) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.background(
-                        color = Theme.v2.colors.backgrounds.surface1,
-                        shape = RoundedCornerShape(
-                            size = 24.dp
-                        )
-                    )
+                    modifier =
+                        Modifier.background(
+                            color = Theme.v2.colors.backgrounds.surface1,
+                            shape = RoundedCornerShape(size = 24.dp),
+                        ),
                 ) {
                     DeviceCountDescription(
                         selectedIndex = uiState.deviceCount - 1,
-                        tips = uiState.tips
+                        tips = uiState.tips,
                     )
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(
-                            0.dp,
-                            Alignment.CenterHorizontally
-                        ),
+                        horizontalArrangement =
+                            Arrangement.spacedBy(0.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-
-                            .padding(
-                                vertical = 14.dp
-                            )
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.appstore_style_icon),
                             contentDescription = null,
-                            contentScale = ContentScale.None
+                            contentScale = ContentScale.None,
                         )
                         UiSpacer(8.dp)
                         Text(
@@ -122,31 +101,20 @@ private fun ChooseDeviceCountScreen(
                             color = Theme.v2.colors.text.primary,
                         )
                     }
-
                 }
-
             } else
-                DeviceCountDescription(
-                    selectedIndex = uiState.deviceCount - 1,
-                    tips = uiState.tips
-                )
+                DeviceCountDescription(selectedIndex = uiState.deviceCount - 1, tips = uiState.tips)
 
-            UiSpacer(
-                weight = 1f
-            )
+            UiSpacer(weight = 1f)
 
             Tip()
 
-            UiSpacer(
-                size = 16.dp
-            )
+            UiSpacer(size = 16.dp)
 
             VsButton(
                 label = stringResource(R.string.referral_onboarding_get_started),
                 modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    onEvent(ChooseDeviceCountUiEvent.Next)
-                }
+                onClick = { onEvent(ChooseDeviceCountUiEvent.Next) },
             )
         }
     }
@@ -155,9 +123,7 @@ private fun ChooseDeviceCountScreen(
 @Composable
 private fun Header() {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(250.dp),
+        modifier = Modifier.fillMaxWidth().height(250.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -165,11 +131,9 @@ private fun Header() {
             painter = painterResource(R.drawable.logo),
             contentDescription = null,
             modifier = Modifier.width(60.dp),
-            contentScale = ContentScale.FillWidth
+            contentScale = ContentScale.FillWidth,
         )
-        UiSpacer(
-            size = 24.dp
-        )
+        UiSpacer(size = 24.dp)
         Text(
             text = stringResource(R.string.welcome_preference_devices_title),
             style = Theme.brockmann.headings.title2,
@@ -184,16 +148,10 @@ private fun Tip() {
     Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        UiIcon(
-            drawableResId = R.drawable.tip,
-            size = 16.dp,
-            tint = Theme.v2.colors.alerts.info
-        )
-        UiSpacer(
-            size = 8.dp
-        )
+        UiIcon(drawableResId = R.drawable.tip, size = 16.dp, tint = Theme.v2.colors.alerts.info)
+        UiSpacer(size = 8.dp)
         Text(
             text = stringResource(R.string.welcome_tip),
             style = Theme.brockmann.supplementary.caption,
@@ -203,57 +161,26 @@ private fun Tip() {
 }
 
 @Composable
-private fun DeviceCountDescription(
-    selectedIndex: Int,
-    tips: List<DeviceCountTip>
-) {
-    val shape = RoundedCornerShape(
-        topStart = 24.dp,
-        topEnd = 24.dp,
-        bottomStart = 20.dp,
-        bottomEnd = 20.dp
-    )
+private fun DeviceCountDescription(selectedIndex: Int, tips: List<DeviceCountTip>) {
+    val shape =
+        RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 20.dp, bottomEnd = 20.dp)
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(
-                shape = shape
-            )
-            .background(
-                color = Theme.v2.colors.backgrounds.background
-            )
-            .border(
-                width = 1.dp,
-                shape = shape,
-                color = Theme.v2.colors.border.light
-            )
-            .padding(
-                horizontal = 20.dp,
-                vertical = 24.dp,
-            ),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(shape = shape)
+                .background(color = Theme.v2.colors.backgrounds.background)
+                .border(width = 1.dp, shape = shape, color = Theme.v2.colors.border.light)
+                .padding(horizontal = 20.dp, vertical = 24.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        HorizontalAnimatedPager(
-            index = selectedIndex
-        ) {
-            tips.forEach { (logo, _, _) ->
-                item {
-                    V3Icon(logo)
-                }
-            }
+        HorizontalAnimatedPager(index = selectedIndex) {
+            tips.forEach { (logo, _, _) -> item { V3Icon(logo) } }
         }
-        UiSpacer(
-            size = 12.dp
-        )
+        UiSpacer(size = 12.dp)
 
-
-        Column(
-            modifier = Modifier.animateContentSize()
-        ) {
-            UiSpacer(
-                size = 8.dp
-            )
+        Column(modifier = Modifier.animateContentSize()) {
+            UiSpacer(size = 8.dp)
             AnimatedContent(targetState = tips[selectedIndex].title.asString()) {
                 Text(
                     text = it,
@@ -262,25 +189,18 @@ private fun DeviceCountDescription(
                 )
             }
 
-            UiSpacer(
-                size = 8.dp
-            )
+            UiSpacer(size = 8.dp)
 
             AnimatedContent(tips[selectedIndex].subTitle.asString()) { subTitleText ->
                 val highlight = tips[selectedIndex].subTitleHighlight?.asString()
                 val annotatedText = buildAnnotatedString {
                     val start = if (highlight != null) subTitleText.indexOf(highlight) else -1
                     if (start >= 0) {
-                        append(
-                            subTitleText.substring(
-                                0,
-                                start
-                            )
-                        )
+                        append(subTitleText.substring(0, start))
                         withStyle(
                             SpanStyle(
                                 color = Theme.v2.colors.neutrals.n50,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
                             )
                         ) {
                             append(highlight)
@@ -296,17 +216,12 @@ private fun DeviceCountDescription(
                     style = Theme.brockmann.body.s.medium,
                 )
             }
-
         }
     }
 }
 
-
 @Preview
 @Composable
 private fun ChooseDeviceCountScreenPreview() {
-    ChooseDeviceCountScreen(
-        uiState = ChooseDeviceCountUiState(),
-        onEvent = {}
-    )
+    ChooseDeviceCountScreen(uiState = ChooseDeviceCountUiState(), onEvent = {})
 }

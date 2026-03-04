@@ -35,6 +35,8 @@ import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigInteger
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,19 +45,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.math.BigInteger
-import javax.inject.Inject
 
 @Immutable
 internal data class TransactionDetailsUiModel(
     val token: ValuedToken = ValuedToken.Empty,
-
     val networkFeeFiatValue: String = "",
     val networkFeeTokenValue: String = "",
-
     val srcAddress: String = "",
     val dstAddress: String = "",
-
     val memo: String? = null,
     val signAmino: String? = null,
     val signDirect: String? = null,
@@ -82,17 +79,21 @@ internal data class VerifyTransactionUiModel(
 
 sealed class TransactionScanStatus {
     data object NotStarted : TransactionScanStatus()
+
     data object Scanning : TransactionScanStatus()
+
     data class Scanned(val result: SecurityScannerResult) : TransactionScanStatus()
+
     data class Error(val message: String, val provider: String) : TransactionScanStatus()
 }
 
 @HiltViewModel
-internal class VerifyTransactionViewModel @Inject constructor(
+internal class VerifyTransactionViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
-
     private val transactionRepository: TransactionRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysign: LaunchKeysignUseCase,
@@ -128,78 +129,60 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private suspend fun calculateFees(transactionUiModel: TransactionDetailsUiModel) {
         val tx = transaction
         val chain = tx.token.chain
-        val vault = withContext(Dispatchers.IO) {
-            vaultRepository.get(vaultId)
-        } ?: return
+        val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return
 
-        val blockchainTransaction = Transfer(
-            coin = tx.token,
-            vault = VaultData(
-                vaultHexChainCode = vault.hexChainCode,
-                vaultHexPublicKey = vault.getPubKeyByChain(chain),
-            ),
-            amount = tx.tokenValue.value,
-            to = tx.dstAddress,
-            memo = tx.memo,
-
-            isMax = false,
-        )
+        val blockchainTransaction =
+            Transfer(
+                coin = tx.token,
+                vault =
+                    VaultData(
+                        vaultHexChainCode = vault.hexChainCode,
+                        vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                    ),
+                amount = tx.tokenValue.value,
+                to = tx.dstAddress,
+                memo = tx.memo,
+                isMax = false,
+            )
 
         try {
-            val fees = withContext(Dispatchers.IO) {
-                feeServiceComposite.calculateFees(blockchainTransaction)
-            }
-            val nativeCoin = withContext(Dispatchers.IO) {
-                tokenRepository.getNativeToken(chain.id)
-            }
-            val fromGas = GasFeeParams(
-                gasLimit = BigInteger.ONE,
-                gasFee = TokenValue(
-                    value = fees.amount,
-                    token = nativeCoin,
-                ),
-                selectedToken = tx.token,
-            )
-            val uiFeeModel = gasFeeToEstimate(fromGas)
-            val updateTx = transactionUiModel.copy(
-                networkFeeTokenValue = uiFeeModel.formattedTokenValue,
-                networkFeeFiatValue = uiFeeModel.formattedFiatValue,
-            )
-
-            uiState.update {
-                it.copy(
-                    isLoadingFees = false,
-                    transaction = updateTx
+            val fees =
+                withContext(Dispatchers.IO) {
+                    feeServiceComposite.calculateFees(blockchainTransaction)
+                }
+            val nativeCoin =
+                withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+            val fromGas =
+                GasFeeParams(
+                    gasLimit = BigInteger.ONE,
+                    gasFee = TokenValue(value = fees.amount, token = nativeCoin),
+                    selectedToken = tx.token,
                 )
-            }
-        } catch (t: Throwable) {
-            Timber.e(
-                t,
-                "Error calculating fees"
-            )
+            val uiFeeModel = gasFeeToEstimate(fromGas)
+            val updateTx =
+                transactionUiModel.copy(
+                    networkFeeTokenValue = uiFeeModel.formattedTokenValue,
+                    networkFeeFiatValue = uiFeeModel.formattedFiatValue,
+                )
 
-            uiState.update {
-                it.copy(isLoadingFees = false)
-            }
+            uiState.update { it.copy(isLoadingFees = false, transaction = updateTx) }
+        } catch (t: Throwable) {
+            Timber.e(t, "Error calculating fees")
+
+            uiState.update { it.copy(isLoadingFees = false) }
         }
     }
 
     fun checkConsentAddress(checked: Boolean) {
-        viewModelScope.launch {
-            uiState.update { it.copy(consentAddress = checked) }
-        }
+        viewModelScope.launch { uiState.update { it.copy(consentAddress = checked) } }
     }
 
     fun checkConsentAmount(checked: Boolean) {
-        viewModelScope.launch {
-            uiState.update { it.copy(consentAmount = checked) }
-        }
+        viewModelScope.launch { uiState.update { it.copy(consentAmount = checked) } }
     }
 
     fun checkConsentDst(checked: Boolean) {
-        viewModelScope.launch {
-            uiState.update { it.copy(consentDst = checked) }
-        }
+        viewModelScope.launch { uiState.update { it.copy(consentDst = checked) } }
     }
 
     fun authFastSign() {
@@ -242,9 +225,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         uiState.update { it.copy(showScanningWarning = false) }
 
         if (!tryToFastSignWithPassword()) {
-            viewModelScope.launch {
-                _fastSignFlow.send(true)
-            }
+            viewModelScope.launch { _fastSignFlow.send(true) }
         }
     }
 
@@ -265,67 +246,53 @@ internal class VerifyTransactionViewModel @Inject constructor(
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.back()
-        }
+        viewModelScope.launch { navigator.back() }
     }
 
-    private fun keysign(
-        keysignInitType: KeysignInitType,
-    ) {
+    private fun keysign(keysignInitType: KeysignInitType) {
         if (uiState.value.hasAllConsents) {
             viewModelScope.launch {
                 launchKeysign(
-                    keysignInitType, transactionId, password.value,
+                    keysignInitType,
+                    transactionId,
+                    password.value,
                     Route.Keysign.Keysign.TxType.Send,
-                    vaultId
+                    vaultId,
                 )
             }
         } else {
             uiState.update {
                 it.copy(
-                    errorText = UiText.StringResource(
-                        R.string.verify_transaction_error_not_enough_consent
-                    )
+                    errorText =
+                        UiText.StringResource(R.string.verify_transaction_error_not_enough_consent)
                 )
             }
         }
     }
 
     private fun loadPassword() {
-        viewModelScope.launch {
-            password.value = vaultPasswordRepository.getPassword(vaultId)
-        }
+        viewModelScope.launch { password.value = vaultPasswordRepository.getPassword(vaultId) }
     }
 
     private fun loadFastSign() {
         viewModelScope.launch {
             val hasFastSign = isVaultHasFastSignById(vaultId)
-            uiState.update {
-                it.copy(
-                    hasFastSign = hasFastSign
-                )
-            }
+            uiState.update { it.copy(hasFastSign = hasFastSign) }
         }
     }
 
     private fun loadTransaction() {
         viewModelScope.launch {
-            transaction = runCatching {
-                transactionRepository.getTransaction(transactionId)
-            }.getOrElse {
-                Timber.e(
-                    it,
-                    "Failed to load transaction"
-                )
-                navigator.back()
-                return@launch
-            }
+            transaction =
+                runCatching { transactionRepository.getTransaction(transactionId) }
+                    .getOrElse {
+                        Timber.e(it, "Failed to load transaction")
+                        navigator.back()
+                        return@launch
+                    }
             val transactionUiModel = mapTransactionToUiModel(transaction)
 
-            uiState.update {
-                it.copy(transaction = transactionUiModel, isLoadingFees = true)
-            }
+            uiState.update { it.copy(transaction = transactionUiModel, isLoadingFees = true) }
 
             calculateFees(transactionUiModel)
             scanTransaction()
@@ -337,46 +304,34 @@ internal class VerifyTransactionViewModel @Inject constructor(
             val transaction = transaction
             val chain = transaction.token.chain
 
-            val isSupported = securityScannerService
-                .getSupportedChainsByFeature()
-                .isChainSupported(chain) && securityScannerService.isSecurityServiceEnabled()
+            val isSupported =
+                securityScannerService.getSupportedChainsByFeature().isChainSupported(chain) &&
+                    securityScannerService.isSecurityServiceEnabled()
 
             if (!isSupported) return
 
-            uiState.update {
-                it.copy(txScanStatus = TransactionScanStatus.Scanning)
-            }
+            uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 
             val securityScannerTransaction =
                 securityScannerService.createSecurityScannerTransaction(transaction)
 
-            val result = withContext(Dispatchers.IO) {
-                securityScannerService.scanTransaction(securityScannerTransaction)
-            }
+            val result =
+                withContext(Dispatchers.IO) {
+                    securityScannerService.scanTransaction(securityScannerTransaction)
+                }
 
-            uiState.update {
-                it.copy(
-                    txScanStatus = TransactionScanStatus.Scanned(result)
-                )
-            }
+            uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
         } catch (t: Throwable) {
             val errorMessage = "Security scan failed ${t.message}"
-            Timber.e(
-                t,
-                errorMessage
-            )
+            Timber.e(t, errorMessage)
 
             uiState.update {
                 val message = t.message ?: errorMessage
                 it.copy(
-                    txScanStatus = TransactionScanStatus.Error(
-                        message = message,
-                        provider = BLOCKAID_PROVIDER,
-                    )
+                    txScanStatus =
+                        TransactionScanStatus.Error(message = message, provider = BLOCKAID_PROVIDER)
                 )
             }
         }
     }
 }
-
-

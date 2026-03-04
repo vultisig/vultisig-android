@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -16,9 +18,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
-
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Stable
@@ -42,27 +41,19 @@ internal class VSSnackbarState(
                             ProgressState(
                                 message = message,
                                 isVisible = true,
-                                progress = (step + 1).toFloat() / steps
+                                progress = (step + 1).toFloat() / steps,
                             )
                         )
                     }
-                    emit(ProgressState(
-                        message = "",
-                        isVisible = false,
-                        progress = 0f
-                    ))
+                    emit(ProgressState(message = "", isVisible = false, progress = 0f))
                 }
             }
-            .onEach { state ->
-                _progressState.update { state }
-            }
+            .onEach { state -> _progressState.update { state } }
             .launchIn(coroutineScope)
     }
 
     fun show(message: String) {
-        coroutineScope.launch {
-            _showProgress.emit(message)
-        }
+        coroutineScope.launch { _showProgress.emit(message) }
     }
 }
 
@@ -73,10 +64,7 @@ internal data class ProgressState(
 )
 
 @Composable
-internal fun rememberVsSnackbarState(
-    duration: Duration = 1.seconds
-): VSSnackbarState {
+internal fun rememberVsSnackbarState(duration: Duration = 1.seconds): VSSnackbarState {
     val coroutineScope = rememberCoroutineScope()
     return remember { VSSnackbarState(duration, coroutineScope) }
 }
-

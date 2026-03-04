@@ -7,6 +7,10 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.inject.Inject
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -14,15 +18,11 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.net.ConnectException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
-import javax.inject.Inject
 
 /**
- * Instrumented tests verifying that transport-level [java.io.IOException]s thrown
- * by OkHttp are converted to [NetworkException] with `httpStatusCode = 0`
- * by the Ktor [io.ktor.client.plugins.HttpCallValidator] installed in
+ * Instrumented tests verifying that transport-level [java.io.IOException]s thrown by OkHttp are
+ * converted to [NetworkException] with `httpStatusCode = 0` by the Ktor
+ * [io.ktor.client.plugins.HttpCallValidator] installed in
  * [com.vultisig.wallet.data.networkutils.HttpClientConfigurator].
  *
  * Uses [FaultyInterceptor] to simulate transport failures at the OkHttp layer.
@@ -31,14 +31,11 @@ import javax.inject.Inject
 @UninstallModules(NetworkModule::class)
 class NetworkErrorHandlingTest {
 
-    @get:Rule
-    val hiltRule = HiltAndroidRule(this)
+    @get:Rule val hiltRule = HiltAndroidRule(this)
 
-    @Inject
-    lateinit var httpClient: HttpClient
+    @Inject lateinit var httpClient: HttpClient
 
-    @Inject
-    lateinit var faultyInterceptor: FaultyInterceptor
+    @Inject lateinit var faultyInterceptor: FaultyInterceptor
 
     @Before
     fun init() {

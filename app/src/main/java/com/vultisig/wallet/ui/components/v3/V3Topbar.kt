@@ -37,55 +37,47 @@ fun V3Topbar(
                 color = Theme.v2.colors.text.primary,
             )
         },
-        navigationIcon = onBackClick?.let {
-            {
-                Row {
-                    UiSpacer(
-                        size = 12.dp
-                    )
-                    VsCircleButton(
-                        onClick = onBackClick,
-                        size = VsCircleButtonSize.Small,
-                        type = VsCircleButtonType.Secondary,
-                        designType = DesignType.Shined,
-                        icon = R.drawable.ic_caret_left,
-                    )
+        navigationIcon =
+            onBackClick?.let {
+                {
+                    Row {
+                        UiSpacer(size = 12.dp)
+                        VsCircleButton(
+                            onClick = onBackClick,
+                            size = VsCircleButtonSize.Small,
+                            type = VsCircleButtonType.Secondary,
+                            designType = DesignType.Shined,
+                            icon = R.drawable.ic_caret_left,
+                        )
+                    }
                 }
-            }
-        } ?: {},
+            } ?: {},
         actions = {
             actions?.let {
                 it()
-                UiSpacer(
-                    size = 12.dp
-                )
+                UiSpacer(size = 12.dp)
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor =
-                if (transparentBackground)
-                    Color.Transparent
-                else Theme.v2.colors.backgrounds.background,
-        ),
-        windowInsets = WindowInsets(0.dp)
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor =
+                    if (transparentBackground) Color.Transparent
+                    else Theme.v2.colors.backgrounds.background
+            ),
+        windowInsets = WindowInsets(0.dp),
     )
 }
 
 @Preview
 @Composable
 private fun PreviewV3Topbar() {
-    V3Topbar(
-        title = "Title",
-        onBackClick = null
-    )
+    V3Topbar(title = "Title", onBackClick = null)
 }
+
 @Preview
 @Composable
 private fun PreviewV3Topbar2() {
-    V3Topbar(
-        title = "Title",
-        onBackClick = {},
-    )
+    V3Topbar(title = "Title", onBackClick = {})
 }
 
 @Preview
@@ -102,7 +94,7 @@ private fun PreviewV3Topbar3() {
                 designType = DesignType.Shined,
                 icon = R.drawable.camera,
             )
-        }
+        },
     )
 }
 
@@ -120,7 +112,7 @@ private fun PreviewV3Topbar4() {
                 designType = DesignType.Shined,
                 icon = R.drawable.camera,
             )
-        }
+        },
     )
 }
 
@@ -138,26 +130,18 @@ private fun PreviewV3Topbar5() {
                 designType = DesignType.Shined,
                 icon = R.drawable.camera,
             )
-        }
+        },
     )
 }
 
 @Preview
 @Composable
 private fun PreviewV3Topbar6() {
-    V3Topbar(
-        title = "title",
-        onBackClick = null,
-        actions = null
-    )
+    V3Topbar(title = "title", onBackClick = null, actions = null)
 }
 
 @Preview
 @Composable
 private fun PreviewV3Topbar7() {
-    V3Topbar(
-        title = "title",
-        onBackClick = null,
-        actions = { }
-    )
+    V3Topbar(title = "title", onBackClick = null, actions = {})
 }

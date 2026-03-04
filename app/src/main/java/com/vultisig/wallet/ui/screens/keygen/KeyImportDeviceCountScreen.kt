@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,9 +41,7 @@ import com.vultisig.wallet.ui.models.keygen.KeyImportSetupType
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun KeyImportDeviceCountScreen(
-    model: KeyImportDeviceCountViewModel = hiltViewModel(),
-) {
+internal fun KeyImportDeviceCountScreen(model: KeyImportDeviceCountViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     V2Scaffold(
@@ -51,9 +49,7 @@ internal fun KeyImportDeviceCountScreen(
         title = stringResource(R.string.key_import_device_count_title),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(16.dp),
             horizontalAlignment = CenterHorizontally,
         ) {
             UiSpacer(24.dp)
@@ -62,26 +58,23 @@ internal fun KeyImportDeviceCountScreen(
 
             LookaheadScope {
                 Box(
-                    modifier = Modifier
-                        .height(intrinsicSize = IntrinsicSize.Min)
-                        .clip(CircleShape)
-                        .background(Theme.v2.colors.backgrounds.tertiary_2)
-                        .padding(6.dp)
+                    modifier =
+                        Modifier.height(intrinsicSize = IntrinsicSize.Min)
+                            .clip(CircleShape)
+                            .background(Theme.v2.colors.backgrounds.tertiary_2)
+                            .padding(6.dp)
                 ) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(),
-                        contentAlignment = if (isSecure)
-                            Alignment.TopEnd else Alignment.TopStart,
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                        contentAlignment = if (isSecure) Alignment.TopEnd else Alignment.TopStart,
                     ) {
                         Box(
-                            modifier = Modifier
-                                .animatePlacementInScope(this@LookaheadScope)
-                                .clip(CircleShape)
-                                .background(Theme.v2.colors.backgrounds.primary)
-                                .fillMaxHeight()
-                                .fillMaxWidth(0.5f)
+                            modifier =
+                                Modifier.animatePlacementInScope(this@LookaheadScope)
+                                    .clip(CircleShape)
+                                    .background(Theme.v2.colors.backgrounds.primary)
+                                    .fillMaxHeight()
+                                    .fillMaxWidth(0.5f)
                         )
                     }
                     Row(
@@ -89,14 +82,12 @@ internal fun KeyImportDeviceCountScreen(
                         horizontalArrangement = Arrangement.SpaceAround,
                     ) {
                         Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(CircleShape)
-                                .clickable {
-                                    model.selectType(KeyImportSetupType.Fast)
-                                }
-                                .padding(16.dp)
-                                .wrapContentWidth(CenterHorizontally),
+                            modifier =
+                                Modifier.weight(1f)
+                                    .clip(CircleShape)
+                                    .clickable { model.selectType(KeyImportSetupType.Fast) }
+                                    .padding(16.dp)
+                                    .wrapContentWidth(CenterHorizontally)
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.thunder),
@@ -111,21 +102,19 @@ internal fun KeyImportDeviceCountScreen(
                             )
                         }
                         Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(CircleShape)
-                                .clickable {
-                                    model.selectType(KeyImportSetupType.Secure)
-                                }
-                                .padding(16.dp)
-                                .wrapContentWidth(CenterHorizontally),
+                            modifier =
+                                Modifier.weight(1f)
+                                    .clip(CircleShape)
+                                    .clickable { model.selectType(KeyImportSetupType.Secure) }
+                                    .padding(16.dp)
+                                    .wrapContentWidth(CenterHorizontally)
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_shield),
                                 contentDescription = null,
-                                tint = if (isSecure)
-                                    Theme.v2.colors.alerts.success
-                                else Theme.v2.colors.text.primary,
+                                tint =
+                                    if (isSecure) Theme.v2.colors.alerts.success
+                                    else Theme.v2.colors.text.primary,
                             )
                             UiSpacer(8.dp)
                             Text(
@@ -142,28 +131,36 @@ internal fun KeyImportDeviceCountScreen(
 
             val shape = RoundedCornerShape(15)
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(shape)
-                    .border(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.normal,
-                        shape = shape,
-                    )
-                    .background(Theme.v2.colors.backgrounds.tertiary_2)
-                    .padding(20.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .clip(shape)
+                        .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
+                        .background(Theme.v2.colors.backgrounds.tertiary_2)
+                        .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 when (state.selectedType) {
                     KeyImportSetupType.Fast -> {
-                        DescriptionItem(stringResource(R.string.key_import_device_count_fast_desc_1))
-                        DescriptionItem(stringResource(R.string.key_import_device_count_fast_desc_2))
-                        DescriptionItem(stringResource(R.string.key_import_device_count_fast_desc_3))
+                        DescriptionItem(
+                            stringResource(R.string.key_import_device_count_fast_desc_1)
+                        )
+                        DescriptionItem(
+                            stringResource(R.string.key_import_device_count_fast_desc_2)
+                        )
+                        DescriptionItem(
+                            stringResource(R.string.key_import_device_count_fast_desc_3)
+                        )
                     }
                     KeyImportSetupType.Secure -> {
-                        DescriptionItem(stringResource(R.string.key_import_device_count_secure_desc_1))
-                        DescriptionItem(stringResource(R.string.key_import_device_count_secure_desc_2))
-                        DescriptionItem(stringResource(R.string.key_import_device_count_secure_desc_3))
+                        DescriptionItem(
+                            stringResource(R.string.key_import_device_count_secure_desc_1)
+                        )
+                        DescriptionItem(
+                            stringResource(R.string.key_import_device_count_secure_desc_2)
+                        )
+                        DescriptionItem(
+                            stringResource(R.string.key_import_device_count_secure_desc_3)
+                        )
                     }
                 }
             }

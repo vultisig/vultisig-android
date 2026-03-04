@@ -4,7 +4,4 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CardanoTransactionHashRequestBodyJson(
-    @SerialName("data")
-    val data: String
-)
+data class CardanoTransactionHashRequestBodyJson(@SerialName("data") val data: String)

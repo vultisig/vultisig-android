@@ -18,15 +18,10 @@ internal fun Banners(
 ) {
     HomepagePager(
         modifier = modifier,
-        params = HomepagePagerParams(
-            hasMigration = hasMigration
-        ),
+        params = HomepagePagerParams(hasMigration = hasMigration),
         onUpgradeClick = onMigrateClick,
         onFollowXClick = {
-            SocialUtils.openTwitter(
-                context = context,
-                twitterHandle = VsAuxiliaryLinks.TWITTER_ID
-            )
+            SocialUtils.openTwitter(context = context, twitterHandle = VsAuxiliaryLinks.TWITTER_ID)
         },
         onCloseClick = onDismissBanner,
     )

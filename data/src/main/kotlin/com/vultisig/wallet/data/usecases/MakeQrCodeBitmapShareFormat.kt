@@ -24,8 +24,7 @@ fun Int.dpToPx(context: Context): Int {
     return (this * context.resources.displayMetrics.density).roundToInt()
 }
 
-internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor(
-) : MakeQrCodeBitmapShareFormat {
+internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCodeBitmapShareFormat {
     override fun invoke(
         context: Context,
         qrCodeBitmap: Bitmap,
@@ -44,17 +43,18 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor(
         val minQrCodePx = QR_CODE_MIN_SIZE_DP.dpToPx(context)
         val maxQrCodePx = QR_CODE_MAX_SIZE_DP.dpToPx(context)
 
-        val qrBitmap = when {
-            qrCodeBitmap.width < minQrCodePx -> {
-                qrCodeBitmap.scale(minQrCodePx, minQrCodePx, false)
+        val qrBitmap =
+            when {
+                qrCodeBitmap.width < minQrCodePx -> {
+                    qrCodeBitmap.scale(minQrCodePx, minQrCodePx, false)
+                }
+                qrCodeBitmap.width > maxQrCodePx -> {
+                    qrCodeBitmap.scale(maxQrCodePx, maxQrCodePx, false)
+                }
+                else -> {
+                    qrCodeBitmap
+                }
             }
-            qrCodeBitmap.width > maxQrCodePx -> {
-                qrCodeBitmap.scale(maxQrCodePx, maxQrCodePx, false)
-            }
-            else -> {
-                qrCodeBitmap
-            }
-        }
 
         val width = qrBitmap.width
         val height = qrBitmap.height
@@ -82,26 +82,22 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor(
         canvas.drawColor(color)
         canvas.drawBitmap(qrBitmap, padding.toFloat(), padding.toFloat(), null)
 
-        val paint = Paint().apply {
-            this.textSize = textSize
-            this.color = textColor
-            this.textAlign = Paint.Align.CENTER
-            this.isAntiAlias = true
-        }
+        val paint =
+            Paint().apply {
+                this.textSize = textSize
+                this.color = textColor
+                this.textAlign = Paint.Align.CENTER
+                this.isAntiAlias = true
+            }
 
-        canvas.drawText(
-            title,
-            finalWidth / 2f,
-            padding + height + textSize * 3 / 2,
-            paint
-        )
+        canvas.drawText(title, finalWidth / 2f, padding + height + textSize * 3 / 2, paint)
 
         descLines?.forEachIndexed { index, line ->
             canvas.drawText(
                 line,
                 finalWidth / 2f,
                 padding + height + textSize * 3 + textSize / 2 + index * textSize * 3 / 2,
-                paint
+                paint,
             )
         }
 
@@ -109,14 +105,14 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor(
             scaledLogo,
             (finalWidth - logoWidth) / 2f,
             finalHeight - padding - 2 * textSize - logoWidth,
-            null
+            null,
         )
 
         canvas.drawText(
             VULTISIG_ADDRESS,
             finalWidth / 2f,
             finalHeight - padding - textSize / 2,
-            paint
+            paint,
         )
 
         return bitmap

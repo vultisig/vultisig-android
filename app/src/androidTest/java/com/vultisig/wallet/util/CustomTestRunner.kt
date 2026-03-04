@@ -9,10 +9,12 @@ import dagger.hilt.android.testing.CustomTestApplication
 class HiltTestRunner : AndroidJUnitRunner() {
 
     override fun newApplication(cl: ClassLoader?, name: String?, context: Context?): Application {
-        return super.newApplication(cl, VultisigTestApplication_Application::class.java.name, context)
+        return super.newApplication(
+            cl,
+            VultisigTestApplication_Application::class.java.name,
+            context,
+        )
     }
-
 }
 
-@CustomTestApplication(VsBaseApplication::class)
-interface VultisigTestApplication
+@CustomTestApplication(VsBaseApplication::class) interface VultisigTestApplication

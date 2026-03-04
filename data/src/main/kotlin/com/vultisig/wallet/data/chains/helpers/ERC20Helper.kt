@@ -10,13 +10,13 @@ import com.vultisig.wallet.data.models.payload.DeFiAction
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
+import java.math.BigInteger
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ethereum
-import java.math.BigInteger
 
 class ERC20Helper(
     private val coinType: CoinType,
@@ -24,26 +24,32 @@ class ERC20Helper(
     private val vaultHexChainCode: String,
 ) {
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
-        val ethSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
-            ?: throw IllegalArgumentException("Invalid blockChainSpecific")
+        val ethSpecific =
+            keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
+                ?: throw IllegalArgumentException("Invalid blockChainSpecific")
 
         val defiAction = keysignPayload.defiAction
-        val input = when (defiAction) {
-            DeFiAction.CIRCLE_USDC_WITHDRAW -> buildUsdcWithdraw(keysignPayload)
-            DeFiAction.NONE -> buildErc20TokenTransfer(keysignPayload)
-        }
+        val input =
+            when (defiAction) {
+                DeFiAction.CIRCLE_USDC_WITHDRAW -> buildUsdcWithdraw(keysignPayload)
+                DeFiAction.NONE -> buildErc20TokenTransfer(keysignPayload)
+            }
 
         return EthereumGasHelper.setGasParameters(
-            ethSpecific.gasLimit,
-            ethSpecific.maxFeePerGasWei,
-            input,
-            keysignPayload,
-            nonceIncrement = BigInteger.ZERO,
-            coinType = coinType
-        ).build().toByteArray()
+                ethSpecific.gasLimit,
+                ethSpecific.maxFeePerGasWei,
+                input,
+                keysignPayload,
+                nonceIncrement = BigInteger.ZERO,
+                coinType = coinType,
+            )
+            .build()
+            .toByteArray()
     }
 
-    private fun buildErc20TokenTransfer(keysignPayload: KeysignPayload): Ethereum.SigningInput.Builder =
+    private fun buildErc20TokenTransfer(
+        keysignPayload: KeysignPayload
+    ): Ethereum.SigningInput.Builder =
         Ethereum.SigningInput.newBuilder()
             .setToAddress(keysignPayload.coin.contractAddress)
             .setTransaction(
@@ -57,19 +63,23 @@ class ERC20Helper(
                     .build()
             )
 
-    private fun buildUsdcWithdraw(keysignPayload: KeysignPayload) : Ethereum.SigningInput.Builder {
-        require(!keysignPayload.memo.isNullOrBlank()) {
-            "Empty memo for usdc withdraw"
-        }
+    private fun buildUsdcWithdraw(keysignPayload: KeysignPayload): Ethereum.SigningInput.Builder {
+        require(!keysignPayload.memo.isNullOrBlank()) { "Empty memo for usdc withdraw" }
 
         return Ethereum.SigningInput.newBuilder().apply {
             toAddress = keysignPayload.toAddress
-            transaction = Ethereum.Transaction.newBuilder().apply {
-                transfer = Ethereum.Transaction.Transfer.newBuilder().apply {
-                    amount = ByteString.copyFrom(BigInteger.ZERO.toByteArray())
-                    data = keysignPayload.memo.toByteStringOrHex()
-                }.build()
-            }.build()
+            transaction =
+                Ethereum.Transaction.newBuilder()
+                    .apply {
+                        transfer =
+                            Ethereum.Transaction.Transfer.newBuilder()
+                                .apply {
+                                    amount = ByteString.copyFrom(BigInteger.ZERO.toByteArray())
+                                    data = keysignPayload.memo.toByteStringOrHex()
+                                }
+                                .build()
+                    }
+                    .build()
         }
     }
 
@@ -87,11 +97,12 @@ class ERC20Helper(
         keysignPayload: KeysignPayload,
         signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
-        val ethPublicKey = PublicKeyHelper.getDerivedPublicKey(
-            vaultHexPublicKey,
-            vaultHexChainCode,
-            coinType.derivationPath()
-        )
+        val ethPublicKey =
+            PublicKeyHelper.getDerivedPublicKey(
+                vaultHexPublicKey,
+                vaultHexChainCode,
+                coinType.derivationPath(),
+            )
         val inputData = getPreSignedInputData(keysignPayload)
         val publicKey = PublicKey(ethPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
@@ -101,24 +112,24 @@ class ERC20Helper(
         val allSignatures = DataVector()
         val allPublicKeys = DataVector()
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
-        val signature = signatures[key]?.getSignatureWithRecoveryID()
-            ?: throw Exception("Signature not found")
+        val signature =
+            signatures[key]?.getSignatureWithRecoveryID() ?: throw Exception("Signature not found")
         if (!publicKey.verify(signature, preSigningOutput.dataHash.toByteArray())) {
             throw Exception("Signature verification failed")
         }
         allSignatures.add(signature)
 
-        val compileWithSignature = TransactionCompiler.compileWithSignatures(
-            coinType,
-            inputData,
-            allSignatures,
-            allPublicKeys
-        )
-        val output = Ethereum.SigningOutput.parseFrom(compileWithSignature)
-            .checkError()
+        val compileWithSignature =
+            TransactionCompiler.compileWithSignatures(
+                coinType,
+                inputData,
+                allSignatures,
+                allPublicKeys,
+            )
+        val output = Ethereum.SigningOutput.parseFrom(compileWithSignature).checkError()
         return SignedTransactionResult(
             rawTransaction = Numeric.toHexStringNoPrefix(output.encoded.toByteArray()),
-            transactionHash = output.encoded.toByteArray().toKeccak256()
+            transactionHash = output.encoded.toByteArray().toKeccak256(),
         )
     }
 }

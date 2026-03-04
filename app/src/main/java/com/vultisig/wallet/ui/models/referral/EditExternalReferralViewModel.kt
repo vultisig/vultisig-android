@@ -16,13 +16,13 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 internal data class EditExternalReferralUiState(
     val referralMessage: UiText? = null,
@@ -30,7 +30,9 @@ internal data class EditExternalReferralUiState(
 )
 
 @HiltViewModel
-internal class EditExternalReferralViewModel @Inject constructor(
+internal class EditExternalReferralViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val referralCodeRepository: ReferralCodeSettingsRepository,
     private val thorChainApi: ThorChainApi,
@@ -67,9 +69,10 @@ internal class EditExternalReferralViewModel @Inject constructor(
 
     private fun prefillReferral() {
         viewModelScope.launch {
-            val referralCode = withContext(Dispatchers.IO) {
-                referralCodeRepository.getExternalReferralBy(vaultId)
-            } ?: ""
+            val referralCode =
+                withContext(Dispatchers.IO) {
+                    referralCodeRepository.getExternalReferralBy(vaultId)
+                } ?: ""
 
             referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(referralCode)
         }
@@ -106,32 +109,32 @@ internal class EditExternalReferralViewModel @Inject constructor(
         }
 
         runCatching {
-            withContext(Dispatchers.IO) {
-                thorChainApi.existsReferralCode(referralCode)
+                withContext(Dispatchers.IO) { thorChainApi.existsReferralCode(referralCode) }
             }
-        }.onSuccess { exists ->
-            val (message, innerState) = if (exists) {
-                withContext(Dispatchers.IO) {
-                    referralCodeRepository.saveExternalReferral(vaultId, referralCode)
+            .onSuccess { exists ->
+                val (message, innerState) =
+                    if (exists) {
+                        withContext(Dispatchers.IO) {
+                            referralCodeRepository.saveExternalReferral(vaultId, referralCode)
+                        }
+                        R.string.referral_code_linked_successfully.asUiText() to
+                            VsTextInputFieldInnerState.Success
+                    } else {
+                        R.string.referral_external_not_linked.asUiText() to
+                            VsTextInputFieldInnerState.Error
+                    }
+                state.update {
+                    it.copy(referralMessage = message, referralMessageState = innerState)
                 }
-                R.string.referral_code_linked_successfully.asUiText() to VsTextInputFieldInnerState.Success
-            } else {
-                R.string.referral_external_not_linked.asUiText() to VsTextInputFieldInnerState.Error
             }
-            state.update {
-                it.copy(
-                    referralMessage = message,
-                    referralMessageState = innerState,
-                )
+            .onFailure {
+                state.update {
+                    it.copy(
+                        referralMessage = R.string.referral_external_not_failed.asUiText(),
+                        referralMessageState = VsTextInputFieldInnerState.Error,
+                    )
+                }
             }
-        }.onFailure {
-            state.update {
-                it.copy(
-                    referralMessage = R.string.referral_external_not_failed.asUiText(),
-                    referralMessageState = VsTextInputFieldInnerState.Error,
-                )
-            }
-        }
     }
 
     fun onPasteIconClick(content: String?) {

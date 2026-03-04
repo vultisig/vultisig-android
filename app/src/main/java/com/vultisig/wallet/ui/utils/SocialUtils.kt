@@ -13,11 +13,12 @@ internal object SocialUtils {
         val webUrl = "https://twitter.com/$twitterHandle".toUri()
 
         val pm: PackageManager = context.packageManager
-        val intent = if (isAppInstalled(pm, twitterPackage)) {
-            Intent(Intent.ACTION_VIEW, twitterUri)
-        } else {
-            Intent(Intent.ACTION_VIEW, webUrl)
-        }
+        val intent =
+            if (isAppInstalled(pm, twitterPackage)) {
+                Intent(Intent.ACTION_VIEW, twitterUri)
+            } else {
+                Intent(Intent.ACTION_VIEW, webUrl)
+            }
 
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 

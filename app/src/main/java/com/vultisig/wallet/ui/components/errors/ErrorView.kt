@@ -37,45 +37,32 @@ internal fun ErrorView(
     onButtonClick: () -> Unit,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(horizontal = 24.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(Theme.v2.colors.backgrounds.primary)
+                .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
+    ) {
+        UiSpacer(weight = 1f)
 
-        ) {
-
-        UiSpacer(
-            weight = 1f
-        )
-
-        ErrorWaves(
-            title = title,
-            description = description,
-            errorState = errorState
-        )
+        ErrorWaves(title = title, description = description, errorState = errorState)
 
         UiSpacer(30.dp)
         VsButton(
             variant = VsButtonVariant.Secondary,
             label = buttonText,
             modifier = Modifier.fillMaxWidth(),
-            onClick = onButtonClick
+            onClick = onButtonClick,
         )
 
-        UiSpacer(
-            weight = 1f
-        )
+        UiSpacer(weight = 1f)
 
         AppVersionText()
 
-        UiSpacer(
-            size = 50.dp
-        )
+        UiSpacer(size = 50.dp)
     }
-
-
 }
 
 @Composable
@@ -84,7 +71,7 @@ internal fun ErrorWaves(
     title: String,
     description: String? = null,
     errorState: ErrorState = ErrorState.WARNING,
-){
+) {
 
     val waveCircleColor = Theme.v2.colors.border.light
     Column(
@@ -93,30 +80,33 @@ internal fun ErrorWaves(
         verticalArrangement = Arrangement.Center,
     ) {
         Image(
-            imageVector = ImageVector.vectorResource(id = when(errorState){
-                ErrorState.CRITICAL -> R.drawable.error_critical
-                ErrorState.WARNING -> R.drawable.error_warning
-            }),
+            imageVector =
+                ImageVector.vectorResource(
+                    id =
+                        when (errorState) {
+                            ErrorState.CRITICAL -> R.drawable.error_critical
+                            ErrorState.WARNING -> R.drawable.error_warning
+                        }
+                ),
             contentDescription = "Warning",
-            modifier = Modifier
-                .size(24.dp)
-                .drawBehind {
+            modifier =
+                Modifier.size(24.dp).drawBehind {
                     drawCircle(
                         color = waveCircleColor,
                         radius = 37.dp.toPx(),
-                        style = Stroke(width = 0.69f.dp.toPx())
+                        style = Stroke(width = 0.69f.dp.toPx()),
                     )
                     drawCircle(
                         color = waveCircleColor,
                         radius = 68.dp.toPx(),
-                        style = Stroke(width = 0.55.dp.toPx())
+                        style = Stroke(width = 0.55.dp.toPx()),
                     )
                     drawCircle(
                         color = waveCircleColor,
                         radius = 131.dp.toPx(),
-                        style = Stroke(width = 0.69f.dp.toPx())
+                        style = Stroke(width = 0.69f.dp.toPx()),
                     )
-                }
+                },
         )
 
         UiSpacer(24.dp)
@@ -124,13 +114,13 @@ internal fun ErrorWaves(
         Text(
             text = title,
             style = Theme.brockmann.headings.title2,
-            color = when(errorState){
-                ErrorState.CRITICAL -> Theme.v2.colors.alerts.error
-                ErrorState.WARNING -> Theme.v2.colors.alerts.warning
-            },
-            textAlign = TextAlign.Center
+            color =
+                when (errorState) {
+                    ErrorState.CRITICAL -> Theme.v2.colors.alerts.error
+                    ErrorState.WARNING -> Theme.v2.colors.alerts.warning
+                },
+            textAlign = TextAlign.Center,
         )
-
 
         description?.let {
             UiSpacer(12.dp)
@@ -138,7 +128,7 @@ internal fun ErrorWaves(
                 text = description,
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.tertiary,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -146,7 +136,7 @@ internal fun ErrorWaves(
 
 enum class ErrorState {
     CRITICAL,
-    WARNING
+    WARNING,
 }
 
 @Preview
@@ -163,9 +153,5 @@ fun WarningErrorViewPreview() {
 @Preview
 @Composable
 fun WarningErrorViewPreview2() {
-    ErrorView(
-        title = "Something went wrong",
-        errorState = ErrorState.CRITICAL,
-        onButtonClick = {},
-    )
+    ErrorView(title = "Something went wrong", errorState = ErrorState.CRITICAL, onButtonClick = {})
 }

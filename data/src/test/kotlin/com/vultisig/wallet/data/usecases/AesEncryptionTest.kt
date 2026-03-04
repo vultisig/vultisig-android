@@ -1,9 +1,9 @@
 package com.vultisig.wallet.data.usecases
 
 import io.ktor.util.decodeBase64Bytes
+import kotlin.test.assertFailsWith
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import kotlin.test.assertFailsWith
 
 class AesEncryptionTest {
 
@@ -28,8 +28,9 @@ class AesEncryptionTest {
         val encryptedBase64 = "zPMOwnPVMFKMf9LOIFkyqBOr8AC1SIdQ34Ruk5gmRqxZ+lIyK7zM5/1NUjXlAg=="
         assertEquals(
             originalInput,
-            aes.decrypt(encryptedBase64.decodeBase64Bytes(), password.toByteArray())!!
-                .toString(Charsets.UTF_8),
+            aes.decrypt(encryptedBase64.decodeBase64Bytes(), password.toByteArray())!!.toString(
+                Charsets.UTF_8
+            ),
         )
     }
 
@@ -60,9 +61,9 @@ class AesEncryptionTest {
         val encryptedMessage = "PMUgpdrUY/6MgbxVN7Juaw+FUqq/p/Da5HE6xVptbHWP3UGfomHSfjii6qoLj8Y="
         val decryptedMsg =
             aes.decrypt(
-                encryptedMessage.decodeBase64Bytes(),
-                encryptionKey.toByteArray(Charsets.UTF_8)
-            )!!
+                    encryptedMessage.decodeBase64Bytes(),
+                    encryptionKey.toByteArray(Charsets.UTF_8),
+                )!!
                 .toString(Charsets.UTF_8)
         assertEquals("vultiserver-message", decryptedMsg)
     }

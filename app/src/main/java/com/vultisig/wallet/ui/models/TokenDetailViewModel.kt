@@ -20,6 +20,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -29,7 +30,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import javax.inject.Inject
 
 @Immutable
 internal data class TokenDetailUiModel(
@@ -43,7 +43,9 @@ internal data class TokenDetailUiModel(
 )
 
 @HiltViewModel
-internal class TokenDetailViewModel @Inject constructor(
+internal class TokenDetailViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
@@ -66,12 +68,9 @@ internal class TokenDetailViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
-            uiState.update {
-                it.copy(isBalanceVisible = isBalanceVisible)
-            }
+            uiState.update { it.copy(isBalanceVisible = isBalanceVisible) }
         }
     }
-
 
     fun refresh() {
         loadData()
@@ -79,110 +78,86 @@ internal class TokenDetailViewModel @Inject constructor(
 
     fun send() {
         viewModelScope.launch {
-            navigator.route(
-                Route.Send(
-                    vaultId = vaultId,
-                    chainId = chainRaw,
-                    tokenId = tokenId,
-                )
-            )
+            navigator.route(Route.Send(vaultId = vaultId, chainId = chainRaw, tokenId = tokenId))
         }
     }
 
     fun swap() {
         viewModelScope.launch {
-            navigator.route(
-                Route.Swap(
-                    vaultId = vaultId,
-                    chainId = chainRaw,
-                    srcTokenId = tokenId,
-                )
-            )
+            navigator.route(Route.Swap(vaultId = vaultId, chainId = chainRaw, srcTokenId = tokenId))
         }
     }
 
-
     fun deposit() {
         viewModelScope.launch {
-            navigator.route(
-                Route.Deposit(
-                    vaultId = vaultId,
-                    chainId = chainRaw,
-                )
-            )
+            navigator.route(Route.Deposit(vaultId = vaultId, chainId = chainRaw))
         }
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     fun buy() {
         viewModelScope.launch {
-            navigator.route(
-                Route.OnRamp(
-                    vaultId = vaultId,
-                    chainId = chainRaw,
-                )
-            )
+            navigator.route(Route.OnRamp(vaultId = vaultId, chainId = chainRaw))
         }
     }
 
     private fun loadData() {
         loadDataJob?.cancel()
-        loadDataJob = viewModelScope.launch {
-            updateRefreshing(true)
+        loadDataJob =
+            viewModelScope.launch {
+                updateRefreshing(true)
 
-            val chain = requireNotNull(Chain.fromRaw(chainRaw))
+                val chain = requireNotNull(Chain.fromRaw(chainRaw))
 
-            accountsRepository.loadAddress(
-                vaultId = vaultId,
-                chain = chain,
-            ).catch {
-                updateRefreshing(false)
-                Timber.e(it)
-            }.onEach { address ->
-                address.accounts
-                    .firstOrNull { it.token.id == tokenId }
-                    ?.let { account ->
-                        val token = account.token
-                        val tokenUiModel = ChainTokenUiModel(
-                            id = token.id,
-                            name = token.ticker,
-                            balance = account.tokenValue
-                                ?.let(mapTokenValueToStringWithUnitMapper)
-                                ?: "",
-                            fiatBalance = account.fiatValue
-                                ?.let { fiatValueToStringMapper(it) },
-                            tokenLogo = getCoinLogo(token.logo),
-                            chainLogo = chain.logo,
-                            mergeBalance = mergedBalance,
-                            price = account.price?.let { fiatValueToStringMapper(it) },
-                            network = token.chain.raw,
-                        )
+                accountsRepository
+                    .loadAddress(vaultId = vaultId, chain = chain)
+                    .catch {
+                        updateRefreshing(false)
+                        Timber.e(it)
+                    }
+                    .onEach { address ->
+                        address.accounts
+                            .firstOrNull { it.token.id == tokenId }
+                            ?.let { account ->
+                                val token = account.token
+                                val tokenUiModel =
+                                    ChainTokenUiModel(
+                                        id = token.id,
+                                        name = token.ticker,
+                                        balance =
+                                            account.tokenValue?.let(
+                                                mapTokenValueToStringWithUnitMapper
+                                            ) ?: "",
+                                        fiatBalance =
+                                            account.fiatValue?.let { fiatValueToStringMapper(it) },
+                                        tokenLogo = getCoinLogo(token.logo),
+                                        chainLogo = chain.logo,
+                                        mergeBalance = mergedBalance,
+                                        price = account.price?.let { fiatValueToStringMapper(it) },
+                                        network = token.chain.raw,
+                                    )
 
-                        val accountAddress = address.address
-                        val explorerUrl = explorerLinkRepository
-                            .getAddressLink(chain, accountAddress)
+                                val accountAddress = address.address
+                                val explorerUrl =
+                                    explorerLinkRepository.getAddressLink(chain, accountAddress)
 
-                        uiState.update {
-                            it.copy(
-                                token = tokenUiModel,
-                                canDeposit = chain.isDepositSupported,
-                                canSwap = chain.isSwapSupported,
-                                canBuy = chain.isBuySupported,
-                                explorerUrl = explorerUrl
-                            )
-                        }
-                    } ?: run {
-                    updateRefreshing(false)
-                }
-            }.onCompletion {
-                updateRefreshing(false)
-            }.collect()
-        }
+                                uiState.update {
+                                    it.copy(
+                                        token = tokenUiModel,
+                                        canDeposit = chain.isDepositSupported,
+                                        canSwap = chain.isSwapSupported,
+                                        canBuy = chain.isBuySupported,
+                                        explorerUrl = explorerUrl,
+                                    )
+                                }
+                            } ?: run { updateRefreshing(false) }
+                    }
+                    .onCompletion { updateRefreshing(false) }
+                    .collect()
+            }
     }
 
     private fun updateRefreshing(isRefreshing: Boolean) {

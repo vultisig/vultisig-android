@@ -51,10 +51,8 @@ internal fun StakingTabContent(
     isBalanceVisible: Boolean = true,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         state.positions.forEach { stakingPosition ->
             StakingWidget(
@@ -81,22 +79,22 @@ internal fun StakingWidget(
     isBalanceVisible: Boolean = true,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.normal,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(16.dp)
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
                 painter = painterResource(id = getHeaderIcon(state.stakedAmountDisplay)),
                 contentDescription = null,
-                modifier = Modifier.size(46.dp)
+                modifier = Modifier.size(46.dp),
             )
 
             UiSpacer(12.dp)
@@ -111,14 +109,11 @@ internal fun StakingWidget(
                 UiSpacer(4.dp)
 
                 if (isLoading) {
-                    UiPlaceholderLoader(
-                        modifier = Modifier
-                            .width(120.dp)
-                            .height(28.dp)
-                    )
+                    UiPlaceholderLoader(modifier = Modifier.width(120.dp).height(28.dp))
                 } else {
                     Text(
-                        text = if (isBalanceVisible) state.stakedAmountDisplay else HIDE_BALANCE_CHARS,
+                        text =
+                            if (isBalanceVisible) state.stakedAmountDisplay else HIDE_BALANCE_CHARS,
                         style = Theme.brockmann.headings.title1,
                         color = Theme.v2.colors.text.primary,
                     )
@@ -135,9 +130,7 @@ internal fun StakingWidget(
         }
 
         if (state.apy != null) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 InfoItem(
                     icon = R.drawable.ic_icon_percentage,
                     label = stringResource(R.string.apy),
@@ -160,12 +153,10 @@ internal fun StakingWidget(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (state.nextPayout != null) {
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
+                Box(modifier = Modifier.weight(1f)) {
                     InfoItem(
                         icon = R.drawable.calendar_days,
                         label = stringResource(R.string.next_payout),
@@ -175,9 +166,7 @@ internal fun StakingWidget(
             }
 
             if (state.nextReward != null) {
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
+                Box(modifier = Modifier.weight(1f)) {
                     InfoItem(
                         icon = R.drawable.ic_cup,
                         label = stringResource(R.string.next_award),
@@ -195,7 +184,11 @@ internal fun StakingWidget(
 
         if (state.canWithdraw) {
             VsButton(
-                label = stringResource(R.string.withdraw_amount, if (isBalanceVisible) state.rewards.orEmpty() else HIDE_BALANCE_CHARS),
+                label =
+                    stringResource(
+                        R.string.withdraw_amount,
+                        if (isBalanceVisible) state.rewards.orEmpty() else HIDE_BALANCE_CHARS,
+                    ),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onClickWithdraw,
                 state = VsButtonState.Enabled,
@@ -217,55 +210,51 @@ internal fun StakingWidget(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (state.stakeAmount > BigDecimal.ZERO) {
                 ActionButton(
-                    title = stringResource(
-                        if (!state.supportsMint) R.string.defi_action_unstake else R.string.defi_action_redeem
-                    ),
+                    title =
+                        stringResource(
+                            if (!state.supportsMint) R.string.defi_action_unstake
+                            else R.string.defi_action_redeem
+                        ),
                     icon = R.drawable.ic_circle_minus,
                     background = Color.Transparent,
-                    border = BorderStroke(
-                        1.dp,
-                        Theme.v2.colors.primary.accent4
-                    ),
+                    border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
                     contentColor = Theme.v2.colors.text.primary,
                     onClick = { onClickUnstake(state.coin.getUnstakeDeFiNavAction()) },
                     modifier = Modifier.weight(1f),
                     enabled = state.canUnstake,
-                    iconCircleColor = Theme.v2.colors.text.tertiary
-
+                    iconCircleColor = Theme.v2.colors.text.tertiary,
                 )
             }
 
             ActionButton(
-                title = stringResource(
-                    if (!state.supportsMint) R.string.defi_action_stake else R.string.defi_action_mint
-                ),
+                title =
+                    stringResource(
+                        if (!state.supportsMint) R.string.defi_action_stake
+                        else R.string.defi_action_mint
+                    ),
                 icon = R.drawable.ic_circle_plus,
                 background = Theme.v2.colors.primary.accent3,
                 contentColor = Theme.v2.colors.text.primary,
                 onClick = { onClickStake(state.coin.getStakeDeFiNavAction()) },
                 modifier = Modifier.weight(1f),
                 enabled = state.canStake,
-                iconCircleColor = Theme.v2.colors.primary.accent4
+                iconCircleColor = Theme.v2.colors.primary.accent4,
             )
         }
     }
 }
 
 @Composable
-internal fun StakingHeader(
-    title: String,
-    amount: String,
-    icon: Int,
-) {
+internal fun StakingHeader(title: String, amount: String, icon: Int) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Image(
             painter = painterResource(id = icon),
             contentDescription = null,
-            modifier = Modifier.size(46.dp)
+            modifier = Modifier.size(46.dp),
         )
 
         UiSpacer(12.dp)
@@ -302,11 +291,7 @@ private fun getHeaderIcon(assetStake: String): Int {
 @Preview(showBackground = true, name = "Staking Header - ATOM")
 @Composable
 private fun StakingHeaderAtomPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         StakingHeader(
             title = "Total Staked TCY",
             amount = "5000 ATOM",
@@ -318,11 +303,7 @@ private fun StakingHeaderAtomPreview() {
 @Preview(showBackground = true, name = "Staking Header - Large Amount")
 @Composable
 private fun StakingHeaderLargeAmountPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         StakingHeader(
             title = "Total Staked Value",
             amount = "1,234,567.89 RUJI",
@@ -334,24 +315,21 @@ private fun StakingHeaderLargeAmountPreview() {
 @Preview(showBackground = true, name = "Staking Widget - Can Stake & Unstake")
 @Composable
 private fun StakingWidgetFullActionsPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         StakingWidget(
-            state = StakePositionUiModel(
-                coin = Coins.ThorChain.RUJI,
-                stakeAssetHeader = "Staked RUJI",
-                stakedAmountDisplay = "1000 RUJI",
-                apy = "18.5%",
-                canWithdraw = true,
-                canStake = true,
-                canUnstake = true,
-                rewards = "50 RUJI",
-                nextReward = "5 RUJI",
-                nextPayout = "Jan 15, 2025"
-            ),
+            state =
+                StakePositionUiModel(
+                    coin = Coins.ThorChain.RUJI,
+                    stakeAssetHeader = "Staked RUJI",
+                    stakedAmountDisplay = "1000 RUJI",
+                    apy = "18.5%",
+                    canWithdraw = true,
+                    canStake = true,
+                    canUnstake = true,
+                    rewards = "50 RUJI",
+                    nextReward = "5 RUJI",
+                    nextPayout = "Jan 15, 2025",
+                ),
             onClickStake = {},
             onClickUnstake = {},
             onClickWithdraw = {},
@@ -363,24 +341,21 @@ private fun StakingWidgetFullActionsPreview() {
 @Preview(showBackground = true, name = "Staking Widget - Loading State")
 @Composable
 private fun StakingWidgetLoadingPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         StakingWidget(
-            state = StakePositionUiModel(
-                coin = Coins.ThorChain.RUJI,
-                stakeAssetHeader = "Staked RUJI",
-                stakedAmountDisplay = "0 RUJI",
-                apy = "0%",
-                canWithdraw = false,
-                canStake = false,
-                canUnstake = false,
-                rewards = null,
-                nextReward = null,
-                nextPayout = null
-            ),
+            state =
+                StakePositionUiModel(
+                    coin = Coins.ThorChain.RUJI,
+                    stakeAssetHeader = "Staked RUJI",
+                    stakedAmountDisplay = "0 RUJI",
+                    apy = "0%",
+                    canWithdraw = false,
+                    canStake = false,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null,
+                ),
             isLoading = true,
             onClickStake = {},
             onClickUnstake = {},

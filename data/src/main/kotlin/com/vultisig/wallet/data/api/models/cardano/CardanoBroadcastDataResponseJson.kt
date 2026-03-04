@@ -5,6 +5,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CardanoBroadcastDataResponseJson(
-    @SerialName("transaction_hash")
-    val transactionHash: String,
+    @SerialName("transaction_hash") val transactionHash: String
 )

@@ -5,6 +5,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -15,13 +16,12 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.io.IOException
 
 /**
  * Tests for [safeLaunch] — the ViewModel-level safety net.
  *
- * [safeLaunch] catches all exceptions except [CancellationException],
- * preventing crashes from unhandled errors in coroutines.
+ * [safeLaunch] catches all exceptions except [CancellationException], preventing crashes from
+ * unhandled errors in coroutines.
  *
  * Test groups:
  * 1. Catches application-level exceptions (the crash vectors HttpCallValidator can't handle)
@@ -31,8 +31,7 @@ import java.io.IOException
  */
 class SafeLaunchTest {
 
-    @Serializable
-    data class TypedResponse(@SerialName("id") val id: Int)
+    @Serializable data class TypedResponse(@SerialName("id") val id: Int)
 
     // ================================================================
     // GROUP 1: Catches application-level exceptions
@@ -45,9 +44,7 @@ class SafeLaunchTest {
     fun catches_ioException() = runBlocking {
         var caught: Throwable? = null
 
-        val job = safeLaunch(onError = { caught = it }) {
-            throw IOException("Connection reset")
-        }
+        val job = safeLaunch(onError = { caught = it }) { throw IOException("Connection reset") }
         job.join()
 
         assertNotNull("IOException must be caught", caught)
@@ -60,9 +57,10 @@ class SafeLaunchTest {
         // which is used in BlockChairApi, CardanoApi, etc.
         var caught: Throwable? = null
 
-        val job = safeLaunch(onError = { caught = it }) {
-            error("fail to broadcast transaction: invalid hex")
-        }
+        val job =
+            safeLaunch(onError = { caught = it }) {
+                error("fail to broadcast transaction: invalid hex")
+            }
         job.join()
 
         assertNotNull("RuntimeException from error() must be caught", caught)
@@ -75,12 +73,10 @@ class SafeLaunchTest {
         // Simulates: bodyOrThrow() throwing NetworkException on non-2xx response
         var caught: Throwable? = null
 
-        val job = safeLaunch(onError = { caught = it }) {
-            throw NetworkException(
-                httpStatusCode = 500,
-                message = "Internal server error",
-            )
-        }
+        val job =
+            safeLaunch(onError = { caught = it }) {
+                throw NetworkException(httpStatusCode = 500, message = "Internal server error")
+            }
         job.join()
 
         assertNotNull("NetworkException must be caught", caught)
@@ -93,9 +89,10 @@ class SafeLaunchTest {
         // Simulates: body<T>() failing because server returned unexpected JSON
         var caught: Throwable? = null
 
-        val job = safeLaunch(onError = { caught = it }) {
-            throw kotlinx.serialization.SerializationException("Missing field: context")
-        }
+        val job =
+            safeLaunch(onError = { caught = it }) {
+                throw kotlinx.serialization.SerializationException("Missing field: context")
+            }
         job.join()
 
         assertNotNull("SerializationException must be caught", caught)
@@ -107,11 +104,11 @@ class SafeLaunchTest {
         // Simulates: accessing null response data without null check
         var caught: Throwable? = null
 
-        val job = safeLaunch(onError = { caught = it }) {
-            val list: List<String>? = null
-            @Suppress("ALWAYS_NULL")
-            list!!.size
-        }
+        val job =
+            safeLaunch(onError = { caught = it }) {
+                val list: List<String>? = null
+                @Suppress("ALWAYS_NULL") list!!.size
+            }
         job.join()
 
         assertNotNull("NullPointerException must be caught", caught)
@@ -129,16 +126,17 @@ class SafeLaunchTest {
     fun cancellationException_isNotCaught_whenJobIsCancelled() = runBlocking {
         var onErrorCalled = false
 
-        val job = safeLaunch(onError = { onErrorCalled = true }) {
-            delay(Long.MAX_VALUE) // suspend until cancelled
-        }
+        val job =
+            safeLaunch(onError = { onErrorCalled = true }) {
+                delay(Long.MAX_VALUE) // suspend until cancelled
+            }
 
         job.cancel()
         job.join()
 
         assertFalse(
             "CancellationException must NOT trigger onError — " +
-                    "it must propagate to cancel the coroutine",
+                "it must propagate to cancel the coroutine",
             onErrorCalled,
         )
         assertTrue("Job must be cancelled", job.isCancelled)
@@ -148,15 +146,13 @@ class SafeLaunchTest {
     fun cancellationException_thrownDirectly_isNotCaught() = runBlocking {
         var onErrorCalled = false
 
-        val job = safeLaunch(onError = { onErrorCalled = true }) {
-            throw CancellationException("scope cleared")
-        }
+        val job =
+            safeLaunch(onError = { onErrorCalled = true }) {
+                throw CancellationException("scope cleared")
+            }
         job.join()
 
-        assertFalse(
-            "Directly thrown CancellationException must NOT trigger onError",
-            onErrorCalled,
-        )
+        assertFalse("Directly thrown CancellationException must NOT trigger onError", onErrorCalled)
         assertTrue("Job must be cancelled", job.isCancelled)
     }
 
@@ -169,9 +165,7 @@ class SafeLaunchTest {
         var onErrorCalled = false
         var blockCompleted = false
 
-        val job = safeLaunch(onError = { onErrorCalled = true }) {
-            blockCompleted = true
-        }
+        val job = safeLaunch(onError = { onErrorCalled = true }) { blockCompleted = true }
         job.join()
 
         assertTrue("Block must complete", blockCompleted)
@@ -185,22 +179,15 @@ class SafeLaunchTest {
         val original = IllegalArgumentException("bad input")
         var caught: Throwable? = null
 
-        val job = safeLaunch(onError = { caught = it }) {
-            throw original
-        }
+        val job = safeLaunch(onError = { caught = it }) { throw original }
         job.join()
 
-        assertTrue(
-            "onError must receive the exact same exception instance",
-            caught === original
-        )
+        assertTrue("onError must receive the exact same exception instance", caught === original)
     }
 
     @Test
     fun jobCompletes_afterError() = runBlocking {
-        val job = safeLaunch(onError = { /* swallow */ }) {
-            error("crash")
-        }
+        val job = safeLaunch(onError = { /* swallow */ }) { error("crash") }
         job.join()
 
         assertTrue("Job must complete (not hang) after error", job.isCompleted)
@@ -214,9 +201,7 @@ class SafeLaunchTest {
         var thirdResult: String? = null
 
         val job1 = safeLaunch { firstResult = "success" }
-        val job2 = safeLaunch(onError = { secondCaught = it }) {
-            error("second fails")
-        }
+        val job2 = safeLaunch(onError = { secondCaught = it }) { error("second fails") }
         val job3 = safeLaunch { thirdResult = "also success" }
 
         job1.join()
@@ -238,15 +223,14 @@ class SafeLaunchTest {
     @Test
     fun layer1_httpCallValidator_catchesNetworkError_safeLaunchReceivesNetworkException() =
         runBlocking {
-            val client = MockHttpClient.throwingIOException(
-                IOException("Unable to resolve host")
-            )
+            val client = MockHttpClient.throwingIOException(IOException("Unable to resolve host"))
             var caught: Throwable? = null
 
-            val job = safeLaunch(onError = { caught = it }) {
-                val response = client.get("https://api.vultisig.com/test")
-                response.body<TypedResponse>()
-            }
+            val job =
+                safeLaunch(onError = { caught = it }) {
+                    val response = client.get("https://api.vultisig.com/test")
+                    response.body<TypedResponse>()
+                }
             job.join()
 
             // Layer 1 (HttpCallValidator) converts IOException → NetworkException
@@ -262,66 +246,66 @@ class SafeLaunchTest {
         }
 
     @Test
-    fun layer2_safeLaunch_catchesDeserializationError_thatEscapesHttpCallValidator() =
-        runBlocking {
-            // Server returns 200 with JSON that doesn't match TypedResponse
-            val client = MockHttpClient.respondingWith(
-                HttpStatusCode.OK,
-                """{"unexpected_field": "value"}""",
-            )
-            var caught: Throwable? = null
+    fun layer2_safeLaunch_catchesDeserializationError_thatEscapesHttpCallValidator() = runBlocking {
+        // Server returns 200 with JSON that doesn't match TypedResponse
+        val client =
+            MockHttpClient.respondingWith(HttpStatusCode.OK, """{"unexpected_field": "value"}""")
+        var caught: Throwable? = null
 
-            val job = safeLaunch(onError = { caught = it }) {
+        val job =
+            safeLaunch(onError = { caught = it }) {
                 val response = client.get("https://api.vultisig.com/data")
                 response.body<TypedResponse>() // missing "id" field → deserialization error
             }
-            job.join()
+        job.join()
 
-            // HttpCallValidator does NOT catch deserialization errors (correct).
-            // safeLaunch catches them — no crash.
-            assertNotNull("safeLaunch must catch deserialization error", caught)
-            assertFalse(
-                "Deserialization error must NOT be NetworkException — " +
-                        "it's an application-level bug, not a transport error. " +
-                        "Got: ${caught!!::class.simpleName}",
-                caught is NetworkException,
-            )
+        // HttpCallValidator does NOT catch deserialization errors (correct).
+        // safeLaunch catches them — no crash.
+        assertNotNull("safeLaunch must catch deserialization error", caught)
+        assertFalse(
+            "Deserialization error must NOT be NetworkException — " +
+                "it's an application-level bug, not a transport error. " +
+                "Got: ${caught!!::class.simpleName}",
+            caught is NetworkException,
+        )
 
-            client.close()
-        }
+        client.close()
+    }
 
     @Test
-    fun layer2_safeLaunch_catchesBodyOrThrowNetworkException_fromNon2xxResponse() =
-        runBlocking {
-            val client = MockHttpClient.respondingWith(
+    fun layer2_safeLaunch_catchesBodyOrThrowNetworkException_fromNon2xxResponse() = runBlocking {
+        val client =
+            MockHttpClient.respondingWith(
                 HttpStatusCode.InternalServerError,
                 """{"message": "database connection failed"}""",
             )
-            var caught: Throwable? = null
+        var caught: Throwable? = null
 
-            val job = safeLaunch(onError = { caught = it }) {
+        val job =
+            safeLaunch(onError = { caught = it }) {
                 val response = client.get("https://api.vultisig.com/solana/")
                 response.bodyOrThrow<String>() // throws NetworkException(500, ...)
             }
-            job.join()
+        job.join()
 
-            assertNotNull("safeLaunch must catch NetworkException from bodyOrThrow", caught)
-            assertTrue(caught is NetworkException)
-            assertEquals(500, (caught as NetworkException).httpStatusCode)
+        assertNotNull("safeLaunch must catch NetworkException from bodyOrThrow", caught)
+        assertTrue(caught is NetworkException)
+        assertEquals(500, (caught as NetworkException).httpStatusCode)
 
-            client.close()
-        }
+        client.close()
+    }
 
     @Test
-    fun layer2_safeLaunch_catchesBusinessLogicError_fromStatusCodeCheck() =
-        runBlocking {
-            val client = MockHttpClient.respondingWith(
+    fun layer2_safeLaunch_catchesBusinessLogicError_fromStatusCodeCheck() = runBlocking {
+        val client =
+            MockHttpClient.respondingWith(
                 HttpStatusCode.BadRequest,
                 """{"error": "invalid transaction hex"}""",
             )
-            var caught: Throwable? = null
+        var caught: Throwable? = null
 
-            val job = safeLaunch(onError = { caught = it }) {
+        val job =
+            safeLaunch(onError = { caught = it }) {
                 // Simulates BlockChairApi.broadcastTransaction pattern:
                 // if (response.status != HttpStatusCode.OK) { error("fail to broadcast") }
                 val response = client.get("https://api.vultisig.com/blockchair/push")
@@ -330,23 +314,20 @@ class SafeLaunchTest {
                     error("fail to broadcast transaction: $errorBody")
                 }
             }
-            job.join()
+        job.join()
 
-            assertNotNull("safeLaunch must catch the error() call", caught)
-            assertTrue(caught is IllegalStateException)
-            assertTrue(caught!!.message!!.contains("fail to broadcast"))
+        assertNotNull("safeLaunch must catch the error() call", caught)
+        assertTrue(caught is IllegalStateException)
+        assertTrue(caught!!.message!!.contains("fail to broadcast"))
 
-            client.close()
-        }
+        client.close()
+    }
 
     @Test
     fun withoutSafeLaunch_deserializationError_wouldCrash() = runBlocking {
         // Documents what happens WITHOUT safeLaunch — the exception escapes.
         // In a ViewModel without try-catch, this crashes the app.
-        val client = MockHttpClient.respondingWith(
-            HttpStatusCode.OK,
-            """not json""",
-        )
+        val client = MockHttpClient.respondingWith(HttpStatusCode.OK, """not json""")
 
         var exceptionEscaped = false
         try {
@@ -358,7 +339,7 @@ class SafeLaunchTest {
 
         assertTrue(
             "Without safeLaunch, deserialization errors escape to the caller. " +
-                    "In a ViewModel without try-catch, this crashes the app.",
+                "In a ViewModel without try-catch, this crashes the app.",
             exceptionEscaped,
         )
 
@@ -370,19 +351,21 @@ class SafeLaunchTest {
         // Simulates a ViewModel using safeLaunch with custom error handling
         var uiErrorMessage: String? = null
 
-        val job = safeLaunch(
-            onError = { e ->
-                uiErrorMessage = when (e) {
-                    is NetworkException ->
-                        if (e.httpStatusCode == 0) "No internet connection"
-                        else "Server error: ${e.message}"
+        val job =
+            safeLaunch(
+                onError = { e ->
+                    uiErrorMessage =
+                        when (e) {
+                            is NetworkException ->
+                                if (e.httpStatusCode == 0) "No internet connection"
+                                else "Server error: ${e.message}"
 
-                    else -> "Unexpected error: ${e.message}"
+                            else -> "Unexpected error: ${e.message}"
+                        }
                 }
+            ) {
+                throw NetworkException(httpStatusCode = 0, message = "No internet connection")
             }
-        ) {
-            throw NetworkException(httpStatusCode = 0, message = "No internet connection")
-        }
         job.join()
 
         assertEquals("No internet connection", uiErrorMessage)
@@ -392,9 +375,7 @@ class SafeLaunchTest {
     fun safeLaunch_defaultHandler_doesNotCrash() = runBlocking {
         // Uses the default onError (Timber.e). Verifies it doesn't throw.
         // In tests, Timber is a no-op unless a Tree is planted.
-        val job = safeLaunch {
-            error("this would crash without safeLaunch")
-        }
+        val job = safeLaunch { error("this would crash without safeLaunch") }
         job.join()
 
         assertTrue("Job must complete even with default handler", job.isCompleted)

@@ -1,90 +1,63 @@
 package com.vultisig.wallet.data.api.models
 
+import java.math.BigInteger
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.math.BigInteger
 
 @Serializable
 internal data class TronBroadcastTxResponseJson(
-    @SerialName("txid")
-    val txId: String?,
-    @SerialName("code")
-    val code: String?
+    @SerialName("txid") val txId: String?,
+    @SerialName("code") val code: String?,
 )
 
 @Serializable
 data class TronSpecificBlockJson(
-    @SerialName("block_header")
-    val blockHeader: TronSpecificBlockHeaderJson
+    @SerialName("block_header") val blockHeader: TronSpecificBlockHeaderJson
 )
 
 @Serializable
 data class TronSpecificBlockHeaderJson(
-    @SerialName("raw_data")
-    val rawData: TronSpecificBlockRawDataJson,
+    @SerialName("raw_data") val rawData: TronSpecificBlockRawDataJson
 )
 
 @Serializable
 data class TronSpecificBlockRawDataJson(
-    @SerialName("number")
-    val number: ULong,
-    @SerialName("txTrieRoot")
-    val txTrieRoot: String,
-    @SerialName("witness_address")
-    val witnessAddress: String,
-    @SerialName("parentHash")
-    val parentHash: String,
-    @SerialName("version")
-    val version: ULong,
-    @SerialName("timestamp")
-    val timeStamp: ULong,
+    @SerialName("number") val number: ULong,
+    @SerialName("txTrieRoot") val txTrieRoot: String,
+    @SerialName("witness_address") val witnessAddress: String,
+    @SerialName("parentHash") val parentHash: String,
+    @SerialName("version") val version: ULong,
+    @SerialName("timestamp") val timeStamp: ULong,
 )
 
 @Serializable
 internal data class TronBalanceResponseJson(
-    @SerialName("data")
-    val tronBalanceResponseData: Array<TronBalanceResponseData>
+    @SerialName("data") val tronBalanceResponseData: Array<TronBalanceResponseData>
 )
 
 @Serializable
 internal data class TronBalanceResponseData(
-    @SerialName("balance")
-    @Contextual
-    val balance: BigInteger,
-    @SerialName("trc20")
-    val trc20: Array<Map<String, String>>
+    @SerialName("balance") @Contextual val balance: BigInteger,
+    @SerialName("trc20") val trc20: Array<Map<String, String>>,
 )
 
 @Serializable
 data class TronTriggerConstantContractJson(
-    @SerialName("result")
-    val result: Result? = Result(),
-    @SerialName("energy_used")
-    val energyUsed: Long = 0L,
-    @SerialName("energy_penalty")
-    val energyPenalty: Long = 0L,
-    @SerialName("transaction")
-    val transaction: Transaction,
+    @SerialName("result") val result: Result? = Result(),
+    @SerialName("energy_used") val energyUsed: Long = 0L,
+    @SerialName("energy_penalty") val energyPenalty: Long = 0L,
+    @SerialName("transaction") val transaction: Transaction,
 ) {
-    @Serializable
-    data class Result(
-        val result: Boolean = false,
-        val message: String = "",
-    )
+    @Serializable data class Result(val result: Boolean = false, val message: String = "")
 
-    @Serializable
-    data class RetItem(
-        val ret: String? = null,
-    )
+    @Serializable data class RetItem(val ret: String? = null)
 
     @Serializable
     data class Transaction(
-        @SerialName("ret")
-        val ret: List<RetItem>? = null,
-        @SerialName("raw_data_hex")
-        val rawDataHex: String = "",
+        @SerialName("ret") val ret: List<RetItem>? = null,
+        @SerialName("raw_data_hex") val rawDataHex: String = "",
     )
 
     fun isSuccessfulSimulation(): Boolean {
@@ -93,9 +66,7 @@ data class TronTriggerConstantContractJson(
 }
 
 @Serializable
-data class TronChainParametersJson(
-    val chainParameter: List<TronChainParameterJson>,
-) {
+data class TronChainParametersJson(val chainParameter: List<TronChainParameterJson>) {
     private val chainParameterMapped = chainParameter.associate { it.key to it.value }
 
     val memoFeeEstimate: Long
@@ -118,86 +89,49 @@ data class TronChainParametersJson(
         get() = chainParameterMapped["getTransactionFee"] ?: 0L
 }
 
-@Serializable
-data class TronChainParameterJson(
-    val key: String,
-    val value: Long = 0L,
-)
+@Serializable data class TronChainParameterJson(val key: String, val value: Long = 0L)
+
+@Serializable internal data class TronAccountRequestJson(val address: String, val visible: Boolean)
 
 @Serializable
-internal data class TronAccountRequestJson(
-    val address: String,
-    val visible: Boolean,
-)
-
-@Serializable
-internal data class TronContractRequestJson(
-    val value: String,
-) {
-    @EncodeDefault
-    val visible: Boolean = true
+internal data class TronContractRequestJson(val value: String) {
+    @EncodeDefault val visible: Boolean = true
 }
 
 @Serializable
 data class TronAccountResourceJson(
-    @SerialName("freeNetUsed")
-    val freeNetUsed: Long = 0L,
-    @SerialName("freeNetLimit")
-    val freeNetLimit: Long = 0L,
-    @SerialName("NetUsed")
-    val netUsed: Long = 0L,
-    @SerialName("NetLimit")
-    val netLimit: Long = 0L,
-    @SerialName("EnergyLimit")
-    val energyLimit: Long = 0L,
-    @SerialName("EnergyUsed")
-    val energyUsed: Long = 0L,
-    @SerialName("TotalNetLimit")
-    val totalNetLimit: Long = 0L,
-    @SerialName("TotalNetWeight")
-    val totalNetWeight: Long = 0L,
-    @SerialName("TotalEnergyLimit")
-    val totalEnergyLimit: Long = 0L,
-    @SerialName("TotalEnergyWeight")
-    val totalEnergyWeight: Long = 0L,
-    @SerialName("tronPowerUsed")
-    val tronPowerUsed: Long = 0L,
-    @SerialName("tronPowerLimit")
-    val tronPowerLimit: Long = 0L,
+    @SerialName("freeNetUsed") val freeNetUsed: Long = 0L,
+    @SerialName("freeNetLimit") val freeNetLimit: Long = 0L,
+    @SerialName("NetUsed") val netUsed: Long = 0L,
+    @SerialName("NetLimit") val netLimit: Long = 0L,
+    @SerialName("EnergyLimit") val energyLimit: Long = 0L,
+    @SerialName("EnergyUsed") val energyUsed: Long = 0L,
+    @SerialName("TotalNetLimit") val totalNetLimit: Long = 0L,
+    @SerialName("TotalNetWeight") val totalNetWeight: Long = 0L,
+    @SerialName("TotalEnergyLimit") val totalEnergyLimit: Long = 0L,
+    @SerialName("TotalEnergyWeight") val totalEnergyWeight: Long = 0L,
+    @SerialName("tronPowerUsed") val tronPowerUsed: Long = 0L,
+    @SerialName("tronPowerLimit") val tronPowerLimit: Long = 0L,
 )
 
-@Serializable
-data class TronAccountJson(
-    @SerialName("address")
-    val address: String = "",
-)
+@Serializable data class TronAccountJson(@SerialName("address") val address: String = "")
 
 @Serializable
 data class TronContractInfoJson(
-    @SerialName("contract_state")
-    val contractState: ContractStateJson,
+    @SerialName("contract_state") val contractState: ContractStateJson
 ) {
     @Serializable
-    data class ContractStateJson(
-        @SerialName("energy_factor")
-        val energyFactor: Long = 0L,
-    )
+    data class ContractStateJson(@SerialName("energy_factor") val energyFactor: Long = 0L)
 }
 
 @Serializable
 data class TronTransactionStatusResponse(
-    @SerialName("ret")
-    val ret: List<TronTransactionStatusRet>?,
-
-    @SerialName("txID")
-    val txId: String,
+    @SerialName("ret") val ret: List<TronTransactionStatusRet>?,
+    @SerialName("txID") val txId: String,
 )
 
 @Serializable
-data class TronTransactionStatusRet(
-    @SerialName("contractRet")
-    val contractRet: String
-)
+data class TronTransactionStatusRet(@SerialName("contractRet") val contractRet: String)
 
 fun TronAccountResourceJson.calculateResourceStats(): ResourceUsage {
     val totalBandwidth = freeNetLimit + netLimit
@@ -212,7 +146,7 @@ fun TronAccountResourceJson.calculateResourceStats(): ResourceUsage {
         availableBandwidth = availableBandwidth,
         totalBandwidth = totalBandwidth,
         totalEnergy = totalEnergy,
-        availableEnergy = availableEnergy
+        availableEnergy = availableEnergy,
     )
 }
 
@@ -221,5 +155,5 @@ data class ResourceUsage(
     val availableBandwidth: Long,
     val totalBandwidth: Long,
     val totalEnergy: Long,
-    val availableEnergy: Long
+    val availableEnergy: Long,
 )

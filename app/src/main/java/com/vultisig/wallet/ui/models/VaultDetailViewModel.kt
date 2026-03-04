@@ -13,14 +13,13 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareVaultDetailName
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import javax.inject.Inject
-
 
 internal data class VaultDetailUiModel(
     val name: String = "",
@@ -32,19 +31,15 @@ internal data class VaultDetailUiModel(
     val libType: String? = "",
 )
 
-internal data class DeviceMeta(
-    val name: String,
-    val isThisDevice: Boolean,
-)
+internal data class DeviceMeta(val name: String, val isThisDevice: Boolean)
 
 @HiltViewModel
-internal class VaultDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-    private val vaultRepository: VaultRepository,
-) : ViewModel() {
+internal class VaultDetailViewModel
+@Inject
+constructor(savedStateHandle: SavedStateHandle, private val vaultRepository: VaultRepository) :
+    ViewModel() {
 
-    private val vaultId: String =
-        savedStateHandle.toRoute<Route.Details>().vaultId
+    private val vaultId: String = savedStateHandle.toRoute<Route.Details>().vaultId
 
     val uiModel = MutableStateFlow(VaultDetailUiModel())
 
@@ -60,45 +55,39 @@ internal class VaultDetailViewModel @Inject constructor(
                         vaultSize = vault.signers.size.toString(),
                         pubKeyECDSA = vault.pubKeyECDSA,
                         pubKeyEDDSA = vault.pubKeyEDDSA,
-                        deviceList = vault.signers.map {
-                            DeviceMeta(
-                                name = it,
-                                isThisDevice = it == vault.localPartyID
-                            )
-                        }
+                        deviceList =
+                            vault.signers.map {
+                                DeviceMeta(name = it, isThisDevice = it == vault.localPartyID)
+                            },
                     )
                 }
             }
         }
     }
 
-    fun takeScreenShot(
-        graphicsLayer: GraphicsLayer,
-        context: Context,
-    ) {
+    fun takeScreenShot(graphicsLayer: GraphicsLayer, context: Context) {
         viewModelScope.launch {
             try {
-                val bitmap = withContext(Dispatchers.Default) {
-                    graphicsLayer.toImageBitmap().asAndroidBitmap()
-                }
+                val bitmap =
+                    withContext(Dispatchers.Default) {
+                        graphicsLayer.toImageBitmap().asAndroidBitmap()
+                    }
                 try {
                     withContext(Dispatchers.Main) {
                         context.share(
                             bitmap = bitmap,
-                            fileName = shareVaultDetailName(
-                                vaultName = uiModel.value.name,
-                                vaultPart = uiModel.value.vaultPart,
-                            )
+                            fileName =
+                                shareVaultDetailName(
+                                    vaultName = uiModel.value.name,
+                                    vaultPart = uiModel.value.vaultPart,
+                                ),
                         )
                     }
                 } finally {
                     bitmap.recycle()
                 }
             } catch (e: Exception) {
-                Timber.e(
-                    e,
-                    "Failed to capture and share vault screenshot"
-                )
+                Timber.e(e, "Failed to capture and share vault screenshot")
             }
         }
     }

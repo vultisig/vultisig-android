@@ -21,5 +21,4 @@ internal open class VsBaseApplication : Application() {
     }
 }
 
-@HiltAndroidApp
-internal class VultisigApplication : VsBaseApplication()
+@HiltAndroidApp internal class VultisigApplication : VsBaseApplication()

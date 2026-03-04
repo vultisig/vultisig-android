@@ -8,13 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.ui.components.v2.tab.TabMenuAndSearchBar
 
-
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 internal fun HomePageTabMenuAndSearchBar(
     modifier: Modifier = Modifier,
     searchTextFieldState: TextFieldState,
-//    onTNFTsClick: () -> Unit = {},
+    //    onTNFTsClick: () -> Unit = {},
     onPortfolioClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
     isEditVisible: Boolean = true,
@@ -31,18 +30,15 @@ internal fun HomePageTabMenuAndSearchBar(
         tabMenuContent = {
             HomePageTabMenu(
                 modifier = modifier,
-//                onTNFTsClick = onTNFTsClick,
+                //                onTNFTsClick = onTNFTsClick,
                 onPortfolioClick = onPortfolioClick,
                 onEditClick = onEditClick,
                 isEditVisible = isEditVisible,
-                onSearchClick = {
-                    onSearchClick()
-                },
+                onSearchClick = { onSearchClick() },
             )
         },
     )
 }
-
 
 @Preview
 @Composable
@@ -54,5 +50,3 @@ private fun PreviewHomePageTabMenuAndSearchBar() {
         searchTextFieldState = rememberTextFieldState(),
     )
 }
-
-

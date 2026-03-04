@@ -27,105 +27,65 @@ import com.vultisig.wallet.ui.screens.v3.onboarding.components.SetupVaultRive
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
-
 @Composable
-internal fun SetupVaultInfoScreen(
-    viewModel: SetupVaultInfoViewModel = hiltViewModel()
-){
+internal fun SetupVaultInfoScreen(viewModel: SetupVaultInfoViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
 
-    SetupVaultInfoScreen(
-        uiState = uiState,
-        onEvent = viewModel::onEvent
-    )
-
+    SetupVaultInfoScreen(uiState = uiState, onEvent = viewModel::onEvent)
 }
 
 @Composable
 private fun SetupVaultInfoScreen(
     uiState: SetupVaultInfoUiState,
-    onEvent: (SetupVaultInfoEvent) -> Unit
-){
-    V3Scaffold(
-        onBackClick = {
-            onEvent(SetupVaultInfoEvent.Back)
-        },
-        applyDefaultPaddings = false,
-    ){
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(
-                        horizontal = V3Scaffold.PADDING_HORIZONTAL,
-                    )
-            ) {
-                UiSpacer(
-                    size = 20.dp
-                )
+    onEvent: (SetupVaultInfoEvent) -> Unit,
+) {
+    V3Scaffold(onBackClick = { onEvent(SetupVaultInfoEvent.Back) }, applyDefaultPaddings = false) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.padding(horizontal = V3Scaffold.PADDING_HORIZONTAL)) {
+                UiSpacer(size = 20.dp)
                 Text(
                     text = stringResource(R.string.vault_setup_your_vault_setup),
                     color = Theme.v2.colors.neutrals.n50,
-                    style = Theme.brockmann.headings.title2
+                    style = Theme.brockmann.headings.title2,
                 )
-                UiSpacer(
-                    size = 20.dp
-                )
+                UiSpacer(size = 20.dp)
 
                 SetupVaultHeader(
                     logo = uiState.headerLogo,
-                    title =  uiState.title.asString(),
+                    title = uiState.title.asString(),
                     subTitle = uiState.subTitle.asString(),
                 )
-
             }
 
-            UiSpacer(
-                size = 14.dp
-            )
+            UiSpacer(size = 14.dp)
 
-            SetupVaultRive(
-                animationRes = uiState.rive
-            )
+            SetupVaultRive(animationRes = uiState.rive)
 
-            UiSpacer(
-                size = 33.dp
-            )
+            UiSpacer(size = 33.dp)
 
             Column(
-                modifier = Modifier
-                    .padding(
+                modifier =
+                    Modifier.padding(
                         horizontal = V3Scaffold.PADDING_HORIZONTAL,
                         vertical = V3Scaffold.PADDING_VERTICAL,
                     )
             ) {
-
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    uiState.tips.forEach {(logo, title, subTitle) ->
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    uiState.tips.forEach { (logo, title, subTitle) ->
                         SetupVaultGuideItem(
                             logo = logo,
                             title = title.asString(),
-                            subTitle = subTitle.asString()
+                            subTitle = subTitle.asString(),
                         )
                     }
                 }
 
-
-                UiSpacer(
-                    weight = 1f
-                )
+                UiSpacer(weight = 1f)
 
                 VsButton(
                     label = stringResource(R.string.key_import_device_count_get_started),
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    onClick = {
-                        onEvent(SetupVaultInfoEvent.Next)
-                    }
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { onEvent(SetupVaultInfoEvent.Next) },
                 )
             }
         }
@@ -134,11 +94,6 @@ private fun SetupVaultInfoScreen(
 
 @Composable
 @Preview
-private fun SetupVaultInfoScreenPreview(){
-    SetupVaultInfoScreen(
-        uiState = SetupVaultInfoUiState(
-
-        ),
-        onEvent = {}
-    )
+private fun SetupVaultInfoScreenPreview() {
+    SetupVaultInfoScreen(uiState = SetupVaultInfoUiState(), onEvent = {})
 }

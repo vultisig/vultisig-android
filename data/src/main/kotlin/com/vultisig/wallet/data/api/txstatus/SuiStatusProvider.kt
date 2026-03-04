@@ -6,16 +6,14 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import javax.inject.Inject
 
-class SuiStatusProvider @Inject constructor(
-    private val suiApi: SuiApi,
-) : TransactionStatusProvider {
+class SuiStatusProvider @Inject constructor(private val suiApi: SuiApi) :
+    TransactionStatusProvider {
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
 
         val txResponse = suiApi.checkStatus(txHash)
 
         return when {
-
             txResponse == null -> {
                 TransactionResult.NotFound
             }
@@ -27,9 +25,10 @@ class SuiStatusProvider @Inject constructor(
             txResponse.effects?.status != null -> {
                 when (txResponse.effects.status.status) {
                     "success" -> TransactionResult.Confirmed
-                    "failure" -> TransactionResult.Failed(
-                        txResponse.effects.status.error ?: "Transaction execution failed"
-                    )
+                    "failure" ->
+                        TransactionResult.Failed(
+                            txResponse.effects.status.error ?: "Transaction execution failed"
+                        )
 
                     else -> TransactionResult.Pending
                 }

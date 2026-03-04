@@ -11,14 +11,14 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.math.BigDecimal
+import java.math.BigInteger
+import javax.inject.Singleton
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.protobuf.ProtoBuf
 import tss.KeysignResponse
-import java.math.BigDecimal
-import java.math.BigInteger
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -33,22 +33,14 @@ internal interface DataModule {
 
         @Provides
         @Singleton
-        fun provideJson(
-            serializersModule: SerializersModule,
-        ) = Json {
+        fun provideJson(serializersModule: SerializersModule) = Json {
             ignoreUnknownKeys = true
             explicitNulls = false
             encodeDefaults = true
             this.serializersModule = serializersModule
         }
 
-        @Provides
-        @Singleton
-        @PrettyJson
-        fun providePrettyJson() = Json {
-            prettyPrint = true
-        }
-
+        @Provides @Singleton @PrettyJson fun providePrettyJson() = Json { prettyPrint = true }
 
         @Provides
         @Singleton
@@ -57,26 +49,14 @@ internal interface DataModule {
             bigIntegerSerializer: BigIntegerSerializer,
             keysignResponseSerializer: KeysignResponseSerializer,
         ) = SerializersModule {
-            contextual(
-                BigDecimal::class,
-                bigDecimalSerializer
-            )
-            contextual(
-                BigInteger::class,
-                bigIntegerSerializer
-            )
-            contextual(
-                KeysignResponse::class,
-                keysignResponseSerializer
-            )
+            contextual(BigDecimal::class, bigDecimalSerializer)
+            contextual(BigInteger::class, bigIntegerSerializer)
+            contextual(KeysignResponse::class, keysignResponseSerializer)
         }
 
         @Singleton
         @Provides
-        fun provideAppUpdateManager(
-            @ApplicationContext context: Context
-        ) = AppUpdateManagerFactory.create(context)
-
+        fun provideAppUpdateManager(@ApplicationContext context: Context) =
+            AppUpdateManagerFactory.create(context)
     }
-
 }

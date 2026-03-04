@@ -26,19 +26,15 @@ fun LanguageSettingScreen(navController: NavHostController) {
     val viewModel = hiltViewModel<LanguageSettingViewModel>()
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(key1 = Unit) {
-        viewModel.initSelectedLanguage()
-    }
+    LaunchedEffect(key1 = Unit) { viewModel.initSelectedLanguage() }
 
     LanguageSettingScreen(
         state = state,
-        onBackClick = {
-            navController.popBackStack()
-        },
+        onBackClick = { navController.popBackStack() },
         onLanguageClick = { language ->
             viewModel.changeLanguage(language)
             navController.popBackStack()
-        }
+        },
     )
 }
 
@@ -50,12 +46,9 @@ private fun LanguageSettingScreen(
 ) {
     V2Scaffold(
         title = stringResource(R.string.language_setting_screen_title),
-        onBackClick = onBackClick
+        onBackClick = onBackClick,
     ) {
-        V2Container(
-            type = ContainerType.SECONDARY,
-            borderType = ContainerBorderType.Borderless
-        ) {
+        V2Container(type = ContainerType.SECONDARY, borderType = ContainerBorderType.Borderless) {
             LazyColumn {
                 itemsIndexed(state.languages) { index, language ->
                     LanguageSettingItem(
@@ -63,14 +56,11 @@ private fun LanguageSettingScreen(
                         englishName = language.englishName,
                         isSelected = language == state.selectedLanguage,
                         isLastItem = index == state.languages.lastIndex,
-                        onClick = {
-                            onLanguageClick(language)
-                        }
+                        onClick = { onLanguageClick(language) },
                     )
                 }
             }
         }
-
     }
 }
 
@@ -80,18 +70,19 @@ private fun LanguageSettingItem(
     englishName: String?,
     isSelected: Boolean,
     isLastItem: Boolean = false,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
 
     SettingItem(
-        item = SettingsItemUiModel(
-            title = name.asUiText(),
-            subTitle = englishName?.asUiText(),
-            leadingIcon = null,
-            trailingIcon = if (isSelected) R.drawable.check_2 else null,
-        ),
+        item =
+            SettingsItemUiModel(
+                title = name.asUiText(),
+                subTitle = englishName?.asUiText(),
+                leadingIcon = null,
+                trailingIcon = if (isSelected) R.drawable.check_2 else null,
+            ),
         onClick = onClick,
-        isLastItem = isLastItem
+        isLastItem = isLastItem,
     )
 }
 
@@ -99,23 +90,16 @@ private fun LanguageSettingItem(
 @Composable
 private fun LanguageSettingScreenPreview() {
     LanguageSettingScreen(
-        state = LanguageSettingUiModel(
-            languages = listOf(
-                Language(
-                    mainName = "English",
-                    englishName = "English"
-                ),
-                Language(
-                    mainName = "Français",
-                    englishName = "French"
-                )
+        state =
+            LanguageSettingUiModel(
+                languages =
+                    listOf(
+                        Language(mainName = "English", englishName = "English"),
+                        Language(mainName = "Français", englishName = "French"),
+                    ),
+                selectedLanguage = Language(mainName = "English", englishName = "English"),
             ),
-            selectedLanguage = Language(
-                mainName = "English",
-                englishName = "English"
-            )
-        ),
         onBackClick = {},
-        onLanguageClick = {}
+        onLanguageClick = {},
     )
 }

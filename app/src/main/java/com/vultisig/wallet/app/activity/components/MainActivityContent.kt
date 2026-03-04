@@ -1,6 +1,5 @@
 package com.vultisig.wallet.app.activity.components
 
-
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -34,50 +33,33 @@ internal fun MainActivityContent(
     onNavigationReady: () -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .background(color = Theme.v2.colors.backgrounds.primary)
-            .safeDrawingPadding()
+        modifier =
+            Modifier.background(color = Theme.v2.colors.backgrounds.primary).safeDrawingPadding()
     ) {
-
         Column(modifier = Modifier.fillMaxSize()) {
             OfflineBanner(mainViewModel.isOffline.value)
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            ) {
-                SetupNavGraph(
-                    navController = navController,
-                    startDestination = startDestination,
-                )
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                SetupNavGraph(navController = navController, startDestination = startDestination)
             }
         }
 
         LaunchedEffect(navController) {
-            snapshotFlow { navController.currentBackStackEntry }
-                .filterNotNull()
-                .first()
+            snapshotFlow { navController.currentBackStackEntry }.filterNotNull().first()
 
             onNavigationReady()
 
             launch {
-                mainViewModel.destination.collect {
-                    navController.route(it.dst.route, it.opts)
-                }
+                mainViewModel.destination.collect { navController.route(it.dst.route, it.opts) }
             }
 
-            launch {
-                mainViewModel.route.collect {
-                    navController.route(it)
-                }
-            }
+            launch { mainViewModel.route.collect { navController.route(it) } }
         }
 
         BiometryAuthScreen()
 
         VsSnackBar(
             modifier = Modifier.align(Alignment.BottomCenter),
-            snackbarState = mainViewModel.snakeBarHostState
+            snackbarState = mainViewModel.snakeBarHostState,
         )
     }
 }

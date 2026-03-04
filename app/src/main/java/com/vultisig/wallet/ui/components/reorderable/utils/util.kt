@@ -6,20 +6,23 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 
-internal fun Offset.getAxis(orientation: Orientation) = when (orientation) {
-    Orientation.Vertical -> y
-    Orientation.Horizontal -> x
-}
+internal fun Offset.getAxis(orientation: Orientation) =
+    when (orientation) {
+        Orientation.Vertical -> y
+        Orientation.Horizontal -> x
+    }
 
-internal fun IntOffset.getAxis(orientation: Orientation) = when (orientation) {
-    Orientation.Vertical -> y
-    Orientation.Horizontal -> x
-}
+internal fun IntOffset.getAxis(orientation: Orientation) =
+    when (orientation) {
+        Orientation.Vertical -> y
+        Orientation.Horizontal -> x
+    }
 
-internal fun IntSize.getAxis(orientation: Orientation) = when (orientation) {
-    Orientation.Vertical -> height
-    Orientation.Horizontal -> width
-}
+internal fun IntSize.getAxis(orientation: Orientation) =
+    when (orientation) {
+        Orientation.Vertical -> height
+        Orientation.Horizontal -> width
+    }
 
 internal fun Offset.reverseAxis(orientation: Orientation) =
     when (orientation) {
@@ -40,9 +43,9 @@ internal fun IntSize.Companion.fromAxis(orientation: Orientation, value: Int) =
     }
 
 internal operator fun Offset.plus(size: Size) = Offset(x + size.width, y + size.height)
+
 internal operator fun Offset.minus(size: Size) = Offset(x - size.width, y - size.height)
 
 internal operator fun IntOffset.plus(size: IntSize) = IntOffset(x + size.width, y + size.height)
+
 internal operator fun IntOffset.minus(size: IntSize) = IntOffset(x - size.width, y - size.height)
-
-

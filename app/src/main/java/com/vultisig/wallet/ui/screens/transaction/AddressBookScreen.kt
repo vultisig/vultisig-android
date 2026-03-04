@@ -55,14 +55,10 @@ import com.vultisig.wallet.ui.models.transaction.AddressBookViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun AddressBookScreen(
-    model: AddressBookViewModel = hiltViewModel(),
-) {
+internal fun AddressBookScreen(model: AddressBookViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) {
-        model.loadData()
-    }
+    LaunchedEffect(Unit) { model.loadData() }
 
     AddressBookScreen(
         state = state,
@@ -71,7 +67,7 @@ internal fun AddressBookScreen(
         onDeleteAddressClick = model::deleteAddress,
         onToggleEditMode = model::toggleEditMode,
         onAddAddressClick = model::addAddress,
-        onMove = model::move
+        onMove = model::move,
     )
 }
 
@@ -95,17 +91,14 @@ internal fun AddressBookScreen(
                         text = stringResource(R.string.address_book_edit_mode_done),
                         style = Theme.brockmann.button.medium.medium,
                         color = Theme.v2.colors.primary.accent4,
-                        modifier = Modifier
-                            .clickOnce(onClick = onToggleEditMode)
-                            .background(
-                                color = Theme.v2.colors.backgrounds.secondary,
-                                shape = CircleShape
-                            )
-                            .padding(
-                                all = 12.dp
-                            )
+                        modifier =
+                            Modifier.clickOnce(onClick = onToggleEditMode)
+                                .background(
+                                    color = Theme.v2.colors.backgrounds.secondary,
+                                    shape = CircleShape,
+                                )
+                                .padding(all = 12.dp),
                     )
-
                 } else {
                     VsCircleButton(
                         onClick = onToggleEditMode,
@@ -118,24 +111,18 @@ internal fun AddressBookScreen(
             }
         },
         onBackClick = onBackClick,
-        title = if (isEditModeEnabled)
-            stringResource(R.string.address_book_title_edit)
-        else
-            stringResource(R.string.address_book_toolbar_title),
+        title =
+            if (isEditModeEnabled) stringResource(R.string.address_book_title_edit)
+            else stringResource(R.string.address_book_toolbar_title),
         bottomBar = {
             if (state.entries.isNotEmpty()) {
                 VsButton(
                     label = stringResource(R.string.address_book_add_address_button),
                     onClick = onAddAddressClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            vertical = 16.dp,
-                            horizontal = 16.dp,
-                        ),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 16.dp),
                 )
             }
-        }
+        },
     ) {
         if (state.entries.isNotEmpty()) {
             VerticalReorderList(
@@ -144,7 +131,7 @@ internal fun AddressBookScreen(
                 key = { it.model.id },
                 isReorderEnabled = state.isEditModeEnabled,
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) { entry ->
                 AddressItem(
                     image = entry.image,
@@ -152,7 +139,8 @@ internal fun AddressBookScreen(
                     address = entry.address,
                     isEditModeEnabled = isEditModeEnabled,
                     onClick = { onAddressClick(entry) },
-                    onDeleteClick = { onDeleteAddressClick(entry) })
+                    onDeleteClick = { onDeleteAddressClick(entry) },
+                )
             }
         } else {
             NoAddressView(onAddAddressClick = onAddAddressClick)
@@ -161,54 +149,41 @@ internal fun AddressBookScreen(
 }
 
 @Composable
-private fun NoAddressView(
-    onAddAddressClick: () -> Unit,
-) {
+private fun NoAddressView(onAddAddressClick: () -> Unit) {
     Column(
-        Modifier
-            .fillMaxSize()
-            .shadeCircle()
-            .padding(48.dp),
+        Modifier.fillMaxSize().shadeCircle().padding(48.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-
         Text(
             text = stringResource(R.string.address_book_empty_title),
             style = Theme.brockmann.button.semibold.large,
             color = Theme.v2.colors.neutrals.n50,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
-        UiSpacer(
-            size = 12.dp
-        )
+        UiSpacer(size = 12.dp)
 
         Text(
             text = stringResource(R.string.address_book_empty_description),
             style = Theme.brockmann.button.medium.medium,
             color = Theme.v2.colors.neutrals.n300,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
-        UiSpacer(
-            size = 30.dp
-        )
+        UiSpacer(size = 30.dp)
 
         VsButton(
             label = stringResource(R.string.address_book_add_address_button),
             onClick = onAddAddressClick,
             size = VsButtonSize.Medium,
-            variant = VsButtonVariant.Primary
+            variant = VsButtonVariant.Primary,
         )
     }
 }
 
-fun Modifier.shadeCircle() = this.drawBehind {
-    drawCircle(
-        brush = Brush.vultiCircleShadeGradient(),
-    )
-}
+fun Modifier.shadeCircle() =
+    this.drawBehind { drawCircle(brush = Brush.vultiCircleShadeGradient()) }
 
 @Preview
 @Composable
@@ -225,78 +200,53 @@ private fun AddressItem(
     onClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-
+    Row(verticalAlignment = Alignment.CenterVertically) {
         if (isEditModeEnabled) {
-            UiIcon(
-                drawableResId = R.drawable.ic_drag_handle,
-                size = 24.dp,
-            )
-            UiSpacer(
-                size = 8.dp
-            )
+            UiIcon(drawableResId = R.drawable.ic_drag_handle, size = 24.dp)
+            UiSpacer(size = 8.dp)
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickOnce(onClick = onClick)
-                .background(
-                    color = Theme.v2.colors.backgrounds.secondary,
-                    shape = RoundedCornerShape(
-                        size = 12.dp
-                    ),
-                )
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(
-                        size = 12.dp
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clickOnce(onClick = onClick)
+                    .background(
+                        color = Theme.v2.colors.backgrounds.secondary,
+                        shape = RoundedCornerShape(size = 12.dp),
                     )
-                )
-                .padding(
-                    horizontal = 20.dp,
-                    vertical = 12.dp,
-                )
+                    .border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.border.light,
+                        shape = RoundedCornerShape(size = 12.dp),
+                    )
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
         ) {
             TokenLogo(
                 logo = image,
                 title = name,
-                modifier = Modifier
-                    .size(32.dp),
-                errorLogoModifier = Modifier
-                    .size(32.dp),
+                modifier = Modifier.size(32.dp),
+                errorLogoModifier = Modifier.size(32.dp),
             )
-            UiSpacer(
-                size = 12.dp,
-            )
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            UiSpacer(size = 12.dp)
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = name,
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.primary,
                 )
 
-                UiSpacer(
-                    size = 4.dp
-                )
+                UiSpacer(size = 4.dp)
                 Text(
                     text = address,
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.secondary,
                     maxLines = 1,
-                    overflow = TextOverflow.MiddleEllipsis
+                    overflow = TextOverflow.MiddleEllipsis,
                 )
             }
 
             if (isEditModeEnabled) {
-                UiSpacer(
-                    size = 16.dp
-                )
+                UiSpacer(size = 16.dp)
                 UiIcon(
                     drawableResId = R.drawable.trash_outline,
                     onClick = onDeleteClick,
@@ -304,10 +254,8 @@ private fun AddressItem(
                 )
             }
         }
-
     }
 }
-
 
 @Preview
 @Composable
@@ -318,7 +266,7 @@ private fun AddressItemPreview() {
         address = "0xF43jf9840fkfjn38fk0dk9Ac5F43jf9840fkfjn38fk0dk9Ac5",
         isEditModeEnabled = true,
         onClick = {},
-        onDeleteClick = {}
+        onDeleteClick = {},
     )
 }
 
@@ -331,7 +279,7 @@ private fun AddressItemPreview2() {
         address = "0xF43jf9840fkfjn38fk0dk9Ac5F43jf9840fkfjn38fk0dk9Ac5",
         isEditModeEnabled = false,
         onClick = {},
-        onDeleteClick = {}
+        onDeleteClick = {},
     )
 }
 
@@ -339,27 +287,30 @@ private fun AddressItemPreview2() {
 @Composable
 private fun AddressBookScreenPreview() {
     AddressBookScreen(
-        state = AddressBookUiModel(
-            isEditModeEnabled = false,
-            entries = listOf(
-                AddressBookEntryUiModel(
-                    model = AddressBookEntry(
-                        chain = Chain.Ethereum,
-                        address = "0xF43jf9840fkfjn38fk0dk9Ac5",
-                        title = "Online Wallet"
+        state =
+            AddressBookUiModel(
+                isEditModeEnabled = false,
+                entries =
+                    listOf(
+                        AddressBookEntryUiModel(
+                            model =
+                                AddressBookEntry(
+                                    chain = Chain.Ethereum,
+                                    address = "0xF43jf9840fkfjn38fk0dk9Ac5",
+                                    title = "Online Wallet",
+                                ),
+                            image = "",
+                            name = "Online Wallet",
+                            network = "Ethereum",
+                            address = "0xF43jf9840fkfjn38fk0dk9Ac5",
+                        )
                     ),
-                    image = "",
-                    name = "Online Wallet",
-                    network = "Ethereum",
-                    address = "0xF43jf9840fkfjn38fk0dk9Ac5",
-                )
-            )
-        ),
+            ),
         onBackClick = {},
         onAddressClick = {},
         onDeleteAddressClick = {},
         onToggleEditMode = {},
         onAddAddressClick = {},
-        onMove = { _, _ -> }
+        onMove = { _, _ -> },
     )
 }

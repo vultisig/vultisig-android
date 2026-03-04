@@ -1,12 +1,12 @@
 package com.vultisig.wallet.data.utils
 
+import java.math.BigInteger
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.json.*
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.math.BigInteger
 
 class BigIntegerSerializerImplTest {
 
@@ -15,8 +15,7 @@ class BigIntegerSerializerImplTest {
 
     @Serializable
     data class TestData(
-        @Serializable(with = BigIntegerSerializerImpl::class)
-        val value: BigInteger
+        @Serializable(with = BigIntegerSerializerImpl::class) val value: BigInteger
     )
 
     @Test
@@ -56,16 +55,28 @@ class BigIntegerSerializerImplTest {
 
     @Test
     fun `deserialize simple integer_string4`() {
-        val jsonString = """{"value":115792089237316195423570985008687907853269984665640564039457584007913129639935}"""
+        val jsonString =
+            """{"value":115792089237316195423570985008687907853269984665640564039457584007913129639935}"""
         val result = json.decodeFromString(TestData.serializer(), jsonString)
-        assertEquals(BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639935"), result.value)
+        assertEquals(
+            BigInteger(
+                "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+            ),
+            result.value,
+        )
     }
 
     @Test
     fun `deserialize simple integer_string5`() {
-        val jsonString = """{"value":"115792089237316195423570985008687907853269984665640564039457584007913129639935"}"""
+        val jsonString =
+            """{"value":"115792089237316195423570985008687907853269984665640564039457584007913129639935"}"""
         val result = json.decodeFromString(TestData.serializer(), jsonString)
-        assertEquals(BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639935"), result.value)
+        assertEquals(
+            BigInteger(
+                "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+            ),
+            result.value,
+        )
     }
 
     @Test
@@ -150,7 +161,10 @@ class BigIntegerSerializerImplTest {
     @Test
     fun `handles 256-bit unsigned integer (common in smart contracts)`() {
         // 2^256 - 1 (max uint256 in Solidity)
-        val maxUint256 = BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639935")
+        val maxUint256 =
+            BigInteger(
+                "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+            )
         val data = TestData(maxUint256)
         val jsonString = json.encodeToString(TestData.serializer(), data)
         val deserialized = json.decodeFromString(TestData.serializer(), jsonString)
@@ -209,7 +223,10 @@ class BigIntegerSerializerImplTest {
     @Test
     fun `handles cryptographic hash as number`() {
         // SHA-256 hash represented as number (256 bits)
-        val hashAsNumber = BigInteger("109418989131512359209847712234789012345678901234567890123456789012345678901")
+        val hashAsNumber =
+            BigInteger(
+                "109418989131512359209847712234789012345678901234567890123456789012345678901"
+            )
         val data = TestData(hashAsNumber)
         val jsonString = json.encodeToString(TestData.serializer(), data)
         val deserialized = json.decodeFromString(TestData.serializer(), jsonString)
@@ -228,14 +245,16 @@ class BigIntegerSerializerImplTest {
 
     @Test
     fun `round trip crypto amounts maintain exact value`() {
-        val cryptoValues = listOf(
-            "2100000000000000", // BTC in satoshis
-            "120000000000000000000000000", // ETH in Wei
-            "115792089237316195423570985008687907853269984665640564039457584007913129639935", // max uint256
-            "1000000000000000000000000000", // 1B tokens with 18 decimals
-            "999999999999999999999999999999999999", // Arbitrary large number
-            "12345678901234567890123456789012345678901234567890" // 50 digit number
-        )
+        val cryptoValues =
+            listOf(
+                "2100000000000000", // BTC in satoshis
+                "120000000000000000000000000", // ETH in Wei
+                "115792089237316195423570985008687907853269984665640564039457584007913129639935", // max
+                // uint256
+                "1000000000000000000000000000", // 1B tokens with 18 decimals
+                "999999999999999999999999999999999999", // Arbitrary large number
+                "12345678901234567890123456789012345678901234567890", // 50 digit number
+            )
 
         cryptoValues.forEach { value ->
             val original = BigInteger(value)
@@ -278,7 +297,10 @@ class BigIntegerSerializerImplTest {
 
     @Test
     fun `handles numbers with 100 digits`() {
-        val hundredDigits = BigInteger("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")
+        val hundredDigits =
+            BigInteger(
+                "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+            )
         val data = TestData(hundredDigits)
         val jsonString = json.encodeToString(TestData.serializer(), data)
         val deserialized = json.decodeFromString(TestData.serializer(), jsonString)
@@ -288,7 +310,8 @@ class BigIntegerSerializerImplTest {
     @Test
     fun `handles factorial of large numbers`() {
         // 50! = huge number used in probability calculations
-        val factorial50 = BigInteger("30414093201713378043612608166064768844377641568960512000000000000")
+        val factorial50 =
+            BigInteger("30414093201713378043612608166064768844377641568960512000000000000")
         val data = TestData(factorial50)
         val jsonString = json.encodeToString(TestData.serializer(), data)
         val deserialized = json.decodeFromString(TestData.serializer(), jsonString)

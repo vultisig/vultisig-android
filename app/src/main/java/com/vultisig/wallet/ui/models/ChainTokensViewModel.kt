@@ -37,6 +37,8 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigInteger
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -50,8 +52,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.math.BigInteger
-import javax.inject.Inject
 
 @Immutable
 internal data class ChainTokensUiModel(
@@ -88,12 +88,13 @@ internal data class ChainTokenUiModel(
 )
 
 @HiltViewModel
-internal class ChainTokensViewModel @Inject constructor(
+internal class ChainTokensViewModel
+@Inject
+constructor(
     private val navigator: Navigator<Destination>,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToStringWithUnitMapper: TokenValueToStringWithUnitMapper,
     private val discoverTokenUseCase: DiscoverTokenUseCase,
-
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
@@ -101,8 +102,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val requestResultRepository: RequestResultRepository,
     private val balanceRepository: BalanceRepository,
-
-    ) : ViewModel() {
+) : ViewModel() {
     private val tokens = MutableStateFlow(emptyList<Coin>())
 
     private lateinit var chainRaw: String
@@ -116,16 +116,11 @@ internal class ChainTokensViewModel @Inject constructor(
     private fun updateBalanceVisibility() {
         viewModelScope.launch {
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
-            uiState.update {
-                it.copy(isBalanceVisible = isBalanceVisible)
-            }
+            uiState.update { it.copy(isBalanceVisible = isBalanceVisible) }
         }
     }
 
-    fun initData(
-        vaultId: String,
-        chainId: String
-    ) {
+    fun initData(vaultId: String, chainId: String) {
         this.vaultId = vaultId
         this.chainRaw = chainId
         updateBalanceVisibility()
@@ -138,57 +133,28 @@ internal class ChainTokensViewModel @Inject constructor(
     }
 
     fun send() {
-        viewModelScope.launch {
-            navigator.route(
-                Route.Send(
-                    vaultId = vaultId,
-                    chainId = chainRaw,
-                )
-            )
-        }
+        viewModelScope.launch { navigator.route(Route.Send(vaultId = vaultId, chainId = chainRaw)) }
     }
 
     fun swap() {
-        viewModelScope.launch {
-            navigator.route(
-                Route.Swap(
-                    vaultId = vaultId,
-                    chainId = chainRaw,
-                )
-            )
-        }
+        viewModelScope.launch { navigator.route(Route.Swap(vaultId = vaultId, chainId = chainRaw)) }
     }
 
     fun deposit() {
         viewModelScope.launch {
-            navigator.route(
-                Route.Deposit(
-                    vaultId = vaultId,
-                    chainId = chainRaw,
-                )
-            )
+            navigator.route(Route.Deposit(vaultId = vaultId, chainId = chainRaw))
         }
     }
 
     fun buy() {
         viewModelScope.launch {
-            navigator.route(
-                Route.OnRamp(
-                    vaultId = vaultId,
-                    chainId = chainRaw,
-                )
-            )
+            navigator.route(Route.OnRamp(vaultId = vaultId, chainId = chainRaw))
         }
     }
 
     fun selectTokens() {
         viewModelScope.launch {
-            navigator.route(
-                Route.SelectTokens(
-                    vaultId = vaultId,
-                    chainId = chainRaw,
-                )
-            )
+            navigator.route(Route.SelectTokens(vaultId = vaultId, chainId = chainRaw))
             requestResultRepository.request<Unit>(REFRESH_TOKEN_DATA)
             loadData(isRefresh = true)
         }
@@ -207,153 +173,126 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
-    private fun loadData(
-        isRefresh: Boolean
-    ) {
-        discoverTokenUseCase(
-            vaultId,
-            chainRaw
-        )
+    private fun loadData(isRefresh: Boolean) {
+        discoverTokenUseCase(vaultId, chainRaw)
 
         loadDataJob?.cancel()
-        loadDataJob = viewModelScope.launch {
-            if(isRefresh) {
-                updateRefreshing(true)
-            }
-            val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
+        loadDataJob =
+            viewModelScope.launch {
+                if (isRefresh) {
+                    updateRefreshing(true)
+                }
+                val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
 
-            val addressDataSource = if (isRefresh) {
-                accountsRepository.loadAddress(
-                    vaultId = vaultId,
-                    chain = chain,
-                )
-            } else {
-                accountsRepository.loadCachedAddress(
-                    vaultId = vaultId,
-                    chain = chain,
-                )
-            }
-
-            currentVault = vaultRepository.get(vaultId)
-                ?: error("No vault with $vaultId")
-            collectTronResourceStats(chain)
-            addressDataSource
-                .onEach {
+                val addressDataSource =
                     if (isRefresh) {
-                        updateRefreshing(it.accounts.hasNullAccount())
-                    }
-                }
-                .combine(fetchMergeBalanceFlow(chain)) { address, mergeBalance ->
-                    address to mergeBalance
-                }
-                .catch {
-                    if(isRefresh) {
-                        updateRefreshing(false)
-                    }
-                    Timber.e(it)
-                }
-                .combine(
-                    uiState.value.searchTextFieldState.textAsFlow()
-                ) { (address, mergeBalances), searchQuery ->
-                    val totalFiatValue = address.accounts
-                        .calculateAccountsTotalFiatValue()
-
-                    val accounts = address.accounts
-                        .sortedWith(
-                            compareBy(
-                                { !it.token.isNativeToken },
-                                { (it.fiatValue?.value ?: it.tokenValue?.decimal)?.unaryMinus() })
-                        )
-
-                    val tokensFromAccounts = accounts.map { it.token }
-                    tokens.update { it + tokensFromAccounts }
-                    val uiTokens = accounts.map { account ->
-                        val token = account.token
-                        ChainTokenUiModel(
-                            id = token.id,
-                            name = token.ticker,
-                            balance = account.tokenValue
-                                ?.let(mapTokenValueToStringWithUnitMapper)
-                                ?: "",
-                            fiatBalance = account.fiatValue
-                                ?.let { fiatValueToStringMapper(it) },
-                            tokenLogo = getCoinLogo(token.logo),
-                            chainLogo = chain.logo,
-                            monotoneChainLogo = chain.monoToneLogo,
-                            mergeBalance = mergeBalances.findMergeBalance(token).toString(),
-                            price = account.price?.let { fiatValueToStringMapper(it) },
-                            network = token.chain.raw,
-                        )
+                        accountsRepository.loadAddress(vaultId = vaultId, chain = chain)
+                    } else {
+                        accountsRepository.loadCachedAddress(vaultId = vaultId, chain = chain)
                     }
 
-                    val accountAddress = address.address
-                    val explorerUrl = explorerLinkRepository
-                        .getAddressLink(
-                            chain,
-                            accountAddress
-                        )
-                    val totalBalance = totalFiatValue
-                        ?.let { fiatValueToStringMapper(it) }
+                currentVault = vaultRepository.get(vaultId) ?: error("No vault with $vaultId")
+                collectTronResourceStats(chain)
+                addressDataSource
+                    .onEach {
+                        if (isRefresh) {
+                            updateRefreshing(it.accounts.hasNullAccount())
+                        }
+                    }
+                    .combine(fetchMergeBalanceFlow(chain)) { address, mergeBalance ->
+                        address to mergeBalance
+                    }
+                    .catch {
+                        if (isRefresh) {
+                            updateRefreshing(false)
+                        }
+                        Timber.e(it)
+                    }
+                    .combine(uiState.value.searchTextFieldState.textAsFlow()) {
+                        (address, mergeBalances),
+                        searchQuery ->
+                        val totalFiatValue = address.accounts.calculateAccountsTotalFiatValue()
 
-                    uiState.update {
-                        it.copy(
-                            chainName = chainRaw,
-                            chainAddress = accountAddress,
-                            chainLogo = chain.logo,
-                            tokens = uiTokens.filter { uiToken ->
-                                searchQuery.isBlank() || uiToken.name.contains(
-                                    searchQuery,
-                                    ignoreCase = true
+                        val accounts =
+                            address.accounts.sortedWith(
+                                compareBy(
+                                    { !it.token.isNativeToken },
+                                    {
+                                        (it.fiatValue?.value ?: it.tokenValue?.decimal)
+                                            ?.unaryMinus()
+                                    },
                                 )
-                            },
-                            explorerURL = explorerUrl,
-                            totalBalance = totalBalance,
-                            canDeposit = chain.isDepositSupported,
-                            canSwap = chain.isSwapSupported,
-                            canBuy = chain.isBuySupported,
-                            canSelectTokens = chain.canSelectTokens,
-                        )
+                            )
+
+                        val tokensFromAccounts = accounts.map { it.token }
+                        tokens.update { it + tokensFromAccounts }
+                        val uiTokens =
+                            accounts.map { account ->
+                                val token = account.token
+                                ChainTokenUiModel(
+                                    id = token.id,
+                                    name = token.ticker,
+                                    balance =
+                                        account.tokenValue?.let(mapTokenValueToStringWithUnitMapper)
+                                            ?: "",
+                                    fiatBalance =
+                                        account.fiatValue?.let { fiatValueToStringMapper(it) },
+                                    tokenLogo = getCoinLogo(token.logo),
+                                    chainLogo = chain.logo,
+                                    monotoneChainLogo = chain.monoToneLogo,
+                                    mergeBalance = mergeBalances.findMergeBalance(token).toString(),
+                                    price = account.price?.let { fiatValueToStringMapper(it) },
+                                    network = token.chain.raw,
+                                )
+                            }
+
+                        val accountAddress = address.address
+                        val explorerUrl =
+                            explorerLinkRepository.getAddressLink(chain, accountAddress)
+                        val totalBalance = totalFiatValue?.let { fiatValueToStringMapper(it) }
+
+                        uiState.update {
+                            it.copy(
+                                chainName = chainRaw,
+                                chainAddress = accountAddress,
+                                chainLogo = chain.logo,
+                                tokens =
+                                    uiTokens.filter { uiToken ->
+                                        searchQuery.isBlank() ||
+                                            uiToken.name.contains(searchQuery, ignoreCase = true)
+                                    },
+                                explorerURL = explorerUrl,
+                                totalBalance = totalBalance,
+                                canDeposit = chain.isDepositSupported,
+                                canSwap = chain.isSwapSupported,
+                                canBuy = chain.isBuySupported,
+                                canSelectTokens = chain.canSelectTokens,
+                            )
+                        }
                     }
-                }
-                .collect()
-        }
+                    .collect()
+            }
     }
 
     private fun collectTronResourceStats(chain: Chain) {
         viewModelScope.launch {
             if (chain == Chain.Tron) {
-                val address = currentVault?.coins
-                    ?.firstOrNull { it.chain == chain }
-                    ?.address
+                val address = currentVault?.coins?.firstOrNull { it.chain == chain }?.address
 
                 if (address == null) {
-                    Timber.w(
-                        "No TRON address for chain %s in vault %s",
-                        chainRaw,
-                        vaultId
-                    )
+                    Timber.w("No TRON address for chain %s in vault %s", chainRaw, vaultId)
                     return@launch
                 }
                 balanceRepository
                     .getTronResourceDataSource(address)
                     .flowOn(Dispatchers.IO)
                     .catch {
-                        Timber.e(
-                            it,
-                            "Error fetching tron resource data for address $address"
-                        )
+                        Timber.e(it, "Error fetching tron resource data for address $address")
                     }
-                    .collect {
-                        uiState.update { uiState ->
-                            uiState.copy(
-                                tronResourceStats = it
-                            )
-                        }
-                    }
+                    .collect { uiState.update { uiState -> uiState.copy(tronResourceStats = it) } }
             }
         }
     }
-
 
     fun openAddressQr() {
         viewModelScope.launch {
@@ -362,7 +301,7 @@ internal class ChainTokensViewModel @Inject constructor(
                     vaultId = vaultId,
                     address = uiState.value.chainAddress,
                     name = uiState.value.chainName,
-                    logo = uiState.value.chainLogo
+                    logo = uiState.value.chainLogo,
                 )
             )
         }
@@ -385,22 +324,12 @@ internal class ChainTokensViewModel @Inject constructor(
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.back()
-        }
+        viewModelScope.launch { navigator.back() }
     }
 
-
-    private fun fetchMergeBalanceFlow(
-        chain: Chain,
-    ): Flow<List<MergeAccount>> = flow {
+    private fun fetchMergeBalanceFlow(chain: Chain): Flow<List<MergeAccount>> = flow {
         emit(emptyList())
-        emit(
-            accountsRepository.fetchMergeBalance(
-                chain,
-                vaultId
-            )
-        )
+        emit(accountsRepository.fetchMergeBalance(chain, vaultId))
     }
 
     private fun updateRefreshing(isRefreshing: Boolean) {
@@ -410,12 +339,10 @@ internal class ChainTokensViewModel @Inject constructor(
     private fun List<MergeAccount>.findMergeBalance(coin: Coin): BigInteger {
         val ticker = coin.ticker.lowercase()
 
-        val mergeBalance = this.firstOrNull {
-            it.pool?.mergeAsset?.metadata?.symbol.equals(
-                ticker,
-                true
-            )
-        }?.shares?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val mergeBalance =
+            this.firstOrNull { it.pool?.mergeAsset?.metadata?.symbol.equals(ticker, true) }
+                ?.shares
+                ?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
         return mergeBalance
     }

@@ -16,28 +16,25 @@ import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import javax.inject.Inject
 
 internal data class DepositTransactionUiModel(
     val token: ValuedToken = ValuedToken.Empty,
-
     val networkFeeFiatValue: String = "",
     val networkFeeTokenValue: String = "",
-
     val srcAddress: String = "",
     val dstAddress: String = "",
-
     val memo: String = "",
-
     val operation: String = "",
     val thorAddress: String = "",
 )
+
 internal data class VerifyDepositUiModel(
     val depositTransactionUiModel: DepositTransactionUiModel = DepositTransactionUiModel(),
     val errorText: UiText? = null,
@@ -46,7 +43,9 @@ internal data class VerifyDepositUiModel(
 )
 
 @HiltViewModel
-internal class VerifyDepositViewModel @Inject constructor(
+internal class VerifyDepositViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val mapTransactionToUiModel: DepositTransactionToUiModelMapper,
     private val depositTransactionRepository: DepositTransactionRepository,
@@ -71,26 +70,21 @@ internal class VerifyDepositViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val transaction = depositTransactionRepository.getTransaction(transactionId!!)
-                var initialTransaction = DepositTransactionUiModel(
-                    srcAddress = transaction.srcAddress,
-                    dstAddress = transaction.dstAddress,
-                    token = ValuedToken(
-                        token = transaction.srcToken,
-                        value = "",
-                        fiatValue = "",
-                    ),
-                    networkFeeFiatValue = transaction.estimateFeesFiat,
-                    networkFeeTokenValue = "",
-                    memo = transaction.memo,
-                    operation = transaction.operation,
-                    thorAddress = transaction.thorAddress,
-                )
+                var initialTransaction =
+                    DepositTransactionUiModel(
+                        srcAddress = transaction.srcAddress,
+                        dstAddress = transaction.dstAddress,
+                        token =
+                            ValuedToken(token = transaction.srcToken, value = "", fiatValue = ""),
+                        networkFeeFiatValue = transaction.estimateFeesFiat,
+                        networkFeeTokenValue = "",
+                        memo = transaction.memo,
+                        operation = transaction.operation,
+                        thorAddress = transaction.thorAddress,
+                    )
 
                 state.update {
-                    it.copy(
-                        isLoading = true,
-                        depositTransactionUiModel = initialTransaction
-                    )
+                    it.copy(isLoading = true, depositTransactionUiModel = initialTransaction)
                 }
 
                 val depositTransactionUiModel = mapTransactionToUiModel(transaction)
@@ -105,7 +99,7 @@ internal class VerifyDepositViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         errorText = UiText.StringResource(R.string.try_again),
-                        isLoading = false
+                        isLoading = false,
                     )
                 }
             }
@@ -136,34 +130,29 @@ internal class VerifyDepositViewModel @Inject constructor(
         }
     }
 
-    private fun keysign(
-        keysignInitType: KeysignInitType,
-    ) {
+    private fun keysign(keysignInitType: KeysignInitType) {
         viewModelScope.launch {
-            launchKeysign(keysignInitType, transactionId!!, password.value,
-                Route.Keysign.Keysign.TxType.Deposit, vaultId!!)
+            launchKeysign(
+                keysignInitType,
+                transactionId!!,
+                password.value,
+                Route.Keysign.Keysign.TxType.Deposit,
+                vaultId!!,
+            )
         }
     }
 
     private fun loadPassword() {
         viewModelScope.launch {
-            password.value = withContext(Dispatchers.IO) {
-                vaultPasswordRepository.getPassword(vaultId!!)
-            }
+            password.value =
+                withContext(Dispatchers.IO) { vaultPasswordRepository.getPassword(vaultId!!) }
         }
     }
 
     private fun loadFastSign() {
         viewModelScope.launch {
-            val hasFastSign = withContext(Dispatchers.IO){
-                isVaultHasFastSignById(vaultId!!)
-            }
-            state.update {
-                it.copy(
-                    hasFastSign = hasFastSign
-                )
-            }
+            val hasFastSign = withContext(Dispatchers.IO) { isVaultHasFastSignById(vaultId!!) }
+            state.update { it.copy(hasFastSign = hasFastSign) }
         }
     }
-
 }

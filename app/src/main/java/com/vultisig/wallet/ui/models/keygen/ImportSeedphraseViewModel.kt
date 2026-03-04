@@ -18,6 +18,8 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,8 +27,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
 
 internal data class ImportSeedphraseUiModel(
     val wordCount: Int = 0,
@@ -38,7 +38,9 @@ internal data class ImportSeedphraseUiModel(
 )
 
 @HiltViewModel
-internal class ImportSeedphraseViewModel @Inject constructor(
+internal class ImportSeedphraseViewModel
+@Inject
+constructor(
     private val navigator: Navigator<Destination>,
     private val validateMnemonic: ValidateMnemonicUseCase,
     private val keyImportRepository: KeyImportRepository,
@@ -56,22 +58,22 @@ internal class ImportSeedphraseViewModel @Inject constructor(
         observeMnemonicChanges()
     }
 
-    private fun observeImmediateInput() = viewModelScope.launch {
-        mnemonicFieldState.textAsFlow().collect {
-            _state.update {
-                it.copy(
-                    errorMessage = null,
-                    isImportEnabled = false,
-                    innerState = VsTextInputFieldInnerState.Default,
-                )
+    private fun observeImmediateInput() =
+        viewModelScope.launch {
+            mnemonicFieldState.textAsFlow().collect {
+                _state.update {
+                    it.copy(
+                        errorMessage = null,
+                        isImportEnabled = false,
+                        innerState = VsTextInputFieldInnerState.Default,
+                    )
+                }
             }
         }
-    }
 
-    private fun observeMnemonicChanges() = viewModelScope.launch {
-        mnemonicFieldState.textAsFlow()
-            .debounce(500)
-            .collectLatest { text ->
+    private fun observeMnemonicChanges() =
+        viewModelScope.launch {
+            mnemonicFieldState.textAsFlow().debounce(500).collectLatest { text ->
                 val trimmed = cleanMnemonic(text.toString())
                 if (trimmed.isEmpty()) {
                     _state.update {
@@ -93,26 +95,27 @@ internal class ImportSeedphraseViewModel @Inject constructor(
 
                 val result = validateMnemonic(trimmed)
 
-                val errorMessage = when (result) {
-                    is MnemonicValidationResult.Valid -> null
-                    is MnemonicValidationResult.InvalidWordCount ->
-                        UiText.FormattedText(
-                            R.string.import_seedphrase_invalid_word_count,
-                            listOf(result.actual.toString(), expectedWordCount.toString())
-                        )
+                val errorMessage =
+                    when (result) {
+                        is MnemonicValidationResult.Valid -> null
+                        is MnemonicValidationResult.InvalidWordCount ->
+                            UiText.FormattedText(
+                                R.string.import_seedphrase_invalid_word_count,
+                                listOf(result.actual.toString(), expectedWordCount.toString()),
+                            )
 
-                    is MnemonicValidationResult.InvalidPhrase ->
-                        UiText.StringResource(R.string.import_seedphrase_invalid_phrase)
-                }
+                        is MnemonicValidationResult.InvalidPhrase ->
+                            UiText.StringResource(R.string.import_seedphrase_invalid_phrase)
+                    }
 
-                val innerState = when (result) {
-                    is MnemonicValidationResult.Valid ->
-                        VsTextInputFieldInnerState.Success
+                val innerState =
+                    when (result) {
+                        is MnemonicValidationResult.Valid -> VsTextInputFieldInnerState.Success
 
-                    is MnemonicValidationResult.InvalidWordCount,
-                    is MnemonicValidationResult.InvalidPhrase ->
-                        VsTextInputFieldInnerState.Error
-                }
+                        is MnemonicValidationResult.InvalidWordCount,
+                        is MnemonicValidationResult.InvalidPhrase ->
+                            VsTextInputFieldInnerState.Error
+                    }
 
                 _state.update {
                     it.copy(
@@ -124,7 +127,7 @@ internal class ImportSeedphraseViewModel @Inject constructor(
                     )
                 }
             }
-    }
+        }
 
     fun importSeedphrase() {
         if (state.value.isImporting) return
@@ -142,7 +145,8 @@ internal class ImportSeedphraseViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             isImporting = false,
-                            errorMessage = UiText.StringResource(R.string.import_seedphrase_already_imported),
+                            errorMessage =
+                                UiText.StringResource(R.string.import_seedphrase_already_imported),
                             innerState = VsTextInputFieldInnerState.Error,
                         )
                     }
@@ -161,10 +165,9 @@ internal class ImportSeedphraseViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         isImporting = false,
-                        errorMessage = if (e.message != null)
-                            UiText.DynamicString(e.message!!)
-                        else
-                            UiText.StringResource(R.string.error_view_default_description),
+                        errorMessage =
+                            if (e.message != null) UiText.DynamicString(e.message!!)
+                            else UiText.StringResource(R.string.error_view_default_description),
                         innerState = VsTextInputFieldInnerState.Error,
                     )
                 }
@@ -178,8 +181,6 @@ internal class ImportSeedphraseViewModel @Inject constructor(
 
     fun back() {
         keyImportRepository.clear()
-        viewModelScope.launch {
-            navigator.back()
-        }
+        viewModelScope.launch { navigator.back() }
     }
 }

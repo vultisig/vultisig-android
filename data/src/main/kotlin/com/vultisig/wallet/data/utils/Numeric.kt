@@ -40,16 +40,20 @@ object Numeric {
         var i = startIdx
         while (i < len) {
             data[(i + 1) / 2] =
-                ((Character.digit(
-                    cleanInput[i],
-                    16
-                ) shl 4) + Character.digit(cleanInput[i + 1], 16)).toByte()
+                ((Character.digit(cleanInput[i], 16) shl 4) +
+                        Character.digit(cleanInput[i + 1], 16))
+                    .toByte()
             i += 2
         }
         return data
     }
 
-    private fun toHexString(input: ByteArray?, offset: Int, length: Int, withPrefix: Boolean): String {
+    private fun toHexString(
+        input: ByteArray?,
+        offset: Int,
+        length: Int,
+        withPrefix: Boolean,
+    ): String {
         val stringBuilder = StringBuilder()
         if (withPrefix) {
             stringBuilder.append("0x")

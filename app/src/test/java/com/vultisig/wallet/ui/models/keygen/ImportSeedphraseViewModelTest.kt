@@ -18,6 +18,11 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -31,11 +36,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 internal class ImportSeedphraseViewModelTest {
 
@@ -62,12 +62,13 @@ internal class ImportSeedphraseViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel() = ImportSeedphraseViewModel(
-        navigator = navigator,
-        validateMnemonic = validateMnemonic,
-        keyImportRepository = keyImportRepository,
-        checkMnemonicDuplicate = checkMnemonicDuplicate,
-    )
+    private fun createViewModel() =
+        ImportSeedphraseViewModel(
+            navigator = navigator,
+            validateMnemonic = validateMnemonic,
+            keyImportRepository = keyImportRepository,
+            checkMnemonicDuplicate = checkMnemonicDuplicate,
+        )
 
     private fun TextFieldState.setTextAndNotify(text: String) {
         edit { replace(0, length, text) }
@@ -77,150 +78,158 @@ internal class ImportSeedphraseViewModelTest {
     // region Initial State
 
     @Test
-    fun `initial state has correct defaults`() = runTest(mainDispatcher) {
-        val vm = createViewModel()
+    fun `initial state has correct defaults`() =
+        runTest(mainDispatcher) {
+            val vm = createViewModel()
 
-        val state = vm.state.value
-        assertEquals(0, state.wordCount)
-        assertEquals(12, state.expectedWordCount)
-        assertNull(state.errorMessage)
-        assertFalse(state.isImportEnabled)
-        assertFalse(state.isImporting)
-        assertEquals(VsTextInputFieldInnerState.Default, state.innerState)
-    }
+            val state = vm.state.value
+            assertEquals(0, state.wordCount)
+            assertEquals(12, state.expectedWordCount)
+            assertNull(state.errorMessage)
+            assertFalse(state.isImportEnabled)
+            assertFalse(state.isImporting)
+            assertEquals(VsTextInputFieldInnerState.Default, state.innerState)
+        }
 
     // endregion
 
     // region Immediate Input Observer (error clearing)
 
     @Test
-    fun `typing clears error message immediately`() = runTest(mainDispatcher) {
-        every { validateMnemonic(any()) } returns MnemonicValidationResult.InvalidPhrase
-        val vm = createViewModel()
+    fun `typing clears error message immediately`() =
+        runTest(mainDispatcher) {
+            every { validateMnemonic(any()) } returns MnemonicValidationResult.InvalidPhrase
+            val vm = createViewModel()
 
-        // Type to trigger debounced validation error
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
+            // Type to trigger debounced validation error
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
 
-        // Verify error is set
-        assertNotNull(vm.state.value.errorMessage)
-        assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)
+            // Verify error is set
+            assertNotNull(vm.state.value.errorMessage)
+            assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)
 
-        // Type again - error should clear before next debounce
-        vm.mnemonicFieldState.setTextAndNotify("$TWELVE_WORDS extra")
+            // Type again - error should clear before next debounce
+            vm.mnemonicFieldState.setTextAndNotify("$TWELVE_WORDS extra")
 
-        assertNull(vm.state.value.errorMessage)
-        assertEquals(VsTextInputFieldInnerState.Default, vm.state.value.innerState)
-    }
-
-    @Test
-    fun `typing resets isImportEnabled to false`() = runTest(mainDispatcher) {
-        every { validateMnemonic(any()) } returns MnemonicValidationResult.Valid
-        val vm = createViewModel()
-
-        // Get to valid state
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
-        assertTrue(vm.state.value.isImportEnabled)
-
-        // Type more - isImportEnabled should reset
-        vm.mnemonicFieldState.setTextAndNotify("$TWELVE_WORDS extra")
-
-        assertFalse(vm.state.value.isImportEnabled)
-    }
+            assertNull(vm.state.value.errorMessage)
+            assertEquals(VsTextInputFieldInnerState.Default, vm.state.value.innerState)
+        }
 
     @Test
-    fun `typing resets innerState to Default`() = runTest(mainDispatcher) {
-        every { validateMnemonic(any()) } returns MnemonicValidationResult.Valid
-        val vm = createViewModel()
+    fun `typing resets isImportEnabled to false`() =
+        runTest(mainDispatcher) {
+            every { validateMnemonic(any()) } returns MnemonicValidationResult.Valid
+            val vm = createViewModel()
 
-        // Get to success state
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
-        assertEquals(VsTextInputFieldInnerState.Success, vm.state.value.innerState)
+            // Get to valid state
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
+            assertTrue(vm.state.value.isImportEnabled)
 
-        // Type more - should reset to Default
-        vm.mnemonicFieldState.setTextAndNotify("$TWELVE_WORDS extra")
+            // Type more - isImportEnabled should reset
+            vm.mnemonicFieldState.setTextAndNotify("$TWELVE_WORDS extra")
 
-        assertEquals(VsTextInputFieldInnerState.Default, vm.state.value.innerState)
-    }
+            assertFalse(vm.state.value.isImportEnabled)
+        }
+
+    @Test
+    fun `typing resets innerState to Default`() =
+        runTest(mainDispatcher) {
+            every { validateMnemonic(any()) } returns MnemonicValidationResult.Valid
+            val vm = createViewModel()
+
+            // Get to success state
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
+            assertEquals(VsTextInputFieldInnerState.Success, vm.state.value.innerState)
+
+            // Type more - should reset to Default
+            vm.mnemonicFieldState.setTextAndNotify("$TWELVE_WORDS extra")
+
+            assertEquals(VsTextInputFieldInnerState.Default, vm.state.value.innerState)
+        }
 
     // endregion
 
     // region Debounced Validation
 
     @Test
-    fun `empty input resets to default state after debounce`() = runTest(mainDispatcher) {
-        every { validateMnemonic(any()) } returns MnemonicValidationResult.Valid
-        val vm = createViewModel()
+    fun `empty input resets to default state after debounce`() =
+        runTest(mainDispatcher) {
+            every { validateMnemonic(any()) } returns MnemonicValidationResult.Valid
+            val vm = createViewModel()
 
-        // Type something and wait for validation
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
-        assertTrue(vm.state.value.isImportEnabled)
+            // Type something and wait for validation
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
+            assertTrue(vm.state.value.isImportEnabled)
 
-        // Clear text
-        vm.mnemonicFieldState.setTextAndNotify("")
-        advanceTimeBy(600)
-        advanceUntilIdle()
+            // Clear text
+            vm.mnemonicFieldState.setTextAndNotify("")
+            advanceTimeBy(600)
+            advanceUntilIdle()
 
-        assertEquals(0, vm.state.value.wordCount)
-        assertEquals(12, vm.state.value.expectedWordCount)
-        assertNull(vm.state.value.errorMessage)
-        assertFalse(vm.state.value.isImportEnabled)
-        assertEquals(VsTextInputFieldInnerState.Default, vm.state.value.innerState)
-    }
-
-    @Test
-    fun `valid mnemonic sets success state after debounce`() = runTest(mainDispatcher) {
-        every { validateMnemonic(any()) } returns MnemonicValidationResult.Valid
-        val vm = createViewModel()
-
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
-
-        assertEquals(12, vm.state.value.wordCount)
-        assertEquals(12, vm.state.value.expectedWordCount)
-        assertNull(vm.state.value.errorMessage)
-        assertTrue(vm.state.value.isImportEnabled)
-        assertEquals(VsTextInputFieldInnerState.Success, vm.state.value.innerState)
-    }
+            assertEquals(0, vm.state.value.wordCount)
+            assertEquals(12, vm.state.value.expectedWordCount)
+            assertNull(vm.state.value.errorMessage)
+            assertFalse(vm.state.value.isImportEnabled)
+            assertEquals(VsTextInputFieldInnerState.Default, vm.state.value.innerState)
+        }
 
     @Test
-    fun `invalid word count sets error state after debounce`() = runTest(mainDispatcher) {
-        every { validateMnemonic(any()) } returns MnemonicValidationResult.InvalidWordCount(5)
-        val vm = createViewModel()
+    fun `valid mnemonic sets success state after debounce`() =
+        runTest(mainDispatcher) {
+            every { validateMnemonic(any()) } returns MnemonicValidationResult.Valid
+            val vm = createViewModel()
 
-        vm.mnemonicFieldState.setTextAndNotify("one two three four five")
-        advanceTimeBy(600)
-        advanceUntilIdle()
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
 
-        assertEquals(5, vm.state.value.wordCount)
-        assertEquals(12, vm.state.value.expectedWordCount)
-        assertNotNull(vm.state.value.errorMessage)
-        assertFalse(vm.state.value.isImportEnabled)
-        assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)
-    }
+            assertEquals(12, vm.state.value.wordCount)
+            assertEquals(12, vm.state.value.expectedWordCount)
+            assertNull(vm.state.value.errorMessage)
+            assertTrue(vm.state.value.isImportEnabled)
+            assertEquals(VsTextInputFieldInnerState.Success, vm.state.value.innerState)
+        }
 
     @Test
-    fun `invalid phrase sets error state after debounce`() = runTest(mainDispatcher) {
-        every { validateMnemonic(any()) } returns MnemonicValidationResult.InvalidPhrase
-        val vm = createViewModel()
+    fun `invalid word count sets error state after debounce`() =
+        runTest(mainDispatcher) {
+            every { validateMnemonic(any()) } returns MnemonicValidationResult.InvalidWordCount(5)
+            val vm = createViewModel()
 
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
+            vm.mnemonicFieldState.setTextAndNotify("one two three four five")
+            advanceTimeBy(600)
+            advanceUntilIdle()
 
-        assertEquals(12, vm.state.value.wordCount)
-        assertNotNull(vm.state.value.errorMessage)
-        assertFalse(vm.state.value.isImportEnabled)
-        assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)
-    }
+            assertEquals(5, vm.state.value.wordCount)
+            assertEquals(12, vm.state.value.expectedWordCount)
+            assertNotNull(vm.state.value.errorMessage)
+            assertFalse(vm.state.value.isImportEnabled)
+            assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)
+        }
+
+    @Test
+    fun `invalid phrase sets error state after debounce`() =
+        runTest(mainDispatcher) {
+            every { validateMnemonic(any()) } returns MnemonicValidationResult.InvalidPhrase
+            val vm = createViewModel()
+
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
+
+            assertEquals(12, vm.state.value.wordCount)
+            assertNotNull(vm.state.value.errorMessage)
+            assertFalse(vm.state.value.isImportEnabled)
+            assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)
+        }
 
     @Test
     fun `expected word count switches to 24 when more than 12 words`() =
@@ -251,112 +260,119 @@ internal class ImportSeedphraseViewModelTest {
         }
 
     @Test
-    fun `validation is not triggered before debounce period`() = runTest(mainDispatcher) {
-        var validateCalled = false
-        every { validateMnemonic(any()) } answers {
-            validateCalled = true
-            MnemonicValidationResult.Valid
+    fun `validation is not triggered before debounce period`() =
+        runTest(mainDispatcher) {
+            var validateCalled = false
+            every { validateMnemonic(any()) } answers
+                {
+                    validateCalled = true
+                    MnemonicValidationResult.Valid
+                }
+            val vm = createViewModel()
+
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(300) // only 300ms, debounce is 500ms
+
+            // Debounced validation hasn't run yet
+            assertFalse(validateCalled)
+            assertFalse(vm.state.value.isImportEnabled)
         }
-        val vm = createViewModel()
-
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(300) // only 300ms, debounce is 500ms
-
-        // Debounced validation hasn't run yet
-        assertFalse(validateCalled)
-        assertFalse(vm.state.value.isImportEnabled)
-    }
 
     // endregion
 
     // region cleanMnemonic
 
     @Test
-    fun `validation receives normalized whitespace`() = runTest(mainDispatcher) {
-        var capturedInput = ""
-        every { validateMnemonic(any()) } answers {
-            capturedInput = firstArg()
-            MnemonicValidationResult.Valid
+    fun `validation receives normalized whitespace`() =
+        runTest(mainDispatcher) {
+            var capturedInput = ""
+            every { validateMnemonic(any()) } answers
+                {
+                    capturedInput = firstArg()
+                    MnemonicValidationResult.Valid
+                }
+            val vm = createViewModel()
+
+            // Input with multiple spaces, tabs, newlines
+            vm.mnemonicFieldState.setTextAndNotify(
+                "  one  two\tthree\nfour   five  six seven eight nine ten eleven twelve  "
+            )
+            advanceTimeBy(600)
+            advanceUntilIdle()
+
+            assertEquals(
+                "one two three four five six seven eight nine ten eleven twelve",
+                capturedInput,
+            )
         }
-        val vm = createViewModel()
-
-        // Input with multiple spaces, tabs, newlines
-        vm.mnemonicFieldState.setTextAndNotify(
-            "  one  two\tthree\nfour   five  six seven eight nine ten eleven twelve  "
-        )
-        advanceTimeBy(600)
-        advanceUntilIdle()
-
-        assertEquals(
-            "one two three four five six seven eight nine ten eleven twelve",
-            capturedInput
-        )
-    }
 
     @Test
-    fun `whitespace-only input is treated as empty`() = runTest(mainDispatcher) {
-        val vm = createViewModel()
+    fun `whitespace-only input is treated as empty`() =
+        runTest(mainDispatcher) {
+            val vm = createViewModel()
 
-        vm.mnemonicFieldState.setTextAndNotify("   \t\n  ")
-        advanceTimeBy(600)
-        advanceUntilIdle()
+            vm.mnemonicFieldState.setTextAndNotify("   \t\n  ")
+            advanceTimeBy(600)
+            advanceUntilIdle()
 
-        assertEquals(0, vm.state.value.wordCount)
-        assertNull(vm.state.value.errorMessage)
-        assertFalse(vm.state.value.isImportEnabled)
-        assertEquals(VsTextInputFieldInnerState.Default, vm.state.value.innerState)
-    }
+            assertEquals(0, vm.state.value.wordCount)
+            assertNull(vm.state.value.errorMessage)
+            assertFalse(vm.state.value.isImportEnabled)
+            assertEquals(VsTextInputFieldInnerState.Default, vm.state.value.innerState)
+        }
 
     // endregion
 
     // region importSeedphrase — double-submit guard
 
     @Test
-    fun `double submit guard prevents concurrent imports`() = runTest(mainDispatcher) {
-        // Make checkMnemonicDuplicate suspend forever to simulate ongoing import
-        checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
-            delay(Long.MAX_VALUE)
-            false
+    fun `double submit guard prevents concurrent imports`() =
+        runTest(mainDispatcher) {
+            // Make checkMnemonicDuplicate suspend forever to simulate ongoing import
+            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
+                delay(Long.MAX_VALUE)
+                false
+            }
+            val vm = createViewModel()
+
+            // Type valid phrase and wait for validation
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
+            assertTrue(vm.state.value.isImportEnabled)
+
+            // First import starts — sets isImporting=true, suspends at checkMnemonicDuplicate
+            vm.importSeedphrase()
+            assertTrue(vm.state.value.isImporting)
+
+            // Second import should be blocked by isImporting guard
+            vm.importSeedphrase()
+            assertTrue(vm.state.value.isImporting)
         }
-        val vm = createViewModel()
-
-        // Type valid phrase and wait for validation
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
-        assertTrue(vm.state.value.isImportEnabled)
-
-        // First import starts — sets isImporting=true, suspends at checkMnemonicDuplicate
-        vm.importSeedphrase()
-        assertTrue(vm.state.value.isImporting)
-
-        // Second import should be blocked by isImporting guard
-        vm.importSeedphrase()
-        assertTrue(vm.state.value.isImporting)
-    }
 
     @Test
-    fun `double submit guard does not call duplicate check twice`() = runTest(mainDispatcher) {
-        var duplicateCheckCount = 0
-        checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
-            duplicateCheckCount++
-            delay(Long.MAX_VALUE)
-            false
+    fun `double submit guard does not call duplicate check twice`() =
+        runTest(mainDispatcher) {
+            var duplicateCheckCount = 0
+            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
+                duplicateCheckCount++
+                delay(Long.MAX_VALUE)
+                false
+            }
+            val vm = createViewModel()
+
+            // Type valid phrase and wait for validation
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
+
+            // First import — suspends at checkMnemonicDuplicate
+            vm.importSeedphrase()
+            // Second import — blocked by isImporting guard
+            vm.importSeedphrase()
+
+            assertEquals(1, duplicateCheckCount)
         }
-        val vm = createViewModel()
-
-        // Type valid phrase and wait for validation
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
-
-        // First import — suspends at checkMnemonicDuplicate
-        vm.importSeedphrase()
-        // Second import — blocked by isImporting guard
-        vm.importSeedphrase()
-
-        assertEquals(1, duplicateCheckCount)
-    }
 
     // endregion
 
@@ -451,121 +467,122 @@ internal class ImportSeedphraseViewModelTest {
     // region importSeedphrase — duplicate path
 
     @Test
-    fun `importSeedphrase shows error on duplicate`() = runTest(mainDispatcher) {
-        checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase { true }
-        val vm = createViewModel()
+    fun `importSeedphrase shows error on duplicate`() =
+        runTest(mainDispatcher) {
+            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase { true }
+            val vm = createViewModel()
 
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
 
-        vm.importSeedphrase()
-        advanceUntilIdle()
+            vm.importSeedphrase()
+            advanceUntilIdle()
 
-        assertFalse(vm.state.value.isImporting)
-        assertEquals(
-            UiText.StringResource(R.string.import_seedphrase_already_imported),
-            vm.state.value.errorMessage,
-        )
-        assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)
-    }
-
-    @Test
-    fun `importSeedphrase duplicate does not navigate`() = runTest(mainDispatcher) {
-        checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase { true }
-        val vm = createViewModel()
-
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
-
-        vm.importSeedphrase()
-        advanceUntilIdle()
-
-        coVerify(exactly = 0) { navigator.route(any()) }
-    }
+            assertFalse(vm.state.value.isImporting)
+            assertEquals(
+                UiText.StringResource(R.string.import_seedphrase_already_imported),
+                vm.state.value.errorMessage,
+            )
+            assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)
+        }
 
     @Test
-    fun `importSeedphrase duplicate does not call setMnemonic`() = runTest(mainDispatcher) {
-        checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase { true }
-        val vm = createViewModel()
+    fun `importSeedphrase duplicate does not navigate`() =
+        runTest(mainDispatcher) {
+            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase { true }
+            val vm = createViewModel()
 
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
 
-        vm.importSeedphrase()
-        advanceUntilIdle()
+            vm.importSeedphrase()
+            advanceUntilIdle()
 
-        verify(exactly = 0) { keyImportRepository.setMnemonic(any()) }
-    }
+            coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
+    @Test
+    fun `importSeedphrase duplicate does not call setMnemonic`() =
+        runTest(mainDispatcher) {
+            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase { true }
+            val vm = createViewModel()
+
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
+
+            vm.importSeedphrase()
+            advanceUntilIdle()
+
+            verify(exactly = 0) { keyImportRepository.setMnemonic(any()) }
+        }
 
     // endregion
 
     // region importSeedphrase — exception path
 
     @Test
-    fun `importSeedphrase shows error on exception`() = runTest(mainDispatcher) {
-        checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
-            throw RuntimeException("Network error")
+    fun `importSeedphrase shows error on exception`() =
+        runTest(mainDispatcher) {
+            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
+                throw RuntimeException("Network error")
+            }
+            val vm = createViewModel()
+
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
+
+            vm.importSeedphrase()
+            advanceUntilIdle()
+
+            assertFalse(vm.state.value.isImporting)
+            assertEquals(UiText.DynamicString("Network error"), vm.state.value.errorMessage)
+            assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)
         }
-        val vm = createViewModel()
-
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
-
-        vm.importSeedphrase()
-        advanceUntilIdle()
-
-        assertFalse(vm.state.value.isImporting)
-        assertEquals(
-            UiText.DynamicString("Network error"),
-            vm.state.value.errorMessage,
-        )
-        assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)
-    }
 
     @Test
-    fun `importSeedphrase exception does not navigate`() = runTest(mainDispatcher) {
-        checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
-            throw RuntimeException("fail")
+    fun `importSeedphrase exception does not navigate`() =
+        runTest(mainDispatcher) {
+            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
+                throw RuntimeException("fail")
+            }
+            val vm = createViewModel()
+
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
+
+            vm.importSeedphrase()
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { navigator.route(any()) }
         }
-        val vm = createViewModel()
-
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
-
-        vm.importSeedphrase()
-        advanceUntilIdle()
-
-        coVerify(exactly = 0) { navigator.route(any()) }
-    }
 
     @Test
-    fun `importSeedphrase exception does not call setMnemonic`() = runTest(mainDispatcher) {
-        checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
-            throw RuntimeException("fail")
+    fun `importSeedphrase exception does not call setMnemonic`() =
+        runTest(mainDispatcher) {
+            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
+                throw RuntimeException("fail")
+            }
+            val vm = createViewModel()
+
+            vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
+            advanceTimeBy(600)
+            advanceUntilIdle()
+
+            vm.importSeedphrase()
+            advanceUntilIdle()
+
+            verify(exactly = 0) { keyImportRepository.setMnemonic(any()) }
         }
-        val vm = createViewModel()
-
-        vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
-        advanceTimeBy(600)
-        advanceUntilIdle()
-
-        vm.importSeedphrase()
-        advanceUntilIdle()
-
-        verify(exactly = 0) { keyImportRepository.setMnemonic(any()) }
-    }
 
     @Test
     fun `importSeedphrase shows unknown error when exception message is null`() =
         runTest(mainDispatcher) {
-            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
-                throw RuntimeException()
-            }
+            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase { throw RuntimeException() }
             val vm = createViewModel()
 
             vm.mnemonicFieldState.setTextAndNotify(TWELVE_WORDS)
@@ -665,9 +682,7 @@ internal class ImportSeedphraseViewModelTest {
     fun `can reimport successfully after duplicate error`() =
         runTest(mainDispatcher) {
             var isDuplicate = true
-            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase {
-                isDuplicate
-            }
+            checkMnemonicDuplicate = CheckMnemonicDuplicateUseCase { isDuplicate }
             val vm = createViewModel()
 
             // First import — duplicate
@@ -716,10 +731,7 @@ internal class ImportSeedphraseViewModelTest {
             vm.importSeedphrase()
             advanceUntilIdle()
 
-            assertEquals(
-                UiText.DynamicString("Network error"),
-                vm.state.value.errorMessage,
-            )
+            assertEquals(UiText.DynamicString("Network error"), vm.state.value.errorMessage)
 
             // Type same phrase again, let debounce complete
             shouldThrow = false
@@ -821,14 +833,15 @@ internal class ImportSeedphraseViewModelTest {
     // region back
 
     @Test
-    fun `back navigates to Destination Back`() = runTest(mainDispatcher) {
-        val vm = createViewModel()
+    fun `back navigates to Destination Back`() =
+        runTest(mainDispatcher) {
+            val vm = createViewModel()
 
-        vm.back()
-        advanceUntilIdle()
+            vm.back()
+            advanceUntilIdle()
 
-        coVerify { navigator.navigate(Destination.Back) }
-    }
+            coVerify { navigator.navigate(Destination.Back) }
+        }
 
     // endregion
 
@@ -838,10 +851,11 @@ internal class ImportSeedphraseViewModelTest {
     fun `rapid typing only triggers validation for final input`() =
         runTest(mainDispatcher) {
             val capturedInputs = mutableListOf<String>()
-            every { validateMnemonic(any()) } answers {
-                capturedInputs.add(firstArg())
-                MnemonicValidationResult.InvalidPhrase
-            }
+            every { validateMnemonic(any()) } answers
+                {
+                    capturedInputs.add(firstArg())
+                    MnemonicValidationResult.InvalidPhrase
+                }
             val vm = createViewModel()
 
             // Rapid typing - each within debounce window

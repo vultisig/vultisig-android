@@ -4,25 +4,28 @@ import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.api.models.BlockChairStatusResponse
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
-import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteError
-import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteJson
-import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
-import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
-import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
-import com.vultisig.wallet.data.api.models.quotes.OneInchQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteError
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
+import java.math.BigDecimal
+import java.math.BigInteger
+import javax.inject.Inject
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -37,9 +40,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
-import java.math.BigDecimal
-import java.math.BigInteger
-import javax.inject.Inject
 
 interface DefaultSerializer<T> : KSerializer<T> {
     override fun serialize(encoder: Encoder, value: T) {
@@ -50,23 +50,23 @@ interface DefaultSerializer<T> : KSerializer<T> {
 interface BigDecimalSerializer : DefaultSerializer<BigDecimal>
 
 class BigDecimalSerializerImpl @Inject constructor() : BigDecimalSerializer {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
-        "BigDecimal",
-        PrimitiveKind.STRING
-    )
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("BigDecimal", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: BigDecimal) =
         encoder.encodeString(value.toPlainString())
 
     override fun deserialize(decoder: Decoder): BigDecimal {
-        val jsonDecoder = decoder as? JsonDecoder
-            ?: return BigDecimal(decoder.decodeString())
+        val jsonDecoder = decoder as? JsonDecoder ?: return BigDecimal(decoder.decodeString())
 
         val element = jsonDecoder.decodeJsonElement()
 
         return when {
             element is JsonPrimitive -> BigDecimal(element.content)
-            else -> throw SerializationException("Expected string or number for BigDecimal, got ${element::class}")
+            else ->
+                throw SerializationException(
+                    "Expected string or number for BigDecimal, got ${element::class}"
+                )
         }
     }
 }
@@ -74,34 +74,30 @@ class BigDecimalSerializerImpl @Inject constructor() : BigDecimalSerializer {
 interface BigIntegerSerializer : DefaultSerializer<BigInteger>
 
 class BigIntegerSerializerImpl @Inject constructor() : BigIntegerSerializer {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
-        "BigInteger",
-        PrimitiveKind.STRING
-    )
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("BigInteger", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: BigInteger) =
         encoder.encodeString(value.toString())
 
     override fun deserialize(decoder: Decoder): BigInteger {
-        val jsonDecoder = decoder as? JsonDecoder
-            ?: return BigInteger(decoder.decodeString())
+        val jsonDecoder = decoder as? JsonDecoder ?: return BigInteger(decoder.decodeString())
 
         val element = jsonDecoder.decodeJsonElement()
 
         return when {
             element is JsonPrimitive -> BigInteger(element.content)
-            else -> throw SerializationException("Expected string or number for BigInteger, got ${element::class}")
+            else ->
+                throw SerializationException(
+                    "Expected string or number for BigInteger, got ${element::class}"
+                )
         }
     }
 }
 
-
 interface SplTokenResponseJsonSerializer : DefaultSerializer<SplTokenDeserialized>
 
-
-class SplTokenResponseJsonSerializerImpl @Inject constructor(
-    private val json: Json,
-) :
+class SplTokenResponseJsonSerializerImpl @Inject constructor(private val json: Json) :
     SplTokenResponseJsonSerializer {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("SplTokenResponseJsonSerializer")
@@ -111,18 +107,11 @@ class SplTokenResponseJsonSerializerImpl @Inject constructor(
         val jsonObject = input.decodeJsonElement().jsonObject
 
         return if (jsonObject.containsKey("error")) {
-            Error(
-                json.decodeFromJsonElement<SplTokenResponseJson>(jsonObject)
-            )
+            Error(json.decodeFromJsonElement<SplTokenResponseJson>(jsonObject))
         } else {
-            Result(
-                json.decodeFromJsonElement<Map<String, SplTokenJson>>(
-                    jsonObject
-                )
-            )
+            Result(json.decodeFromJsonElement<Map<String, SplTokenJson>>(jsonObject))
         }
     }
-
 }
 
 interface ThorChainSwapQuoteResponseJsonSerializer :
@@ -172,7 +161,6 @@ class LiFiSwapQuoteResponseSerializerImpl @Inject constructor(private val json: 
     }
 }
 
-
 interface UTXOStatusResponseSerializer : DefaultSerializer<BlockChainStatusDeserialized>
 
 class UTXOStatusResponseSerializerImpl @Inject constructor(private val json: Json) :
@@ -190,9 +178,7 @@ class UTXOStatusResponseSerializerImpl @Inject constructor(private val json: Jso
                 json.decodeFromJsonElement<BlockChairStatusResponse>(jsonObject)
             )
         } else {
-            BlockChainStatusDeserialized.Error(
-                ""
-            )
+            BlockChainStatusDeserialized.Error("")
         })
     }
 }
@@ -212,11 +198,11 @@ class OneInchSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val
         return if (swapJsonObject != null && quoteJsonObject != null) {
             val swapJson = json.decodeFromJsonElement<EVMSwapQuoteJson>(swapJsonObject)
             val quoteJson = json.decodeFromJsonElement<OneInchQuoteJson>(quoteJsonObject)
-            EVMSwapQuoteDeserialized.Result(swapJson.copy(tx = swapJson.tx.copy(gas = quoteJson.gas)))
-        } else {
-            EVMSwapQuoteDeserialized.Error(
-                json.decodeFromJsonElement<String>(jsonObject)
+            EVMSwapQuoteDeserialized.Result(
+                swapJson.copy(tx = swapJson.tx.copy(gas = quoteJson.gas))
             )
+        } else {
+            EVMSwapQuoteDeserialized.Error(json.decodeFromJsonElement<String>(jsonObject))
         }
     }
 }
@@ -252,10 +238,7 @@ class KeysignResponseSerializerImpl @Inject constructor() : KeysignResponseSeria
 
     override fun serialize(encoder: Encoder, value: tss.KeysignResponse) {
         val surrogate = KeysignResponseSerializable.serialize(value)
-        encoder.encodeSerializableValue(
-            serializer,
-            surrogate
-        )
+        encoder.encodeSerializableValue(serializer, surrogate)
     }
 
     override fun deserialize(decoder: Decoder): tss.KeysignResponse {
@@ -264,12 +247,9 @@ class KeysignResponseSerializerImpl @Inject constructor() : KeysignResponseSeria
     }
 }
 
-
 interface CosmosThorChainResponseSerializer : DefaultSerializer<CosmosTHORChainAccountResponse>
 
-class CosmosThorChainResponseSerializerImpl @Inject constructor(
-    private val json: Json,
-) :
+class CosmosThorChainResponseSerializerImpl @Inject constructor(private val json: Json) :
     CosmosThorChainResponseSerializer {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("CosmosThorChainResponseSerializer")
@@ -278,8 +258,7 @@ class CosmosThorChainResponseSerializerImpl @Inject constructor(
         val input = decoder as JsonDecoder
         val jsonObject = input.decodeJsonElement().jsonObject
 
-        val isErrorResponse = (jsonObject.containsKey("message")
-                && jsonObject.containsKey("code"))
+        val isErrorResponse = (jsonObject.containsKey("message") && jsonObject.containsKey("code"))
 
         return if (isErrorResponse) {
             CosmosTHORChainAccountResponse.Error(

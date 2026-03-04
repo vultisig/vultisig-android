@@ -4,13 +4,15 @@ import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
-import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 @Singleton
-class FeeServiceComposite @Inject constructor(
+class FeeServiceComposite
+@Inject
+constructor(
     @EthereumFee private val ethereumFeeService: FeeService,
     @ZkSyncFee private val zkFeeService: FeeService,
     @PolkadotFee private val polkadotFeeService: FeeService,
@@ -51,7 +53,12 @@ class FeeServiceComposite @Inject constructor(
     }
 
     @Deprecated("Only used for ethereum, to remove upcoming PR")
-    override suspend fun calculateFees(chain: Chain, limit: BigInteger, isSwap: Boolean, to: String?): Fee {
+    override suspend fun calculateFees(
+        chain: Chain,
+        limit: BigInteger,
+        isSwap: Boolean,
+        to: String?,
+    ): Fee {
         require(chain.standard == TokenStandard.EVM) {
             "Unsupported method for ${chain.standard.name}"
         }

@@ -12,9 +12,7 @@ import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 @Composable
-fun OnBoardingComposeTheme(
-    content: @Composable () -> Unit,
-) {
+fun OnBoardingComposeTheme(content: @Composable () -> Unit) {
     AppUtils(
         appColor = colors,
         menloTypography = menloTypography,
@@ -22,42 +20,36 @@ fun OnBoardingComposeTheme(
         brockmannTypography = brockmannTypography,
     ) {
         MaterialTheme(
-            colorScheme = lightColorScheme(
-                background = Theme.v2.colors.backgrounds.primary,
-                onBackground = Theme.v2.colors.neutrals.n50,
-                primary = Theme.v2.colors.buttons.primary,
-                onPrimary = Theme.v2.colors.backgrounds.primary,
-                surfaceDim = Color("#1f9183".toColorInt())
-            ),
+            colorScheme =
+                lightColorScheme(
+                    background = Theme.v2.colors.backgrounds.primary,
+                    onBackground = Theme.v2.colors.neutrals.n50,
+                    primary = Theme.v2.colors.buttons.primary,
+                    onPrimary = Theme.v2.colors.backgrounds.primary,
+                    surfaceDim = Color("#1f9183".toColorInt()),
+                ),
             shapes = Shapes,
-            content = content
+            content = content,
         )
     }
 }
 
-
 internal object Theme {
 
     val v2: V2
-    @Composable
-    get() = LocalV2Theme.current
+        @Composable get() = LocalV2Theme.current
 
     val menlo: VultisigTypography
-        @Composable
-        get() = LocalMenloFamilyTypography.current
+        @Composable get() = LocalMenloFamilyTypography.current
 
     val montserrat: VultisigTypography
-        @Composable
-        get() = LocalMontserratFamilyTypography.current
+        @Composable get() = LocalMontserratFamilyTypography.current
 
     val brockmann: VsTypography
-        @Composable
-        get() = LocalBrockmannFamilyTypography.current
+        @Composable get() = LocalBrockmannFamilyTypography.current
 
     val satoshi: SatoshiTypography = satoshiTypography
 }
 
-
 internal val Theme.cursorBrush: Brush
-    @Composable
-    get() = SolidColor(v2.colors.neutrals.n100)
+    @Composable get() = SolidColor(v2.colors.neutrals.n100)

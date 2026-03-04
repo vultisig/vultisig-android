@@ -14,38 +14,38 @@ import com.vultisig.wallet.data.models.settings.AppLanguage.Companion.fromName
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
 
 internal data class LanguageSettingUiModel(
     val languages: List<Language> = listOf(),
     val selectedLanguage: Language = Language(),
 )
 
-
 @HiltViewModel
-internal class LanguageSettingViewModel @Inject constructor(
+internal class LanguageSettingViewModel
+@Inject
+constructor(
     private val appLocaleRepository: AppLocaleRepository,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
-    val state = MutableStateFlow(
-        LanguageSettingUiModel(
-            languages = appLocaleRepository.getAllLocales()
-                .map { lang: AppLanguage -> lang.toUiModel() },
+    val state =
+        MutableStateFlow(
+            LanguageSettingUiModel(
+                languages =
+                    appLocaleRepository.getAllLocales().map { lang: AppLanguage ->
+                        lang.toUiModel()
+                    }
+            )
         )
-    )
-
 
     fun initSelectedLanguage() {
         viewModelScope.launch {
             appLocaleRepository.local.collect { local ->
-                state.update {
-                    it.copy(selectedLanguage = local.toUiModel())
-                }
+                state.update { it.copy(selectedLanguage = local.toUiModel()) }
             }
         }
     }
@@ -62,12 +62,9 @@ internal class LanguageSettingViewModel @Inject constructor(
             context.getSystemService(LocaleManager::class.java).applicationLocales =
                 LocaleList.forLanguageTags(locale)
         } else {
-            AppCompatDelegate.setApplicationLocales(
-                LocaleListCompat.forLanguageTags(locale)
-            )
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(locale))
         }
     }
 
     private fun AppLanguage.toUiModel() = Language(mainName, engName)
-
 }

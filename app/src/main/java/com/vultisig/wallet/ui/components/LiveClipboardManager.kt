@@ -14,9 +14,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import com.vultisig.wallet.ui.utils.VsClipboardService
 
 @Composable
-internal fun rememberClipboardText(
-    filter: (String?) -> Boolean = { true },
-): State<String?> {
+internal fun rememberClipboardText(filter: (String?) -> Boolean = { true }): State<String?> {
 
     val currentText = VsClipboardService.getClipboardData()
 
@@ -43,8 +41,7 @@ private fun onClipDataChanged(onPrimaryClipChanged: ClipData?.() -> Unit) {
     val isWindowFocused = windowInfo.isWindowFocused
 
     LaunchedEffect(context, isWindowFocused) {
-        if (isWindowFocused.not())
-            return@LaunchedEffect
+        if (isWindowFocused.not()) return@LaunchedEffect
         val clipboardManager =
             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         onPrimaryClipChanged(clipboardManager.primaryClip)

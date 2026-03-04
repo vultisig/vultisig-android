@@ -52,15 +52,9 @@ enum class SecurityRiskLevel {
 }
 
 enum class SecurityScannerFeaturesType {
-    SCAN_TRANSACTION,
+    SCAN_TRANSACTION
 }
 
-data class SecurityScannerSupport(
-    val provider: String,
-    val feature: List<Feature>,
-) {
-    data class Feature(
-        val chains: List<Chain>,
-        val featureType: SecurityScannerFeaturesType,
-    )
+data class SecurityScannerSupport(val provider: String, val feature: List<Feature>) {
+    data class Feature(val chains: List<Chain>, val featureType: SecurityScannerFeaturesType)
 }

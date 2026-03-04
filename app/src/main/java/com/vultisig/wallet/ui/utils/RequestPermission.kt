@@ -12,12 +12,13 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 internal fun WriteFilePermissionHandler(
     permissionFlow: Flow<Boolean>,
-    onPermissionResult: (Boolean) -> Unit
+    onPermissionResult: (Boolean) -> Unit,
 ) {
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onPermissionResult
-    )
+    val requestPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+            onPermissionResult,
+        )
 
     LaunchedEffect(Unit) {
         permissionFlow.collectLatest {
@@ -25,7 +26,6 @@ internal fun WriteFilePermissionHandler(
         }
     }
 }
-
 
 @Composable
 internal fun RequestWriteFilePermissionOnceIfNotGranted(
@@ -44,12 +44,11 @@ internal fun RequestPermissionOnceIfNotGranted(
     permission: String,
     onRequestPermissionResult: (Boolean) -> Unit,
 ) {
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = onRequestPermissionResult
-    )
+    val requestPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+            onResult = onRequestPermissionResult,
+        )
 
-    LaunchedEffect(Unit) {
-        requestPermissionLauncher.launch(permission)
-    }
+    LaunchedEffect(Unit) { requestPermissionLauncher.launch(permission) }
 }

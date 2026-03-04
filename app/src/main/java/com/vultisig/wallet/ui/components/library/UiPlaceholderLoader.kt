@@ -12,14 +12,13 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun UiPlaceholderLoader(
-    modifier: Modifier = Modifier,
-) {
+internal fun UiPlaceholderLoader(modifier: Modifier = Modifier) {
     Spacer(
-        modifier = modifier
-            .clip(RoundedCornerShape(2.dp))
-            .background(Theme.v2.colors.backgrounds.tertiary_2)
-            .defaultMinSize(minWidth = 16.dp, minHeight = 16.dp),
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(2.dp))
+                .background(Theme.v2.colors.backgrounds.tertiary_2)
+                .defaultMinSize(minWidth = 16.dp, minHeight = 16.dp)
     )
 }
 

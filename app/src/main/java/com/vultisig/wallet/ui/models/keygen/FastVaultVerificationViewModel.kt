@@ -24,6 +24,7 @@ import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -32,11 +33,12 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import timber.log.Timber
-import javax.inject.Inject
-
 
 internal enum class VerifyPinState {
-    Idle, Loading, Success, Error
+    Idle,
+    Loading,
+    Success,
+    Error,
 }
 
 internal data class VaultBackupState(
@@ -47,7 +49,9 @@ internal data class VaultBackupState(
 private const val FAST_VAULT_VERIFICATION_SUCCESS_DELAY = 400L
 
 @HiltViewModel
-internal class FastVaultVerificationViewModel @Inject constructor(
+internal class FastVaultVerificationViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
@@ -80,24 +84,21 @@ internal class FastVaultVerificationViewModel @Inject constructor(
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     fun changeEmail() {
         viewModelScope.launch {
             navigator.route(
-                route = Route.VaultInfo.Email(
-                    name = args.vaultName,
-                    action = args.tssAction,
-                    vaultId = args.vaultId,
-                    password = null
-                ),
-                opts = NavigationOptions(
-                    popUpToRoute = Route.VaultInfo.Email::class,
-                    inclusive = true,
-                )
+                route =
+                    Route.VaultInfo.Email(
+                        name = args.vaultName,
+                        action = args.tssAction,
+                        vaultId = args.vaultId,
+                        password = null,
+                    ),
+                opts =
+                    NavigationOptions(popUpToRoute = Route.VaultInfo.Email::class, inclusive = true),
             )
         }
     }
@@ -109,10 +110,8 @@ internal class FastVaultVerificationViewModel @Inject constructor(
             if (isCodeTemplateValid(code)) {
                 updateVerifyState(VerifyPinState.Loading)
 
-                val isCodeValid = verifyFastVaultBackupCode(
-                    publicKeyEcdsa = args.pubKeyEcdsa,
-                    code = code,
-                )
+                val isCodeValid =
+                    verifyFastVaultBackupCode(publicKeyEcdsa = args.pubKeyEcdsa, code = code)
                 if (isCodeValid) {
                     try {
                         updateVerifyState(VerifyPinState.Success)
@@ -123,9 +122,7 @@ internal class FastVaultVerificationViewModel @Inject constructor(
                         saveVault(vault.vault, shouldOverride)
 
                         vault.hint?.let {
-                            vaultDataStoreRepository.setFastSignHint(
-                                vaultId = vaultId, hint = it
-                            )
+                            vaultDataStoreRepository.setFastSignHint(vaultId = vaultId, hint = it)
                         }
 
                         if (context.canAuthenticateBiometric()) {
@@ -134,21 +131,22 @@ internal class FastVaultVerificationViewModel @Inject constructor(
 
                         vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
                             vaultId = vaultId,
-                            date = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                            date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
                         )
 
                         delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
                         navigator.route(
-                            route = Route.BackupVault(
-                                vaultId = args.vaultId,
-                                vaultType = VaultType.Fast,
-                                action = args.tssAction,
-                                passwordType = BackupPasswordType.VultiServerPassword(
-                                    password = args.password,
+                            route =
+                                Route.BackupVault(
+                                    vaultId = args.vaultId,
+                                    vaultType = VaultType.Fast,
+                                    action = args.tssAction,
+                                    passwordType =
+                                        BackupPasswordType.VultiServerPassword(
+                                            password = args.password
+                                        ),
                                 )
-                            )
                         )
-
                     } catch (e: Exception) {
                         Timber.e(e, "FastVaultVerification: save vault failed")
                         updateVerifyState(VerifyPinState.Error)
@@ -166,13 +164,10 @@ internal class FastVaultVerificationViewModel @Inject constructor(
         code.isDigitsOnly() && code.length == FAST_VAULT_VERIFICATION_CODE_LENGTH
 
     private fun updateVerifyState(verifyState: VerifyPinState) {
-        state.update {
-            it.copy(verifyPinState = verifyState)
-        }
+        state.update { it.copy(verifyPinState = verifyState) }
     }
 
     companion object {
         const val FAST_VAULT_VERIFICATION_CODE_LENGTH = 4
     }
-
 }

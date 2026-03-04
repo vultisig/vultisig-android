@@ -33,6 +33,8 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import kotlin.reflect.typeOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,8 +43,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import javax.inject.Inject
-import kotlin.reflect.typeOf
 
 internal data class BackupPasswordState(
     val mimeType: MimeType = MimeType.OCTET_STREAM,
@@ -55,7 +55,9 @@ internal data class BackupPasswordState(
 )
 
 @HiltViewModel
-internal class BackupPasswordViewModel @Inject constructor(
+internal class BackupPasswordViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     @ApplicationContext private val context: Context,
     private val vaultRepository: VaultRepository,
@@ -74,16 +76,15 @@ internal class BackupPasswordViewModel @Inject constructor(
     val passwordTextFieldState = passwordDelegate.passwordTextFieldState
     val confirmPasswordTextFieldState = passwordDelegate.confirmPasswordTextFieldState
 
-    private val args = try {
-        savedStateHandle.toRoute<Route.BackupPassword>(
-            typeMap = mapOf(
-                typeOf<BackupType>() to BackupTypeNavType
+    private val args =
+        try {
+            savedStateHandle.toRoute<Route.BackupPassword>(
+                typeMap = mapOf(typeOf<BackupType>() to BackupTypeNavType)
             )
-        )
-    } catch (e: Exception) {
-        Timber.e(e)
-        null
-    }
+        } catch (e: Exception) {
+            Timber.e(e)
+            null
+        }
 
     private val vaultId = args?.vaultId
     private val backupType = args?.backupType
@@ -92,23 +93,23 @@ internal class BackupPasswordViewModel @Inject constructor(
     private var vaults = listOf<Vault>()
     private val isVaultLoaded = MutableStateFlow(false)
 
-    val state = MutableStateFlow(
-        BackupPasswordState(
-            mimeType = when (backupType) {
-                BackupType.AllVaults -> MimeType.ZIP
-                is BackupType.CurrentVault -> MimeType.OCTET_STREAM
-                else -> error("Invalid backup type")
-            }
+    val state =
+        MutableStateFlow(
+            BackupPasswordState(
+                mimeType =
+                    when (backupType) {
+                        BackupType.AllVaults -> MimeType.ZIP
+                        is BackupType.CurrentVault -> MimeType.OCTET_STREAM
+                        else -> error("Invalid backup type")
+                    }
+            )
         )
-    )
 
     val createDocumentRequestFlow = MutableSharedFlow<String>()
 
     private var isMoreInfoVisible: Boolean
         get() = state.value.isMoreInfoVisible
-        set(value) = state.update {
-            it.copy(isMoreInfoVisible = value)
-        }
+        set(value) = state.update { it.copy(isMoreInfoVisible = value) }
 
     init {
         if (vaultId == null) {
@@ -131,21 +132,21 @@ internal class BackupPasswordViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            passwordDelegate.validatePasswords()
-                .collect { passwordState ->
-                    val errorMessage = if (passwordState is PasswordState.Mismatch) {
+            passwordDelegate.validatePasswords().collect { passwordState ->
+                val errorMessage =
+                    if (passwordState is PasswordState.Mismatch) {
                         UiText.StringResource(R.string.fast_vault_password_screen_error)
                     } else {
                         null
                     }
 
-                    state.update { state ->
-                        state.copy(
-                            passwordErrorMessage = errorMessage,
-                            isNextButtonEnabled = passwordState is PasswordState.Valid,
-                        )
-                    }
+                state.update { state ->
+                    state.copy(
+                        passwordErrorMessage = errorMessage,
+                        isNextButtonEnabled = passwordState is PasswordState.Valid,
+                    )
                 }
+            }
         }
     }
 
@@ -154,11 +155,7 @@ internal class BackupPasswordViewModel @Inject constructor(
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(
-                Destination.Back,
-            )
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     fun backupEncryptedVault() {
@@ -172,11 +169,12 @@ internal class BackupPasswordViewModel @Inject constructor(
     }
 
     private suspend fun requestToCreateVaultFile() {
-        val currentVault = if (isVaultLoaded.value) {
-            vault.value
-        } else {
-            vault.firstOrNull { it != null }
-        }
+        val currentVault =
+            if (isVaultLoaded.value) {
+                vault.value
+            } else {
+                vault.firstOrNull { it != null }
+            }
 
         if (currentVault == null) {
             showError()
@@ -200,15 +198,11 @@ internal class BackupPasswordViewModel @Inject constructor(
     }
 
     fun togglePasswordVisibility() {
-        state.update {
-            it.copy(isPasswordVisible = !it.isPasswordVisible)
-        }
+        state.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
     }
 
     fun toggleConfirmPasswordVisibility() {
-        state.update {
-            it.copy(isConfirmPasswordVisible = !it.isConfirmPasswordVisible)
-        }
+        state.update { it.copy(isConfirmPasswordVisible = !it.isConfirmPasswordVisible) }
     }
 
     fun onPermissionResult(isGranted: Boolean) {
@@ -221,7 +215,7 @@ internal class BackupPasswordViewModel @Inject constructor(
                 if (vaultId != null) {
                     navigator.route(
                         Route.VaultSettings(vaultId),
-                        NavigationOptions(clearBackStack = true)
+                        NavigationOptions(clearBackStack = true),
                     )
                 } else {
                     navigator.navigate(Destination.Back)
@@ -235,27 +229,29 @@ internal class BackupPasswordViewModel @Inject constructor(
             val password = passwordTextFieldState.text.toString()
 
             if (isFileExtensionValid(uri, mimeType.toMimeType())) {
-                val isSuccess = when (backupType) {
-                    BackupType.AllVaults -> {
-                        backupAllVaults(password, uri)
-                    }
+                val isSuccess =
+                    when (backupType) {
+                        BackupType.AllVaults -> {
+                            backupAllVaults(password, uri)
+                        }
 
-                    is BackupType.CurrentVault -> {
-                        backupCurrentVault(password, uri)
-                    }
+                        is BackupType.CurrentVault -> {
+                            backupCurrentVault(password, uri)
+                        }
 
-                    null -> false
-                }
+                        null -> false
+                    }
                 completeBackupVault(isSuccess)
             } else {
                 DocumentsContract.deleteDocument(context.contentResolver, uri)
 
                 state.update {
                     it.copy(
-                        error = UiText.FormattedText(
-                            R.string.vault_settings_error_extension_backup_file,
-                            listOf(FILE_ALLOWED_EXTENSIONS.joinToString(", "))
-                        )
+                        error =
+                            UiText.FormattedText(
+                                R.string.vault_settings_error_extension_backup_file,
+                                listOf(FILE_ALLOWED_EXTENSIONS.joinToString(", ")),
+                            )
                     )
                 }
             }
@@ -266,20 +262,13 @@ internal class BackupPasswordViewModel @Inject constructor(
 
         val vault = vault.value
         if (vault == null) {
-            viewModelScope.launch {
-                showError()
-            }
+            viewModelScope.launch { showError() }
             return false
         }
 
-        val backup = createVaultBackup(
-            mapVaultToProto(vault),
-            password,
-        )
+        val backup = createVaultBackup(mapVaultToProto(vault), password)
         if (backup == null) {
-            viewModelScope.launch {
-                showError()
-            }
+            viewModelScope.launch { showError() }
             return false
         }
 
@@ -287,14 +276,13 @@ internal class BackupPasswordViewModel @Inject constructor(
     }
 
     private suspend fun backupAllVaults(password: String, uri: Uri): Boolean {
-        val content = vaults.map { vault ->
-            val vaultBackupData = createVaultBackup(
-                mapVaultToProto(vault),
-                password
-            ) ?: return false
-            val fileName = createVaultBackupFileName(vault)
-            AppZipEntry(fileName, vaultBackupData)
-        }
+        val content =
+            vaults.map { vault ->
+                val vaultBackupData =
+                    createVaultBackup(mapVaultToProto(vault), password) ?: return false
+                val fileName = createVaultBackupFileName(vault)
+                AppZipEntry(fileName, vaultBackupData)
+            }
 
         return context.saveContentToUri(uri, content)
     }
@@ -305,12 +293,7 @@ internal class BackupPasswordViewModel @Inject constructor(
                 when (backupType) {
                     BackupType.AllVaults -> {
                         vaults.forEach { vault ->
-                            launch {
-                                vaultDataStoreRepository.setBackupStatus(
-                                    vault.id,
-                                    true
-                                )
-                            }
+                            launch { vaultDataStoreRepository.setBackupStatus(vault.id, true) }
                         }
                     }
 
@@ -328,28 +311,24 @@ internal class BackupPasswordViewModel @Inject constructor(
                     null -> Unit
                 }
 
-
                 snackbarFlow.showMessage(
-                    context.getString(
-                        R.string.vault_settings_success_backup_message
-                    )
+                    context.getString(R.string.vault_settings_success_backup_message)
                 )
                 if (backupType is BackupType.CurrentVault && backupType.vaultType != null) {
                     navigator.route(
                         Route.VaultConfirmation(
-                            vaultId = vaultId ?: run {
-                                showError()
-                                return@launch
-                            },
+                            vaultId =
+                                vaultId
+                                    ?: run {
+                                        showError()
+                                        return@launch
+                                    },
                             vaultType = backupType.vaultType,
                             action = backupType.action,
                         )
                     )
                 } else {
-                    navigator.route(
-                        Route.Home(vaultId),
-                        NavigationOptions(clearBackStack = true)
-                    )
+                    navigator.route(Route.Home(vaultId), NavigationOptions(clearBackStack = true))
                 }
             } else {
                 showError()
@@ -358,8 +337,6 @@ internal class BackupPasswordViewModel @Inject constructor(
     }
 
     private suspend fun showError() {
-        snackbarFlow.showMessage(
-            context.getString(R.string.vault_settings_error_backup_file)
-        )
+        snackbarFlow.showMessage(context.getString(R.string.vault_settings_error_backup_file))
     }
 }

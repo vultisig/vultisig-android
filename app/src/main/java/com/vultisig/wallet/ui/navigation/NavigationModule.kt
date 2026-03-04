@@ -12,14 +12,9 @@ internal interface NavigationModule {
 
     @Binds
     @Singleton
-    fun bindNavigator(
-        navigator: NavigatorImpl<Destination>
-    ): Navigator<Destination>
+    fun bindNavigator(navigator: NavigatorImpl<Destination>): Navigator<Destination>
 
     @Binds
     @Singleton
-    fun bindNavigatorSendDst(
-        navigator: NavigatorImpl<SendDst>
-    ): Navigator<SendDst>
-
+    fun bindNavigatorSendDst(navigator: NavigatorImpl<SendDst>): Navigator<SendDst>
 }

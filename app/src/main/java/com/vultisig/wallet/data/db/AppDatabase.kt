@@ -35,24 +35,25 @@ import com.vultisig.wallet.data.db.models.VaultMetadataEntity
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 
 @Database(
-    entities = [
-        VaultEntity::class,
-        KeyShareEntity::class,
-        SignerEntity::class,
-        CoinEntity::class,
-        VaultOrderEntity::class,
-        TokenValueEntity::class,
-        TokenPriceEntity::class,
-        AddressBookEntryEntity::class,
-        AddressBookOrderEntity::class,
-        FolderEntity::class,
-        FolderOrderEntity::class,
-        VaultMetadataEntity::class,
-        DisabledCoinEntity::class,
-        ActiveBondedNodeEntity::class,
-        StakingDetailsEntity::class,
-        ChainPublicKeyEntity::class,
-    ],
+    entities =
+        [
+            VaultEntity::class,
+            KeyShareEntity::class,
+            SignerEntity::class,
+            CoinEntity::class,
+            VaultOrderEntity::class,
+            TokenValueEntity::class,
+            TokenPriceEntity::class,
+            AddressBookEntryEntity::class,
+            AddressBookOrderEntity::class,
+            FolderEntity::class,
+            FolderOrderEntity::class,
+            VaultMetadataEntity::class,
+            DisabledCoinEntity::class,
+            ActiveBondedNodeEntity::class,
+            StakingDetailsEntity::class,
+            ChainPublicKeyEntity::class,
+        ],
     version = 27,
     exportSchema = false,
 )
@@ -84,5 +85,4 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun activeBondedNodeDao(): ActiveBondedNodeDao
 
     abstract fun stakingDetailsDao(): StakingDetailsDao
-
 }

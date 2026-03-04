@@ -14,9 +14,7 @@ internal interface DataMappersModule {
 
     @Binds
     @Singleton
-    fun bindMapHexToPlainString(
-        impl: MapHexToPlainStringImpl
-    ): MapHexToPlainString
+    fun bindMapHexToPlainString(impl: MapHexToPlainStringImpl): MapHexToPlainString
 
     @Binds
     fun bindChainAndTokensToAddressMapper(
@@ -34,6 +32,7 @@ internal interface DataMappersModule {
     fun bindKeygenMessageToProtoMapper(
         impl: KeygenMessageToProtoMapperImpl
     ): KeygenMessageToProtoMapper
+
     @Binds
     @Singleton
     fun bindKeysignMessageFromProtoMapper(
@@ -60,9 +59,5 @@ internal interface DataMappersModule {
 
     @Binds
     @Singleton
-    fun bindPayloadToProtoMapper(
-        impl: PayloadToProtoMapperImpl
-    ): PayloadToProtoMapper
+    fun bindPayloadToProtoMapper(impl: PayloadToProtoMapperImpl): PayloadToProtoMapper
 }
-
-

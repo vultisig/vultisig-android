@@ -16,27 +16,25 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun VsUiCheckbox(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
+internal fun VsUiCheckbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Surface(
-        color = if (checked) {
-            Theme.v2.colors.backgrounds.success
-        } else {
-            Theme.v2.colors.backgrounds.secondary
-        },
-        shape = CircleShape,
-        border = BorderStroke(1.dp,
+        color =
             if (checked) {
-                Theme.v2.colors.alerts.success
+                Theme.v2.colors.backgrounds.success
             } else {
-                Theme.v2.colors.border.normal
-            }
-        ),
-        modifier = Modifier
-            .size(24.dp)
-            .clickable(onClick = { onCheckedChange(!checked) })
+                Theme.v2.colors.backgrounds.secondary
+            },
+        shape = CircleShape,
+        border =
+            BorderStroke(
+                1.dp,
+                if (checked) {
+                    Theme.v2.colors.alerts.success
+                } else {
+                    Theme.v2.colors.border.normal
+                },
+            ),
+        modifier = Modifier.size(24.dp).clickable(onClick = { onCheckedChange(!checked) }),
     ) {
         if (checked) {
             Icon(
@@ -53,14 +51,8 @@ internal fun VsUiCheckbox(
 @Composable
 private fun VsUiCheckboxPreview() {
     Row {
-        VsUiCheckbox(
-            checked = true,
-            onCheckedChange = {}
-        )
+        VsUiCheckbox(checked = true, onCheckedChange = {})
 
-        VsUiCheckbox(
-            checked = false,
-            onCheckedChange = {}
-        )
+        VsUiCheckbox(checked = false, onCheckedChange = {})
     }
 }

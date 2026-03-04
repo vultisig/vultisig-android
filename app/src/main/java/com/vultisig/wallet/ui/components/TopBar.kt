@@ -33,10 +33,8 @@ internal fun TopBar(
     onEndIconClick: () -> Unit = {},
 ) {
     val activity = LocalContext.current.closestActivityOrNull()
-    val navStartIconClick = onStartIconClick?: {
-        if (!navController.popBackStack())
-            activity?.finish()
-    }
+    val navStartIconClick =
+        onStartIconClick ?: { if (!navController.popBackStack()) activity?.finish() }
     TopBarWithoutNav(
         centerText = centerText,
         modifier = modifier,
@@ -67,38 +65,31 @@ internal fun TopBarWithoutNav(
                 textAlign = TextAlign.Center,
             )
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Theme.v2.colors.backgrounds.primary,
-            titleContentColor = Theme.v2.colors.neutrals.n50
-        ),
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = Theme.v2.colors.backgrounds.primary,
+                titleContentColor = Theme.v2.colors.neutrals.n50,
+            ),
         navigationIcon = {
             startIcon?.let {
-                IconButton(
-                    onClick = clickOnce {
-                        onStartIconClick.invoke()
-                    }
-                ) {
+                IconButton(onClick = clickOnce { onStartIconClick.invoke() }) {
                     Icon(
                         painter = painterResource(id = it),
                         contentDescription = null,
                         tint = Theme.v2.colors.neutrals.n50,
-                        modifier = Modifier
-                            .size(24.dp)
+                        modifier = Modifier.size(24.dp),
                     )
                 }
             }
         },
         actions = {
             endIcon?.let {
-                IconButton(
-                    onClick = clickOnce { onEndIconClick() }
-                ) {
+                IconButton(onClick = clickOnce { onEndIconClick() }) {
                     Icon(
                         painter = painterResource(id = endIcon),
                         contentDescription = null,
                         tint = Theme.v2.colors.neutrals.n50,
-                        modifier = Modifier
-                            .size(24.dp),
+                        modifier = Modifier.size(24.dp),
                     )
                 }
             }

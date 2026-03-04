@@ -8,11 +8,9 @@ import org.junit.Rule
 
 open class CleanTest {
 
-    @get:Rule(order = 0)
-    val hintRule = HiltAndroidRule(this)
+    @get:Rule(order = 0) val hintRule = HiltAndroidRule(this)
 
-    @get:Rule(order = LAST_ORDER_INDEX)
-    val compose = createEmptyComposeRule()
+    @get:Rule(order = LAST_ORDER_INDEX) val compose = createEmptyComposeRule()
 
     open fun setUp() {
         clearAppData()

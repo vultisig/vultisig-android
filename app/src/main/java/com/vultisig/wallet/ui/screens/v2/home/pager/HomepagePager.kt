@@ -26,63 +26,46 @@ internal fun HomepagePager(
     val state = rememberVsPagerState(key = params)
 
     Column(
-        modifier = modifier
-            .animateContentSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier.animateContentSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-
         VsPager(state = state) {
             if (params.hasMigration)
                 item {
-                    HomePagePagerContainer(
-                        onCloseClick = onCloseClick
-                    ) {
-                        UpgradeBanner(
-                            onUpgradeClick = onUpgradeClick
-                        )
+                    HomePagePagerContainer(onCloseClick = onCloseClick) {
+                        UpgradeBanner(onUpgradeClick = onUpgradeClick)
                     }
                 }
 
             item {
-                HomePagePagerContainer(
-                    onCloseClick = onCloseClick
-                ) {
-                    FollowXBanner(
-                        onFollowXClick = onFollowXClick,
-                    )
+                HomePagePagerContainer(onCloseClick = onCloseClick) {
+                    FollowXBanner(onFollowXClick = onFollowXClick)
                 }
             }
         }
 
         if (state.pageCount > 1) {
 
-            UiSpacer(
-                size = 12.dp
-            )
+            UiSpacer(size = 12.dp)
 
             VsPagerIndicator(
                 selectedPage = state.currentPage,
                 numberOfPages = state.pageCount,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
     }
 }
 
-
 @Preview
 @Composable
 private fun HomepagePagerPreview() {
     HomepagePager(
-        params = HomepagePagerParams(
-            hasMigration = true,
-        ),
+        params = HomepagePagerParams(hasMigration = true),
         onCloseClick = {},
         onUpgradeClick = {},
         onFollowXClick = {},
     )
 }
 
-internal data class HomepagePagerParams(
-    val hasMigration: Boolean,
-)
+internal data class HomepagePagerParams(val hasMigration: Boolean)

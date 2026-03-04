@@ -10,41 +10,43 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 
-private val menloFontFamily = FontFamily(
-    Font(R.font.menlo_bold, weight = FontWeight.Bold),
-    Font(R.font.menlo_bold, weight = FontWeight.SemiBold),
-    Font(R.font.menlo_regular, weight = FontWeight.Normal),
-    Font(R.font.menlo_regular, weight = FontWeight.Medium)
-)
+private val menloFontFamily =
+    FontFamily(
+        Font(R.font.menlo_bold, weight = FontWeight.Bold),
+        Font(R.font.menlo_bold, weight = FontWeight.SemiBold),
+        Font(R.font.menlo_regular, weight = FontWeight.Normal),
+        Font(R.font.menlo_regular, weight = FontWeight.Medium),
+    )
 
-private val montserratFontFamily = FontFamily(
-    Font(R.font.montserrat_bold, weight = FontWeight.Bold),
-    Font(R.font.montserrat_bold, weight = FontWeight.SemiBold),
-    Font(R.font.montserrat_regular, weight = FontWeight.Normal),
-    Font(R.font.montserrat_regular, weight = FontWeight.Medium),
-)
+private val montserratFontFamily =
+    FontFamily(
+        Font(R.font.montserrat_bold, weight = FontWeight.Bold),
+        Font(R.font.montserrat_bold, weight = FontWeight.SemiBold),
+        Font(R.font.montserrat_regular, weight = FontWeight.Normal),
+        Font(R.font.montserrat_regular, weight = FontWeight.Medium),
+    )
 
-private val brockmannFontFamily = FontFamily(
-    Font(R.font.brockmann_bold, weight = FontWeight.Bold),
-    Font(R.font.brockmann_semibold, weight = FontWeight.SemiBold),
-    Font(R.font.brockmann_regular, weight = FontWeight.Normal),
-    Font(R.font.brockmann_medium, weight = FontWeight.Medium),
-)
+private val brockmannFontFamily =
+    FontFamily(
+        Font(R.font.brockmann_bold, weight = FontWeight.Bold),
+        Font(R.font.brockmann_semibold, weight = FontWeight.SemiBold),
+        Font(R.font.brockmann_regular, weight = FontWeight.Normal),
+        Font(R.font.brockmann_medium, weight = FontWeight.Medium),
+    )
 
-private val satoshiFontFamily = FontFamily(
-    Font(R.font.satoshi_black, weight = FontWeight.Black),
-    Font(R.font.satoshi_blackitalic, weight = FontWeight.Black, style = FontStyle.Italic),
-    Font(R.font.satoshi_bold, weight = FontWeight.Bold),
-    Font(R.font.satoshi_bolditalic, weight = FontWeight.Bold, style = FontStyle.Italic),
-    Font(R.font.satoshi_italic, style = FontStyle.Italic),
-    Font(R.font.satoshi_light, weight = FontWeight.Light),
-    Font(R.font.satoshi_lightitalic, weight = FontWeight.Light, style = FontStyle.Italic),
-    Font(R.font.satoshi_medium, weight = FontWeight.Medium),
-    Font(R.font.satoshi_mediumitalic, weight = FontWeight.Medium, style = FontStyle.Italic),
-    Font(R.font.satoshi_regular),
-)
-
-
+private val satoshiFontFamily =
+    FontFamily(
+        Font(R.font.satoshi_black, weight = FontWeight.Black),
+        Font(R.font.satoshi_blackitalic, weight = FontWeight.Black, style = FontStyle.Italic),
+        Font(R.font.satoshi_bold, weight = FontWeight.Bold),
+        Font(R.font.satoshi_bolditalic, weight = FontWeight.Bold, style = FontStyle.Italic),
+        Font(R.font.satoshi_italic, style = FontStyle.Italic),
+        Font(R.font.satoshi_light, weight = FontWeight.Light),
+        Font(R.font.satoshi_lightitalic, weight = FontWeight.Light, style = FontStyle.Italic),
+        Font(R.font.satoshi_medium, weight = FontWeight.Medium),
+        Font(R.font.satoshi_mediumitalic, weight = FontWeight.Medium, style = FontStyle.Italic),
+        Font(R.font.satoshi_regular),
+    )
 
 @Immutable
 internal data class VsTypography(
@@ -64,18 +66,9 @@ internal data class VsTypography(
         val subtitle: TextStyle,
     )
 
-    @Immutable
-    data class Body(
-        val l: BodyStyles,
-        val m: BodyStyles,
-        val s: BodyStyles,
-    )
+    @Immutable data class Body(val l: BodyStyles, val m: BodyStyles, val s: BodyStyles)
 
-    @Immutable
-    data class BodyStyles(
-        val medium: TextStyle,
-        val regular: TextStyle,
-    )
+    @Immutable data class BodyStyles(val medium: TextStyle, val regular: TextStyle)
 
     @Immutable
     data class Supplementary(
@@ -84,11 +77,7 @@ internal data class VsTypography(
         val footnote: TextStyle,
     )
 
-    @Immutable
-    data class Button(
-        val medium: ButtonStyle,
-        val semibold: ButtonStyle,
-    )
+    @Immutable data class Button(val medium: ButtonStyle, val semibold: ButtonStyle)
 
     @Immutable
     data class ButtonStyle(
@@ -102,217 +91,252 @@ internal data class VsTypography(
 
     companion object {
 
-        private val lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Proportional,
-            trim = LineHeightStyle.Trim.None,
-        )
+        private val lineHeightStyle =
+            LineHeightStyle(
+                alignment = LineHeightStyle.Alignment.Proportional,
+                trim = LineHeightStyle.Trim.None,
+            )
 
         fun createFrom(fontFamily: FontFamily): VsTypography =
             VsTypography(
-                headings = Headings(
-                    headline = TextStyle(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 48.sp,
-                        lineHeight = 56.sp,
-                        letterSpacing = (-1).sp,
-                        fontFamily = fontFamily,
-                        lineHeightStyle = lineHeightStyle,
+                headings =
+                    Headings(
+                        headline =
+                            TextStyle(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 48.sp,
+                                lineHeight = 56.sp,
+                                letterSpacing = (-1).sp,
+                                fontFamily = fontFamily,
+                                lineHeightStyle = lineHeightStyle,
+                            ),
+                        largeTitle =
+                            TextStyle(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 34.sp,
+                                lineHeight = 37.sp,
+                                letterSpacing = (-1).sp,
+                                fontFamily = fontFamily,
+                                lineHeightStyle = lineHeightStyle,
+                            ),
+                        title1 =
+                            TextStyle(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 28.sp,
+                                lineHeight = 34.sp,
+                                letterSpacing = (-0.64).sp,
+                                fontFamily = fontFamily,
+                                lineHeightStyle = lineHeightStyle,
+                            ),
+                        title2 =
+                            TextStyle(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 22.sp,
+                                lineHeight = 24.sp,
+                                letterSpacing = (-0.36).sp,
+                                fontFamily = fontFamily,
+                                lineHeightStyle = lineHeightStyle,
+                            ),
+                        title3 =
+                            TextStyle(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 17.sp,
+                                lineHeight = 20.sp,
+                                letterSpacing = (-0.3).sp,
+                                fontFamily = fontFamily,
+                                lineHeightStyle = lineHeightStyle,
+                            ),
+                        subtitle =
+                            TextStyle(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 15.sp,
+                                lineHeight = 17.sp,
+                                letterSpacing = (-0.18).sp,
+                                fontFamily = fontFamily,
+                                lineHeightStyle = lineHeightStyle,
+                            ),
                     ),
-                    largeTitle = TextStyle(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 34.sp,
-                        lineHeight = 37.sp,
-                        letterSpacing = (-1).sp,
-                        fontFamily = fontFamily,
-                        lineHeightStyle = lineHeightStyle,
+                body =
+                    Body(
+                        l =
+                            BodyStyles(
+                                medium =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 18.sp,
+                                        lineHeight = 28.sp,
+                                        letterSpacing = (-0.09).sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                regular =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 18.sp,
+                                        lineHeight = 28.sp,
+                                        letterSpacing = (-0.09).sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                            ),
+                        m =
+                            BodyStyles(
+                                medium =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 16.sp,
+                                        lineHeight = 24.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                regular =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 16.sp,
+                                        lineHeight = 24.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                            ),
+                        s =
+                            BodyStyles(
+                                medium =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 14.sp,
+                                        lineHeight = 20.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                regular =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 14.sp,
+                                        lineHeight = 20.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                            ),
                     ),
-                    title1 = TextStyle(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 28.sp,
-                        lineHeight = 34.sp,
-                        letterSpacing = (-0.64).sp,
-                        fontFamily = fontFamily,
-                        lineHeightStyle = lineHeightStyle,
+                supplementary =
+                    Supplementary(
+                        caption =
+                            TextStyle(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp,
+                                letterSpacing = 0.12.sp,
+                                fontFamily = fontFamily,
+                                lineHeightStyle = lineHeightStyle,
+                            ),
+                        captionSmall =
+                            TextStyle(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 10.sp,
+                                lineHeight = 14.sp,
+                                letterSpacing = 0.12.sp,
+                                fontFamily = fontFamily,
+                                lineHeightStyle = lineHeightStyle,
+                            ),
+                        footnote =
+                            TextStyle(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 13.sp,
+                                lineHeight = 18.sp,
+                                letterSpacing = 0.06.sp,
+                                fontFamily = fontFamily,
+                                lineHeightStyle = lineHeightStyle,
+                            ),
                     ),
-                    title2 = TextStyle(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 22.sp,
-                        lineHeight = 24.sp,
-                        letterSpacing = (-0.36).sp,
-                        fontFamily = fontFamily,
-                        lineHeightStyle = lineHeightStyle,
+                button =
+                    Button(
+                        medium =
+                            ButtonStyle(
+                                large =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 16.sp,
+                                        lineHeight = 20.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                semibold =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 16.sp,
+                                        lineHeight = 20.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                medium =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 14.sp,
+                                        lineHeight = 18.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                regular =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 16.sp,
+                                        lineHeight = 20.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                small =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 14.sp,
+                                        lineHeight = 18.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                            ),
+                        semibold =
+                            ButtonStyle(
+                                large =
+                                    TextStyle(
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 16.sp,
+                                        lineHeight = 20.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                semibold =
+                                    TextStyle(
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 16.sp,
+                                        lineHeight = 20.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                medium =
+                                    TextStyle(
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp,
+                                        lineHeight = 18.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                regular =
+                                    TextStyle(
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 16.sp,
+                                        lineHeight = 20.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                small =
+                                    TextStyle(
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp,
+                                        lineHeight = 18.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                            ),
                     ),
-                    title3 = TextStyle(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 17.sp,
-                        lineHeight = 20.sp,
-                        letterSpacing = (-0.3).sp,
-                        fontFamily = fontFamily,
-                        lineHeightStyle = lineHeightStyle,
-                    ),
-                    subtitle = TextStyle(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 15.sp,
-                        lineHeight = 17.sp,
-                        letterSpacing = (-0.18).sp,
-                        fontFamily = fontFamily,
-                        lineHeightStyle = lineHeightStyle,
-                    ),
-                ),
-                body = Body(
-                    l = BodyStyles(
-                        medium = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 18.sp,
-                            lineHeight = 28.sp,
-                            letterSpacing = (-0.09).sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                        regular = TextStyle(
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 18.sp,
-                            lineHeight = 28.sp,
-                            letterSpacing = (-0.09).sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                    ),
-                    m = BodyStyles(
-                        medium = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            lineHeight = 24.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                        regular = TextStyle(
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 16.sp,
-                            lineHeight = 24.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                    ),
-                    s = BodyStyles(
-                        medium = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-                            lineHeight = 20.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                        regular = TextStyle(
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 14.sp,
-                            lineHeight = 20.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                    )
-                ),
-                supplementary = Supplementary(
-                    caption = TextStyle(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
-                        lineHeight = 16.sp,
-                        letterSpacing = 0.12.sp,
-                        fontFamily = fontFamily,
-                        lineHeightStyle = lineHeightStyle,
-                    ),
-                    captionSmall = TextStyle(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 10.sp,
-                        lineHeight = 14.sp,
-                        letterSpacing = 0.12.sp,
-                        fontFamily = fontFamily,
-                        lineHeightStyle = lineHeightStyle,
-                    ),
-                    footnote = TextStyle(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 13.sp,
-                        lineHeight = 18.sp,
-                        letterSpacing = 0.06.sp,
-                        fontFamily = fontFamily,
-                        lineHeightStyle = lineHeightStyle,
-                    ),
-                ),
-                button = Button(
-                    medium = ButtonStyle(
-                        large = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            lineHeight = 20.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                        semibold = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            lineHeight = 20.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                        medium = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-                            lineHeight = 18.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                        regular = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            lineHeight = 20.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                        small = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-                            lineHeight = 18.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                    ),
-                    semibold = ButtonStyle(
-                        large = TextStyle(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
-                            lineHeight = 20.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                        semibold = TextStyle(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
-                            lineHeight = 20.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                        medium = TextStyle(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            lineHeight = 18.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                        regular = TextStyle(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
-                            lineHeight = 20.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                        small = TextStyle(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            lineHeight = 18.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        ),
-                    ),
-                ),
             )
     }
 }
@@ -337,118 +361,131 @@ internal data class VultisigTypography(
     companion object {
         fun createFrom(fontFamily: FontFamily): VultisigTypography =
             VultisigTypography(
-                heading1 = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 50.sp,
-                    fontFamily = fontFamily,
-                ),
-                heading2 = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 40.sp,
-                    fontFamily = fontFamily,
-                ),
-                heading3 = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 40.sp,
-                    fontFamily = fontFamily,
-                ),
-                heading4 = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 28.sp,
-                    fontFamily = fontFamily,
-                ),
-                heading5 = TextStyle(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 20.sp,
-                    lineHeight = 30.sp,
-                    fontFamily = fontFamily,
-                ),
-                subtitle1 = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    fontFamily = fontFamily,
-                ),
-                subtitle2 = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    fontFamily = fontFamily,
-                ),
-                subtitle3 = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
-                    fontFamily = fontFamily,
-                ),
-                body1 = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 12.sp,
-                    fontFamily = fontFamily,
-                ),
-                body2 = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    fontFamily = fontFamily,
-                ),
-                body3 = TextStyle(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.sp,
-                    fontFamily = fontFamily,
-                ),
-                caption = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    fontFamily = fontFamily,
-                ),
-                overline = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 12.sp,
-                    fontFamily = fontFamily,
-                ),
-                overline2 = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 12.sp,
-                    fontFamily = fontFamily,
-                ),
+                heading1 =
+                    TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 50.sp,
+                        fontFamily = fontFamily,
+                    ),
+                heading2 =
+                    TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 40.sp,
+                        fontFamily = fontFamily,
+                    ),
+                heading3 =
+                    TextStyle(
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 40.sp,
+                        fontFamily = fontFamily,
+                    ),
+                heading4 =
+                    TextStyle(
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 28.sp,
+                        fontFamily = fontFamily,
+                    ),
+                heading5 =
+                    TextStyle(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp,
+                        lineHeight = 30.sp,
+                        fontFamily = fontFamily,
+                    ),
+                subtitle1 =
+                    TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        fontFamily = fontFamily,
+                    ),
+                subtitle2 =
+                    TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        fontFamily = fontFamily,
+                    ),
+                subtitle3 =
+                    TextStyle(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        fontFamily = fontFamily,
+                    ),
+                body1 =
+                    TextStyle(
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp,
+                        fontFamily = fontFamily,
+                    ),
+                body2 =
+                    TextStyle(
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        fontFamily = fontFamily,
+                    ),
+                body3 =
+                    TextStyle(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        fontFamily = fontFamily,
+                    ),
+                caption =
+                    TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        fontFamily = fontFamily,
+                    ),
+                overline =
+                    TextStyle(
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp,
+                        fontFamily = fontFamily,
+                    ),
+                overline2 =
+                    TextStyle(
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp,
+                        fontFamily = fontFamily,
+                    ),
             )
     }
 }
 
-
-internal data class SatoshiTypography(
-    val price : SatoshiPriceTypography = SatoshiPriceTypography()
-)
+internal data class SatoshiTypography(val price: SatoshiPriceTypography = SatoshiPriceTypography())
 
 internal data class SatoshiPriceTypography(
-    val largeTitle: TextStyle = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 34.sp,
-        lineHeight = 37.sp,
-        letterSpacing = (-0.86).sp,
-        fontFamily = satoshiFontFamily,
-    ),
-    val title1: TextStyle = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 28.sp,
-        lineHeight = 34.sp,
-        letterSpacing = (-0.56).sp,
-        fontFamily = satoshiFontFamily,
-    ),
-    val bodyS : TextStyle = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = (0.2).sp,
-        fontFamily = satoshiFontFamily,
-    ),
-    val caption : TextStyle = TextStyle(
-        fontWeight = FontWeight(550),
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.12.sp,
-        fontFamily = satoshiFontFamily,
-    )
-
+    val largeTitle: TextStyle =
+        TextStyle(
+            fontWeight = FontWeight.Medium,
+            fontSize = 34.sp,
+            lineHeight = 37.sp,
+            letterSpacing = (-0.86).sp,
+            fontFamily = satoshiFontFamily,
+        ),
+    val title1: TextStyle =
+        TextStyle(
+            fontWeight = FontWeight.Medium,
+            fontSize = 28.sp,
+            lineHeight = 34.sp,
+            letterSpacing = (-0.56).sp,
+            fontFamily = satoshiFontFamily,
+        ),
+    val bodyS: TextStyle =
+        TextStyle(
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            letterSpacing = (0.2).sp,
+            fontFamily = satoshiFontFamily,
+        ),
+    val caption: TextStyle =
+        TextStyle(
+            fontWeight = FontWeight(550),
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.12.sp,
+            fontFamily = satoshiFontFamily,
+        ),
 )
-
 
 internal val menloTypography = VultisigTypography.createFrom(menloFontFamily)
 

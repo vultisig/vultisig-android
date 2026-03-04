@@ -63,22 +63,19 @@ internal fun BalanceBanner(
     isBalanceVisible: Boolean = true,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(140.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.light,
-                shape = RoundedCornerShape(16.dp)
-            )
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(140.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = RoundedCornerShape(16.dp),
+                )
     ) {
         SetBackgoundBanner(backgroundImageResId = image)
 
-        Column(
-            modifier = Modifier
-                .padding(start = 16.dp, top = 16.dp)
-        ) {
+        Column(modifier = Modifier.padding(start = 16.dp, top = 16.dp)) {
             Text(
                 text = title,
                 color = Theme.v2.colors.text.primary,
@@ -96,10 +93,7 @@ internal fun BalanceBanner(
             UiSpacer(12.dp)
 
             if (isLoading) {
-                UiPlaceholderLoader(
-                    modifier = Modifier
-                        .size(width = 150.dp, height = 32.dp)
-                )
+                UiPlaceholderLoader(modifier = Modifier.size(width = 150.dp, height = 32.dp))
             } else {
                 Text(
                     text = if (isBalanceVisible) totalValue else HIDE_BALANCE_CHARS,
@@ -116,17 +110,13 @@ private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 @Preview(showBackground = true, name = "Balance Banner - With Value")
 @Composable
 private fun BalanceBannerPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         BalanceBanner(
             title = Chain.ThorChain.raw,
             isLoading = false,
             totalValue = "$12,345.67",
             image = R.drawable.referral_data_banner,
-            isBalanceVisible = true
+            isBalanceVisible = true,
         )
     }
 }
@@ -134,17 +124,13 @@ private fun BalanceBannerPreview() {
 @Preview(showBackground = true, name = "Balance Banner - Hidden")
 @Composable
 private fun BalanceBannerHiddenPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         BalanceBanner(
             title = Chain.ThorChain.raw,
             isLoading = false,
             totalValue = "$12,345.67",
             image = R.drawable.referral_data_banner,
-            isBalanceVisible = false
+            isBalanceVisible = false,
         )
     }
 }
@@ -152,17 +138,13 @@ private fun BalanceBannerHiddenPreview() {
 @Preview(showBackground = true, name = "Balance Banner - Loading")
 @Composable
 private fun BalanceBannerLoadingPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         BalanceBanner(
             title = Chain.ThorChain.raw,
             isLoading = true,
             totalValue = "",
             image = R.drawable.referral_data_banner,
-            isBalanceVisible = true
+            isBalanceVisible = true,
         )
     }
 }
@@ -199,7 +181,6 @@ fun InfoItem(icon: Int, label: String, value: String?) {
     }
 }
 
-
 @Composable
 fun ActionButton(
     title: String,
@@ -215,65 +196,59 @@ fun ActionButton(
     Button(
         onClick = onClick,
         enabled = enabled,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = background,
-            contentColor = contentColor,
-            disabledContainerColor = background.copy(alpha = 0.5f),
-            disabledContentColor = contentColor.copy(alpha = 0.5f)
-        ),
-        border = if (enabled) {
-            border
-        } else {
-            border?.let {
-                BorderStroke(
-                    width = it.width,
-                    color = when (val brush = it.brush) {
-                        is SolidColor -> brush.value.copy(alpha = 0.5f)
-                        else -> Color.Gray.copy(alpha = 0.5f) // fallback for gradient brushes
-                    }
-                )
-            }
-        },
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = background,
+                contentColor = contentColor,
+                disabledContainerColor = background.copy(alpha = 0.5f),
+                disabledContentColor = contentColor.copy(alpha = 0.5f),
+            ),
+        border =
+            if (enabled) {
+                border
+            } else {
+                border?.let {
+                    BorderStroke(
+                        width = it.width,
+                        color =
+                            when (val brush = it.brush) {
+                                is SolidColor -> brush.value.copy(alpha = 0.5f)
+                                else ->
+                                    Color.Gray.copy(alpha = 0.5f) // fallback for gradient brushes
+                            },
+                    )
+                }
+            },
         shape = RoundedCornerShape(50),
         contentPadding = PaddingValues(horizontal = 6.dp),
-        modifier = modifier.height(42.dp)
+        modifier = modifier.height(42.dp),
     ) {
         if (icon != null) {
             Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(
-                        if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
-                        RoundedCornerShape(50)
-                    ),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier.size(32.dp)
+                        .background(
+                            if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
+                            RoundedCornerShape(50),
+                        ),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     painter = painterResource(id = icon),
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
-                    tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f)
+                    tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
                 )
             }
         }
 
-        Text(
-            text = title,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
-        )
+        Text(text = title, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
     }
 }
 
 @Composable
-fun ApyInfoItem(
-    apy: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+fun ApyInfoItem(apy: String, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         InfoItem(
             icon = R.drawable.ic_icon_percentage,
             label = stringResource(R.string.apy),
@@ -303,38 +278,34 @@ internal fun PositionsSelectionDialog(
     val searchQuery = searchTextFieldState.text.toString().lowercase()
 
     // Update selections with remember to avoid recreation
-    val updateBondPositions = remember(bondPositions, selectedPositions) {
-        bondPositions.map {
-            it.copy(
-                isSelected = selectedPositions.contains(it.ticker)
-            )
+    val updateBondPositions =
+        remember(bondPositions, selectedPositions) {
+            bondPositions.map { it.copy(isSelected = selectedPositions.contains(it.ticker)) }
         }
-    }
 
-    val updateStakePositions = remember(stakePositions, selectedPositions) {
-        stakePositions.map {
-            it.copy(
-                isSelected = selectedPositions.contains(it.ticker),
-            )
+    val updateStakePositions =
+        remember(stakePositions, selectedPositions) {
+            stakePositions.map { it.copy(isSelected = selectedPositions.contains(it.ticker)) }
         }
-    }
 
     // Filter positions based on search query with remember
-    val filteredBondPositions = remember(searchQuery, updateBondPositions) {
-        if (searchQuery.isEmpty()) {
-            updateBondPositions
-        } else {
-            updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
+    val filteredBondPositions =
+        remember(searchQuery, updateBondPositions) {
+            if (searchQuery.isEmpty()) {
+                updateBondPositions
+            } else {
+                updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
+            }
         }
-    }
 
-    val filteredStakePositions = remember(searchQuery, updateStakePositions) {
-        if (searchQuery.isEmpty()) {
-            updateStakePositions
-        } else {
-            updateStakePositions.filter { it.ticker.lowercase().contains(searchQuery) }
+    val filteredStakePositions =
+        remember(searchQuery, updateStakePositions) {
+            if (searchQuery.isEmpty()) {
+                updateStakePositions
+            } else {
+                updateStakePositions.filter { it.ticker.lowercase().contains(searchQuery) }
+            }
         }
-    }
 
     val groups = mutableListOf<TokenSelectionGroupUiModel<PositionUiModelDialog>>()
 
@@ -342,23 +313,25 @@ internal fun PositionsSelectionDialog(
         groups.add(
             TokenSelectionGroupUiModel(
                 title = "Bond",
-                items = filteredBondPositions.map { position ->
-                    GridTokenUiModel.SingleToken(data = position)
-                },
+                items =
+                    filteredBondPositions.map { position ->
+                        GridTokenUiModel.SingleToken(data = position)
+                    },
                 mapper = { gridToken ->
-                    val tokenSelectionUiModel = when (gridToken) {
-                        is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
-                            error("Not supported")
-                        is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
-                            TokenSelectionUiModel.TokenUiSingle(
-                                name = gridToken.data.ticker,
-                                logo = gridToken.data.logo,
-                            )
+                    val tokenSelectionUiModel =
+                        when (gridToken) {
+                            is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
+                                error("Not supported")
+                            is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
+                                TokenSelectionUiModel.TokenUiSingle(
+                                    name = gridToken.data.ticker,
+                                    logo = gridToken.data.logo,
+                                )
+                            }
                         }
-                    }
                     TokenSelectionGridUiModel(
                         isChecked = gridToken.data.isSelected,
-                        tokenSelectionUiModel = tokenSelectionUiModel
+                        tokenSelectionUiModel = tokenSelectionUiModel,
                     )
                 },
                 plusUiModel = null,
@@ -370,23 +343,25 @@ internal fun PositionsSelectionDialog(
         groups.add(
             TokenSelectionGroupUiModel(
                 title = "Stake",
-                items = filteredStakePositions.map { position ->
-                    GridTokenUiModel.SingleToken(data = position)
-                },
+                items =
+                    filteredStakePositions.map { position ->
+                        GridTokenUiModel.SingleToken(data = position)
+                    },
                 mapper = { gridToken ->
-                    val tokenSelectionUiModel = when (gridToken) {
-                        is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
-                            error("Not Supported")
-                        is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
-                            TokenSelectionUiModel.TokenUiSingle(
-                                name = gridToken.data.ticker,
-                                logo = gridToken.data.logo
-                            )
+                    val tokenSelectionUiModel =
+                        when (gridToken) {
+                            is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
+                                error("Not Supported")
+                            is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
+                                TokenSelectionUiModel.TokenUiSingle(
+                                    name = gridToken.data.ticker,
+                                    logo = gridToken.data.logo,
+                                )
+                            }
                         }
-                    }
                     TokenSelectionGridUiModel(
                         isChecked = gridToken.data.isSelected,
-                        tokenSelectionUiModel = tokenSelectionUiModel
+                        tokenSelectionUiModel = tokenSelectionUiModel,
                     )
                 },
                 plusUiModel = null,
@@ -414,11 +389,7 @@ internal fun PositionsSelectionDialog(
                 )
             }
         },
-        notFoundContent = {
-            NoFoundContent(
-                message = stringResource(R.string.no_positions_found)
-            )
-        },
+        notFoundContent = { NoFoundContent(message = stringResource(R.string.no_positions_found)) },
         onCheckChange = { isSelected, uiModel ->
             when (uiModel) {
                 is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
@@ -431,14 +402,12 @@ internal fun PositionsSelectionDialog(
         },
         onDoneClick = onDoneClick,
         onCancelClick = onCancelClick,
-        onPasteClick = searchTextFieldState::setTextAndPlaceCursorAtEnd
+        onPasteClick = searchTextFieldState::setTextAndPlaceCursorAtEnd,
     )
 }
 
 @Composable
-internal fun NoPositionsContainer(
-    onManagePositionsClick: () -> Unit = {}
-) {
+internal fun NoPositionsContainer(onManagePositionsClick: () -> Unit = {}) {
     NotEnabledContainer(
         title = stringResource(R.string.defi_no_positions_selected),
         content = stringResource(R.string.defi_no_positions_selected_desc),
@@ -447,46 +416,35 @@ internal fun NoPositionsContainer(
                 text = stringResource(R.string.manage_positions),
                 style = Theme.brockmann.button.medium.medium,
                 color = Theme.v2.colors.text.primary,
-                modifier = Modifier
-                    .clip(shape = CircleShape)
-                    .clickOnce(onClick = onManagePositionsClick)
-                    .background(
-                        color = Theme.v2.colors.border.primaryAccent4
-                    )
-                    .padding(
-                        vertical = 8.dp,
-                        horizontal = 16.dp
-                    )
+                modifier =
+                    Modifier.clip(shape = CircleShape)
+                        .clickOnce(onClick = onManagePositionsClick)
+                        .background(color = Theme.v2.colors.border.primaryAccent4)
+                        .padding(vertical = 8.dp, horizontal = 16.dp),
             )
-        }
+        },
     )
 }
 
 @Composable
-internal fun DeFiWarningBanner(
-    text: String,
-    onClickClose: (() -> Unit)? = null,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
+internal fun DeFiWarningBanner(text: String, onClickClose: (() -> Unit)? = null) {
+    Box(modifier = Modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(
-                    start = 16.dp,
-                    top = 16.dp,
-                    end = if (onClickClose != null) 40.dp else 16.dp,
-                    bottom = 16.dp
-                )
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Theme.v2.colors.backgrounds.secondary)
+                    .border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.border.normal,
+                        shape = RoundedCornerShape(16.dp),
+                    )
+                    .padding(
+                        start = 16.dp,
+                        top = 16.dp,
+                        end = if (onClickClose != null) 40.dp else 16.dp,
+                        bottom = 16.dp,
+                    )
         ) {
             Text(
                 text = text,
@@ -497,14 +455,14 @@ internal fun DeFiWarningBanner(
 
         if (onClickClose != null) {
             Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .size(22.dp)
-                    .clip(CircleShape)
-                    .background(Theme.v2.colors.backgrounds.surface2)
-                    .clickable(onClick = onClickClose),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier.align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(22.dp)
+                        .clip(CircleShape)
+                        .background(Theme.v2.colors.backgrounds.surface2)
+                        .clickable(onClick = onClickClose),
+                contentAlignment = Alignment.Center,
             ) {
                 UiIcon(
                     drawableResId = R.drawable.big_close,
@@ -528,22 +486,22 @@ internal fun HeaderDeFiWidget(
     isBalanceVisible: Boolean = true,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.normal,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(16.dp)
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(36.dp),
             )
 
             UiSpacer(12.dp)
@@ -558,10 +516,7 @@ internal fun HeaderDeFiWidget(
                 UiSpacer(4.dp)
 
                 if (isLoading) {
-                    UiPlaceholderLoader(
-                        modifier = Modifier
-                            .size(width = 120.dp, height = 28.dp)
-                    )
+                    UiPlaceholderLoader(modifier = Modifier.size(width = 120.dp, height = 28.dp))
                 } else {
                     Text(
                         text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
@@ -611,22 +566,22 @@ internal fun HeaderDeFiWidget(
     isBalanceVisible: Boolean = true,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.normal,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(16.dp)
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(36.dp),
             )
 
             UiSpacer(12.dp)
@@ -641,10 +596,7 @@ internal fun HeaderDeFiWidget(
                 UiSpacer(4.dp)
 
                 if (isLoading) {
-                    UiPlaceholderLoader(
-                        modifier = Modifier
-                            .size(width = 120.dp, height = 28.dp)
-                    )
+                    UiPlaceholderLoader(modifier = Modifier.size(width = 120.dp, height = 28.dp))
                 } else {
                     Text(
                         text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
@@ -673,7 +625,7 @@ internal fun HeaderDeFiWidget(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ActionButton(
                 title = buttonFirstActionText,
@@ -699,32 +651,33 @@ internal fun HeaderDeFiWidget(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "DeFi Warning Banner - Short Text")
+@Preview(
+    showBackground = true,
+    backgroundColor = 0xFFFFFFFF,
+    name = "DeFi Warning Banner - Short Text",
+)
 @Composable
 private fun DeFiWarningBannerShortPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         DeFiWarningBanner(
             text = "This feature is currently in beta. Please use with caution.",
-            onClickClose = {}
+            onClickClose = {},
         )
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "DeFi Warning Banner - Long Text")
+@Preview(
+    showBackground = true,
+    backgroundColor = 0xFFFFFFFF,
+    name = "DeFi Warning Banner - Long Text",
+)
 @Composable
 private fun DeFiWarningBannerLongPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         DeFiWarningBanner(
-            text = "Important: Your funds are at risk. This DeFi protocol has not been audited and may contain smart contract vulnerabilities. Only invest what you can afford to lose. Always do your own research before participating in any DeFi protocol.",
-            onClickClose = {}
+            text =
+                "Important: Your funds are at risk. This DeFi protocol has not been audited and may contain smart contract vulnerabilities. Only invest what you can afford to lose. Always do your own research before participating in any DeFi protocol.",
+            onClickClose = {},
         )
     }
 }
@@ -736,69 +689,34 @@ private fun PositionsSelectionDialogPreview() {
         bondPositions = defaultPositionsBondDialog(),
         stakePositions = defaultPositionsStakingDialog(),
         selectedPositions = listOf("RUNE", "TCY"),
-        searchTextFieldState = TextFieldState()
+        searchTextFieldState = TextFieldState(),
     )
 }
 
 @Preview(showBackground = true, name = "Info Item - With Value")
 @Composable
 private fun InfoItemWithValuePreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
-        InfoItem(
-            icon = R.drawable.coins_tier,
-            label = "APY",
-            value = "12.5%"
-        )
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
+        InfoItem(icon = R.drawable.coins_tier, label = "APY", value = "12.5%")
     }
 }
 
 @Preview(showBackground = true, name = "Info Item - Without Value")
 @Composable
 private fun InfoItemWithoutValuePreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
-        InfoItem(
-            icon = R.drawable.calendar_days,
-            label = "Next Churn",
-            value = null
-        )
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
+        InfoItem(icon = R.drawable.calendar_days, label = "Next Churn", value = null)
     }
 }
 
 @Preview(showBackground = true, name = "Info Items - Row")
 @Composable
 private fun InfoItemsRowPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            InfoItem(
-                icon = R.drawable.coins_tier,
-                label = "APY",
-                value = "12.5%"
-            )
-            InfoItem(
-                icon = R.drawable.coins_tier,
-                label = "Bonded",
-                value = "1000 RUNE"
-            )
-            InfoItem(
-                icon = R.drawable.coins_tier,
-                label = "Next Award",
-                value = "20 RUNE"
-            )
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            InfoItem(icon = R.drawable.coins_tier, label = "APY", value = "12.5%")
+            InfoItem(icon = R.drawable.coins_tier, label = "Bonded", value = "1000 RUNE")
+            InfoItem(icon = R.drawable.coins_tier, label = "Next Award", value = "20 RUNE")
         }
     }
 }
@@ -806,11 +724,7 @@ private fun InfoItemsRowPreview() {
 @Preview(showBackground = true, name = "Action Button - Bond (Enabled)")
 @Composable
 private fun ActionButtonBondEnabledPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         ActionButton(
             title = "Bond",
             icon = R.drawable.circle_plus,
@@ -818,7 +732,7 @@ private fun ActionButtonBondEnabledPreview() {
             contentColor = Theme.v2.colors.text.primary,
             iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
             enabled = true,
-            onClick = {}
+            onClick = {},
         )
     }
 }
@@ -826,11 +740,7 @@ private fun ActionButtonBondEnabledPreview() {
 @Preview(showBackground = true, name = "Action Button - Bond (Disabled)")
 @Composable
 private fun ActionButtonBondDisabledPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         ActionButton(
             title = "Bond",
             icon = R.drawable.circle_plus,
@@ -838,7 +748,7 @@ private fun ActionButtonBondDisabledPreview() {
             contentColor = Theme.v2.colors.text.primary,
             iconCircleColor = Theme.v2.colors.text.primary,
             enabled = false,
-            onClick = {}
+            onClick = {},
         )
     }
 }
@@ -846,11 +756,7 @@ private fun ActionButtonBondDisabledPreview() {
 @Preview(showBackground = true, name = "Action Button - Unbond")
 @Composable
 private fun ActionButtonUnbondPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         ActionButton(
             title = "Unbond",
             icon = R.drawable.circle_minus,
@@ -858,7 +764,7 @@ private fun ActionButtonUnbondPreview() {
             border = BorderStroke(1.dp, Theme.v2.colors.buttons.tertiary),
             contentColor = Theme.v2.colors.buttons.tertiary,
             iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
-            onClick = {}
+            onClick = {},
         )
     }
 }
@@ -866,14 +772,10 @@ private fun ActionButtonUnbondPreview() {
 @Preview(showBackground = true, name = "Action Buttons - Row")
 @Composable
 private fun ActionButtonsRowPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ActionButton(
                 title = "Bond",
@@ -882,7 +784,7 @@ private fun ActionButtonsRowPreview() {
                 contentColor = Theme.v2.colors.text.primary,
                 iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
                 modifier = Modifier.weight(1f),
-                onClick = {}
+                onClick = {},
             )
             ActionButton(
                 title = "Unbond",
@@ -892,7 +794,7 @@ private fun ActionButtonsRowPreview() {
                 contentColor = Theme.v2.colors.buttons.tertiary,
                 iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
                 modifier = Modifier.weight(1f),
-                onClick = {}
+                onClick = {},
             )
         }
     }
@@ -901,25 +803,18 @@ private fun ActionButtonsRowPreview() {
 @Preview(showBackground = true, name = "Complete Node Card Mock")
 @Composable
 private fun CompleteNodeCardMockPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Theme.v2.colors.backgrounds.secondary,
-                    RoundedCornerShape(12.dp)
-                )
-                .padding(16.dp)
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(Theme.v2.colors.backgrounds.secondary, RoundedCornerShape(12.dp))
+                    .padding(16.dp)
         ) {
             // Node Address
             Text(
                 text = "thor1abcd...xyz",
                 style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.primary
+                color = Theme.v2.colors.text.primary,
             )
 
             UiSpacer(12.dp)
@@ -927,30 +822,18 @@ private fun CompleteNodeCardMockPreview() {
             // Info Items
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                InfoItem(
-                    icon = R.drawable.coins_tier,
-                    label = "APY",
-                    value = "12.5%"
-                )
-                InfoItem(
-                    icon = R.drawable.coins_tier,
-                    label = "Bonded",
-                    value = "1000 RUNE"
-                )
-                InfoItem(
-                    icon = R.drawable.coins_tier,
-                    label = "Next Award",
-                    value = "20 RUNE"
-                )
+                InfoItem(icon = R.drawable.coins_tier, label = "APY", value = "12.5%")
+                InfoItem(icon = R.drawable.coins_tier, label = "Bonded", value = "1000 RUNE")
+                InfoItem(icon = R.drawable.coins_tier, label = "Next Award", value = "20 RUNE")
             }
 
             UiSpacer(16.dp)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 ActionButton(
                     title = "Bond",
@@ -959,7 +842,7 @@ private fun CompleteNodeCardMockPreview() {
                     contentColor = Theme.v2.colors.text.primary,
                     iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
                     modifier = Modifier.weight(1f),
-                    onClick = {}
+                    onClick = {},
                 )
                 ActionButton(
                     title = "Unbond",
@@ -969,7 +852,7 @@ private fun CompleteNodeCardMockPreview() {
                     contentColor = Theme.v2.colors.buttons.tertiary,
                     iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
                     modifier = Modifier.weight(1f),
-                    onClick = {}
+                    onClick = {},
                 )
             }
         }
@@ -979,41 +862,23 @@ private fun CompleteNodeCardMockPreview() {
 @Preview(showBackground = true, name = "APY Info Item")
 @Composable
 private fun ApyInfoItemPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
-        ApyInfoItem(
-            apy = "12.5%"
-        )
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
+        ApyInfoItem(apy = "12.5%")
     }
 }
 
 @Preview(showBackground = true, name = "APY Info Item - High APY")
 @Composable
 private fun ApyInfoItemHighPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
-        ApyInfoItem(
-            apy = "125.8%"
-        )
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
+        ApyInfoItem(apy = "125.8%")
     }
 }
 
 @Preview(showBackground = true, name = "APY Info Item - Low APY")
 @Composable
 private fun ApyInfoItemLowPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
-        ApyInfoItem(
-            apy = "0.5%"
-        )
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
+        ApyInfoItem(apy = "0.5%")
     }
 }

@@ -60,7 +60,6 @@ import com.vultisig.wallet.ui.utils.KeyboardAware
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.showReviewPopUp
 
-
 @Composable
 internal fun ChainTokensScreen(
     vaultId: VaultId,
@@ -73,12 +72,7 @@ internal fun ChainTokensScreen(
 
     KeyboardAware(viewModel::handleKeyboardState)
 
-    LaunchedEffect(Unit) {
-        viewModel.initData(
-            vaultId = vaultId,
-            chainId = chainId
-        )
-    }
+    LaunchedEffect(Unit) { viewModel.initData(vaultId = vaultId, chainId = chainId) }
 
     ChainTokensScreen(
         uiModel = uiModel,
@@ -93,9 +87,7 @@ internal fun ChainTokensScreen(
         onBackClick = viewModel::back,
         onHideSearchBar = viewModel::hideSearchBar,
         onShowSearchBar = viewModel::showSearchBar,
-        onShowReviewPopUp = {
-            reviewManager.showReviewPopUp(context)
-        }
+        onShowReviewPopUp = { reviewManager.showReviewPopUp(context) },
     )
 }
 
@@ -120,15 +112,11 @@ internal fun ChainTokensScreen(
     val uriHandler = VsUriHandler()
     val context = LocalContext.current
 
-    var isAddressBottomSheetVisible by remember {
-        mutableStateOf(false)
-    }
+    var isAddressBottomSheetVisible by remember { mutableStateOf(false) }
 
     ScaffoldWithExpandableTopBar(
-        modifier = Modifier.then(
-            if (isAddressBottomSheetVisible) Modifier.blur(10.dp)
-            else Modifier
-        ),
+        modifier =
+            Modifier.then(if (isAddressBottomSheetVisible) Modifier.blur(10.dp) else Modifier),
         onRefresh = onRefresh,
         isRefreshing = uiModel.isRefreshing,
         snackbarState = snackbarState,
@@ -138,37 +126,28 @@ internal fun ChainTokensScreen(
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     VsCircleButton(
                         onClick = onBackClick,
                         size = VsCircleButtonSize.Small,
                         icon = R.drawable.ic_caret_left,
                         type = VsCircleButtonType.Secondary,
-                        designType = DesignType.Shined
+                        designType = DesignType.Shined,
                     )
                     VsCircleButton(
-                        onClick = {
-                            uriHandler.openUri(uiModel.explorerURL)
-                        },
+                        onClick = { uriHandler.openUri(uiModel.explorerURL) },
                         size = VsCircleButtonSize.Small,
                         icon = R.drawable.explor,
                         type = VsCircleButtonType.Secondary,
-                        designType = DesignType.Shined
+                        designType = DesignType.Shined,
                     )
                 }
 
-                UiSpacer(
-                    size = 10.dp
-                )
+                UiSpacer(size = 10.dp)
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    ChainLogo(
-                        name = uiModel.chainName,
-                        logo = uiModel.chainLogo
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    ChainLogo(name = uiModel.chainName, logo = uiModel.chainLogo)
                     UiSpacer(size = 8.dp)
                     Text(
                         text = uiModel.chainName,
@@ -177,9 +156,7 @@ internal fun ChainTokensScreen(
                     )
                 }
 
-                UiSpacer(
-                    size = 12.dp,
-                )
+                UiSpacer(size = 12.dp)
 
                 LoadableValue(
                     value = uiModel.totalBalance,
@@ -188,61 +165,46 @@ internal fun ChainTokensScreen(
                     color = Theme.v2.colors.text.primary,
                 )
 
-                UiSpacer(
-                    size = 12.dp,
-                )
+                UiSpacer(size = 12.dp)
 
                 CopiableAddress(
                     address = uiModel.chainAddress,
                     onAddressCopied = {
                         snackbarState.show(
-                            context.getString(
-                                R.string.address_copied,
-                                uiModel.chainName
-                            )
+                            context.getString(R.string.address_copied, uiModel.chainName)
                         )
                         onShowReviewPopUp()
                     },
-                    modifier = Modifier
-                        .clip(
-                            RoundedCornerShape(
-                                size = 8.dp
-                            )
-                        )
-                        .background(
-                            color = Theme.v2.colors.text.button.dim.copy(alpha = 0.12f)
-                        )
-                        .padding(
-                            horizontal = 6.dp,
-                            vertical = 4.dp,
-                        ),
+                    modifier =
+                        Modifier.clip(RoundedCornerShape(size = 8.dp))
+                            .background(color = Theme.v2.colors.text.button.dim.copy(alpha = 0.12f))
+                            .padding(horizontal = 6.dp, vertical = 4.dp),
                     tint = Theme.v2.colors.alerts.info,
-                    maxLength = 108.dp
+                    maxLength = 108.dp,
                 )
 
-                UiSpacer(
-                    size = 32.dp,
-                )
+                UiSpacer(size = 32.dp)
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(
-                        space = 12.dp,
-                        alignment = Alignment.CenterHorizontally
-                    ),
+                    horizontalArrangement =
+                        Arrangement.spacedBy(
+                            space = 12.dp,
+                            alignment = Alignment.CenterHorizontally,
+                        ),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     if (uiModel.canSwap) {
                         TransactionTypeButton(
                             txType = TransactionType.SWAP,
                             isSelected = true,
-                            onClick = onSwap
+                            onClick = onSwap,
                         )
                     }
 
                     TransactionTypeButton(
                         txType = TransactionType.SEND,
                         isSelected = false,
-                        onClick = onSend
+                        onClick = onSend,
                     )
 
                     if (uiModel.canBuy) {
@@ -257,65 +219,52 @@ internal fun ChainTokensScreen(
                         TransactionTypeButton(
                             txType = TransactionType.FUNCTIONS,
                             isSelected = false,
-                            onClick = onDeposit
+                            onClick = onDeposit,
                         )
                     }
 
                     TransactionTypeButton(
                         txType = TransactionType.RECEIVE,
                         isSelected = false,
-                        onClick = onReceive
+                        onClick = onReceive,
                     )
                 }
 
-                UiSpacer(
-                    size = 10.dp
-                )
+                UiSpacer(size = 10.dp)
                 uiModel.tronResourceStats?.let { resourceUsage ->
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(
-                            space = 6.dp,
-                            alignment = Alignment.CenterHorizontally
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+                        horizontalArrangement =
+                            Arrangement.spacedBy(
+                                space = 6.dp,
+                                alignment = Alignment.CenterHorizontally,
+                            ),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         ResourceTwoCardsRow(
                             modifier = Modifier.weight(1f),
-                            resourceUsage = resourceUsage
+                            resourceUsage = resourceUsage,
                         )
-
                     }
                 }
             }
         },
         content = { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
                 Column(
-                    modifier = Modifier
-                        .background(Theme.v2.colors.backgrounds.primary)
-                        .fillMaxSize()
+                    modifier =
+                        Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize()
                 ) {
                     ChainTokensTabMenuAndSearchBar(
-                        modifier = Modifier.padding(
-                            horizontal = 16.dp,
-                        ),
+                        modifier = Modifier.padding(horizontal = 16.dp),
                         onEditClick = onSelectTokens,
                         onSearchClick = onShowSearchBar,
                         onTokensClick = {},
                         isTabMenu = uiModel.isSearchMode.not(),
                         onCancelSearchClick = onHideSearchBar,
-                        searchTextFieldState = uiModel.searchTextFieldState
+                        searchTextFieldState = uiModel.searchTextFieldState,
                     )
 
-                    TopShineContainer(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
+                    TopShineContainer(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                         LazyColumn {
                             itemsIndexed(items = uiModel.tokens) { index, token ->
                                 Column {
@@ -330,10 +279,8 @@ internal fun ChainTokensScreen(
                                         price = token.price,
                                         onClick = clickOnce { onTokenClick(token) },
                                         mergedBalance = token.mergeBalance,
-                                        modifier = Modifier.padding(
-                                            horizontal = 16.dp,
-                                            vertical = 12.dp,
-                                        )
+                                        modifier =
+                                            Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                                     )
                                     if (index != uiModel.tokens.lastIndex) {
                                         UiHorizontalDivider()
@@ -342,13 +289,9 @@ internal fun ChainTokensScreen(
                             }
                         }
                     }
-
                 }
 
-                BottomFadeEffect(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                )
+                BottomFadeEffect(modifier = Modifier.align(Alignment.BottomCenter))
             }
         },
     )
@@ -358,28 +301,30 @@ internal fun ChainTokensScreen(
 @Composable
 private fun PreviewChainCoinScreen1() {
     ChainTokensScreen(
-        uiModel = ChainTokensUiModel(
-            chainName = "Tron",
-            chainAddress = "0x1234567890",
-            totalBalance = "0.000000",
-            explorerURL = "https://etherscan.io/",
-            tokens = listOf(
-                ChainTokenUiModel(
-                    name = "USDT",
-                    balance = "0.000",
-                    fiatBalance = "$0.000000",
-                    tokenLogo = R.drawable.usdt,
-                    chainLogo = R.drawable.ethereum
-                ),
-                ChainTokenUiModel(
-                    name = "USDT",
-                    balance = "0.000",
-                    fiatBalance = "$0.000000",
-                    tokenLogo = R.drawable.usdt,
-                    chainLogo = R.drawable.ethereum
-                ),
-            )
-        ),
+        uiModel =
+            ChainTokensUiModel(
+                chainName = "Tron",
+                chainAddress = "0x1234567890",
+                totalBalance = "0.000000",
+                explorerURL = "https://etherscan.io/",
+                tokens =
+                    listOf(
+                        ChainTokenUiModel(
+                            name = "USDT",
+                            balance = "0.000",
+                            fiatBalance = "$0.000000",
+                            tokenLogo = R.drawable.usdt,
+                            chainLogo = R.drawable.ethereum,
+                        ),
+                        ChainTokenUiModel(
+                            name = "USDT",
+                            balance = "0.000",
+                            fiatBalance = "$0.000000",
+                            tokenLogo = R.drawable.usdt,
+                            chainLogo = R.drawable.ethereum,
+                        ),
+                    ),
+            ),
         onRefresh = {},
         onShowSearchBar = {},
         onHideSearchBar = {},
@@ -394,4 +339,3 @@ private fun PreviewChainCoinScreen1() {
         onShowReviewPopUp = {},
     )
 }
-

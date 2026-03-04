@@ -9,19 +9,19 @@ import kotlinx.datetime.LocalDate
 @Entity(
     tableName = "vaultMetadata",
     primaryKeys = ["vaultId"],
-    foreignKeys = [
-        ForeignKey(
-            entity = VaultEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["vaultId"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.CASCADE
-        )
-    ]
+    foreignKeys =
+        [
+            ForeignKey(
+                entity = VaultEntity::class,
+                parentColumns = ["id"],
+                childColumns = ["vaultId"],
+                onDelete = ForeignKey.CASCADE,
+                onUpdate = ForeignKey.CASCADE,
+            )
+        ],
 )
 data class VaultMetadataEntity(
-    @ColumnInfo("vaultId")
-    val vaultId: VaultId,
+    @ColumnInfo("vaultId") val vaultId: VaultId,
     @ColumnInfo("fastVaultPasswordReminderShownDate")
     val fastVaultPasswordReminderShownDate: LocalDate?,
 )
