@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models.keygen
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -21,7 +20,6 @@ internal data class StartUiModel(
 internal class StartViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val navigator: Navigator<Destination>,
-    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     val state = MutableStateFlow(StartUiModel())

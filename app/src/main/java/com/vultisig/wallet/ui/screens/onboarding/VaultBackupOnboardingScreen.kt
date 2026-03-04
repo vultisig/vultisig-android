@@ -71,9 +71,7 @@ internal fun VaultBackupOnboardingScreen(
                             width = 350.dp,
                             height = 260.dp,
                         )
-                        .background(
-                            color = Theme.v2.colors.backgrounds.secondary
-                        )
+                        
                         .dashedBorder(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
