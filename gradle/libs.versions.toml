@@ -51,6 +51,8 @@ update = "2.1.0"
 review = "2.0.2"
 security = "1.0.0"
 coreKtxVersion = "1.7.0"
+googleGmsGoogleServices = "4.4.4"
+firebaseMessaging = "25.0.1"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -128,6 +130,7 @@ rive = { module = "app.rive:rive-android", version.ref = "rive" }
 play-update = { module = "com.google.android.play:app-update", version.ref = "update" }
 play-review = { module = "com.google.android.play:review", version.ref = "review" }
 androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hilt" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
 
 
 [plugins]
@@ -139,3 +142,4 @@ daggerHiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "dagg
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 protobuf = { id = "com.google.protobuf", version.ref = "protobuf" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
