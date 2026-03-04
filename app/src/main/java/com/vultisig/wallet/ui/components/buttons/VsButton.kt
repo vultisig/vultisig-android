@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
@@ -164,6 +165,7 @@ fun VsButton(
     size: VsButtonSize = Medium,
     forceClickable: Boolean = false,
     shape: Shape? = null,
+    sizeIcon: Dp? = null,
     onClick: () -> Unit,
 ) {
     VsButton(
@@ -203,7 +205,7 @@ fun VsButton(
         if (iconLeft != null) {
             UiIcon(
                 drawableResId = iconLeft,
-                size = iconSize,
+                size = sizeIcon ?: iconSize,
                 tint = contentColor,
             )
         }
@@ -219,7 +221,7 @@ fun VsButton(
         if (iconRight != null) {
             UiIcon(
                 drawableResId = iconRight,
-                size = iconSize,
+                size = sizeIcon ?: iconSize,
                 tint = contentColor,
             )
         }
