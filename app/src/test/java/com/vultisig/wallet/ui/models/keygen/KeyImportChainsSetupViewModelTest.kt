@@ -19,9 +19,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -33,6 +31,9 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 internal class KeyImportChainsSetupViewModelTest {
 
@@ -86,6 +87,21 @@ internal class KeyImportChainsSetupViewModelTest {
     ) {
         every { keyImportRepository.get() } returns KeyImportData(mnemonic = mnemonic)
         coEvery { scanChainBalances(any()) } returns results
+    }
+
+    /**
+     * Creates a ViewModel whose scan suspends on a [CompletableDeferred]. Returns both the VM and
+     * the deferred that controls when the scan completes. A brief sleep ensures the IO thread has
+     * reached the mock before the deferred is used.
+     */
+    private fun createViewModelWithPendingScan():
+        Pair<KeyImportChainsSetupViewModel, CompletableDeferred<List<ChainBalanceResult>>> {
+        every { keyImportRepository.get() } returns KeyImportData(mnemonic = "test")
+        val scanDeferred = CompletableDeferred<List<ChainBalanceResult>>()
+        coEvery { scanChainBalances(any()) } coAnswers { scanDeferred.await() }
+        val vm = createViewModel()
+        Thread.sleep(100)
+        return vm to scanDeferred
     }
 
     @Test
@@ -541,14 +557,7 @@ internal class KeyImportChainsSetupViewModelTest {
     @Test
     fun `continueWithSelection from Scanning does nothing`() =
         runTest(mainDispatcher) {
-            every { keyImportRepository.get() } returns KeyImportData(mnemonic = "test")
-            coEvery { scanChainBalances(any()) } coAnswers
-                {
-                    kotlinx.coroutines.delay(Long.MAX_VALUE)
-                    emptyList()
-                }
-
-            val vm = createViewModel()
+            val (vm, _) = createViewModelWithPendingScan()
             // State is still Scanning because scan hasn't completed
 
             vm.continueWithSelection()
@@ -568,5 +577,147 @@ internal class KeyImportChainsSetupViewModelTest {
             advanceUntilIdle()
 
             coVerify { navigator.navigate(Destination.Back) }
+        }
+
+    // --- selectManually during scanning ---
+
+    @Test
+    fun `selectManually during scanning populates all supported chains`() =
+        runTest(mainDispatcher) {
+            val (vm, _) = createViewModelWithPendingScan()
+            assertEquals(ChainsSetupState.Scanning, vm.state.value.screenState)
+
+            vm.selectManually()
+
+            val state = vm.state.value
+            assertEquals(ChainsSetupState.CustomizeChains, state.screenState)
+            assertEquals(Chain.keyImportSupportedChains, state.allChains.map { it.chain })
+            assertEquals(Chain.keyImportSupportedChains, state.filteredChains.map { it.chain })
+            assertTrue(state.allChains.none { it.isSelected })
+        }
+
+    @Test
+    fun `selectManually during scanning uses default derivation path for all chains`() =
+        runTest(mainDispatcher) {
+            val (vm, _) = createViewModelWithPendingScan()
+
+            vm.selectManually()
+
+            assertTrue(vm.state.value.allChains.all { it.derivationPath == DerivationPath.Default })
+        }
+
+    @Test
+    fun `selectManually during scanning allows toggling and continuing`() =
+        runTest(mainDispatcher) {
+            val (vm, _) = createViewModelWithPendingScan()
+
+            vm.selectManually()
+            vm.toggleChain(Chain.Bitcoin)
+            vm.toggleChain(Chain.Ethereum)
+
+            assertEquals(2, vm.state.value.selectedCount)
+
+            vm.continueWithSelection()
+            advanceUntilIdle()
+
+            verify {
+                keyImportRepository.setChainSettings(
+                    match { settings ->
+                        settings.size == 2 &&
+                            settings.any { it.chain == Chain.Bitcoin } &&
+                            settings.any { it.chain == Chain.Ethereum }
+                    }
+                )
+            }
+            coVerify { navigator.route(Route.KeyImport.DeviceCount) }
+        }
+
+    // --- scanning completing after selectManually ---
+
+    @Test
+    fun `scan completing after selectManually preserves CustomizeChains state and selections`() =
+        runTest(mainDispatcher) {
+            val (vm, scanDeferred) = createViewModelWithPendingScan()
+
+            vm.selectManually()
+            vm.toggleChain(Chain.Bitcoin)
+
+            // Now let the scan complete with active chains
+            scanDeferred.complete(
+                listOf(
+                    ChainBalanceResult(
+                        chain = Chain.Ethereum,
+                        derivationPath = DerivationPath.Default,
+                        address = "0xaddr",
+                        hasBalance = true,
+                    )
+                )
+            )
+            Thread.sleep(100)
+
+            val state = vm.state.value
+            // Screen should stay on CustomizeChains
+            assertEquals(ChainsSetupState.CustomizeChains, state.screenState)
+            // User's Bitcoin selection should be preserved
+            assertTrue(state.allChains.first { it.chain == Chain.Bitcoin }.isSelected)
+            // Ethereum should NOT be auto-selected (user's selections are preserved)
+            assertFalse(state.allChains.first { it.chain == Chain.Ethereum }.isSelected)
+        }
+
+    @Test
+    fun `scan completing after selectManually merges Solana Phantom derivation path`() =
+        runTest(mainDispatcher) {
+            val (vm, scanDeferred) = createViewModelWithPendingScan()
+
+            vm.selectManually()
+
+            // Verify Solana initially has Default path
+            assertEquals(
+                DerivationPath.Default,
+                vm.state.value.allChains.first { it.chain == Chain.Solana }.derivationPath,
+            )
+
+            // Scan completes finding Solana balance on Phantom path
+            scanDeferred.complete(
+                listOf(
+                    ChainBalanceResult(
+                        chain = Chain.Solana,
+                        derivationPath = DerivationPath.Default,
+                        address = "default_addr",
+                        hasBalance = false,
+                    ),
+                    ChainBalanceResult(
+                        chain = Chain.Solana,
+                        derivationPath = DerivationPath.Phantom,
+                        address = "phantom_addr",
+                        hasBalance = true,
+                    ),
+                )
+            )
+            Thread.sleep(100)
+
+            val state = vm.state.value
+            assertEquals(ChainsSetupState.CustomizeChains, state.screenState)
+            // Solana derivation path should be updated to Phantom
+            val solanaItem = state.allChains.first { it.chain == Chain.Solana }
+            assertEquals(DerivationPath.Phantom, solanaItem.derivationPath)
+        }
+
+    @Test
+    fun `scan failure after selectManually does not disturb user`() =
+        runTest(mainDispatcher) {
+            val (vm, scanDeferred) = createViewModelWithPendingScan()
+
+            vm.selectManually()
+            vm.toggleChain(Chain.Bitcoin)
+
+            // Scan fails
+            scanDeferred.completeExceptionally(RuntimeException("Network error"))
+            Thread.sleep(100)
+
+            val state = vm.state.value
+            assertEquals(ChainsSetupState.CustomizeChains, state.screenState)
+            assertTrue(state.allChains.first { it.chain == Chain.Bitcoin }.isSelected)
+            assertEquals(Chain.keyImportSupportedChains.size, state.allChains.size)
         }
 }
