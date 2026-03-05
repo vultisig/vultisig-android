@@ -10,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @AndroidEntryPoint
 class VultisigFirebaseMessagingService : FirebaseMessagingService() {
@@ -20,13 +19,12 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onNewToken(token: String) {
-        Timber.d("FCM token refreshed : $token")
-
         serviceScope.launch { notificationTokenRepository.setToken(token) }
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        Timber.d("FCM message received from: ${message.from}")
+        // TODO: Handle incoming messages if needed. For now, we rely on the system to display
+        // notifications based on the payload.
     }
 
     override fun onDestroy() {
