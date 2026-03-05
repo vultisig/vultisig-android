@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Push Notifications -->
+    <string name="notifications">通知</string>
+    <string name="push_notifications">推送通知</string>
+    <string name="enable_push_notifications">启用推送通知</string>
+    <string name="notifications_are_here">通知已到来</string>
+    <string name="notifications_description">随时了解您的金库活动，例如当另一台设备发起交易签名时。</string>
+    <string name="choose_vaults_for_notifications">选择接收通知的金库</string>
+    <string name="enable_notifications_for_vault">为 %s 启用通知</string>
+    <string name="not_now">暂不</string>
+    <string name="vault_notifications">金库通知</string>
+    <string name="enable_all">全部启用</string>
+
     <!-- Deposit Options -->
     <string name="deposit_option_bond">绑定</string>
     <string name="deposit_option_unbond">解绑</string>

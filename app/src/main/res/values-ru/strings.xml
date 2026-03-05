@@ -1,4 +1,16 @@
 <resources>
+    <!-- Push Notifications -->
+    <string name="notifications">Уведомления</string>
+    <string name="push_notifications">Push-уведомления</string>
+    <string name="enable_push_notifications">Включить push-уведомления</string>
+    <string name="notifications_are_here">Уведомления появились</string>
+    <string name="notifications_description">Следите за активностью вашего хранилища, например, когда другое устройство инициирует подписание транзакции.</string>
+    <string name="choose_vaults_for_notifications">Выбрать хранилища для уведомлений</string>
+    <string name="enable_notifications_for_vault">Включить уведомления для %s</string>
+    <string name="not_now">Не сейчас</string>
+    <string name="vault_notifications">Уведомления хранилища</string>
+    <string name="enable_all">Включить все</string>
+
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Логотип токена</string>
     <string name="tokens">Токены</string>

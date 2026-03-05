@@ -1,4 +1,16 @@
 <resources>
+    <!-- Push Notifications -->
+    <string name="notifications">Meldingen</string>
+    <string name="push_notifications">Pushmeldingen</string>
+    <string name="enable_push_notifications">Pushmeldingen inschakelen</string>
+    <string name="notifications_are_here">Meldingen zijn er</string>
+    <string name="notifications_description">Blijf op de hoogte van uw kluisactiviteit, zoals wanneer een ander apparaat een transactieondertekening initieert.</string>
+    <string name="choose_vaults_for_notifications">Kluizen kiezen voor meldingen</string>
+    <string name="enable_notifications_for_vault">Meldingen inschakelen voor %s</string>
+    <string name="not_now">Niet nu</string>
+    <string name="vault_notifications">Kluismeldingen</string>
+    <string name="enable_all">Alles inschakelen</string>
+
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
