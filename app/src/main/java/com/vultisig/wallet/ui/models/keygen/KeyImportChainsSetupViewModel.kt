@@ -112,27 +112,38 @@ constructor(
                         )
                     }
 
-                if (activeResults.isNotEmpty()) {
-                    val activeItems =
-                        activeResults.map { result ->
-                            ChainItemUiModel(
-                                chain = result.chain,
-                                derivationPath = result.derivationPath,
-                                isSelected = true,
-                            )
-                        }
-                    _state.update {
-                        it.copy(
+                _state.update { current ->
+                    if (current.screenState == ChainsSetupState.CustomizeChains) {
+                        val updatedAllChains =
+                            current.allChains.map { item ->
+                                val scannedPath =
+                                    allChainItems
+                                        .firstOrNull { it.chain == item.chain }
+                                        ?.derivationPath ?: item.derivationPath
+                                item.copy(derivationPath = scannedPath)
+                            }
+                        current.copy(
+                            allChains = updatedAllChains,
+                            filteredChains = applyFilter(updatedAllChains),
+                        )
+                    } else if (activeResults.isNotEmpty()) {
+                        val activeItems =
+                            activeResults.map { result ->
+                                ChainItemUiModel(
+                                    chain = result.chain,
+                                    derivationPath = result.derivationPath,
+                                    isSelected = true,
+                                )
+                            }
+                        current.copy(
                             screenState = ChainsSetupState.ActiveChains,
                             activeChains = activeItems,
                             allChains = allChainItems,
                             filteredChains = allChainItems,
                             selectedCount = activeItems.size,
                         )
-                    }
-                } else {
-                    _state.update {
-                        it.copy(
+                    } else {
+                        current.copy(
                             screenState = ChainsSetupState.NoActiveChains,
                             allChains = allChainItems,
                             filteredChains = allChainItems,
@@ -144,7 +155,35 @@ constructor(
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to scan chain balances")
-                // Fall back to manual selection
+                _state.update { current ->
+                    // If user is already in CustomizeChains, don't disturb them
+                    if (current.screenState == ChainsSetupState.CustomizeChains) {
+                        current
+                    } else {
+                        val allChainItems =
+                            Chain.keyImportSupportedChains.map { chain ->
+                                ChainItemUiModel(
+                                    chain = chain,
+                                    derivationPath = DerivationPath.Default,
+                                    isSelected = false,
+                                )
+                            }
+                        current.copy(
+                            screenState = ChainsSetupState.NoActiveChains,
+                            allChains = allChainItems,
+                            filteredChains = allChainItems,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun selectManually() {
+        _state.update {
+            if (it.allChains.isNotEmpty()) {
+                it.copy(screenState = ChainsSetupState.CustomizeChains)
+            } else {
                 val allChainItems =
                     Chain.keyImportSupportedChains.map { chain ->
                         ChainItemUiModel(
@@ -153,19 +192,13 @@ constructor(
                             isSelected = false,
                         )
                     }
-                _state.update {
-                    it.copy(
-                        screenState = ChainsSetupState.NoActiveChains,
-                        allChains = allChainItems,
-                        filteredChains = allChainItems,
-                    )
-                }
+                it.copy(
+                    screenState = ChainsSetupState.CustomizeChains,
+                    allChains = allChainItems,
+                    filteredChains = applyFilter(allChainItems),
+                )
             }
         }
-    }
-
-    fun selectManually() {
-        _state.update { it.copy(screenState = ChainsSetupState.CustomizeChains) }
     }
 
     fun customize() = selectManually()
