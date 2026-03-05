@@ -37,9 +37,8 @@ fi
 
 # ── Destructive git operations ─────────────────────────────────────────────
 DESTRUCTIVE_PATTERNS=(
-  "git push.*--force"
+  "git push.*--force[^-]"
   "git push.*-f "
-  "--force-with-lease"
   "--no-verify"
   "git reset --hard"
   "git checkout \."
@@ -67,7 +66,7 @@ SECRET_PATTERNS=(
   "\.key$"
   "\.p12$"
   "\.pfx$"
-  "keystore"
+  "\.keystore$"
   "\.jks$"
 )
 
