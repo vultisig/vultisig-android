@@ -392,6 +392,7 @@ constructor(
                 }
 
             val isNextButtonEnabled = errorMessage == null
+            nameInnerState.value = if (errorMessage != null) VsTextInputFieldInnerState.Error else VsTextInputFieldInnerState.Default
             nameErrorMessage.value = errorMessage
             uiState.update { it.copy(isNextButtonEnabled = isNextButtonEnabled) }
         }

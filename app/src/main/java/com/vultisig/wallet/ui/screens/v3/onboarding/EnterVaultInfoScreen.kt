@@ -35,6 +35,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.v2.modifiers.shinedBottom
@@ -149,6 +150,7 @@ internal fun EnterVaultInfoScreen(
             VsButton(
                 label = stringResource(R.string.enter_email_screen_next),
                 modifier = Modifier.fillMaxWidth().testTag(EnterVaultInfoTags.NEXT_BUTTON),
+                state = if (uiState.isNextButtonEnabled) VsButtonState.Enabled else VsButtonState.Disabled,
             ) {
                 onEvent(EnterVaultInfoEvent.Next)
             }
