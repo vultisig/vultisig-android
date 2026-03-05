@@ -17,58 +17,39 @@ class RpcExtensionExtractErrorTest {
 
     @Test
     fun returnsErrorValueWhenJsonContainsErrorKey() = runBlocking {
-        val response = mockResponse(
-            """{ "error": "Invalid token" }"""
-        )
+        val response = mockResponse("""{ "error": "Invalid token" }""")
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            "Invalid token",
-            result
-        )
+        assertEquals("Invalid token", result)
     }
 
     @Test
     fun returnsErrorValueFromTopLevelJsonArray() = runBlocking {
-        val body = """
+        val body =
+            """
         [
           { "code": 401 },
           { "error": "Authentication failed" }
         ]
-    """.trimIndent()
+    """
+                .trimIndent()
 
         val response = mockResponse(body)
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            "Authentication failed",
-            result
-        )
+        assertEquals("Authentication failed", result)
     }
-
 
     @Test
     fun returnsFullResponseBodyWhenJsonDoesNotContainErrorKey() = runBlocking {
         val body = """{ "message": "Something went wrong" }"""
         val response = mockResponse(body)
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            body,
-            result
-        )
+        assertEquals(body, result)
     }
 
     @Test
@@ -76,15 +57,9 @@ class RpcExtensionExtractErrorTest {
         val body = "Internal Server Error"
         val response = mockResponse(body)
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            body,
-            result
-        )
+        assertEquals(body, result)
     }
 
     @Test
@@ -92,62 +67,44 @@ class RpcExtensionExtractErrorTest {
         val body = """{ "error": "Invalid token" """
         val response = mockResponse(body)
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            body,
-            result
-        )
+        assertEquals(body, result)
     }
 
     @Test
     fun returnsEmptyStringWhenErrorKeyExistsButIsEmpty() = runBlocking {
-        val response = mockResponse(
-            """{ "error": "" }"""
-        )
+        val response = mockResponse("""{ "error": "" }""")
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            "",
-            result
-        )
+        assertEquals("", result)
     }
 
     @Test
     fun returnsErrorValueFromNestedJsonObject() = runBlocking {
-        val body = """
+        val body =
+            """
         {
           "status": "error",
           "data": {
             "error": "Invalid token"
           }
         }
-    """.trimIndent()
+    """
+                .trimIndent()
 
         val response = mockResponse(body)
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            "Invalid token",
-            result
-        )
+        assertEquals("Invalid token", result)
     }
-
 
     @Test
     fun returnsErrorValueFromDeeplyNestedJson() = runBlocking {
-        val body = """
+        val body =
+            """
         {
           "meta": {
             "request": {
@@ -157,75 +114,60 @@ class RpcExtensionExtractErrorTest {
             }
           }
         }
-    """.trimIndent()
+    """
+                .trimIndent()
 
         val response = mockResponse(body)
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            "User not authorized",
-            result
-        )
+        assertEquals("User not authorized", result)
     }
-
 
     @Test
     fun prefersTopLevelErrorOverNestedError() = runBlocking {
-        val body = """
+        val body =
+            """
         {
           "error": "Top level error",
           "data": {
             "error": "Nested error"
           }
         }
-    """.trimIndent()
+    """
+                .trimIndent()
 
         val response = mockResponse(body)
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            "Top level error",
-            result
-        )
+        assertEquals("Top level error", result)
     }
-
 
     @Test
     fun returnsErrorValueFromJsonArray() = runBlocking {
-        val body = """
+        val body =
+            """
         {
           "errors": [
             { "code": 401 },
             { "error": "Token expired" }
           ]
         }
-    """.trimIndent()
+    """
+                .trimIndent()
 
         val response = mockResponse(body)
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            "Token expired",
-            result
-        )
+        assertEquals("Token expired", result)
     }
-
 
     @Test
     fun returnsFirstMatchingErrorWhenMultipleExist() = runBlocking {
-        val body = """
+        val body =
+            """
         {
           "data": {
             "error": "First error",
@@ -234,48 +176,38 @@ class RpcExtensionExtractErrorTest {
             }
           }
         }
-    """.trimIndent()
+    """
+                .trimIndent()
 
         val response = mockResponse(body)
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            "First error",
-            result
-        )
+        assertEquals("First error", result)
     }
-
 
     @Test
     fun returnsFullBodyWhenErrorKeyNotFoundRecursively() = runBlocking {
-        val body = """
+        val body =
+            """
         {
           "message": "Something failed",
           "code": 500
         }
-    """.trimIndent()
+    """
+                .trimIndent()
 
         val response = mockResponse(body)
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            body,
-            result
-        )
+        assertEquals(body, result)
     }
-
 
     @Test
     fun findsErrorInMixedJsonStructures() = runBlocking {
-        val body = """
+        val body =
+            """
         {
           "data": [
             {
@@ -285,21 +217,15 @@ class RpcExtensionExtractErrorTest {
             }
           ]
         }
-    """.trimIndent()
+    """
+                .trimIndent()
 
         val response = mockResponse(body)
 
-        val result = extractError(
-            response,
-            "error"
-        )
+        val result = extractError(response, "error")
 
-        assertEquals(
-            "Deep array error",
-            result
-        )
+        assertEquals("Deep array error", result)
     }
-
 
     private suspend fun mockResponse(
         body: String,
@@ -309,17 +235,10 @@ class RpcExtensionExtractErrorTest {
             respond(
                 content = body,
                 status = status,
-                headers = headersOf(
-                    HttpHeaders.ContentType,
-                    Application.Json.toString()
-                )
+                headers = headersOf(HttpHeaders.ContentType, Application.Json.toString()),
             )
         }
 
-        return HttpClient(engine).use { client ->
-            client.get("https://test.com")
-        }
+        return HttpClient(engine).use { client -> client.get("https://test.com") }
     }
-
-
 }

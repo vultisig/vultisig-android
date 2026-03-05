@@ -19,8 +19,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.ui.screens.scan.createScanner
-import timber.log.Timber
 import java.util.concurrent.Executor
+import timber.log.Timber
 
 internal fun Context.setupCamera(
     lifecycleOwner: LifecycleOwner,
@@ -28,36 +28,30 @@ internal fun Context.setupCamera(
     cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
     onSuccess: (List<Barcode>) -> Unit,
     onError: (error: String) -> Unit,
-    onAutoFocusTriggered: () -> Unit
+    onAutoFocusTriggered: () -> Unit,
 ): PreviewView {
 
     val previewView = PreviewView(this)
     try {
-        val resolutionStrategy = ResolutionStrategy(
-            Size(
-                1920,
-                1080
-            ),
-            ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
-        )
-        val resolutionSelector = ResolutionSelector.Builder()
-            .setResolutionStrategy(resolutionStrategy)
-            .build()
+        val resolutionStrategy =
+            ResolutionStrategy(
+                Size(1920, 1080),
+                ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
+            )
+        val resolutionSelector =
+            ResolutionSelector.Builder().setResolutionStrategy(resolutionStrategy).build()
 
-        val preview = Preview.Builder()
-            .setResolutionSelector(resolutionSelector)
-            .build()
-        val selector = CameraSelector.Builder()
-            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-            .build()
+        val preview = Preview.Builder().setResolutionSelector(resolutionSelector).build()
+        val selector =
+            CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
 
         preview.surfaceProvider = previewView.surfaceProvider
 
-
-        val imageAnalysis = ImageAnalysis.Builder()
-            .setResolutionSelector(resolutionSelector)
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
+        val imageAnalysis =
+            ImageAnalysis.Builder()
+                .setResolutionSelector(resolutionSelector)
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
         imageAnalysis.setAnalyzer(
             executor,
             BarcodeAnalyzer(
@@ -65,19 +59,15 @@ internal fun Context.setupCamera(
                     this.unbindCameraListener(cameraProviderFuture)
                     onSuccess(it)
                 },
-                onError = onError
-            )
+                onError = onError,
+            ),
         )
 
         val cameraProvider = cameraProviderFuture.get()
         cameraProvider.unbindAll()
 
-        val camera = cameraProvider.bindToLifecycle(
-            lifecycleOwner,
-            selector,
-            preview,
-            imageAnalysis,
-        )
+        val camera =
+            cameraProvider.bindToLifecycle(lifecycleOwner, selector, preview, imageAnalysis)
 
         // In some devices auto-focus does not work very well
         // We should allow user to touch and perform focus,
@@ -87,13 +77,8 @@ internal fun Context.setupCamera(
             if (event.action == MotionEvent.ACTION_UP) {
                 Timber.d("Auto-focus requested : ${event.x} ${event.y}")
                 val factory = previewView.meteringPointFactory
-                val point = factory.createPoint(
-                    event.x,
-                    event.y
-                )
-                val action = FocusMeteringAction.Builder(point)
-                    .disableAutoCancel()
-                    .build()
+                val point = factory.createPoint(event.x, event.y)
+                val action = FocusMeteringAction.Builder(point).disableAutoCancel().build()
                 camera.cameraControl.startFocusAndMetering(action)
                 onAutoFocusTriggered()
                 previewView.performClick()
@@ -107,20 +92,17 @@ internal fun Context.setupCamera(
 }
 
 internal fun Context.unbindCameraListener(
-    cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
+    cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
 ) {
     cameraProviderFuture.addListener(
         {
             try {
                 cameraProviderFuture.get().unbindAll()
             } catch (e: Exception) {
-                Timber.e(
-                    e,
-                    "Failed to unbind camera"
-                )
+                Timber.e(e, "Failed to unbind camera")
             }
         },
-        ContextCompat.getMainExecutor(this)
+        ContextCompat.getMainExecutor(this),
     )
 }
 
@@ -146,24 +128,21 @@ private class BarcodeAnalyzer(
             return
         }
         try {
-            currentScanner.process(
-                InputImage.fromMediaImage(
-                    mediaImage,
-                    imageProxy.imageInfo.rotationDegrees
+            currentScanner
+                .process(
+                    InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
                 )
-            ).addOnSuccessListener { barcode ->
-                barcode?.takeIf { it.isNotEmpty() }
-                    ?.let(onSuccess)
-            }.addOnFailureListener { e ->
-                onError(e.message ?: e.toString())
-                imageProxy.close()
-            }.addOnCompleteListener {
-                imageProxy.close()
-            }
+                .addOnSuccessListener { barcode ->
+                    barcode?.takeIf { it.isNotEmpty() }?.let(onSuccess)
+                }
+                .addOnFailureListener { e ->
+                    onError(e.message ?: e.toString())
+                    imageProxy.close()
+                }
+                .addOnCompleteListener { imageProxy.close() }
         } catch (e: Exception) {
             onError(e.message ?: e.toString())
             imageProxy.close()
-
         }
     }
 }

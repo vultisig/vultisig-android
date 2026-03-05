@@ -43,7 +43,7 @@ fun VsExpandableTopBar(
     modifier: Modifier = Modifier,
     backgroundColor: Color,
     expandedContent: @Composable BoxScope.() -> Unit,
-    collapsedContent: @Composable BoxScope.() -> Unit
+    collapsedContent: @Composable BoxScope.() -> Unit,
 ) {
     var expandedHeightPx by remember { mutableIntStateOf(0) }
     var collapsedHeightPx by remember { mutableIntStateOf(0) }
@@ -52,23 +52,19 @@ fun VsExpandableTopBar(
 
     if (isMeasuring) {
         Box(
-            modifier = Modifier
-                .alpha(0f)
-                .fillMaxWidth()
-                .onGloballyPositioned { coordinates ->
+            modifier =
+                Modifier.alpha(0f).fillMaxWidth().onGloballyPositioned { coordinates ->
                     val newHeight = coordinates.size.height
                     if (newHeight > 0) {
                         expandedHeightPx = newHeight
                     }
                 },
-            content = expandedContent
+            content = expandedContent,
         )
 
         Box(
-            modifier = Modifier
-                .alpha(0f)
-                .fillMaxWidth()
-                .onGloballyPositioned { coordinates ->
+            modifier =
+                Modifier.alpha(0f).fillMaxWidth().onGloballyPositioned { coordinates ->
                     val newHeight = coordinates.size.height
                     if (newHeight > 0) {
                         collapsedHeightPx = newHeight
@@ -77,23 +73,16 @@ fun VsExpandableTopBar(
                         }
                     }
                 },
-            content = collapsedContent
+            content = collapsedContent,
         )
     }
-
 
     Layout(
         modifier = Modifier.alpha(0f),
         content = {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                content = expandedContent
-            )
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                content = collapsedContent
-            )
-        }
+            Box(modifier = Modifier.fillMaxWidth(), content = expandedContent)
+            Box(modifier = Modifier.fillMaxWidth(), content = collapsedContent)
+        },
     ) { measurables, constraints ->
         val expandedPlaceable = measurables[0].measure(constraints)
         val collapsedPlaceable = measurables[1].measure(constraints)
@@ -109,9 +98,10 @@ fun VsExpandableTopBar(
     }
 
     if (!isMeasuring && expandedHeightPx > 0 && collapsedHeightPx > 0) {
-        val heightDiffPx = remember(expandedHeightPx, collapsedHeightPx) {
-            (expandedHeightPx - collapsedHeightPx).toFloat()
-        }
+        val heightDiffPx =
+            remember(expandedHeightPx, collapsedHeightPx) {
+                (expandedHeightPx - collapsedHeightPx).toFloat()
+            }
         val offsetLimit = remember(heightDiffPx) { -heightDiffPx }
 
         val animatedOffset = remember { Animatable(0f) }
@@ -141,27 +131,25 @@ fun VsExpandableTopBar(
 
         LaunchedEffect(Unit) {
             snapshotFlow { animatedOffset.value }
-                .collect { value ->
-                    scrollBehavior.state.heightOffset = value
+                .collect { value -> scrollBehavior.state.heightOffset = value }
+        }
+
+        val offset by remember { derivedStateOf { scrollBehavior.state.heightOffset } }
+
+        val collapseFraction =
+            remember(offset, offsetLimit) {
+                if (offsetLimit < 0f) {
+                    (offset / offsetLimit).coerceIn(0f, 1f)
+                } else {
+                    0f
                 }
-        }
-
-        val offset by remember {
-            derivedStateOf { scrollBehavior.state.heightOffset }
-        }
-
-        val collapseFraction = remember(offset, offsetLimit) {
-            if (offsetLimit < 0f) {
-                (offset / offsetLimit).coerceIn(0f, 1f)
-            } else {
-                0f
             }
-        }
 
         val expandedFraction = remember(collapseFraction) { 1f - collapseFraction }
-        val currentHeightPx = remember(expandedFraction, expandedHeightPx, collapsedHeightPx) {
-            collapsedHeightPx + (expandedHeightPx - collapsedHeightPx) * expandedFraction
-        }
+        val currentHeightPx =
+            remember(expandedFraction, expandedHeightPx, collapsedHeightPx) {
+                collapsedHeightPx + (expandedHeightPx - collapsedHeightPx) * expandedFraction
+            }
 
         val coroutineScope = rememberCoroutineScope()
 
@@ -172,30 +160,32 @@ fun VsExpandableTopBar(
         }
 
         Surface(
-            modifier = modifier
-                .height(with(density) { currentHeightPx.toDp() })
-                .draggable(
-                    orientation = Orientation.Vertical,
-                    state = dragState,
-                    onDragStopped = {
-                        val target = if (expandedFraction < 0.5f) offsetLimit else 0f
-                        animatedOffset.animateTo(
-                            targetValue = target,
-                            animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
-                        )
-                    }
-                ),
+            modifier =
+                modifier
+                    .height(with(density) { currentHeightPx.toDp() })
+                    .draggable(
+                        orientation = Orientation.Vertical,
+                        state = dragState,
+                        onDragStopped = {
+                            val target = if (expandedFraction < 0.5f) offsetLimit else 0f
+                            animatedOffset.animateTo(
+                                targetValue = target,
+                                animationSpec =
+                                    tween(durationMillis = 300, easing = FastOutSlowInEasing),
+                            )
+                        },
+                    ),
             tonalElevation = 0.dp,
-            color = backgroundColor
+            color = backgroundColor,
         ) {
             Crossfade(
                 targetState = expandedFraction > 0.5f,
                 animationSpec = tween(durationMillis = 150),
-                label = "content_transition"
+                label = "content_transition",
             ) { isExpanded ->
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    content = if (isExpanded) expandedContent else collapsedContent
+                    content = if (isExpanded) expandedContent else collapsedContent,
                 )
             }
         }

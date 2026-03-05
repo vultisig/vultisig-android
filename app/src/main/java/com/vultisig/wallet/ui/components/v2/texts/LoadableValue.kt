@@ -42,22 +42,19 @@ internal fun LoadableValue(
     minLines: Int = 1,
     onTextLayout: ((TextLayoutResult) -> Unit)? = null,
 ) {
-    AnimatedContent(
-        modifier = modifier,
-        targetState = value,
-    ) { v ->
+    AnimatedContent(modifier = modifier, targetState = value) { v ->
         ToggleVisibilityText(
             text = v ?: "",
             isVisible = isVisible,
             style = style,
             color = color,
             maxLines = maxLines,
-            modifier = modifier
-                .clip(RoundedCornerShape(2.dp))
-                .background(Theme.v2.colors.backgrounds.tertiary_2)
-                .defaultMinSize(minWidth = 20.dp, minHeight = 16.dp).takeIf {
-                    v == null
-                } ?: modifier,
+            modifier =
+                modifier
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Theme.v2.colors.backgrounds.tertiary_2)
+                    .defaultMinSize(minWidth = 20.dp, minHeight = 16.dp)
+                    .takeIf { v == null } ?: modifier,
             fontSize = fontSize,
             fontStyle = fontStyle,
             fontWeight = fontWeight,

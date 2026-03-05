@@ -21,36 +21,25 @@ internal fun ChainSelectorPickerItem(
     distanceFromCenter: Int,
     modifier: Modifier = Modifier,
 ) {
-    PopupPickerItem(
-        distanceFromCenter = distanceFromCenter,
-        modifier = modifier
-    ) {
+    PopupPickerItem(distanceFromCenter = distanceFromCenter, modifier = modifier) {
         Row(
-            modifier = Modifier
-                .width(FAST_SELECTION_MODAL_WIDTH),
+            modifier = Modifier.width(FAST_SELECTION_MODAL_WIDTH),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
-
             TokenLogo(
-                errorLogoModifier = Modifier
-                    .size(40.dp)
-                    .background(Theme.v2.colors.neutrals.n100),
+                errorLogoModifier = Modifier.size(40.dp).background(Theme.v2.colors.neutrals.n100),
                 logo = item.logo,
                 title = item.title,
-                modifier = Modifier
-                    .size(40.dp)
+                modifier = Modifier.size(40.dp),
             )
 
-
-            UiSpacer(
-                size = 10.dp
-            )
+            UiSpacer(size = 10.dp)
 
             Text(
                 text = item.chain.raw,
                 color = Theme.v2.colors.text.primary,
-                style = Theme.brockmann.body.m.medium
+                style = Theme.brockmann.body.m.medium,
             )
         }
     }

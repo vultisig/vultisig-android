@@ -14,12 +14,11 @@ interface AllowanceRepository {
         srcAddress: String,
         dstAddress: String,
     ): BigInteger?
-
 }
 
-internal class AllowanceRepositoryImpl @Inject constructor(
-    private val evmApiFactory: EvmApiFactory,
-) : AllowanceRepository {
+internal class AllowanceRepositoryImpl
+@Inject
+constructor(private val evmApiFactory: EvmApiFactory) : AllowanceRepository {
 
     override suspend fun getAllowance(
         chain: Chain,
@@ -28,11 +27,12 @@ internal class AllowanceRepositoryImpl @Inject constructor(
         dstAddress: String,
     ): BigInteger? =
         if (contractAddress.isEmpty() || chain.standard != TokenStandard.EVM) null
-        else evmApiFactory.createEvmApi(chain)
-            .getAllowance(
-                contractAddress = contractAddress,
-                owner = srcAddress,
-                spender = dstAddress,
-            )
-
+        else
+            evmApiFactory
+                .createEvmApi(chain)
+                .getAllowance(
+                    contractAddress = contractAddress,
+                    owner = srcAddress,
+                    spender = dstAddress,
+                )
 }

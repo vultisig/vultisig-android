@@ -14,7 +14,9 @@ fun interface RequestQrScanUseCase {
     suspend operator fun invoke(): String?
 }
 
-internal class RequestQrScanUseCaseImpl @Inject constructor(
+internal class RequestQrScanUseCaseImpl
+@Inject
+constructor(
     private val navigator: Navigator<Destination>,
     private val requestResultRepo: RequestResultRepository,
 ) : RequestQrScanUseCase {

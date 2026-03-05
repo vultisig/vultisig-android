@@ -7,29 +7,23 @@ import com.vultisig.wallet.ui.utils.UiText.DynamicString
 import com.vultisig.wallet.ui.utils.UiText.FormattedText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 
-
 sealed class UiText {
     data class DynamicString(val text: String) : UiText()
+
     data class StringResource(val resId: Int) : UiText()
-    data class FormattedText(
-        val resId: Int,
-        val formatArgs: List<Any>
-    ) : UiText()
+
+    data class FormattedText(val resId: Int, val formatArgs: List<Any>) : UiText()
 
     companion object {
         val Empty: DynamicString = DynamicString("")
     }
-
 }
 
-internal fun Int.asUiText(vararg args: Any): UiText =
-    FormattedText(this, args.toList())
+internal fun Int.asUiText(vararg args: Any): UiText = FormattedText(this, args.toList())
 
-fun Int.asUiText(): UiText =
-    StringResource(this)
+fun Int.asUiText(): UiText = StringResource(this)
 
-fun String.asUiText(): UiText =
-    DynamicString(this)
+fun String.asUiText(): UiText = DynamicString(this)
 
 @Composable
 fun UiText.asString(): String {
@@ -50,7 +44,5 @@ fun UiText.asString(context: Context): String {
 }
 
 infix fun String?.or(resId: Int): UiText {
-    return if (this.isNullOrBlank())
-        StringResource(resId)
-    else DynamicString(this)
+    return if (this.isNullOrBlank()) StringResource(resId) else DynamicString(this)
 }

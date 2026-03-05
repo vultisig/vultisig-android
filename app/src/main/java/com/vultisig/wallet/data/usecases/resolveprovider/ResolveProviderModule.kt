@@ -13,14 +13,12 @@ internal interface ResolveProviderModule {
     @Binds
     @Singleton
     fun bindDefaultSwapProviderSelectionStrategy(
-        impl: DefaultSwapProviderSelectionStrategyImpl,
+        impl: DefaultSwapProviderSelectionStrategyImpl
     ): DefaultSwapProviderSelectionStrategy
-
 
     @Binds
     @Singleton
     fun bindKyberSwapProviderSelectionStrategy(
-        impl: KyberSwapProviderSelectionStrategyImpl,
+        impl: KyberSwapProviderSelectionStrategyImpl
     ): KyberSwapProviderSelectionStrategy
-
 }

@@ -4,7 +4,6 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -41,7 +40,7 @@ internal fun V3Scaffold(
                 onBackClick = onBackClick,
                 transparentBackground = applyGradientBackground,
             )
-        }
+        },
     )
 }
 
@@ -71,7 +70,7 @@ internal fun V3Scaffold(
                 actions = actions,
                 transparentBackground = applyGradientBackground,
             )
-        }
+        },
     )
 }
 
@@ -100,24 +99,17 @@ internal fun V3Scaffold(
                 title = title,
                 onBackClick = onBackClick,
                 transparentBackground = applyGradientBackground,
-                actions = rightIcon?.let {
-                    {
-                        V3TopbarButton(
-                            icon = rightIcon,
-                            onClick = onRightIconClick ?: {}
-                        )
-                    }
-                } ?: {},
+                actions =
+                    rightIcon?.let {
+                        { V3TopbarButton(icon = rightIcon, onClick = onRightIconClick ?: {}) }
+                    } ?: {},
             )
-        }
+        },
     )
 }
 
 @Composable
-internal fun V3TopbarButton(
-    icon: Int,
-    onClick: () -> Unit
-) {
+internal fun V3TopbarButton(icon: Int, onClick: () -> Unit) {
     VsCircleButton(
         icon = icon,
         onClick = onClick,
@@ -138,41 +130,33 @@ internal fun V3Scaffold(
     bottomBar: @Composable () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
-    Scaffold(
-        topBar = topBar,
-        bottomBar = bottomBar,
-        modifier = modifier,
-    ) {
-        if(applyGradientBackground) {
+    Scaffold(topBar = topBar, bottomBar = bottomBar, modifier = modifier) {
+        if (applyGradientBackground) {
             V3Background()
         }
         Box(
-            modifier = Modifier
-                .then(
-                    if (applyGradientBackground)
-                        Modifier
-                    else Modifier.background(
-                        color = Theme.v2.colors.backgrounds.background
+            modifier =
+                Modifier.then(
+                        if (applyGradientBackground) Modifier
+                        else Modifier.background(color = Theme.v2.colors.backgrounds.background)
                     )
-                )
-                .then(
-                    if (applyScaffoldPaddings) {
-                        Modifier.padding(it)
-                    } else {
-                        Modifier
-                    }
-                )
-                .then(
-                    if (applyDefaultPaddings) {
-                        Modifier
-                            .padding(
+                    .then(
+                        if (applyScaffoldPaddings) {
+                            Modifier.padding(it)
+                        } else {
+                            Modifier
+                        }
+                    )
+                    .then(
+                        if (applyDefaultPaddings) {
+                            Modifier.padding(
                                 horizontal = V3Scaffold.PADDING_HORIZONTAL,
                                 vertical = V3Scaffold.PADDING_VERTICAL,
                             )
-                    } else {
-                        Modifier
-                    }
-                )
+                        } else {
+                            Modifier
+                        }
+                    )
         ) {
             content()
         }
@@ -182,6 +166,4 @@ internal fun V3Scaffold(
 internal object V3Scaffold {
     internal val PADDING_VERTICAL = 12.dp
     internal val PADDING_HORIZONTAL = 24.dp
-
 }
-

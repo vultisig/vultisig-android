@@ -28,69 +28,57 @@ enum class TransactionType {
     FUNCTIONS,
 }
 
-
 @Composable
 fun TransactionTypeButton(
     modifier: Modifier = Modifier,
     txType: TransactionType,
-    isSelected: Boolean = when (txType) {
-        TransactionType.SWAP -> true
-        else -> false
-    },
-    onClick: () -> Unit = {}
+    isSelected: Boolean =
+        when (txType) {
+            TransactionType.SWAP -> true
+            else -> false
+        },
+    onClick: () -> Unit = {},
 ) {
 
-    val backgroundColor = if (isSelected)
-        Theme.v2.colors.buttons.tertiary
-    else Theme.v2.colors.backgrounds.tertiary_2
+    val backgroundColor =
+        if (isSelected) Theme.v2.colors.buttons.tertiary else Theme.v2.colors.backgrounds.tertiary_2
 
-    val (logo, title) = when (txType) {
-        TransactionType.SWAP -> R.drawable.swap_v2 to R.string.transaction_type_button_swap
-        TransactionType.BUY -> R.drawable.buy to R.string.transaction_type_button_buy
-        TransactionType.SEND -> R.drawable.send to R.string.transaction_type_button_send
-        TransactionType.RECEIVE -> R.drawable.receive to R.string.transaction_type_button_receive
-        TransactionType.FUNCTIONS -> R.drawable.functions to R.string.transaction_type_button_functions
-    }
-
-
-    Column(
-        modifier = modifier
-            .clickOnce(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-
-        Box(
-            modifier = Modifier
-                .size(
-                    size = 52.dp
-                )
-                .clip(
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.03f),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .background(backgroundColor),
-            contentAlignment = Alignment.Center
-        ) {
-            UiIcon(
-                drawableResId = logo,
-                size = 24.dp,
-                tint = Theme.v2.colors.text.primary
-            )
+    val (logo, title) =
+        when (txType) {
+            TransactionType.SWAP -> R.drawable.swap_v2 to R.string.transaction_type_button_swap
+            TransactionType.BUY -> R.drawable.buy to R.string.transaction_type_button_buy
+            TransactionType.SEND -> R.drawable.send to R.string.transaction_type_button_send
+            TransactionType.RECEIVE ->
+                R.drawable.receive to R.string.transaction_type_button_receive
+            TransactionType.FUNCTIONS ->
+                R.drawable.functions to R.string.transaction_type_button_functions
         }
 
-        UiSpacer(
-            4.dp
-        )
+    Column(
+        modifier = modifier.clickOnce(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier =
+                Modifier.size(size = 52.dp)
+                    .clip(shape = RoundedCornerShape(16.dp))
+                    .border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.03f),
+                        shape = RoundedCornerShape(16.dp),
+                    )
+                    .background(backgroundColor),
+            contentAlignment = Alignment.Center,
+        ) {
+            UiIcon(drawableResId = logo, size = 24.dp, tint = Theme.v2.colors.text.primary)
+        }
+
+        UiSpacer(4.dp)
 
         Text(
             text = stringResource(title),
             color = Theme.v2.colors.text.primary,
-            style = Theme.brockmann.supplementary.caption
+            style = Theme.brockmann.supplementary.caption,
         )
     }
 }
@@ -98,17 +86,11 @@ fun TransactionTypeButton(
 @Preview
 @Composable
 private fun PreviewTransactionTypeButton() {
-    TransactionTypeButton(
-        txType = TransactionType.SWAP,
-        isSelected = true
-    )
+    TransactionTypeButton(txType = TransactionType.SWAP, isSelected = true)
 }
 
 @Preview
 @Composable
 private fun PreviewTransactionTypeButton2() {
-    TransactionTypeButton(
-        txType = TransactionType.SEND,
-        isSelected = false
-    )
+    TransactionTypeButton(txType = TransactionType.SEND, isSelected = false)
 }

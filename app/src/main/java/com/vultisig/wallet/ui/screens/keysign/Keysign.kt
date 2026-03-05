@@ -35,21 +35,24 @@ internal fun KeysignView(
     showToolbar: Boolean = false,
     showSaveToAddressBook: Boolean,
 ) {
-    val text = when (state) {
-        is KeysignState.CreatingInstance -> stringResource(id = R.string.keysign_screen_preparing_vault)
-        is KeysignState.KeysignECDSA -> stringResource(id = R.string.keysign_screen_signing_with_ecdsa)
-        is KeysignState.KeysignEdDSA -> stringResource(id = R.string.keysign_screen_signing_with_eddsa)
-        is KeysignState.KeysignFinished -> stringResource(id = R.string.keysign_screen_keysign_finished)
-        is KeysignState.Error -> stringResource(
-            id = R.string.keysign_screen_error_please_try_again,
-            state.errorMessage,
-        )
-    }
+    val text =
+        when (state) {
+            is KeysignState.CreatingInstance ->
+                stringResource(id = R.string.keysign_screen_preparing_vault)
+            is KeysignState.KeysignECDSA ->
+                stringResource(id = R.string.keysign_screen_signing_with_ecdsa)
+            is KeysignState.KeysignEdDSA ->
+                stringResource(id = R.string.keysign_screen_signing_with_eddsa)
+            is KeysignState.KeysignFinished ->
+                stringResource(id = R.string.keysign_screen_keysign_finished)
+            is KeysignState.Error ->
+                stringResource(
+                    id = R.string.keysign_screen_error_please_try_again,
+                    state.errorMessage,
+                )
+        }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (state) {
             is KeysignState.KeysignFinished -> {
                 when (transactionTypeUiModel) {
@@ -93,25 +96,20 @@ internal fun KeysignView(
                             onBack = onBack,
                             transactionTypeUiModel = transactionTypeUiModel,
                             showToolbar = showToolbar,
-                            onUriClick = uriHandler::openUri
+                            onUriClick = uriHandler::openUri,
                         )
                     }
                 }
             }
 
             is KeysignState.Error -> {
-                KeysignErrorScreen(
-                    errorMessage = state.errorMessage,
-                    tryAgain = onBack
-                )
+                KeysignErrorScreen(errorMessage = state.errorMessage, tryAgain = onBack)
             }
 
             else -> {
                 KeepScreenOn()
 
-                VsSigningProgressIndicator(
-                    text = text,
-                )
+                VsSigningProgressIndicator(text = text)
             }
         }
     }
@@ -127,13 +125,14 @@ private fun KeysignPreview() {
         approveTransactionHash = "0x1234567890",
         transactionLink = "",
         approveTransactionLink = "",
-        transactionTypeUiModel = TransactionTypeUiModel.Send(
-            TransactionDetailsUiModel(
-                srcAddress = "0x1234567890",
-                dstAddress = "0x1234567890",
-                memo = "some memo",
-            )
-        ),
+        transactionTypeUiModel =
+            TransactionTypeUiModel.Send(
+                TransactionDetailsUiModel(
+                    srcAddress = "0x1234567890",
+                    dstAddress = "0x1234567890",
+                    memo = "some memo",
+                )
+            ),
         onComplete = {},
         onAddToAddressBook = {},
         showSaveToAddressBook = true,

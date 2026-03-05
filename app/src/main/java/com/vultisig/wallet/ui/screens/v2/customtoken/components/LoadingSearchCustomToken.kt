@@ -25,26 +25,20 @@ internal fun LoadingSearchCustomToken() {
     V2Container(
         type = ContainerType.TERTIARY,
         cornerType = CornerType.RoundedCornerShape(size = 24.dp),
-        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal)
+        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal),
     ) {
         Column(
-            modifier = Modifier.Companion
-                .fillMaxWidth()
-                .padding(all = 16.dp),
+            modifier = Modifier.Companion.fillMaxWidth().padding(all = 16.dp),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Companion.CenterHorizontally
+            horizontalAlignment = Alignment.Companion.CenterHorizontally,
         ) {
-
             V2Loading()
 
-            UiSpacer(
-                size = 8.dp
-            )
+            UiSpacer(size = 8.dp)
             Text(
                 text = stringResource(R.string.custom_token_screen_finding_token),
                 color = Theme.v2.colors.text.primary,
-                style = Theme.brockmann.supplementary.footnote
-
+                style = Theme.brockmann.supplementary.footnote,
             )
         }
     }
@@ -52,6 +46,6 @@ internal fun LoadingSearchCustomToken() {
 
 @Preview
 @Composable
-private fun PreviewLoadingSearchCustomToken(){
+private fun PreviewLoadingSearchCustomToken() {
     LoadingSearchCustomToken()
 }

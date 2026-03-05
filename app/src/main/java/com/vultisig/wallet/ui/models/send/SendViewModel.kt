@@ -16,12 +16,14 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
-internal class SendViewModel @Inject constructor(
+internal class SendViewModel
+@Inject
+constructor(
     private val sendNavigator: Navigator<SendDst>,
     private val mainNavigator: Navigator<Destination>,
     val addressProvider: AddressProvider,
@@ -36,12 +38,7 @@ internal class SendViewModel @Inject constructor(
     private val vaultId = savedStateHandle.toRoute<Route.SignMessage>().vaultId
 
     init {
-        viewModelScope.launch {
-            vaultRepository.get(vaultId)
-                ?.let {
-                    currentVault.value = it
-                }
-        }
+        viewModelScope.launch { vaultRepository.get(vaultId)?.let { currentVault.value = it } }
     }
 
     fun finishKeysign() {
@@ -49,20 +46,13 @@ internal class SendViewModel @Inject constructor(
     }
 
     fun onGasSettingsClick() {
-        viewModelScope.launch {
-            advanceGasUiRepository.showSettings()
-        }
+        viewModelScope.launch { advanceGasUiRepository.showSettings() }
     }
 
     fun navigateToHome(useMainNavigator: Boolean) {
         viewModelScope.launch {
             if (isKeysignFinished.value) {
-                mainNavigator.route(
-                    Route.Home(),
-                    NavigationOptions(
-                        clearBackStack = true
-                    )
-                )
+                mainNavigator.route(Route.Home(), NavigationOptions(clearBackStack = true))
             }
             if (useMainNavigator) {
                 mainNavigator.navigate(Destination.Back)

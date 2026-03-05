@@ -28,36 +28,29 @@ internal fun VsCircularLoading(
     color1: Color = Theme.v2.colors.buttons.tertiary,
     color2: Color = Color.Transparent,
 ) {
-    val infiniteTransition = rememberInfiniteTransition(
-        label = "VsCircularLoadingTransition"
-    )
-    val angle by infiniteTransition.animateFloat(
-        initialValue = 0F,
-        targetValue = 360F,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 1000,
-                easing = LinearEasing
-            )
-        ),
-        label = "angleAnimation"
-    )
+    val infiniteTransition = rememberInfiniteTransition(label = "VsCircularLoadingTransition")
+    val angle by
+        infiniteTransition.animateFloat(
+            initialValue = 0F,
+            targetValue = 360F,
+            animationSpec =
+                infiniteRepeatable(animation = tween(durationMillis = 1000, easing = LinearEasing)),
+            label = "angleAnimation",
+        )
     Canvas(modifier = modifier.rotate(angle)) {
         drawArc(
-            brush = Brush.sweepGradient(
-                0f to color2,
-                0.95f to color1,
-                0.96f to color2, // there was a problem with start of the gradient
-            ),
+            brush =
+                Brush.sweepGradient(
+                    0f to color2,
+                    0.95f to color1,
+                    0.96f to color2, // there was a problem with start of the gradient
+                ),
             size = Size(size.width - strokeWidth, size.height - strokeWidth),
             topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
             startAngle = 0f,
             sweepAngle = 300f,
             useCenter = false,
-            style = Stroke(
-                width = strokeWidth,
-                cap = StrokeCap.Round,
-            ),
+            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
         )
     }
 }
@@ -65,7 +58,5 @@ internal fun VsCircularLoading(
 @Preview
 @Composable
 private fun VsCircularLoadingPreview() {
-    VsCircularLoading(
-        modifier = Modifier.size(50.dp)
-    )
+    VsCircularLoading(modifier = Modifier.size(50.dp))
 }

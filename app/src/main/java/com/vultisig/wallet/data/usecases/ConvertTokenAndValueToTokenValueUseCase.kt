@@ -10,10 +10,6 @@ internal interface ConvertTokenAndValueToTokenValueUseCase : (Coin, BigInteger) 
 internal class ConvertTokenAndValueToTokenValueUseCaseImpl @Inject constructor() :
     ConvertTokenAndValueToTokenValueUseCase {
 
-    override fun invoke(token: Coin, value: BigInteger): TokenValue = TokenValue(
-        value = value,
-        unit = token.ticker,
-        decimals = token.decimal
-    )
-
+    override fun invoke(token: Coin, value: BigInteger): TokenValue =
+        TokenValue(value = value, unit = token.ticker, decimals = token.decimal)
 }

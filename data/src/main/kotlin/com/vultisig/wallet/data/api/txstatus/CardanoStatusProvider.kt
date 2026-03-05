@@ -14,7 +14,6 @@ class CardanoStatusProvider @Inject constructor(private val cardanoApi: CardanoA
             val txStatus = cardanoApi.getTxStatus(txHash)
 
             when {
-
                 txStatus == null -> {
                     TransactionResult.NotFound
                 }

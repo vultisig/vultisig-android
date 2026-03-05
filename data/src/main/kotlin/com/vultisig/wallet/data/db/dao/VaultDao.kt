@@ -38,11 +38,9 @@ interface VaultDao {
     @Query("SELECT coinId FROM disabledCoin WHERE vaultId = :vaultId")
     suspend fun loadDisabledCoinIds(vaultId: VaultId): List<String>
 
-    @Query("SELECT COUNT(*) > 0 FROM vault")
-    suspend fun hasVaults(): Boolean
+    @Query("SELECT COUNT(*) > 0 FROM vault") suspend fun hasVaults(): Boolean
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertVault(vault: VaultEntity)
+    @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertVault(vault: VaultEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCoins(coins: List<CoinEntity>)
@@ -68,28 +66,21 @@ interface VaultDao {
     @Transaction
     suspend fun enableCoins(coins: List<CoinEntity>) {
         insertCoins(coins)
-        coins.forEach {
-            deleteFromDisabledCoin(vaultId = it.vaultId, coinId = it.id)
-        }
+        coins.forEach { deleteFromDisabledCoin(vaultId = it.vaultId, coinId = it.id) }
     }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDisabledCoin(disabledCoin: DisabledCoinEntity)
 
-    @Upsert
-    suspend fun upsertVault(vault: VaultEntity)
+    @Upsert suspend fun upsertVault(vault: VaultEntity)
 
-    @Upsert
-    suspend fun upsertCoins(coins: List<CoinEntity>)
+    @Upsert suspend fun upsertCoins(coins: List<CoinEntity>)
 
-    @Upsert
-    suspend fun upsertKeyshares(keyshares: List<KeyShareEntity>)
+    @Upsert suspend fun upsertKeyshares(keyshares: List<KeyShareEntity>)
 
-    @Upsert
-    suspend fun upsertSigners(signers: List<SignerEntity>)
+    @Upsert suspend fun upsertSigners(signers: List<SignerEntity>)
 
-    @Upsert
-    suspend fun upsertChainPublicKeys(chainPublicKeys: List<ChainPublicKeyEntity>)
+    @Upsert suspend fun upsertChainPublicKeys(chainPublicKeys: List<ChainPublicKeyEntity>)
 
     @Query("DELETE FROM chainPublicKey WHERE vaultId = :vaultId")
     suspend fun deleteChainPublicKeys(vaultId: String)
@@ -122,10 +113,9 @@ interface VaultDao {
     @Query("UPDATE vault SET name = :name WHERE id = :vaultId")
     suspend fun setVaultName(vaultId: String, name: String)
 
-    @Query("DELETE FROM signer WHERE vaultId = :vaultId")
-    suspend fun deleteSigners(vaultId: String)
-    @Query("DELETE FROM vault WHERE id = :vaultId")
-    suspend fun delete(vaultId: String)
+    @Query("DELETE FROM signer WHERE vaultId = :vaultId") suspend fun deleteSigners(vaultId: String)
+
+    @Query("DELETE FROM vault WHERE id = :vaultId") suspend fun delete(vaultId: String)
 
     @Query("DELETE FROM disabledCoin WHERE vaultId = :vaultId AND coinId = :coinId")
     suspend fun deleteFromDisabledCoin(vaultId: VaultId, coinId: String)
@@ -136,12 +126,6 @@ interface VaultDao {
     @Transaction
     suspend fun disableTokenFromVault(vaultId: String, tokenId: String, chain: String) {
         deleteTokenFromVault(vaultId, tokenId)
-        insertDisabledCoin(
-            DisabledCoinEntity(
-                vaultId = vaultId,
-                coinId = tokenId,
-                chain = chain,
-            )
-        )
+        insertDisabledCoin(DisabledCoinEntity(vaultId = vaultId, coinId = tokenId, chain = chain))
     }
 }

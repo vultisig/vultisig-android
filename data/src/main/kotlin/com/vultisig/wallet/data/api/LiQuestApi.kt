@@ -15,23 +15,23 @@ internal interface LiQuestApi {
     ): LiQuestResponseJson
 }
 
-internal class LiQuestApiImpl @Inject constructor(
-    private val http: HttpClient,
-) : LiQuestApi {
+internal class LiQuestApiImpl @Inject constructor(private val http: HttpClient) : LiQuestApi {
 
     override suspend fun getLifiContractPriceUsd(
         chain: Chain,
         contractAddresses: String,
-    ): LiQuestResponseJson = http.get("https://li.quest/v1/token") {
-        parameter("chain", chain.lifiChainId)
-        parameter("token", contractAddresses)
-    }.body()
-
+    ): LiQuestResponseJson =
+        http
+            .get("https://li.quest/v1/token") {
+                parameter("chain", chain.lifiChainId)
+                parameter("token", contractAddresses)
+            }
+            .body()
 
     private val Chain.lifiChainId: String
-        get() = when (this) {
-            Chain.Ethereum -> "eth"
-            else -> error("lifi chain id not found for chain $this")
-        }
+        get() =
+            when (this) {
+                Chain.Ethereum -> "eth"
+                else -> error("lifi chain id not found for chain $this")
+            }
 }
-

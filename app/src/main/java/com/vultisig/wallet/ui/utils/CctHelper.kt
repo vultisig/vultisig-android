@@ -20,10 +20,11 @@ internal fun Activity.openCct(uri: Uri, onError: () -> Unit = {}) {
 
 private fun Activity.getCustomTabsPackages(): ArrayList<ResolveInfo> {
     val pm = packageManager
-    val activityIntent = Intent()
-        .setAction(Intent.ACTION_VIEW)
-        .addCategory(Intent.CATEGORY_BROWSABLE)
-        .setData(Uri.fromParts("https", "", null))
+    val activityIntent =
+        Intent()
+            .setAction(Intent.ACTION_VIEW)
+            .addCategory(Intent.CATEGORY_BROWSABLE)
+            .setData(Uri.fromParts("https", "", null))
     val resolvedActivityList = pm.queryIntentActivities(activityIntent, 0)
     val packagesSupportingCustomTabs = ArrayList<ResolveInfo>()
     for (info in resolvedActivityList) {

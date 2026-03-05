@@ -24,31 +24,28 @@ internal interface NetworkModule {
 
         @Provides
         @Singleton
-        fun provideHttpClient(
-            baseConfig: HttpClientConfigurator,
-        ): HttpClient = HttpClient(OkHttp) {
-            baseConfig.configure(this)
+        fun provideHttpClient(baseConfig: HttpClientConfigurator): HttpClient =
+            HttpClient(OkHttp) {
+                baseConfig.configure(this)
 
-            if (BuildConfig.DEBUG) {
-                install(Logging) {
-                    logger = Logger.ANDROID
-                    level = LogLevel.ALL
+                if (BuildConfig.DEBUG) {
+                    install(Logging) {
+                        logger = Logger.ANDROID
+                        level = LogLevel.ALL
+                    }
+                }
+
+                install(HttpCache)
+
+                engine {
+                    config {
+                        connectTimeout(15, TimeUnit.SECONDS)
+                        readTimeout(15, TimeUnit.SECONDS)
+                        writeTimeout(15, TimeUnit.SECONDS)
+
+                        retryOnConnectionFailure(true)
+                    }
                 }
             }
-
-            install(HttpCache)
-
-            engine {
-                config {
-                    connectTimeout(15, TimeUnit.SECONDS)
-                    readTimeout(15, TimeUnit.SECONDS)
-                    writeTimeout(15, TimeUnit.SECONDS)
-
-                    retryOnConnectionFailure(true)
-                }
-            }
-        }
-
     }
-
 }

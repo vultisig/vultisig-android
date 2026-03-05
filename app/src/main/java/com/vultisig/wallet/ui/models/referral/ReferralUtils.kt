@@ -9,7 +9,7 @@ private fun validateMaxLength(code: String): UiText? {
     return if (code.length > MAX_LENGTH_REFERRAL_CODE) {
         UiText.FormattedText(
             R.string.referral_code_can_be_up_to_characters,
-            listOf(MAX_LENGTH_REFERRAL_CODE)
+            listOf(MAX_LENGTH_REFERRAL_CODE),
         )
     } else {
         null

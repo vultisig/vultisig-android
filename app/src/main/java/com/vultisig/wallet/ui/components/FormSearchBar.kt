@@ -17,24 +17,16 @@ import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun FormSearchBar(
-    textFieldState: TextFieldState,
-    modifier: Modifier = Modifier,
-) {
-    FormCard(
-        modifier = modifier,
-    ) {
+internal fun FormSearchBar(textFieldState: TextFieldState, modifier: Modifier = Modifier) {
+    FormCard(modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(
-                    horizontal = 12.dp,
-                )
+            modifier = Modifier.padding(horizontal = 12.dp),
         ) {
             UiIcon(
                 drawableResId = R.drawable.ic_search,
                 size = 24.dp,
-                tint = Theme.v2.colors.neutrals.n500
+                tint = Theme.v2.colors.neutrals.n500,
             )
 
             BasicFormTextField(
@@ -44,9 +36,7 @@ internal fun FormSearchBar(
                 onLostFocus = {
                     // todo no validation needed
                 },
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.padding(16.dp).fillMaxWidth(),
             )
         }
     }
@@ -55,7 +45,5 @@ internal fun FormSearchBar(
 @Preview
 @Composable
 private fun FormSearchBarPreview() {
-    FormSearchBar(
-        textFieldState = TextFieldState()
-    )
+    FormSearchBar(textFieldState = TextFieldState())
 }

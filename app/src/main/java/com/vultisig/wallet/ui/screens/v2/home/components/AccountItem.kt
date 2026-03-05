@@ -42,20 +42,15 @@ internal fun AccountItem(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .clickOnce(onClick = onClick)
-            .height(intrinsicSize = IntrinsicSize.Min),
+        modifier = modifier.clickOnce(onClick = onClick).height(intrinsicSize = IntrinsicSize.Min),
     ) {
         Image(
             painter = painterResource(id = account.logo),
             contentDescription = null,
-            modifier = Modifier
-                .size(36.dp)
+            modifier = Modifier.size(36.dp),
         )
 
-        UiSpacer(
-            size = 12.dp
-        )
+        UiSpacer(size = 12.dp)
 
         Column(
             modifier = Modifier.fillMaxHeight(),
@@ -72,21 +67,17 @@ internal fun AccountItem(
 
             CopiableAddress(
                 address = account.address,
-                modifier = Modifier
-                    .padding(top = 4.dp),
+                modifier = Modifier.padding(top = 4.dp),
                 onAddressCopied = onCopy,
             )
         }
 
-        UiSpacer(
-            weight = 1f
-        )
+        UiSpacer(weight = 1f)
 
         Column(
-            modifier = Modifier
-                .fillMaxHeight(),
+            modifier = Modifier.fillMaxHeight(),
             verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.End
+            horizontalAlignment = Alignment.End,
         ) {
             LoadableValue(
                 value = account.fiatAmount,
@@ -98,10 +89,8 @@ internal fun AccountItem(
             if (account.assetsSize > 1) {
                 ToggleVisibilityText(
                     isVisible = isBalanceVisible,
-                    text = stringResource(
-                        R.string.vault_accounts_account_assets,
-                        account.assetsSize
-                    ),
+                    text =
+                        stringResource(R.string.vault_accounts_account_assets, account.assetsSize),
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.tertiary,
                     maxLines = 1,
@@ -110,7 +99,7 @@ internal fun AccountItem(
             } else {
                 AnimatedContent(
                     targetState = account.nativeTokenAmount,
-                    label = "ChainAccount NativeTokenAmount"
+                    label = "ChainAccount NativeTokenAmount",
                 ) { nativeTokenAmount ->
                     if (nativeTokenAmount != null) {
                         ToggleVisibilityText(
@@ -122,16 +111,12 @@ internal fun AccountItem(
                             overflow = TextOverflow.Ellipsis,
                         )
                     } else {
-                        UiPlaceholderLoader(
-                            modifier = Modifier
-                                .width(48.dp)
-                        )
+                        UiPlaceholderLoader(modifier = Modifier.width(48.dp))
                     }
                 }
             }
-
         }
-        
+
         UiSpacer(size = 8.dp)
 
         UiIcon(
@@ -142,25 +127,26 @@ internal fun AccountItem(
     }
 }
 
-
 @Preview
 @Composable
 private fun PreviewAccounts() {
     AccountItem(
         isBalanceVisible = true,
         onCopy = {},
-        account = AccountUiModel(
-            chainName = "Ethereum",
-            logo = R.drawable.ethereum,
-            address = "0x123abc456bca123abc456bca123abc456bca",
-            nativeTokenAmount = "0.01",
-            fiatAmount = "999$",
-            assetsSize = 4,
-            model = Address(
-                chain = Chain.Ethereum,
-                address = "123abc456bca123abc456bca123abc456bca",
-                accounts = emptyList()
-            )
-        )
+        account =
+            AccountUiModel(
+                chainName = "Ethereum",
+                logo = R.drawable.ethereum,
+                address = "0x123abc456bca123abc456bca123abc456bca",
+                nativeTokenAmount = "0.01",
+                fiatAmount = "999$",
+                assetsSize = 4,
+                model =
+                    Address(
+                        chain = Chain.Ethereum,
+                        address = "123abc456bca123abc456bca123abc456bca",
+                        accounts = emptyList(),
+                    ),
+            ),
     )
 }

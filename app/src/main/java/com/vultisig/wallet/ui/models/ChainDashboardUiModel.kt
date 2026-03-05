@@ -10,21 +10,21 @@ import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.repositories.ChainDashboardBottomBarVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
+import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
+import com.vultisig.wallet.ui.navigation.ChainDashboardRouteNavType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
-import com.vultisig.wallet.ui.navigation.ChainDashboardRouteNavType
 import com.vultisig.wallet.ui.screens.v2.home.components.BOTH_CRYPTO_CONNECTION_TYPES
 import com.vultisig.wallet.ui.screens.v2.home.components.ONLY_WALLET
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlin.reflect.typeOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import kotlin.reflect.typeOf
 
 data class ChainDashboardUiModel(
     val isBottomBarVisible: Boolean = true,
@@ -34,24 +34,23 @@ data class ChainDashboardUiModel(
 )
 
 @HiltViewModel
-internal class ChainDashboardViewModel @Inject constructor(
+internal class ChainDashboardViewModel
+@Inject
+constructor(
     val savedStateHandle: SavedStateHandle,
     private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
     private val bottomBarVisibility: ChainDashboardBottomBarVisibilityRepository,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val args = savedStateHandle.toRoute<Route.ChainDashboard>(
-        typeMap = mapOf(
-            typeOf<ChainDashboardRoute>() to ChainDashboardRouteNavType
+    private val args =
+        savedStateHandle.toRoute<Route.ChainDashboard>(
+            typeMap = mapOf(typeOf<ChainDashboardRoute>() to ChainDashboardRouteNavType)
         )
-    )
-    private  lateinit var vaultId: VaultId
+    private lateinit var vaultId: VaultId
     private var chainId: ChainId? = null
 
-    val uiState = MutableStateFlow(
-        ChainDashboardUiModel()
-    )
+    val uiState = MutableStateFlow(ChainDashboardUiModel())
 
     init {
         initData()
@@ -76,7 +75,6 @@ internal class ChainDashboardViewModel @Inject constructor(
                 vaultId = args.route.vaultId
                 chainId = args.route.chainId
             }
-
         }
     }
 
@@ -86,48 +84,39 @@ internal class ChainDashboardViewModel @Inject constructor(
                 BOTH_CRYPTO_CONNECTION_TYPES
             else ONLY_WALLET
 
-        uiState.update {
-            it.copy(
-                availableCryptoTypes = availableCryptoTypes,
-            )
-        }
+        uiState.update { it.copy(availableCryptoTypes = availableCryptoTypes) }
     }
-
 
     private fun collectBottomBarVisibility() {
         bottomBarVisibility
             .getBottomBarVisibility()
             .onEach { isVisible ->
-                uiState.update { state ->
-                    state.copy(isBottomBarVisible = isVisible)
-                }
+                uiState.update { state -> state.copy(isBottomBarVisible = isVisible) }
             }
             .launchIn(viewModelScope)
     }
 
     private fun collectActiveRoute() {
-        cryptoConnectionTypeRepository
-            .activeCryptoConnectionFlow
+        cryptoConnectionTypeRepository.activeCryptoConnectionFlow
             .onEach { type ->
-                val activeRoute = when (type) {
-                    CryptoConnectionType.Wallet -> ChainDashboardRoute.Wallet(
-                        vaultId = vaultId,
-                        chainId = requireNotNull(chainId)
-                    )
+                val activeRoute =
+                    when (type) {
+                        CryptoConnectionType.Wallet ->
+                            ChainDashboardRoute.Wallet(
+                                vaultId = vaultId,
+                                chainId = requireNotNull(chainId),
+                            )
 
-                    CryptoConnectionType.Defi -> {
-                        if (chainId == Chain.ThorChain.id) {
-                            ChainDashboardRoute.PositionTokens(vaultId = vaultId)
-                        } else {
-                            ChainDashboardRoute.PositionCircle(vaultId = vaultId)
+                        CryptoConnectionType.Defi -> {
+                            if (chainId == Chain.ThorChain.id) {
+                                ChainDashboardRoute.PositionTokens(vaultId = vaultId)
+                            } else {
+                                ChainDashboardRoute.PositionCircle(vaultId = vaultId)
+                            }
                         }
                     }
-                }
                 uiState.update { state ->
-                    state.copy(
-                        route = activeRoute,
-                        cryptoConnectionType = type,
-                    )
+                    state.copy(route = activeRoute, cryptoConnectionType = type)
                 }
             }
             .launchIn(viewModelScope)
@@ -137,9 +126,7 @@ internal class ChainDashboardViewModel @Inject constructor(
         cryptoConnectionTypeRepository.setActiveCryptoConnection(cryptoConnectionType)
     }
 
-    fun openCamera(){
-        viewModelScope.launch {
-            navigator.route(Route.ScanQr(vaultId = vaultId))
-        }
+    fun openCamera() {
+        viewModelScope.launch { navigator.route(Route.ScanQr(vaultId = vaultId)) }
     }
 }

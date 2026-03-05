@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
-
 class HorizontalAnimatedPagerScope {
     val items = mutableListOf<@Composable () -> Unit>()
 
@@ -25,10 +24,8 @@ fun HorizontalAnimatedPager(
     AnimatedContent(
         targetState = index,
         modifier = modifier,
-        transitionSpec = {
-            if (targetState > initialState) slideRight() else slideLeft()
-        },
-        label = "HorizontalAnimatedPager"
+        transitionSpec = { if (targetState > initialState) slideRight() else slideLeft() },
+        label = "HorizontalAnimatedPager",
     ) { currentIndex ->
         items.getOrNull(currentIndex)?.invoke()
     }

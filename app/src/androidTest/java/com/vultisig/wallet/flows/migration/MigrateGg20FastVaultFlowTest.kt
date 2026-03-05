@@ -29,33 +29,32 @@ import com.vultisig.wallet.util.intendingBackup
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @Ignore
 @UninstallModules(FastVaultModule::class)
 @HiltAndroidTest
 class MigrateGg20FastVaultFlowTest : CleanTest() {
 
-    @get:Rule(order = LAST_ORDER_INDEX + 1)
-    val intents = IntentsRule()
+    @get:Rule(order = LAST_ORDER_INDEX + 1) val intents = IntentsRule()
 
-    @Inject
-    lateinit var secrets: SecretSettingsRepository
+    @Inject lateinit var secrets: SecretSettingsRepository
 
-    @Inject
-    lateinit var vaults: VaultRepository
+    @Inject lateinit var vaults: VaultRepository
 
     @BindValue
     @JvmField
     val verifyFastVaultBackupCodeUseCase: VerifyFastVaultBackupCodeUseCase =
-        VerifyFastVaultBackupCodeUseCase { _, _ -> true }
+        VerifyFastVaultBackupCodeUseCase { _, _ ->
+            true
+        }
 
     private var isDklsEnabled = false
         set(value) {
@@ -74,8 +73,7 @@ class MigrateGg20FastVaultFlowTest : CleanTest() {
 
         // generate new gg20 fast vault
         isDklsEnabled = false
-        FastVaultKeygenFlow(compose)
-            .execute(vaultName = vaultName)
+        FastVaultKeygenFlow(compose).execute(vaultName = vaultName)
 
         // migrate vault
         val accounts = VaultAccountsPage(compose)
@@ -87,10 +85,8 @@ class MigrateGg20FastVaultFlowTest : CleanTest() {
         compose.click(MigrationOnboardingScreenTags.NEXT)
         compose.click(MigrationOnboardingScreenTags.NEXT)
 
-
         compose.waitUntilShown("InputPasswordScreen.password")
-        compose.textField("InputPasswordScreen.password")
-            .performTextInput(TEST_VAULT_PASSWORD)
+        compose.textField("InputPasswordScreen.password").performTextInput(TEST_VAULT_PASSWORD)
 
         compose.click("InputPasswordScreen.next")
 
@@ -99,7 +95,6 @@ class MigrateGg20FastVaultFlowTest : CleanTest() {
         email.waitUntilShown()
         email.inputEmail(TEST_VAULT_EMAIL)
         email.next()
-
 
         // wait until migration is finished; 1 minute max
         val backupOnboarding = VaultBackupOnboardingPage(compose)
@@ -127,12 +122,9 @@ class MigrateGg20FastVaultFlowTest : CleanTest() {
         // assume it's home screens toolbar title with newly created vault
         compose.waitUntilAtLeastOneExists(hasText(vaultName), timeoutMillis = 10_000)
 
-        val migratedVault = runBlocking {
-            vaults.getAll()
-        }.find { it.name == vaultName }
+        val migratedVault = runBlocking { vaults.getAll() }.find { it.name == vaultName }
 
         // check if vault is migrated to dkls
         Assert.assertEquals(migratedVault?.libType, SigningLibType.DKLS)
     }
-
 }

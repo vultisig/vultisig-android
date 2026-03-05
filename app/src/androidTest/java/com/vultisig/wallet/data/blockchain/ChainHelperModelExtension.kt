@@ -10,8 +10,6 @@ import SwapPayload
 import ThorchainSwapPayload
 import TriggerSmartContractPayload
 import WasmExecuteContractPayload
-import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
-import com.vultisig.wallet.data.models.proto.v1.SignSolanaProto
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
@@ -19,6 +17,9 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
+import com.vultisig.wallet.data.models.proto.v1.SignSolanaProto
+import java.math.BigInteger
 import kotlinx.serialization.json.Json
 import vultisig.keysign.v1.CosmosCoin
 import vultisig.keysign.v1.CosmosFee
@@ -27,78 +28,74 @@ import vultisig.keysign.v1.CosmosMsg
 import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.TransactionType
 import vultisig.keysign.v1.TronTriggerSmartContractPayload
-import java.math.BigInteger
 
-fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.payload.KeysignPayload {
+fun KeysignPayload.toInternalKeySignPayload():
+    com.vultisig.wallet.data.models.payload.KeysignPayload {
     val coin = this.coin.toInternalCoinPayload()
 
     return com.vultisig.wallet.data.models.payload.KeysignPayload(
         coin = coin,
         toAddress = this.toAddress,
         toAmount = this.toAmount.toBigInteger(),
-        blockChainSpecific = this.blockchainSpecific.toBlockChainSpecific(
-            coin,
-            this.toAddress
-        ),
-        utxos = this.utxoInfo?.map {
-            UtxoInfo(
-                hash = it.hash,
-                amount = it.amount,
-                index = it.index.toUInt(),
-            )
-        } ?: emptyList(),
-        signAmino = this.signData?.signAmino?.let {
-            SignAmino(
-                fee = it.fee?.let { fee ->
-                    CosmosFee(
-                        amount = fee.amount.map { cosmosCoin ->
-                            CosmosCoin(
-                                denom = cosmosCoin.denom,
-                                amount = cosmosCoin.amount,
+        blockChainSpecific = this.blockchainSpecific.toBlockChainSpecific(coin, this.toAddress),
+        utxos =
+            this.utxoInfo?.map {
+                UtxoInfo(hash = it.hash, amount = it.amount, index = it.index.toUInt())
+            } ?: emptyList(),
+        signAmino =
+            this.signData?.signAmino?.let {
+                SignAmino(
+                    fee =
+                        it.fee?.let { fee ->
+                            CosmosFee(
+                                amount =
+                                    fee.amount.map { cosmosCoin ->
+                                        CosmosCoin(
+                                            denom = cosmosCoin.denom,
+                                            amount = cosmosCoin.amount,
+                                        )
+                                    }
                             )
-
                         },
-                    )
-                },
-                msgs = this.signData.signAmino.msgs.map { msg ->
-
-                    CosmosMsg(
-                        type = msg.type,
-                        value = Json.encodeToString(msg.value)
-                    )
-                }
-            )
-        },
-        signDirect = this.signData?.signDirect?.let {  signDirect ->
-            SignDirectProto(
-                bodyBytes = signDirect.bodyBytes,
-                authInfoBytes = signDirect.authInfoBytes,
-                chainId = signDirect.chainId,
-                accountNumber = signDirect.accountNumber,
-            )
-        },
-        signSolana = this.signData?.signSolana?.let { signSolana ->
-            SignSolanaProto(
-                rawTransactions = signSolana.rawTransactions
-            )
-        },
+                    msgs =
+                        this.signData.signAmino.msgs.map { msg ->
+                            CosmosMsg(type = msg.type, value = Json.encodeToString(msg.value))
+                        },
+                )
+            },
+        signDirect =
+            this.signData?.signDirect?.let { signDirect ->
+                SignDirectProto(
+                    bodyBytes = signDirect.bodyBytes,
+                    authInfoBytes = signDirect.authInfoBytes,
+                    chainId = signDirect.chainId,
+                    accountNumber = signDirect.accountNumber,
+                )
+            },
+        signSolana =
+            this.signData?.signSolana?.let { signSolana ->
+                SignSolanaProto(rawTransactions = signSolana.rawTransactions)
+            },
         memo = this.memo,
         vaultPublicKeyECDSA = this.vaultPublicKeyEcdsa,
         vaultLocalPartyID = "",
         libType = SigningLibType.valueOf(this.libType),
         wasmExecuteContractPayload = this.wasmExecuteContractPayload?.toWasmPayload(),
         swapPayload = this.swapPayload?.toInternalSwapPayload(),
-        approvePayload = this.approvePayload?.let {
-            com.vultisig.wallet.data.models.payload.ERC20ApprovePayload(
-                spender = it.spender,
-                amount = it.amount.toBigInteger(),
-            )
-        },
-        tronTriggerSmartContractPayload = this.triggerSmartContractPayload?.toTriggerSmartContractPayload(),
+        approvePayload =
+            this.approvePayload?.let {
+                com.vultisig.wallet.data.models.payload.ERC20ApprovePayload(
+                    spender = it.spender,
+                    amount = it.amount.toBigInteger(),
+                )
+            },
+        tronTriggerSmartContractPayload =
+            this.triggerSmartContractPayload?.toTriggerSmartContractPayload(),
     )
 }
 
-internal fun TriggerSmartContractPayload.toTriggerSmartContractPayload(): TronTriggerSmartContractPayload {
+internal fun TriggerSmartContractPayload.toTriggerSmartContractPayload():
+    TronTriggerSmartContractPayload {
     return TronTriggerSmartContractPayload(
         ownerAddress = this.ownerAddress,
         contractAddress = this.contractAddress,
@@ -108,28 +105,21 @@ internal fun TriggerSmartContractPayload.toTriggerSmartContractPayload(): TronTr
     )
 }
 
-internal fun WasmExecuteContractPayload.toWasmPayload(): vultisig.keysign.v1.WasmExecuteContractPayload {
+internal fun WasmExecuteContractPayload.toWasmPayload():
+    vultisig.keysign.v1.WasmExecuteContractPayload {
     return vultisig.keysign.v1.WasmExecuteContractPayload(
         senderAddress = this.senderAddress,
         contractAddress = this.contractAddress,
         executeMsg = this.executeMsg,
-        coins = this.coins.map {
-            CosmosCoin(
-                denom = it.denom,
-                amount = it.amount,
-            )
-        }
+        coins = this.coins.map { CosmosCoin(denom = it.denom, amount = it.amount) },
     )
 }
 
 internal fun Coin.toInternalCoinPayload(): com.vultisig.wallet.data.models.Coin {
     return com.vultisig.wallet.data.models.Coin(
-        chain = Chain.entries.find {
-            it.raw.equals(
-                this.chain,
-                true
-            )
-        } ?: error("Unrecognized chain: ${this.chain}"),
+        chain =
+            Chain.entries.find { it.raw.equals(this.chain, true) }
+                ?: error("Unrecognized chain: ${this.chain}"),
         ticker = this.ticker,
         logo = this.logo,
         address = this.address,
@@ -143,7 +133,7 @@ internal fun Coin.toInternalCoinPayload(): com.vultisig.wallet.data.models.Coin 
 
 fun BlockchainSpecific.toBlockChainSpecific(
     coin: com.vultisig.wallet.data.models.Coin,
-    toAddress: String
+    toAddress: String,
 ): BlockChainSpecific {
     val standard = coin.chain.standard
     return when (standard) {
@@ -153,7 +143,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 maxFeePerGasWei = BigInteger(ethereumSpecific.maxFeePerGasWei),
                 priorityFeeWei = BigInteger(ethereumSpecific.priorityFee),
                 nonce = BigInteger.valueOf(ethereumSpecific.nonce.toLong()),
-                gasLimit = BigInteger(ethereumSpecific.gasLimit)
+                gasLimit = BigInteger(ethereumSpecific.gasLimit),
             )
         }
 
@@ -163,11 +153,12 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 accountNumber = cosmosSpecific.accountNumber.toBigInteger(),
                 sequence = cosmosSpecific.sequence.toBigInteger(),
                 gas = cosmosSpecific.gas.toBigInteger(),
-                ibcDenomTraces = CosmosIbcDenomTrace(
-                    path = cosmosSpecific.ibcDenomTrace?.path ?: "",
-                    baseDenom = cosmosSpecific.ibcDenomTrace?.baseDenom ?: "",
-                    latestBlock = cosmosSpecific.ibcDenomTrace?.height ?: "",
-                ),
+                ibcDenomTraces =
+                    CosmosIbcDenomTrace(
+                        path = cosmosSpecific.ibcDenomTrace?.path ?: "",
+                        baseDenom = cosmosSpecific.ibcDenomTrace?.baseDenom ?: "",
+                        latestBlock = cosmosSpecific.ibcDenomTrace?.height ?: "",
+                    ),
                 transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
             )
         }
@@ -214,7 +205,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 fromAddressPubKey = solanaSpecific.fromAddressPubKey,
                 toAddressPubKey = solanaSpecific.toAddressPubKey,
                 programId = solanaSpecific.hasProgramId,
-                priorityLimit = solanaSpecific.priorityLimit?.toBigInteger() ?: BigInteger.ZERO
+                priorityLimit = solanaSpecific.priorityLimit?.toBigInteger() ?: BigInteger.ZERO,
             )
         }
 
@@ -226,7 +217,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
                     sequence = it.sequence.toBigInteger(),
                     fee = it.fee.toBigInteger(),
                     isDeposit = it.isDeposit,
-                    transactionType = getTransactionType(it.transactionType)
+                    transactionType = getTransactionType(it.transactionType),
                 )
             }
             val mayachainSpecific = this.mayachainSpecific
@@ -253,16 +244,17 @@ fun BlockchainSpecific.toBlockChainSpecific(
             BlockChainSpecific.Sui(
                 referenceGasPrice = suiSpecific.referenceGasPrice.toBigInteger(),
                 gasBudget = suiSpecific.gasBudget.toBigInteger(),
-                coins = suiSpecific.coins.map {
-                    vultisig.keysign.v1.SuiCoin(
-                        coinType = it.coinType,
-                        coinObjectId = it.coinObjectId,
-                        version = it.version,
-                        balance = it.balance,
-                        digest = it.digest,
-                        previousTransaction = it.previousTransaction ?: "",
-                    )
-                }
+                coins =
+                    suiSpecific.coins.map {
+                        vultisig.keysign.v1.SuiCoin(
+                            coinType = it.coinType,
+                            coinObjectId = it.coinObjectId,
+                            version = it.version,
+                            balance = it.balance,
+                            digest = it.digest,
+                            previousTransaction = it.previousTransaction ?: "",
+                        )
+                    },
             )
         }
 
@@ -277,27 +269,33 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 blockHeaderTxTrieRoot = trc20Specific.blockHeaderTxTrieRoot,
                 blockHeaderParentHash = trc20Specific.blockHeaderParentHash,
                 blockHeaderWitnessAddress = trc20Specific.blockHeaderWitnessAddress,
-                gasFeeEstimation = trc20Specific.gasFeeEstimation.toULong()
+                gasFeeEstimation = trc20Specific.gasFeeEstimation.toULong(),
             )
         }
-
     }
 }
 
 fun SwapPayload.toInternalSwapPayload(): com.vultisig.wallet.data.models.payload.SwapPayload {
     this.thorchainSwapPayload?.let {
-        return com.vultisig.wallet.data.models.payload.SwapPayload.ThorChain(it.toInternalThorChainSwapPayload())
+        return com.vultisig.wallet.data.models.payload.SwapPayload.ThorChain(
+            it.toInternalThorChainSwapPayload()
+        )
     }
     this.mayachainSwapPayload?.let {
-        return com.vultisig.wallet.data.models.payload.SwapPayload.MayaChain(it.toInternalThorChainSwapPayload())
+        return com.vultisig.wallet.data.models.payload.SwapPayload.MayaChain(
+            it.toInternalThorChainSwapPayload()
+        )
     }
     this.oneinchSwapPayload?.let {
-        return com.vultisig.wallet.data.models.payload.SwapPayload.EVM(it.toInternalOneInchSwapPayload())
+        return com.vultisig.wallet.data.models.payload.SwapPayload.EVM(
+            it.toInternalOneInchSwapPayload()
+        )
     }
     error("SwapPayload is nil")
 }
 
-fun ThorchainSwapPayload.toInternalThorChainSwapPayload(): com.vultisig.wallet.data.models.THORChainSwapPayload {
+fun ThorchainSwapPayload.toInternalThorChainSwapPayload():
+    com.vultisig.wallet.data.models.THORChainSwapPayload {
     return com.vultisig.wallet.data.models.THORChainSwapPayload(
         fromAddress = this.fromAddress,
         fromCoin = this.fromCoin.toInternalCoinPayload(),
@@ -314,7 +312,8 @@ fun ThorchainSwapPayload.toInternalThorChainSwapPayload(): com.vultisig.wallet.d
     )
 }
 
-fun OneinchSwapPayload.toInternalOneInchSwapPayload(): com.vultisig.wallet.data.models.EVMSwapPayloadJson {
+fun OneinchSwapPayload.toInternalOneInchSwapPayload():
+    com.vultisig.wallet.data.models.EVMSwapPayloadJson {
     return com.vultisig.wallet.data.models.EVMSwapPayloadJson(
         fromCoin = this.fromCoin.toInternalCoinPayload(),
         toCoin = this.toCoin.toInternalCoinPayload(),
@@ -326,10 +325,7 @@ fun OneinchSwapPayload.toInternalOneInchSwapPayload(): com.vultisig.wallet.data.
 }
 
 fun OneinchQuote.toInternalOneInchQuote(): EVMSwapQuoteJson {
-    return EVMSwapQuoteJson(
-        dstAmount = this.dstAmount,
-        tx = this.tx.toInternalOneInchTransaction()
-    )
+    return EVMSwapQuoteJson(dstAmount = this.dstAmount, tx = this.tx.toInternalOneInchTransaction())
 }
 
 fun OneinchTransaction.toInternalOneInchTransaction(): OneInchSwapTxJson {

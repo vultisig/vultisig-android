@@ -1,26 +1,37 @@
 package com.vultisig.wallet.data.repositories
 
 import android.content.SharedPreferences
-import jakarta.inject.Inject
 import androidx.core.content.edit
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.vultisig.wallet.data.sources.AppDataStore
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.first
 
 interface ReferralCodeSettingsRepositoryContract {
     fun hasVisitReferralCode(): Boolean
+
     fun visitReferralCode()
+
     fun getReferralCreatedBy(vaultId: String): String?
+
     fun saveReferralCreated(vaultId: String, referralCode: String)
+
     fun getExternalReferralBy(vaultId: String): String?
+
     fun saveExternalReferral(vaultId: String, referralCode: String?)
+
     fun getCurrentVaultId(): String?
+
     fun setCurrentVaultId(vaultId: String)
+
     suspend fun setAsShown()
+
     suspend fun isShown(): Boolean
 }
 
-class ReferralCodeSettingsRepository @Inject constructor(
+class ReferralCodeSettingsRepository
+@Inject
+constructor(
     private val encryptedSharedPreferences: SharedPreferences,
     private val appDataStore: AppDataStore,
 ) : ReferralCodeSettingsRepositoryContract {
@@ -65,16 +76,11 @@ class ReferralCodeSettingsRepository @Inject constructor(
     }
 
     override suspend fun setAsShown() {
-        appDataStore.editData { preferences ->
-            preferences[SHOW_REFERRAL_HOW_IT_WORKS] = true
-        }
+        appDataStore.editData { preferences -> preferences[SHOW_REFERRAL_HOW_IT_WORKS] = true }
     }
 
     override suspend fun isShown() =
-        appDataStore
-            .readData(SHOW_REFERRAL_HOW_IT_WORKS, false)
-            .first()
-
+        appDataStore.readData(SHOW_REFERRAL_HOW_IT_WORKS, false).first()
 
     private companion object {
         const val HAS_VISIT_REFERRAL_CODE_KEY = "has_visit_referral_code"

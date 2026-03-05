@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.utils.TextFieldUtils
-import org.apache.commons.lang3.StringUtils
 import javax.inject.Inject
+import org.apache.commons.lang3.StringUtils
 
 interface IsVaultNameValid : (String) -> Boolean
 

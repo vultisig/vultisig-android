@@ -9,39 +9,23 @@ import kotlinx.serialization.json.Json
 
 interface TronResourceDataSource {
 
-    suspend fun readTronResourceLimit(
-        tronAddress: String,
-    ): ResourceUsage?
+    suspend fun readTronResourceLimit(tronAddress: String): ResourceUsage?
 
-
-    suspend fun setTronResourceLimit(
-        tronAddress: String,
-        resourceUsage: ResourceUsage
-    )
+    suspend fun setTronResourceLimit(tronAddress: String, resourceUsage: ResourceUsage)
 }
 
-internal class TronResourceDataSourceImpl @Inject constructor(
-    private val appDataSource: AppDataStore,
-    private val json: Json,
-) : TronResourceDataSource {
-    override suspend fun readTronResourceLimit(
-        tronAddress: String
-    ): ResourceUsage? {
-        val tronResourceString: String? = appDataSource.readData(stringPreferencesKey(tronAddress)).first()
+internal class TronResourceDataSourceImpl
+@Inject
+constructor(private val appDataSource: AppDataStore, private val json: Json) :
+    TronResourceDataSource {
+    override suspend fun readTronResourceLimit(tronAddress: String): ResourceUsage? {
+        val tronResourceString: String? =
+            appDataSource.readData(stringPreferencesKey(tronAddress)).first()
 
         return tronResourceString?.let { json.decodeFromString<ResourceUsage>(it) }
     }
 
-    override suspend fun setTronResourceLimit(
-        tronAddress: String,
-        resourceUsage: ResourceUsage
-    ) {
-        appDataSource.set(
-            stringPreferencesKey(tronAddress),
-            json.encodeToString(
-                resourceUsage
-            )
-        )
+    override suspend fun setTronResourceLimit(tronAddress: String, resourceUsage: ResourceUsage) {
+        appDataSource.set(stringPreferencesKey(tronAddress), json.encodeToString(resourceUsage))
     }
-
 }

@@ -4,9 +4,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import com.vultisig.wallet.ui.utils.click
 import com.vultisig.wallet.ui.utils.waitUntilShown
 
-internal class ChooseVaultPage(
-    private val rule: ComposeTestRule,
-) {
+internal class ChooseVaultPage(private val rule: ComposeTestRule) {
 
     fun waitUntilShown() {
         rule.waitUntilShown("ChooseVaultScreen.selectFastVault")
@@ -19,5 +17,4 @@ internal class ChooseVaultPage(
     fun next() {
         rule.click("ChooseVaultScreen.continue")
     }
-
 }

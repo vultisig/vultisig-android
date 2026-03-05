@@ -8,10 +8,12 @@ import com.vultisig.wallet.data.models.OldJsonVault
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
-import vultisig.vault.v1.Vault as VaultProto
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.test.assertEquals
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.json.Json
@@ -19,9 +21,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import vultisig.keygen.v1.LibType
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
-import kotlin.test.assertEquals
+import vultisig.vault.v1.Vault as VaultProto
 
 @OptIn(ExperimentalEncodingApi::class)
 internal class ParseVaultFromStringUseCaseImplTest {
@@ -32,25 +32,20 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @BeforeEach
     fun setUp() {
-        useCase = ParseVaultFromStringUseCaseImpl(
-            vaultFromOldJsonMapper = mockk<VaultFromOldJsonMapper>(),
-            mapHexToPlainString = mockk<MapHexToPlainString>(),
-            encryption = mockk<Encryption>(),
-            protoBuf = protoBuf,
-            json = mockk(),
-        )
+        useCase =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk<VaultFromOldJsonMapper>(),
+                mapHexToPlainString = mockk<MapHexToPlainString>(),
+                encryption = mockk<Encryption>(),
+                protoBuf = protoBuf,
+                json = mockk(),
+            )
     }
 
-    private fun encodeVaultContainer(
-        vaultProto: VaultProto,
-        isEncrypted: Boolean = false,
-    ): String {
+    private fun encodeVaultContainer(vaultProto: VaultProto, isEncrypted: Boolean = false): String {
         val vaultBytes = protoBuf.encodeToByteArray(vaultProto)
         val vaultBase64 = Base64.encode(vaultBytes)
-        val container = VaultContainerProto(
-            vault = vaultBase64,
-            isEncrypted = isEncrypted,
-        )
+        val container = VaultContainerProto(vault = vaultBase64, isEncrypted = isEncrypted)
         val containerBytes = protoBuf.encodeToByteArray(container)
         return Base64.encode(containerBytes)
     }
@@ -66,30 +61,32 @@ internal class ParseVaultFromStringUseCaseImplTest {
         libType: LibType = LibType.LIB_TYPE_DKLS,
         keyShares: List<VaultProto.KeyShare?> = emptyList(),
         chainPublicKeys: List<VaultProto.ChainPublicKey?> = emptyList(),
-    ) = VaultProto(
-        name = name,
-        publicKeyEcdsa = publicKeyEcdsa,
-        publicKeyEddsa = publicKeyEddsa,
-        hexChainCode = hexChainCode,
-        localPartyId = localPartyId,
-        signers = signers,
-        resharePrefix = resharePrefix,
-        libType = libType,
-        keyShares = keyShares,
-        chainPublicKeys = chainPublicKeys,
-    )
+    ) =
+        VaultProto(
+            name = name,
+            publicKeyEcdsa = publicKeyEcdsa,
+            publicKeyEddsa = publicKeyEddsa,
+            hexChainCode = hexChainCode,
+            localPartyId = localPartyId,
+            signers = signers,
+            resharePrefix = resharePrefix,
+            libType = libType,
+            keyShares = keyShares,
+            chainPublicKeys = chainPublicKeys,
+        )
 
     @Test
     fun `parses basic vault fields correctly`() {
-        val proto = testVaultProto(
-            name = "MyVault",
-            publicKeyEcdsa = "ecdsa1",
-            publicKeyEddsa = "eddsa2",
-            hexChainCode = "chain3",
-            localPartyId = "localP",
-            signers = listOf("signerA", "signerB"),
-            resharePrefix = "prefix",
-        )
+        val proto =
+            testVaultProto(
+                name = "MyVault",
+                publicKeyEcdsa = "ecdsa1",
+                publicKeyEddsa = "eddsa2",
+                hexChainCode = "chain3",
+                localPartyId = "localP",
+                signers = listOf("signerA", "signerB"),
+                resharePrefix = "prefix",
+            )
 
         val vault = useCase(encodeVaultContainer(proto), null)
 
@@ -116,20 +113,22 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @Test
     fun `parses chainPublicKeys from protobuf`() {
-        val proto = testVaultProto(
-            chainPublicKeys = listOf(
-                VaultProto.ChainPublicKey(
-                    chain = "Ethereum",
-                    publicKey = "ethPub1",
-                    isEddsa = false,
-                ),
-                VaultProto.ChainPublicKey(
-                    chain = "Solana",
-                    publicKey = "solPub2",
-                    isEddsa = true,
-                ),
-            ),
-        )
+        val proto =
+            testVaultProto(
+                chainPublicKeys =
+                    listOf(
+                        VaultProto.ChainPublicKey(
+                            chain = "Ethereum",
+                            publicKey = "ethPub1",
+                            isEddsa = false,
+                        ),
+                        VaultProto.ChainPublicKey(
+                            chain = "Solana",
+                            publicKey = "solPub2",
+                            isEddsa = true,
+                        ),
+                    )
+            )
 
         val vault = useCase(encodeVaultContainer(proto), null)
 
@@ -148,13 +147,15 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @Test
     fun `deduplicates keyshares by pubKey keeping last`() {
-        val proto = testVaultProto(
-            keyShares = listOf(
-                VaultProto.KeyShare(publicKey = "pubA", keyshare = "shareA1"),
-                VaultProto.KeyShare(publicKey = "pubB", keyshare = "shareB1"),
-                VaultProto.KeyShare(publicKey = "pubA", keyshare = "shareA2"),
-            ),
-        )
+        val proto =
+            testVaultProto(
+                keyShares =
+                    listOf(
+                        VaultProto.KeyShare(publicKey = "pubA", keyshare = "shareA1"),
+                        VaultProto.KeyShare(publicKey = "pubB", keyshare = "shareB1"),
+                        VaultProto.KeyShare(publicKey = "pubA", keyshare = "shareA2"),
+                    )
+            )
 
         val vault = useCase(encodeVaultContainer(proto), null)
 
@@ -166,9 +167,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @Test
     fun `parses libType KeyImport from protobuf`() {
-        val proto = testVaultProto(
-            libType = LibType.LIB_TYPE_KEYIMPORT,
-        )
+        val proto = testVaultProto(libType = LibType.LIB_TYPE_KEYIMPORT)
 
         val vault = useCase(encodeVaultContainer(proto), null)
 
@@ -184,15 +183,17 @@ internal class ParseVaultFromStringUseCaseImplTest {
         every { hexMapper(any()) } answers { firstArg() }
         every { mapper(capture(capturedOldVault)) } returns expectedVault
 
-        val fallbackUseCase = ParseVaultFromStringUseCaseImpl(
-            vaultFromOldJsonMapper = mapper,
-            mapHexToPlainString = hexMapper,
-            encryption = mockk(),
-            protoBuf = protoBuf,
-            json = Json,
-        )
+        val fallbackUseCase =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mapper,
+                mapHexToPlainString = hexMapper,
+                encryption = mockk(),
+                protoBuf = protoBuf,
+                json = Json,
+            )
 
-        val oldJson = """
+        val oldJson =
+            """
             {
               "id": "old-id",
               "localPartyID": "party-1",
@@ -203,7 +204,8 @@ internal class ParseVaultFromStringUseCaseImplTest {
               "signers": ["party-1", "party-2"],
               "keyshares": [{"pubkey": "pub1", "keyshare": "share1"}]
             }
-        """.trimIndent()
+        """
+                .trimIndent()
 
         val result = fallbackUseCase(oldJson, null)
 

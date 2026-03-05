@@ -19,40 +19,22 @@ import com.vultisig.wallet.ui.components.v3.V3Icon
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun SetupVaultHeader(
-    logo: Int,
-    title: String,
-    subTitle: String,
-){
+fun SetupVaultHeader(logo: Int, title: String, subTitle: String) {
     Box(
-        modifier = Modifier
-            .clip(
-                shape = RoundedCornerShape(size = 16.dp)
-            )
-            .background(
-                color = Theme.v2.colors.border.light
-            )
-            .padding(top = 1.dp)
+        modifier =
+            Modifier.clip(shape = RoundedCornerShape(size = 16.dp))
+                .background(color = Theme.v2.colors.border.light)
+                .padding(top = 1.dp)
     ) {
-
         Row(
-            modifier = Modifier
-                .clip(
-                    shape = RoundedCornerShape(size = 16.dp)
-                )
-
-                .background(
-                    color = Theme.v2.colors.backgrounds.secondary
-                )
-                .padding(
-                    all = 8.dp
-                ),
+            modifier =
+                Modifier.clip(shape = RoundedCornerShape(size = 16.dp))
+                    .background(color = Theme.v2.colors.backgrounds.secondary)
+                    .padding(all = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             V3Icon(logo)
-            UiSpacer(
-                size = 8.dp
-            )
+            UiSpacer(size = 8.dp)
             Column() {
                 Text(
                     text = title,
@@ -66,19 +48,17 @@ fun SetupVaultHeader(
                 )
             }
 
-            UiSpacer(
-                size = 12.dp
-            )
+            UiSpacer(size = 12.dp)
         }
     }
 }
 
 @Preview
 @Composable
-private fun SetupVaultHeaderPreview(){
+private fun SetupVaultHeaderPreview() {
     SetupVaultHeader(
         logo = R.drawable.icon_shield_solid,
         title = "Secure Vault",
-        subTitle = "3-device vault"
+        subTitle = "3-device vault",
     )
 }

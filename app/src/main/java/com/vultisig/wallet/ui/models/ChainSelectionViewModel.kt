@@ -7,9 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.hasPreGeneratedKey
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -22,24 +20,20 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-internal data class ChainSelectionUiModel(
-    val chains: List<ChainUiModel> = emptyList(),
-    val isKeyImportVault: Boolean = false,
-)
+internal data class ChainSelectionUiModel(val chains: List<ChainUiModel> = emptyList())
 
-internal data class ChainUiModel(
-    val isEnabled: Boolean,
-    val coin: Coin,
-)
+internal data class ChainUiModel(val isEnabled: Boolean, val coin: Coin)
 
 @HiltViewModel
-internal class ChainSelectionViewModel @Inject constructor(
+internal class ChainSelectionViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
@@ -60,29 +54,27 @@ internal class ChainSelectionViewModel @Inject constructor(
     }
 
     fun enableAccountTemp(nativeToken: Coin) {
-        val chains = uiState.value.chains.map {
-            if (it.coin.id == nativeToken.id) {
-                it.copy(isEnabled = true)
-            } else {
-                it
+        val chains =
+            uiState.value.chains.map {
+                if (it.coin.id == nativeToken.id) {
+                    it.copy(isEnabled = true)
+                } else {
+                    it
+                }
             }
-        }
-        uiState.update {
-            it.copy(chains = chains)
-        }
+        uiState.update { it.copy(chains = chains) }
     }
 
     fun disableAccountTemp(nativeToken: Coin) {
-        val chains = uiState.value.chains.map {
-            if (it.coin.id == nativeToken.id) {
-                it.copy(isEnabled = false)
-            } else {
-                it
+        val chains =
+            uiState.value.chains.map {
+                if (it.coin.id == nativeToken.id) {
+                    it.copy(isEnabled = false)
+                } else {
+                    it
+                }
             }
-        }
-        uiState.update {
-            it.copy(chains = chains)
-        }
+        uiState.update { it.copy(chains = chains) }
     }
 
     fun onCommitChanges() {
@@ -90,21 +82,14 @@ internal class ChainSelectionViewModel @Inject constructor(
         val toDisableAccounts = uiState.value.chains - toEnableAccounts.toSet()
 
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId)
-                ?: error("No vault with $vaultId")
+            val vault = vaultRepository.get(vaultId) ?: error("No vault with $vaultId")
 
-            toEnableAccounts.forEach {
-                enableAccount(it.coin, vault)
-            }
-            toDisableAccounts.forEach {
-                disableAccount(it.coin)
-            }
+            toEnableAccounts.forEach { enableAccount(it.coin, vault) }
+            toDisableAccounts.forEach { disableAccount(it.coin) }
             if (routeFromInitVault) {
                 navigator.route(
                     route = Route.Home(),
-                    opts = NavigationOptions(
-                        clearBackStack = true,
-                    ),
+                    opts = NavigationOptions(clearBackStack = true),
                 )
             } else {
                 requestResultRepository.respond(REFRESH_CHAIN_DATA, Unit)
@@ -114,9 +99,7 @@ internal class ChainSelectionViewModel @Inject constructor(
     }
 
     fun onBackClick() {
-        viewModelScope.launch {
-            navigator.back()
-        }
+        viewModelScope.launch { navigator.back() }
     }
 
     fun setSearchText(searchText: String) {
@@ -124,14 +107,9 @@ internal class ChainSelectionViewModel @Inject constructor(
     }
 
     private suspend fun enableAccount(nativeToken: Coin, vault: Vault) {
-        val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-            nativeToken,
-            vault
-        )
-        val updatedCoin = nativeToken.copy(
-            address = address,
-            hexPublicKey = derivedPublicKey
-        )
+        val (address, derivedPublicKey) =
+            chainAccountAddressRepository.getAddress(nativeToken, vault)
+        val updatedCoin = nativeToken.copy(address = address, hexPublicKey = derivedPublicKey)
 
         vaultRepository.addTokenToVault(vaultId, updatedCoin)
     }
@@ -142,40 +120,23 @@ internal class ChainSelectionViewModel @Inject constructor(
 
     private fun loadChains() {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: run {
-                navigator.back()
-                return@launch
-            }
-            val isKeyImport = vault.libType == SigningLibType.KeyImport
-
-            uiState.update { it.copy(isKeyImportVault = isKeyImport) }
-
             combine(
-                tokenRepository.nativeTokens,
-                vaultRepository.getEnabledChains(vaultId),
-                searchTextFieldState.textAsFlow(),
-            ) { tokens, enabledChains, query ->
-                tokens
-                    .filter { token ->
-                        !isKeyImport || vault.hasPreGeneratedKey(token.chain)
-                    }
-                    .filter {
-                        query.isBlank() ||
+                    tokenRepository.nativeTokens,
+                    vaultRepository.getEnabledChains(vaultId),
+                    searchTextFieldState.textAsFlow(),
+                ) { tokens, enabledChains, query ->
+                    tokens
+                        .filter {
+                            query.isBlank() ||
                                 it.ticker.contains(query, ignoreCase = true) ||
                                 it.chain.raw.contains(query, ignoreCase = true)
-                    }
-                    .map { token ->
-                        ChainUiModel(
-                            isEnabled = token.chain in enabledChains,
-                            coin = token,
-                        )
-                    }
-                    .sortedWith(compareBy({ it.coin.ticker }, { it.coin.chain.raw }))
-
-            }.collect { chains ->
-                uiState.update { it.copy(chains = chains) }
-            }
+                        }
+                        .map { token ->
+                            ChainUiModel(isEnabled = token.chain in enabledChains, coin = token)
+                        }
+                        .sortedWith(compareBy({ it.coin.ticker }, { it.coin.chain.raw }))
+                }
+                .collect { chains -> uiState.update { it.copy(chains = chains) } }
         }
     }
-
 }

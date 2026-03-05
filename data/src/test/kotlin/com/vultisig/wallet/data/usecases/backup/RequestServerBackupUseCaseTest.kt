@@ -8,10 +8,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
 
 class RequestServerBackupUseCaseTest {
 
@@ -28,17 +28,16 @@ class RequestServerBackupUseCaseTest {
     fun setUp() {
         vaultRepository = mockk()
         vultiSignerRepository = mockk()
-        useCase = RequestServerBackupUseCaseImpl(
-            vaultRepository = vaultRepository,
-            vultiSignerRepository = vultiSignerRepository,
-        )
+        useCase =
+            RequestServerBackupUseCaseImpl(
+                vaultRepository = vaultRepository,
+                vultiSignerRepository = vultiSignerRepository,
+            )
     }
 
     @Test
     fun `invoke returns success when repository succeeds`() = runTest {
-        val vault = mockk<Vault> {
-            every { pubKeyECDSA } returns testPubKeyECDSA
-        }
+        val vault = mockk<Vault> { every { pubKeyECDSA } returns testPubKeyECDSA }
         coEvery { vaultRepository.get(testVaultId) } returns vault
         coEvery {
             vultiSignerRepository.requestServerBackup(testPubKeyECDSA, testEmail, testPassword)
@@ -58,20 +57,13 @@ class RequestServerBackupUseCaseTest {
 
         val result = useCase(testVaultId, testEmail, testPassword)
 
-        assertEquals(
-            ServerBackupResult.Error(ServerBackupResult.ErrorType.UNKNOWN),
-            result,
-        )
-        coVerify(exactly = 0) {
-            vultiSignerRepository.requestServerBackup(any(), any(), any())
-        }
+        assertEquals(ServerBackupResult.Error(ServerBackupResult.ErrorType.UNKNOWN), result)
+        coVerify(exactly = 0) { vultiSignerRepository.requestServerBackup(any(), any(), any()) }
     }
 
     @Test
     fun `invoke returns invalid password error from repository`() = runTest {
-        val vault = mockk<Vault> {
-            every { pubKeyECDSA } returns testPubKeyECDSA
-        }
+        val vault = mockk<Vault> { every { pubKeyECDSA } returns testPubKeyECDSA }
         coEvery { vaultRepository.get(testVaultId) } returns vault
         coEvery {
             vultiSignerRepository.requestServerBackup(testPubKeyECDSA, testEmail, testPassword)
@@ -87,9 +79,7 @@ class RequestServerBackupUseCaseTest {
 
     @Test
     fun `invoke returns network error from repository`() = runTest {
-        val vault = mockk<Vault> {
-            every { pubKeyECDSA } returns testPubKeyECDSA
-        }
+        val vault = mockk<Vault> { every { pubKeyECDSA } returns testPubKeyECDSA }
         coEvery { vaultRepository.get(testVaultId) } returns vault
         coEvery {
             vultiSignerRepository.requestServerBackup(testPubKeyECDSA, testEmail, testPassword)
@@ -97,17 +87,12 @@ class RequestServerBackupUseCaseTest {
 
         val result = useCase(testVaultId, testEmail, testPassword)
 
-        assertEquals(
-            ServerBackupResult.Error(ServerBackupResult.ErrorType.NETWORK_ERROR),
-            result,
-        )
+        assertEquals(ServerBackupResult.Error(ServerBackupResult.ErrorType.NETWORK_ERROR), result)
     }
 
     @Test
     fun `invoke returns too many requests error from repository`() = runTest {
-        val vault = mockk<Vault> {
-            every { pubKeyECDSA } returns testPubKeyECDSA
-        }
+        val vault = mockk<Vault> { every { pubKeyECDSA } returns testPubKeyECDSA }
         coEvery { vaultRepository.get(testVaultId) } returns vault
         coEvery {
             vultiSignerRepository.requestServerBackup(testPubKeyECDSA, testEmail, testPassword)
@@ -124,13 +109,10 @@ class RequestServerBackupUseCaseTest {
     @Test
     fun `invoke passes correct public key from vault`() = runTest {
         val specificPubKey = "specific-ecdsa-key-456"
-        val vault = mockk<Vault> {
-            every { pubKeyECDSA } returns specificPubKey
-        }
+        val vault = mockk<Vault> { every { pubKeyECDSA } returns specificPubKey }
         coEvery { vaultRepository.get(testVaultId) } returns vault
-        coEvery {
-            vultiSignerRepository.requestServerBackup(any(), any(), any())
-        } returns ServerBackupResult.Success
+        coEvery { vultiSignerRepository.requestServerBackup(any(), any(), any()) } returns
+            ServerBackupResult.Success
 
         useCase(testVaultId, testEmail, testPassword)
 

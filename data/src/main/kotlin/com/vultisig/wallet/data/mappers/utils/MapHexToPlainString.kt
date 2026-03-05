@@ -10,6 +10,6 @@ internal class MapHexToPlainStringImpl @Inject constructor() : MapHexToPlainStri
         return hex.chunked(2)
             .map { it.toInt(16).toByte() }
             .toByteArray()
-            .toString(Charsets.ISO_8859_1)  // Or whichever encoding your input uses
+            .toString(Charsets.ISO_8859_1) // Or whichever encoding your input uses
     }
 }

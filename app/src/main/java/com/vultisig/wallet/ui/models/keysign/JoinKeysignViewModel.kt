@@ -1,7 +1,4 @@
-@file:OptIn(
-    ExperimentalSerializationApi::class,
-    ExperimentalStdlibApi::class
-)
+@file:OptIn(ExperimentalSerializationApi::class, ExperimentalStdlibApi::class)
 
 package com.vultisig.wallet.ui.models.keysign
 
@@ -91,6 +88,12 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
+import java.math.BigInteger
+import java.net.UnknownHostException
+import java.util.UUID
+import javax.inject.Inject
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -108,13 +111,6 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 import vultisig.keysign.v1.KeysignMessage
-import java.math.BigInteger
-import java.net.UnknownHostException
-import java.util.UUID
-import javax.inject.Inject
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
-
 
 sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
@@ -124,11 +120,14 @@ sealed class JoinKeysignError(val message: UiText) {
         JoinKeysignError(R.string.join_keysign_missing_required_vault.asUiText())
 
     data object WrongVault : JoinKeysignError(R.string.join_keysign_wrong_vault.asUiText())
+
     data object WrongVaultShare :
         JoinKeysignError(R.string.join_keysign_error_wrong_vault_share.asUiText())
 
     data object WrongReShare : JoinKeysignError(R.string.join_keysign_wrong_reshare.asUiText())
+
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
+
     data class FailedToStart(val exceptionMessage: String) :
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
 
@@ -141,40 +140,35 @@ sealed class JoinKeysignError(val message: UiText) {
 
 sealed interface JoinKeysignState {
     data object DiscoveringSessionID : JoinKeysignState
+
     data object DiscoverService : JoinKeysignState
+
     data object JoinKeysign : JoinKeysignState
+
     data object WaitingForKeysignStart : JoinKeysignState
+
     data object Keysign : JoinKeysignState
+
     data class Error(val errorType: JoinKeysignError) : JoinKeysignState
 }
 
 internal sealed class VerifyUiModel {
 
-    data class Send(
-        val model: VerifyTransactionUiModel,
-    ) : VerifyUiModel()
+    data class Send(val model: VerifyTransactionUiModel) : VerifyUiModel()
 
-    data class Swap(
-        val model: VerifySwapUiModel,
-    ) : VerifyUiModel()
+    data class Swap(val model: VerifySwapUiModel) : VerifyUiModel()
 
-    data class Deposit(
-        val model: VerifyDepositUiModel,
-    ) : VerifyUiModel()
+    data class Deposit(val model: VerifyDepositUiModel) : VerifyUiModel()
 
-    data class SignMessage(
-        val model: VerifySignMessageUiModel,
-    ) : VerifyUiModel()
-
+    data class SignMessage(val model: VerifySignMessageUiModel) : VerifyUiModel()
 }
 
-internal data class FunctionInfo(
-    val signature: String,
-    val inputs: String,
-)
+internal data class FunctionInfo(val signature: String, val inputs: String)
 
 @HiltViewModel
-internal class JoinKeysignViewModel @Inject constructor(
+internal class JoinKeysignViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
@@ -220,10 +214,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
     private val vaultId: String = args.vaultId
     private val qrBase64: String = args.qr
-    private var _currentVault: Vault = Vault(
-        id = UUID.randomUUID().toString(),
-        "temp vault"
-    )
+    private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
     var currentState: MutableState<JoinKeysignState> =
         mutableStateOf(JoinKeysignState.DiscoveringSessionID)
     private var _localPartyID: String = ""
@@ -249,31 +240,32 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val deepLinkHelper = MutableStateFlow<DeepLinkHelper?>(null)
 
     val keysignViewModel: KeysignViewModel
-        get() = KeysignViewModel(
-            vault = _currentVault,
-            keysignCommittee = _keysignCommittee,
-            serverUrl = _serverAddress,
-            sessionId = _sessionID,
-            encryptionKeyHex = _encryptionKeyHex,
-            messagesToSign = messagesToSign,
-            keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
-            keysignPayload = _keysignPayload,
-            broadcastTx = broadcastTx,
-            thorChainApi = thorChainApi,
-            evmApiFactory = evmApiFactory,
-            explorerLinkRepository = explorerLinkRepository,
-            sessionApi = sessionApi,
-            navigator = navigator,
-            transactionTypeUiModel = transactionTypeUiModel,
-            encryption = encryption,
-            featureFlagApi = featureFlagApi,
-            pullTssMessages = pullTssMessages,
-            customMessagePayload = customMessagePayload,
-            isInitiatingDevice = false,
-            addressBookRepository = addressBookRepository,
-            transactionStatusServiceManager = transactionStatusServiceManager,
-            txStatusConfigurationProvider = txStatusConfigurationProvider,
-        )
+        get() =
+            KeysignViewModel(
+                vault = _currentVault,
+                keysignCommittee = _keysignCommittee,
+                serverUrl = _serverAddress,
+                sessionId = _sessionID,
+                encryptionKeyHex = _encryptionKeyHex,
+                messagesToSign = messagesToSign,
+                keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
+                keysignPayload = _keysignPayload,
+                broadcastTx = broadcastTx,
+                thorChainApi = thorChainApi,
+                evmApiFactory = evmApiFactory,
+                explorerLinkRepository = explorerLinkRepository,
+                sessionApi = sessionApi,
+                navigator = navigator,
+                transactionTypeUiModel = transactionTypeUiModel,
+                encryption = encryption,
+                featureFlagApi = featureFlagApi,
+                pullTssMessages = pullTssMessages,
+                customMessagePayload = customMessagePayload,
+                isInitiatingDevice = false,
+                addressBookRepository = addressBookRepository,
+                transactionStatusServiceManager = transactionStatusServiceManager,
+                txStatusConfigurationProvider = txStatusConfigurationProvider,
+            )
 
     val verifyUiModel =
         MutableStateFlow<VerifyUiModel>(VerifyUiModel.Send(VerifyTransactionUiModel()))
@@ -291,14 +283,13 @@ internal class JoinKeysignViewModel @Inject constructor(
             }
 
             try {
-                val content = Base64.UrlSafe.decode(qrBase64.toByteArray())
-                    .decodeToString()
+                val content = Base64.UrlSafe.decode(qrBase64.toByteArray()).decodeToString()
 
                 deepLinkHelper.value = DeepLinkHelper(content)
 
-                val qrCodeContent = requireNotNull(deepLinkHelper.value)
-                    .getJsonData()
-                    ?: error("Invalid QR code content")
+                val qrCodeContent =
+                    requireNotNull(deepLinkHelper.value).getJsonData()
+                        ?: error("Invalid QR code content")
 
                 val rawJson = decompressQr(qrCodeContent.decodeBase64Bytes())
 
@@ -311,12 +302,12 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                 val customMessagePayload = payloadProto.customMessagePayload
                 if (customMessagePayload != null) {
-                    val vaultPublicKeyEcdsa = customMessagePayload.vaultPublicKeyEcdsa.ifEmpty {
-                        deepLinkHelper.value?.getParameter(VAULT_PARAMETER) ?: ""
-                    }
-                    val payloadWithVaultKey = customMessagePayload.copy(
-                        vaultPublicKeyEcdsa = vaultPublicKeyEcdsa
-                    )
+                    val vaultPublicKeyEcdsa =
+                        customMessagePayload.vaultPublicKeyEcdsa.ifEmpty {
+                            deepLinkHelper.value?.getParameter(VAULT_PARAMETER) ?: ""
+                        }
+                    val payloadWithVaultKey =
+                        customMessagePayload.copy(vaultPublicKeyEcdsa = vaultPublicKeyEcdsa)
                     if (!handleCustomMessage(payloadWithVaultKey)) {
                         return@launch
                     }
@@ -336,22 +327,21 @@ internal class JoinKeysignViewModel @Inject constructor(
                     this@JoinKeysignViewModel._serverAddress = Endpoints.VULTISIG_RELAY_URL
                     // when Payload is not in the QRCode
                     if (payloadProto.payloadId.isNotEmpty()) {
-                        routerApi.getPayload(
-                            _serverAddress,
-                            payloadId
-                        ).let { payload ->
+                        routerApi.getPayload(_serverAddress, payloadId).let { payload ->
                             if (payload.isNotEmpty()) {
                                 val rawPayload = decompressQr(payload.decodeBase64Bytes())
                                 val payloadProto =
                                     protoBuf.decodeFromByteArray<KeysignPayloadProto>(rawPayload)
-                                val keysignMsgProto = KeysignMessageProto(
-                                    keysignPayload = payloadProto,
-                                    sessionId = tempKeysignMessageProto!!.sessionId,
-                                    serviceName = tempKeysignMessageProto!!.serviceName,
-                                    encryptionKeyHex = tempKeysignMessageProto!!.encryptionKeyHex,
-                                    useVultisigRelay = _useVultisigRelay,
-                                    payloadId = payloadId
-                                )
+                                val keysignMsgProto =
+                                    KeysignMessageProto(
+                                        keysignPayload = payloadProto,
+                                        sessionId = tempKeysignMessageProto!!.sessionId,
+                                        serviceName = tempKeysignMessageProto!!.serviceName,
+                                        encryptionKeyHex =
+                                            tempKeysignMessageProto!!.encryptionKeyHex,
+                                        useVultisigRelay = _useVultisigRelay,
+                                        payloadId = payloadId,
+                                    )
 
                                 if (handleKeysignMessage(keysignMsgProto)) {
                                     return@launch
@@ -364,16 +354,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                     currentState.value = JoinKeysignState.DiscoverService
                 }
             } catch (e: UnknownHostException) {
-                Timber.d(
-                    e,
-                    "Failed to resolve request"
-                )
+                Timber.d(e, "Failed to resolve request")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
-                Timber.d(
-                    e,
-                    "Failed to parse QR code"
-                )
+                Timber.d(e, "Failed to parse QR code")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
             }
         }
@@ -385,16 +369,13 @@ internal class JoinKeysignViewModel @Inject constructor(
         libType: SigningLibType?,
     ): Boolean {
         if (_currentVault.pubKeyECDSA != pubKeyEcdsa) {
-            val matchingVault = vaultRepository.getAll().firstOrNull {
-                it.pubKeyECDSA == pubKeyEcdsa
-            }
+            val matchingVault =
+                vaultRepository.getAll().firstOrNull { it.pubKeyECDSA == pubKeyEcdsa }
             if (matchingVault != null) {
                 switchToCorrectVault(matchingVault)
                 return true
             } else
-                currentState.value = JoinKeysignState.Error(
-                    JoinKeysignError.MissingRequiredVault
-                )
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.MissingRequiredVault)
             return false
         }
 
@@ -416,12 +397,11 @@ internal class JoinKeysignViewModel @Inject constructor(
         _localPartyID = vault.localPartyID
     }
 
-    private suspend fun handleCustomMessage(
-        customMessage: CustomMessagePayload
-    ): Boolean {
+    private suspend fun handleCustomMessage(customMessage: CustomMessagePayload): Boolean {
         // supports old versions which have no vaultPublicKeyEcdsa or localPartyId
         if (customMessage.vaultPublicKeyEcdsa.isNotEmpty()) {
-            if (!checkIsVaultCorrect(
+            if (
+                !checkIsVaultCorrect(
                     customMessage.vaultPublicKeyEcdsa,
                     customMessage.vaultLocalPartyId,
                     libType = null,
@@ -433,63 +413,58 @@ internal class JoinKeysignViewModel @Inject constructor(
 
         customMessagePayload = customMessage
 
-        val model = SignMessageTransactionUiModel(
-            method = customMessage.method,
-            message = getNormalizedCustomMessage(customMessage),
-        )
+        val model =
+            SignMessageTransactionUiModel(
+                method = customMessage.method,
+                message = getNormalizedCustomMessage(customMessage),
+            )
 
         transactionTypeUiModel = TransactionTypeUiModel.SignMessage(model)
 
-        verifyUiModel.value = VerifyUiModel.SignMessage(
-            model = VerifySignMessageUiModel(
-                model = model,
-            ),
-        )
+        verifyUiModel.value =
+            VerifyUiModel.SignMessage(model = VerifySignMessageUiModel(model = model))
 
         return true
     }
 
     private fun getNormalizedCustomMessage(customMessage: CustomMessagePayload) =
-    // For "eth_signTypedData_v4", the extension sends both the message and the domain
-    // as pre-hashed values. Because these fields are already hashed, the original data
-    // cannot be decoded from the resulting hex string.
-    // Therefore, we display the raw hex instead.
-    //
-    // Reference:
-    // https://github.com/ethers-io/ethers.js/blob/98c49d091eb84a9146dfba8476f18e4c3e3d1d31/src.ts/hash/typed-data.ts#L520
+        // For "eth_signTypedData_v4", the extension sends both the message and the domain
+        // as pre-hashed values. Because these fields are already hashed, the original data
+        // cannot be decoded from the resulting hex string.
+        // Therefore, we display the raw hex instead.
+        //
+        // Reference:
+        // https://github.com/ethers-io/ethers.js/blob/98c49d091eb84a9146dfba8476f18e4c3e3d1d31/src.ts/hash/typed-data.ts#L520
         // https://github.com/vultisig/vultisig-windows/blob/e7e5b388ca022c9e3f02a85346336b837857a856/core/inpage-provider/popup/view/resolvers/signMessage/overview/index.tsx#L36
-        if (customMessage.method.equals(
-                other = ETH_SIGN_TYPED_DATA_V4,
-                ignoreCase = true
-            )
-        ) {
+        if (customMessage.method.equals(other = ETH_SIGN_TYPED_DATA_V4, ignoreCase = true)) {
             customMessage.message
         } else {
             customMessage.message.normalizeMessageFormat()
         }
 
-    private suspend fun handleKeysignMessage(
-        proto: KeysignMessageProto
-    ): Boolean {
+    private suspend fun handleKeysignMessage(proto: KeysignMessageProto): Boolean {
         val message = mapKeysignMessageFromProto(proto)
 
         return !loadKeysignMessage(message.payload!!)
     }
 
     private suspend fun loadKeysignMessage(ksPayload: KeysignPayload): Boolean {
-        if (!checkIsVaultCorrect(
+        if (
+            !checkIsVaultCorrect(
                 ksPayload.vaultPublicKeyECDSA,
                 ksPayload.vaultLocalPartyID,
-                ksPayload.libType
+                ksPayload.libType,
             )
         ) {
             return false
         }
 
         if (deepLinkHelper.value?.hasResharePrefix() == true) {
-            if (_currentVault.resharePrefix != requireNotNull(deepLinkHelper.value).getResharePrefix()) {
-                currentState.value =
-                    JoinKeysignState.Error(JoinKeysignError.WrongReShare)
+            if (
+                _currentVault.resharePrefix !=
+                    requireNotNull(deepLinkHelper.value).getResharePrefix()
+            ) {
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongReShare)
                 return false
             }
         }
@@ -515,26 +490,28 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val nativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
                 val chain = srcToken.chain
-                val (nativeTokenAddress, _) = chainAccountAddressRepository.getAddress(
-                    nativeToken,
-                    _currentVault
-                )
-                val gasFee = gasFeeRepository.getGasFee(
-                    chain = chain,
-                    address = nativeTokenAddress,
-                    isSwap = true
-                )
-                val estimatedNetworkGasFee: EstimatedGasFee = gasFeeToEstimatedFee(
-                    GasFeeParams(
-                        gasLimit = if (chain.standard == TokenStandard.EVM) {
-                            (payload.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                        } else {
-                            BigInteger.valueOf(1)
-                        },
-                        gasFee = gasFee,
-                        selectedToken = srcToken,
+                val (nativeTokenAddress, _) =
+                    chainAccountAddressRepository.getAddress(nativeToken, _currentVault)
+                val gasFee =
+                    gasFeeRepository.getGasFee(
+                        chain = chain,
+                        address = nativeTokenAddress,
+                        isSwap = true,
                     )
-                )
+                val estimatedNetworkGasFee: EstimatedGasFee =
+                    gasFeeToEstimatedFee(
+                        GasFeeParams(
+                            gasLimit =
+                                if (chain.standard == TokenStandard.EVM) {
+                                    (payload.blockChainSpecific as BlockChainSpecific.Ethereum)
+                                        .gasLimit
+                                } else {
+                                    BigInteger.valueOf(1)
+                                },
+                            gasFee = gasFee,
+                            selectedToken = srcToken,
+                        )
+                    )
                 val networkGasFeeFiatValue = estimatedNetworkGasFee.fiatValue
 
                 val vaultName = _currentVault.name
@@ -542,416 +519,440 @@ internal class JoinKeysignViewModel @Inject constructor(
                 when (swapPayload) {
                     is SwapPayload.EVM -> {
                         val oneInchSwapTxJson = swapPayload.data.quote.tx
-                        //if swapFee is not null then it provider is Lifi otherwise 1inch
-                        val value = if (!oneInchSwapTxJson.swapFee.isNullOrEmpty() &&
-                            oneInchSwapTxJson.swapFee.toBigIntegerOrNull() != null
-                        ) {
-                            oneInchSwapTxJson.swapFee.toBigInteger()
-                        } else {
-                            (oneInchSwapTxJson.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO) *
+                        // if swapFee is not null then it provider is Lifi otherwise 1inch
+                        val value =
+                            if (
+                                !oneInchSwapTxJson.swapFee.isNullOrEmpty() &&
+                                    oneInchSwapTxJson.swapFee.toBigIntegerOrNull() != null
+                            ) {
+                                oneInchSwapTxJson.swapFee.toBigInteger()
+                            } else {
+                                (oneInchSwapTxJson.gasPrice.toBigIntegerOrNull()
+                                    ?: BigInteger.ZERO) *
                                     (oneInchSwapTxJson.gas.takeIf { it != 0L }
-                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
-                        }
+                                            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
+                                        .toBigInteger()
+                            }
                         val hasJupiterSwapProvider =
                             srcToken.chain == Chain.Solana && dstToken.chain == Chain.Solana
 
                         val feeToken = if (hasJupiterSwapProvider) srcToken else nativeToken
-                        val estimatedTokenFees = TokenValue(
-                            value = value,
-                            token = feeToken
-                        )
+                        val estimatedTokenFees = TokenValue(value = value, token = feeToken)
 
-                        val estimatedFee = convertTokenValueToFiat(
-                            feeToken,
-                            estimatedTokenFees,
-                            currency
-                        )
+                        val estimatedFee =
+                            convertTokenValueToFiat(feeToken, estimatedTokenFees, currency)
 
-                        val swapTransaction = SwapTransactionUiModel(
-                            src = ValuedToken(
-                                value = mapTokenValueToDecimalUiString(srcTokenValue),
-                                token = srcToken,
-                                fiatValue = fiatValueToStringMapper(
-                                    convertTokenValueToFiat(
-                                        srcToken,
-                                        srcTokenValue,
-                                        currency
-                                    )
-                                ),
-                            ),
-                            dst = ValuedToken(
-                                value = mapTokenValueToDecimalUiString(dstTokenValue),
-                                token = dstToken,
-                                fiatValue = fiatValueToStringMapper(
-                                    convertTokenValueToFiat(
-                                        dstToken,
-                                        dstTokenValue,
-                                        currency
-                                    )
-                                ),
-                            ),
-                            providerFee = ValuedToken(
-                                token = feeToken,
-                                value = value.toString(),
-                                fiatValue = fiatValueToStringMapper(estimatedFee),
-                            ),
-                            networkFee = ValuedToken(
-                                token = srcToken,
-                                value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
-                                fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
-                            ),
-                            networkFeeFormatted = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
-                                    " ${estimatedNetworkGasFee.tokenValue.unit}",
-                            totalFee = fiatValueToStringMapper(
-                                estimatedFee + networkGasFeeFiatValue
-                            ),
-                        )
+                        val swapTransaction =
+                            SwapTransactionUiModel(
+                                src =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(srcTokenValue),
+                                        token = srcToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    srcToken,
+                                                    srcTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                dst =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(dstTokenValue),
+                                        token = dstToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    dstToken,
+                                                    dstTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                providerFee =
+                                    ValuedToken(
+                                        token = feeToken,
+                                        value = value.toString(),
+                                        fiatValue = fiatValueToStringMapper(estimatedFee),
+                                    ),
+                                networkFee =
+                                    ValuedToken(
+                                        token = srcToken,
+                                        value =
+                                            mapTokenValueToDecimalUiString(
+                                                estimatedNetworkGasFee.tokenValue
+                                            ),
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                estimatedNetworkGasFee.fiatValue
+                                            ),
+                                    ),
+                                networkFeeFormatted =
+                                    mapTokenValueToDecimalUiString(
+                                        estimatedNetworkGasFee.tokenValue
+                                    ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
+                                totalFee =
+                                    fiatValueToStringMapper(estimatedFee + networkGasFeeFiatValue),
+                            )
 
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction)
 
-                        verifyUiModel.value = VerifyUiModel.Swap(
-                            VerifySwapUiModel(
-                                tx = swapTransaction,
-                                vaultName = vaultName,
+                        verifyUiModel.value =
+                            VerifyUiModel.Swap(
+                                VerifySwapUiModel(tx = swapTransaction, vaultName = vaultName)
                             )
-                        )
                     }
 
                     is SwapPayload.ThorChain -> {
-                        val quote = swapQuoteRepository.getSwapQuote(
-                            srcToken = srcToken,
-                            dstToken = dstToken,
-                            dstAddress = swapPayload.data.toAddress,
-                            tokenValue = srcTokenValue,
-                        )
+                        val quote =
+                            swapQuoteRepository.getSwapQuote(
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                dstAddress = swapPayload.data.toAddress,
+                                tokenValue = srcTokenValue,
+                            )
 
-                        val estimatedFee = convertTokenValueToFiat(
-                            dstToken,
-                            quote.fees,
-                            currency
-                        )
-                        val swapTransactionUiModel = SwapTransactionUiModel(
-                            src = ValuedToken(
-                                value = mapTokenValueToDecimalUiString(srcTokenValue),
-                                token = srcToken,
-                                fiatValue = fiatValueToStringMapper(
-                                    convertTokenValueToFiat(
-                                        srcToken,
-                                        srcTokenValue,
-                                        currency
-                                    )
-                                ),
-                            ),
-                            dst = ValuedToken(
-                                value = mapTokenValueToDecimalUiString(dstTokenValue),
-                                token = dstToken,
-                                fiatValue = fiatValueToStringMapper(
-                                    convertTokenValueToFiat(
-                                        dstToken,
-                                        dstTokenValue,
-                                        currency
-                                    )
-                                ),
-                            ),
-                            networkFee = ValuedToken(
-                                token = srcToken,
-                                value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
-                                fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
-                            ),
-                            providerFee = ValuedToken(
-                                token = dstToken,
-                                value = quote.fees.value.toString(),
-                                fiatValue = fiatValueToStringMapper(estimatedFee),
-                            ),
-                            networkFeeFormatted =
-                                mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
-                                        " ${estimatedNetworkGasFee.tokenValue.unit}",
-                            totalFee = fiatValueToStringMapper(
-                                estimatedFee + networkGasFeeFiatValue
-                            ),
-                        )
+                        val estimatedFee = convertTokenValueToFiat(dstToken, quote.fees, currency)
+                        val swapTransactionUiModel =
+                            SwapTransactionUiModel(
+                                src =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(srcTokenValue),
+                                        token = srcToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    srcToken,
+                                                    srcTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                dst =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(dstTokenValue),
+                                        token = dstToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    dstToken,
+                                                    dstTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                networkFee =
+                                    ValuedToken(
+                                        token = srcToken,
+                                        value =
+                                            mapTokenValueToDecimalUiString(
+                                                estimatedNetworkGasFee.tokenValue
+                                            ),
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                estimatedNetworkGasFee.fiatValue
+                                            ),
+                                    ),
+                                providerFee =
+                                    ValuedToken(
+                                        token = dstToken,
+                                        value = quote.fees.value.toString(),
+                                        fiatValue = fiatValueToStringMapper(estimatedFee),
+                                    ),
+                                networkFeeFormatted =
+                                    mapTokenValueToDecimalUiString(
+                                        estimatedNetworkGasFee.tokenValue
+                                    ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
+                                totalFee =
+                                    fiatValueToStringMapper(estimatedFee + networkGasFeeFiatValue),
+                            )
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
 
-                        verifyUiModel.value = VerifyUiModel.Swap(
-                            VerifySwapUiModel(
-                                tx = swapTransactionUiModel,
-                                vaultName = vaultName,
+                        verifyUiModel.value =
+                            VerifyUiModel.Swap(
+                                VerifySwapUiModel(
+                                    tx = swapTransactionUiModel,
+                                    vaultName = vaultName,
+                                )
                             )
-                        )
                     }
 
                     is SwapPayload.MayaChain -> {
-                        val srcUsdFiatValue = convertTokenValueToFiat(
-                            srcToken,
-                            srcTokenValue,
-                            AppCurrency.USD,
-                        )
+                        val srcUsdFiatValue =
+                            convertTokenValueToFiat(srcToken, srcTokenValue, AppCurrency.USD)
 
                         val isAffiliate =
                             srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
-                        val quote = swapQuoteRepository.getMayaSwapQuote(
-                            srcToken = srcToken,
-                            dstToken = dstToken,
-                            dstAddress = swapPayload.data.toAddress,
-                            tokenValue = srcTokenValue,
-                            isAffiliate = isAffiliate
-                        )
+                        val quote =
+                            swapQuoteRepository.getMayaSwapQuote(
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                dstAddress = swapPayload.data.toAddress,
+                                tokenValue = srcTokenValue,
+                                isAffiliate = isAffiliate,
+                            )
 
-                        val estimatedFee =
-                            convertTokenValueToFiat(
-                                dstToken,
-                                quote.fees,
-                                currency
+                        val estimatedFee = convertTokenValueToFiat(dstToken, quote.fees, currency)
+                        val swapTransactionUiModel =
+                            SwapTransactionUiModel(
+                                src =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(srcTokenValue),
+                                        token = srcToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    srcToken,
+                                                    srcTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                dst =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(dstTokenValue),
+                                        token = dstToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    dstToken,
+                                                    dstTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                providerFee =
+                                    ValuedToken(
+                                        token = dstToken,
+                                        value = quote.fees.value.toString(),
+                                        fiatValue = fiatValueToStringMapper(estimatedFee),
+                                    ),
+                                networkFee =
+                                    ValuedToken(
+                                        token = srcToken,
+                                        value =
+                                            mapTokenValueToDecimalUiString(
+                                                estimatedNetworkGasFee.tokenValue
+                                            ),
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                estimatedNetworkGasFee.fiatValue
+                                            ),
+                                    ),
+                                networkFeeFormatted =
+                                    mapTokenValueToDecimalUiString(
+                                        estimatedNetworkGasFee.tokenValue
+                                    ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
+                                totalFee =
+                                    fiatValueToStringMapper(estimatedFee + networkGasFeeFiatValue),
                             )
-                        val swapTransactionUiModel = SwapTransactionUiModel(
-                            src = ValuedToken(
-                                value = mapTokenValueToDecimalUiString(srcTokenValue),
-                                token = srcToken,
-                                fiatValue = fiatValueToStringMapper(
-                                    convertTokenValueToFiat(
-                                        srcToken,
-                                        srcTokenValue,
-                                        currency
-                                    )
-                                ),
-                            ),
-                            dst = ValuedToken(
-                                value = mapTokenValueToDecimalUiString(dstTokenValue),
-                                token = dstToken,
-                                fiatValue = fiatValueToStringMapper(
-                                    convertTokenValueToFiat(
-                                        dstToken,
-                                        dstTokenValue,
-                                        currency
-                                    )
-                                ),
-                            ),
-                            providerFee = ValuedToken(
-                                token = dstToken,
-                                value = quote.fees.value.toString(),
-                                fiatValue = fiatValueToStringMapper(estimatedFee),
-                            ),
-                            networkFee = ValuedToken(
-                                token = srcToken,
-                                value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
-                                fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
-                            ),
-                            networkFeeFormatted =
-                                mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue)
-                                        + " ${estimatedNetworkGasFee.tokenValue.unit}",
-                            totalFee = fiatValueToStringMapper(
-                                estimatedFee + networkGasFeeFiatValue
-                            ),
-                        )
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
-                        verifyUiModel.value = VerifyUiModel.Swap(
-                            VerifySwapUiModel(
-                                tx = swapTransactionUiModel,
-                                vaultName = vaultName,
+                        verifyUiModel.value =
+                            VerifyUiModel.Swap(
+                                VerifySwapUiModel(
+                                    tx = swapTransactionUiModel,
+                                    vaultName = vaultName,
+                                )
                             )
-                        )
                     }
                 }
             }
 
             else -> {
-                val isDeposit = when (val specific = payload.blockChainSpecific) {
-                    is BlockChainSpecific.MayaChain -> specific.isDeposit
-                    is BlockChainSpecific.THORChain -> specific.isDeposit
-                    else -> {
-                        val memoUpper = payload.memo?.uppercase()
-                        payload.coin.isSecuredAsset() &&
+                val isDeposit =
+                    when (val specific = payload.blockChainSpecific) {
+                        is BlockChainSpecific.MayaChain -> specific.isDeposit
+                        is BlockChainSpecific.THORChain -> specific.isDeposit
+                        else -> {
+                            val memoUpper = payload.memo?.uppercase()
+                            payload.coin.isSecuredAsset() &&
                                 (memoUpper?.contains("SECURE+:") == true)
+                        }
                     }
-                }
 
                 if (isDeposit) {
                     when (payload.blockChainSpecific) {
-                        is BlockChainSpecific.MayaChain, is BlockChainSpecific.THORChain, is BlockChainSpecific.Ethereum, is BlockChainSpecific.UTXO -> Unit
-                        else -> error("BlockChainSpecific ${payload.blockChainSpecific} is not supported")
+                        is BlockChainSpecific.MayaChain,
+                        is BlockChainSpecific.THORChain,
+                        is BlockChainSpecific.Ethereum,
+                        is BlockChainSpecific.UTXO -> Unit
+                        else ->
+                            error(
+                                "BlockChainSpecific ${payload.blockChainSpecific} is not supported"
+                            )
                     }
 
                     val payloadToken = payload.coin
                     val chain = payloadToken.chain
 
-                    val tokenValue = TokenValue(
-                        value = payload.toAmount,
-                        unit = payloadToken.ticker,
-                        decimals = payloadToken.decimal,
-                    )
-
-                    val vault = withContext(Dispatchers.IO) {
-                        vaultRepository.get(vaultId)
-                    } ?: error("Vault not found")
-
-                    val blockchainTransaction = Transfer(
-                        coin = payloadToken,
-                        vault = VaultData(
-                            vaultHexChainCode = vault.hexChainCode,
-                            vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                        ),
-                        amount = tokenValue.value,
-                        to = payload.toAddress,
-                        memo = payload.memo,
-                        isMax = false,
-                    )
-
-                    val fees = withContext(Dispatchers.IO) {
-                        feeServiceComposite.calculateFees(blockchainTransaction)
-                    }
-                    val nativeCoin = withContext(Dispatchers.IO) {
-                        tokenRepository.getNativeToken(chain.id)
-                    }
-                    val estimatedTokenFees = TokenValue(
-                        value = fees.amount,
-                        token = nativeCoin,
-                    )
-
-                    val totalGasAndFee = gasFeeToEstimatedFee(
-                        GasFeeParams(
-                            gasLimit = BigInteger.valueOf(1),
-                            gasFee = estimatedTokenFees,
-                            selectedToken = payload.coin,
+                    val tokenValue =
+                        TokenValue(
+                            value = payload.toAmount,
+                            unit = payloadToken.ticker,
+                            decimals = payloadToken.decimal,
                         )
-                    )
 
-                    val depositTransactionUiModel = DepositTransactionUiModel(
-                        token = ValuedToken(
-                            token = payload.coin,
-                            value = mapTokenValueToDecimalUiString(tokenValue),
-                            fiatValue = "",
-                        ),
-                        srcAddress = payload.coin.address,
-                        dstAddress = payload.toAddress,
+                    val vault =
+                        withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+                            ?: error("Vault not found")
 
-                        networkFeeTokenValue = totalGasAndFee.formattedTokenValue,
-                        networkFeeFiatValue = totalGasAndFee.formattedFiatValue,
-                        memo = payload.memo ?: "",
-                    )
+                    val blockchainTransaction =
+                        Transfer(
+                            coin = payloadToken,
+                            vault =
+                                VaultData(
+                                    vaultHexChainCode = vault.hexChainCode,
+                                    vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                                ),
+                            amount = tokenValue.value,
+                            to = payload.toAddress,
+                            memo = payload.memo,
+                            isMax = false,
+                        )
+
+                    val fees =
+                        withContext(Dispatchers.IO) {
+                            feeServiceComposite.calculateFees(blockchainTransaction)
+                        }
+                    val nativeCoin =
+                        withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+                    val estimatedTokenFees = TokenValue(value = fees.amount, token = nativeCoin)
+
+                    val totalGasAndFee =
+                        gasFeeToEstimatedFee(
+                            GasFeeParams(
+                                gasLimit = BigInteger.valueOf(1),
+                                gasFee = estimatedTokenFees,
+                                selectedToken = payload.coin,
+                            )
+                        )
+
+                    val depositTransactionUiModel =
+                        DepositTransactionUiModel(
+                            token =
+                                ValuedToken(
+                                    token = payload.coin,
+                                    value = mapTokenValueToDecimalUiString(tokenValue),
+                                    fiatValue = "",
+                                ),
+                            srcAddress = payload.coin.address,
+                            dstAddress = payload.toAddress,
+                            networkFeeTokenValue = totalGasAndFee.formattedTokenValue,
+                            networkFeeFiatValue = totalGasAndFee.formattedFiatValue,
+                            memo = payload.memo ?: "",
+                        )
                     transactionTypeUiModel =
                         TransactionTypeUiModel.Deposit(depositTransactionUiModel)
-                    verifyUiModel.value = VerifyUiModel.Deposit(
-                        VerifyDepositUiModel(
-                            depositTransactionUiModel
-                        )
-                    )
+                    verifyUiModel.value =
+                        VerifyUiModel.Deposit(VerifyDepositUiModel(depositTransactionUiModel))
                 } else {
                     val payloadToken = payload.coin
                     val address = payloadToken.address
                     val chain = payloadToken.chain
 
-                    val tokenValue = TokenValue(
-                        value = payload.toAmount,
-                        unit = payloadToken.ticker,
-                        decimals = payloadToken.decimal,
-                    )
-
-                    val vault = withContext(Dispatchers.IO) {
-                        vaultRepository.get(vaultId)
-                    } ?: return
-
-                    val blockchainTransaction = Transfer(
-                        coin = payloadToken,
-                        vault = VaultData(
-                            vaultHexChainCode = vault.hexChainCode,
-                            vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                        ),
-                        amount = tokenValue.value,
-                        to = payload.toAddress,
-                        memo = payload.memo,
-                        isMax = false,
-                    )
-
-
-                    val fees = withContext(Dispatchers.IO) {
-                        feeServiceComposite.calculateFees(blockchainTransaction)
-                    }
-                    val nativeCoin = withContext(Dispatchers.IO) {
-                        tokenRepository.getNativeToken(chain.id)
-                    }
-                    val gasFee = TokenValue(
-                        value = fees.amount,
-                        token = nativeCoin,
-                    )
-
-                    val totalGasAndFee = gasFeeToEstimatedFee(
-                        GasFeeParams(
-                            gasLimit = BigInteger.valueOf(1),
-                            gasFee = gasFee,
-                            selectedToken = payload.coin,
+                    val tokenValue =
+                        TokenValue(
+                            value = payload.toAmount,
+                            unit = payloadToken.ticker,
+                            decimals = payloadToken.decimal,
                         )
-                    )
-                    val functionInfo = getTransactionFunctionInfo(
-                        payload.memo,
-                        chain
-                    )
-                    val normalizedSignAminoJson = kotlinx.serialization.json.buildJsonArray{
 
-                        payload.signAmino?.msgs?.forEach { cosmosMsg ->
-                            cosmosMsg?.type ?: return@forEach
-                            addJsonObject {
-                                val type = cosmosMsg.type
-                                val valueElem = try {
-                                    json.parseToJsonElement(cosmosMsg.value)
-                                } catch (e: Exception) {
-                                    kotlinx.serialization.json.JsonPrimitive(cosmosMsg.value)
+                    val vault =
+                        withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return
+
+                    val blockchainTransaction =
+                        Transfer(
+                            coin = payloadToken,
+                            vault =
+                                VaultData(
+                                    vaultHexChainCode = vault.hexChainCode,
+                                    vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                                ),
+                            amount = tokenValue.value,
+                            to = payload.toAddress,
+                            memo = payload.memo,
+                            isMax = false,
+                        )
+
+                    val fees =
+                        withContext(Dispatchers.IO) {
+                            feeServiceComposite.calculateFees(blockchainTransaction)
+                        }
+                    val nativeCoin =
+                        withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+                    val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+
+                    val totalGasAndFee =
+                        gasFeeToEstimatedFee(
+                            GasFeeParams(
+                                gasLimit = BigInteger.valueOf(1),
+                                gasFee = gasFee,
+                                selectedToken = payload.coin,
+                            )
+                        )
+                    val functionInfo = getTransactionFunctionInfo(payload.memo, chain)
+                    val normalizedSignAminoJson =
+                        kotlinx.serialization.json.buildJsonArray {
+                            payload.signAmino?.msgs?.forEach { cosmosMsg ->
+                                cosmosMsg?.type ?: return@forEach
+                                addJsonObject {
+                                    val type = cosmosMsg.type
+                                    val valueElem =
+                                        try {
+                                            json.parseToJsonElement(cosmosMsg.value)
+                                        } catch (e: Exception) {
+                                            kotlinx.serialization.json.JsonPrimitive(
+                                                cosmosMsg.value
+                                            )
+                                        }
+
+                                    put("type", kotlinx.serialization.json.JsonPrimitive(type))
+                                    put("value", valueElem)
                                 }
-
-                                put(
-                                    "type",
-                                    kotlinx.serialization.json.JsonPrimitive(
-                                        type
-                                    )
-                                )
-                                put(
-                                    "value",
-                                    valueElem
-                                )
                             }
                         }
 
-                    }
-
-                    val normalizedSignAmino = json.encodeToString(normalizedSignAminoJson)
-                        .takeIf { !normalizedSignAminoJson.isEmpty() } ?: ""
-                    val signDirect = payload.signDirect?.let {
-                        json.encodeToString(parseCosmosMessage(it))
-                    } ?: ""
+                    val normalizedSignAmino =
+                        json.encodeToString(normalizedSignAminoJson).takeIf {
+                            !normalizedSignAminoJson.isEmpty()
+                        } ?: ""
+                    val signDirect =
+                        payload.signDirect?.let { json.encodeToString(parseCosmosMessage(it)) }
+                            ?: ""
 
                     val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
-                    val transaction = Transaction(
-                        id = UUID.randomUUID().toString(),
-                        vaultId = payload.vaultPublicKeyECDSA,
-                        chainId = chain.id,
-                        token = payloadToken,
-                        srcAddress = address,
-                        dstAddress = payload.toAddress,
-                        tokenValue = tokenValue,
-                        fiatValue = convertTokenValueToFiat(
-                            payloadToken,
-                            tokenValue,
-                            currency,
-                        ),
-                        gasFee = gasFee,
-                        memo = payload.memo.takeIf { functionInfo == null },
-                        estimatedFee = totalGasAndFee.formattedFiatValue,
-                        blockChainSpecific = payload.blockChainSpecific,
-                        totalGas = totalGasAndFee.formattedTokenValue,
-                        signAmino = normalizedSignAmino,
-                        signDirect = signDirect,
-                        signSolana = signSolana,
-                    )
+                    val transaction =
+                        Transaction(
+                            id = UUID.randomUUID().toString(),
+                            vaultId = payload.vaultPublicKeyECDSA,
+                            chainId = chain.id,
+                            token = payloadToken,
+                            srcAddress = address,
+                            dstAddress = payload.toAddress,
+                            tokenValue = tokenValue,
+                            fiatValue = convertTokenValueToFiat(payloadToken, tokenValue, currency),
+                            gasFee = gasFee,
+                            memo = payload.memo.takeIf { functionInfo == null },
+                            estimatedFee = totalGasAndFee.formattedFiatValue,
+                            blockChainSpecific = payload.blockChainSpecific,
+                            totalGas = totalGasAndFee.formattedTokenValue,
+                            signAmino = normalizedSignAmino,
+                            signDirect = signDirect,
+                            signSolana = signSolana,
+                        )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
                     transactionTypeUiModel = TransactionTypeUiModel.Send(transactionToUiModel)
-                    verifyUiModel.value = VerifyUiModel.Send(
-                        VerifyTransactionUiModel(
-                            transaction = transactionToUiModel,
-                            functionSignature = functionInfo?.signature,
-                            functionInputs = functionInfo?.inputs,
+                    verifyUiModel.value =
+                        VerifyUiModel.Send(
+                            VerifyTransactionUiModel(
+                                transaction = transactionToUiModel,
+                                functionSignature = functionInfo?.signature,
+                                functionInputs = functionInfo?.inputs,
+                            )
                         )
-                    )
                     val uiModel = verifyUiModel.value
                     if (uiModel is VerifyUiModel.Send) {
                         scanTransaction(transaction)
@@ -964,9 +965,9 @@ internal class JoinKeysignViewModel @Inject constructor(
     private fun scanTransaction(transaction: Transaction) {
         viewModelScope.launch {
             val chain = transaction.token.chain
-            val isChainSupported = securityScannerService
-                .getSupportedChainsByFeature()
-                .isChainSupported(chain) && securityScannerService.isSecurityServiceEnabled()
+            val isChainSupported =
+                securityScannerService.getSupportedChainsByFeature().isChainSupported(chain) &&
+                    securityScannerService.isSecurityServiceEnabled()
 
             if (!isChainSupported) {
                 return@launch
@@ -981,19 +982,21 @@ internal class JoinKeysignViewModel @Inject constructor(
                 // run scanner and update UI widget
                 val securityScannerTransaction =
                     securityScannerService.createSecurityScannerTransaction(transaction)
-                val scanResult = withContext(Dispatchers.IO) {
-                    securityScannerService.scanTransaction(securityScannerTransaction)
-                }
+                val scanResult =
+                    withContext(Dispatchers.IO) {
+                        securityScannerService.scanTransaction(securityScannerTransaction)
+                    }
                 updateSendUiModel(verifyUiModel) { currentModel ->
                     currentModel.copy(txScanStatus = TransactionScanStatus.Scanned(scanResult))
                 }
             } catch (e: Exception) {
                 updateSendUiModel(verifyUiModel) { currentModel ->
                     currentModel.copy(
-                        txScanStatus = TransactionScanStatus.Error(
-                            e.message ?: "Security Scanner Failed",
-                            BLOCKAID_PROVIDER
-                        )
+                        txScanStatus =
+                            TransactionScanStatus.Error(
+                                e.message ?: "Security Scanner Failed",
+                                BLOCKAID_PROVIDER,
+                            )
                     )
                 }
             }
@@ -1002,7 +1005,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     private fun updateSendUiModel(
         flow: MutableStateFlow<VerifyUiModel>,
-        updateBlock: (VerifyTransactionUiModel) -> VerifyTransactionUiModel
+        updateBlock: (VerifyTransactionUiModel) -> VerifyTransactionUiModel,
     ) {
         flow.update { currentVerifyModel ->
             if (currentVerifyModel is VerifyUiModel.Send) {
@@ -1022,22 +1025,20 @@ internal class JoinKeysignViewModel @Inject constructor(
         if (!payloadId.isEmpty() && tempKeysignMessageProto != null) {
             viewModelScope.launch {
                 // when Payload is not in the QRCode
-                routerApi.getPayload(
-                    _serverAddress,
-                    payloadId
-                ).let { payload ->
+                routerApi.getPayload(_serverAddress, payloadId).let { payload ->
                     if (payload.isNotEmpty()) {
                         val rawPayload = decompressQr(payload.decodeBase64Bytes())
                         val payloadProto =
                             protoBuf.decodeFromByteArray<KeysignPayloadProto>(rawPayload)
-                        val keysignMsgProto = KeysignMessageProto(
-                            keysignPayload = payloadProto,
-                            sessionId = tempKeysignMessageProto!!.sessionId,
-                            serviceName = tempKeysignMessageProto!!.serviceName,
-                            encryptionKeyHex = tempKeysignMessageProto!!.encryptionKeyHex,
-                            useVultisigRelay = _useVultisigRelay,
-                            payloadId = payloadId
-                        )
+                        val keysignMsgProto =
+                            KeysignMessageProto(
+                                keysignPayload = payloadProto,
+                                sessionId = tempKeysignMessageProto!!.sessionId,
+                                serviceName = tempKeysignMessageProto!!.serviceName,
+                                encryptionKeyHex = tempKeysignMessageProto!!.encryptionKeyHex,
+                                useVultisigRelay = _useVultisigRelay,
+                                payloadId = payloadId,
+                            )
                         if (handleKeysignMessage(keysignMsgProto)) {
                             return@launch
                         }
@@ -1055,17 +1056,9 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     fun discoveryMediator(nsdManager: NsdManager) {
         _discoveryListener =
-            MediatorServiceDiscoveryListener(
-                nsdManager,
-                _serviceName,
-                ::onServerAddressDiscovered
-            )
+            MediatorServiceDiscoveryListener(nsdManager, _serviceName, ::onServerAddressDiscovered)
         _nsdManager = nsdManager
-        nsdManager.discoverServices(
-            "_http._tcp.",
-            NsdManager.PROTOCOL_DNS_SD,
-            _discoveryListener
-        )
+        nsdManager.discoverServices("_http._tcp.", NsdManager.PROTOCOL_DNS_SD, _discoveryListener)
     }
 
     fun joinKeysign() {
@@ -1073,19 +1066,12 @@ internal class JoinKeysignViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 try {
                     Timber.tag("JoinKeysignViewModel").d("Joining keysign")
-                    sessionApi.startSession(
-                        _serverAddress,
-                        _sessionID,
-                        listOf(_localPartyID)
-                    )
+                    sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
                 } catch (e: Exception) {
                     Timber.tag("JoinKeysignViewModel")
-                        .e(
-                            "Failed to join keysign: %s",
-                            e.stackTraceToString()
-                        )
+                        .e("Failed to join keysign: %s", e.stackTraceToString())
                     currentState.value =
                         JoinKeysignState.Error(JoinKeysignError.FailedToStart(e.message.toString()))
                 }
@@ -1099,10 +1085,11 @@ internal class JoinKeysignViewModel @Inject constructor(
             when (keysignError.errorType) {
                 JoinKeysignError.MissingRequiredVault,
                 JoinKeysignError.WrongVault,
-                JoinKeysignError.WrongVaultShare -> navigator.route(
-                    Route.Home(showVaultList = true),
-                    opts = NavigationOptions(clearBackStack = true)
-                )
+                JoinKeysignError.WrongVaultShare ->
+                    navigator.route(
+                        Route.Home(showVaultList = true),
+                        opts = NavigationOptions(clearBackStack = true),
+                    )
 
                 else -> navigator.navigate(Destination.Back)
             }
@@ -1114,36 +1101,35 @@ internal class JoinKeysignViewModel @Inject constructor(
     }
 
     private fun waitForKeysignToStart() {
-        _jobWaitingForKeysignStart = viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                while (isActive) {
-                    if (checkKeygenStarted()) {
-                        currentState.value = JoinKeysignState.Keysign
-                        return@withContext
+        _jobWaitingForKeysignStart =
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    while (isActive) {
+                        if (checkKeygenStarted()) {
+                            currentState.value = JoinKeysignState.Keysign
+                            return@withContext
+                        }
+                        // backoff 1s
+                        delay(1000)
                     }
-                    // backoff 1s
-                    delay(1000)
                 }
             }
-        }
     }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun checkKeygenStarted(): Boolean {
         try {
-            this._keysignCommittee = sessionApi.checkCommittee(
-                _serverAddress,
-                _sessionID
-            )
+            this._keysignCommittee = sessionApi.checkCommittee(_serverAddress, _sessionID)
             Timber.d("Keysign committee: $_keysignCommittee")
             Timber.d("local party: $_localPartyID")
             if (this._keysignCommittee.contains(_localPartyID)) {
                 when {
                     _keysignPayload != null -> {
-                        messagesToSign = SigningHelper.getKeysignMessages(
-                            payload = _keysignPayload!!,
-                            vault = _currentVault,
-                        )
+                        messagesToSign =
+                            SigningHelper.getKeysignMessages(
+                                payload = _keysignPayload!!,
+                                vault = _currentVault,
+                            )
                     }
 
                     customMessagePayload != null -> {
@@ -1154,10 +1140,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 return true
             }
         } catch (e: Exception) {
-            Timber.e(
-                e,
-                "Failed to check keysign start"
-            )
+            Timber.e(e, "Failed to check keysign start")
             currentState.value =
                 JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))
         }
@@ -1171,12 +1154,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     fun navigateToHome() {
         viewModelScope.launch {
             if (isNavigateToHome) {
-                navigator.route(
-                    Route.Home(),
-                    NavigationOptions(
-                        clearBackStack = true
-                    )
-                )
+                navigator.route(Route.Home(), NavigationOptions(clearBackStack = true))
             } else {
                 navigator.navigate(Destination.Back)
             }
@@ -1188,23 +1166,14 @@ internal class JoinKeysignViewModel @Inject constructor(
         super.onCleared()
     }
 
-    private suspend fun getTransactionFunctionInfo(
-        memo: String?,
-        chain: Chain,
-    ): FunctionInfo? {
-        if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty())
-            return null
+    private suspend fun getTransactionFunctionInfo(memo: String?, chain: Chain): FunctionInfo? {
+        if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty()) return null
 
         val functionSignature = fourByteRepository.decodeFunction(memo)
-        val functionInputs = if (functionSignature != null) {
-            fourByteRepository.decodeFunctionArgs(
-                functionSignature,
-                memo
-            ) ?: return null
-        } else return null
-        return FunctionInfo(
-            functionSignature,
-            functionInputs
-        )
+        val functionInputs =
+            if (functionSignature != null) {
+                fourByteRepository.decodeFunctionArgs(functionSignature, memo) ?: return null
+            } else return null
+        return FunctionInfo(functionSignature, functionInputs)
     }
 }

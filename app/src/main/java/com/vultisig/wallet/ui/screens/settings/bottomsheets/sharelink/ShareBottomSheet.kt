@@ -41,16 +41,12 @@ import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ShareLinkBottomSheet(
-    onDismissRequest: () -> Unit,
-) {
+internal fun ShareLinkBottomSheet(onDismissRequest: () -> Unit) {
     val viewModel = hiltViewModel<ShareLinkViewModel>()
     val context = LocalContext.current
     val uiModel = remember(context) { viewModel.getUiModel(context) }
 
-    VsModalBottomSheet(
-        onDismissRequest = onDismissRequest
-    ) {
+    VsModalBottomSheet(onDismissRequest = onDismissRequest) {
         ShareLinkContent(
             uiModel = uiModel,
             onShareClick = { shareOption ->
@@ -67,204 +63,169 @@ private fun ShareLinkContent(
     onShareClick: (ShareOptionUiModel) -> Unit,
 ) {
 
-    Column(
-        modifier = Modifier
-            .padding(8.dp),
-    ) {
+    Column(modifier = Modifier.padding(8.dp)) {
         Text(
             text = stringResource(R.string.app_name),
             style = Theme.brockmann.headings.subtitle,
             color = Theme.v2.colors.text.primary,
             modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
-        FadingHorizontalDivider(
-            modifier = Modifier.padding(
-                vertical = 24.dp
-            )
-        )
+        FadingHorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
 
         Text(
             text = stringResource(R.string.settings_screen_share_the_app),
             color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.supplementary.footnote,
-            modifier = Modifier
-                .padding(
-                    horizontal = 20.dp
-                )
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
 
-        UiSpacer(
-            size = 14.dp,
-        )
-
+        UiSpacer(size = 14.dp)
 
         FlowRow(
-            modifier = Modifier
-                .padding(horizontal = 20.dp),
+            modifier = Modifier.padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             uiModel.shareOptions.forEach { shareOption ->
-                ShareOptionItem(
-                    shareOption = shareOption,
-                    onClick = { onShareClick(shareOption) }
-                )
+                ShareOptionItem(shareOption = shareOption, onClick = { onShareClick(shareOption) })
             }
         }
 
-
-        UiSpacer(
-            size = 24.dp,
-        )
+        UiSpacer(size = 24.dp)
 
         V2Container(
             modifier = Modifier.padding(horizontal = 20.dp),
             type = ContainerType.SECONDARY,
-            borderType = ContainerBorderType.Bordered()
+            borderType = ContainerBorderType.Bordered(),
         ) {
             Row(
-                modifier = Modifier
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = uiModel.link,
                     style = Theme.brockmann.body.m.regular,
                     color = Theme.v2.colors.text.secondary,
-                    modifier = Modifier
-                        .weight(1f),
+                    modifier = Modifier.weight(1f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                UiSpacer(
-                    size = 40.dp
-                )
+                UiSpacer(size = 40.dp)
 
                 CopyIcon(
                     textToCopy = uiModel.link,
                     tint = Theme.v2.colors.primary.accent4,
                     size = 16.dp,
                 )
-
             }
         }
 
-
-        UiSpacer(
-            size = 24.dp,
-        )
+        UiSpacer(size = 24.dp)
     }
-
 }
 
 @Composable
-private fun ShareOptionItem(
-    shareOption: ShareOptionUiModel,
-    onClick: () -> Unit,
-) {
+private fun ShareOptionItem(shareOption: ShareOptionUiModel, onClick: () -> Unit) {
 
     Box(
-        modifier = Modifier
-            .size(
-                size = 54.dp
-            )
-            .clip(
-                shape = CircleShape
-            )
-            .clickable(
-                onClick = onClick
-            )
-            .background(
-                Theme.v2.colors.backgrounds.secondary
-            ),
+        modifier =
+            Modifier.size(size = 54.dp)
+                .clip(shape = CircleShape)
+                .clickable(onClick = onClick)
+                .background(Theme.v2.colors.backgrounds.secondary),
         contentAlignment = Alignment.Center,
     ) {
-
         Image(
             painter = rememberAsyncImagePainter(model = shareOption.icon),
             contentDescription = shareOption.label,
-            modifier = Modifier
-                .size(38.dp),
+            modifier = Modifier.size(38.dp),
         )
     }
-
 }
-
 
 @Preview
 @Composable
 private fun ShareLinkContentPreview() {
     ShareLinkContent(
-        uiModel = ShareLinkUiModel(
-            link = VsAuxiliaryLinks.GOOGLE_PLAY,
-            shareOptions = listOf(
-                ShareOptionUiModel(
-                    packageName = "",
-                    label = "More",
-                    icon = AppCompatResources.getDrawable(
-                        LocalContext.current,
-                        R.drawable.plus
-                    )!!,
-                ),
-                ShareOptionUiModel(
-                    packageName = "",
-                    label = "chrome",
-                    icon = AppCompatResources.getDrawable(
-                        LocalContext.current,
-                        R.drawable.plus
-                    )!!,
-                    isSpecial = true
-                ),
-                ShareOptionUiModel(
-                    packageName = "",
-                    label = "chrome",
-                    icon = AppCompatResources.getDrawable(
-                        LocalContext.current,
-                        R.drawable.plus
-                    )!!,
-                    isSpecial = true
-                ),
-                ShareOptionUiModel(
-                    packageName = "",
-                    label = "chrome",
-                    icon = AppCompatResources.getDrawable(
-                        LocalContext.current,
-                        R.drawable.plus
-                    )!!,
-                    isSpecial = true
-                ),
-                ShareOptionUiModel(
-                    packageName = "",
-                    label = "chrome",
-                    icon = AppCompatResources.getDrawable(
-                        LocalContext.current,
-                        R.drawable.plus
-                    )!!,
-                    isSpecial = true
-                ),
-                ShareOptionUiModel(
-                    packageName = "",
-                    label = "chrome",
-                    icon = AppCompatResources.getDrawable(
-                        LocalContext.current,
-                        R.drawable.plus
-                    )!!,
-                    isSpecial = true
-                ),
-                ShareOptionUiModel(
-                    packageName = "",
-                    label = "chrome",
-                    icon = AppCompatResources.getDrawable(
-                        LocalContext.current,
-                        R.drawable.plus
-                    )!!,
-                    isSpecial = true
-                )
-            )
-        ),
-        onShareClick = {}
+        uiModel =
+            ShareLinkUiModel(
+                link = VsAuxiliaryLinks.GOOGLE_PLAY,
+                shareOptions =
+                    listOf(
+                        ShareOptionUiModel(
+                            packageName = "",
+                            label = "More",
+                            icon =
+                                AppCompatResources.getDrawable(
+                                    LocalContext.current,
+                                    R.drawable.plus,
+                                )!!,
+                        ),
+                        ShareOptionUiModel(
+                            packageName = "",
+                            label = "chrome",
+                            icon =
+                                AppCompatResources.getDrawable(
+                                    LocalContext.current,
+                                    R.drawable.plus,
+                                )!!,
+                            isSpecial = true,
+                        ),
+                        ShareOptionUiModel(
+                            packageName = "",
+                            label = "chrome",
+                            icon =
+                                AppCompatResources.getDrawable(
+                                    LocalContext.current,
+                                    R.drawable.plus,
+                                )!!,
+                            isSpecial = true,
+                        ),
+                        ShareOptionUiModel(
+                            packageName = "",
+                            label = "chrome",
+                            icon =
+                                AppCompatResources.getDrawable(
+                                    LocalContext.current,
+                                    R.drawable.plus,
+                                )!!,
+                            isSpecial = true,
+                        ),
+                        ShareOptionUiModel(
+                            packageName = "",
+                            label = "chrome",
+                            icon =
+                                AppCompatResources.getDrawable(
+                                    LocalContext.current,
+                                    R.drawable.plus,
+                                )!!,
+                            isSpecial = true,
+                        ),
+                        ShareOptionUiModel(
+                            packageName = "",
+                            label = "chrome",
+                            icon =
+                                AppCompatResources.getDrawable(
+                                    LocalContext.current,
+                                    R.drawable.plus,
+                                )!!,
+                            isSpecial = true,
+                        ),
+                        ShareOptionUiModel(
+                            packageName = "",
+                            label = "chrome",
+                            icon =
+                                AppCompatResources.getDrawable(
+                                    LocalContext.current,
+                                    R.drawable.plus,
+                                )!!,
+                            isSpecial = true,
+                        ),
+                    ),
+            ),
+        onShareClick = {},
     )
 }

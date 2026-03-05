@@ -2,16 +2,14 @@ package com.vultisig.wallet.data.common
 
 import android.content.Context
 import android.provider.Settings
-import org.bouncycastle.crypto.digests.Blake2bDigest
 import java.security.SecureRandom
 import kotlin.math.ceil
+import org.bouncycastle.crypto.digests.Blake2bDigest
 
 object Utils {
     fun deviceName(context: Context): String {
-        val identifierForVendor: String? = Settings.Secure.getString(
-            context.contentResolver,
-            Settings.Secure.ANDROID_ID
-        )
+        val identifierForVendor: String? =
+            Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
         return "${android.os.Build.MODEL}-${identifierForVendor?.takeLast(3) ?: "N/A"}"
     }
 

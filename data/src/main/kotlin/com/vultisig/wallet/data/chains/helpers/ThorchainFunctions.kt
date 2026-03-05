@@ -1,10 +1,10 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import java.math.BigInteger
 import org.json.JSONArray
 import org.json.JSONObject
 import vultisig.keysign.v1.CosmosCoin
 import vultisig.keysign.v1.WasmExecuteContractPayload
-import java.math.BigInteger
 import wallet.core.jni.Base64
 
 object ThorchainFunctions {
@@ -23,12 +23,7 @@ object ThorchainFunctions {
             senderAddress = fromAddress,
             contractAddress = stakingContract,
             executeMsg = """{ "account": { "bond": {} } }""",
-            coins = listOf(
-                CosmosCoin(
-                    denom = denom,
-                    amount = amount.toString(),
-                )
-            )
+            coins = listOf(CosmosCoin(denom = denom, amount = amount.toString())),
         )
     }
 
@@ -44,14 +39,11 @@ object ThorchainFunctions {
             senderAddress = fromAddress,
             contractAddress = stakingContract,
             executeMsg = """{ "account": { "withdraw": { "amount": "$amount" } } }""",
-            coins = listOf()
+            coins = listOf(),
         )
     }
 
-    fun claimRujiRewards(
-        fromAddress: String,
-        stakingContract: String,
-    ): WasmExecuteContractPayload {
+    fun claimRujiRewards(fromAddress: String, stakingContract: String): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
         require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
 
@@ -75,32 +67,32 @@ object ThorchainFunctions {
         require(tokenContract.isNotEmpty()) { "tokenContract cannot be empty" }
         require(denom.isNotEmpty()) { "Denom cannot be empty" }
 
-        val depositMsg = JSONObject().apply {
-            put("deposit", JSONObject())
-        }
+        val depositMsg = JSONObject().apply { put("deposit", JSONObject()) }
         val base64Msg = Base64.encode(depositMsg.toString().toByteArray(Charsets.UTF_8))
 
-        val fullPayload = JSONObject().apply {
-            put("execute", JSONObject().apply {
-                put("contract_addr", tokenContract)
-                put("msg", base64Msg)
-                put("affiliate", JSONArray().apply {
-                    put(VULTISIG_AFFILIATE_ADDRESS)
-                    put(10)
-                })
-            })
-        }
+        val fullPayload =
+            JSONObject().apply {
+                put(
+                    "execute",
+                    JSONObject().apply {
+                        put("contract_addr", tokenContract)
+                        put("msg", base64Msg)
+                        put(
+                            "affiliate",
+                            JSONArray().apply {
+                                put(VULTISIG_AFFILIATE_ADDRESS)
+                                put(10)
+                            },
+                        )
+                    },
+                )
+            }
 
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = stakingContract,
             executeMsg = fullPayload.toString(),
-            coins = listOf(
-                CosmosCoin(
-                    denom = denom,
-                    amount = amount.toString(),
-                )
-            ),
+            coins = listOf(CosmosCoin(denom = denom, amount = amount.toString())),
         )
     }
 
@@ -116,22 +108,14 @@ object ThorchainFunctions {
         require(slippage.isNotEmpty()) { "slippage cannot be empty" }
         require(denom.isNotEmpty()) { "denom cannot be empty" }
 
-        val executePayload = JSONObject().apply {
-            put("withdraw", JSONObject().apply {
-                put("slippage", slippage)
-            })
-        }
+        val executePayload =
+            JSONObject().apply { put("withdraw", JSONObject().apply { put("slippage", slippage) }) }
 
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = tokenContract,
             executeMsg = executePayload.toString(),
-            coins = listOf(
-                CosmosCoin(
-                    denom = denom,
-                    amount = amount.toString(),
-                ),
-            ),
+            coins = listOf(CosmosCoin(denom = denom, amount = amount.toString())),
         )
     }
 
@@ -149,12 +133,7 @@ object ThorchainFunctions {
             senderAddress = fromAddress,
             contractAddress = stakingContract,
             executeMsg = """{ "liquid": { "bond": {} } }""",
-            coins = listOf(
-                CosmosCoin(
-                    denom = denom,
-                    amount = amount.toString(),
-                )
-            ),
+            coins = listOf(CosmosCoin(denom = denom, amount = amount.toString())),
         )
     }
 
@@ -171,15 +150,9 @@ object ThorchainFunctions {
             senderAddress = fromAddress,
             contractAddress = stakingContract,
             executeMsg = """{ "liquid": { "unbond": {} } }""",
-            coins = listOf(
-                CosmosCoin(
-                    denom = "x/staking-tcy",
-                    amount = units.toString(),
-                )
-            )
+            coins = listOf(CosmosCoin(denom = "x/staking-tcy", amount = units.toString())),
         )
     }
 }
 
-private const val VULTISIG_AFFILIATE_ADDRESS =
-    "thor1svfwxevnxtm4ltnw92hrqpqk4vzuzw9a4jzy04"
+private const val VULTISIG_AFFILIATE_ADDRESS = "thor1svfwxevnxtm4ltnw92hrqpqk4vzuzw9a4jzy04"

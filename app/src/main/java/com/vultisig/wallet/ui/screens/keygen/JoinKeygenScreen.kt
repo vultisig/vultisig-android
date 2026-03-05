@@ -28,9 +28,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun JoinKeygenScreen(
-    model: JoinKeygenViewModel = hiltViewModel()
-) {
+internal fun JoinKeygenScreen(model: JoinKeygenViewModel = hiltViewModel()) {
     KeepScreenOn()
 
     val state by model.state.collectAsState()
@@ -41,26 +39,20 @@ internal fun JoinKeygenScreen(
         ErrorView(
             title = error.message.asString(),
             buttonText = stringResource(R.string.scan_qr_code_error_button),
-            onButtonClick = model::navigateBack
+            onButtonClick = model::navigateBack,
         )
     }
 }
 
 @Composable
-private fun JoinKeygenScreen(
-    state: JoinKeygenUiModel,
-) {
+private fun JoinKeygenScreen(state: JoinKeygenUiModel) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                color = Theme.v2.colors.backgrounds.primary,
-            )
-            .padding(
-                all = 36.dp,
-            )
+        modifier =
+            Modifier.fillMaxSize()
+                .background(color = Theme.v2.colors.backgrounds.primary)
+                .padding(all = 36.dp),
     ) {
         Text(
             text = stringResource(R.string.join_key_gen_waiting_for_other_devices_to_join),
@@ -82,13 +74,12 @@ private fun JoinKeygenScreen(
 
         RiveAnimation(
             animation = R.raw.riv_connecting_with_server,
-            modifier = Modifier
-                .size(24.dp),
+            modifier = Modifier.size(24.dp),
             onInit = {
                 if (state.isSuccess) {
                     it.fireState("State Machine 1", "Succes")
                 }
-            }
+            },
         )
     }
 }
@@ -96,7 +87,5 @@ private fun JoinKeygenScreen(
 @Preview
 @Composable
 private fun JoinKeygenScreenPreview() {
-    JoinKeygenScreen(
-        state = JoinKeygenUiModel(),
-    )
+    JoinKeygenScreen(state = JoinKeygenUiModel())
 }

@@ -2,41 +2,47 @@ package com.vultisig.wallet.data.blockchain.ethereum
 
 import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.Fee
-import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.supportsLegacyGas
 import com.vultisig.wallet.data.utils.increaseByPercent
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
-class EthereumFeeService @Inject constructor(
-    private val evmApiFactory: EvmApiFactory,
-) : FeeService {
+class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory) :
+    FeeService {
 
     @Deprecated("Use calculateFees(transaction: BlockchainTransaction): Fee")
-    override suspend fun calculateFees(chain: Chain, limit: BigInteger, isSwap: Boolean, to: String?): Fee {
+    override suspend fun calculateFees(
+        chain: Chain,
+        limit: BigInteger,
+        isSwap: Boolean,
+        to: String?,
+    ): Fee {
         require(limit > BigInteger.ZERO) { "Limit should not be 0" }
         val evmApi = evmApiFactory.createEvmApi(chain)
 
-        val fees = if (chain.supportsLegacyGas) {
-            calculateLegacyGasFees(limit, evmApi)
-        } else {
-            calculateEip1559Fees(limit, chain, isSwap, evmApi)
-        }
+        val fees =
+            if (chain.supportsLegacyGas) {
+                calculateLegacyGasFees(limit, evmApi)
+            } else {
+                calculateEip1559Fees(limit, chain, isSwap, evmApi)
+            }
 
-        val l1Fees = if (chain.isLayer2) {
-            calculateLayer1Fees()
-        } else {
-            BigInteger.ZERO
-        }
+        val l1Fees =
+            if (chain.isLayer2) {
+                calculateLayer1Fees()
+            } else {
+                BigInteger.ZERO
+            }
 
         return fees.addL1Amount(l1Fees)
     }
@@ -49,17 +55,19 @@ class EthereumFeeService @Inject constructor(
         val evmApi = evmApiFactory.createEvmApi(chain)
         val limit = calculateLimit(transaction, evmApi)
 
-        val fees = if (chain.supportsLegacyGas) {
-            calculateLegacyGasFees(limit, evmApi)
-        } else {
-            calculateEip1559Fees(limit, chain, false, evmApi)
-        }
+        val fees =
+            if (chain.supportsLegacyGas) {
+                calculateLegacyGasFees(limit, evmApi)
+            } else {
+                calculateEip1559Fees(limit, chain, false, evmApi)
+            }
 
-        val l1Fees = if (chain.isLayer2) {
-            calculateLayer1Fees()
-        } else {
-            BigInteger.ZERO
-        }
+        val l1Fees =
+            if (chain.isLayer2) {
+                calculateLayer1Fees()
+            } else {
+                BigInteger.ZERO
+            }
 
         return fees.addL1Amount(l1Fees)
     }
@@ -71,21 +79,24 @@ class EthereumFeeService @Inject constructor(
         val amount = transaction.amount
         val memo = transaction.memo
 
-        val calculatedLimit = if (isCoinTransfer) {
-            evmApi.estimateGasForEthTransaction(
-                senderAddress = token.address,
-                recipientAddress = toAddress,
-                value = amount,
-                memo = memo,
-            )
-        } else {
-            evmApi.estimateGasForERC20Transfer(
-                senderAddress = token.address,
-                recipientAddress = toAddress,
-                contractAddress = token.contractAddress,
-                value = amount,
-            ).increaseByPercent(50)
-        }
+        val calculatedLimit =
+            if (isCoinTransfer) {
+                evmApi.estimateGasForEthTransaction(
+                    senderAddress = token.address,
+                    recipientAddress = toAddress,
+                    value = amount,
+                    memo = memo,
+                )
+            } else {
+                evmApi
+                    .estimateGasForERC20Transfer(
+                        senderAddress = token.address,
+                        recipientAddress = toAddress,
+                        contractAddress = token.contractAddress,
+                        value = amount,
+                    )
+                    .increaseByPercent(50)
+            }
 
         return maxOf(calculatedLimit, getDefaultLimit(transaction))
     }
@@ -99,17 +110,13 @@ class EthereumFeeService @Inject constructor(
         val defaultLimit = getDefaultLimit(transaction)
         val isSwap = transaction is Transfer
 
-        return calculateFees(chain,  defaultLimit, isSwap)
+        return calculateFees(chain, defaultLimit, isSwap)
     }
 
     private suspend fun calculateLegacyGasFees(limit: BigInteger, evmApi: EvmApi): GasFees {
         val gasPrice = evmApi.getGasPrice()
 
-        return GasFees(
-            price = gasPrice,
-            limit = limit,
-            amount = gasPrice * limit,
-        )
+        return GasFees(price = gasPrice, limit = limit, amount = gasPrice * limit)
     }
 
     private suspend fun calculateEip1559Fees(
@@ -160,17 +167,27 @@ class EthereumFeeService @Inject constructor(
         } else {
             when (chain) {
                 // Arb and Mantle requires no miner tip
-                Chain.Arbitrum, Chain.Mantle -> BigInteger.ZERO
+                Chain.Arbitrum,
+                Chain.Mantle -> BigInteger.ZERO
 
                 // Blast is a dead chain, with empty blocks with 0 miner tips
-                Chain.Blast -> maxOf(rewardsFeeHistory.maxOrNull() ?: BigInteger.ZERO, DEFAULT_MAX_PRIORITY_FEE_BLAST)
+                Chain.Blast ->
+                    maxOf(
+                        rewardsFeeHistory.maxOrNull() ?: BigInteger.ZERO,
+                        DEFAULT_MAX_PRIORITY_FEE_BLAST,
+                    )
 
                 // picked max from 10 previous blocks, then ensure inclusion. For l2 is quite low
                 Chain.Base,
-                Chain.Optimism, -> rewardsFeeHistory.maxOrNull() ?: DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2
+                Chain.Optimism ->
+                    rewardsFeeHistory.maxOrNull() ?: DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2
 
                 // polygon has min of 30 gwei, but some blocks comes with less rewards
-                Chain.Polygon -> maxOf(rewardsFeeHistory[rewardsFeeHistory.size / 2], GWEI * DEFAULT_MAX_PRIORITY_FEE_POLYGON)
+                Chain.Polygon ->
+                    maxOf(
+                        rewardsFeeHistory[rewardsFeeHistory.size / 2],
+                        GWEI * DEFAULT_MAX_PRIORITY_FEE_POLYGON,
+                    )
 
                 // picked medium with min of 1 GWEI (ETH etc..)
                 else -> maxOf(a = rewardsFeeHistory[rewardsFeeHistory.size / 2], b = GWEI)

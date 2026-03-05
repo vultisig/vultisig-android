@@ -40,9 +40,7 @@ import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun SelectAssetScreen(
-    model: SelectAssetViewModel = hiltViewModel(),
-) {
+internal fun SelectAssetScreen(model: SelectAssetViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     VsModalBottomSheet(
@@ -54,7 +52,7 @@ internal fun SelectAssetScreen(
                 onAssetClick = model::selectAsset,
                 onSelectChain = model::selectChain,
             )
-        }
+        },
     )
 }
 
@@ -76,14 +74,10 @@ private fun SelectAssetScreen(
                     style = Theme.brockmann.body.l.medium,
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(all = 16.dp)
+                    modifier = Modifier.fillMaxWidth().padding(all = 16.dp),
                 )
 
-                VsSearchTextField(
-                    fieldState = searchFieldState,
-                )
+                VsSearchTextField(fieldState = searchFieldState)
             }
         },
         content = {
@@ -93,11 +87,7 @@ private fun SelectAssetScreen(
                     NoFoundContent(message = stringResource(R.string.select_asset_no_result))
                 }
             } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(
-                        all = 16.dp,
-                    ),
-                ) {
+                LazyColumn(contentPadding = PaddingValues(all = 16.dp)) {
                     itemsIndexed(assets) { index, item ->
                         val isFirst = index == 0
                         val isLast = index == assets.size - 1
@@ -110,19 +100,18 @@ private fun SelectAssetScreen(
                             amount = item.amount,
                             value = item.value,
                             isDisabled = item.isDisabled,
-                            modifier = Modifier
-                                .clickable(onClick = {
-                                    onAssetClick(item)
-                                })
-                                .background(
-                                    color = Theme.v2.colors.backgrounds.secondary,
-                                    shape = RoundedCornerShape(
-                                        topStart = if (isFirst) rounding else 0.dp,
-                                        topEnd = if (isFirst) rounding else 0.dp,
-                                        bottomStart = if (isLast) rounding else 0.dp,
-                                        bottomEnd = if (isLast) rounding else 0.dp,
-                                    )
-                                )
+                            modifier =
+                                Modifier.clickable(onClick = { onAssetClick(item) })
+                                    .background(
+                                        color = Theme.v2.colors.backgrounds.secondary,
+                                        shape =
+                                            RoundedCornerShape(
+                                                topStart = if (isFirst) rounding else 0.dp,
+                                                topEnd = if (isFirst) rounding else 0.dp,
+                                                bottomStart = if (isLast) rounding else 0.dp,
+                                                bottomEnd = if (isLast) rounding else 0.dp,
+                                            ),
+                                    ),
                         )
 
                         if (!isLast) {
@@ -141,10 +130,9 @@ private fun SelectAssetScreen(
                 chains = state.chains,
                 selectedChain = state.selectedChain,
             )
-        }
+        },
     )
 }
-
 
 @Composable
 private fun AssetItem(
@@ -159,50 +147,36 @@ private fun AssetItem(
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .padding(
-                horizontal = 20.dp,
-                vertical = 12.dp,
-            )
+        modifier = modifier.padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
         TokenLogo(
-            errorLogoModifier = Modifier
-                .size(32.dp)
-                .background(Theme.v2.colors.neutrals.n100),
+            errorLogoModifier = Modifier.size(32.dp).background(Theme.v2.colors.neutrals.n100),
             logo = logo,
             title = title,
-            modifier = Modifier
-                .size(32.dp)
+            modifier = Modifier.size(32.dp),
         )
 
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.primary,
-            modifier = Modifier.weight(2f)
+            modifier = Modifier.weight(2f),
         )
 
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.secondary,
-            modifier = Modifier
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(70.dp),
-                )
-                .padding(
-                    horizontal = 12.dp,
-                    vertical = 8.dp,
-                ),
+            modifier =
+                Modifier.border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.border.light,
+                        shape = RoundedCornerShape(70.dp),
+                    )
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
         )
 
-
-        Column(
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier.weight(1f),
-        ) {
+        Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
             if (!isDisabled) {
                 AutoSizingText(
                     text = amount,
@@ -217,7 +191,6 @@ private fun AssetItem(
                 )
             }
         }
-
     }
 }
 
@@ -225,34 +198,36 @@ private fun AssetItem(
 @Composable
 private fun SelectAssetScreenPreview() {
     SelectAssetScreen(
-        state = SelectAssetUiModel(
-            assets = listOf(
-                AssetUiModel(
-                    token = Coins.Base.WEWE,
-                    logo = "btc",
-                    title = "BTC",
-                    subtitle = "Bitcoin",
-                    amount = "0.00",
-                    value = "$0.00",
-                ),
-                AssetUiModel(
-                    token = Coins.Base.WEWE,
-                    logo = "eth",
-                    title = "ETH",
-                    subtitle = "Ethereum",
-                    amount = "0.00",
-                    value = "$0.00",
-                ),
-                AssetUiModel(
-                    token = Coins.Base.WEWE,
-                    logo = "thor",
-                    title = "LP-GAIA.ATOM/ETH.USDC-XYK",
-                    subtitle = "Thorchain",
-                    amount = "0.00",
-                    value = "$0.00",
-                ),
-            )
-        ),
+        state =
+            SelectAssetUiModel(
+                assets =
+                    listOf(
+                        AssetUiModel(
+                            token = Coins.Base.WEWE,
+                            logo = "btc",
+                            title = "BTC",
+                            subtitle = "Bitcoin",
+                            amount = "0.00",
+                            value = "$0.00",
+                        ),
+                        AssetUiModel(
+                            token = Coins.Base.WEWE,
+                            logo = "eth",
+                            title = "ETH",
+                            subtitle = "Ethereum",
+                            amount = "0.00",
+                            value = "$0.00",
+                        ),
+                        AssetUiModel(
+                            token = Coins.Base.WEWE,
+                            logo = "thor",
+                            title = "LP-GAIA.ATOM/ETH.USDC-XYK",
+                            subtitle = "Thorchain",
+                            amount = "0.00",
+                            value = "$0.00",
+                        ),
+                    )
+            ),
         searchFieldState = TextFieldState(),
         onAssetClick = {},
         onSelectChain = {},

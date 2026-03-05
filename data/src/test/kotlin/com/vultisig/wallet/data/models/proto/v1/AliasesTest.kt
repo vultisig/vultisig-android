@@ -50,7 +50,10 @@ class AliasesTest {
 
     @Test
     fun `round-trip KeyImport through proto and back`() {
-        assertEquals(SigningLibType.KeyImport, SigningLibType.KeyImport.toProto().toSigningLibType())
+        assertEquals(
+            SigningLibType.KeyImport,
+            SigningLibType.KeyImport.toProto().toSigningLibType(),
+        )
     }
 
     @Test

@@ -11,8 +11,5 @@ internal fun UiHorizontalDivider(
     modifier: Modifier = Modifier,
     color: Color = Theme.v2.colors.backgrounds.tertiary_2,
 ) {
-    HorizontalDivider(
-        color = color,
-        modifier = modifier,
-    )
+    HorizontalDivider(color = color, modifier = modifier)
 }

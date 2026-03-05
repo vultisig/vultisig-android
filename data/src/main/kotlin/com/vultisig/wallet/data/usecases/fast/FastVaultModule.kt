@@ -13,7 +13,6 @@ abstract class FastVaultModule {
     @Binds
     @Singleton
     internal abstract fun bindVerifyFastVaultBackupCodeUseCase(
-        impl: VerifyFastVaultBackupCodeUseCaseImpl,
+        impl: VerifyFastVaultBackupCodeUseCaseImpl
     ): VerifyFastVaultBackupCodeUseCase
-
 }

@@ -10,15 +10,12 @@ import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.wallet.Swaps
+import java.math.BigInteger
 import tss.KeysignResponse
 import wallet.core.jni.proto.Ethereum.SigningInput
 import wallet.core.jni.proto.Ethereum.Transaction
-import java.math.BigInteger
 
-class OneInchSwap(
-    private val vaultHexPublicKey: String,
-    private val vaultHexChainCode: String,
-) {
+class OneInchSwap(private val vaultHexPublicKey: String, private val vaultHexChainCode: String) {
 
     fun getPreSignedImageHash(
         swapPayload: EVMSwapPayloadJson,
@@ -40,8 +37,7 @@ class OneInchSwap(
         nonceIncrement: BigInteger,
     ): SignedTransactionResult {
         val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload, nonceIncrement)
-        val helper =
-            EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
+        val helper = EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
         return helper.getSignedTransaction(inputData, signatures)
     }
 
@@ -50,33 +46,44 @@ class OneInchSwap(
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): ByteArray {
-        val input = SigningInput.newBuilder()
-            .setToAddress(quote.tx.to)
-            .setTransaction(
-                Transaction.newBuilder()
-                    .setContractGeneric(
-                        Transaction.ContractGeneric.newBuilder()
-                            .setAmount(
-                                quote.tx.value.toBigIntegerOrNull()?.toByteArray()?.toByteString()
-                                    ?: BigInteger.ZERO.toByteArray().toByteString()
-                            )
-                            .setData(quote.tx.data.removePrefix("0x").toHexBytesInByteString())
-                    )
-            )
+        val input =
+            SigningInput.newBuilder()
+                .setToAddress(quote.tx.to)
+                .setTransaction(
+                    Transaction.newBuilder()
+                        .setContractGeneric(
+                            Transaction.ContractGeneric.newBuilder()
+                                .setAmount(
+                                    quote.tx.value
+                                        .toBigIntegerOrNull()
+                                        ?.toByteArray()
+                                        ?.toByteString()
+                                        ?: BigInteger.ZERO.toByteArray().toByteString()
+                                )
+                                .setData(quote.tx.data.removePrefix("0x").toHexBytesInByteString())
+                        )
+                )
 
-        val gasPrice = maxOf(quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO,
-            requireEthereumSpec(keysignPayload.blockChainSpecific).maxFeePerGasWei)
-        val gas = maxOf(
-            (quote.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
-            requireEthereumSpec(keysignPayload.blockChainSpecific).gasLimit
-        )
+        val gasPrice =
+            maxOf(
+                quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO,
+                requireEthereumSpec(keysignPayload.blockChainSpecific).maxFeePerGasWei,
+            )
+        val gas =
+            maxOf(
+                (quote.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
+                    .toBigInteger(),
+                requireEthereumSpec(keysignPayload.blockChainSpecific).gasLimit,
+            )
         return EthereumGasHelper.setGasParameters(
-            gas = gas,
-            gasPrice = gasPrice,
-            signingInput = input,
-            keysignPayload = keysignPayload,
-            nonceIncrement = nonceIncrement,
-            coinType = keysignPayload.coin.coinType
-        ).build().toByteArray()
+                gas = gas,
+                gasPrice = gasPrice,
+                signingInput = input,
+                keysignPayload = keysignPayload,
+                nonceIncrement = nonceIncrement,
+                coinType = keysignPayload.coin.coinType,
+            )
+            .build()
+            .toByteArray()
     }
 }

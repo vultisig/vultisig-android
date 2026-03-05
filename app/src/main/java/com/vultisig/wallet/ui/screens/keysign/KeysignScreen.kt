@@ -29,10 +29,7 @@ internal fun KeysignScreen(
 
     when (val state = keysignFlowState) {
         is KeysignFlowState.PeerDiscovery -> {
-            KeysignPeerDiscovery(
-                viewModel = viewModel,
-                txType = txType,
-            )
+            KeysignPeerDiscovery(viewModel = viewModel, txType = txType)
         }
 
         is KeysignFlowState.Keysign -> {
@@ -44,10 +41,7 @@ internal fun KeysignScreen(
         }
 
         is Error -> {
-            KeysignErrorScreen(
-                errorMessage = state.errorMessage,
-                tryAgain = viewModel::tryAgain,
-            )
+            KeysignErrorScreen(errorMessage = state.errorMessage, tryAgain = viewModel::tryAgain)
         }
     }
 }
@@ -63,18 +57,18 @@ private fun Keysign(
     val reviewManager = remember { ReviewManagerFactory.create(context) }
     val view = LocalView.current
 
-    val wrapperViewModel = hiltViewModel(
-        creationCallback = { factory: KeySignWrapperViewModel.Factory ->
-            factory.create(viewModel)
-        }
-    )
+    val wrapperViewModel =
+        hiltViewModel(
+            creationCallback = { factory: KeySignWrapperViewModel.Factory ->
+                factory.create(viewModel)
+            }
+        )
 
     val keysignViewModel = wrapperViewModel.viewModel
 
     val state: KeysignState = keysignViewModel.currentState.collectAsState().value
     LaunchedEffect(state) {
         when (state) {
-
             is KeysignState.Error -> onError(state.errorMessage)
             is KeysignState.KeysignECDSA,
             is KeysignState.KeysignEdDSA -> {

@@ -12,15 +12,13 @@ interface FolderDao {
     @Query("SELECT * FROM vaultFolder WHERE id = :id")
     suspend fun getFolder(id: String): FolderEntity
 
-    @Query("DELETE FROM vaultFolder WHERE id = :id")
-    suspend fun deleteFolder(id: String)
+    @Query("DELETE FROM vaultFolder WHERE id = :id") suspend fun deleteFolder(id: String)
 
     @Query("UPDATE vaultFolder SET name = :name WHERE id = :id")
     suspend fun updateFolderName(id: String, name: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertFolder(folder: FolderEntity) : Long
+    suspend fun insertFolder(folder: FolderEntity): Long
 
-    @Query("SELECT * FROM vaultFolder")
-    fun getAll(): Flow<List<FolderEntity>>
+    @Query("SELECT * FROM vaultFolder") fun getAll(): Flow<List<FolderEntity>>
 }

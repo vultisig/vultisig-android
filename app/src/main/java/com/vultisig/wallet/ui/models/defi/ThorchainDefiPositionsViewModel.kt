@@ -44,6 +44,10 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.defi.thorchainSupportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.math.RoundingMode
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -58,10 +62,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import wallet.core.jni.CoinType
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.math.RoundingMode
-import javax.inject.Inject
 
 internal data class ThorchainDefiPositionsUiModel(
     // tabs info
@@ -89,9 +89,7 @@ internal data class BondedTabUiModel(
     val nodes: List<BondedNodeUiModel> = emptyList(),
 )
 
-internal data class StakingTabUiModel(
-    val positions: List<StakePositionUiModel> = emptyList()
-)
+internal data class StakingTabUiModel(val positions: List<StakePositionUiModel> = emptyList())
 
 internal data class LpTabUiModel(
     val isLoading: Boolean = false,
@@ -142,7 +140,9 @@ data class TotalDefiValue(
 )
 
 @HiltViewModel
-internal class ThorchainDefiPositionsViewModel @Inject constructor(
+internal class ThorchainDefiPositionsViewModel
+@Inject
+constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val bondUseCase: ThorchainBondUseCase,
@@ -175,9 +175,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
     val totalValueTCYStake: StateFlow<BigInteger> = _totalValueTCYStake
     val isLoadingTotalAmount: StateFlow<Boolean> = _isLoadingTotalAmount
 
-
-
-    fun setData(vaultId: VaultId){
+    fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
         loadBalanceVisibility()
         loadSavedPositions()
@@ -186,9 +184,8 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
 
     private fun loadBalanceVisibility() {
         viewModelScope.launch {
-            val isVisible = withContext(Dispatchers.IO) {
-                balanceVisibilityRepository.getVisibility(vaultId)
-            }
+            val isVisible =
+                withContext(Dispatchers.IO) { balanceVisibilityRepository.getVisibility(vaultId) }
             state.update { it.copy(isBalanceVisible = isVisible) }
         }
     }
@@ -196,24 +193,25 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
     private fun loadTotalValue() {
         viewModelScope.launch {
             combine(
-                totalValueBond,
-                totalValueDefaultStake,
-                totalValueRujiStake,
-                totalValueTCYStake,
-                isLoadingTotalAmount,
-            ) { bondValue, stakeValue, rujiStake, tcyStake, isLoading ->
-                TotalDefiValue(
-                    bondAmount = bondValue,
-                    defaultStakeValues = stakeValue,
-                    rujiStakeAmount = rujiStake,
-                    tcyStakeAmount = tcyStake,
-                    isLoading = isLoading,
-                )
-            }.collect { totalValue ->
-                if (!totalValue.isLoading) {
-                    handleTotalValueUpdate(totalValue)
+                    totalValueBond,
+                    totalValueDefaultStake,
+                    totalValueRujiStake,
+                    totalValueTCYStake,
+                    isLoadingTotalAmount,
+                ) { bondValue, stakeValue, rujiStake, tcyStake, isLoading ->
+                    TotalDefiValue(
+                        bondAmount = bondValue,
+                        defaultStakeValues = stakeValue,
+                        rujiStakeAmount = rujiStake,
+                        tcyStakeAmount = tcyStake,
+                        isLoading = isLoading,
+                    )
                 }
-            }
+                .collect { totalValue ->
+                    if (!totalValue.isLoading) {
+                        handleTotalValueUpdate(totalValue)
+                    }
+                }
         }
     }
 
@@ -236,15 +234,15 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                         createFiatValue(decimalAmount, position.coin, currency)
                     }
 
-                val totalFiatValue = listOf(runeFiatValue, rujiFiatValue, tcyFiatValue)
-                    .plus(defaultStakingFiatValues)
-                    .fold(FiatValue(BigDecimal.ZERO, currency.ticker)) { acc, fiatValue ->
-                        acc + fiatValue
-                    }
+                val totalFiatValue =
+                    listOf(runeFiatValue, rujiFiatValue, tcyFiatValue)
+                        .plus(defaultStakingFiatValues)
+                        .fold(FiatValue(BigDecimal.ZERO, currency.ticker)) { acc, fiatValue ->
+                            acc + fiatValue
+                        }
 
-                val currencyFormat = withContext(Dispatchers.IO) {
-                    appCurrencyRepository.getCurrencyFormat()
-                }
+                val currencyFormat =
+                    withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
 
                 state.update {
                     it.copy(
@@ -255,11 +253,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
             } catch (e: Exception) {
                 Timber.e(e, "Failed to calculate total fiat value")
 
-                state.update {
-                    it.copy(
-                        isTotalAmountLoading = false,
-                    )
-                }
+                state.update { it.copy(isTotalAmountLoading = false) }
             }
         }
     }
@@ -267,29 +261,28 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
     private suspend fun createFiatValue(
         amount: BigDecimal,
         coin: Coin,
-        currency: AppCurrency
+        currency: AppCurrency,
     ): FiatValue {
         try {
             if (amount == BigDecimal.ZERO) {
                 return FiatValue(BigDecimal.ZERO, currency.ticker)
             }
 
-            val price = tokenPriceRepository.getCachedPrice(
-                tokenId = coin.id,
-                appCurrency = currency
-            ) ?: tokenPriceRepository.getPriceByContactAddress(coin.chain.id, coin.contractAddress)
+            val price =
+                tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
+                    ?: tokenPriceRepository.getPriceByContactAddress(
+                        coin.chain.id,
+                        coin.contractAddress,
+                    )
 
             return FiatValue(
                 value = amount.multiply(price).setScale(2, RoundingMode.DOWN),
-                currency = currency.ticker
+                currency = currency.ticker,
             )
         } catch (t: Throwable) {
             Timber.e(t)
 
-            return FiatValue(
-                value = BigDecimal.ZERO,
-                currency = currency.ticker
-            )
+            return FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)
         }
     }
 
@@ -299,17 +292,13 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
             state.update {
                 it.copy(
                     selectedPositions = savedPositions.toList(),
-                    tempSelectedPositions = savedPositions.toList()
+                    tempSelectedPositions = savedPositions.toList(),
                 )
             }
 
-            launch {
-                loadBondedNodes()
-            }
+            launch { loadBondedNodes() }
 
-            launch {
-                loadStakingPositions()
-            }
+            launch { loadStakingPositions() }
         }
     }
 
@@ -321,71 +310,51 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
             if (!state.value.selectedPositions.hasBondPositions()) {
                 _totalValueBond.value = BigInteger.ZERO
 
-                state.update {
-                    it.copy(
-                        bonded = emptyBondedTabUiModel(),
-                    )
-                }
+                state.update { it.copy(bonded = emptyBondedTabUiModel()) }
                 return@launch
             }
 
-            state.update {
-                it.copy(
-                    bonded = it.bonded.copy(isLoading = true)
-                )
-            }
+            state.update { it.copy(bonded = it.bonded.copy(isLoading = true)) }
 
             // Load selected positions, if disabled then show nothing
             try {
-                val vault = withContext(Dispatchers.IO) {
-                    vaultRepository.get(vaultId)
-                }
+                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
                 val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
 
                 if (runeCoin == null) {
                     Timber.e("Vault does not have RUNE coin")
-                    state.update {
-                        it.copy(
-                            bonded = it.bonded.copy(isLoading = false)
-                        )
-                    }
+                    state.update { it.copy(bonded = it.bonded.copy(isLoading = false)) }
                     return@launch
                 }
 
                 val address = runeCoin.address
 
                 bondedNodesRefreshTrigger
-                    .flatMapLatest {
-                        bondUseCase.getActiveNodes(vaultId, address)
-                    }
+                    .flatMapLatest { bondUseCase.getActiveNodes(vaultId, address) }
                     .catch { it ->
                         Timber.e(it)
-                        state.update {
-                            it.copy(
-                                bonded = it.bonded.copy(isLoading = false)
-                            )
-                        }
+                        state.update { it.copy(bonded = it.bonded.copy(isLoading = false)) }
                     }
                     .collect { activeNodes ->
                         // Format UI data and show
                         val nodeUiModels = activeNodes.map { it.toUiModel() }
                         val totalBonded = calculateTotalBonded(activeNodes)
 
-                        val totalBondedRaw = activeNodes.fold(BigInteger.ZERO) { acc, node ->
-                            acc + node.amount
-                        }
+                        val totalBondedRaw =
+                            activeNodes.fold(BigInteger.ZERO) { acc, node -> acc + node.amount }
 
                         val bondedPrice = calculateBondedFiatPrice(totalBondedRaw)
 
                         state.update {
                             it.copy(
                                 isTotalAmountLoading = false,
-                                bonded = BondedTabUiModel(
-                                    isLoading = false,
-                                    totalBondedAmount = totalBonded,
-                                    totalBondedPrice = bondedPrice,
-                                    nodes = nodeUiModels
-                                )
+                                bonded =
+                                    BondedTabUiModel(
+                                        isLoading = false,
+                                        totalBondedAmount = totalBonded,
+                                        totalBondedPrice = bondedPrice,
+                                        nodes = nodeUiModels,
+                                    ),
                             )
                         }
 
@@ -396,7 +365,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         isTotalAmountLoading = false,
-                        bonded = it.bonded.copy(isLoading = false)
+                        bonded = it.bonded.copy(isLoading = false),
                     )
                 }
             }
@@ -404,18 +373,12 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
     }
 
     private fun updateTotalValueStatus(amount: BigInteger, loading: Boolean) {
-        _totalValueBond.update {
-            amount
-        }
-        _isLoadingTotalAmount.update {
-            loading
-        }
+        _totalValueBond.update { amount }
+        _isLoadingTotalAmount.update { loading }
     }
 
     private fun calculateTotalBonded(nodes: List<BondedNodePosition>): String {
-        val total = nodes.fold(BigInteger.ZERO) { acc, node ->
-            acc + node.amount
-        }
+        val total = nodes.fold(BigInteger.ZERO) { acc, node -> acc + node.amount }
         return total.formatAmount(CoinType.THORCHAIN)
     }
 
@@ -424,9 +387,8 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
             val totalInRune = CoinType.THORCHAIN.toValue(totalBondedRaw)
             val currency = appCurrencyRepository.currency.first()
             val fiatValue = createFiatValue(totalInRune, Coins.ThorChain.RUNE, currency)
-            val currencyFormat = withContext(Dispatchers.IO) {
-                appCurrencyRepository.getCurrencyFormat()
-            }
+            val currencyFormat =
+                withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
             currencyFormat.format(fiatValue.value)
         } catch (e: Exception) {
             Timber.e(e, "Failed to calculate bonded fiat price")
@@ -447,30 +409,19 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 _totalValueTCYStake.update { BigInteger.ZERO }
                 _isLoadingTotalAmount.update { false }
 
-                state.update {
-                    it.copy(
-                        staking = emptyStakingTabUiModel()
-                    )
-                }
+                state.update { it.copy(staking = emptyStakingTabUiModel()) }
                 return@launch
             }
-            val defaultLoadingPositions = loadDefaultStakingPositions().filter { coin ->
-                selectedPositions.contains(coin.stakedAmountDisplay)
-            }.map { positionUiModel ->
-                positionUiModel.copy(isLoading = true)
-            }
+            val defaultLoadingPositions =
+                loadDefaultStakingPositions()
+                    .filter { coin -> selectedPositions.contains(coin.stakedAmountDisplay) }
+                    .map { positionUiModel -> positionUiModel.copy(isLoading = true) }
             state.update {
-                it.copy(
-                    staking = StakingTabUiModel(
-                        positions = defaultLoadingPositions,
-                    )
-                )
+                it.copy(staking = StakingTabUiModel(positions = defaultLoadingPositions))
             }
 
             try {
-                val vault = withContext(Dispatchers.IO) {
-                    vaultRepository.get(vaultId)
-                }
+                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
 
                 val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
 
@@ -479,20 +430,23 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
 
                     state.update {
                         it.copy(
-                            staking = it.staking.copy(
-                                positions = it.staking.positions.map { position ->
-                                    position.copy(isLoading = false)
-                                }
-                            )
+                            staking =
+                                it.staking.copy(
+                                    positions =
+                                        it.staking.positions.map { position ->
+                                            position.copy(isLoading = false)
+                                        }
+                                )
                         )
                     }
                     return@launch
                 }
 
                 val address = runeCoin.address
-                val coinsToLoad = thorchainSupportStakingDeFi.filter { coin ->
-                    selectedPositions.contains(coin.ticker)
-                }.map { coin -> coin.id }
+                val coinsToLoad =
+                    thorchainSupportStakingDeFi
+                        .filter { coin -> selectedPositions.contains(coin.ticker) }
+                        .map { coin -> coin.id }
 
                 if (coinsToLoad.contains(Coins.ThorChain.RUJI.id)) {
                     createRujiStakePosition(address, vaultId)
@@ -506,36 +460,38 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 Timber.e(t, "Failed to load staking positions")
                 state.update {
                     it.copy(
-                        staking = it.staking.copy(
-                            positions = it.staking.positions.map { position ->
-                                position.copy(isLoading = false)
-                            }
-                        )
+                        staking =
+                            it.staking.copy(
+                                positions =
+                                    it.staking.positions.map { position ->
+                                        position.copy(isLoading = false)
+                                    }
+                            )
                     )
                 }
             }
         }
     }
 
-    private fun createRujiStakePosition(
-        address: String,
-        vaultId: String
-    ) {
+    private fun createRujiStakePosition(address: String, vaultId: String) {
         viewModelScope.launch {
-            rujiStakingService.getStakingDetails(address, vaultId)
+            rujiStakingService
+                .getStakingDetails(address, vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions RUJI")
                     state.update {
                         it.copy(
-                            staking = it.staking.copy(
-                                positions = it.staking.positions.map { position ->
-                                    if (position.coin.id == Coins.ThorChain.RUJI.id) {
-                                        position.copy(isLoading = false)
-                                    } else {
-                                        position
-                                    }
-                                }
-                            )
+                            staking =
+                                it.staking.copy(
+                                    positions =
+                                        it.staking.positions.map { position ->
+                                            if (position.coin.id == Coins.ThorChain.RUJI.id) {
+                                                position.copy(isLoading = false)
+                                            } else {
+                                                position
+                                            }
+                                        }
+                                )
                         )
                     }
                 }
@@ -543,25 +499,28 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                     val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
                     val formattedAmount = "${stakedAmount.toPlainString()} $RUJI_SYMBOL"
 
-                    val rewards = details.rewards?.let { rewardAmount ->
-                        val rewardAmountFormatted = Chain.ThorChain.coinType.toValue(rewardAmount)
-                        val rewardValue = rewardAmountFormatted.setScale(6, RoundingMode.DOWN)
-                        "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
-                    }
+                    val rewards =
+                        details.rewards?.let { rewardAmount ->
+                            val rewardAmountFormatted =
+                                Chain.ThorChain.coinType.toValue(rewardAmount)
+                            val rewardValue = rewardAmountFormatted.setScale(6, RoundingMode.DOWN)
+                            "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
+                        }
 
-                    val stakePosition = StakePositionUiModel(
-                        coin = details.coin,
-                        stakeAssetHeader = "Staked $RUJI_SYMBOL",
-                        stakeAmount = stakedAmount ,
-                        stakedAmountDisplay = formattedAmount,
-                        apy = details.apr?.formatPercentage(),
-                        canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
-                        canStake = true,
-                        canUnstake = details.stakeAmount > BigInteger.ZERO,
-                        rewards = rewards,
-                        nextReward = null,
-                        nextPayout = null
-                    )
+                    val stakePosition =
+                        StakePositionUiModel(
+                            coin = details.coin,
+                            stakeAssetHeader = "Staked $RUJI_SYMBOL",
+                            stakeAmount = stakedAmount,
+                            stakedAmountDisplay = formattedAmount,
+                            apy = details.apr?.formatPercentage(),
+                            canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
+                            canStake = true,
+                            canUnstake = details.stakeAmount > BigInteger.ZERO,
+                            rewards = rewards,
+                            nextReward = null,
+                            nextPayout = null,
+                        )
 
                     updateExistingPosition(stakePosition)
 
@@ -573,48 +532,51 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
 
     private fun createTCYStakePosition(address: String, vaultId: String) {
         viewModelScope.launch {
-            tcyStakingService.getStakingDetails(
-                address = address,
-                vaultId = vaultId,
-            ).catch { t ->
-                Timber.e(t, "Failed to load staking positions TCY Stake")
-                state.update {
-                    it.copy(
-                        staking = it.staking.copy(
-                            positions = it.staking.positions.map { position ->
-                                if (position.coin.id == Coins.ThorChain.TCY.id) {
-                                    position.copy(isLoading = false)
-                                } else {
-                                    position
-                                }
-                            }
+            tcyStakingService
+                .getStakingDetails(address = address, vaultId = vaultId)
+                .catch { t ->
+                    Timber.e(t, "Failed to load staking positions TCY Stake")
+                    state.update {
+                        it.copy(
+                            staking =
+                                it.staking.copy(
+                                    positions =
+                                        it.staking.positions.map { position ->
+                                            if (position.coin.id == Coins.ThorChain.TCY.id) {
+                                                position.copy(isLoading = false)
+                                            } else {
+                                                position
+                                            }
+                                        }
+                                )
                         )
-                    )
+                    }
                 }
-            }.collect { position ->
-                val stakedAmount = Chain.ThorChain.coinType.toValue(position.stakeAmount)
-                val formattedAmount = "${stakedAmount.toPlainString()} TCY"
+                .collect { position ->
+                    val stakedAmount = Chain.ThorChain.coinType.toValue(position.stakeAmount)
+                    val formattedAmount = "${stakedAmount.toPlainString()} TCY"
 
-                // Create and return the UI model
-                val stakePosition = StakePositionUiModel(
-                    coin = position.coin,
-                    stakeAssetHeader = "Staked TCY",
-                    stakedAmountDisplay = formattedAmount,
-                    stakeAmount = stakedAmount,
-                    apy = position.apr?.formatPercentage(),
-                    canWithdraw = false, // TCY auto-distributes rewards
-                    canStake = true,
-                    canUnstake = true,
-                    rewards = null,
-                    nextReward = position.estimatedRewards?.toDouble()?.formatToString(),
-                    nextPayout = position.nextPayoutDate?.formatDate()
-                )
+                    // Create and return the UI model
+                    val stakePosition =
+                        StakePositionUiModel(
+                            coin = position.coin,
+                            stakeAssetHeader = "Staked TCY",
+                            stakedAmountDisplay = formattedAmount,
+                            stakeAmount = stakedAmount,
+                            apy = position.apr?.formatPercentage(),
+                            canWithdraw = false, // TCY auto-distributes rewards
+                            canStake = true,
+                            canUnstake = true,
+                            rewards = null,
+                            nextReward = position.estimatedRewards?.toDouble()?.formatToString(),
+                            nextPayout = position.nextPayoutDate?.formatDate(),
+                        )
 
-                updateExistingPosition(stakePosition)
+                    updateExistingPosition(stakePosition)
 
-                _totalValueTCYStake.update { position.stakeAmount }
-                _isLoadingTotalAmount.update { false }
-            }
+                    _totalValueTCYStake.update { position.stakeAmount }
+                    _isLoadingTotalAmount.update { false }
+                }
         }
     }
 
@@ -624,75 +586,89 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
         coinsToLoad: List<String>,
     ) {
         viewModelScope.launch {
-            defaultStakingPositionService.getStakingDetails(address, vaultId)
+            defaultStakingPositionService
+                .getStakingDetails(address, vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions")
                     state.update {
                         it.copy(
-                            staking = it.staking.copy(
-                                positions = it.staking.positions.map { position ->
-                                    if (position.coin.id == Coins.ThorChain.yRUNE.id
-                                        || position.coin.id == Coins.ThorChain.yTCY.id
-                                        || position.coin.id == Coins.ThorChain.sTCY.id) {
-                                        position.copy(isLoading = false)
-                                    } else {
-                                        position
-                                    }
-                                }
-                            )
+                            staking =
+                                it.staking.copy(
+                                    positions =
+                                        it.staking.positions.map { position ->
+                                            if (
+                                                position.coin.id == Coins.ThorChain.yRUNE.id ||
+                                                    position.coin.id == Coins.ThorChain.yTCY.id ||
+                                                    position.coin.id == Coins.ThorChain.sTCY.id
+                                            ) {
+                                                position.copy(isLoading = false)
+                                            } else {
+                                                position
+                                            }
+                                        }
+                                )
                         )
                     }
                 }
                 .collect { defaultPositions ->
-                    val positions = defaultPositions
-                        .filter { it.coin.id in coinsToLoad }
-                        .map { defaultPosition ->
-                            val stakeAmount =
-                                Chain.ThorChain.coinType.toValue(defaultPosition.stakeAmount)
-                            val coin =
-                                defaultPosition.coin
-                            val supportsMint = coin.ticker.contains("yrune", ignoreCase = true) ||
-                                    coin.ticker.contains("ytcy", ignoreCase = true)
+                    val positions =
+                        defaultPositions
+                            .filter { it.coin.id in coinsToLoad }
+                            .map { defaultPosition ->
+                                val stakeAmount =
+                                    Chain.ThorChain.coinType.toValue(defaultPosition.stakeAmount)
+                                val coin = defaultPosition.coin
+                                val supportsMint =
+                                    coin.ticker.contains("yrune", ignoreCase = true) ||
+                                        coin.ticker.contains("ytcy", ignoreCase = true)
 
-                            val canTransfer = coin.ticker.contains("stcy", ignoreCase = true)
+                                val canTransfer = coin.ticker.contains("stcy", ignoreCase = true)
 
-                            val header = if (supportsMint) {
-                                "Minted"
-                            } else if (defaultPosition.coin.id.equals(Coins.ThorChain.sTCY.id, true)) {
-                                "Compounded"
+                                val header =
+                                    if (supportsMint) {
+                                        "Minted"
+                                    } else if (
+                                        defaultPosition.coin.id.equals(
+                                            Coins.ThorChain.sTCY.id,
+                                            true,
+                                        )
+                                    ) {
+                                        "Compounded"
+                                    } else {
+                                        "Staked"
+                                    }
+                                val position =
+                                    StakePositionUiModel(
+                                        coin = defaultPosition.coin,
+                                        stakeAssetHeader = "$header ${coin.ticker}",
+                                        stakedAmountDisplay =
+                                            "${stakeAmount.toPlainString()} ${coin.ticker}",
+                                        stakeAmount = stakeAmount,
+                                        apy = null,
+                                        supportsMint = supportsMint,
+                                        canWithdraw = false, // TCY auto-distributes rewards
+                                        canStake = true,
+                                        canTransfer = canTransfer,
+                                        canUnstake = stakeAmount > BigDecimal.ZERO,
+                                        rewards = null,
+                                        nextReward = null,
+                                        nextPayout = null,
+                                    )
+
+                                updateExistingPosition(position)
+
+                                position to defaultPosition.stakeAmount
                             }
-                            else {
-                                "Staked"
-                            }
-                            val position = StakePositionUiModel(
-                                coin = defaultPosition.coin,
-                                stakeAssetHeader = "$header ${coin.ticker}",
-                                stakedAmountDisplay = "${stakeAmount.toPlainString()} ${coin.ticker}",
-                                stakeAmount = stakeAmount,
-                                apy = null,
-                                supportsMint = supportsMint,
-                                canWithdraw = false, // TCY auto-distributes rewards
-                                canStake = true,
-                                canTransfer = canTransfer,
-                                canUnstake = stakeAmount > BigDecimal.ZERO,
-                                rewards = null,
-                                nextReward = null,
-                                nextPayout = null,
-                            )
-
-                            updateExistingPosition(position)
-
-                            position to defaultPosition.stakeAmount
-                        }
 
                     _totalValueDefaultStake.update {
                         StakeDefaultValues(
-                            stakeElements = positions.map { position ->
-                                StakeDefaultValues.StakingElement(
-                                    coin = position.first.coin,
-                                    amount = position.second
-                                )
-                            }
+                            stakeElements =
+                                positions.map { position ->
+                                    StakeDefaultValues.StakingElement(
+                                        coin = position.first.coin,
+                                        amount = position.second,
+                                    )
+                                }
                         )
                     }
 
@@ -703,102 +679,93 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
 
     fun updateExistingPosition(stakePosition: StakePositionUiModel) {
         // Ensure only RUJI can have withdraw enabled
-        val correctedPosition = if (stakePosition.coin.id != Coins.ThorChain.RUJI.id) {
-            stakePosition.copy(canWithdraw = false)
-        } else {
-            stakePosition
-        }
+        val correctedPosition =
+            if (stakePosition.coin.id != Coins.ThorChain.RUJI.id) {
+                stakePosition.copy(canWithdraw = false)
+            } else {
+                stakePosition
+            }
 
         state.update { currentState ->
             val existingPositions = currentState.staking.positions
-            val positionExists = existingPositions.any {
-                it.coin.id == correctedPosition.coin.id
-            }
+            val positionExists = existingPositions.any { it.coin.id == correctedPosition.coin.id }
 
             if (positionExists) {
                 currentState.copy(
-                    staking = currentState.staking.copy(
-                        positions = existingPositions.map {
-                            if (it.coin.id == correctedPosition.coin.id) correctedPosition else it
-                        }
-                    )
+                    staking =
+                        currentState.staking.copy(
+                            positions =
+                                existingPositions.map {
+                                    if (it.coin.id == correctedPosition.coin.id) correctedPosition
+                                    else it
+                                }
+                        )
                 )
             } else {
                 currentState.copy(
-                    staking = currentState.staking.copy(
-                        positions = existingPositions + correctedPosition
-                    )
+                    staking =
+                        currentState.staking.copy(positions = existingPositions + correctedPosition)
                 )
             }
         }
     }
 
     fun onTabSelected(tab: DeFiTab) {
-        state.update { currentState ->
-            currentState.copy(selectedTab = tab.displayNameRes)
-        }
+        state.update { currentState -> currentState.copy(selectedTab = tab.displayNameRes) }
     }
 
     // Dummy Loading, remove after real LP logic
     private fun loadLpPositions() {
         viewModelScope.launch {
             // Create two dummy loading positions immediately
-            val loadingPositions = listOf(
-                LpPositionUiModel(
-                    titleLp = "Loading...",
-                    totalPriceLp = "$0.00",
-                    icon = R.drawable.ethereum,
-                    apr = null,
-                    position = "Loading position..."
-                ),
-                LpPositionUiModel(
-                    titleLp = "Loading...",
-                    totalPriceLp = "$0.00",
-                    apr = null,
-                    icon = R.drawable.bitcoin,
-                    position = "Loading position..."
+            val loadingPositions =
+                listOf(
+                    LpPositionUiModel(
+                        titleLp = "Loading...",
+                        totalPriceLp = "$0.00",
+                        icon = R.drawable.ethereum,
+                        apr = null,
+                        position = "Loading position...",
+                    ),
+                    LpPositionUiModel(
+                        titleLp = "Loading...",
+                        totalPriceLp = "$0.00",
+                        apr = null,
+                        icon = R.drawable.bitcoin,
+                        position = "Loading position...",
+                    ),
                 )
-            )
 
             // Set loading state with dummy positions showing
             state.update {
-                it.copy(
-                    lp = LpTabUiModel(
-                        isLoading = true,
-                        positions = loadingPositions
-                    )
-                )
+                it.copy(lp = LpTabUiModel(isLoading = true, positions = loadingPositions))
             }
 
             // Simulate loading delay
             delay(2000)
 
             // Create actual LP positions
-            val actualPositions = listOf(
-                LpPositionUiModel(
-                    titleLp = "ETH/USDC",
-                    totalPriceLp = "$12,450.00",
-                    icon = R.drawable.ethereum,
-                    apr = "8.5%",
-                    position = "0.5 ETH / 1,500 USDC"
-                ),
-                LpPositionUiModel(
-                    titleLp = "BTC/USDT",
-                    totalPriceLp = "$45,200.00",
-                    icon = R.drawable.bitcoin,
-                    apr = "12.3%",
-                    position = "0.8 BTC / 35,000 USDT"
-                ),
-            )
+            val actualPositions =
+                listOf(
+                    LpPositionUiModel(
+                        titleLp = "ETH/USDC",
+                        totalPriceLp = "$12,450.00",
+                        icon = R.drawable.ethereum,
+                        apr = "8.5%",
+                        position = "0.5 ETH / 1,500 USDC",
+                    ),
+                    LpPositionUiModel(
+                        titleLp = "BTC/USDT",
+                        totalPriceLp = "$45,200.00",
+                        icon = R.drawable.bitcoin,
+                        apr = "12.3%",
+                        position = "0.8 BTC / 35,000 USDT",
+                    ),
+                )
 
             // Update state with actual positions and remove loading state
             state.update {
-                it.copy(
-                    lp = LpTabUiModel(
-                        isLoading = false,
-                        positions = actualPositions
-                    )
-                )
+                it.copy(lp = LpTabUiModel(isLoading = false, positions = actualPositions))
             }
         }
     }
@@ -809,14 +776,14 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         showPositionSelectionDialog = true,
-                        tempSelectedPositions = it.selectedPositions
+                        tempSelectedPositions = it.selectedPositions,
                     )
                 }
             } else {
                 state.update {
                     it.copy(
                         showPositionSelectionDialog = false,
-                        tempSelectedPositions = it.selectedPositions
+                        tempSelectedPositions = it.selectedPositions,
                     )
                 }
             }
@@ -826,11 +793,12 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
     fun onPositionSelectionChange(positionTitle: String, isSelected: Boolean) {
         viewModelScope.launch {
             state.update { currentState ->
-                val updatedPositions = if (isSelected) {
-                    currentState.tempSelectedPositions + positionTitle
-                } else {
-                    currentState.tempSelectedPositions - positionTitle
-                }
+                val updatedPositions =
+                    if (isSelected) {
+                        currentState.tempSelectedPositions + positionTitle
+                    } else {
+                        currentState.tempSelectedPositions - positionTitle
+                    }
                 currentState.copy(tempSelectedPositions = updatedPositions)
             }
         }
@@ -847,23 +815,16 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
             }
 
             state.update {
-                it.copy(
-                    showPositionSelectionDialog = false,
-                    selectedPositions = selectedPositions
-                )
+                it.copy(showPositionSelectionDialog = false, selectedPositions = selectedPositions)
             }
 
             loadedTabs.clear()
 
             bondedNodesRefreshTrigger.value++
 
-            launch {
-                loadBondedNodes()
-            }
+            launch { loadBondedNodes() }
 
-            launch {
-                loadStakingPositions()
-            }
+            launch { loadStakingPositions() }
         }
     }
 
@@ -931,20 +892,21 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
 
     fun onNavigateToFunctions(defiNavAction: DeFiNavActions) {
         viewModelScope.launch {
-            val tokenId = when (defiNavAction) {
-                DeFiNavActions.STAKE_RUJI -> Coins.ThorChain.RUJI.id
-                DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI.id
-                DeFiNavActions.STAKE_TCY -> Coins.ThorChain.TCY.id
-                DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY.id
-                DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY.id
-                DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY.id
-                DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY.id
-                DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY.id
-                DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE.id
-                DeFiNavActions.REDEEM_YRUNE -> Coins.ThorChain.yRUNE.id
-                DeFiNavActions.WITHDRAW_RUJI -> "USDC-${Chain.ThorChain.id}"
-                else -> null
-            }
+            val tokenId =
+                when (defiNavAction) {
+                    DeFiNavActions.STAKE_RUJI -> Coins.ThorChain.RUJI.id
+                    DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI.id
+                    DeFiNavActions.STAKE_TCY -> Coins.ThorChain.TCY.id
+                    DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY.id
+                    DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY.id
+                    DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY.id
+                    DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY.id
+                    DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY.id
+                    DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE.id
+                    DeFiNavActions.REDEEM_YRUNE -> Coins.ThorChain.yRUNE.id
+                    DeFiNavActions.WITHDRAW_RUJI -> "USDC-${Chain.ThorChain.id}"
+                    else -> null
+                }
             if (tokenId == null) {
                 navigator.route(
                     Route.Deposit(
@@ -968,9 +930,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
     }
 
     fun onBackClick() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     fun onClickTransfer() {
@@ -1008,7 +968,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                     canUnstake = false,
                     rewards = null,
                     nextReward = null,
-                    nextPayout = null
+                    nextPayout = null,
                 ),
                 StakePositionUiModel(
                     coin = tcy,
@@ -1020,7 +980,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                     canUnstake = false,
                     rewards = null,
                     nextReward = null,
-                    nextPayout = null
+                    nextPayout = null,
                 ),
                 StakePositionUiModel(
                     coin = stcy,
@@ -1032,7 +992,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                     canUnstake = false,
                     rewards = null,
                     nextReward = null,
-                    nextPayout = null
+                    nextPayout = null,
                 ),
                 StakePositionUiModel(
                     coin = ytcy,
@@ -1044,7 +1004,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                     canUnstake = false,
                     rewards = null,
                     nextReward = null,
-                    nextPayout = null
+                    nextPayout = null,
                 ),
                 StakePositionUiModel(
                     coin = yrune,
@@ -1056,18 +1016,13 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                     canUnstake = false,
                     rewards = null,
                     nextReward = null,
-                    nextPayout = null
+                    nextPayout = null,
                 ),
             )
         }
     }
 }
 
-data class StakeDefaultValues(
-    val stakeElements: List<StakingElement> = emptyList()
-) {
-    data class StakingElement(
-        val coin: Coin,
-        val amount: BigInteger,
-    )
+data class StakeDefaultValues(val stakeElements: List<StakingElement> = emptyList()) {
+    data class StakingElement(val coin: Coin, val amount: BigInteger)
 }

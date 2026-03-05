@@ -8,22 +8,19 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.errors.ErrorView
 
 @Composable
-internal fun ScanQrErrorScreen(
-    viewModel: ScanQrErrorViewModel = hiltViewModel(),
-) {
+internal fun ScanQrErrorScreen(viewModel: ScanQrErrorViewModel = hiltViewModel()) {
     ScanQrErrorScreen(viewModel::back)
 }
 
 @Composable
 private fun ScanQrErrorScreen(back: () -> Unit) {
 
-        ErrorView(
-            title = stringResource(R.string.scan_qr_code_error_text),
-            buttonText = stringResource(R.string.scan_qr_code_error_button),
-            onButtonClick = back,
-        )
+    ErrorView(
+        title = stringResource(R.string.scan_qr_code_error_text),
+        buttonText = stringResource(R.string.scan_qr_code_error_button),
+        onButtonClick = back,
+    )
 }
-
 
 @Preview
 @Composable

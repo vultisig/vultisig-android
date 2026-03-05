@@ -13,6 +13,7 @@ data class TempVaultDto(
 
 interface TemporaryVaultRepository {
     fun add(vault: TempVaultDto)
+
     fun getById(vaultId: VaultId): TempVaultDto
 }
 
@@ -25,5 +26,4 @@ internal class TemporaryVaultRepositoryImpl @Inject constructor() : TemporaryVau
 
     override fun getById(vaultId: VaultId): TempVaultDto =
         vaults[vaultId] ?: error("Vault not found")
-
 }

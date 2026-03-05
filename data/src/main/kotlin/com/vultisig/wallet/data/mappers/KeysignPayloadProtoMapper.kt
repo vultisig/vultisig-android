@@ -20,8 +20,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 
-interface KeysignPayloadProtoMapper :
-    MapperFunc<KeysignPayloadProto, KeysignPayload>
+interface KeysignPayloadProtoMapper : MapperFunc<KeysignPayloadProto, KeysignPayload>
 
 internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayloadProtoMapper {
 
@@ -34,207 +33,217 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             memo = from.memo,
             coin = requireNotNull(from.coin).toCoin(),
             libType = SigningLibType.from(from.libType),
-            utxos = from.utxoInfo
-                .asSequence()
-                .filterNotNull()
-                .map {
-                    UtxoInfo(
-                        hash = it.hash,
-                        amount = it.amount,
-                        index = it.index,
-                    )
-                }
-                .toList(),
-            approvePayload = from.erc20ApprovePayload?.let {
-                ERC20ApprovePayload(
-                    amount = BigInteger(it.amount),
-                    spender = it.spender,
-                )
-            },
+            utxos =
+                from.utxoInfo
+                    .asSequence()
+                    .filterNotNull()
+                    .map { UtxoInfo(hash = it.hash, amount = it.amount, index = it.index) }
+                    .toList(),
+            approvePayload =
+                from.erc20ApprovePayload?.let {
+                    ERC20ApprovePayload(amount = BigInteger(it.amount), spender = it.spender)
+                },
             wasmExecuteContractPayload = from.wasmExecuteContractPayload,
             skipBroadcast = from.skipBroadcast ?: false,
             signAmino = from.signAmino,
             signDirect = from.signDirect,
             signSolana = from.signSolana,
-            swapPayload = when {
-                from.oneinchSwapPayload != null -> from.oneinchSwapPayload.let { it ->
-                    SwapPayload.EVM(
-                        EVMSwapPayloadJson(
-                            fromCoin = requireNotNull(it.fromCoin).toCoin(),
-                            toCoin = requireNotNull(it.toCoin).toCoin(),
-                            fromAmount = BigInteger(it.fromAmount),
-                            toAmountDecimal = BigDecimal(it.toAmountDecimal),
-                            quote = requireNotNull(it.quote).let { it ->
-                                EVMSwapQuoteJson(
-                                    dstAmount = it.dstAmount,
-                                    tx = requireNotNull(it.tx).let {
-                                        OneInchSwapTxJson(
-                                            from = it.from,
-                                            to = it.to,
-                                            gas = it.gas,
-                                            data = it.data,
-                                            value = it.value,
-                                            gasPrice = it.gasPrice,
-                                            swapFee = it.swapFee,
-                                        )
-                                    },
+            swapPayload =
+                when {
+                    from.oneinchSwapPayload != null ->
+                        from.oneinchSwapPayload.let { it ->
+                            SwapPayload.EVM(
+                                EVMSwapPayloadJson(
+                                    fromCoin = requireNotNull(it.fromCoin).toCoin(),
+                                    toCoin = requireNotNull(it.toCoin).toCoin(),
+                                    fromAmount = BigInteger(it.fromAmount),
+                                    toAmountDecimal = BigDecimal(it.toAmountDecimal),
+                                    quote =
+                                        requireNotNull(it.quote).let { it ->
+                                            EVMSwapQuoteJson(
+                                                dstAmount = it.dstAmount,
+                                                tx =
+                                                    requireNotNull(it.tx).let {
+                                                        OneInchSwapTxJson(
+                                                            from = it.from,
+                                                            to = it.to,
+                                                            gas = it.gas,
+                                                            data = it.data,
+                                                            value = it.value,
+                                                            gasPrice = it.gasPrice,
+                                                            swapFee = it.swapFee,
+                                                        )
+                                                    },
+                                            )
+                                        },
+                                    provider = it.provider,
                                 )
-                            },
-                            provider = it.provider,
-                        )
-                    )
-                }
+                            )
+                        }
 
-                from.thorchainSwapPayload != null -> from.thorchainSwapPayload.let {
-                    SwapPayload.ThorChain(
-                        it.toThorChainSwapPayload()
-                    )
-                }
+                    from.thorchainSwapPayload != null ->
+                        from.thorchainSwapPayload.let {
+                            SwapPayload.ThorChain(it.toThorChainSwapPayload())
+                        }
 
-                from.mayachainSwapPayload != null -> from.mayachainSwapPayload.let {
-                    SwapPayload.MayaChain(
-                        it.toThorChainSwapPayload()
-                    )
-                }
+                    from.mayachainSwapPayload != null ->
+                        from.mayachainSwapPayload.let {
+                            SwapPayload.MayaChain(it.toThorChainSwapPayload())
+                        }
 
-                else -> null
-            },
+                    else -> null
+                },
+            blockChainSpecific =
+                when {
+                    from.ethereumSpecific != null ->
+                        from.ethereumSpecific.let {
+                            BlockChainSpecific.Ethereum(
+                                maxFeePerGasWei = BigInteger(it.maxFeePerGasWei),
+                                priorityFeeWei = BigInteger(it.priorityFee),
+                                nonce = it.nonce.toBigInteger(),
+                                gasLimit = BigInteger(it.gasLimit),
+                            )
+                        }
 
-            blockChainSpecific = when {
-                from.ethereumSpecific != null -> from.ethereumSpecific.let {
-                    BlockChainSpecific.Ethereum(
-                        maxFeePerGasWei = BigInteger(it.maxFeePerGasWei),
-                        priorityFeeWei = BigInteger(it.priorityFee),
-                        nonce = it.nonce.toBigInteger(),
-                        gasLimit = BigInteger(it.gasLimit),
-                    )
-                }
+                    from.thorchainSpecific != null ->
+                        from.thorchainSpecific.let {
+                            BlockChainSpecific.THORChain(
+                                accountNumber = BigInteger(it.accountNumber.toString()),
+                                sequence = BigInteger(it.sequence.toString()),
+                                fee = BigInteger(it.fee.toString()),
+                                isDeposit = it.isDeposit,
+                                transactionType = it.transactionType,
+                            )
+                        }
 
-                from.thorchainSpecific != null -> from.thorchainSpecific.let {
-                    BlockChainSpecific.THORChain(
-                        accountNumber = BigInteger(it.accountNumber.toString()),
-                        sequence = BigInteger(it.sequence.toString()),
-                        fee = BigInteger(it.fee.toString()),
-                        isDeposit = it.isDeposit,
-                        transactionType = it.transactionType,
-                    )
-                }
+                    from.utxoSpecific != null ->
+                        from.utxoSpecific.let {
+                            BlockChainSpecific.UTXO(
+                                byteFee = BigInteger(it.byteFee),
+                                sendMaxAmount = it.sendMaxAmount,
+                            )
+                        }
 
-                from.utxoSpecific != null -> from.utxoSpecific.let {
-                    BlockChainSpecific.UTXO(
-                        byteFee = BigInteger(it.byteFee),
-                        sendMaxAmount = it.sendMaxAmount,
-                    )
-                }
+                    from.mayaSpecific != null ->
+                        from.mayaSpecific.let {
+                            BlockChainSpecific.MayaChain(
+                                accountNumber = BigInteger(it.accountNumber.toString()),
+                                sequence = BigInteger(it.sequence.toString()),
+                                isDeposit = it.isDeposit,
+                            )
+                        }
 
-                from.mayaSpecific != null -> from.mayaSpecific.let {
-                    BlockChainSpecific.MayaChain(
-                        accountNumber = BigInteger(it.accountNumber.toString()),
-                        sequence = BigInteger(it.sequence.toString()),
-                        isDeposit = it.isDeposit,
-                    )
-                }
+                    from.cosmosSpecific != null ->
+                        from.cosmosSpecific.let {
+                            BlockChainSpecific.Cosmos(
+                                accountNumber = BigInteger(it.accountNumber.toString()),
+                                sequence = BigInteger(it.sequence.toString()),
+                                gas = BigInteger(it.gas.toString()),
+                                ibcDenomTraces = it.ibcDenomTraces,
+                                transactionType = it.transactionType,
+                            )
+                        }
 
-                from.cosmosSpecific != null -> from.cosmosSpecific.let {
-                    BlockChainSpecific.Cosmos(
-                        accountNumber = BigInteger(it.accountNumber.toString()),
-                        sequence = BigInteger(it.sequence.toString()),
-                        gas = BigInteger(it.gas.toString()),
-                        ibcDenomTraces = it.ibcDenomTraces,
-                        transactionType = it.transactionType,
-                    )
-                }
+                    from.solanaSpecific != null ->
+                        from.solanaSpecific.let {
+                            BlockChainSpecific.Solana(
+                                recentBlockHash = it.recentBlockHash,
+                                priorityFee =
+                                    it.priorityFee.toBigIntegerOrNull() ?: BigInteger.ZERO,
+                                fromAddressPubKey = it.fromTokenAssociatedAddress,
+                                toAddressPubKey = it.toTokenAssociatedAddress,
+                                programId = it.programId == true,
+                                priorityLimit =
+                                    it.computeLimit?.toBigInteger()
+                                        ?: SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
+                            )
+                        }
 
-                from.solanaSpecific != null -> from.solanaSpecific.let {
-                    BlockChainSpecific.Solana(
-                        recentBlockHash = it.recentBlockHash,
-                        priorityFee = it.priorityFee.toBigIntegerOrNull() ?: BigInteger.ZERO,
-                        fromAddressPubKey = it.fromTokenAssociatedAddress,
-                        toAddressPubKey = it.toTokenAssociatedAddress,
-                        programId = it.programId == true,
-                        priorityLimit = it.computeLimit?.toBigInteger()
-                            ?: SOLANA_PRIORITY_FEE_LIMIT.toBigInteger()
-                    )
-                }
+                    from.polkadotSpecific != null ->
+                        from.polkadotSpecific.let {
+                            BlockChainSpecific.Polkadot(
+                                recentBlockHash = it.recentBlockHash,
+                                nonce = BigInteger(it.nonce.toString()),
+                                currentBlockNumber = BigInteger(it.currentBlockNumber),
+                                specVersion = it.specVersion,
+                                transactionVersion = it.transactionVersion,
+                                genesisHash = it.genesisHash,
+                                gas = it.gas,
+                            )
+                        }
 
-                from.polkadotSpecific != null -> from.polkadotSpecific.let {
-                    BlockChainSpecific.Polkadot(
-                        recentBlockHash = it.recentBlockHash,
-                        nonce = BigInteger(it.nonce.toString()),
-                        currentBlockNumber = BigInteger(it.currentBlockNumber),
-                        specVersion = it.specVersion,
-                        transactionVersion = it.transactionVersion,
-                        genesisHash = it.genesisHash,
-                        gas = it.gas
-                    )
-                }
+                    from.suicheSpecific != null ->
+                        from.suicheSpecific.let {
+                            BlockChainSpecific.Sui(
+                                referenceGasPrice = BigInteger(it.referenceGasPrice),
+                                coins = it.coins.filterNotNull(),
+                                gasBudget = it.gasBudget.toBigInteger(),
+                            )
+                        }
 
-                from.suicheSpecific != null -> from.suicheSpecific.let {
-                    BlockChainSpecific.Sui(
-                        referenceGasPrice = BigInteger(it.referenceGasPrice),
-                        coins = it.coins.filterNotNull(),
-                        gasBudget = it.gasBudget.toBigInteger(),
-                    )
-                }
+                    from.tonSpecific != null ->
+                        from.tonSpecific.let {
+                            BlockChainSpecific.Ton(
+                                sequenceNumber = it.sequenceNumber,
+                                expireAt = it.expireAt,
+                                bounceable = it.bounceable,
+                                sendMaxAmount = it.sendMaxAmount,
+                                jettonAddress = it.jettonAddress,
+                                isActiveDestination = it.isActiveDestination,
+                            )
+                        }
+                    from.rippleSpecific != null ->
+                        from.rippleSpecific.let {
+                            BlockChainSpecific.Ripple(
+                                sequence = it.sequence,
+                                lastLedgerSequence = it.lastLedgerSequence,
+                                gas = it.gas,
+                            )
+                        }
 
-                from.tonSpecific != null -> from.tonSpecific.let {
-                    BlockChainSpecific.Ton(
-                        sequenceNumber = it.sequenceNumber,
-                        expireAt = it.expireAt,
-                        bounceable = it.bounceable,
-                        sendMaxAmount = it.sendMaxAmount,
-                        jettonAddress = it.jettonAddress,
-                        isActiveDestination = it.isActiveDestination,
-                    )
-                }
-                from.rippleSpecific != null -> from.rippleSpecific.let {
-                    BlockChainSpecific.Ripple(
-                        sequence = it.sequence,
-                        lastLedgerSequence = it.lastLedgerSequence,
-                        gas = it.gas,
-                    )
-                }
+                    from.tronSpecific != null ->
+                        from.tronSpecific.let {
+                            BlockChainSpecific.Tron(
+                                timestamp = it.timestamp,
+                                expiration = it.expiration,
+                                blockHeaderTimestamp = it.blockHeaderTimestamp,
+                                blockHeaderNumber = it.blockHeaderNumber,
+                                blockHeaderVersion = it.blockHeaderVersion,
+                                blockHeaderTxTrieRoot = it.blockHeaderTxTrieRoot,
+                                blockHeaderParentHash = it.blockHeaderParentHash,
+                                blockHeaderWitnessAddress = it.blockHeaderWitnessAddress,
+                                gasFeeEstimation = it.gasEstimation,
+                            )
+                        }
+                    from.cardano != null ->
+                        from.cardano.let {
+                            BlockChainSpecific.Cardano(
+                                byteFee = it.byteFee,
+                                sendMaxAmount = it.sendMaxAmount,
+                                ttl = it.ttl,
+                            )
+                        }
 
-                from.tronSpecific != null -> from.tronSpecific.let {
-                    BlockChainSpecific.Tron(
-                        timestamp = it.timestamp,
-                        expiration = it.expiration,
-                        blockHeaderTimestamp = it.blockHeaderTimestamp,
-                        blockHeaderNumber = it.blockHeaderNumber,
-                        blockHeaderVersion = it.blockHeaderVersion,
-                        blockHeaderTxTrieRoot = it.blockHeaderTxTrieRoot,
-                        blockHeaderParentHash = it.blockHeaderParentHash,
-                        blockHeaderWitnessAddress = it.blockHeaderWitnessAddress,
-                        gasFeeEstimation = it.gasEstimation,
-                    )
-                }
-                from.cardano !=null ->  from.cardano.let {
-                    BlockChainSpecific.Cardano(
-                        byteFee = it.byteFee,
-                        sendMaxAmount = it.sendMaxAmount,
-                        ttl = it.ttl
-                    )
-                }
-
-                else -> error("No supported BlockChainSpecific in proto $from")
-            },
+                    else -> error("No supported BlockChainSpecific in proto $from")
+                },
             tronTransferContractPayload = from.tronTransferContractPayload,
             tronTransferAssetContractPayload = from.tronTransferAssetContractPayload,
             tronTriggerSmartContractPayload = from.tronTriggerSmartContractPayload,
         )
     }
 
-    private fun CoinProto.toCoin(): Coin = Coin(
-        chain = Chain.fromRaw(chain),
-        ticker = ticker,
-        address = address,
-        contractAddress = contractAddress,
-        hexPublicKey = hexPublicKey,
-        decimal = decimals,
-        priceProviderID = priceProviderId,
-        logo = logo,
-        isNativeToken = isNativeToken,
-    )
+    private fun CoinProto.toCoin(): Coin =
+        Coin(
+            chain = Chain.fromRaw(chain),
+            ticker = ticker,
+            address = address,
+            contractAddress = contractAddress,
+            hexPublicKey = hexPublicKey,
+            decimal = decimals,
+            priceProviderID = priceProviderId,
+            logo = logo,
+            isNativeToken = isNativeToken,
+        )
 
     private fun ThorChainSwapPayloadProto.toThorChainSwapPayload() =
         THORChainSwapPayload(

@@ -24,16 +24,10 @@ import com.vultisig.wallet.ui.utils.waitUntilShown
 import com.vultisig.wallet.util.intendingBackup
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * Starts from a clean app and passes fast vault generation flow until home screen.
- */
-class FastVaultKeygenFlow(
-    private val compose: ComposeTestRule,
-) {
+/** Starts from a clean app and passes fast vault generation flow until home screen. */
+class FastVaultKeygenFlow(private val compose: ComposeTestRule) {
 
-    fun execute(
-        vaultName: String = TEST_VAULT_NAME
-    ) {
+    fun execute(vaultName: String = TEST_VAULT_NAME) {
         ActivityScenario.launch(MainActivity::class.java)
 
         val start = StartPage(compose)
@@ -104,7 +98,6 @@ class FastVaultKeygenFlow(
         compose.waitUntilShown(BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD)
         compose.click(BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD)
 
-
         // agree & pass summary
         summary.waitUntilShown(10.seconds)
 
@@ -125,5 +118,4 @@ class FastVaultKeygenFlow(
         const val TEST_VAULT_EMAIL = "test@email.com"
         const val TEST_VAULT_PASSWORD = "password123"
     }
-
 }

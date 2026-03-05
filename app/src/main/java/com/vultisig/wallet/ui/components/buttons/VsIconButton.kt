@@ -21,15 +21,19 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 enum class VsIconButtonVariant {
-    Primary, Secondary,
+    Primary,
+    Secondary,
 }
 
 enum class VsIconButtonState {
-    Enabled, Disabled
+    Enabled,
+    Disabled,
 }
 
 enum class VsIconButtonSize {
-    Medium, Small, Mini
+    Medium,
+    Small,
+    Mini,
 }
 
 @Composable
@@ -44,75 +48,69 @@ fun VsIconButton(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        modifier = modifier
-            .background(
-                color =
-                    when (state) {
-                        Enabled -> when (variant) {
-                            Primary -> Theme.v2.colors.buttons.primary
-                            Secondary -> Theme.v2.colors.backgrounds.secondary
-                        }
+        modifier =
+            modifier
+                .background(
+                    color =
+                        when (state) {
+                            Enabled ->
+                                when (variant) {
+                                    Primary -> Theme.v2.colors.buttons.primary
+                                    Secondary -> Theme.v2.colors.backgrounds.secondary
+                                }
 
-                        Disabled -> when (variant) {
-                            Primary -> Theme.v2.colors.buttons.disabled
-                            Secondary -> Theme.v2.colors.buttons.disabled
-                        }
-                    },
-                shape = RoundedCornerShape(percent = 100)
-            )
-            .clickable(enabled = state == Enabled, onClick = clickOnce(onClick = onClick))
-            .then(
-                when (size) {
-                    Medium -> Modifier.padding(
-                        vertical = 14.dp,
-                        horizontal = 32.dp
-                    )
+                            Disabled ->
+                                when (variant) {
+                                    Primary -> Theme.v2.colors.buttons.disabled
+                                    Secondary -> Theme.v2.colors.buttons.disabled
+                                }
+                        },
+                    shape = RoundedCornerShape(percent = 100),
+                )
+                .clickable(enabled = state == Enabled, onClick = clickOnce(onClick = onClick))
+                .then(
+                    when (size) {
+                        Medium -> Modifier.padding(vertical = 14.dp, horizontal = 32.dp)
 
-                    Small -> Modifier.padding(
-                        vertical = 12.dp,
-                        horizontal = 12.dp
-                    )
+                        Small -> Modifier.padding(vertical = 12.dp, horizontal = 12.dp)
 
-                    Mini -> Modifier
-                }
-            )
-
+                        Mini -> Modifier
+                    }
+                ),
     ) {
-        val contentColor = when (state) {
-            Enabled -> when (variant) {
-                Primary -> Theme.v2.colors.backgrounds.primary
-                Secondary -> Theme.v2.colors.text.button.primary
+        val contentColor =
+            when (state) {
+                Enabled ->
+                    when (variant) {
+                        Primary -> Theme.v2.colors.backgrounds.primary
+                        Secondary -> Theme.v2.colors.text.button.primary
+                    }
+
+                Disabled -> Theme.v2.colors.text.button.disabled
             }
 
-            Disabled -> Theme.v2.colors.text.button.disabled
-        }
+        val iconSize =
+            when (size) {
+                Medium -> 20.dp
+                Small,
+                Mini -> 16.dp
+            }
 
-        val iconSize = when (size) {
-            Medium -> 20.dp
-            Small, Mini -> 16.dp
-        }
-
-        UiIcon(
-            drawableResId = icon,
-            size = iconSize,
-            tint = contentColor,
-        )
+        UiIcon(drawableResId = icon, size = iconSize, tint = contentColor)
     }
 }
 
 @Preview
 @Composable
 private fun VsIconButtonPreview() {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         VsIconButton(
             variant = Primary,
             state = Enabled,
             size = Medium,
             icon = R.drawable.ic_caret_left,
             onClick = {},
-            )
+        )
 
         VsIconButton(
             variant = Primary,
@@ -120,7 +118,7 @@ private fun VsIconButtonPreview() {
             size = Medium,
             icon = R.drawable.ic_caret_left,
             onClick = {},
-            )
+        )
 
         VsIconButton(
             variant = Secondary,
@@ -128,7 +126,7 @@ private fun VsIconButtonPreview() {
             size = Medium,
             icon = R.drawable.ic_caret_left,
             onClick = {},
-            )
+        )
 
         VsIconButton(
             variant = Secondary,
@@ -136,7 +134,7 @@ private fun VsIconButtonPreview() {
             size = Medium,
             icon = R.drawable.ic_caret_left,
             onClick = {},
-            )
+        )
 
         VsIconButton(
             variant = Primary,
@@ -144,7 +142,7 @@ private fun VsIconButtonPreview() {
             size = Small,
             icon = R.drawable.ic_caret_left,
             onClick = {},
-            )
+        )
 
         VsIconButton(
             variant = Primary,
@@ -152,7 +150,7 @@ private fun VsIconButtonPreview() {
             size = Small,
             icon = R.drawable.ic_caret_left,
             onClick = {},
-            )
+        )
 
         VsIconButton(
             variant = Primary,

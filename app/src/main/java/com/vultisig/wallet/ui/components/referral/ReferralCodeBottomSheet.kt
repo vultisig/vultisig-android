@@ -34,10 +34,7 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ReferralCodeBottomSheet(
-    onContinue: () -> Unit,
-    onDismissRequest: () -> Unit,
-) {
+internal fun ReferralCodeBottomSheet(onContinue: () -> Unit, onDismissRequest: () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         containerColor = Theme.v2.colors.backgrounds.secondary,
@@ -45,55 +42,43 @@ internal fun ReferralCodeBottomSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = null,
     ) {
-        ReferralCodeBottomSheetContent(
-            onContinue = onContinue,
-        )
+        ReferralCodeBottomSheetContent(onContinue = onContinue)
     }
 }
 
 @Composable
-internal fun ReferralCodeBottomSheetContent(
-    onContinue: () -> Unit,
-) {
+internal fun ReferralCodeBottomSheetContent(onContinue: () -> Unit) {
     Column(
-        modifier = Modifier
-            .padding(horizontal = 32.dp)
-            .fillMaxWidth()
-            .navigationBarsPadding(),
+        modifier = Modifier.padding(horizontal = 32.dp).fillMaxWidth().navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        verticalArrangement = Arrangement.Top,
     ) {
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Image(
                 painter = painterResource(id = R.drawable.referralcodeiphone),
                 contentDescription = "ReferralImage",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(24.dp))
+                modifier = Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(24.dp)),
             )
         }
 
         UiSpacer(32.dp)
 
         SequenceOfGradientText(
-            listTextItems = listOf(
-                PartiallyGradientTextItem(
-                    resId = R.string.referral_invite_onboarding_1,
-                    coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+            listTextItems =
+                listOf(
+                    PartiallyGradientTextItem(
+                        resId = R.string.referral_invite_onboarding_1,
+                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                    ),
+                    PartiallyGradientTextItem(
+                        resId = R.string.referral_invite_onboarding_2,
+                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                    ),
+                    PartiallyGradientTextItem(
+                        resId = R.string.referral_invite_onboarding_3,
+                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                    ),
                 ),
-                PartiallyGradientTextItem(
-                    resId = R.string.referral_invite_onboarding_2,
-                    coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                ),
-                PartiallyGradientTextItem(
-                    resId = R.string.referral_invite_onboarding_3,
-                    coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-                ),
-            ),
             style = Theme.brockmann.headings.title2,
         )
 
@@ -104,9 +89,7 @@ internal fun ReferralCodeBottomSheetContent(
             style = Theme.brockmann.body.s.medium,
             textAlign = TextAlign.Center,
             color = Theme.v2.colors.text.secondary,
-            modifier = Modifier
-                .padding(horizontal = 32.dp)
-                .fillMaxWidth()
+            modifier = Modifier.padding(horizontal = 32.dp).fillMaxWidth(),
         )
 
         UiSpacer(32.dp)
@@ -117,9 +100,7 @@ internal fun ReferralCodeBottomSheetContent(
             state = Enabled,
             size = Medium,
             onClick = onContinue,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
         )
     }
 }
@@ -127,8 +108,5 @@ internal fun ReferralCodeBottomSheetContent(
 @Composable
 @androidx.compose.ui.tooling.preview.Preview
 private fun ReferralCodeBottomSheetPreview() {
-    ReferralCodeBottomSheet(
-        onContinue = {},
-        onDismissRequest = {},
-    )
+    ReferralCodeBottomSheet(onContinue = {}, onDismissRequest = {})
 }

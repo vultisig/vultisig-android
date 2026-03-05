@@ -32,15 +32,10 @@ internal class InputPasswordViewModelDelegate(
     val password: String
         get() = passwordFieldState.text.toString()
 
-
     init {
         viewModelScope.launch {
             val passwordHint = getPasswordHint(vaultId)
-            state.update {
-                it.copy(
-                    passwordHint = passwordHint
-                )
-            }
+            state.update { it.copy(passwordHint = passwordHint) }
         }
     }
 
@@ -49,30 +44,27 @@ internal class InputPasswordViewModelDelegate(
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     suspend fun checkIfPasswordIsValid(): Boolean {
         val password = password
         if (!isPasswordEmpty()) {
-            val vault = vaultRepository.get(vaultId)
-                ?: error("No vault with id $vaultId exists")
+            val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId exists")
 
-            val isPasswordValid = vultiSignerRepository.isPasswordValid(
-                publicKeyEcdsa = vault.pubKeyECDSA,
-                password = password,
-            )
+            val isPasswordValid =
+                vultiSignerRepository.isPasswordValid(
+                    publicKeyEcdsa = vault.pubKeyECDSA,
+                    password = password,
+                )
 
             if (isPasswordValid) {
                 return true
             } else {
                 state.update {
                     it.copy(
-                        passwordError = UiText.StringResource(
-                            R.string.keysign_password_incorrect_password
-                        ),
+                        passwordError =
+                            UiText.StringResource(R.string.keysign_password_incorrect_password)
                     )
                 }
             }
@@ -84,12 +76,11 @@ internal class InputPasswordViewModelDelegate(
     }
 
     private fun verifyPassword() {
-        val error = if (isPasswordEmpty()) {
-            UiText.StringResource(R.string.password_should_not_be_empty)
-        } else null
-        state.update {
-            it.copy(passwordError = error)
-        }
+        val error =
+            if (isPasswordEmpty()) {
+                UiText.StringResource(R.string.password_should_not_be_empty)
+            } else null
+        state.update { it.copy(passwordError = error) }
     }
 
     private suspend fun getPasswordHint(vaultId: String): UiText? {
@@ -100,10 +91,9 @@ internal class InputPasswordViewModelDelegate(
 
         return UiText.FormattedText(
             R.string.import_file_password_hint_text,
-            listOf(passwordHintString)
+            listOf(passwordHintString),
         )
     }
 
     private fun isPasswordEmpty() = password.isEmpty()
-
 }

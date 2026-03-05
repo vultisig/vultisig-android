@@ -39,22 +39,16 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ReceiveBottomSheet(
-    viewModel: ReceiveViewModel = hiltViewModel(),
-) {
+internal fun ReceiveBottomSheet(viewModel: ReceiveViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
 
-    V2BottomSheet(
-        onDismissRequest = viewModel::back
-    ) {
+    V2BottomSheet(onDismissRequest = viewModel::back) {
         ReceiveContent(
             searchFieldState = viewModel.searchFieldState,
             uiState = uiState,
-            onChainClick = viewModel::onChainClick
+            onChainClick = viewModel::onChainClick,
         )
-
     }
-
 }
 
 @Composable
@@ -63,17 +57,8 @@ private fun ReceiveContent(
     searchFieldState: TextFieldState,
     onChainClick: (ChainToReceiveUiModel) -> Unit,
 ) {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(
-                    horizontal = 16.dp
-                )
-    ) {
-        UiSpacer(
-            size = 32.dp
-        )
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+        UiSpacer(size = 32.dp)
         Text(
             text = stringResource(R.string.select_chain_title),
             style = Theme.brockmann.body.l.medium,
@@ -81,60 +66,36 @@ private fun ReceiveContent(
         )
         UiSpacer(16.dp)
 
-        SearchBar(
-            isInitiallyFocused = false,
-            state = searchFieldState,
-            onCancelClick = {},
-        )
+        SearchBar(isInitiallyFocused = false, state = searchFieldState, onCancelClick = {})
 
-        UiSpacer(
-            size = 16.dp
-        )
+        UiSpacer(size = 16.dp)
 
-        V2Container(
-            type = ContainerType.SECONDARY
-        ) {
-            LazyColumn(
-                modifier = Modifier.padding(
-
-                )
-            ) {
+        V2Container(type = ContainerType.SECONDARY) {
+            LazyColumn(modifier = Modifier.padding()) {
                 itemsIndexed(uiState.chains) { index, chain ->
-
                     Column {
                         Row(
-                            modifier = Modifier
-                                .clickOnce(onClick = {
-                                    onChainClick(chain)
-                                })
-                                .fillMaxWidth()
-                                .padding(
-                                    horizontal = 16.dp,
-                                    vertical = 12.dp
-                                ),
+                            modifier =
+                                Modifier.clickOnce(onClick = { onChainClick(chain) })
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Image(
                                 painter = painterResource(chain.logo),
                                 contentDescription = chain.name,
-                                modifier = Modifier.size(
-                                    22.dp
-                                )
+                                modifier = Modifier.size(22.dp),
                             )
 
-                            UiSpacer(
-                                size = 24.dp
-                            )
+                            UiSpacer(size = 24.dp)
 
                             Text(
                                 text = chain.ticker.uppercase(),
                                 style = Theme.brockmann.body.s.medium,
-                                color = Theme.v2.colors.text.primary
+                                color = Theme.v2.colors.text.primary,
                             )
 
-                            UiSpacer(
-                                size = 24.dp
-                            )
+                            UiSpacer(size = 24.dp)
 
                             V2Container(
                                 cornerType = CornerType.Circular,
@@ -142,13 +103,11 @@ private fun ReceiveContent(
                                 type = ContainerType.SECONDARY,
                             ) {
                                 Text(
-                                    modifier = Modifier.padding(
-                                        vertical = 4.dp,
-                                        horizontal = 16.dp
-                                    ),
+                                    modifier =
+                                        Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
                                     text = chain.name,
                                     style = Theme.brockmann.body.s.medium,
-                                    color = Theme.v2.colors.text.primary
+                                    color = Theme.v2.colors.text.primary,
                                 )
                             }
                         }
@@ -159,7 +118,6 @@ private fun ReceiveContent(
                 }
             }
         }
-
     }
 }
 
@@ -167,23 +125,24 @@ private fun ReceiveContent(
 @Composable
 private fun ReceiveContentPreview() {
     ReceiveContent(
-        uiState = ReceiveUiModel(
-            listOf(
-                ChainToReceiveUiModel(
-                    name = "Ethereum",
-                    logo = R.drawable.ethereum,
-                    ticker = "ETH",
-                    address = "0x1234",
-                ),
-                ChainToReceiveUiModel(
-                    name = "Bitcoin",
-                    logo = R.drawable.bitcoin,
-                    ticker = "BTC",
-                    address = "0x1234",
+        uiState =
+            ReceiveUiModel(
+                listOf(
+                    ChainToReceiveUiModel(
+                        name = "Ethereum",
+                        logo = R.drawable.ethereum,
+                        ticker = "ETH",
+                        address = "0x1234",
+                    ),
+                    ChainToReceiveUiModel(
+                        name = "Bitcoin",
+                        logo = R.drawable.bitcoin,
+                        ticker = "BTC",
+                        address = "0x1234",
+                    ),
                 )
-            )
-        ),
+            ),
         searchFieldState = TextFieldState(),
-        onChainClick = {}
+        onChainClick = {},
     )
 }

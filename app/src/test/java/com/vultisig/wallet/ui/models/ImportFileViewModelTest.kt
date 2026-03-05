@@ -24,6 +24,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
+import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -34,7 +35,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ImportFileViewModelTest {
@@ -72,33 +72,24 @@ internal class ImportFileViewModelTest {
         fileName: String? = null,
         fileContent: String? = "test-content",
     ): ImportFileViewModel {
-        val savedStateHandle = SavedStateHandle(
-            mapOf("uri" to null)
-        )
-        val vm = ImportFileViewModel(
-            savedStateHandle = savedStateHandle,
-            navigator = navigator,
-            context = context,
-            vaultDataStoreRepository = vaultDataStoreRepository,
-            saveVault = saveVault,
-            parseVaultFromString = parseVaultFromString,
-            discoverToken = discoverToken,
-        )
-        vm.uiModel.value = ImportFileState(
-            fileName = fileName,
-            fileContent = fileContent,
-            isZip = false,
-        )
+        val savedStateHandle = SavedStateHandle(mapOf("uri" to null))
+        val vm =
+            ImportFileViewModel(
+                savedStateHandle = savedStateHandle,
+                navigator = navigator,
+                context = context,
+                vaultDataStoreRepository = vaultDataStoreRepository,
+                saveVault = saveVault,
+                parseVaultFromString = parseVaultFromString,
+                discoverToken = discoverToken,
+            )
+        vm.uiModel.value =
+            ImportFileState(fileName = fileName, fileContent = fileContent, isZip = false)
         return vm
     }
 
-    private fun testVault(
-        libType: SigningLibType = SigningLibType.DKLS,
-    ) = Vault(
-        id = "test-vault-id",
-        name = "Test Vault",
-        libType = libType,
-    )
+    private fun testVault(libType: SigningLibType = SigningLibType.DKLS) =
+        Vault(id = "test-vault-id", name = "Test Vault", libType = libType)
 
     @Test
     fun `KeyImport vault with share filename keeps KeyImport libType`() = runTest {
@@ -149,7 +140,7 @@ internal class ImportFileViewModelTest {
 
         assertEquals(
             UiText.StringResource(R.string.import_file_screen_duplicate_vault),
-            vm.snackBarChannelFlow.first()
+            vm.snackBarChannelFlow.first(),
         )
     }
 
@@ -168,7 +159,7 @@ internal class ImportFileViewModelTest {
 
         assertEquals(
             UiText.StringResource(R.string.import_file_screen_duplicate_vault),
-            vm.snackBarChannelFlow.first()
+            vm.snackBarChannelFlow.first(),
         )
     }
 }

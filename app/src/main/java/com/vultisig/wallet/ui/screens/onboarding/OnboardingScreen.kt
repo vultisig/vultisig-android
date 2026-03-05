@@ -40,9 +40,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.delay
 
 @Composable
-internal fun OnboardingScreen(
-    model: OnboardingViewModel = hiltViewModel(),
-) {
+internal fun OnboardingScreen(model: OnboardingViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
     var showPreview by remember { mutableStateOf(true) }
     var fadeoutPreviewText by remember { mutableStateOf(false) }
@@ -54,9 +52,7 @@ internal fun OnboardingScreen(
     }
     if (showPreview) {
         Box(
-            modifier = Modifier
-                .background(Theme.v2.colors.backgrounds.primary)
-                .fillMaxSize(),
+            modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             AnimatedVisibility(
@@ -66,16 +62,18 @@ internal fun OnboardingScreen(
                 exit = fadeOut(tween(200)),
             ) {
                 SequenceOfGradientText(
-                    listTextItems = listOf(
-                        PartiallyGradientTextItem(
-                            resId = R.string.onboarding_intro_preview_part_1,
-                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                    listTextItems =
+                        listOf(
+                            PartiallyGradientTextItem(
+                                resId = R.string.onboarding_intro_preview_part_1,
+                                coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                            ),
+                            PartiallyGradientTextItem(
+                                resId = R.string.onboarding_intro_preview_part_2,
+                                coloring =
+                                    GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                            ),
                         ),
-                        PartiallyGradientTextItem(
-                            resId = R.string.onboarding_intro_preview_part_2,
-                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                        ),
-                    ),
                     style = Theme.brockmann.headings.title1,
                 )
             }
@@ -103,20 +101,14 @@ private fun OnboardingScreen(
         topBar = {
             VsTopAppProgressBar(
                 navigationContent = {
-                    Row(
-                        Modifier.clickable(onClick = onBackClick),
-                    ) {
-                        UiSpacer(
-                            size = 12.dp
-                        )
+                    Row(Modifier.clickable(onClick = onBackClick)) {
+                        UiSpacer(size = 12.dp)
                         UiIcon(
                             drawableResId = R.drawable.ic_caret_left,
                             onClick = onBackClick,
-                            size = 24.dp
+                            size = 24.dp,
                         )
-                        UiSpacer(
-                            size = 8.dp
-                        )
+                        UiSpacer(size = 8.dp)
                         Text(
                             modifier = Modifier.align(Alignment.CenterVertically),
                             text = stringResource(R.string.onboarding_intro_back),
@@ -133,9 +125,9 @@ private fun OnboardingScreen(
                         text = stringResource(R.string.welcome_screen_skip),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.v2.colors.text.tertiary,
-                        modifier = Modifier
-                            .clickable(onClick = onSkipClick)
-                            .testTag("OnboardingScreen.skip")
+                        modifier =
+                            Modifier.clickable(onClick = onSkipClick)
+                                .testTag("OnboardingScreen.skip"),
                     )
                 },
             )
@@ -145,126 +137,120 @@ private fun OnboardingScreen(
                 state = state,
                 riveAnimation = R.raw.riv_onboarding,
                 nextClick = onNextClick,
-                textDescription = { index ->
-                    Description(index = index)
-                },
+                textDescription = { index -> Description(index = index) },
             )
-        }
+        },
     )
 }
 
 @Composable
-private fun Description(
-    index: Int,
-    modifier: Modifier = Modifier,
-) {
+private fun Description(index: Int, modifier: Modifier = Modifier) {
     SequenceOfGradientText(
-        listTextItems = when (index) {
-            0 -> {
-                listOf(
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_1_part_1,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_1_part_2,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_1_part_3,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.secondary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_1_part_4,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                    ),
-                )
-            }
+        listTextItems =
+            when (index) {
+                0 -> {
+                    listOf(
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_1_part_1,
+                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_1_part_2,
+                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_1_part_3,
+                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.secondary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_1_part_4,
+                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        ),
+                    )
+                }
 
-            1 -> {
-                listOf(
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_2_part_1,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_2_part_2,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_2_part_3,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_2_part_4,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                    ),
-                )
+                1 -> {
+                    listOf(
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_2_part_1,
+                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_2_part_2,
+                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_2_part_3,
+                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_2_part_4,
+                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        ),
+                    )
+                }
 
-            }
+                2 -> {
+                    listOf(
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_3_part_1,
+                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_3_part_2,
+                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_3_part_3,
+                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        ),
+                    )
+                }
 
-            2 -> {
-                listOf(
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_3_part_1,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_3_part_2,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_3_part_3,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                    ),
-                )
+                3 -> {
+                    listOf(
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_4_part_1,
+                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_4_part_2,
+                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        ),
+                    )
+                }
 
-            }
+                4 -> {
+                    listOf(
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_5_part_1,
+                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_5_part_2,
+                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_5_part_3,
+                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        ),
+                    )
+                }
 
-            3 -> {
-                listOf(
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_4_part_1,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_4_part_2,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                    ),
-                )
-            }
-
-            4 -> {
-                listOf(
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_5_part_1,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_5_part_2,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_5_part_3,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                    ),
-                )
-            }
-
-            else -> {
-                listOf(
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_6_part_1,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_desc_page_6_part_2,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                    ),
-                )
-            }
-        },
+                else -> {
+                    listOf(
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_6_part_1,
+                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_desc_page_6_part_2,
+                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        ),
+                    )
+                }
+            },
         style = Theme.brockmann.headings.title1,
-        modifier = modifier
+        modifier = modifier,
     )
 }

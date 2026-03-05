@@ -79,10 +79,12 @@ private fun ReferralEditVaultScreen(
     referralTextFieldState: TextFieldState,
 ) {
     if (state.error != null) {
-        val message = when (state.error) {
-            ReferralError.BALANCE_ERROR -> stringResource(R.string.referral_create_not_enough_balance)
-            else -> stringResource(R.string.referral_create_unknown_error)
-        }
+        val message =
+            when (state.error) {
+                ReferralError.BALANCE_ERROR ->
+                    stringResource(R.string.referral_create_not_enough_balance)
+                else -> stringResource(R.string.referral_create_unknown_error)
+            }
 
         UiAlertDialog(
             title = stringResource(R.string.dialog_default_error_title),
@@ -95,14 +97,13 @@ private fun ReferralEditVaultScreen(
     V2Scaffold(
         title = stringResource(R.string.referral_edit_referral),
         onBackClick = onBackPressed,
-
         content = {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .imePadding()
-                    .navigationBarsPadding(),
+                modifier =
+                    Modifier.fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .imePadding()
+                        .navigationBarsPadding()
             ) {
                 Text(
                     text = stringResource(R.string.referral_view_your_referral_code),
@@ -184,18 +185,17 @@ private fun ReferralEditVaultScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.save_changes),
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 24.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp).fillMaxWidth(),
                 variant = VsButtonVariant.Primary,
-                state = if (state.referralCounter != 0) {
-                    VsButtonState.Enabled
-                } else {
-                    VsButtonState.Disabled
-                },
+                state =
+                    if (state.referralCounter != 0) {
+                        VsButtonState.Enabled
+                    } else {
+                        VsButtonState.Disabled
+                    },
                 onClick = onSavedReferral,
             )
-        }
+        },
     )
 }
 
@@ -203,15 +203,16 @@ private fun ReferralEditVaultScreen(
 @Composable
 private fun ReferralEditVaultScreenPreview() {
     val referralTextFieldState = TextFieldState("VULTISIG-REF-2024")
-    
+
     ReferralEditVaultScreen(
-        state = EditVaultReferralUiState(
-            referralCounter = 2,
-            referralExpiration = "December 31, 2025",
-            referralCostAmountFormatted = "0.02 RUNE",
-            referralCostFiatFormatted = "$1.50",
-            error = null
-        ),
+        state =
+            EditVaultReferralUiState(
+                referralCounter = 2,
+                referralExpiration = "December 31, 2025",
+                referralCostAmountFormatted = "0.02 RUNE",
+                referralCostFiatFormatted = "$1.50",
+                error = null,
+            ),
         onBackPressed = {},
         onCopyReferralCode = {},
         onSavedReferral = {},

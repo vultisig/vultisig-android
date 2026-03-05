@@ -25,7 +25,6 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.models.sign.SignMessageFormViewModel
 
-
 @Composable
 internal fun SignMessageFormScreen(
     vaultId: VaultId,
@@ -33,28 +32,23 @@ internal fun SignMessageFormScreen(
 ) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(vaultId) {
-        model.setData(vaultId)
-    }
+    LaunchedEffect(vaultId) { model.setData(vaultId) }
 
     val focusManager = LocalFocusManager.current
-    val isFormValid = model.methodFieldState.text.isNotBlank() &&
-            model.messageFieldState.text.isNotBlank()
+    val isFormValid =
+        model.methodFieldState.text.isNotBlank() && model.messageFieldState.text.isNotBlank()
 
     SignMessageFormScreen(
         methodFieldState = model.methodFieldState,
         messageFieldState = model.messageFieldState,
-        state = if (state.isLoading || !isFormValid)
-            VsButtonState.Disabled
-        else
-            VsButtonState.Enabled,
+        state =
+            if (state.isLoading || !isFormValid) VsButtonState.Disabled else VsButtonState.Enabled,
         onSign = {
             focusManager.clearFocus()
             model.sign()
-        }
+        },
     )
 }
-
 
 @Composable
 private fun SignMessageFormScreen(
@@ -69,20 +63,11 @@ private fun SignMessageFormScreen(
                 label = stringResource(id = R.string.sign_message_continue),
                 state = state,
                 onClick = onSign,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(all = 16.dp),
             )
         }
     ) {
-        Column(
-            modifier = Modifier
-                .padding(it)
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp
-                )
-        ) {
+        Column(modifier = Modifier.padding(it).padding(horizontal = 16.dp, vertical = 12.dp)) {
             VsTextInputField(
                 textFieldState = methodFieldState,
                 hint = stringResource(id = R.string.hint_signing_method),
@@ -101,7 +86,6 @@ private fun SignMessageFormScreen(
         }
     }
 }
-
 
 @Preview
 @Composable

@@ -59,19 +59,17 @@ import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.performHaptic
 
 @Composable
-internal fun KeygenScreen(
-    model: KeygenViewModel = hiltViewModel(),
-) {
+internal fun KeygenScreen(model: KeygenViewModel = hiltViewModel()) {
     KeepScreenOn()
 
     val state by model.state.collectAsState()
     val view = LocalView.current
 
     LaunchedEffect(state.keygenState) {
-        when(state.keygenState) {
+        when (state.keygenState) {
             KeygenState.KeygenECDSA,
             KeygenState.KeygenEdDSA,
-            KeygenState.Success,-> {
+            KeygenState.Success -> {
                 view.performHaptic()
             }
             else -> Unit
@@ -82,16 +80,15 @@ internal fun KeygenScreen(
         Success()
     } else {
         when (state.action) {
-            TssAction.KEYGEN, TssAction.ReShare , TssAction.KeyImport -> {
-                KeygenScreen(
-                    state = state,
-                    onTryAgainClick = model::tryAgain,
-                )
+            TssAction.KEYGEN,
+            TssAction.ReShare,
+            TssAction.KeyImport -> {
+                KeygenScreen(state = state, onTryAgainClick = model::tryAgain)
             }
 
             TssAction.Migrate -> {
                 VsSigningProgressIndicator(
-                    text = stringResource(R.string.keygen_screen_upgrading_vault),
+                    text = stringResource(R.string.keygen_screen_upgrading_vault)
                 )
             }
         }
@@ -99,38 +96,32 @@ internal fun KeygenScreen(
 }
 
 @Composable
-private fun KeygenScreen(
-    state: KeygenUiModel,
-    onTryAgainClick: () -> Unit,
-) {
+private fun KeygenScreen(state: KeygenUiModel, onTryAgainClick: () -> Unit) {
     V2Scaffold(
         applyDefaultPaddings = false,
         applyScaffoldPaddings = false,
         topBar = {},
         content = {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxSize(),
-            ) {
+            Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize()) {
                 val error = state.error
                 if (error == null) {
 
-                    val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keygen).value ?: return@Column
-                    val vmi = rememberViewModelInstance(
-                        file = riveFile,
-                        source = ViewModelSource.Named("ViewModel").defaultInstance()
-                    )
+                    val riveFile =
+                        rememberRiveResourceFile(resId = R.raw.riv_keygen).value ?: return@Column
+                    val vmi =
+                        rememberViewModelInstance(
+                            file = riveFile,
+                            source = ViewModelSource.Named("ViewModel").defaultInstance(),
+                        )
 
-                    LaunchedEffect(Unit) {
-                        vmi.setBoolean("Connected", true)
-                    }
+                    LaunchedEffect(Unit) { vmi.setBoolean("Connected", true) }
 
-                    val animatedValue by animateFloatAsState(
-                        targetValue = state.progress.times(100),
-                        animationSpec = tween(durationMillis = 300),
-                        label = "riv_progress_animation"
-                    )
+                    val animatedValue by
+                        animateFloatAsState(
+                            targetValue = state.progress.times(100),
+                            animationSpec = tween(durationMillis = 300),
+                            label = "riv_progress_animation",
+                        )
 
                     LaunchedEffect(animatedValue) {
                         vmi.setNumber("progessPercentage", animatedValue)
@@ -140,19 +131,18 @@ private fun KeygenScreen(
                         file = riveFile,
                         viewModelInstance = vmi,
                         modifier = Modifier.fillMaxSize(),
-                        fit = Fit.Cover()
+                        fit = Fit.Cover(),
                     )
                 } else {
                     ErrorView(
                         title = error.title.asString(),
                         description = error.description.asString(),
                         onButtonClick = onTryAgainClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
-        }
+        },
     )
 }
 
@@ -161,33 +151,41 @@ private data class BenefitsDescription(
     @StringRes val emphasized: Int,
 )
 
-private fun benefits() = listOf(
-    BenefitsDescription(R.string.keygen_benefit_1_template, R.string.keygen_benefit_1_emphasized),
-    BenefitsDescription(R.string.keygen_benefit_2_template, R.string.keygen_benefit_2_emphasized),
-    BenefitsDescription(R.string.keygen_benefit_3_template, R.string.keygen_benefit_3_emphasized),
-    BenefitsDescription(R.string.keygen_benefit_4_template, R.string.keygen_benefit_4_emphasized),
-    BenefitsDescription(R.string.keygen_benefit_5_template, R.string.keygen_benefit_5_emphasized),
-)
+private fun benefits() =
+    listOf(
+        BenefitsDescription(
+            R.string.keygen_benefit_1_template,
+            R.string.keygen_benefit_1_emphasized,
+        ),
+        BenefitsDescription(
+            R.string.keygen_benefit_2_template,
+            R.string.keygen_benefit_2_emphasized,
+        ),
+        BenefitsDescription(
+            R.string.keygen_benefit_3_template,
+            R.string.keygen_benefit_3_emphasized,
+        ),
+        BenefitsDescription(
+            R.string.keygen_benefit_4_template,
+            R.string.keygen_benefit_4_emphasized,
+        ),
+        BenefitsDescription(
+            R.string.keygen_benefit_5_template,
+            R.string.keygen_benefit_5_emphasized,
+        ),
+    )
 
 @Composable
-private fun LoadingStageItem(
-    text: String,
-    isLoading: Boolean,
-    modifier: Modifier = Modifier,
-) {
+private fun LoadingStageItem(text: String, isLoading: Boolean, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .padding(
-                vertical = 2.dp,
-            )
+        modifier = modifier.padding(vertical = 2.dp),
     ) {
         if (isLoading) {
             CircularProgressIndicator(
                 strokeWidth = 2.dp,
                 color = Theme.v2.colors.alerts.success,
-                modifier = Modifier
-                    .size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
         } else {
             UiIcon(
@@ -202,8 +200,7 @@ private fun LoadingStageItem(
         Text(
             text = text,
             style = Theme.brockmann.body.m.medium,
-            color = if (isLoading) Theme.v2.colors.text.primary
-            else Theme.v2.colors.text.tertiary,
+            color = if (isLoading) Theme.v2.colors.text.primary else Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center,
         )
     }
@@ -214,44 +211,30 @@ private fun Success() {
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.primary),
+        modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             RiveAnimation(
                 animation = R.raw.riv_vault_created,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
+                modifier = Modifier.fillMaxWidth().weight(1f),
             )
 
             var isSuccessVisible by remember { mutableStateOf(false) }
 
-            LaunchedEffect(Unit) {
-                isSuccessVisible = true
-            }
-
+            LaunchedEffect(Unit) { isSuccessVisible = true }
 
             AnimatedVisibility(
                 visible = isSuccessVisible,
-                enter = fadeIn(tween(SUCCESS_ENTER_DURATION_MS)) +
-                        slideInVertically(
-                            tween(SUCCESS_ENTER_DURATION_MS),
-                        ) +
+                enter =
+                    fadeIn(tween(SUCCESS_ENTER_DURATION_MS)) +
+                        slideInVertically(tween(SUCCESS_ENTER_DURATION_MS)) +
                         scaleIn(tween(SUCCESS_ENTER_DURATION_MS)),
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val successText = buildAnnotatedString {
                         append(stringResource(R.string.keygen_vault_created_success_part_1))
                         appendLine(" ")
-                        withStyle(
-                            SpanStyle(brush = Theme.v2.colors.gradients.primary)
-                        ) {
+                        withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
                             append(stringResource(R.string.vault_created_success_part_2))
                         }
                     }
@@ -267,14 +250,12 @@ private fun Success() {
 
                     RiveAnimation(
                         animation = R.raw.riv_connecting_with_server,
-                        modifier = Modifier
-                            .size(24.dp),
+                        modifier = Modifier.size(24.dp),
                     )
                 }
             }
 
             UiSpacer(60.dp)
-
         }
     }
 }
@@ -285,18 +266,20 @@ private const val SUCCESS_ENTER_DURATION_MS = 375
 @Composable
 private fun KeygenScreenPreview() {
     KeygenScreen(
-        state = KeygenUiModel(
-            steps = listOf(
-                KeygenStepUiModel(
-                    UiText.StringResource(R.string.keygen_step_preparing_vault),
-                    isLoading = true,
-                ),
-                KeygenStepUiModel(
-                    UiText.StringResource(R.string.keygen_step_generating_ecdsa),
-                    isLoading = false,
-                ),
-            )
-        ),
+        state =
+            KeygenUiModel(
+                steps =
+                    listOf(
+                        KeygenStepUiModel(
+                            UiText.StringResource(R.string.keygen_step_preparing_vault),
+                            isLoading = true,
+                        ),
+                        KeygenStepUiModel(
+                            UiText.StringResource(R.string.keygen_step_generating_ecdsa),
+                            isLoading = false,
+                        ),
+                    )
+            ),
         onTryAgainClick = {},
     )
 }

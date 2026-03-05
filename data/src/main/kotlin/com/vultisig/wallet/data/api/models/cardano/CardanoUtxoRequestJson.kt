@@ -4,7 +4,4 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CardanoUtxoRequestJson(
-    @SerialName("_addresses")
-    val addresses: List<String>
-)
+data class CardanoUtxoRequestJson(@SerialName("_addresses") val addresses: List<String>)

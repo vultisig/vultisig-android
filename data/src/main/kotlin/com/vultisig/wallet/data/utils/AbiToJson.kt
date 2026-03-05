@@ -1,5 +1,9 @@
 package com.vultisig.wallet.data.utils
 
+import java.math.BigDecimal
+import java.math.BigInteger
+import kotlin.collections.map
+import kotlin.collections.orEmpty
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -8,11 +12,6 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import java.math.BigDecimal
-import java.math.BigInteger
-import kotlin.collections.map
-import kotlin.collections.orEmpty
-
 
 internal fun convertParameter(obj: JsonObject): JsonElement {
     val type = obj["type"]?.jsonPrimitive?.content ?: ""
@@ -24,41 +23,30 @@ internal fun convertParameter(obj: JsonObject): JsonElement {
     if (type.endsWith("[]")) {
         val baseType = type.removeSuffix("[]")
         val arr = obj["value"]?.jsonArray.orEmpty()
-        return JsonArray(arr.map { elem ->
-            when {
-                elem is JsonObject && (elem["components"] != null) ->
-                    convertTuple(elem.jsonObject)
+        return JsonArray(
+            arr.map { elem ->
+                when {
+                    elem is JsonObject && (elem["components"] != null) ->
+                        convertTuple(elem.jsonObject)
 
-                elem is JsonObject && elem["value"] != null ->
-                    convertSimpleValue(
-                        baseType,
-                        elem["value"]!!
-                    )
+                    elem is JsonObject && elem["value"] != null ->
+                        convertSimpleValue(baseType, elem["value"]!!)
 
-                else -> convertSimpleValue(
-                    baseType,
-                    elem
-                )
+                    else -> convertSimpleValue(baseType, elem)
+                }
             }
-        })
+        )
     }
 
     val valueElem = obj["value"] ?: return JsonNull
-    return convertSimpleValue(
-        type,
-        valueElem
-    )
+    return convertSimpleValue(type, valueElem)
 }
-
 
 private fun convertTuple(obj: JsonObject): JsonElement {
     val components = obj["components"]?.jsonArray.orEmpty()
-    val items = components.map { comp ->
-        convertParameter(comp.jsonObject)
-    }
+    val items = components.map { comp -> convertParameter(comp.jsonObject) }
     return JsonArray(items)
 }
-
 
 private fun convertSimpleValue(type: String, value: JsonElement): JsonElement {
     if (value is JsonNull) return JsonNull
@@ -66,46 +54,23 @@ private fun convertSimpleValue(type: String, value: JsonElement): JsonElement {
     val text = value.jsonPrimitive.content
 
     return when {
-        type.equals(
-            "address",
-            true
-        ) ||
-                type.startsWith(
-                    "bytes",
-                    ignoreCase = true
-                ) -> JsonPrimitive(normalizeHex(text))
+        type.equals("address", true) || type.startsWith("bytes", ignoreCase = true) ->
+            JsonPrimitive(normalizeHex(text))
 
-        type.equals(
-            "bool",
-            true
-        ) -> JsonPrimitive(
-            text.equals(
-                "true",
-                true
-            )
-        )
+        type.equals("bool", true) -> JsonPrimitive(text.equals("true", true))
 
-        type.equals(
-            "string",
-            true
-        ) -> JsonPrimitive(text)
+        type.equals("string", true) -> JsonPrimitive(text)
 
         type.startsWith("uint") || type.startsWith("int") -> {
             parseBigIntAsJsonNumber(text)
         }
 
-        type.matches(
-            Regex(
-                "bytes\\d+",
-                RegexOption.IGNORE_CASE
-            )
-        ) ->
+        type.matches(Regex("bytes\\d+", RegexOption.IGNORE_CASE)) ->
             JsonPrimitive(normalizeHex(text))
 
         else -> JsonPrimitive(text)
     }
 }
-
 
 private fun parseBigIntAsJsonNumber(value: String): JsonElement {
     return try {

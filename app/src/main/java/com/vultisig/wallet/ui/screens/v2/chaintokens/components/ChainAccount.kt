@@ -51,92 +51,68 @@ internal fun ChainAccount(
     mergedBalance: String? = null,
 ) {
     Row(
-        modifier = modifier
-            .clickOnce(
-                onClick = onClick
-            ),
+        modifier = modifier.clickOnce(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box {
             TokenLogo(
                 logo = tokenLogo,
                 title = title,
-                modifier = Modifier
-                    .size(36.dp)
-                    .align(Alignment.Center),
-                errorLogoModifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Theme.v2.colors.backgrounds.body),
+                modifier = Modifier.size(36.dp).align(Alignment.Center),
+                errorLogoModifier =
+                    Modifier.size(36.dp)
+                        .clip(CircleShape)
+                        .background(Theme.v2.colors.backgrounds.body),
             )
-            monoToneChainLogo.takeIf { chainLogo != tokenLogo }?.let {
-                Image(
-                    painter = painterResource(id = it),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.backgrounds.secondary,
-                            shape = CircleShape
-                        )
-                        .background(
-                            Theme.v2.colors.neutrals.n200,
-                            CircleShape
-                        )
-                        .align(Alignment.BottomEnd)
-                )
-            }
+            monoToneChainLogo
+                .takeIf { chainLogo != tokenLogo }
+                ?.let {
+                    Image(
+                        painter = painterResource(id = it),
+                        contentDescription = null,
+                        modifier =
+                            Modifier.size(16.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = Theme.v2.colors.backgrounds.secondary,
+                                    shape = CircleShape,
+                                )
+                                .background(Theme.v2.colors.neutrals.n200, CircleShape)
+                                .align(Alignment.BottomEnd),
+                    )
+                }
         }
 
-        UiSpacer(
-            size = 9.dp
-        )
+        UiSpacer(size = 9.dp)
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = Theme.brockmann.body.s.medium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                color = Theme.v2.colors.text.primary
+                color = Theme.v2.colors.text.primary,
             )
-            UiSpacer(
-                size = 2.dp
-            )
+            UiSpacer(size = 2.dp)
 
             V2Container(
                 type = ContainerType.TERTIARY,
                 borderType = ContainerBorderType.Borderless,
-                cornerType = CornerType.RoundedCornerShape(
-                    size = 8.dp
-                )
+                cornerType = CornerType.RoundedCornerShape(size = 8.dp),
             ) {
                 LoadableValue(
                     value = price,
                     isVisible = true,
                     style = Theme.satoshi.price.caption,
                     color = Theme.v2.colors.text.secondary,
-                    modifier = Modifier
-                        .padding(
-                            horizontal = 8.dp,
-                            vertical = 3.dp
-                        )
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                 )
             }
         }
 
-        UiSpacer(
-            size = 8.dp
-        )
+        UiSpacer(size = 8.dp)
 
-        Column(
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier.weight(1f),
-        ) {
+        Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
             LoadableValue(
                 value = fiatBalance,
                 isVisible = isBalanceVisible,
@@ -144,9 +120,7 @@ internal fun ChainAccount(
                 color = Theme.v2.colors.neutrals.n50,
             )
 
-            UiSpacer(
-                size = 4.dp
-            )
+            UiSpacer(size = 4.dp)
 
             LoadableValue(
                 value = balance,
@@ -158,9 +132,7 @@ internal fun ChainAccount(
             )
         }
 
-        UiSpacer(
-            size = 8.dp
-        )
+        UiSpacer(size = 8.dp)
 
         UiIcon(
             drawableResId = R.drawable.ic_small_caret_right,
@@ -172,7 +144,7 @@ internal fun ChainAccount(
 
 @Preview
 @Composable
-fun ChainAccountPreview(){
+fun ChainAccountPreview() {
     ChainAccount(
         modifier = Modifier,
         title = "LP-THOR.RUJI/ ETH.USDC-XYK",
@@ -183,14 +155,14 @@ fun ChainAccountPreview(){
         tokenLogo = Coins.Ethereum.USDT.logo,
         chainLogo = Coins.Ethereum.USDT.chain.logo,
         monoToneChainLogo = Coins.Ethereum.USDT.chain.monoToneLogo,
-        onClick = {  },
+        onClick = {},
         mergedBalance = "",
     )
 }
 
 @Preview
 @Composable
-fun ChainAccountPreview2(){
+fun ChainAccountPreview2() {
     ChainAccount(
         modifier = Modifier,
         title = Coins.Ethereum.USDT.ticker,
@@ -201,7 +173,7 @@ fun ChainAccountPreview2(){
         tokenLogo = Coins.Ethereum.USDT.logo,
         chainLogo = Coins.Ethereum.USDT.chain.logo,
         monoToneChainLogo = Coins.Ethereum.USDT.chain.monoToneLogo,
-        onClick = {  },
+        onClick = {},
         mergedBalance = "",
     )
 }

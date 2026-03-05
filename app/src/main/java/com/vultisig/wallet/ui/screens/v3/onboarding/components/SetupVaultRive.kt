@@ -12,36 +12,27 @@ import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.util.dashedBorder
 import com.vultisig.wallet.ui.theme.Theme
 
-
 @Composable
-fun SetupVaultRive(
-    animationRes: Int,
-    modifier: Modifier = Modifier,
-) {
+fun SetupVaultRive(animationRes: Int, modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier
-            .size(width = 350.dp, height = 240.dp)
-            .background(
-                color = Theme.v2.colors.backgrounds.secondary
-            )
-            .dashedBorder(
-                width = 1.dp,
-                color = Theme.v2.colors.border.light,
-                cornerRadius = 0.dp,
-                intervalLength = 4.dp,
-                dashLength = 4.dp
-            )
+        modifier =
+            modifier
+                .size(width = 350.dp, height = 240.dp)
+                .background(color = Theme.v2.colors.backgrounds.secondary)
+                .dashedBorder(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    cornerRadius = 0.dp,
+                    intervalLength = 4.dp,
+                    dashLength = 4.dp,
+                )
     ) {
-        RiveAnimation(
-            animation = animationRes
-        )
+        RiveAnimation(animation = animationRes)
     }
 }
 
 @Preview
 @Composable
-fun SetupVaultRivePreview(){
-    SetupVaultRive(
-        animationRes = R.raw.riv_keygen
-    )
+fun SetupVaultRivePreview() {
+    SetupVaultRive(animationRes = R.raw.riv_keygen)
 }

@@ -34,8 +34,8 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
-import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
+import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
@@ -55,9 +55,7 @@ internal fun ThorchainDefiPositionsScreen(
 ) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) {
-        model.setData(vaultId = vaultId)
-    }
+    LaunchedEffect(Unit) { model.setData(vaultId = vaultId) }
 
     ThorchainDefiPositionScreenContent(
         state = state,
@@ -73,7 +71,7 @@ internal fun ThorchainDefiPositionsScreen(
         onClickWithdraw = { model.onNavigateToFunctions(it) },
         onClickStake = { model.onNavigateToFunctions(it) },
         onClickUnstake = { model.onNavigateToFunctions(it) },
-        onClickTransfer = { model.onClickTransfer() }
+        onClickTransfer = { model.onClickTransfer() },
     )
 }
 
@@ -96,18 +94,11 @@ internal fun ThorchainDefiPositionScreenContent(
 ) {
     val searchTextFieldState = remember { TextFieldState() }
 
-    val tabs = listOf(
-        DeFiTab.BONDED,
-        DeFiTab.STAKED,
-    )
+    val tabs = listOf(DeFiTab.BONDED, DeFiTab.STAKED)
 
-    V2Scaffold(
-        onBackClick = onBackClick,
-    ) {
+    V2Scaffold(onBackClick = onBackClick) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Theme.v2.colors.backgrounds.primary),
+            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
             horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -122,30 +113,23 @@ internal fun ThorchainDefiPositionScreenContent(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-
-                VsTabGroup(
-                    index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }
-                ) {
+                VsTabGroup(index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }) {
                     tabs.forEach { tab ->
                         tab {
                             VsTab(
                                 label = stringResource(tab.displayNameRes),
-                                onClick = {
-                                    onTabSelected(tab)
-                                },
+                                onClick = { onTabSelected(tab) },
                             )
                         }
                     }
                 }
 
-
                 V2Container(
                     type = ContainerType.SECONDARY,
                     cornerType = CornerType.Circular,
-                    modifier = Modifier
-                        .clickOnce(onClick = {})
+                    modifier = Modifier.clickOnce(onClick = {}),
                 ) {
                     UiIcon(
                         drawableResId = R.drawable.edit_chain,
@@ -172,9 +156,7 @@ internal fun ThorchainDefiPositionScreenContent(
             when (state.selectedTab) {
                 DeFiTab.BONDED.displayNameRes -> {
                     if (!state.selectedPositions.hasBondPositions()) {
-                        NoPositionsContainer(
-                            onManagePositionsClick = onEditPositionClick
-                        )
+                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
                     } else {
                         BondedTabContent(
                             bondToNodeOnClick = onClickBondToNode,
@@ -187,9 +169,7 @@ internal fun ThorchainDefiPositionScreenContent(
 
                 DeFiTab.STAKED.displayNameRes -> {
                     if (!state.selectedPositions.hasStakingPositions()) {
-                        NoPositionsContainer(
-                            onManagePositionsClick = onEditPositionClick
-                        )
+                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
                     } else {
                         StakingTabContent(
                             state = state.staking,
@@ -203,12 +183,10 @@ internal fun ThorchainDefiPositionScreenContent(
                 }
 
                 DeFiTab.LP.displayNameRes -> {
-                    NoPositionsContainer(
-                        onManagePositionsClick = onEditPositionClick
-                    )
+                    NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
                 }
             }
-            
+
             UiSpacer(size = 16.dp)
         }
     }
@@ -218,63 +196,66 @@ internal fun ThorchainDefiPositionScreenContent(
 @Preview(showBackground = true, name = "DeFi Positions - Empty")
 private fun ThorchainDefiPositionsScreenPreviewEmpty() {
     ThorchainDefiPositionScreenContent(
-        onBackClick = { },
+        onBackClick = {},
         state = ThorchainDefiPositionsUiModel(),
         onClickBond = {},
         onClickUnbond = {},
         onClickBondToNode = {},
-        onTabSelected = {}
+        onTabSelected = {},
     )
 }
 
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - With Data")
 private fun ThorchainDefiPositionsScreenPreviewWithData() {
-    val mockNodes = listOf(
-        BondedNodeUiModel(
-            address = "thor1abcd...xyz",
-            fullAddress = "",
-            status = BondNodeState.ACTIVE,
-            apy = "12.5%",
-            bondedAmount = "1000 RUNE",
-            nextAward = "20 RUNE",
-            nextChurn = "Oct 15, 25"
-        ),
-        BondedNodeUiModel(
-            address = "thor1efgh...123",
-            fullAddress = "",
-            status = BondNodeState.STANDBY,
-            apy = "11.2%",
-            bondedAmount = "500 RUNE",
-            nextAward = "10 RUNE",
-            nextChurn = "Oct 16, 25"
-        ),
-        BondedNodeUiModel(
-            address = "thor1ijkl...456",
-            fullAddress = "",
-            status = BondNodeState.READY,
-            apy = "10.8%",
-            bondedAmount = "750 RUNE",
-            nextAward = "15 RUNE",
-            nextChurn = "Oct 17, 25"
+    val mockNodes =
+        listOf(
+            BondedNodeUiModel(
+                address = "thor1abcd...xyz",
+                fullAddress = "",
+                status = BondNodeState.ACTIVE,
+                apy = "12.5%",
+                bondedAmount = "1000 RUNE",
+                nextAward = "20 RUNE",
+                nextChurn = "Oct 15, 25",
+            ),
+            BondedNodeUiModel(
+                address = "thor1efgh...123",
+                fullAddress = "",
+                status = BondNodeState.STANDBY,
+                apy = "11.2%",
+                bondedAmount = "500 RUNE",
+                nextAward = "10 RUNE",
+                nextChurn = "Oct 16, 25",
+            ),
+            BondedNodeUiModel(
+                address = "thor1ijkl...456",
+                fullAddress = "",
+                status = BondNodeState.READY,
+                apy = "10.8%",
+                bondedAmount = "750 RUNE",
+                nextAward = "15 RUNE",
+                nextChurn = "Oct 17, 25",
+            ),
         )
-    )
 
     ThorchainDefiPositionScreenContent(
-        onBackClick = { },
-        state = ThorchainDefiPositionsUiModel(
-            totalAmountPrice = "$3,250.00",
-            selectedTab = DeFiTab.BONDED.displayNameRes,
-            bonded = BondedTabUiModel(
-                isLoading = false,
-                totalBondedAmount = "2250 RUNE",
-                nodes = mockNodes
-            )
-        ),
+        onBackClick = {},
+        state =
+            ThorchainDefiPositionsUiModel(
+                totalAmountPrice = "$3,250.00",
+                selectedTab = DeFiTab.BONDED.displayNameRes,
+                bonded =
+                    BondedTabUiModel(
+                        isLoading = false,
+                        totalBondedAmount = "2250 RUNE",
+                        nodes = mockNodes,
+                    ),
+            ),
         onClickBond = {},
         onClickUnbond = {},
         onClickBondToNode = {},
-        onTabSelected = {}
+        onTabSelected = {},
     )
 }
 
@@ -282,16 +263,11 @@ private fun ThorchainDefiPositionsScreenPreviewWithData() {
 @Preview(showBackground = true, name = "DeFi Positions - Loading")
 private fun ThorchainDefiPositionsScreenPreviewLoading() {
     ThorchainDefiPositionScreenContent(
-        onBackClick = { },
-        state = ThorchainDefiPositionsUiModel(
-            bonded = BondedTabUiModel(
-                isLoading = true
-            )
-        ),
+        onBackClick = {},
+        state = ThorchainDefiPositionsUiModel(bonded = BondedTabUiModel(isLoading = true)),
         onClickBond = {},
         onClickUnbond = {},
         onClickBondToNode = {},
-        onTabSelected = {}
+        onTabSelected = {},
     )
 }
-

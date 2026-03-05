@@ -14,17 +14,13 @@ import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import com.vultisig.wallet.data.utils.getDustThreshold
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
-import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
+import wallet.core.jni.CoinType
 
 typealias ChainId = String
 
-enum class Chain(
-    val raw: ChainId,
-    val standard: TokenStandard,
-    val feeUnit: String,
-) {
+enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: String) {
     ThorChain("THORChain", THORCHAIN, "Rune"),
     MayaChain("MayaChain", THORCHAIN, "cacao"),
 
@@ -51,7 +47,6 @@ enum class Chain(
     Dash("Dash", UTXO, "DASH/vbyte"),
     Zcash("Zcash", UTXO, "ZEC/vbyte"),
     Cardano("Cardano", UTXO, "ADA/vbyte"),
-
     GaiaChain("Cosmos", COSMOS, "uatom"),
     Kujira("Kujira", COSMOS, "ukuji"),
     Dydx("Dydx", COSMOS, "adydx"),
@@ -60,224 +55,248 @@ enum class Chain(
     TerraClassic("TerraClassic", COSMOS, "uluna"),
     Noble("Noble", COSMOS, "uusdc"),
     Akash("Akash", COSMOS, "uakt"),
-
     Solana("Solana", SOL, "SOL"),
     Polkadot("Polkadot", SUBSTRATE, "DOT"),
     Sui("Sui", SUI, "SUI"),
     Ton("Ton", TON, "TON"),
-
     Ripple("Ripple", RIPPLE, "XRP"),
-    Tron("Tron",TRC20,"TRX"),
-
-    ;
+    Tron("Tron", TRC20, "TRX");
 
     val id: ChainId
         get() = raw
 
     companion object {
         fun fromRaw(raw: String): Chain =
-            Chain.entries.first {
-                it.raw.equals(
-                    other = raw,
-                    ignoreCase = true
-                )
-            }
+            Chain.entries.first { it.raw.equals(other = raw, ignoreCase = true) }
 
         val keyImportSupportedChains: List<Chain>
             get() = entries.filter { it != Cardano }
     }
 }
 
-data class DefiChain(
-    val raw: String,
-    val chain: Chain,
-)
+data class DefiChain(val raw: String, val chain: Chain)
 
 val Chain.toDefi: DefiChain
-    get() = when (this) {
-        Chain.Ethereum -> DefiChain(
-            raw =  "Circle",
-            chain = this
-        )
-        else -> DefiChain(
-            raw = raw,
-            chain = this,
-        )
-    }
-
+    get() =
+        when (this) {
+            Chain.Ethereum -> DefiChain(raw = "Circle", chain = this)
+            else -> DefiChain(raw = raw, chain = this)
+        }
 
 val Chain.coinType: CoinType
-    get() = when (this) {
-        Chain.Bitcoin -> CoinType.BITCOIN
-        Chain.BitcoinCash -> CoinType.BITCOINCASH
-        Chain.Litecoin -> CoinType.LITECOIN
-        Chain.Dogecoin -> CoinType.DOGECOIN
-        Chain.Dash -> CoinType.DASH
-        Chain.ThorChain -> CoinType.THORCHAIN
-        Chain.MayaChain -> CoinType.THORCHAIN
-        Chain.Ethereum -> CoinType.ETHEREUM
-        Chain.Solana -> CoinType.SOLANA
-        Chain.Avalanche -> CoinType.AVALANCHECCHAIN
-        Chain.Base -> CoinType.BASE
-        Chain.Blast -> CoinType.BLAST
-        Chain.Arbitrum -> CoinType.ARBITRUM
-        Chain.Polygon -> CoinType.POLYGON
-        Chain.Optimism -> CoinType.OPTIMISM
-        Chain.BscChain -> CoinType.SMARTCHAIN
-        Chain.GaiaChain -> CoinType.COSMOS
-        Chain.Kujira -> CoinType.KUJIRA
-        Chain.CronosChain -> CoinType.CRONOSCHAIN
-        Chain.Polkadot -> CoinType.POLKADOT
-        Chain.Dydx -> CoinType.DYDX
-        Chain.ZkSync -> CoinType.ZKSYNC
-        Chain.Sui -> CoinType.SUI
-        Chain.Ton -> CoinType.TON
-        Chain.Osmosis -> CoinType.OSMOSIS
-        Chain.Terra -> CoinType.TERRAV2
-        Chain.TerraClassic -> CoinType.TERRA
-        Chain.Noble -> CoinType.NOBLE
-        Chain.Ripple -> CoinType.XRP
-        Chain.Akash -> CoinType.AKASH
-        Chain.Tron -> CoinType.TRON
-        Chain.Zcash -> CoinType.ZCASH
-        Chain.Cardano -> CoinType.CARDANO
-        Chain.Mantle -> CoinType.MANTLE
-        Chain.Sei -> CoinType.SEI
-        Chain.Hyperliquid -> CoinType.ETHEREUM
-    }
+    get() =
+        when (this) {
+            Chain.Bitcoin -> CoinType.BITCOIN
+            Chain.BitcoinCash -> CoinType.BITCOINCASH
+            Chain.Litecoin -> CoinType.LITECOIN
+            Chain.Dogecoin -> CoinType.DOGECOIN
+            Chain.Dash -> CoinType.DASH
+            Chain.ThorChain -> CoinType.THORCHAIN
+            Chain.MayaChain -> CoinType.THORCHAIN
+            Chain.Ethereum -> CoinType.ETHEREUM
+            Chain.Solana -> CoinType.SOLANA
+            Chain.Avalanche -> CoinType.AVALANCHECCHAIN
+            Chain.Base -> CoinType.BASE
+            Chain.Blast -> CoinType.BLAST
+            Chain.Arbitrum -> CoinType.ARBITRUM
+            Chain.Polygon -> CoinType.POLYGON
+            Chain.Optimism -> CoinType.OPTIMISM
+            Chain.BscChain -> CoinType.SMARTCHAIN
+            Chain.GaiaChain -> CoinType.COSMOS
+            Chain.Kujira -> CoinType.KUJIRA
+            Chain.CronosChain -> CoinType.CRONOSCHAIN
+            Chain.Polkadot -> CoinType.POLKADOT
+            Chain.Dydx -> CoinType.DYDX
+            Chain.ZkSync -> CoinType.ZKSYNC
+            Chain.Sui -> CoinType.SUI
+            Chain.Ton -> CoinType.TON
+            Chain.Osmosis -> CoinType.OSMOSIS
+            Chain.Terra -> CoinType.TERRAV2
+            Chain.TerraClassic -> CoinType.TERRA
+            Chain.Noble -> CoinType.NOBLE
+            Chain.Ripple -> CoinType.XRP
+            Chain.Akash -> CoinType.AKASH
+            Chain.Tron -> CoinType.TRON
+            Chain.Zcash -> CoinType.ZCASH
+            Chain.Cardano -> CoinType.CARDANO
+            Chain.Mantle -> CoinType.MANTLE
+            Chain.Sei -> CoinType.SEI
+            Chain.Hyperliquid -> CoinType.ETHEREUM
+        }
 
 val Chain.supportsLegacyGas: Boolean
-    get() = when (this) {
-        Chain.BscChain -> true
-        else -> false
-    }
-
-val Chain.TssKeysignType: TssKeyType
-    get() = when (this) {
-        Chain.Solana, Chain.Polkadot, Chain.Sui, Chain.Ton, Chain.Cardano -> TssKeyType.EDDSA
-        else -> TssKeyType.ECDSA
-    }
-
-val Chain.canSelectTokens: Boolean
-    get() = when (this) {
-        Chain.MayaChain,
-        Chain.Solana,
-        Chain.Terra,
-        Chain.TerraClassic,
-        Chain.Sui,
-        Chain.Kujira,
-        Chain.GaiaChain,
-        Chain.Osmosis, Chain.Tron, Chain.Ton -> true
-        Chain.ThorChain -> true
-        Chain.CronosChain, Chain.ZkSync -> false
-        else -> when {
-            standard == EVM -> true
+    get() =
+        when (this) {
+            Chain.BscChain -> true
             else -> false
         }
-    }
+
+val Chain.TssKeysignType: TssKeyType
+    get() =
+        when (this) {
+            Chain.Solana,
+            Chain.Polkadot,
+            Chain.Sui,
+            Chain.Ton,
+            Chain.Cardano -> TssKeyType.EDDSA
+            else -> TssKeyType.ECDSA
+        }
+
+val Chain.canSelectTokens: Boolean
+    get() =
+        when (this) {
+            Chain.MayaChain,
+            Chain.Solana,
+            Chain.Terra,
+            Chain.TerraClassic,
+            Chain.Sui,
+            Chain.Kujira,
+            Chain.GaiaChain,
+            Chain.Osmosis,
+            Chain.Tron,
+            Chain.Ton -> true
+            Chain.ThorChain -> true
+            Chain.CronosChain,
+            Chain.ZkSync -> false
+            else ->
+                when {
+                    standard == EVM -> true
+                    else -> false
+                }
+        }
 
 val Chain.isSwapSupported: Boolean
-    get() = this in arrayOf(
-        Chain.ThorChain, Chain.MayaChain, Chain.GaiaChain, Chain.Kujira,
-
-        Chain.Bitcoin, Chain.Dogecoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dash, Chain.Ripple,
-
-        Chain.Avalanche, Chain.Base, Chain.BscChain, Chain.Ethereum, Chain.Optimism, Chain.Polygon, Chain.Mantle,
-
-        Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana, Chain.ZkSync, Chain.Zcash,
-
-        Chain.Tron, Chain.Hyperliquid
-    )
+    get() =
+        this in
+            arrayOf(
+                Chain.ThorChain,
+                Chain.MayaChain,
+                Chain.GaiaChain,
+                Chain.Kujira,
+                Chain.Bitcoin,
+                Chain.Dogecoin,
+                Chain.BitcoinCash,
+                Chain.Litecoin,
+                Chain.Dash,
+                Chain.Ripple,
+                Chain.Avalanche,
+                Chain.Base,
+                Chain.BscChain,
+                Chain.Ethereum,
+                Chain.Optimism,
+                Chain.Polygon,
+                Chain.Mantle,
+                Chain.Arbitrum,
+                Chain.Blast,
+                Chain.CronosChain,
+                Chain.Solana,
+                Chain.ZkSync,
+                Chain.Zcash,
+                Chain.Tron,
+                Chain.Hyperliquid,
+            )
 
 val Chain.isDepositSupported: Boolean
-    get() = when (this) {
-        Chain.ThorChain, Chain.MayaChain, Chain.Ton,
-        Chain.Kujira, Chain.GaiaChain, Chain.Osmosis,
-        Chain.Bitcoin,
-        Chain.BitcoinCash,
-        Chain.Ethereum,
-        Chain.Avalanche,
-        Chain.Dogecoin,
-        Chain.BscChain,
-        Chain.Litecoin,
-            -> true
-        else -> false
-    }
+    get() =
+        when (this) {
+            Chain.ThorChain,
+            Chain.MayaChain,
+            Chain.Ton,
+            Chain.Kujira,
+            Chain.GaiaChain,
+            Chain.Osmosis,
+            Chain.Bitcoin,
+            Chain.BitcoinCash,
+            Chain.Ethereum,
+            Chain.Avalanche,
+            Chain.Dogecoin,
+            Chain.BscChain,
+            Chain.Litecoin -> true
+            else -> false
+        }
 
 val Chain.isBuySupported: Boolean
-    get() = when (this) {
-        Chain.ThorChain,
-        Chain.Solana,
-        Chain.Ethereum,
-        Chain.Avalanche,
-        Chain.Base,
-        Chain.Arbitrum,
-        Chain.Polygon,
-        Chain.Optimism,
-        Chain.BscChain,
-        Chain.Bitcoin,
-        Chain.BitcoinCash,
-        Chain.Litecoin,
-        Chain.Dogecoin,
-        Chain.Dash,
-        Chain.Cardano,
-        Chain.GaiaChain,
-        Chain.CronosChain,
-        Chain.Sui,
-        Chain.ZkSync,
-        Chain.Ton,
-        Chain.Tron,
-        Chain.Mantle,
-        Chain.Ripple,
-        Chain.Dydx,
-        Chain.Polkadot -> true
-        else -> false
-    }
+    get() =
+        when (this) {
+            Chain.ThorChain,
+            Chain.Solana,
+            Chain.Ethereum,
+            Chain.Avalanche,
+            Chain.Base,
+            Chain.Arbitrum,
+            Chain.Polygon,
+            Chain.Optimism,
+            Chain.BscChain,
+            Chain.Bitcoin,
+            Chain.BitcoinCash,
+            Chain.Litecoin,
+            Chain.Dogecoin,
+            Chain.Dash,
+            Chain.Cardano,
+            Chain.GaiaChain,
+            Chain.CronosChain,
+            Chain.Sui,
+            Chain.ZkSync,
+            Chain.Ton,
+            Chain.Tron,
+            Chain.Mantle,
+            Chain.Ripple,
+            Chain.Dydx,
+            Chain.Polkadot -> true
+            else -> false
+        }
 
 val Chain.banxaAssetName: String?
-    get() = when (this) {
-        Chain.ThorChain -> "THORCHAIN"
-        Chain.Solana -> "SOL"
-        Chain.Ethereum -> "ETH"
-        Chain.Avalanche -> "AVAX-C"
-        Chain.Base -> "BASE"
-        Chain.Arbitrum -> "ARB"
-        Chain.Polygon -> "MATIC"
-        Chain.Optimism -> "OPTIMISM"
-        Chain.BscChain -> "BSC"
-        Chain.Bitcoin -> "BTC"
-        Chain.BitcoinCash -> "BCH"
-        Chain.Litecoin -> "LTC"
-        Chain.Dogecoin -> "DOGE"
-        Chain.Dash -> "DASH"
-        Chain.Cardano -> "ADA"
-        Chain.GaiaChain -> "ATOM"
-        Chain.CronosChain -> "CRO"
-        Chain.Sui -> "SUI"
-        Chain.ZkSync -> "ZKSYNC"
-        Chain.Ton -> "TON"
-        Chain.Tron -> "TRON"
-        Chain.Mantle -> "MNT"
-        Chain.Ripple -> "XRP"
-        Chain.Dydx -> "DYDX"
-        Chain.Polkadot -> "DOT"
-        Chain.Sei -> "SEI"
-        Chain.Hyperliquid -> "HYPE"
-        else -> null
-    }
+    get() =
+        when (this) {
+            Chain.ThorChain -> "THORCHAIN"
+            Chain.Solana -> "SOL"
+            Chain.Ethereum -> "ETH"
+            Chain.Avalanche -> "AVAX-C"
+            Chain.Base -> "BASE"
+            Chain.Arbitrum -> "ARB"
+            Chain.Polygon -> "MATIC"
+            Chain.Optimism -> "OPTIMISM"
+            Chain.BscChain -> "BSC"
+            Chain.Bitcoin -> "BTC"
+            Chain.BitcoinCash -> "BCH"
+            Chain.Litecoin -> "LTC"
+            Chain.Dogecoin -> "DOGE"
+            Chain.Dash -> "DASH"
+            Chain.Cardano -> "ADA"
+            Chain.GaiaChain -> "ATOM"
+            Chain.CronosChain -> "CRO"
+            Chain.Sui -> "SUI"
+            Chain.ZkSync -> "ZKSYNC"
+            Chain.Ton -> "TON"
+            Chain.Tron -> "TRON"
+            Chain.Mantle -> "MNT"
+            Chain.Ripple -> "XRP"
+            Chain.Dydx -> "DYDX"
+            Chain.Polkadot -> "DOT"
+            Chain.Sei -> "SEI"
+            Chain.Hyperliquid -> "HYPE"
+            else -> null
+        }
 
 val Chain.isDeFiSupported: Boolean
-    get() = when (this) {
-        Chain.ThorChain,
-        Chain.Ethereum -> true
-        else -> false
-    }
+    get() =
+        when (this) {
+            Chain.ThorChain,
+            Chain.Ethereum -> true
+            else -> false
+        }
 
 val Chain.isLayer2: Boolean
-    get() = when (this) {
-        Chain.Arbitrum, Chain.Base, Chain.Blast, Chain.Optimism, Chain.ZkSync -> true
-        else -> false
-    }
+    get() =
+        when (this) {
+            Chain.Arbitrum,
+            Chain.Base,
+            Chain.Blast,
+            Chain.Optimism,
+            Chain.ZkSync -> true
+            else -> false
+        }
 
 fun Chain.oneInchChainId(): Long =
     when (this) {
@@ -294,7 +313,8 @@ fun Chain.oneInchChainId(): Long =
         Chain.ZkSync -> 324
         Chain.Mantle -> 5000
         Chain.Hyperliquid -> 999
-        else -> throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
+        else ->
+            throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
     }
 
 fun Chain.swapAssetName(): String {
@@ -379,27 +399,25 @@ fun Chain.ticker(): String {
     }
 }
 
-
 val Chain.hasReaping: Boolean
-    get() = when (this) {
-        Chain.Polkadot, Chain.Ripple -> true
-        else -> false
-    }
+    get() =
+        when (this) {
+            Chain.Polkadot,
+            Chain.Ripple -> true
+            else -> false
+        }
 
 val Chain.getDustThreshold: BigInteger
-    get() = when {
-        standard == UTXO -> coinType.getDustThreshold.toBigInteger()
-        else -> throw UnsupportedOperationException("Chain ${this.name} does not support Dust")
-    }
+    get() =
+        when {
+            standard == UTXO -> coinType.getDustThreshold.toBigInteger()
+            else -> throw UnsupportedOperationException("Chain ${this.name} does not support Dust")
+        }
 
-fun Chain.toValue(value: BigInteger): BigDecimal =
-    coinType.toValue(value)
+fun Chain.toValue(value: BigInteger): BigDecimal = coinType.toValue(value)
 
-fun Chain.toValue(value: BigDecimal): BigDecimal =
-    coinType.toValue(value)
+fun Chain.toValue(value: BigDecimal): BigDecimal = coinType.toValue(value)
 
-fun Chain.toUnit(value: BigInteger): BigInteger =
-    coinType.toUnit(value)
+fun Chain.toUnit(value: BigInteger): BigInteger = coinType.toUnit(value)
 
-fun Chain.toUnit(value: BigDecimal): BigInteger =
-    coinType.toUnit(value)
+fun Chain.toUnit(value: BigDecimal): BigInteger = coinType.toUnit(value)

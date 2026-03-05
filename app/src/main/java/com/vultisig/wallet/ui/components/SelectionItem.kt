@@ -27,18 +27,16 @@ internal fun SelectionItem(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Theme.v2.colors.backgrounds.secondary
-        )
+        colors = CardDefaults.cardColors(containerColor = Theme.v2.colors.backgrounds.secondary),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .clickable { onCheckedChange?.invoke(!isChecked) }
-                .padding(all = 12.dp),
+            modifier =
+                Modifier.clickable { onCheckedChange?.invoke(!isChecked) }.padding(all = 12.dp),
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = title,
@@ -47,14 +45,15 @@ internal fun SelectionItem(
                 )
             }
             VsSwitch(
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Theme.v2.colors.neutrals.n50,
-                    checkedBorderColor = Theme.v2.colors.backgrounds.teal,
-                    checkedTrackColor = Theme.v2.colors.backgrounds.teal,
-                    uncheckedThumbColor = Theme.v2.colors.neutrals.n50,
-                    uncheckedBorderColor = Theme.v2.colors.backgrounds.tertiary_2,
-                    uncheckedTrackColor = Theme.v2.colors.backgrounds.tertiary_2
-                ),
+                colors =
+                    SwitchDefaults.colors(
+                        checkedThumbColor = Theme.v2.colors.neutrals.n50,
+                        checkedBorderColor = Theme.v2.colors.backgrounds.teal,
+                        checkedTrackColor = Theme.v2.colors.backgrounds.teal,
+                        uncheckedThumbColor = Theme.v2.colors.neutrals.n50,
+                        uncheckedBorderColor = Theme.v2.colors.backgrounds.tertiary_2,
+                        uncheckedTrackColor = Theme.v2.colors.backgrounds.tertiary_2,
+                    ),
                 checked = isChecked,
                 onCheckedChange = null,
             )
@@ -65,7 +64,5 @@ internal fun SelectionItem(
 @Preview
 @Composable
 fun SelectionItemPreview() {
-    SelectionItem(
-        title = "Fast Vault",
-    )
+    SelectionItem(title = "Fast Vault")
 }

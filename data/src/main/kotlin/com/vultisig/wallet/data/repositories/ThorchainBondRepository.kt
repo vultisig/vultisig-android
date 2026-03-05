@@ -7,24 +7,29 @@ import com.vultisig.wallet.data.api.MidgardNetworkData
 import com.vultisig.wallet.data.api.NodeDetailsResponse
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.utils.SimpleCache
-import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 interface ThorchainBondRepository {
     suspend fun getBondedNodes(address: String): BondedNodesResponse
+
     suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse
+
     suspend fun getChurns(): List<ChurnEntry>
+
     suspend fun getChurnInterval(): Long
+
     suspend fun getMidgardNetworkData(): MidgardNetworkData
+
     suspend fun getMidgardHealthData(): MidgardHealth
+
     suspend fun clearCache()
 }
 
 @Singleton
-class ThorchainBondRepositoryImpl @Inject constructor(
-    private val thorChainApi: ThorChainApi,
-) : ThorchainBondRepository {
+class ThorchainBondRepositoryImpl @Inject constructor(private val thorChainApi: ThorChainApi) :
+    ThorchainBondRepository {
 
     companion object {
         // Cache keys

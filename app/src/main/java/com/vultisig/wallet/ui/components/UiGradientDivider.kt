@@ -18,17 +18,14 @@ fun UiGradientDivider(
     endColor: Color,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        initialColor,
-                        borderColor,
-                        endColor,
-                    )
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(1.dp)
+                .background(
+                    brush =
+                        Brush.horizontalGradient(
+                            colors = listOf(initialColor, borderColor, endColor)
+                        )
                 )
-            )
     )
 }

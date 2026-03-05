@@ -11,28 +11,20 @@ import io.ktor.client.engine.okhttp.OkHttp
 import javax.inject.Singleton
 
 @Module
-@TestInstallIn(
-    components = [SingletonComponent::class],
-    replaces = [NetworkModule::class]
-)
+@TestInstallIn(components = [SingletonComponent::class], replaces = [NetworkModule::class])
 object TestNetworkModule {
 
-    @Provides
-    @Singleton
-    fun provideFaultyInterceptor(): FaultyInterceptor = FaultyInterceptor()
+    @Provides @Singleton fun provideFaultyInterceptor(): FaultyInterceptor = FaultyInterceptor()
+
     @Provides
     @Singleton
     fun provideHttpClient(
         baseConfig: HttpClientConfigurator,
         faultyInterceptor: FaultyInterceptor,
-    ): HttpClient = HttpClient(OkHttp) {
+    ): HttpClient =
+        HttpClient(OkHttp) {
+            baseConfig.configure(this)
 
-        baseConfig.configure(this)
-
-        engine {
-            config {
-                addInterceptor(faultyInterceptor)
-            }
+            engine { config { addInterceptor(faultyInterceptor) } }
         }
-    }
 }

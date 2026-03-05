@@ -26,23 +26,17 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.http.path
+import javax.inject.Inject
 import kotlinx.serialization.json.Json
 import timber.log.Timber
-import javax.inject.Inject
 
 interface MayaChainApi {
 
-    suspend fun getBalance(
-        address: String,
-    ): List<CosmosBalance>
+    suspend fun getBalance(address: String): List<CosmosBalance>
 
-    suspend fun getUnStakeCacaoBalance(
-        address: String,
-    ): String?
+    suspend fun getUnStakeCacaoBalance(address: String): String?
 
-    suspend fun getAccountNumber(
-        address: String,
-    ): THORChainAccountValue
+    suspend fun getAccountNumber(address: String): THORChainAccountValue
 
     suspend fun getSwapQuotes(
         address: String,
@@ -63,7 +57,9 @@ interface MayaChainApi {
     suspend fun getMayaConstants(): Map<String, Long>
 }
 
-internal class MayaChainApiImp @Inject constructor(
+internal class MayaChainApiImp
+@Inject
+constructor(
     private val httpClient: HttpClient,
     private val thorChainApi: ThorChainApi,
     private val thorChainSwapQuoteResponseJsonSerializer: ThorChainSwapQuoteResponseJsonSerializer,
@@ -74,8 +70,10 @@ internal class MayaChainApiImp @Inject constructor(
     private val xClientIDValue = "vultisig"
 
     override suspend fun getBalance(address: String): List<CosmosBalance> {
-        val response = httpClient
-            .get("https://mayanode.mayachain.info/cosmos/bank/v1beta1/balances/$address") {
+        val response =
+            httpClient.get(
+                "https://mayanode.mayachain.info/cosmos/bank/v1beta1/balances/$address"
+            ) {
                 header(xClientID, xClientIDValue)
             }
         val resp = response.body<CosmosBalanceResponse>()
@@ -84,15 +82,12 @@ internal class MayaChainApiImp @Inject constructor(
 
     override suspend fun getUnStakeCacaoBalance(address: String): String? {
         return try {
-            val request = httpClient.get("https://midgard.mayachain.info") {
-                url {
-                    path(
-                        "v2",
-                        "cacaopool",
-                        address
-                    )
-                }
-            }.body<List<MayaChainDepositCacaoResponse>>()
+            val request =
+                httpClient
+                    .get("https://midgard.mayachain.info") {
+                        url { path("v2", "cacaopool", address) }
+                    }
+                    .body<List<MayaChainDepositCacaoResponse>>()
             request.firstOrNull()?.cacaoDeposit
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch CACAO pool balance for address: $address")
@@ -107,14 +102,14 @@ internal class MayaChainApiImp @Inject constructor(
         amount: String,
         isAffiliate: Boolean,
         bpsDiscount: Int,
-        referralCode: String
+        referralCode: String,
     ): THORChainSwapQuoteDeserialized {
         try {
             val affiliateFeeRate =
                 maxOf(THORChainSwaps.AFFILIATE_FEE_RATE.toInt() - bpsDiscount, 0).toString()
 
-            val response = httpClient
-                .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
+            val response =
+                httpClient.get("https://mayanode.mayachain.info/mayachain/quote/swap") {
                     parameter("from_asset", fromAsset)
                     parameter("to_asset", toAsset)
                     parameter("amount", amount)
@@ -134,20 +129,18 @@ internal class MayaChainApiImp @Inject constructor(
             val responseRawString = response.body<String>()
             return json.decodeFromString(
                 thorChainSwapQuoteResponseJsonSerializer,
-                responseRawString
+                responseRawString,
             )
         } catch (e: Exception) {
             return THORChainSwapQuoteDeserialized.Error(
-                THORChainSwapQuoteError(
-                    e.message ?: "Unknown error"
-                )
+                THORChainSwapQuoteError(e.message ?: "Unknown error")
             )
         }
     }
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
-        val response = httpClient
-            .get("https://mayanode.mayachain.info/auth/accounts/$address") {
+        val response =
+            httpClient.get("https://mayanode.mayachain.info/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
             }
         val responseBody = response.body<THORChainAccountResultJson>()
@@ -181,7 +174,7 @@ internal class MayaChainApiImp @Inject constructor(
             val responseBody = response.body<MayaLatestBlockInfoResponse>()
             Timber.d("getLatestBlock: $responseBody")
             return responseBody
-        } catch (e: Exception){
+        } catch (e: Exception) {
             Timber.tag("MayaChainService").e("Error getLatestBlock: ${e.message}")
             throw e
         }
@@ -189,13 +182,13 @@ internal class MayaChainApiImp @Inject constructor(
 
     override suspend fun getCacaoProvider(address: String): CacaoProviderResponse {
         try {
-            val response = httpClient
-                .get("https://mayanode.mayachain.info/mayachain/cacao_provider/$address")
+            val response =
+                httpClient.get("https://mayanode.mayachain.info/mayachain/cacao_provider/$address")
 
             val body = response.body<CacaoProviderResponse>()
             Timber.d("getCacaoProvider: $body")
             return body
-        } catch (e: Exception){
+        } catch (e: Exception) {
             Timber.tag("MayaChainService").e("Error getCacaoProvider: ${e.message}")
             throw e
         }
@@ -207,10 +200,9 @@ internal class MayaChainApiImp @Inject constructor(
             val body = response.body<Map<String, Long>>()
             Timber.d("getMayaConstants: $body")
             return body
-        } catch (e: Exception){
+        } catch (e: Exception) {
             Timber.tag("MayaChainService").e("Error getMayaConstants: ${e.message}")
             throw e
         }
     }
-
 }

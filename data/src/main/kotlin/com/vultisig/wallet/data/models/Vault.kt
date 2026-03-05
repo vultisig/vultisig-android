@@ -24,19 +24,11 @@ data class Vault(
 
     fun getKeyshare(pubKey: String): String? =
         keyshares.firstOrNull { it.pubKey == pubKey }?.keyShare
-
 }
 
-data class SigningKey(
-    val publicKey: String,
-    val chainCode: String,
-)
+data class SigningKey(val publicKey: String, val chainCode: String)
 
-data class ChainPublicKey(
-    val chain: String,
-    val publicKey: String,
-    val isEddsa: Boolean,
-)
+data class ChainPublicKey(val chain: String, val publicKey: String, val isEddsa: Boolean)
 
 @Serializable
 enum class SigningLibType {
@@ -45,20 +37,22 @@ enum class SigningLibType {
     KeyImport;
 
     companion object {
-        fun from(string: String) = when (string.lowercase()) {
-            "dkls" -> DKLS
-            "gg20" -> GG20
-            "keyimport" -> KeyImport
-            else -> null
-        }
+        fun from(string: String) =
+            when (string.lowercase()) {
+                "dkls" -> DKLS
+                "gg20" -> GG20
+                "keyimport" -> KeyImport
+                else -> null
+            }
     }
 }
 
-fun SigningLibType.toProtoString() = when (this) {
-    SigningLibType.DKLS -> "dkls"
-    SigningLibType.GG20 -> "gg20"
-    SigningLibType.KeyImport -> "keyimport"
-}
+fun SigningLibType.toProtoString() =
+    when (this) {
+        SigningLibType.DKLS -> "dkls"
+        SigningLibType.GG20 -> "gg20"
+        SigningLibType.KeyImport -> "keyimport"
+    }
 
 fun Vault.getVaultPart(): Int {
     return signers.indexOf(localPartyID) + 1
@@ -85,8 +79,8 @@ fun Vault.isFastVault(): Boolean {
  *
  * For KeyImport vaults, resolves the per-chain key from [ChainPublicKey]:
  * - Exact chain match first, then derivation-path match (e.g. all EVM chains share one key).
- * - Returns empty chainCode when a per-chain key is found, signaling that BIP32 derivation
- *   should be skipped (the key is already fully derived).
+ * - Returns empty chainCode when a per-chain key is found, signaling that BIP32 derivation should
+ *   be skipped (the key is already fully derived).
  * - Falls back to root (pubKeyECDSA + hexChainCode) for chains not in [ChainPublicKey].
  */
 fun Vault.getEcdsaSigningKey(chain: Chain): SigningKey {
@@ -95,15 +89,17 @@ fun Vault.getEcdsaSigningKey(chain: Chain): SigningKey {
     }
     // First try exact chain match, then fall back to matching derivation path
     // (e.g. BSC/Polygon/Arbitrum all share ETH's m/44'/60'/0'/0/0 key).
-    val chainPubKey = chainPublicKeys.firstOrNull { it.chain == chain.raw && !it.isEddsa }
-        ?: chainPublicKeys.firstOrNull { cpk ->
-            !cpk.isEddsa && try {
-                Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
-                        chain.coinType.compatibleDerivationPath()
-            } catch (_: Exception) {
-                false
+    val chainPubKey =
+        chainPublicKeys.firstOrNull { it.chain == chain.raw && !it.isEddsa }
+            ?: chainPublicKeys.firstOrNull { cpk ->
+                !cpk.isEddsa &&
+                    try {
+                        Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
+                            chain.coinType.compatibleDerivationPath()
+                    } catch (_: Exception) {
+                        false
+                    }
             }
-        }
     return if (chainPubKey != null) {
         SigningKey(chainPubKey.publicKey, "")
     } else {
@@ -116,28 +112,33 @@ fun Vault.getEddsaSigningKey(chain: Chain): String {
         return pubKeyEDDSA
     }
     // Exact chain match first
-    chainPublicKeys.firstOrNull { it.chain == chain.raw && it.isEddsa }?.let {
-        return it.publicKey
-    }
-    // Derivation-path fallback (mirrors getEcdsaSigningKey)
-    chainPublicKeys.firstOrNull { cpk ->
-        cpk.isEddsa && try {
-            Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
-                    chain.coinType.compatibleDerivationPath()
-        } catch (_: Exception) {
-            false
+    chainPublicKeys
+        .firstOrNull { it.chain == chain.raw && it.isEddsa }
+        ?.let {
+            return it.publicKey
         }
-    }?.let {
-        return it.publicKey
-    }
+    // Derivation-path fallback (mirrors getEcdsaSigningKey)
+    chainPublicKeys
+        .firstOrNull { cpk ->
+            cpk.isEddsa &&
+                try {
+                    Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
+                        chain.coinType.compatibleDerivationPath()
+                } catch (_: Exception) {
+                    false
+                }
+        }
+        ?.let {
+            return it.publicKey
+        }
     return pubKeyEDDSA
 }
 
 /**
  * Returns `true` when this vault has a pre-generated key for [chain].
  *
- * For non-KeyImport vaults every chain is supported (returns `true`).
- * For KeyImport vaults only chains with an exact entry in [chainPublicKeys] are allowed.
+ * For non-KeyImport vaults every chain is supported (returns `true`). For KeyImport vaults only
+ * chains with an exact entry in [chainPublicKeys] are allowed.
  */
 fun Vault.hasPreGeneratedKey(chain: Chain): Boolean {
     if (libType != SigningLibType.KeyImport) return true
@@ -152,20 +153,25 @@ fun Vault.getPubKeyByChain(chain: Chain): String {
     if (libType == SigningLibType.KeyImport) {
         val expectedIsEddsa = chain.TssKeysignType == TssKeyType.EDDSA
         // Exact chain match first
-        chainPublicKeys.firstOrNull { it.chain == chain.raw && it.isEddsa == expectedIsEddsa }?.let {
-            return it.publicKey
-        }
-        // Derivation-path fallback (e.g. BSC reuses ETH key)
-        chainPublicKeys.firstOrNull { cpk ->
-            cpk.isEddsa == expectedIsEddsa && try {
-                Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
-                        chain.coinType.compatibleDerivationPath()
-            } catch (_: Exception) {
-                false
+        chainPublicKeys
+            .firstOrNull { it.chain == chain.raw && it.isEddsa == expectedIsEddsa }
+            ?.let {
+                return it.publicKey
             }
-        }?.let {
-            return it.publicKey
-        }
+        // Derivation-path fallback (e.g. BSC reuses ETH key)
+        chainPublicKeys
+            .firstOrNull { cpk ->
+                cpk.isEddsa == expectedIsEddsa &&
+                    try {
+                        Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
+                            chain.coinType.compatibleDerivationPath()
+                    } catch (_: Exception) {
+                        false
+                    }
+            }
+            ?.let {
+                return it.publicKey
+            }
     }
     // Fall back to root public key
     return when (chain) {

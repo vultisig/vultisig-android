@@ -22,8 +22,6 @@ data class BondedNodePosition(
             }
         }
     }
-    data class BondedNode(
-        val address: String,
-        val state: String,
-    )
+
+    data class BondedNode(val address: String, val state: String)
 }

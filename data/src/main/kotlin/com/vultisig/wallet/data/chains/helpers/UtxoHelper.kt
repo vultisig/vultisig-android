@@ -29,13 +29,16 @@ class UtxoHelper(
     companion object {
         fun getHelper(vault: Vault, coinType: CoinType): UtxoHelper {
             when (coinType) {
-                CoinType.BITCOIN, CoinType.BITCOINCASH,
-                CoinType.LITECOIN, CoinType.DOGECOIN,
-                CoinType.DASH, CoinType.ZCASH  -> {
+                CoinType.BITCOIN,
+                CoinType.BITCOINCASH,
+                CoinType.LITECOIN,
+                CoinType.DOGECOIN,
+                CoinType.DASH,
+                CoinType.ZCASH -> {
                     return UtxoHelper(
                         coinType = coinType,
                         vaultHexPublicKey = vault.pubKeyECDSA,
-                        vaultHexChainCode = vault.hexChainCode
+                        vaultHexChainCode = vault.hexChainCode,
                     )
                 }
 
@@ -47,32 +50,32 @@ class UtxoHelper(
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val inputData = getBitcoinPreSigningInputData(keysignPayload)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes)
-            .checkError()
-        return preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
+        val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes).checkError()
+        return preSigningOutput.hashPublicKeysList
+            .map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
             .sorted()
     }
 
     fun getSwapPreSigningInputData(keysignPayload: KeysignPayload): Bitcoin.SigningInput {
-        val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain
-            ?: throw Exception("Invalid swap payload for THORChain")
-        require(!keysignPayload.memo.isNullOrEmpty()) {
-            "Memo is required for THORChain swap"
-        }
+        val thorChainSwapPayload =
+            keysignPayload.swapPayload as? SwapPayload.ThorChain
+                ?: throw Exception("Invalid swap payload for THORChain")
+        require(!keysignPayload.memo.isNullOrEmpty()) { "Memo is required for THORChain swap" }
         require(thorChainSwapPayload.data.vaultAddress.isNotEmpty()) {
             "Vault address is required for THORChain swap"
         }
-        val input = Bitcoin.SigningInput.newBuilder()
-            .setHashType(BitcoinScript.hashTypeForCoin(coinType))
-            .setAmount(thorChainSwapPayload.data.fromAmount.toLong())
-            .setToAddress(thorChainSwapPayload.data.vaultAddress)
-            .setChangeAddress(keysignPayload.coin.address)
-            .setByteFee(1L)
-            .setCoinType(coinType.value())
-            .setUseMaxAmount(false)
-            .setOutputOpReturn( // output index is the latest by default
-                ByteString.copyFromUtf8(keysignPayload.memo)
-            )
+        val input =
+            Bitcoin.SigningInput.newBuilder()
+                .setHashType(BitcoinScript.hashTypeForCoin(coinType))
+                .setAmount(thorChainSwapPayload.data.fromAmount.toLong())
+                .setToAddress(thorChainSwapPayload.data.vaultAddress)
+                .setChangeAddress(keysignPayload.coin.address)
+                .setByteFee(1L)
+                .setCoinType(coinType.value())
+                .setUseMaxAmount(false)
+                .setOutputOpReturn( // output index is the latest by default
+                    ByteString.copyFromUtf8(keysignPayload.memo)
+                )
         return input.build()
     }
 
@@ -90,32 +93,40 @@ class UtxoHelper(
         for (item in keysignPayload.utxos) {
             val lockScript =
                 BitcoinScript.lockScriptForAddress(keysignPayload.coin.address, coinType)
-            val output = Bitcoin.OutPoint.newBuilder()
-                .setHash(ByteString.copyFrom(Numeric.hexStringToByteArray(item.hash).reversedArray()))
-                .setIndex(item.index.toInt())
-                .setSequence(Long.MAX_VALUE.toInt())
-                .build()
-            val utxoItem = Bitcoin.UnspentTransaction.newBuilder()
-                .setAmount(item.amount)
-                .setOutPoint(output)
-                .setScript(ByteString.copyFrom(lockScript.data()))
+            val output =
+                Bitcoin.OutPoint.newBuilder()
+                    .setHash(
+                        ByteString.copyFrom(Numeric.hexStringToByteArray(item.hash).reversedArray())
+                    )
+                    .setIndex(item.index.toInt())
+                    .setSequence(Long.MAX_VALUE.toInt())
+                    .build()
+            val utxoItem =
+                Bitcoin.UnspentTransaction.newBuilder()
+                    .setAmount(item.amount)
+                    .setOutPoint(output)
+                    .setScript(ByteString.copyFrom(lockScript.data()))
 
             when (coinType) {
-                CoinType.BITCOIN, CoinType.LITECOIN -> {
+                CoinType.BITCOIN,
+                CoinType.LITECOIN -> {
                     val keyHash = lockScript.matchPayToWitnessPublicKeyHash()
                     val redeemScript = BitcoinScript.buildPayToWitnessPubkeyHash(keyHash)
                     signingInput.putScripts(
                         keyHash.toHexString(),
-                        ByteString.copyFrom(redeemScript.data())
+                        ByteString.copyFrom(redeemScript.data()),
                     )
                 }
 
-                CoinType.DOGECOIN, CoinType.BITCOINCASH, CoinType.DASH, CoinType.ZCASH -> {
+                CoinType.DOGECOIN,
+                CoinType.BITCOINCASH,
+                CoinType.DASH,
+                CoinType.ZCASH -> {
                     val keyHash = lockScript.matchPayToPubkeyHash()
                     val redeemScript = BitcoinScript.buildPayToPublicKeyHash(keyHash)
                     signingInput.putScripts(
                         keyHash.toHexString(),
-                        ByteString.copyFrom(redeemScript.data())
+                        ByteString.copyFrom(redeemScript.data()),
                     )
                 }
 
@@ -130,52 +141,58 @@ class UtxoHelper(
         return signingInput.build().toByteArray()
     }
 
-
     @OptIn(ExperimentalStdlibApi::class)
     fun getBitcoinSigningInput(keysignPayload: KeysignPayload): Bitcoin.SigningInput.Builder {
         val utxo = keysignPayload.blockChainSpecific as BlockChainSpecific.UTXO
-        val input = Bitcoin.SigningInput.newBuilder()
-            .setHashType(BitcoinScript.hashTypeForCoin(coinType))
-            .setAmount(keysignPayload.toAmount.toLong())
-            .setUseMaxAmount(utxo.sendMaxAmount)
-            .setToAddress(keysignPayload.toAddress)
-            .setChangeAddress(keysignPayload.coin.address)
-            .setByteFee(utxo.byteFee.toLong())
-            .setCoinType(coinType.value())
-            .setFixedDustThreshold(coinType.getDustThreshold)
-        keysignPayload.memo?.let {
-            input.setOutputOpReturn(ByteString.copyFromUtf8(it))
-        }
+        val input =
+            Bitcoin.SigningInput.newBuilder()
+                .setHashType(BitcoinScript.hashTypeForCoin(coinType))
+                .setAmount(keysignPayload.toAmount.toLong())
+                .setUseMaxAmount(utxo.sendMaxAmount)
+                .setToAddress(keysignPayload.toAddress)
+                .setChangeAddress(keysignPayload.coin.address)
+                .setByteFee(utxo.byteFee.toLong())
+                .setCoinType(coinType.value())
+                .setFixedDustThreshold(coinType.getDustThreshold)
+        keysignPayload.memo?.let { input.setOutputOpReturn(ByteString.copyFromUtf8(it)) }
 
         for (item in keysignPayload.utxos) {
             val lockScript =
                 BitcoinScript.lockScriptForAddress(keysignPayload.coin.address, coinType)
-            val output = Bitcoin.OutPoint.newBuilder()
-                .setHash(ByteString.copyFrom(Numeric.hexStringToByteArray(item.hash).reversedArray()))
-                .setIndex(item.index.toInt())
-                .setSequence(Long.MAX_VALUE.toInt())
-                .build()
-            val utxoItem = Bitcoin.UnspentTransaction.newBuilder()
-                .setAmount(item.amount)
-                .setOutPoint(output)
-                .setScript(ByteString.copyFrom(lockScript.data()))
+            val output =
+                Bitcoin.OutPoint.newBuilder()
+                    .setHash(
+                        ByteString.copyFrom(Numeric.hexStringToByteArray(item.hash).reversedArray())
+                    )
+                    .setIndex(item.index.toInt())
+                    .setSequence(Long.MAX_VALUE.toInt())
+                    .build()
+            val utxoItem =
+                Bitcoin.UnspentTransaction.newBuilder()
+                    .setAmount(item.amount)
+                    .setOutPoint(output)
+                    .setScript(ByteString.copyFrom(lockScript.data()))
 
             when (coinType) {
-                CoinType.BITCOIN, CoinType.LITECOIN -> {
+                CoinType.BITCOIN,
+                CoinType.LITECOIN -> {
                     val keyHash = lockScript.matchPayToWitnessPublicKeyHash()
                     val redeemScript = BitcoinScript.buildPayToWitnessPubkeyHash(keyHash)
                     input.putScripts(
                         keyHash.toHexString(),
-                        ByteString.copyFrom(redeemScript.data())
+                        ByteString.copyFrom(redeemScript.data()),
                     )
                 }
 
-                CoinType.DOGECOIN, CoinType.BITCOINCASH, CoinType.DASH, CoinType.ZCASH -> {
+                CoinType.DOGECOIN,
+                CoinType.BITCOINCASH,
+                CoinType.DASH,
+                CoinType.ZCASH -> {
                     val keyHash = lockScript.matchPayToPubkeyHash()
                     val redeemScript = BitcoinScript.buildPayToPublicKeyHash(keyHash)
                     input.putScripts(
                         keyHash.toHexString(),
-                        ByteString.copyFrom(redeemScript.data())
+                        ByteString.copyFrom(redeemScript.data()),
                     )
                 }
 
@@ -191,11 +208,10 @@ class UtxoHelper(
         val initialPlan: Bitcoin.TransactionPlan =
             AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
 
-        val plan = if (coinType == CoinType.ZCASH) {
-            initialPlan.toBuilder()
-                .setBranchId(ByteString.fromHex("f04dec4d"))
-                .build()
-        } else initialPlan
+        val plan =
+            if (coinType == CoinType.ZCASH) {
+                initialPlan.toBuilder().setBranchId(ByteString.fromHex("f04dec4d")).build()
+            } else initialPlan
 
         signingInput.setPlan(plan)
 
@@ -215,24 +231,25 @@ class UtxoHelper(
         inputData: ByteArray,
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
-        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
-            vaultHexPublicKey,
-            vaultHexChainCode,
-            coinType.derivationPath()
-        )
+        val derivedPublicKey =
+            PublicKeyHelper.getDerivedPublicKey(
+                vaultHexPublicKey,
+                vaultHexChainCode,
+                coinType.derivationPath(),
+            )
         val publicKey = PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes)
-            .checkError()
+        val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes).checkError()
         val publicKeys = DataVector()
         val allSignatures = DataVector()
         for (item in preSigningOutput.hashPublicKeysList) {
             val preImageHash = item.dataHash
             val key = Numeric.toHexStringNoPrefix(preImageHash.toByteArray())
             signatures[key]?.let {
-                if (!publicKey.verifyAsDER(
+                if (
+                    !publicKey.verifyAsDER(
                         it.derSignature.hexToByteArray(),
-                        preImageHash.toByteArray()
+                        preImageHash.toByteArray(),
                     )
                 ) {
                     Timber.d("Invalid signature")
@@ -243,51 +260,46 @@ class UtxoHelper(
             }
         }
 
-        val compiledWithSignature = TransactionCompiler.compileWithSignatures(
-            coinType,
-            inputData,
-            allSignatures,
-            publicKeys
-        )
-        val output = Bitcoin.SigningOutput.parseFrom(compiledWithSignature)
-            .checkError()
+        val compiledWithSignature =
+            TransactionCompiler.compileWithSignatures(
+                coinType,
+                inputData,
+                allSignatures,
+                publicKeys,
+            )
+        val output = Bitcoin.SigningOutput.parseFrom(compiledWithSignature).checkError()
 
         return SignedTransactionResult(
-            rawTransaction = Numeric.toHexStringNoPrefix(
-                output.encoded.toByteArray()
-            ),
-            transactionHash = output.transactionId
+            rawTransaction = Numeric.toHexStringNoPrefix(output.encoded.toByteArray()),
+            transactionHash = output.transactionId,
         )
     }
 
-    fun getZeroSignedTransaction(
-        keysignPayload: KeysignPayload,
-    ): String {
+    fun getZeroSignedTransaction(keysignPayload: KeysignPayload): String {
         val inputData = getBitcoinPreSigningInputData(keysignPayload)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes)
-            .checkError()
+        val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes).checkError()
         val publicKeys = DataVector()
         val allSignatures = DataVector()
-        
+
         // Create a dummy private key for generating valid DER signatures
         val privateKey = PrivateKey()
         val publicKey = privateKey.getPublicKeySecp256k1(true)
-        
+
         for (item in preSigningOutput.hashPublicKeysList) {
             val derSignature = privateKey.signAsDER(item.dataHash.toByteArray())
             allSignatures.add(derSignature)
             publicKeys.add(publicKey.data())
         }
 
-        val compiledWithSignature = TransactionCompiler.compileWithSignatures(
-            coinType,
-            inputData,
-            allSignatures,
-            publicKeys
-        )
-        val output = Bitcoin.SigningOutput.parseFrom(compiledWithSignature)
-            .checkError()
+        val compiledWithSignature =
+            TransactionCompiler.compileWithSignatures(
+                coinType,
+                inputData,
+                allSignatures,
+                publicKeys,
+            )
+        val output = Bitcoin.SigningOutput.parseFrom(compiledWithSignature).checkError()
 
         return Numeric.toHexStringNoPrefix(output.encoded.toByteArray())
     }

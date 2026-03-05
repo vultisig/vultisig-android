@@ -9,8 +9,8 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 /**
  * OkHttp interceptor for instrumented tests that simulates transport-level failures.
  *
- * Call [setFailure] before making a request to make the interceptor throw that exception
- * instead of proceeding with the chain. When no failure is set, returns a 200 OK response.
+ * Call [setFailure] before making a request to make the interceptor throw that exception instead of
+ * proceeding with the chain. When no failure is set, returns a 200 OK response.
  */
 class FaultyInterceptor : Interceptor {
     private var exceptionToThrow: Exception? = null

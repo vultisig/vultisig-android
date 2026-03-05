@@ -15,22 +15,12 @@ import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.components.
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun VaultListBottomSheet(
-    vaultList: Route.VaultList,
-    onDismiss: () -> Unit,
-) {
-    val sheetState = rememberStandardBottomSheetState(
-        initialValue = SheetValue.Hidden,
-        skipHiddenState = false
-    )
+internal fun VaultListBottomSheet(vaultList: Route.VaultList, onDismiss: () -> Unit) {
+    val sheetState =
+        rememberStandardBottomSheetState(initialValue = SheetValue.Hidden, skipHiddenState = false)
 
-    V2BottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-    ) {
-        val navController = rememberVsBottomSheetNavController(
-            initialRoute = vaultList
-        )
+    V2BottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        val navController = rememberVsBottomSheetNavController(initialRoute = vaultList)
 
         BackHandler {
             if (navController.canGoBack) {
@@ -45,10 +35,7 @@ internal fun VaultListBottomSheet(
             sheetState = sheetState,
             content = {
                 composable<Route.VaultList> {
-                    VaultListScreen(
-                        openType = vaultList.openType,
-                        navController = navController,
-                    )
+                    VaultListScreen(openType = vaultList.openType, navController = navController)
                 }
                 composable<Route.FolderList> {
                     FolderScreen(
@@ -58,12 +45,9 @@ internal fun VaultListBottomSheet(
                     )
                 }
                 composable<Route.CreateFolder> {
-                    CreateFolderScreen(
-                        folderId = it.folderId,
-                        navController = navController
-                    )
+                    CreateFolderScreen(folderId = it.folderId, navController = navController)
                 }
-            }
+            },
         )
     }
 }

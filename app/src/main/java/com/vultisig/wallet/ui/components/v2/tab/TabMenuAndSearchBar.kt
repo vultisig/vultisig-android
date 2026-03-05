@@ -18,20 +18,14 @@ internal fun TabMenuAndSearchBar(
     onCancelSearchClick: () -> Unit,
     isInitiallyFocused: Boolean,
     tabMenuContent: @Composable () -> Unit,
-){
-    AnimatedContent(
-        targetState = isTabMenu,
-        transitionSpec = slideAndFadeSpec(),
-    ) {
-        if (it)
-            tabMenuContent()
+) {
+    AnimatedContent(targetState = isTabMenu, transitionSpec = slideAndFadeSpec()) {
+        if (it) tabMenuContent()
         else {
             SearchBar(
                 modifier = modifier,
                 state = searchTextFieldState,
-                onCancelClick = {
-                    onCancelSearchClick()
-                },
+                onCancelClick = { onCancelSearchClick() },
                 isInitiallyFocused = isInitiallyFocused,
             )
         }
@@ -40,15 +34,12 @@ internal fun TabMenuAndSearchBar(
 
 @Preview
 @Composable
-private fun TabMenuAndSearchBarPreview(){
+private fun TabMenuAndSearchBarPreview() {
     TabMenuAndSearchBar(
         isTabMenu = false,
         searchTextFieldState = rememberTextFieldState(),
         onCancelSearchClick = {},
         isInitiallyFocused = true,
-        tabMenuContent = {
-            Text("Tab menu content")
-        }
+        tabMenuContent = { Text("Tab menu content") },
     )
 }
-

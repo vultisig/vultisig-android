@@ -19,24 +19,15 @@ import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun KeysignLoadingScreen(
-    text: String,
-    modifier: Modifier = Modifier,
-) {
+internal fun KeysignLoadingScreen(text: String, modifier: Modifier = Modifier) {
     KeepScreenOn()
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
-        Text(
-            text = text,
-            color = Theme.v2.colors.neutrals.n50,
-            style = Theme.menlo.subtitle1
-        )
+        Text(text = text, color = Theme.v2.colors.neutrals.n50, style = Theme.menlo.subtitle1)
 
         UiSpacer(size = 32.dp)
 
@@ -47,7 +38,5 @@ internal fun KeysignLoadingScreen(
 @Preview
 @Composable
 private fun KeysignLoadingScreenPreview() {
-    KeysignLoadingScreen(
-        text = stringResource(R.string.join_keysign_discovering_session_id),
-    )
+    KeysignLoadingScreen(text = stringResource(R.string.join_keysign_discovering_session_id))
 }

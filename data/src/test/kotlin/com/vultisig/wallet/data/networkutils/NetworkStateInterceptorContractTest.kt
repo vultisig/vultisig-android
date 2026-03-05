@@ -7,6 +7,11 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import java.io.IOException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.net.ssl.SSLHandshakeException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,17 +20,12 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
-import java.io.IOException
-import java.net.ConnectException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
-import javax.net.ssl.SSLHandshakeException
 
 /**
  * Contract tests for network error handling.
  *
- * Verifies that the `HttpCallValidator` approach (`IOException` → `NetworkException`)
- * satisfies all requirements, and does NOT swallow errors it shouldn't.
+ * Verifies that the `HttpCallValidator` approach (`IOException` → `NetworkException`) satisfies all
+ * requirements, and does NOT swallow errors it shouldn't.
  *
  * Contract requirements:
  * 1. Network failures must be distinguishable from real server errors.
@@ -42,23 +42,17 @@ class NetworkStateInterceptorContractTest {
 
     @Serializable
     data class BlockChairDashboardResponse(
-        @SerialName("data")
-        val data: Map<String, TransactionData>? = null,
-        @SerialName("context")
-        val context: ContextData,
+        @SerialName("data") val data: Map<String, TransactionData>? = null,
+        @SerialName("context") val context: ContextData,
     )
 
-    @Serializable
-    data class TransactionData(val transaction: TransactionInfo? = null)
+    @Serializable data class TransactionData(val transaction: TransactionInfo? = null)
 
-    @Serializable
-    data class TransactionInfo(@SerialName("block_id") val blockId: Int? = null)
+    @Serializable data class TransactionInfo(@SerialName("block_id") val blockId: Int? = null)
 
-    @Serializable
-    data class ContextData(@SerialName("state") val state: Int)
+    @Serializable data class ContextData(@SerialName("state") val state: Int)
 
-    @Serializable
-    data class SimpleResponse(@SerialName("value") val value: String)
+    @Serializable data class SimpleResponse(@SerialName("value") val value: String)
 
     // ================================================================
     // GROUP 1: All IOException subtypes → NetworkException(httpStatusCode=0)
@@ -69,30 +63,22 @@ class NetworkStateInterceptorContractTest {
 
     @Test
     fun ioException_becomesNetworkExceptionWithCode0() = runBlocking {
-        assertTransportExceptionBecomesNetworkException(
-            IOException("Connection reset")
-        )
+        assertTransportExceptionBecomesNetworkException(IOException("Connection reset"))
     }
 
     @Test
     fun sslHandshakeException_becomesNetworkExceptionWithCode0() = runBlocking {
-        assertTransportExceptionBecomesNetworkException(
-            SSLHandshakeException("Handshake failed")
-        )
+        assertTransportExceptionBecomesNetworkException(SSLHandshakeException("Handshake failed"))
     }
 
     @Test
     fun socketTimeoutException_becomesNetworkExceptionWithCode0() = runBlocking {
-        assertTransportExceptionBecomesNetworkException(
-            SocketTimeoutException("Read timed out")
-        )
+        assertTransportExceptionBecomesNetworkException(SocketTimeoutException("Read timed out"))
     }
 
     @Test
     fun connectException_becomesNetworkExceptionWithCode0() = runBlocking {
-        assertTransportExceptionBecomesNetworkException(
-            ConnectException("Connection refused")
-        )
+        assertTransportExceptionBecomesNetworkException(ConnectException("Connection refused"))
     }
 
     @Test
@@ -102,9 +88,7 @@ class NetworkStateInterceptorContractTest {
         )
     }
 
-    private suspend fun assertTransportExceptionBecomesNetworkException(
-        ioException: IOException,
-    ) {
+    private suspend fun assertTransportExceptionBecomesNetworkException(ioException: IOException) {
         val client = MockHttpClient.throwingIOException(ioException)
         try {
             client.get("https://api.vultisig.com/test")
@@ -112,7 +96,8 @@ class NetworkStateInterceptorContractTest {
         } catch (e: NetworkException) {
             assertEquals(
                 "httpStatusCode must be 0 for client-side transport errors",
-                0, e.httpStatusCode,
+                0,
+                e.httpStatusCode,
             )
             assertEquals("No internet connection", e.message)
             assertTrue(
@@ -130,21 +115,22 @@ class NetworkStateInterceptorContractTest {
 
     @Test
     fun networkFailure_isClearlyDistinguished_fromRealServer503() = runBlocking {
-        val networkClient = MockHttpClient.throwingIOException(
-            IOException("Unable to resolve host")
-        )
-        val serverClient = MockHttpClient.respondingWith(
-            HttpStatusCode.ServiceUnavailable,
-            """{"error": "Service temporarily unavailable"}""",
-        )
+        val networkClient =
+            MockHttpClient.throwingIOException(IOException("Unable to resolve host"))
+        val serverClient =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.ServiceUnavailable,
+                """{"error": "Service temporarily unavailable"}""",
+            )
 
         // Network failure → exception (no response)
-        val networkException = try {
-            networkClient.get("https://api.vultisig.com/test")
-            null
-        } catch (e: NetworkException) {
-            e
-        }
+        val networkException =
+            try {
+                networkClient.get("https://api.vultisig.com/test")
+                null
+            } catch (e: NetworkException) {
+                e
+            }
 
         // Server 503 → normal response
         val serverResponse = serverClient.get("https://api.vultisig.com/test")
@@ -159,9 +145,7 @@ class NetworkStateInterceptorContractTest {
 
     @Test
     fun networkFailure_doesNotBreakDeserialization() = runBlocking {
-        val client = MockHttpClient.throwingIOException(
-            IOException("Unable to resolve host")
-        )
+        val client = MockHttpClient.throwingIOException(IOException("Unable to resolve host"))
 
         // Exception is thrown at client.get() — body<T>() is never called.
         try {
@@ -177,9 +161,7 @@ class NetworkStateInterceptorContractTest {
 
     @Test
     fun networkFailure_bodyOrThrow_isNeverReached() = runBlocking {
-        val client = MockHttpClient.throwingIOException(
-            IOException("Unable to resolve host")
-        )
+        val client = MockHttpClient.throwingIOException(IOException("Unable to resolve host"))
 
         try {
             val response = client.get("https://api.vultisig.com/solana/")
@@ -194,16 +176,15 @@ class NetworkStateInterceptorContractTest {
 
     @Test
     fun networkException_isCaughtByExistingCatchExceptionBlocks() = runBlocking {
-        val client = MockHttpClient.throwingIOException(
-            IOException("Unable to resolve host")
-        )
+        val client = MockHttpClient.throwingIOException(IOException("Unable to resolve host"))
 
         // Simulates the 46+ catch(Exception) blocks across the codebase.
-        val result: String? = try {
-            client.get("https://test.com").bodyAsText()
-        } catch (_: Exception) {
-            null
-        }
+        val result: String? =
+            try {
+                client.get("https://test.com").bodyAsText()
+            } catch (_: Exception) {
+                null
+            }
 
         assertEquals(null, result)
         client.close()
@@ -218,10 +199,7 @@ class NetworkStateInterceptorContractTest {
 
     @Test
     fun server200_withValidJson_deserializesCorrectly() = runBlocking {
-        val client = MockHttpClient.respondingWith(
-            HttpStatusCode.OK,
-            """{"value": "hello"}""",
-        )
+        val client = MockHttpClient.respondingWith(HttpStatusCode.OK, """{"value": "hello"}""")
 
         val response = client.get("https://api.vultisig.com/test")
         val body = response.body<SimpleResponse>()
@@ -234,10 +212,11 @@ class NetworkStateInterceptorContractTest {
 
     @Test
     fun server4xx_responseIsReturnedNormally() = runBlocking {
-        val client = MockHttpClient.respondingWith(
-            HttpStatusCode.BadRequest,
-            """{"error": "Invalid address"}""",
-        )
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.BadRequest,
+                """{"error": "Invalid address"}""",
+            )
 
         val response = client.get("https://api.vultisig.com/test")
 
@@ -249,10 +228,11 @@ class NetworkStateInterceptorContractTest {
 
     @Test
     fun server5xx_responseIsReturnedNormally() = runBlocking {
-        val client = MockHttpClient.respondingWith(
-            HttpStatusCode.InternalServerError,
-            """{"error": "Internal server error"}""",
-        )
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.InternalServerError,
+                """{"error": "Internal server error"}""",
+            )
 
         val response = client.get("https://api.vultisig.com/test")
 
@@ -263,10 +243,11 @@ class NetworkStateInterceptorContractTest {
 
     @Test
     fun bodyOrThrow_onNon2xx_throwsNetworkExceptionWithActualStatusCode() = runBlocking {
-        val client = MockHttpClient.respondingWith(
-            HttpStatusCode.BadRequest,
-            """{"message": "Invalid address format"}""",
-        )
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.BadRequest,
+                """{"message": "Invalid address format"}""",
+            )
 
         try {
             val response = client.get("https://api.vultisig.com/blockchair/push")
@@ -291,10 +272,7 @@ class NetworkStateInterceptorContractTest {
 
     @Test
     fun server200_withInvalidJson_throwsDeserializationError_notNetworkException() = runBlocking {
-        val client = MockHttpClient.respondingWith(
-            HttpStatusCode.OK,
-            "this is not json at all",
-        )
+        val client = MockHttpClient.respondingWith(HttpStatusCode.OK, "this is not json at all")
 
         try {
             val response = client.get("https://api.vultisig.com/test")
@@ -303,7 +281,7 @@ class NetworkStateInterceptorContractTest {
         } catch (e: NetworkException) {
             fail(
                 "Deserialization errors must NOT become NetworkException. " +
-                        "Got NetworkException(${e.httpStatusCode}): ${e.message}"
+                    "Got NetworkException(${e.httpStatusCode}): ${e.message}"
             )
         } catch (_: Exception) {
             // CORRECT: Deserialization error escapes as a non-NetworkException.
@@ -317,19 +295,23 @@ class NetworkStateInterceptorContractTest {
     fun server200_withWrongJsonShape_throwsDeserializationError() = runBlocking {
         // Simulates what happens when a server returns 200 but with unexpected JSON.
         // The synthetic body from the old interceptor caused exactly this problem.
-        val client = MockHttpClient.respondingWith(
-            HttpStatusCode.OK,
-            """{"error": "Network failure: Unable to resolve host"}""",
-        )
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.OK,
+                """{"error": "Network failure: Unable to resolve host"}""",
+            )
 
         try {
-            val response = client.get("https://api.vultisig.com/blockchair/litecoin/dashboards/transaction/abc")
+            val response =
+                client.get(
+                    "https://api.vultisig.com/blockchair/litecoin/dashboards/transaction/abc"
+                )
             response.body<BlockChairDashboardResponse>()
             fail("Expected a deserialization exception for mismatched JSON shape")
         } catch (e: NetworkException) {
             fail(
                 "JSON shape mismatch must NOT become NetworkException. " +
-                        "Got NetworkException(${e.httpStatusCode}): ${e.message}"
+                    "Got NetworkException(${e.httpStatusCode}): ${e.message}"
             )
         } catch (_: Exception) {
             // CORRECT: missing required field "context" → deserialization error.

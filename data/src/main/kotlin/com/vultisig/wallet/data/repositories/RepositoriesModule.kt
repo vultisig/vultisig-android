@@ -26,105 +26,67 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindCustomMessagePayloadRepo(
-        impl: CustomMessagePayloadRepoImpl
-    ): CustomMessagePayloadRepo
+    fun bindCustomMessagePayloadRepo(impl: CustomMessagePayloadRepoImpl): CustomMessagePayloadRepo
 
     @Binds
     @Singleton
     fun bindChainAccountAddressRepository(
-        impl: ChainAccountAddressRepositoryImpl,
+        impl: ChainAccountAddressRepositoryImpl
     ): ChainAccountAddressRepository
 
     @Binds
     @Singleton
-    fun bindTiersRemoteNFTRepository(
-        impl: TiersNFTRepositoryImpl
-    ): TiersNFTRepository
+    fun bindTiersRemoteNFTRepository(impl: TiersNFTRepositoryImpl): TiersNFTRepository
+
+    @Binds @Singleton fun bindTokenRepository(impl: TokenRepositoryImpl): TokenRepository
+
+    @Binds @Singleton fun bindVaultRepository(impl: VaultRepositoryImpl): VaultRepository
 
     @Binds
     @Singleton
-    fun bindTokenRepository(
-        impl: TokenRepositoryImpl,
-    ): TokenRepository
+    fun bindVultiSignerRepository(impl: VultiSignerRepositoryImpl): VultiSignerRepository
 
     @Binds
     @Singleton
-    fun bindVaultRepository(
-        impl: VaultRepositoryImpl
-    ): VaultRepository
+    fun bindVaultDataStoreRepository(impl: VaultDataStoreRepositoryImpl): VaultDataStoreRepository
 
     @Binds
     @Singleton
-    fun bindVultiSignerRepository(
-        impl: VultiSignerRepositoryImpl
-    ): VultiSignerRepository
+    fun bindTransactionRepository(impl: TransactionRepositoryImpl): TransactionRepository
 
     @Binds
     @Singleton
-    fun bindVaultDataStoreRepository(
-        impl: VaultDataStoreRepositoryImpl
-    ): VaultDataStoreRepository
+    fun bindAppCurrencyRepository(impl: AppCurrencyRepositoryImpl): AppCurrencyRepository
 
     @Binds
     @Singleton
-    fun bindTransactionRepository(
-        impl: TransactionRepositoryImpl,
-    ): TransactionRepository
+    fun bindTokenPriceRepository(impl: TokenPriceRepositoryImpl): TokenPriceRepository
 
     @Binds
     @Singleton
-    fun bindAppCurrencyRepository(
-        impl: AppCurrencyRepositoryImpl,
-    ): AppCurrencyRepository
+    fun bindAppLocaleRepository(impl: AppLocaleRepositoryImpl): AppLocaleRepository
 
     @Binds
     @Singleton
-    fun bindTokenPriceRepository(
-        impl: TokenPriceRepositoryImpl,
-    ): TokenPriceRepository
+    fun bindReferralCodeRepository(
+        impl: ReferralCodeSettingsRepository
+    ): ReferralCodeSettingsRepositoryContract
 
     @Binds
     @Singleton
-    fun bindAppLocaleRepository(
-        impl: AppLocaleRepositoryImpl,
-    ): AppLocaleRepository
-
-   @Binds
-   @Singleton
-   fun bindReferralCodeRepository(
-       impl: ReferralCodeSettingsRepository
-   ): ReferralCodeSettingsRepositoryContract
+    fun bindAddressBookEntryRepository(impl: AddressBookRepositoryImpl): AddressBookRepository
 
     @Binds
     @Singleton
-    fun bindAddressBookEntryRepository(
-        impl: AddressBookRepositoryImpl
-    ): AddressBookRepository
+    fun bindAddressParserRepository(impl: AddressParserRepositoryImpl): AddressParserRepository
 
     @Binds
     @Singleton
-    fun bindAddressParserRepository(
-        impl: AddressParserRepositoryImpl
-    ): AddressParserRepository
+    fun bindAllowanceRepository(impl: AllowanceRepositoryImpl): AllowanceRepository
 
-    @Binds
-    @Singleton
-    fun bindAllowanceRepository(
-        impl: AllowanceRepositoryImpl,
-    ): AllowanceRepository
+    @Binds @Singleton fun bindBalanceRepositoryImpl(impl: BalanceRepositoryImpl): BalanceRepository
 
-    @Binds
-    @Singleton
-    fun bindBalanceRepositoryImpl(
-        impl: BalanceRepositoryImpl,
-    ): BalanceRepository
-
-    @Binds
-    @Singleton
-    fun bindSPLTokenRepository(
-        impl: SplTokenRepositoryImpl
-    ): SplTokenRepository
+    @Binds @Singleton fun bindSPLTokenRepository(impl: SplTokenRepositoryImpl): SplTokenRepository
 
     @Binds
     @Singleton
@@ -135,19 +97,17 @@ internal interface RepositoriesModule {
     @Binds
     @Singleton
     fun bindBlockChainSpecificRepository(
-        impl: BlockChainSpecificRepositoryImpl,
+        impl: BlockChainSpecificRepositoryImpl
     ): BlockChainSpecificRepository
 
     @Binds
     @Singleton
-    fun bindDefaultChainsRepository(
-        impl: DefaultChainsRepositoryImpl,
-    ): DefaultChainsRepository
+    fun bindDefaultChainsRepository(impl: DefaultChainsRepositoryImpl): DefaultChainsRepository
 
     @Binds
     @Singleton
     fun bindDefaultDeFiChainsRepository(
-        impl: DefaultDeFiChainsRepositoryImpl,
+        impl: DefaultDeFiChainsRepositoryImpl
     ): DefaultDeFiChainsRepository
 
     @Binds
@@ -158,33 +118,23 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindExplorerLinkRepository(
-        impl: ExplorerLinkRepositoryImpl,
-    ): ExplorerLinkRepository
+    fun bindExplorerLinkRepository(impl: ExplorerLinkRepositoryImpl): ExplorerLinkRepository
 
-    @Binds
-    @Singleton
-    fun bindGasFeesRepository(
-        impl: GasFeeRepositoryImpl,
-    ): GasFeeRepository
+    @Binds @Singleton fun bindGasFeesRepository(impl: GasFeeRepositoryImpl): GasFeeRepository
 
     @Binds
     @Singleton
     fun bindLastOpenedVaultRepository(
-        impl: LastOpenedVaultRepositoryImpl,
+        impl: LastOpenedVaultRepositoryImpl
     ): LastOpenedVaultRepository
 
     @Binds
     @Singleton
-    fun bindVaultOrderRepository(
-        impl: VaultOrderRepository
-    ): OrderRepository<VaultOrderEntity>
+    fun bindVaultOrderRepository(impl: VaultOrderRepository): OrderRepository<VaultOrderEntity>
 
     @Binds
     @Singleton
-    fun bindFolderOrderRepository(
-        impl: FolderOrderRepository
-    ): OrderRepository<FolderOrderEntity>
+    fun bindFolderOrderRepository(impl: FolderOrderRepository): OrderRepository<FolderOrderEntity>
 
     @Binds
     @Singleton
@@ -194,39 +144,29 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindRequestResultRepository(
-        impl: RequestResultRepositoryImpl
-    ): RequestResultRepository
+    fun bindRequestResultRepository(impl: RequestResultRepositoryImpl): RequestResultRepository
 
     @Binds
     @Singleton
-    fun bindSwapQuoteRepository(
-        impl: SwapQuoteRepositoryImpl
-    ): SwapQuoteRepository
+    fun bindSwapQuoteRepository(impl: SwapQuoteRepositoryImpl): SwapQuoteRepository
 
     @Binds
     @Singleton
-    fun bindChainAccountsRepository(
-        impl: AccountsRepositoryImpl,
-    ): AccountsRepository
+    fun bindChainAccountsRepository(impl: AccountsRepositoryImpl): AccountsRepository
 
     @Binds
     @Singleton
-    fun bindThorchainBondRepository(
-        impl: ThorchainBondRepositoryImpl,
-    ): ThorchainBondRepository
+    fun bindThorchainBondRepository(impl: ThorchainBondRepositoryImpl): ThorchainBondRepository
 
     @Binds
     @Singleton
     fun bindActiveBondedNodeRepository(
-        impl: ActiveBondedNodeRepositoryImpl,
+        impl: ActiveBondedNodeRepositoryImpl
     ): ActiveBondedNodeRepository
 
     @Binds
     @Singleton
-    fun bindStakingDetailsRepository(
-        impl: StakingDetailsRepositoryImpl,
-    ): StakingDetailsRepository
+    fun bindStakingDetailsRepository(impl: StakingDetailsRepositoryImpl): StakingDetailsRepository
 
     @Binds
     @Singleton
@@ -236,51 +176,31 @@ internal interface RepositoriesModule {
 
     @Singleton
     @Binds
-    fun bindOnBoardRepository(
-        impl: OnboardingRepositoryImpl,
-    ): OnboardingRepository
+    fun bindOnBoardRepository(impl: OnboardingRepositoryImpl): OnboardingRepository
+
+    @Singleton @Binds fun bindFolderRepository(impl: FolderRepositoryImpl): FolderRepository
 
     @Singleton
     @Binds
-    fun bindFolderRepository(
-        impl: FolderRepositoryImpl,
-    ): FolderRepository
-
-    @Singleton
-    @Binds
-    fun bindVaultPasswordRepository(
-        impl: VaultPasswordRepositoryImpl,
-    ): VaultPasswordRepository
+    fun bindVaultPasswordRepository(impl: VaultPasswordRepositoryImpl): VaultPasswordRepository
 
     @Singleton
     @Binds
     fun bindSecurityScannerRepository(
-        impl: OnChainSecurityScannerRepositoryImpl,
+        impl: OnChainSecurityScannerRepositoryImpl
     ): OnChainSecurityScannerRepository
 
     @Binds
     @Singleton
-    fun bindThorChainRepository(
-        impl: ThorChainRepositoryImpl
-    ): ThorChainRepository
+    fun bindThorChainRepository(impl: ThorChainRepositoryImpl): ThorChainRepository
+
+    @Binds @Singleton fun bindVaultMetadataRepo(impl: VaultMetadataRepoImpl): VaultMetadataRepo
+
+    @Binds @Singleton fun bindFourByteRepository(impl: FourByteRepositoryImpl): FourByteRepository
 
     @Binds
     @Singleton
-    fun bindVaultMetadataRepo(
-        impl: VaultMetadataRepoImpl
-    ): VaultMetadataRepo
-
-    @Binds
-    @Singleton
-    fun bindFourByteRepository(
-        impl: FourByteRepositoryImpl
-    ): FourByteRepository
-
-    @Binds
-    @Singleton
-    fun bindSecretSettingsRepository(
-        impl: SecretSettingsRepositoryImpl
-    ): SecretSettingsRepository
+    fun bindSecretSettingsRepository(impl: SecretSettingsRepositoryImpl): SecretSettingsRepository
 
     @Binds
     @Singleton
@@ -290,15 +210,11 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindQrHelperModalRepository(
-        impl: QrHelperModalRepositoryImpl
-    ): QrHelperModalRepository
+    fun bindQrHelperModalRepository(impl: QrHelperModalRepositoryImpl): QrHelperModalRepository
 
     @Binds
     @Singleton
-    fun bindTemporaryVaultRepository(
-        impl: TemporaryVaultRepositoryImpl
-    ): TemporaryVaultRepository
+    fun bindTemporaryVaultRepository(impl: TemporaryVaultRepositoryImpl): TemporaryVaultRepository
 
     @Binds
     @Singleton
@@ -308,15 +224,11 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindTronResourceRepository(
-        impl: TronResourceDataSourceImpl
-    ): TronResourceDataSource
+    fun bindTronResourceRepository(impl: TronResourceDataSourceImpl): TronResourceDataSource
 
     @Binds
     @Singleton
-    fun bindKeyImportRepository(
-        impl: KeyImportRepositoryImpl
-    ): KeyImportRepository
+    fun bindKeyImportRepository(impl: KeyImportRepositoryImpl): KeyImportRepository
 
     @Binds
     @Singleton
@@ -325,6 +237,4 @@ internal interface RepositoriesModule {
     ): NotificationTokenRepository
 }
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class PrettyJson
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class PrettyJson

@@ -33,59 +33,41 @@ internal class VsTabGroupScope {
 }
 
 @Composable
-internal fun VsTabGroup(
-    index: Int,
-    content: VsTabGroupScope.() -> Unit,
-) {
+internal fun VsTabGroup(index: Int, content: VsTabGroupScope.() -> Unit) {
     val scope = VsTabGroupScope().apply(content)
     val tabs = scope.tabs
 
-    val tabWidths = remember {
-        mutableStateListOf<Dp>().apply {
-            repeat(tabs.size) {
-                add(0.dp)
-            }
-        }
-    }
+    val tabWidths = remember { mutableStateListOf<Dp>().apply { repeat(tabs.size) { add(0.dp) } } }
     val underLineWidth = tabWidths[index]
     val animateWidth by animateDpAsState(underLineWidth)
     val density = LocalDensity.current
     val itemsSpace = 16.dp
 
-    Column(
-        modifier = Modifier
-    ) {
+    Column(modifier = Modifier) {
         Row(
-            modifier = Modifier.padding(
-                vertical = 6.dp
-            ),
-            horizontalArrangement = Arrangement.spacedBy(
-                space = itemsSpace,
-            ),
+            modifier = Modifier.padding(vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(space = itemsSpace),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-
             tabs.forEachIndexed { index, tab ->
                 Box(
-                    modifier = Modifier
-                        .onGloballyPositioned { coordinates ->
-                            tabWidths[index] = with(density) {
-                                coordinates.size.width.toDp()
-                            }
+                    modifier =
+                        Modifier.onGloballyPositioned { coordinates ->
+                            tabWidths[index] = with(density) { coordinates.size.width.toDp() }
                         },
-                    content = tab
+                    content = tab,
                 )
             }
         }
 
-        val offsetAnimated = animateDpAsState(
-            targetValue = if (index == 0) 0.dp
-            else itemsSpace * (index) + tabWidths.take(index).reduce { acc, dp -> acc + dp })
+        val offsetAnimated =
+            animateDpAsState(
+                targetValue =
+                    if (index == 0) 0.dp
+                    else itemsSpace * (index) + tabWidths.take(index).reduce { acc, dp -> acc + dp }
+            )
 
-        TabUnderLine(
-            width = { animateWidth },
-            offset = offsetAnimated::value
-        )
+        TabUnderLine(width = { animateWidth }, offset = offsetAnimated::value)
     }
 }
 
@@ -98,68 +80,41 @@ internal fun VsTab(
 ) {
     Text(
         text = label,
-        color = if (isEnabled)
-            Theme.v2.colors.text.primary
-        else Theme.v2.colors.text.button.disabled,
+        color =
+            if (isEnabled) Theme.v2.colors.text.primary else Theme.v2.colors.text.button.disabled,
         style = Theme.brockmann.body.s.medium,
-        modifier = modifier
-            .clickable(
-                onClick = onClick,
-                enabled = isEnabled,
-            )
+        modifier = modifier.clickable(onClick = onClick, enabled = isEnabled),
     )
 }
 
 @Composable
-private fun TabUnderLine(
-    width: () -> Dp,
-    offset: () -> Dp,
-) {
+private fun TabUnderLine(width: () -> Dp, offset: () -> Dp) {
     HorizontalDivider(
-        modifier = Modifier
-            .layout { measurables, constraints ->
-                val placeable = measurables.measure(
-                    constraints = constraints.copy(
-                        minWidth = width().roundToPx(),
-                        maxWidth = width().roundToPx()
+        modifier =
+            Modifier.layout { measurables, constraints ->
+                val placeable =
+                    measurables.measure(
+                        constraints =
+                            constraints.copy(
+                                minWidth = width().roundToPx(),
+                                maxWidth = width().roundToPx(),
+                            )
                     )
-                )
                 layout(placeable.width, placeable.height) {
-                    placeable.placeRelative(
-                        x = offset().roundToPx(),
-                        y = 0
-                    )
+                    placeable.placeRelative(x = offset().roundToPx(), y = 0)
                 }
             },
         color = Theme.v2.colors.primary.accent4,
-        thickness = 1.5.dp
+        thickness = 1.5.dp,
     )
 }
-
 
 @Preview
 @Composable
 internal fun TabGroupPreview() {
-    VsTabGroup(
-        index = 1
-    ) {
-        tab {
-            VsTab(
-                label = "Tab 1",
-                onClick = {}
-            )
-        }
-        tab {
-            VsTab(
-                label = "Tab 2",
-                onClick = {}
-            )
-        }
-        tab {
-            VsTab(
-                label = "Tab 3",
-                onClick = {}
-            )
-        }
+    VsTabGroup(index = 1) {
+        tab { VsTab(label = "Tab 1", onClick = {}) }
+        tab { VsTab(label = "Tab 2", onClick = {}) }
+        tab { VsTab(label = "Tab 3", onClick = {}) }
     }
 }

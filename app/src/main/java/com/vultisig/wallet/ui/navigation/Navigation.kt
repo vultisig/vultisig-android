@@ -16,36 +16,26 @@ import com.vultisig.wallet.ui.navigation.Route.VaultList
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-internal open class Dst(
-    val route: String,
-)
+internal open class Dst(val route: String)
 
-internal sealed class Destination(
-    route: String,
-) : Dst(route) {
+internal sealed class Destination(route: String) : Dst(route) {
 
     companion object {
         const val ARG_REFERRAL_ID = "referral_id"
         const val ARG_VAULT_ID = "vault_id"
     }
 
-    data object Back : Destination(
-        route = "back"
-    )
+    data object Back : Destination(route = "back")
 
-
-    data class ReferralCode(
-        val vaultId: String,
-    ) : Destination(route = "referral/referral_screen/$vaultId") {
+    data class ReferralCode(val vaultId: String) :
+        Destination(route = "referral/referral_screen/$vaultId") {
         companion object {
             const val STATIC_ROUTE = "referral/referral_screen/{$ARG_VAULT_ID}"
         }
     }
 
-    data class ReferralView(
-        val vaultId: String,
-        val code: String,
-    ) : Destination(route = "referral/referral_view/$vaultId/$code") {
+    data class ReferralView(val vaultId: String, val code: String) :
+        Destination(route = "referral/referral_view/$vaultId/$code") {
         companion object {
             const val STATIC_ROUTE = "referral/referral_view/{$ARG_VAULT_ID}/{$ARG_REFERRAL_ID}"
         }
@@ -55,11 +45,9 @@ internal sealed class Destination(
 internal sealed class Route {
 
     data object Onboarding {
-        @Serializable
-        data object VaultCreation
+        @Serializable data object VaultCreation
 
-        @Serializable
-        data object VaultCreationSummary
+        @Serializable data object VaultCreationSummary
 
         @Serializable
         data class VaultBackup(
@@ -74,16 +62,11 @@ internal sealed class Route {
         )
     }
 
-    @Serializable
-    data object Secret : Route()
+    @Serializable data object Secret : Route()
 
     // home
 
-    @Serializable
-    data class FastVaultPasswordReminder(
-        val vaultId: VaultId,
-    )
-
+    @Serializable data class FastVaultPasswordReminder(val vaultId: VaultId)
 
     // scan
 
@@ -95,9 +78,7 @@ internal sealed class Route {
         val requestId: String? = null,
     )
 
-    @Serializable
-    data object ScanError
-
+    @Serializable data object ScanError
 
     // select asset / network
     @Serializable
@@ -138,8 +119,7 @@ internal sealed class Route {
         val mscaAddress: String? = null,
     ) {
 
-        @Serializable
-        object SendMain
+        @Serializable object SendMain
     }
 
     @Serializable
@@ -163,11 +143,7 @@ internal sealed class Route {
         val pressY: Float = 0f,
     )
 
-    @Serializable
-    data class VerifySend(
-        val vaultId: VaultId,
-        val transactionId: TransactionId,
-    )
+    @Serializable data class VerifySend(val vaultId: VaultId, val transactionId: TransactionId)
 
     // swap
 
@@ -178,31 +154,18 @@ internal sealed class Route {
         val srcTokenId: TokenId? = null,
         val dstTokenId: TokenId? = null,
     ) {
-        @Serializable
-        object SwapMain
+        @Serializable object SwapMain
     }
 
-    @Serializable
-    data class VerifySwap(
-        val vaultId: VaultId,
-        val transactionId: TransactionId,
-    )
+    @Serializable data class VerifySwap(val vaultId: VaultId, val transactionId: TransactionId)
 
-    @Serializable
-    data class VerifyDeposit(
-        val vaultId: VaultId,
-        val transactionId: TransactionId,
-    )
+    @Serializable data class VerifyDeposit(val vaultId: VaultId, val transactionId: TransactionId)
 
     // keysign
 
     data object Keysign {
 
-        @Serializable
-        data class Join(
-            val vaultId: String,
-            val qr: String,
-        )
+        @Serializable data class Join(val vaultId: String, val qr: String)
 
         @Serializable
         data class Password(
@@ -219,44 +182,38 @@ internal sealed class Route {
         ) {
             @Serializable
             enum class TxType {
-                Send, Swap, Deposit, Sign
+                Send,
+                Swap,
+                Deposit,
+                Sign,
             }
         }
     }
 
     // vault creation / keygen
-    @Serializable
-    data class ImportVault(
-        val uri: String? = null,
-    )
+    @Serializable data class ImportVault(val uri: String? = null)
 
-    @Serializable
-    data object ChooseVaultType
+    @Serializable data object ChooseVaultType
 
     data object KeyImport {
-        @Serializable
-        data object ImportSeedphrase
+        @Serializable data object ImportSeedphrase
 
-        @Serializable
-        data object ChainsSetup
+        @Serializable data object ChainsSetup
 
-        @Serializable
-        data object DeviceCount
+        @Serializable data object DeviceCount
     }
 
     object VaultInfo {
 
         @Serializable
         enum class VaultType {
-            Fast, Secure
+            Fast,
+            Secure,
         }
 
         // required by both vault types
         @Serializable
-        data class Name(
-            val vaultType: VaultType,
-            val tssAction: TssAction = TssAction.KEYGEN,
-        )
+        data class Name(val vaultType: VaultType, val tssAction: TssAction = TssAction.KEYGEN)
 
         // required only by fast vault
         @Serializable
@@ -289,16 +246,12 @@ internal sealed class Route {
     @Serializable
     data object Keygen {
 
-        @Serializable
-        data class Join(
-            val qr: String,
-        )
+        @Serializable data class Join(val qr: String)
 
         @Serializable
         data class PeerDiscovery(
             val action: TssAction,
             val vaultName: String,
-
             val email: String? = null,
             val password: String? = null,
             val hint: String? = null,
@@ -325,7 +278,6 @@ internal sealed class Route {
             val vaultId: VaultId? = null,
             val oldCommittee: List<String>,
             val oldResharePrefix: String,
-
             val email: String?,
             val password: String?,
             val hint: String?,
@@ -334,7 +286,6 @@ internal sealed class Route {
             // key import chains
             val chains: List<String> = emptyList(),
         )
-
     }
 
     @Serializable
@@ -358,12 +309,9 @@ internal sealed class Route {
         @Serializable
         sealed interface BackupPasswordType {
             @Serializable
-            data class VultiServerPassword(
-                val password: String?,
-            ) : BackupPasswordType
+            data class VultiServerPassword(val password: String?) : BackupPasswordType
 
-            @Serializable
-            data object UserSelectionPassword : BackupPasswordType
+            @Serializable data object UserSelectionPassword : BackupPasswordType
         }
     }
 
@@ -373,10 +321,7 @@ internal sealed class Route {
         val backupType: BackupType = BackupType.CurrentVault(),
     )
 
-    @Serializable
-    data class VaultsToBackup(
-        val vaultId: VaultId,
-    )
+    @Serializable data class VaultsToBackup(val vaultId: VaultId)
 
     @Serializable
     data class ServerBackup(
@@ -392,10 +337,7 @@ internal sealed class Route {
     )
 
     @Serializable
-    data class VaultBackupSummary(
-        val vaultId: VaultId,
-        val vaultType: VaultInfo.VaultType,
-    )
+    data class VaultBackupSummary(val vaultId: VaultId, val vaultType: VaultInfo.VaultType)
 
     @Serializable
     data class VaultConfirmation(
@@ -406,15 +348,9 @@ internal sealed class Route {
 
     // vault migration
     object Migration {
-        @Serializable
-        data class Onboarding(
-            val vaultId: VaultId,
-        )
+        @Serializable data class Onboarding(val vaultId: VaultId)
 
-        @Serializable
-        data class Password(
-            val vaultId: VaultId,
-        )
+        @Serializable data class Password(val vaultId: VaultId)
     }
 
     // address book
@@ -434,44 +370,23 @@ internal sealed class Route {
     )
 
     @Serializable
-    data class AddChainAccount(
-        val vaultId: String,
-        val routeFromInitVault: Boolean = false,
-    )
+    data class AddChainAccount(val vaultId: String, val routeFromInitVault: Boolean = false)
+
+    @Serializable data class AddDeFiChainAccount(val vaultId: String)
 
     @Serializable
-    data class AddDeFiChainAccount(
-        val vaultId: String,
-    )
-
-    @Serializable
-    data class VaultList(
-        val openType: OpenType,
-    ) {
+    data class VaultList(val openType: OpenType) {
         @Serializable
         sealed interface OpenType {
-            @Serializable
-            data class DeepLink(
-                val sendDeepLinkData: SendDeeplinkData,
-            ) : OpenType
+            @Serializable data class DeepLink(val sendDeepLinkData: SendDeeplinkData) : OpenType
 
-            @Serializable
-            data class Home(val vaultId: VaultId) : OpenType
+            @Serializable data class Home(val vaultId: VaultId) : OpenType
         }
     }
 
+    @Serializable data class FolderList(val folderId: String, val vaultId: VaultId)
 
-    @Serializable
-    data class FolderList(
-        val folderId: String,
-        val vaultId: VaultId,
-    )
-
-
-    @Serializable
-    data class CreateFolder(
-        val folderId: String?,
-    )
+    @Serializable data class CreateFolder(val folderId: String?)
 
     @Serializable
     data class AddressEntry(
@@ -480,21 +395,11 @@ internal sealed class Route {
         val vaultId: String,
     )
 
-    @Serializable
-    data class SelectTokens(
-        val vaultId: String,
-        val chainId: String,
-    )
+    @Serializable data class SelectTokens(val vaultId: String, val chainId: String)
 
-    @Serializable
-    data class CustomToken(
-        val chainId: String,
-    )
+    @Serializable data class CustomToken(val chainId: String)
 
-    @Serializable
-    data class Rename(
-        val vaultId: String,
-    )
+    @Serializable data class Rename(val vaultId: String)
 
     @Serializable
     data class AddressQr(
@@ -504,31 +409,18 @@ internal sealed class Route {
         val logo: Int?,
     )
 
-    @Serializable
-    data class Receive(
-        val vaultId: String,
-    )
+    @Serializable data class Receive(val vaultId: String)
 
     @Serializable
-    data class Home(
-        val openVaultId: String? = null,
-        val showVaultList: Boolean = false,
-    )
+    data class Home(val openVaultId: String? = null, val showVaultList: Boolean = false)
 
-    @Serializable
-    data object AddVault
+    @Serializable data object AddVault
 
-    @Serializable
-    data class VaultSettings(val vaultId: String)
+    @Serializable data class VaultSettings(val vaultId: String)
 
-    @Serializable
-    data class Details(val vaultId: String)
+    @Serializable data class Details(val vaultId: String)
 
-
-    @Serializable
-    data class SignMessage(
-        val vaultId: String,
-    )
+    @Serializable data class SignMessage(val vaultId: String)
 
     @Serializable
     data class Deposit(
@@ -538,25 +430,17 @@ internal sealed class Route {
         val bondAddress: String? = null,
     )
 
-    @Serializable
-    data class Settings(val vaultId: String)
+    @Serializable data class Settings(val vaultId: String)
 
-    @Serializable
-    data object DefaultChainSetting
+    @Serializable data object DefaultChainSetting
 
-    @Serializable
-    data object FAQSetting
+    @Serializable data object FAQSetting
 
-    @Serializable
-    data class DiscountTiers(
-        val vaultId: String,
-    )
+    @Serializable data class DiscountTiers(val vaultId: String)
 
-    @Serializable
-    data object LanguageSetting
+    @Serializable data object LanguageSetting
 
-    @Serializable
-    data object CurrencyUnitSetting
+    @Serializable data object CurrencyUnitSetting
 
     @Serializable
     data class QrAddressScreen(
@@ -565,54 +449,30 @@ internal sealed class Route {
         val chainName: String,
     )
 
-    @Serializable
-    data class ConfirmDelete(val vaultId: String)
+    @Serializable data class ConfirmDelete(val vaultId: String)
+
+    @Serializable data class ShareVaultQr(val vaultId: String)
+
+    @Serializable data class ReshareStartScreen(val vaultId: String)
+
+    @Serializable data class BiometricsEnable(val vaultId: String)
+
+    @Serializable data object OnChainSecurity
+
+    @Serializable data class ReferralOnboarding(val vaultId: String)
+
+    @Serializable data object CheckForUpdateSetting
 
     @Serializable
-    data class ShareVaultQr(val vaultId: String)
+    data class ReferralVaultEdition(val vaultId: String, val code: String, val expiration: String)
 
-    @Serializable
-    data class ReshareStartScreen(val vaultId: String)
+    @Serializable data class ReferralCreation(val vaultId: String)
 
-    @Serializable
-    data class BiometricsEnable(val vaultId: String)
+    @Serializable data class ReferralExternalEdition(val vaultId: String)
 
-    @Serializable
-    data object OnChainSecurity
+    @Serializable data class ReferralListVault(val vaultId: String)
 
-
-    @Serializable
-    data class ReferralOnboarding(
-        val vaultId: String,
-    )
-
-    @Serializable
-    data object CheckForUpdateSetting
-
-    @Serializable
-    data class ReferralVaultEdition(
-        val vaultId: String,
-        val code: String,
-        val expiration: String,
-    )
-
-    @Serializable
-    data class ReferralCreation(
-        val vaultId: String,
-    )
-
-    @Serializable
-    data class ReferralExternalEdition(
-        val vaultId: String,
-    )
-
-    @Serializable
-    data class ReferralListVault(
-        val vaultId: String,
-    )
-
-    @Serializable
-    data class OnRamp(val vaultId: String, val chainId: String)
+    @Serializable data class OnRamp(val vaultId: String, val chainId: String)
 
     @Serializable
     data class AddressBookScreen(
@@ -621,25 +481,13 @@ internal sealed class Route {
         val vaultId: String,
     )
 
-    @Serializable
-    data class ChainDashboard(
-        val route: ChainDashboardRoute
-    )
+    @Serializable data class ChainDashboard(val route: ChainDashboardRoute)
 
+    @Serializable data class EnterVaultInfo(val count: Int)
 
-    @Serializable
-    data class EnterVaultInfo(
-        val count: Int
-    )
+    @Serializable data class SetupVaultInfo(val count: Int)
 
-
-    @Serializable
-    data class SetupVaultInfo(
-        val count: Int
-    )
-
-    @Serializable
-    data object ChooseVaultCount
+    @Serializable data object ChooseVaultCount
 
     @Serializable
     data class ReviewVaultDevices(
@@ -653,8 +501,6 @@ internal sealed class Route {
         val devices: List<String>?,
         val localPartyId: String?,
     )
-
-
 }
 
 @Serializable
@@ -665,29 +511,17 @@ internal sealed interface BackupType {
         val action: TssAction? = null,
     ) : BackupType
 
-    @Serializable
-    data object AllVaults : BackupType
+    @Serializable data object AllVaults : BackupType
 }
 
 @Serializable
 sealed interface ChainDashboardRoute {
-    @Serializable
-    data class Wallet(
-        val vaultId: String,
-        val chainId: String,
-    ) : ChainDashboardRoute
+    @Serializable data class Wallet(val vaultId: String, val chainId: String) : ChainDashboardRoute
 
-    @Serializable
-    data class PositionTokens(
-        val vaultId: String,
-    ) : ChainDashboardRoute
+    @Serializable data class PositionTokens(val vaultId: String) : ChainDashboardRoute
 
-    @Serializable
-    data class PositionCircle(
-        val vaultId: String,
-    ) : ChainDashboardRoute
+    @Serializable data class PositionCircle(val vaultId: String) : ChainDashboardRoute
 }
-
 
 internal val BackupTypeNavType = createNavType<BackupType>()
 
@@ -697,22 +531,21 @@ internal val BackupPasswordTypeNavType = createNavType<BackupVault.BackupPasswor
 
 internal val ChainDashboardRouteNavType = createNavType<ChainDashboardRoute>()
 
-private inline fun <reified T> createNavType(
-    isNullableAllowed: Boolean = false
-): NavType<T> = object : NavType<T>(isNullableAllowed = isNullableAllowed) {
-    override fun put(bundle: Bundle, key: String, value: T) {
-        bundle.putString(key, Json.encodeToString(value))
-    }
+private inline fun <reified T> createNavType(isNullableAllowed: Boolean = false): NavType<T> =
+    object : NavType<T>(isNullableAllowed = isNullableAllowed) {
+        override fun put(bundle: Bundle, key: String, value: T) {
+            bundle.putString(key, Json.encodeToString(value))
+        }
 
-    override fun get(bundle: Bundle, key: String): T {
-        return Json.decodeFromString(bundle.getString(key)!!)
-    }
+        override fun get(bundle: Bundle, key: String): T {
+            return Json.decodeFromString(bundle.getString(key)!!)
+        }
 
-    override fun parseValue(value: String): T {
-        return Json.decodeFromString(value)
-    }
+        override fun parseValue(value: String): T {
+            return Json.decodeFromString(value)
+        }
 
-    override fun serializeAsValue(value: T): String {
-        return Json.encodeToString(value)
+        override fun serializeAsValue(value: T): String {
+            return Json.encodeToString(value)
+        }
     }
-}

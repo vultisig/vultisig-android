@@ -14,16 +14,18 @@ import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
 import com.vultisig.wallet.data.models.proto.v1.VaultProto
 import com.vultisig.wallet.data.models.proto.v1.toSigningLibType
 import io.ktor.util.decodeBase64Bytes
+import java.util.UUID
+import javax.inject.Inject
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
-import java.util.UUID
-import javax.inject.Inject
 
 internal interface ParseVaultFromStringUseCase : (String, String?) -> Vault
 
-internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
+internal class ParseVaultFromStringUseCaseImpl
+@Inject
+constructor(
     private val vaultFromOldJsonMapper: VaultFromOldJsonMapper,
     private val mapHexToPlainString: MapHexToPlainString,
     private val encryption: Encryption,
@@ -32,35 +34,29 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
 ) : ParseVaultFromStringUseCase {
 
     override fun invoke(input: String, password: String?): Vault =
-        parseProtoBufVault(input, password)
-            .getOrElse {
-                parseOldVault(input, password)
-                    .getOrThrow()
-            }
+        parseProtoBufVault(input, password).getOrElse {
+            parseOldVault(input, password).getOrThrow()
+        }
 
-    private fun parseProtoBufVault(
-        input: String,
-        password: String?,
-    ): Result<Vault> = runCatching {
-        val containerProto = protoBuf.decodeFromByteArray<VaultContainerProto>(
-            input.decodeBase64Bytes(),
-        )
+    private fun parseProtoBufVault(input: String, password: String?): Result<Vault> = runCatching {
+        val containerProto =
+            protoBuf.decodeFromByteArray<VaultContainerProto>(input.decodeBase64Bytes())
 
         val possiblyEncryptedVaultBytes =
             containerProto.vault.decodeBase64Bytes().takeIf { it.isNotEmpty() }
                 ?: error("Empty vault")
 
-
-        val vaultBytes = if (containerProto.isEncrypted) {
-            if (!password.isNullOrBlank()) {
-                encryption.decrypt(possiblyEncryptedVaultBytes, password.toByteArray())
-                    ?: error("Failed to decrypt the vault")
+        val vaultBytes =
+            if (containerProto.isEncrypted) {
+                if (!password.isNullOrBlank()) {
+                    encryption.decrypt(possiblyEncryptedVaultBytes, password.toByteArray())
+                        ?: error("Failed to decrypt the vault")
+                } else {
+                    error("Vault is encrypted, but no password provided")
+                }
             } else {
-                error("Vault is encrypted, but no password provided")
+                possiblyEncryptedVaultBytes
             }
-        } else {
-            possiblyEncryptedVaultBytes
-        }
 
         val proto: VaultProto = protoBuf.decodeFromByteArray(vaultBytes)
 
@@ -73,51 +69,53 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
             localPartyID = proto.localPartyId,
             signers = proto.signers,
             resharePrefix = proto.resharePrefix,
-            keyshares = proto.keyShares.filterNotNull()
-                .map { keyShare ->
-                    KeyShare(
-                        pubKey = keyShare.publicKey,
-                        keyShare = keyShare.keyshare
-                    )
-                }
-                // Deduplicate by pubKey — chains sharing the same derivation path
-                // (e.g. EVM chains with coinType 60) produce duplicate pubKeys.
-                // associateBy keeps the last entry, matching extension's fromCommVault behavior.
-                .associateBy { it.pubKey }
-                .values
-                .toList(),
+            keyshares =
+                proto.keyShares
+                    .filterNotNull()
+                    .map { keyShare ->
+                        KeyShare(pubKey = keyShare.publicKey, keyShare = keyShare.keyshare)
+                    }
+                    // Deduplicate by pubKey — chains sharing the same derivation path
+                    // (e.g. EVM chains with coinType 60) produce duplicate pubKeys.
+                    // associateBy keeps the last entry, matching extension's fromCommVault
+                    // behavior.
+                    .associateBy { it.pubKey }
+                    .values
+                    .toList(),
             coins = emptyList(),
             libType = proto.libType.toSigningLibType(),
-            chainPublicKeys = proto.chainPublicKeys.filterNotNull().map { cpk ->
-                ChainPublicKey(
-                    chain = cpk.chain,
-                    publicKey = cpk.publicKey,
-                    isEddsa = cpk.isEddsa,
-                )
-            },
+            chainPublicKeys =
+                proto.chainPublicKeys.filterNotNull().map { cpk ->
+                    ChainPublicKey(
+                        chain = cpk.chain,
+                        publicKey = cpk.publicKey,
+                        isEddsa = cpk.isEddsa,
+                    )
+                },
         )
     }
 
-    private fun parseOldVault(
-        input: String,
-        password: String?,
-    ): Result<Vault> = runCatching {
-        val fromJson = try {
-            val hexToPlainString = mapHexToPlainString(
-                if (!password.isNullOrBlank()) {
-                    encryption.decrypt(Base64.decode(input, Base64.DEFAULT), password.toByteArray())
-                        ?.decodeToString()
-                        ?: error("Failed to decrypt the old vault")
-                } else {
-                    input
-                }
-            )
-            json.decodeFromString<OldJsonVaultRoot>(hexToPlainString).vault
-        } catch (_: Exception) {
-            json.decodeFromString<OldJsonVault>(input)
-        }
+    private fun parseOldVault(input: String, password: String?): Result<Vault> = runCatching {
+        val fromJson =
+            try {
+                val hexToPlainString =
+                    mapHexToPlainString(
+                        if (!password.isNullOrBlank()) {
+                            encryption
+                                .decrypt(
+                                    Base64.decode(input, Base64.DEFAULT),
+                                    password.toByteArray(),
+                                )
+                                ?.decodeToString() ?: error("Failed to decrypt the old vault")
+                        } else {
+                            input
+                        }
+                    )
+                json.decodeFromString<OldJsonVaultRoot>(hexToPlainString).vault
+            } catch (_: Exception) {
+                json.decodeFromString<OldJsonVault>(input)
+            }
 
         vaultFromOldJsonMapper(fromJson)
     }
-
 }

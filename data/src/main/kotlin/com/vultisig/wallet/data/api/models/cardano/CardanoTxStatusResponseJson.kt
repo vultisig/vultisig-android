@@ -5,11 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CardanoTxStatusResponseJson(
-    @Serializable
-    @SerialName("tx_hash")
-    val txHash: String,
-
-    @Serializable
-    @SerialName("num_confirmations")
-    val numConfirmations: Int? = null
+    @Serializable @SerialName("tx_hash") val txHash: String,
+    @Serializable @SerialName("num_confirmations") val numConfirmations: Int? = null,
 )

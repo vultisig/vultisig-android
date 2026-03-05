@@ -41,8 +41,7 @@ private val allowedAuthenticatorTypes
     get() = BIOMETRIC_STRONG or BIOMETRIC_WEAK or DEVICE_CREDENTIAL
 
 @Composable
-internal fun BiometryAuthScreen(
-) {
+internal fun BiometryAuthScreen() {
     // skip authorization in debug mode
     var isAuthorized by rememberSaveable { mutableStateOf(BuildConfig.DEBUG) }
 
@@ -56,22 +55,19 @@ internal fun BiometryAuthScreen(
 
             val promptTitle = stringResource(R.string.biometry_auth_login_button)
 
-            val authorize: () -> Unit = remember(context) {
-                {
-                    context.launchBiometricPrompt(
-                        promptTitle = promptTitle,
-                        onAuthorizationSuccess = { isAuthorized = true },
-                    )
+            val authorize: () -> Unit =
+                remember(context) {
+                    {
+                        context.launchBiometricPrompt(
+                            promptTitle = promptTitle,
+                            onAuthorizationSuccess = { isAuthorized = true },
+                        )
+                    }
                 }
-            }
 
-            LaunchedEffect(Unit) {
-                authorize()
-            }
+            LaunchedEffect(Unit) { authorize() }
 
-            BiometryAuthView(
-                onRequestLogin = authorize,
-            )
+            BiometryAuthView(onRequestLogin = authorize)
         } else {
             isAuthorized = true
         }
@@ -79,21 +75,19 @@ internal fun BiometryAuthScreen(
 }
 
 @Composable
-private fun BiometryAuthView(
-    onRequestLogin: () -> Unit,
-) {
+private fun BiometryAuthView(onRequestLogin: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.secondary)
-            .padding(all = 16.dp),
+        modifier =
+            Modifier.fillMaxSize()
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .padding(all = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         UiSpacer(weight = 1f)
 
         Image(
             painter = painterResource(id = R.drawable.vultisig),
-            contentDescription = stringResource(id = R.string.app_name)
+            contentDescription = stringResource(id = R.string.app_name),
         )
 
         UiSpacer(size = 16.dp)
@@ -124,8 +118,8 @@ private fun BiometryAuthView(
     }
 }
 
-internal fun Context.canAuthenticateBiometric(): Boolean = BiometricManager.from(this)
-    .canAuthenticate(allowedAuthenticatorTypes) == BIOMETRIC_SUCCESS
+internal fun Context.canAuthenticateBiometric(): Boolean =
+    BiometricManager.from(this).canAuthenticate(allowedAuthenticatorTypes) == BIOMETRIC_SUCCESS
 
 internal fun Context.launchBiometricPrompt(
     promptTitle: String,
@@ -133,8 +127,9 @@ internal fun Context.launchBiometricPrompt(
 ) {
     Timber.d("launchBiometricPrompt")
 
-    val activity = (closestActivityOrNull() as? FragmentActivity)
-        ?: error("Context is not a FragmentActivity. Can't launch biometric prompt")
+    val activity =
+        (closestActivityOrNull() as? FragmentActivity)
+            ?: error("Context is not a FragmentActivity. Can't launch biometric prompt")
 
     activity.launchBiometricPrompt(
         title = promptTitle,
@@ -146,32 +141,36 @@ private fun FragmentActivity.launchBiometricPrompt(
     title: String,
     onAuthorizationSuccess: () -> Unit,
 ) {
-    val biometricPrompt = BiometricPrompt(this,
-        object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationSucceeded(
-                result: BiometricPrompt.AuthenticationResult
-            ) {
-                super.onAuthenticationSucceeded(result)
-                Timber.d("onAuthenticationSucceeded")
-                onAuthorizationSuccess()
-            }
+    val biometricPrompt =
+        BiometricPrompt(
+            this,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(
+                    result: BiometricPrompt.AuthenticationResult
+                ) {
+                    super.onAuthenticationSucceeded(result)
+                    Timber.d("onAuthenticationSucceeded")
+                    onAuthorizationSuccess()
+                }
 
-            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                super.onAuthenticationError(errorCode, errString)
-                Timber.d("onAuthenticationError: $errString")
-            }
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    Timber.d("onAuthenticationError: $errString")
+                }
 
-            override fun onAuthenticationFailed() {
-                super.onAuthenticationFailed()
-                Timber.d("onAuthenticationFailed")
-            }
-        })
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+                    Timber.d("onAuthenticationFailed")
+                }
+            },
+        )
 
-    val promptInfo = BiometricPrompt.PromptInfo.Builder()
-        .setTitle(title)
-        .setAllowedAuthenticators(allowedAuthenticatorTypes)
-        .setConfirmationRequired(false)
-        .build()
+    val promptInfo =
+        BiometricPrompt.PromptInfo.Builder()
+            .setTitle(title)
+            .setAllowedAuthenticators(allowedAuthenticatorTypes)
+            .setConfirmationRequired(false)
+            .build()
 
     Timber.d("biometricPrompt::authenticate")
     biometricPrompt.authenticate(promptInfo)
@@ -180,7 +179,5 @@ private fun FragmentActivity.launchBiometricPrompt(
 @Preview
 @Composable
 private fun BiometryAuthScreenPreview() {
-    BiometryAuthView(
-        onRequestLogin = {}
-    )
+    BiometryAuthView(onRequestLogin = {})
 }

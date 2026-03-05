@@ -19,18 +19,16 @@ import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
-import com.vultisig.wallet.ui.models.ChainSelectionUiModel
-import com.vultisig.wallet.ui.models.ChainSelectionViewModel
-import com.vultisig.wallet.ui.models.ChainUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
+import com.vultisig.wallet.ui.models.ChainSelectionUiModel
+import com.vultisig.wallet.ui.models.ChainSelectionViewModel
+import com.vultisig.wallet.ui.models.ChainUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun ChainSelectionScreen(
-    viewModel: ChainSelectionViewModel = hiltViewModel(),
-) {
+internal fun ChainSelectionScreen(viewModel: ChainSelectionViewModel = hiltViewModel()) {
     val state = viewModel.uiState.collectAsState().value
 
     ChainSelectionScreen(
@@ -65,27 +63,22 @@ internal fun ChainSelectionScreen(
                 color = Theme.v2.colors.neutrals.n100,
             )
         },
-        items = state.chains.map {
-            GridTokenUiModel.SingleToken(
-                data = it
-            )
-        },
+        items = state.chains.map { GridTokenUiModel.SingleToken(data = it) },
         mapper = {
             TokenSelectionGridUiModel(
-                tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
-                    name = it.data.coin.chain.raw,
-                    logo = it.data.coin.chain.logo,
-                ),
-                isChecked = it.data.isEnabled
+                tokenSelectionUiModel =
+                    TokenSelectionUiModel.TokenUiSingle(
+                        name = it.data.coin.chain.raw,
+                        logo = it.data.coin.chain.logo,
+                    ),
+                isChecked = it.data.isEnabled,
             )
         },
         searchTextFieldState = searchTextFieldState,
         onDoneClick = onCommitChanges,
         onCancelClick = onBackClick,
         notFoundContent = {
-            NoFoundContent(
-                message = stringResource(R.string.chain_selection_no_chains_found)
-            )
+            NoFoundContent(message = stringResource(R.string.chain_selection_no_chains_found))
         },
         onCheckChange = { checked, chain ->
             if (checked) {
@@ -95,15 +88,16 @@ internal fun ChainSelectionScreen(
             }
         },
         onSetSearchText = onSetSearchText,
-        bannerContent = if (state.isKeyImportVault) {
-            {
-                Banner(
-                    text = stringResource(R.string.chain_selection_key_import_warning),
-                    variant = BannerVariant.Warning,
-                    modifier = Modifier.padding(top = 16.dp),
-                )
-            }
-        } else null,
+        bannerContent =
+            if (state.isKeyImportVault) {
+                {
+                    Banner(
+                        text = stringResource(R.string.chain_selection_key_import_warning),
+                        variant = BannerVariant.Warning,
+                        modifier = Modifier.padding(top = 16.dp),
+                    )
+                }
+            } else null,
     )
 }
 
@@ -112,26 +106,16 @@ internal fun ChainSelectionScreen(
 fun ChainSelectionViewPreview() {
     ChainSelectionScreen(
         title = "Select Chains",
-        state = ChainSelectionUiModel(
-            chains = listOf(
-                ChainUiModel(
-                    isEnabled = false,
-                    coin = Coins.Ethereum.VULT
-                ),
-                ChainUiModel(
-                    isEnabled = true,
-                    coin = Coins.BscChain.ETH
-                ),
-                ChainUiModel(
-                    isEnabled = false,
-                    coin = Coins.CronosChain.CRO
-                ),
-                ChainUiModel(
-                    isEnabled = true,
-                    coin = Coins.Avalanche.BLS
-                ),
-            )
-        ),
+        state =
+            ChainSelectionUiModel(
+                chains =
+                    listOf(
+                        ChainUiModel(isEnabled = false, coin = Coins.Ethereum.VULT),
+                        ChainUiModel(isEnabled = true, coin = Coins.BscChain.ETH),
+                        ChainUiModel(isEnabled = false, coin = Coins.CronosChain.CRO),
+                        ChainUiModel(isEnabled = true, coin = Coins.Avalanche.BLS),
+                    )
+            ),
         searchTextFieldState = rememberTextFieldState(),
         onEnableAccount = {},
         onDisableAccount = {},

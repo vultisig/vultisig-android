@@ -7,7 +7,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
-
 internal data class PagerIndicatorUiModel(
     val selectedColor: Color,
     val defaultColor: Color,
@@ -25,20 +24,21 @@ internal fun rememberPagerIndicatorUiModel(
     selectedLength: Dp = 12.dp,
     space: Dp = 4.dp,
     animationDurationInMillis: Int = 300,
-) = remember(
-    selectedColor,
-    defaultColor,
-    defaultRadius,
-    selectedLength,
-    space,
-    animationDurationInMillis,
-) {
-    PagerIndicatorUiModel(
-        selectedColor = selectedColor,
-        defaultColor = defaultColor,
-        defaultRadius = defaultRadius,
-        selectedLength = selectedLength,
-        space = space,
-        animationDurationInMillis = animationDurationInMillis
-    )
-}
+) =
+    remember(
+        selectedColor,
+        defaultColor,
+        defaultRadius,
+        selectedLength,
+        space,
+        animationDurationInMillis,
+    ) {
+        PagerIndicatorUiModel(
+            selectedColor = selectedColor,
+            defaultColor = defaultColor,
+            defaultRadius = defaultRadius,
+            selectedLength = selectedLength,
+            space = space,
+            animationDurationInMillis = animationDurationInMillis,
+        )
+    }

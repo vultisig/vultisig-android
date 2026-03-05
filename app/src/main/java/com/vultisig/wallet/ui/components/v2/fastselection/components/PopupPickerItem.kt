@@ -20,41 +20,43 @@ internal fun PopupPickerItem(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val scale = when (distanceFromCenter) {
-        0 -> 1f
-        1 -> 0.95f
-        2 -> 0.90f
-        else -> 0.85f
-    }
+    val scale =
+        when (distanceFromCenter) {
+            0 -> 1f
+            1 -> 0.95f
+            2 -> 0.90f
+            else -> 0.85f
+        }
 
-    val alpha = when (distanceFromCenter) {
-        0 -> 1f
-        1 -> 0.7f
-        2 -> 0.4f
-        else -> 0.2f
-    }
+    val alpha =
+        when (distanceFromCenter) {
+            0 -> 1f
+            1 -> 0.7f
+            2 -> 0.4f
+            else -> 0.2f
+        }
 
-    val animatedScale by animateFloatAsState(
-        targetValue = scale,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "scale"
-    )
+    val animatedScale by
+        animateFloatAsState(
+            targetValue = scale,
+            animationSpec =
+                spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium,
+                ),
+            label = "scale",
+        )
 
-    val animatedAlpha by animateFloatAsState(
-        targetValue = alpha,
-        animationSpec = tween(durationMillis = 200),
-        label = "alpha"
-    )
+    val animatedAlpha by
+        animateFloatAsState(
+            targetValue = alpha,
+            animationSpec = tween(durationMillis = 200),
+            label = "alpha",
+        )
 
     Surface(
-        modifier = modifier
-            .padding(vertical = 8.dp)
-            .scale(animatedScale)
-            .alpha(animatedAlpha),
-        color = Color.Transparent
+        modifier = modifier.padding(vertical = 8.dp).scale(animatedScale).alpha(animatedAlpha),
+        color = Color.Transparent,
     ) {
         content()
     }

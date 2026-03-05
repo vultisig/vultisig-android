@@ -20,17 +20,14 @@ class FeatureFlagApiTest {
             respond(
                 content = """{"encrypt-gcm": true}""",
                 status = HttpStatusCode.OK,
-                headers = headersOf(
-                    HttpHeaders.ContentType,
-                    ContentType.Application.Json.toString()
-                )
+                headers =
+                    headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
             )
         }
-        val httpClient = HttpClient(mockEngine) {
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
+        val httpClient =
+            HttpClient(mockEngine) {
+                install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
             }
-        }
 
         val featureFlagApi = FeatureFlagApiImpl(httpClient)
         val featureFlagJson = featureFlagApi.getFeatureFlag()

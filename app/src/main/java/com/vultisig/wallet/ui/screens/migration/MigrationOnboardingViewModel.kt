@@ -11,17 +11,19 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class MigrationOnboardingUiModel(
-    val vaultType: Route.VaultInfo.VaultType = Route.VaultInfo.VaultType.Secure,
+    val vaultType: Route.VaultInfo.VaultType = Route.VaultInfo.VaultType.Secure
 )
 
 @HiltViewModel
-internal class MigrationOnboardingViewModel @Inject constructor(
+internal class MigrationOnboardingViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
@@ -37,11 +39,12 @@ internal class MigrationOnboardingViewModel @Inject constructor(
             vaultRepository.get(vaultId = vaultId)?.let { vault ->
                 state.update {
                     it.copy(
-                        vaultType = if (vault.isFastVault()) {
-                            Route.VaultInfo.VaultType.Fast
-                        } else {
-                            Route.VaultInfo.VaultType.Secure
-                        }
+                        vaultType =
+                            if (vault.isFastVault()) {
+                                Route.VaultInfo.VaultType.Fast
+                            } else {
+                                Route.VaultInfo.VaultType.Secure
+                            }
                     )
                 }
             }
@@ -50,15 +53,10 @@ internal class MigrationOnboardingViewModel @Inject constructor(
 
     fun upgrade() {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId)
-                ?: error("Vault with $vaultId doesn't exist")
+            val vault = vaultRepository.get(vaultId) ?: error("Vault with $vaultId doesn't exist")
 
             if (vault.isFastVault()) {
-                navigator.route(
-                    Route.Migration.Password(
-                        vaultId = vaultId
-                    )
-                )
+                navigator.route(Route.Migration.Password(vaultId = vaultId))
             } else {
                 navigator.route(
                     Route.Keygen.PeerDiscovery(
@@ -72,9 +70,6 @@ internal class MigrationOnboardingViewModel @Inject constructor(
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
-
 }

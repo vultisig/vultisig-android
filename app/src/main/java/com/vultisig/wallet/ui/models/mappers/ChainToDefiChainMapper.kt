@@ -7,17 +7,11 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.toDefi
 import javax.inject.Inject
 
-
-internal interface ChainToDefiChainUiMapper :
-    MapperFunc<Chain, DefiChainUiModel>
+internal interface ChainToDefiChainUiMapper : MapperFunc<Chain, DefiChainUiModel>
 
 internal class ChainToDefiChainUiMapperImpl @Inject constructor() : ChainToDefiChainUiMapper {
 
     override fun invoke(from: Chain): DefiChainUiModel {
-        return DefiChainUiModel(
-            chain = from,
-            raw = from.toDefi.raw,
-            logo = from.toDefi.logo
-        )
+        return DefiChainUiModel(chain = from, raw = from.toDefi.raw, logo = from.toDefi.logo)
     }
 }

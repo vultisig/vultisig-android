@@ -12,10 +12,10 @@ import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class SignMessageTransactionUiModel(
     val method: String = "",
@@ -29,7 +29,9 @@ internal data class VerifySignMessageUiModel(
 )
 
 @HiltViewModel
-internal class VerifySignMessageViewModel @Inject constructor(
+internal class VerifySignMessageViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val customMessagePayloadRepo: CustomMessagePayloadRepo,
     private val vaultPasswordRepository: VaultPasswordRepository,
@@ -49,10 +51,11 @@ internal class VerifySignMessageViewModel @Inject constructor(
 
             state.update {
                 it.copy(
-                    model = SignMessageTransactionUiModel(
-                        method = payload.method,
-                        message = payload.message,
-                    )
+                    model =
+                        SignMessageTransactionUiModel(
+                            method = payload.method,
+                            message = payload.message,
+                        )
                 )
             }
         }
@@ -82,30 +85,26 @@ internal class VerifySignMessageViewModel @Inject constructor(
         }
     }
 
-    private fun keysign(
-        keysignInitType: KeysignInitType,
-    ) {
+    private fun keysign(keysignInitType: KeysignInitType) {
         viewModelScope.launch {
-            launchKeysignUseCase(keysignInitType, transactionId, password.value,
-                Route.Keysign.Keysign.TxType.Sign, vaultId)
+            launchKeysignUseCase(
+                keysignInitType,
+                transactionId,
+                password.value,
+                Route.Keysign.Keysign.TxType.Sign,
+                vaultId,
+            )
         }
     }
 
     private fun loadPassword() {
-        viewModelScope.launch {
-            password.value = vaultPasswordRepository.getPassword(vaultId)
-        }
+        viewModelScope.launch { password.value = vaultPasswordRepository.getPassword(vaultId) }
     }
 
     private fun loadFastSign() {
         viewModelScope.launch {
             val hasFastSign = isVaultHasFastSignById(vaultId)
-            state.update {
-                it.copy(
-                    hasFastSign = hasFastSign
-                )
-            }
+            state.update { it.copy(hasFastSign = hasFastSign) }
         }
     }
-
 }

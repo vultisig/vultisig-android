@@ -22,79 +22,50 @@ import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks.TWITTER_ID
 
-
 @Composable
-internal fun FollowXBanner(
-    onFollowXClick: () -> Unit,
-) {
+internal fun FollowXBanner(onFollowXClick: () -> Unit) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.light,
-                shape = RoundedCornerShape(16.dp)
-            )
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = RoundedCornerShape(16.dp),
+                )
     ) {
-
         SetBackgoundBanner(backgroundImageResId = R.drawable.follow_banner)
 
-        Column(
-            modifier = Modifier
-                .padding(
-                    all = 24.dp
-                )
-        ) {
+        Column(modifier = Modifier.padding(all = 24.dp)) {
             Text(
                 text = stringResource(R.string.invite_to_x_banner_title),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.tertiary,
             )
-            UiSpacer(
-                size = 2.dp
-            )
+            UiSpacer(size = 2.dp)
             Text(
                 text = stringResource(R.string.invite_to_x_banner_desc),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
             )
-            UiSpacer(
-                size = 16.dp
-            )
-
+            UiSpacer(size = 16.dp)
 
             Text(
                 text = stringResource(R.string.invite_to_x_banner_button, TWITTER_ID),
                 style = Theme.brockmann.button.medium.medium,
                 color = Theme.v2.colors.backgrounds.primary,
-                modifier = Modifier
-                    .clip(shape = CircleShape)
-                    .clickOnce(onClick = onFollowXClick)
-                    .background(
-                        color = Theme.v2.colors.buttons.primary
-                    )
-                    .padding(
-                        vertical = 8.dp,
-                        horizontal = 16.dp
-                    )
+                modifier =
+                    Modifier.clip(shape = CircleShape)
+                        .clickOnce(onClick = onFollowXClick)
+                        .background(color = Theme.v2.colors.buttons.primary)
+                        .padding(vertical = 8.dp, horizontal = 16.dp),
             )
         }
-
     }
 }
-
 
 @Preview
 @Composable
 private fun PreviewInviteToXBanner() {
-    Box(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-    ) {
-        FollowXBanner {
-
-        }
-    }
+    Box(modifier = Modifier.fillMaxWidth()) { FollowXBanner {} }
 }

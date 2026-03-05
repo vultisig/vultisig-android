@@ -28,27 +28,21 @@ internal fun VsHorizontalProgressIndicator(
     val indicatorBrush = Theme.v2.colors.gradients.primaryReversed
     val glowingColor = Theme.v2.colors.buttons.tertiary
 
-    val targetProgress by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = tween(
-            durationMillis = 1000,
-        ),
-        label = "VsHorizontalProgressIndicator.Progress",
-    )
+    val targetProgress by
+        animateFloatAsState(
+            targetValue = progress,
+            animationSpec = tween(durationMillis = 1000),
+            label = "VsHorizontalProgressIndicator.Progress",
+        )
 
-    Canvas(
-        modifier = modifier
-            .height(height),
-    ) {
-        val paint = Paint().apply {
-            color = glowingColor
-            this.asFrameworkPaint().apply {
-                maskFilter = BlurMaskFilter(
-                    36f,
-                    BlurMaskFilter.Blur.NORMAL,
-                )
+    Canvas(modifier = modifier.height(height)) {
+        val paint =
+            Paint().apply {
+                color = glowingColor
+                this.asFrameworkPaint().apply {
+                    maskFilter = BlurMaskFilter(36f, BlurMaskFilter.Blur.NORMAL)
+                }
             }
-        }
         drawIntoCanvas {
             it.drawRoundRect(
                 left = 0f,
@@ -60,27 +54,18 @@ internal fun VsHorizontalProgressIndicator(
                 paint = paint,
             )
         }
-        drawRoundRect(
-            brush = indicatorBrush,
-            size = size.copy(width = size.width * targetProgress),
-        )
+        drawRoundRect(brush = indicatorBrush, size = size.copy(width = size.width * targetProgress))
     }
 }
-
 
 @Preview
 @Composable
 private fun VsHorizontalProgressIndicatorPreview() {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(24.dp)
-            .background(Theme.v2.colors.backgrounds.primary),
+        modifier =
+            Modifier.fillMaxWidth().height(24.dp).background(Theme.v2.colors.backgrounds.primary),
         verticalArrangement = Arrangement.Center,
     ) {
-        VsHorizontalProgressIndicator(
-            progress = 0.5f,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        VsHorizontalProgressIndicator(progress = 0.5f, modifier = Modifier.fillMaxWidth())
     }
 }

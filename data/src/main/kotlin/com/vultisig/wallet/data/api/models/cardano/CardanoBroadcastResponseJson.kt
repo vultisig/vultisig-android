@@ -5,6 +5,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CardanoBroadcastResponseJson(
-    @SerialName("data")
-    val data: CardanoBroadcastDataResponseJson,
+    @SerialName("data") val data: CardanoBroadcastDataResponseJson
 )

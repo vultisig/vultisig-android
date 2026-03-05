@@ -11,8 +11,8 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
@@ -27,6 +27,8 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -40,8 +42,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import javax.inject.Inject
-import kotlin.uuid.ExperimentalUuidApi
 
 internal data class SelectAssetUiModel(
     val selectedChain: Chain = Chain.ThorChain,
@@ -59,9 +59,11 @@ internal data class AssetUiModel(
     val isDisabled: Boolean = false,
 )
 
-//TODO : Refactor current implementation
+// TODO : Refactor current implementation
 @HiltViewModel
-internal class SelectAssetViewModel @Inject constructor(
+internal class SelectAssetViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
@@ -81,11 +83,10 @@ internal class SelectAssetViewModel @Inject constructor(
 
     private val allTokens = MutableStateFlow(emptyList<AssetUiModel>())
 
-    val state = MutableStateFlow(
-        SelectAssetUiModel(
-            selectedChain = Chain.fromRaw(args.preselectedNetworkId),
+    val state =
+        MutableStateFlow(
+            SelectAssetUiModel(selectedChain = Chain.fromRaw(args.preselectedNetworkId))
         )
-    )
 
     init {
         loadAllAssets()
@@ -96,11 +97,10 @@ internal class SelectAssetViewModel @Inject constructor(
 
     private fun observeSelectedChainChanges() {
         if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
-            state.map { it.selectedChain }
+            state
+                .map { it.selectedChain }
                 .distinctUntilChanged()
-                .onEach {
-                    loadAllAssets()
-                }
+                .onEach { loadAllAssets() }
                 .launchIn(viewModelScope)
         }
     }
@@ -118,9 +118,7 @@ internal class SelectAssetViewModel @Inject constructor(
     }
 
     fun selectChain(chain: Chain) {
-        state.update {
-            it.copy(selectedChain = chain)
-        }
+        state.update { it.copy(selectedChain = chain) }
     }
 
     fun back() {
@@ -151,77 +149,76 @@ internal class SelectAssetViewModel @Inject constructor(
                                     isDisabled = true,
                                 )
                             }
-                    }.collect { assets ->
-                        allTokens.value = assets
                     }
+                    .collect { assets -> allTokens.value = assets }
             }
         }
     }
 
     private fun collectSearchResults() {
         combine(
-            state.map { it.selectedChain }
-                .distinctUntilChanged()
-                .flatMapConcat { selectedChain ->
-                    accountRepository.loadAddress(vaultId, selectedChain)
-                }
-                .catch { Timber.e(it) },
-            searchFieldState.textAsFlow().map { it.toString() },
-            allTokens,
-        ) { account, query, allTokens ->
-            val filteredAssets = account
-                .accounts
-                .asSequence()
-                .filter { it.token.id.contains(query, ignoreCase = true) }
-                .sortedWith(compareByDescending<Account> { it.token.isNativeToken }.thenBy { it.token.ticker })
-                .toList()
-                .map {
-                    AssetUiModel(
-                        token = it.token,
-                        logo = getCoinLogo(it.token.logo),
-                        title = it.token.ticker,
-                        subtitle = it.token.chain.raw,
-                        amount = it.tokenValue?.let(mapTokenValueToDecimalUiString) ?: "0",
-                        value = it.fiatValue?.let { fiatValueToString.invoke(it) } ?: "0",
-                    )
-                }
+                state
+                    .map { it.selectedChain }
+                    .distinctUntilChanged()
+                    .flatMapConcat { selectedChain ->
+                        accountRepository.loadAddress(vaultId, selectedChain)
+                    }
+                    .catch { Timber.e(it) },
+                searchFieldState.textAsFlow().map { it.toString() },
+                allTokens,
+            ) { account, query, allTokens ->
+                val filteredAssets =
+                    account.accounts
+                        .asSequence()
+                        .filter { it.token.id.contains(query, ignoreCase = true) }
+                        .sortedWith(
+                            compareByDescending<Account> { it.token.isNativeToken }
+                                .thenBy { it.token.ticker }
+                        )
+                        .toList()
+                        .map {
+                            AssetUiModel(
+                                token = it.token,
+                                logo = getCoinLogo(it.token.logo),
+                                title = it.token.ticker,
+                                subtitle = it.token.chain.raw,
+                                amount = it.tokenValue?.let(mapTokenValueToDecimalUiString) ?: "0",
+                                value = it.fiatValue?.let { fiatValueToString.invoke(it) } ?: "0",
+                            )
+                        }
 
-            val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
-            val additionalAssets =
-                allTokens.filter {
-                    it.token.id.contains(query, ignoreCase = true)
-                            && it.token.id !in filteredTokenIds
-                }
+                val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
+                val additionalAssets =
+                    allTokens.filter {
+                        it.token.id.contains(query, ignoreCase = true) &&
+                            it.token.id !in filteredTokenIds
+                    }
 
-            state.update {
-                it.copy(assets = filteredAssets + additionalAssets)
+                state.update { it.copy(assets = filteredAssets + additionalAssets) }
             }
-        }.launchIn(viewModelScope)
+            .launchIn(viewModelScope)
     }
 
     private fun loadAllAvailableNetworks() {
         viewModelScope.launch {
-            val availableChains = vaultRepository.getEnabledChains(vaultId).first().map { chain ->
-                NetworkUiModel(
-                    chain = chain,
-                    logo = chain.logo,
-                    title = chain.name,
-                )
-            }.filter {
-                when (filter) {
-                    Route.SelectNetwork.Filters.SwapAvailable -> it.chain.isSwapSupported
-                    else -> true
-                }
-            }.sortedByDescending { it.chain.id == state.value.selectedChain.id }
+            val availableChains =
+                vaultRepository
+                    .getEnabledChains(vaultId)
+                    .first()
+                    .map { chain ->
+                        NetworkUiModel(chain = chain, logo = chain.logo, title = chain.name)
+                    }
+                    .filter {
+                        when (filter) {
+                            Route.SelectNetwork.Filters.SwapAvailable -> it.chain.isSwapSupported
+                            else -> true
+                        }
+                    }
+                    .sortedByDescending { it.chain.id == state.value.selectedChain.id }
 
-            state.update {
-                it.copy(chains = availableChains)
-            }
+            state.update { it.copy(chains = availableChains) }
         }
     }
 }
 
-data class AssetSelected(
-    val token: Coin,
-    val isDisabled: Boolean,
-)
+data class AssetSelected(val token: Coin, val isDisabled: Boolean)

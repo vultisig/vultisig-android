@@ -9,16 +9,26 @@ enum class BondNodeState(val state: String) {
     UNKNOWN("unknown");
 
     val canUnbond: Boolean
-        get() = when (this) {
-            WHITELISTED, STANDBY, UNKNOWN -> true
-            READY, ACTIVE, DISABLED -> false
-        }
+        get() =
+            when (this) {
+                WHITELISTED,
+                STANDBY,
+                UNKNOWN -> true
+                READY,
+                ACTIVE,
+                DISABLED -> false
+            }
 
     val canBond: Boolean
-        get() = when (this) {
-            WHITELISTED, STANDBY, READY, ACTIVE -> true
-            DISABLED, UNKNOWN -> false
-        }
+        get() =
+            when (this) {
+                WHITELISTED,
+                STANDBY,
+                READY,
+                ACTIVE -> true
+                DISABLED,
+                UNKNOWN -> false
+            }
 
     companion object {
         fun String?.fromApiStatus(): BondNodeState {

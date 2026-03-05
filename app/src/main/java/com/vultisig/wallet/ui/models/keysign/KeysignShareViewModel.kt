@@ -15,11 +15,9 @@ import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.DeFiAction
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.repositories.CustomMessagePayloadRepo
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
@@ -32,18 +30,17 @@ import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import vultisig.keysign.v1.CustomMessagePayload
-import vultisig.keysign.v1.UTXOSpecific
-import javax.inject.Inject
 
 @HiltViewModel
-internal class KeysignShareViewModel @Inject constructor(
+internal class KeysignShareViewModel
+@Inject
+constructor(
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val vaultRepository: VaultRepository,
     private val transactionRepository: TransactionRepository,
@@ -68,18 +65,21 @@ internal class KeysignShareViewModel @Inject constructor(
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
     suspend fun loadTransaction(transactionId: TransactionId) {
-            val transaction = transactionRepository.getTransaction(transactionId)
+        val transaction = transactionRepository.getTransaction(transactionId)
 
-            val vault = vaultRepository.get(transaction.vaultId)!!
+        val vault = vaultRepository.get(transaction.vaultId)!!
 
-            val pubKeyECDSA = vault.pubKeyECDSA
-            val coin =
-                vault.coins.find { it.id == transaction.token.id && it.chain.id == transaction.chainId }!!
+        val pubKeyECDSA = vault.pubKeyECDSA
+        val coin =
+            vault.coins.find {
+                it.id == transaction.token.id && it.chain.id == transaction.chainId
+            }!!
 
-            this@KeysignShareViewModel.vault = vault
-            amount.value = mapTokenValueToStringWithUnit(transaction.tokenValue)
-            customMessagePayload = null
-            keysignPayload = KeysignPayload(
+        this@KeysignShareViewModel.vault = vault
+        amount.value = mapTokenValueToStringWithUnit(transaction.tokenValue)
+        customMessagePayload = null
+        keysignPayload =
+            KeysignPayload(
                 coin = coin,
                 toAddress = transaction.dstAddress,
                 toAmount = transaction.tokenValue.value,
@@ -91,42 +91,43 @@ internal class KeysignShareViewModel @Inject constructor(
                 libType = vault.libType,
                 wasmExecuteContractPayload = null,
             )
-        }
+    }
 
     suspend fun loadSignMessageTx(id: String) {
-            val dto = customMessagePayloadRepo.get(id)
+        val dto = customMessagePayloadRepo.get(id)
 
-            val vault = vaultRepository.get(dto.vaultId)!!
+        val vault = vaultRepository.get(dto.vaultId)!!
 
-            this@KeysignShareViewModel.vault = vault
-            keysignPayload = null
-            customMessagePayload = dto.payload
-        }
-
+        this@KeysignShareViewModel.vault = vault
+        keysignPayload = null
+        customMessagePayload = dto.payload
+    }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     suspend fun loadSwapTransaction(transactionId: TransactionId) {
-            val transaction = swapTransactionRepository.getTransaction(transactionId)
+        val transaction = swapTransactionRepository.getTransaction(transactionId)
 
-            val vault = vaultRepository.get(transaction.vaultId)!!
+        val vault = vaultRepository.get(transaction.vaultId)!!
 
-            val pubKeyECDSA = vault.pubKeyECDSA
-            val srcToken = transaction.srcToken
+        val pubKeyECDSA = vault.pubKeyECDSA
+        val srcToken = transaction.srcToken
 
-            val specific = transaction.blockChainSpecific
+        val specific = transaction.blockChainSpecific
 
-            this@KeysignShareViewModel.vault = vault
+        this@KeysignShareViewModel.vault = vault
 
-            amount.value = mapTokenValueToStringWithUnit(transaction.srcTokenValue)
-            toAmount.value = mapTokenValueToStringWithUnit(transaction.expectedDstTokenValue)
+        amount.value = mapTokenValueToStringWithUnit(transaction.srcTokenValue)
+        toAmount.value = mapTokenValueToStringWithUnit(transaction.expectedDstTokenValue)
 
-            customMessagePayload = null
-            keysignPayload = when (transaction) {
-
+        customMessagePayload = null
+        keysignPayload =
+            when (transaction) {
                 is SwapTransaction.RegularSwapTransaction -> {
                     var swapPayload: SwapPayload = transaction.payload
                     var dstToken = swapPayload.dstToken
-                    if (swapPayload is SwapPayload.ThorChain && dstToken.chain == Chain.BitcoinCash) {
+                    if (
+                        swapPayload is SwapPayload.ThorChain && dstToken.chain == Chain.BitcoinCash
+                    ) {
                         dstToken = dstToken.adjustBitcoinCashAddressFormat()
                         swapPayload =
                             swapPayload.copy(data = swapPayload.data.copy(toCoin = dstToken))
@@ -142,40 +143,39 @@ internal class KeysignShareViewModel @Inject constructor(
                         utxos = specific.utxos,
                         vaultLocalPartyID = vault.localPartyID,
                         memo = transaction.memo,
-                        approvePayload = if (transaction.isApprovalRequired) ERC20ApprovePayload(
-                            amount = transaction.srcTokenValue.value,
-                            spender = transaction.dstAddress,
-                        )
-                        else null,
+                        approvePayload =
+                            if (transaction.isApprovalRequired)
+                                ERC20ApprovePayload(
+                                    amount = transaction.srcTokenValue.value,
+                                    spender = transaction.dstAddress,
+                                )
+                            else null,
                         libType = vault.libType,
                         wasmExecuteContractPayload = null,
                     )
                 }
             }
-
     }
 
-    private fun Coin.adjustBitcoinCashAddressFormat() = copy(
-        address = address.replace(
-            "bitcoincash:", ""
-        )
-    )
+    private fun Coin.adjustBitcoinCashAddressFormat() =
+        copy(address = address.replace("bitcoincash:", ""))
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     suspend fun loadDepositTransaction(transactionId: TransactionId) {
-            val transaction = depositTransaction.getTransaction(transactionId)
+        val transaction = depositTransaction.getTransaction(transactionId)
 
-            val vault = vaultRepository.get(transaction.vaultId)!!
+        val vault = vaultRepository.get(transaction.vaultId)!!
 
-            val pubKeyECDSA = vault.pubKeyECDSA
-            val srcToken = transaction.srcToken
+        val pubKeyECDSA = vault.pubKeyECDSA
+        val srcToken = transaction.srcToken
 
-            val specific = transaction.blockChainSpecific
+        val specific = transaction.blockChainSpecific
 
-            this@KeysignShareViewModel.vault = vault
+        this@KeysignShareViewModel.vault = vault
 
-            customMessagePayload = null
-            keysignPayload = KeysignPayload(
+        customMessagePayload = null
+        keysignPayload =
+            KeysignPayload(
                 coin = srcToken,
                 toAddress = transaction.dstAddress,
                 toAmount = transaction.srcTokenValue.value,
@@ -186,13 +186,13 @@ internal class KeysignShareViewModel @Inject constructor(
                 memo = transaction.memo,
                 libType = vault.libType,
                 wasmExecuteContractPayload = transaction.wasmExecuteContractPayload,
-                defiAction = if (transaction.operation == OPERATION_CIRCLE_WITHDRAW) {
-                    DeFiAction.CIRCLE_USDC_WITHDRAW
-                } else {
-                    DeFiAction.NONE
-                },
+                defiAction =
+                    if (transaction.operation == OPERATION_CIRCLE_WITHDRAW) {
+                        DeFiAction.CIRCLE_USDC_WITHDRAW
+                    } else {
+                        DeFiAction.NONE
+                    },
             )
-
     }
 
     fun loadQrPainter(address: String) =
@@ -200,22 +200,15 @@ internal class KeysignShareViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 val qrBitmap = generateQrBitmap(address, Color.White, Color.Transparent, null)
                 this@KeysignShareViewModel.qrBitmap = qrBitmap
-                val bitmapPainter = BitmapPainter(
-                    qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
-                )
+                val bitmapPainter =
+                    BitmapPainter(qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None)
                 qrBitmapPainter.value = bitmapPainter
             }
         }
 
     internal fun shareQRCode(activity: Context) {
         val qrBitmap = shareQrBitmap.value ?: return
-        activity.share(
-            qrBitmap,
-            shareFileName(
-                requireNotNull(vault),
-                ShareType.SEND
-            )
-        )
+        activity.share(qrBitmap, shareFileName(requireNotNull(vault), ShareType.SEND))
     }
 
     internal fun saveShareQrBitmap(
@@ -224,11 +217,13 @@ internal class KeysignShareViewModel @Inject constructor(
         title: String,
         description: String,
         logo: Bitmap,
-    ) = viewModelScope.launch {
-        val bitmap = qrBitmap ?: return@launch
-        val qrBitmap = withContext(Dispatchers.IO) {
-            makeQrCodeBitmapShareFormat(context, bitmap, color, logo, title, description)
+    ) =
+        viewModelScope.launch {
+            val bitmap = qrBitmap ?: return@launch
+            val qrBitmap =
+                withContext(Dispatchers.IO) {
+                    makeQrCodeBitmapShareFormat(context, bitmap, color, logo, title, description)
+                }
+            shareQrBitmap.value = qrBitmap
         }
-        shareQrBitmap.value = qrBitmap
-    }
 }

@@ -6,5 +6,5 @@ class SecurityScannerException(
     message: String,
     cause: Throwable? = null,
     val chain: Chain? = null,
-    val transaction: String? = null
+    val transaction: String? = null,
 ) : Exception(message, cause)

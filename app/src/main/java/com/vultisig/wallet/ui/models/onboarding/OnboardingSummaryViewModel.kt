@@ -8,30 +8,29 @@ import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
-internal class OnboardingSummaryViewModel @Inject constructor(
+internal class OnboardingSummaryViewModel
+@Inject
+constructor(
     private val onboardingRepository: OnboardingRepository,
-    private val navigator: Navigator<Destination>
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
     val checkState = MutableStateFlow(false)
 
-    fun toggleCheck(checked: Boolean) = viewModelScope.launch {
-        checkState.value = checked
-    }
+    fun toggleCheck(checked: Boolean) = viewModelScope.launch { checkState.value = checked }
 
-    fun createVault() = viewModelScope.launch {
-        if (!checkState.value) return@launch
-        onboardingRepository.saveOnboardingState(true)
-        navigator.route(
-            route = Route.ChooseVaultType,
-            opts = NavigationOptions(
-                popUpToRoute = Route.AddVault::class,
+    fun createVault() =
+        viewModelScope.launch {
+            if (!checkState.value) return@launch
+            onboardingRepository.saveOnboardingState(true)
+            navigator.route(
+                route = Route.ChooseVaultType,
+                opts = NavigationOptions(popUpToRoute = Route.AddVault::class),
             )
-        )
-    }
+        }
 }

@@ -10,17 +10,11 @@ interface GetAvailableTokenBalanceUseCase : suspend (Account, BigInteger) -> Tok
 internal class GetAvailableTokenBalanceUseCaseImpl @Inject constructor() :
     GetAvailableTokenBalanceUseCase {
 
-    override suspend fun invoke(
-        account: Account,
-        gasCost: BigInteger,
-    ): TokenValue? {
+    override suspend fun invoke(account: Account, gasCost: BigInteger): TokenValue? {
         val token = account.token
         val tokenValue = account.tokenValue
         return if (token.isNativeToken) {
-            tokenValue?.copy(
-                value = tokenValue.value.minus(gasCost)
-                    .coerceAtLeast(BigInteger.ZERO),
-            )
+            tokenValue?.copy(value = tokenValue.value.minus(gasCost).coerceAtLeast(BigInteger.ZERO))
         } else {
             tokenValue
         }

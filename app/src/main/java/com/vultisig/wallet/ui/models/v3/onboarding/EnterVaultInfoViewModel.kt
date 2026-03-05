@@ -27,11 +27,11 @@ import com.vultisig.wallet.ui.screens.backup.PasswordState
 import com.vultisig.wallet.ui.screens.backup.PasswordViewModelDelegate
 import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.UiText
-
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -42,7 +42,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 enum class StepType(
     val title: UiText,
@@ -69,7 +68,7 @@ enum class StepType(
         logo = R.drawable.center_lock,
         isPassword = true,
         descriptionHighlight = StringResource(R.string.password_extra_layer_highlight),
-    )
+    ),
 }
 
 enum class StepState(
@@ -85,21 +84,17 @@ enum class StepState(
         logoTint = V2.colors.buttons.ctaPrimary,
     ),
     Done(
-        backgroundColor = V2.colors.backgrounds.state.success.copy(
-            alpha = 0.05f
-        ),
+        backgroundColor = V2.colors.backgrounds.state.success.copy(alpha = 0.05f),
         borderColor = Color.Transparent,
         borderWidth = 0.dp,
         logoTint = V2.colors.alerts.success,
     ),
-
     Inactive(
         backgroundColor = Color.Transparent,
         borderColor = V2.colors.text.button.disabled,
         borderWidth = 0.dp,
         logoTint = V2.colors.text.button.disabled,
     ),
-
 }
 
 @Immutable
@@ -119,37 +114,44 @@ internal data class EnterVaultInfoUiState(
 
 internal sealed interface EnterVaultInfoEvent {
     object Next : EnterVaultInfoEvent
+
     object Back : EnterVaultInfoEvent
+
     object Referral : EnterVaultInfoEvent
+
     object ClearInput : EnterVaultInfoEvent
+
     object ClearConfirmInput : EnterVaultInfoEvent
+
     object TogglePasswordVisibility : EnterVaultInfoEvent
+
     object ToggleConfirmPasswordVisibility : EnterVaultInfoEvent
 }
 
-
 @HiltViewModel
-internal class EnterVaultInfoViewModel @Inject constructor(
+internal class EnterVaultInfoViewModel
+@Inject
+constructor(
     private val navigator: Navigator<Destination>,
-
     private val vaultRepository: VaultRepository,
     private val isNameLengthValid: IsVaultNameValid,
     private val generateUniqueName: GenerateUniqueName,
-
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val deviceCount: Int = savedStateHandle.toRoute<Route.EnterVaultInfo>().count.coerceIn(1, 4)
+    private val deviceCount: Int =
+        savedStateHandle.toRoute<Route.EnterVaultInfo>().count.coerceIn(1, 4)
     val isSecureVault = deviceCount != 1
 
     private val passwordDelegate = PasswordViewModelDelegate()
 
-    val uiState = MutableStateFlow(
-        EnterVaultInfoUiState(
-            confirmPasswordTextFieldState = passwordDelegate.confirmPasswordTextFieldState
+    val uiState =
+        MutableStateFlow(
+            EnterVaultInfoUiState(
+                confirmPasswordTextFieldState = passwordDelegate.confirmPasswordTextFieldState
+            )
         )
-    )
 
     private var vaultNamesList = emptyList<String>()
 
@@ -176,26 +178,24 @@ internal class EnterVaultInfoViewModel @Inject constructor(
     }
 
     private fun initStepStates() {
-        val stepAndStates = if (isSecureVault) {
-            mapOf(StepType.Name to StepState.InProgress)
-        } else {
-            mapOf(
-                StepType.Name to StepState.InProgress,
-                StepType.Email to StepState.Inactive,
-                StepType.Password to StepState.Inactive,
-            )
-        }
-        uiState.update {
-            it.copy(
-                stepAndStates = stepAndStates
-            )
-        }
+        val stepAndStates =
+            if (isSecureVault) {
+                mapOf(StepType.Name to StepState.InProgress)
+            } else {
+                mapOf(
+                    StepType.Name to StepState.InProgress,
+                    StepType.Email to StepState.Inactive,
+                    StepType.Password to StepState.Inactive,
+                )
+            }
+        uiState.update { it.copy(stepAndStates = stepAndStates) }
     }
 
     private fun generateVaultName() {
         viewModelScope.launch {
             vaultNamesList = vaultRepository.getAll().map { it.name }
-            val proposeName = generateUniqueName(context.getString(R.string.naming_saving_vault), vaultNamesList)
+            val proposeName =
+                generateUniqueName(context.getString(R.string.naming_saving_vault), vaultNamesList)
             nameTextFieldState.setTextAndPlaceCursorAtEnd(proposeName)
         }
     }
@@ -206,20 +206,18 @@ internal class EnterVaultInfoViewModel @Inject constructor(
             .map { it.activeStep }
             .distinctUntilChanged()
             .flatMapLatest { activeStep ->
-                val (innerStateFlow, errorMessageFlow) = when (activeStep) {
-                    StepType.Name -> nameInnerState to nameErrorMessage
-                    StepType.Email -> emailInnerState to emailErrorMessage
-                    StepType.Password -> passwordInnerState to passwordErrorMessage
-                }
+                val (innerStateFlow, errorMessageFlow) =
+                    when (activeStep) {
+                        StepType.Name -> nameInnerState to nameErrorMessage
+                        StepType.Email -> emailInnerState to emailErrorMessage
+                        StepType.Password -> passwordInnerState to passwordErrorMessage
+                    }
                 combine(innerStateFlow, errorMessageFlow) { innerState, errorMessage ->
                     innerState to errorMessage
                 }
             }
             .onEach { (innerState, errorMessage) ->
-                uiState.update { it.copy(
-                    innerState = innerState,
-                    errorMessage = errorMessage)
-                }
+                uiState.update { it.copy(innerState = innerState, errorMessage = errorMessage) }
             }
             .launchIn(viewModelScope)
     }
@@ -229,32 +227,39 @@ internal class EnterVaultInfoViewModel @Inject constructor(
             .map { it.activeStep }
             .distinctUntilChanged()
             .combine(uiState.map { it.stepAndStates.keys }) { activeStep, steps ->
-                val map = steps.associateWith { step ->
-                    when {
-                        step == activeStep -> StepState.InProgress
-                        step.ordinal < activeStep.ordinal -> StepState.Done
-                        else -> StepState.Inactive
+                val map =
+                    steps.associateWith { step ->
+                        when {
+                            step == activeStep -> StepState.InProgress
+                            step.ordinal < activeStep.ordinal -> StepState.Done
+                            else -> StepState.Inactive
+                        }
                     }
-                }
 
-                val textFieldState = when (activeStep) {
-                    StepType.Name -> nameTextFieldState
-                    StepType.Email -> emailTextFieldState
-                    StepType.Password -> passwordTextFieldState
-                }
+                val textFieldState =
+                    when (activeStep) {
+                        StepType.Name -> nameTextFieldState
+                        StepType.Email -> emailTextFieldState
+                        StepType.Password -> passwordTextFieldState
+                    }
 
-                val hint = when(activeStep) {
-                    StepType.Name -> StringResource(R.string.naming_saving_vault)
-                    StepType.Email -> StringResource(R.string.enter_email_screen_title)
-                    StepType.Password -> StringResource(R.string.keysign_password_enter_your_password)
-                }
+                val hint =
+                    when (activeStep) {
+                        StepType.Name -> StringResource(R.string.naming_saving_vault)
+                        StepType.Email -> StringResource(R.string.enter_email_screen_title)
+                        StepType.Password ->
+                            StringResource(R.string.keysign_password_enter_your_password)
+                    }
 
                 uiState.update {
                     it.copy(
                         stepAndStates = map,
                         inputTextFieldState = textFieldState,
                         textFieldHint = hint,
-                        confirmPasswordTextFieldHint = StringResource(R.string.fast_vault_password_screen_reenter_password_hint)
+                        confirmPasswordTextFieldHint =
+                            StringResource(
+                                R.string.fast_vault_password_screen_reenter_password_hint
+                            ),
                     )
                 }
             }
@@ -290,8 +295,7 @@ internal class EnterVaultInfoViewModel @Inject constructor(
     }
 
     private fun clearConfirmInput() {
-              uiState.value.confirmPasswordTextFieldState.clearText()
-
+        uiState.value.confirmPasswordTextFieldState.clearText()
     }
 
     private fun prev() {
@@ -304,24 +308,19 @@ internal class EnterVaultInfoViewModel @Inject constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            uiState.update {
-                it.copy(activeStep = newStep)
-            }
+            uiState.update { it.copy(activeStep = newStep) }
         }
     }
 
     private fun back() {
-        viewModelScope.launch {
-            navigator.back()
-        }
+        viewModelScope.launch { navigator.back() }
     }
 
     private fun next() {
         viewModelScope.launch {
             val currentStep = uiState.value.activeStep
             val canProceedToNextStep = validateAllInputs()
-            if (canProceedToNextStep.not())
-                return@launch
+            if (canProceedToNextStep.not()) return@launch
 
             val currentStepIndex = uiState.value.stepAndStates.keys.indexOf(currentStep)
             val nextIndex = currentStepIndex + 1
@@ -330,96 +329,89 @@ internal class EnterVaultInfoViewModel @Inject constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            uiState.update {
-                it.copy(activeStep = newStep)
-            }
+            uiState.update { it.copy(activeStep = newStep) }
         }
     }
 
     private fun validateAllInputs(): Boolean {
         val currentStep = uiState.value.activeStep
-        val canProceedToNextStep = when (currentStep) {
-            StepType.Name -> {
-                isNameValid()
+        val canProceedToNextStep =
+            when (currentStep) {
+                StepType.Name -> {
+                    isNameValid()
+                }
+                StepType.Email -> {
+                    val typingEmail = emailTextFieldState.text.toString()
+                    val validateEmail = validateEmail(typingEmail)
+                    emailInnerState.value = getEmailInnerState(typingEmail, validateEmail)
+                    validateEmail
+                }
+                StepType.Password -> {
+                    val password = passwordTextFieldState.text.toString()
+                    val confirmPassword =
+                        passwordDelegate.confirmPasswordTextFieldState.text.toString()
+                    when {
+                        password.isEmpty() || confirmPassword.isEmpty() -> false
+                        password == confirmPassword -> true
+                        else -> {
+                            passwordInnerState.value = VsTextInputFieldInnerState.Error
+                            passwordErrorMessage.value =
+                                StringResource(R.string.fast_vault_password_screen_error)
+                            false
+                        }
+                    }
+                }
             }
-            StepType.Email -> {
-                val typingEmail = emailTextFieldState.text.toString()
-                val validateEmail = validateEmail(typingEmail)
-                emailInnerState.value = getEmailInnerState(typingEmail, validateEmail )
-                validateEmail
-            }
-            StepType.Password -> {
-                val password = passwordTextFieldState.text.toString()
-                val confirmPassword = passwordDelegate.confirmPasswordTextFieldState.text.toString()
-                when {
-                    password.isEmpty() || confirmPassword.isEmpty() -> false
-                    password == confirmPassword -> true
-                    else -> {
-                        passwordInnerState.value = VsTextInputFieldInnerState.Error
-                        passwordErrorMessage.value =
-                            StringResource(R.string.fast_vault_password_screen_error)
-                        false
+        return canProceedToNextStep
+    }
+
+    private fun observeNameFieldChanges() =
+        viewModelScope.launch {
+            nameTextFieldState.textAsFlow().collectLatest {
+                if (it.isNotEmpty()) {
+                    validateNameInput()
+                } else {
+                    nameErrorMessage.value = null
+                    uiState.update { currentState ->
+                        currentState.copy(isNextButtonEnabled = false)
                     }
                 }
             }
         }
-        return canProceedToNextStep
-    }
 
+    private fun validateNameInput() =
+        viewModelScope.launch {
+            val name = nameTextFieldState.text.toString().trim()
 
-    private fun observeNameFieldChanges() = viewModelScope.launch {
-        nameTextFieldState.textAsFlow().collectLatest {
-            if (it.isNotEmpty()) {
-                validateNameInput()
-            } else {
-                nameErrorMessage.value = null
-                uiState.update { currentState ->
-                    currentState.copy(
-                        isNextButtonEnabled = false
-                    )
+            val errorMessage =
+                when {
+                    !isNameValid(name) -> StringResource(R.string.naming_vault_screen_invalid_name)
+                    !isNameAvailable(name) ->
+                        StringResource(R.string.name_vault_vault_with_this_name_already_exists)
+                    else -> null
                 }
-            }
-        }
-    }
 
-    private fun validateNameInput() = viewModelScope.launch {
-        val name = nameTextFieldState.text.toString().trim()
-
-        val errorMessage = when {
-            !isNameValid(name) -> StringResource(R.string.naming_vault_screen_invalid_name)
-            !isNameAvailable(name) -> StringResource(R.string.name_vault_vault_with_this_name_already_exists)
-            else -> null
+            val isNextButtonEnabled = errorMessage == null
+            nameErrorMessage.value = errorMessage
+            uiState.update { it.copy(isNextButtonEnabled = isNextButtonEnabled) }
         }
-
-        val isNextButtonEnabled = errorMessage == null
-        nameErrorMessage.value = errorMessage
-        uiState.update {
-            it.copy(
-                isNextButtonEnabled = isNextButtonEnabled,
-            )
-        }
-    }
 
     private fun isNameValid(name: String): Boolean {
         return isNameLengthValid(name)
     }
 
-    private fun isNameAvailable(name: String): Boolean =
-        vaultNamesList.none { it == name }
-
-
+    private fun isNameAvailable(name: String): Boolean = vaultNamesList.none { it == name }
 
     private fun observeEmailFieldChanges() {
         viewModelScope.launch {
             emailTextFieldState.textAsFlow().collect { email ->
                 val isEmailValid = validateEmail(email)
                 val errorMessage =
-                    StringResource(R.string.keygen_email_error)
-                        .takeIf { email.isNotEmpty() && !isEmailValid } ?: UiText.Empty
-                val innerState = getEmailInnerState(
-                    email = email.toString(),
-                    isEmailValid = isEmailValid
-                )
+                    StringResource(R.string.keygen_email_error).takeIf {
+                        email.isNotEmpty() && !isEmailValid
+                    } ?: UiText.Empty
+                val innerState =
+                    getEmailInnerState(email = email.toString(), isEmailValid = isEmailValid)
 
                 emailInnerState.value = innerState
                 emailErrorMessage.value = errorMessage
@@ -430,15 +422,15 @@ internal class EnterVaultInfoViewModel @Inject constructor(
     private fun observePasswordFieldChanges() {
         viewModelScope.launch {
             passwordDelegate.validatePasswords().collect { passwordState ->
-                val errorMessage = if (passwordState is PasswordState.Mismatch) {
-                    StringResource(R.string.fast_vault_password_screen_error)
-                } else {
-                    null
-                }
-                passwordInnerState.value = if (errorMessage != null)
-                    VsTextInputFieldInnerState.Error
-                else
-                    VsTextInputFieldInnerState.Default
+                val errorMessage =
+                    if (passwordState is PasswordState.Mismatch) {
+                        StringResource(R.string.fast_vault_password_screen_error)
+                    } else {
+                        null
+                    }
+                passwordInnerState.value =
+                    if (errorMessage != null) VsTextInputFieldInnerState.Error
+                    else VsTextInputFieldInnerState.Default
                 passwordErrorMessage.value = errorMessage
                 if (uiState.value.activeStep == StepType.Password) {
                     uiState.update {
@@ -452,16 +444,12 @@ internal class EnterVaultInfoViewModel @Inject constructor(
     private fun validateEmail(typingEmail: CharSequence) =
         Patterns.EMAIL_ADDRESS.matcher(typingEmail).matches()
 
-    private fun getEmailInnerState(
-        email: String,
-        isEmailValid: Boolean,
-    ) = if (email.isEmpty())
-        VsTextInputFieldInnerState.Default
-    else {
-        if (isEmailValid)
-            VsTextInputFieldInnerState.Success
-        else VsTextInputFieldInnerState.Error
-    }
+    private fun getEmailInnerState(email: String, isEmailValid: Boolean) =
+        if (email.isEmpty()) VsTextInputFieldInnerState.Default
+        else {
+            if (isEmailValid) VsTextInputFieldInnerState.Success
+            else VsTextInputFieldInnerState.Error
+        }
 
     private fun navigateToNextScreen() {
         val name = nameTextFieldState.text.toString()
@@ -497,9 +485,5 @@ internal class EnterVaultInfoViewModel @Inject constructor(
         return isNameValid(name) && isNameAvailable(name)
     }
 
-    private fun referral() {
-
-    }
-
-
+    private fun referral() {}
 }

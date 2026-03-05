@@ -4,8 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -51,9 +51,7 @@ import com.vultisig.wallet.ui.models.keygen.KeyImportChainsSetupViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun KeyImportChainsSetupScreen(
-    model: KeyImportChainsSetupViewModel = hiltViewModel(),
-) {
+internal fun KeyImportChainsSetupScreen(model: KeyImportChainsSetupViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     KeyImportChainsSetupContent(
@@ -82,39 +80,34 @@ internal fun KeyImportChainsSetupContent(
         title = stringResource(R.string.key_import_chains_title),
     ) {
         when (state.screenState) {
-            ChainsSetupState.Scanning -> ScanningContent(
-                onSelectManually = onSelectManually,
-            )
+            ChainsSetupState.Scanning -> ScanningContent(onSelectManually = onSelectManually)
 
-            ChainsSetupState.ActiveChains -> ActiveChainsContent(
-                chains = state.activeChains,
-                onContinue = onContinue,
-                onCustomize = onCustomize,
-            )
+            ChainsSetupState.ActiveChains ->
+                ActiveChainsContent(
+                    chains = state.activeChains,
+                    onContinue = onContinue,
+                    onCustomize = onCustomize,
+                )
 
-            ChainsSetupState.NoActiveChains -> NoActiveChainsContent(
-                onSelectManually = onSelectManually,
-            )
+            ChainsSetupState.NoActiveChains ->
+                NoActiveChainsContent(onSelectManually = onSelectManually)
 
-            ChainsSetupState.CustomizeChains -> CustomizeChainsContent(
-                chains = state.filteredChains,
-                selectedCount = state.selectedCount,
-                searchTextFieldState = searchTextFieldState,
-                onToggleChain = onToggleChain,
-                onContinue = onContinue,
-            )
+            ChainsSetupState.CustomizeChains ->
+                CustomizeChainsContent(
+                    chains = state.filteredChains,
+                    selectedCount = state.selectedCount,
+                    searchTextFieldState = searchTextFieldState,
+                    onToggleChain = onToggleChain,
+                    onContinue = onContinue,
+                )
         }
     }
 }
 
 @Composable
-private fun ScanningContent(
-    onSelectManually: () -> Unit,
-) {
+private fun ScanningContent(onSelectManually: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -150,11 +143,7 @@ private fun ActiveChainsContent(
     onContinue: () -> Unit,
     onCustomize: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-    ) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text(
             text = stringResource(R.string.key_import_chains_found_title),
             style = Theme.brockmann.headings.subtitle,
@@ -172,9 +161,7 @@ private fun ActiveChainsContent(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(chains) { item ->
-                ChainListItem(chain = item.chain, isSelected = true)
-            }
+            items(chains) { item -> ChainListItem(chain = item.chain, isSelected = true) }
         }
 
         UiSpacer(16.dp)
@@ -195,13 +182,9 @@ private fun ActiveChainsContent(
 }
 
 @Composable
-private fun NoActiveChainsContent(
-    onSelectManually: () -> Unit,
-) {
+private fun NoActiveChainsContent(onSelectManually: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -235,23 +218,13 @@ private fun CustomizeChainsContent(
     onToggleChain: (Chain) -> Unit,
     onContinue: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-    ) {
-        SearchBar(
-            state = searchTextFieldState,
-            onCancelClick = {},
-            isInitiallyFocused = false,
-        )
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        SearchBar(state = searchTextFieldState, onCancelClick = {}, isInitiallyFocused = false)
 
         UiSpacer(14.dp)
 
         if (chains.isEmpty()) {
-            NoFoundContent(
-                message = stringResource(R.string.key_import_chains_no_results),
-            )
+            NoFoundContent(message = stringResource(R.string.key_import_chains_no_results))
             Spacer(modifier = Modifier.weight(1f))
         } else {
             LazyVerticalGrid(
@@ -260,19 +233,18 @@ private fun CustomizeChainsContent(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.weight(1f),
             ) {
-                items(
-                    items = chains,
-                    key = { it.chain.id },
-                    contentType = { "chain_grid_item" },
-                ) { item ->
+                items(items = chains, key = { it.chain.id }, contentType = { "chain_grid_item" }) {
+                    item ->
                     GridItem(
-                        uiModel = TokenSelectionGridUiModel(
-                            tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
-                                name = item.chain.raw,
-                                logo = item.chain.logo,
+                        uiModel =
+                            TokenSelectionGridUiModel(
+                                tokenSelectionUiModel =
+                                    TokenSelectionUiModel.TokenUiSingle(
+                                        name = item.chain.raw,
+                                        logo = item.chain.logo,
+                                    ),
+                                isChecked = item.isSelected,
                             ),
-                            isChecked = item.isSelected,
-                        ),
                         onCheckedChange = { onToggleChain(item.chain) },
                     )
                 }
@@ -292,16 +264,13 @@ private fun CustomizeChainsContent(
 }
 
 @Composable
-private fun ChainListItem(
-    chain: Chain,
-    isSelected: Boolean,
-) {
+private fun ChainListItem(chain: Chain, isSelected: Boolean) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Theme.v2.colors.backgrounds.tertiary_2)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(Theme.v2.colors.backgrounds.tertiary_2)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {

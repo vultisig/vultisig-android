@@ -14,17 +14,18 @@ internal fun highlightedText(
     mainTextStyle: TextStyle,
     mainTextColor: Color,
     highlightTextStyle: TextStyle,
-    highlightTextColor: Color
+    highlightTextColor: Color,
 ): AnnotatedString = buildAnnotatedString {
     var currentIndex = 0
     while (currentIndex < mainText.length) {
         // Find the next highlighted word
-        val nextHighlight = highlightedWords
-            .mapNotNull { word ->
-                val index = mainText.indexOf(word, startIndex = currentIndex, ignoreCase = true)
-                if (index != -1) index to word else null
-            }
-            .minByOrNull { it.first } // closest match
+        val nextHighlight =
+            highlightedWords
+                .mapNotNull { word ->
+                    val index = mainText.indexOf(word, startIndex = currentIndex, ignoreCase = true)
+                    if (index != -1) index to word else null
+                }
+                .minByOrNull { it.first } // closest match
 
         if (nextHighlight == null) {
             // Append remaining normal text

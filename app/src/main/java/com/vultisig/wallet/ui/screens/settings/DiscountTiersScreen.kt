@@ -38,13 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
-import com.vultisig.wallet.ui.components.UiIcon
-import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheet
 import com.vultisig.wallet.ui.screens.v2.components.VsButton
 import com.vultisig.wallet.ui.theme.Theme
@@ -63,9 +63,7 @@ internal fun DiscountTiersScreen(
     val state by model.state.collectAsState()
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.secondary),
+        modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.secondary),
         topBar = {
             V2Topbar(
                 title = stringResource(R.string.vault_settings_discounts),
@@ -73,41 +71,39 @@ internal fun DiscountTiersScreen(
                 actions = {
                     VsCircleButton(
                         icon = R.drawable.settings_globe,
-                        onClick = {
-                            uriHandler.openUri(VsAuxiliaryLinks.VULT_TOKEN_DOCS)
-                        },
+                        onClick = { uriHandler.openUri(VsAuxiliaryLinks.VULT_TOKEN_DOCS) },
                         type = VsCircleButtonType.Secondary,
                         designType = DesignType.Shined,
                         size = VsCircleButtonSize.Small,
                         hasBorder = false,
                     )
-                }
+                },
             )
-        }
+        },
     ) {
         Column(
-            modifier = Modifier
-                .padding(it)
-                .padding(horizontal = 16.dp, vertical = 16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.Start
+            modifier =
+                Modifier.padding(it)
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.Start,
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .border(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.light,
-                        shape = RoundedCornerShape(16.dp)
-                    )
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(
+                            width = 1.dp,
+                            color = Theme.v2.colors.border.light,
+                            shape = RoundedCornerShape(16.dp),
+                        )
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.tiers_header),
                     contentDescription = "Provider Logo",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.matchParentSize()
+                    modifier = Modifier.matchParentSize(),
                 )
             }
 
@@ -125,72 +121,48 @@ internal fun DiscountTiersScreen(
                 tierType = TierType.BRONZE,
                 isActive = state.activeTier == TierType.BRONZE,
                 isExpanded = state.expandedTiers.contains(TierType.BRONZE),
-                onClickUnlock = {
-                    model.onTierUnlockClick(TierType.BRONZE)
-                },
-                onClickCard = {
-                    model.expandOrCollapseTierInfo(TierType.BRONZE)
-                }
+                onClickUnlock = { model.onTierUnlockClick(TierType.BRONZE) },
+                onClickCard = { model.expandOrCollapseTierInfo(TierType.BRONZE) },
             )
 
             TierCard(
                 tierType = TierType.SILVER,
                 isActive = state.activeTier == TierType.SILVER,
                 isExpanded = state.expandedTiers.contains(TierType.SILVER),
-                onClickUnlock = {
-                    model.onTierUnlockClick(TierType.SILVER)
-                },
-                onClickCard = {
-                    model.expandOrCollapseTierInfo(TierType.SILVER)
-                }
+                onClickUnlock = { model.onTierUnlockClick(TierType.SILVER) },
+                onClickCard = { model.expandOrCollapseTierInfo(TierType.SILVER) },
             )
 
             TierCard(
                 tierType = TierType.GOLD,
                 isActive = state.activeTier == TierType.GOLD,
                 isExpanded = state.expandedTiers.contains(TierType.GOLD),
-                onClickUnlock = {
-                    model.onTierUnlockClick(TierType.GOLD)
-                },
-                onClickCard = {
-                    model.expandOrCollapseTierInfo(TierType.GOLD)
-                }
+                onClickUnlock = { model.onTierUnlockClick(TierType.GOLD) },
+                onClickCard = { model.expandOrCollapseTierInfo(TierType.GOLD) },
             )
 
             TierCard(
                 tierType = TierType.PLATINUM,
                 isActive = state.activeTier == TierType.PLATINUM,
                 isExpanded = state.expandedTiers.contains(TierType.PLATINUM),
-                onClickUnlock = {
-                    model.onTierUnlockClick(TierType.PLATINUM)
-                },
-                onClickCard = {
-                    model.expandOrCollapseTierInfo(TierType.PLATINUM)
-                }
+                onClickUnlock = { model.onTierUnlockClick(TierType.PLATINUM) },
+                onClickCard = { model.expandOrCollapseTierInfo(TierType.PLATINUM) },
             )
 
             TierCard(
                 tierType = TierType.DIAMOND,
                 isActive = state.activeTier == TierType.DIAMOND,
                 isExpanded = state.expandedTiers.contains(TierType.DIAMOND),
-                onClickUnlock = {
-                    model.onTierUnlockClick(TierType.DIAMOND)
-                },
-                onClickCard = {
-                    model.expandOrCollapseTierInfo(TierType.DIAMOND)
-                }
+                onClickUnlock = { model.onTierUnlockClick(TierType.DIAMOND) },
+                onClickCard = { model.expandOrCollapseTierInfo(TierType.DIAMOND) },
             )
 
             TierCard(
                 tierType = TierType.ULTIMATE,
                 isActive = state.activeTier == TierType.ULTIMATE,
                 isExpanded = state.expandedTiers.contains(TierType.ULTIMATE),
-                onClickUnlock = {
-                    model.onTierUnlockClick(TierType.ULTIMATE)
-                },
-                onClickCard = {
-                    model.expandOrCollapseTierInfo(TierType.ULTIMATE)
-                }
+                onClickUnlock = { model.onTierUnlockClick(TierType.ULTIMATE) },
+                onClickCard = { model.expandOrCollapseTierInfo(TierType.ULTIMATE) },
             )
 
             UiSpacer(size = 16.dp)
@@ -204,9 +176,7 @@ internal fun DiscountTiersScreen(
                 model.dismissBottomSheet()
                 model.navigateToSwaps(navController, vaultId)
             },
-            onDismissRequest = {
-                model.dismissBottomSheet()
-            }
+            onDismissRequest = { model.dismissBottomSheet() },
         )
     }
 }
@@ -221,153 +191,140 @@ private fun TierCard(
 ) {
     val styleTier = getStyleByTier(tierType)
 
-    Box(
-        modifier = Modifier
-            .padding(vertical = 8.dp)
-            .fillMaxWidth()
-    ) {
+    Box(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth()) {
         if (styleTier.borderBackground != null) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clip(RoundedCornerShape(16.dp))
-            ) {
+            Box(modifier = Modifier.matchParentSize().clip(RoundedCornerShape(16.dp))) {
                 Image(
                     painter = painterResource(id = styleTier.borderBackground),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.matchParentSize()
+                    modifier = Modifier.matchParentSize(),
                 )
             }
         }
-        
+
         Box(
-            modifier = Modifier
-                .then(
-                    when {
-                        styleTier.borderBackground != null -> {
-                            Modifier.padding(1.dp)
+            modifier =
+                Modifier.then(
+                        when {
+                            styleTier.borderBackground != null -> {
+                                Modifier.padding(1.dp)
+                            }
+                            styleTier.gradient != null -> {
+                                Modifier.border(
+                                    width = 1.dp,
+                                    brush = styleTier.gradient,
+                                    shape = RoundedCornerShape(16.dp),
+                                )
+                            }
+                            else -> {
+                                Modifier.border(
+                                    width = 1.dp,
+                                    color = Theme.v2.colors.border.normal,
+                                    shape = RoundedCornerShape(16.dp),
+                                )
+                            }
                         }
-                        styleTier.gradient != null -> {
-                            Modifier.border(
-                                width = 1.dp,
-                                brush = styleTier.gradient,
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                        }
-                        else -> {
-                            Modifier.border(
-                                width = 1.dp,
-                                color = Theme.v2.colors.border.normal,
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                        }
-                    }
-                )
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .clickable { onClickCard.invoke() }
+                    )
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Theme.v2.colors.backgrounds.secondary)
+                    .clickable { onClickCard.invoke() }
         ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Row(
-                    modifier = Modifier.weight(1f, fill = false),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(
-                        painter = painterResource(styleTier.icon),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .offset(x = (-4).dp) // compensate internal image padding
-                            .size(55.dp)
-                            .padding(start = 0.dp, end = 6.dp, bottom = 6.dp, top = 6.dp)
-                    )
-
-                    Text(
-                        text = styleTier.titleText,
-                        style = Theme.brockmann.headings.title1,
-                        color = Theme.v2.colors.text.primary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-
-                UiSpacer(size = 6.dp)
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.border.normal,
-                            shape = RoundedCornerShape(50)
-                        )
-                        .background(Theme.v2.colors.backgrounds.surface2)
-                        .padding(horizontal = 10.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = styleTier.discountText,
-                        style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.v2.colors.text.primary,
-                        maxLines = 1,
-                    )
-                }
-            }
-
-            if (isExpanded) {
-                UiSpacer(size = 8.dp)
-
-                Text(
-                    text = stringResource(R.string.vault_tier_hold),
-                    style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.tertiary
-                )
-
-                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = styleTier.amountText,
-                        style = Theme.brockmann.body.l.regular,
-                        color = Theme.v2.colors.text.primary
-                    )
-
-                    if (isActive) {
-                        UiSpacer(1f)
-
-                        UiIcon(
-                            drawableResId = R.drawable.ic_check,
-                            tint = Theme.v2.colors.alerts.success,
-                            size = 18.dp,
-                            modifier = Modifier.padding(4.dp),
+                    Row(
+                        modifier = Modifier.weight(1f, fill = false),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Image(
+                            painter = painterResource(styleTier.icon),
+                            contentDescription = null,
+                            modifier =
+                                Modifier.offset(x = (-4).dp) // compensate internal image padding
+                                    .size(55.dp)
+                                    .padding(start = 0.dp, end = 6.dp, bottom = 6.dp, top = 6.dp),
                         )
 
                         Text(
-                            text = stringResource(R.string.vault_tier_active),
+                            text = styleTier.titleText,
+                            style = Theme.brockmann.headings.title1,
+                            color = Theme.v2.colors.text.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+
+                    UiSpacer(size = 6.dp)
+
+                    Box(
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(50))
+                                .border(
+                                    width = 1.dp,
+                                    color = Theme.v2.colors.border.normal,
+                                    shape = RoundedCornerShape(50),
+                                )
+                                .background(Theme.v2.colors.backgrounds.surface2)
+                                .padding(horizontal = 10.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = styleTier.discountText,
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.alerts.success,
-                            modifier = Modifier.padding(end = 8.dp)
+                            color = Theme.v2.colors.text.primary,
+                            maxLines = 1,
                         )
                     }
                 }
 
-                UiSpacer(size = 16.dp)
+                if (isExpanded) {
+                    UiSpacer(size = 8.dp)
 
-                VsButton(
-                    label = stringResource(R.string.vault_tier_unlock),
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    onClick = onClickUnlock,
-                )
+                    Text(
+                        text = stringResource(R.string.vault_tier_hold),
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = styleTier.amountText,
+                            style = Theme.brockmann.body.l.regular,
+                            color = Theme.v2.colors.text.primary,
+                        )
+
+                        if (isActive) {
+                            UiSpacer(1f)
+
+                            UiIcon(
+                                drawableResId = R.drawable.ic_check,
+                                tint = Theme.v2.colors.alerts.success,
+                                size = 18.dp,
+                                modifier = Modifier.padding(4.dp),
+                            )
+
+                            Text(
+                                text = stringResource(R.string.vault_tier_active),
+                                style = Theme.brockmann.supplementary.footnote,
+                                color = Theme.v2.colors.alerts.success,
+                                modifier = Modifier.padding(end = 8.dp),
+                            )
+                        }
+                    }
+
+                    UiSpacer(size = 16.dp)
+
+                    VsButton(
+                        label = stringResource(R.string.vault_tier_unlock),
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onClickUnlock,
+                    )
+                }
             }
-        }
         }
     }
 }
@@ -375,88 +332,104 @@ private fun TierCard(
 @Composable
 internal fun getStyleByTier(type: TierType): TierStyle {
     return when (type) {
-        TierType.BRONZE -> TierStyle(
-            icon = R.drawable.tier_bronze,
-            titleText = stringResource(R.string.vault_tier_bronze),
-            discountText = stringResource(R.string.vault_tier_bronze_discount),
-            amountText = formatVultAmount(1500),
-            gradient = Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFFDB5727).copy(alpha = 0.5f),
-                    Theme.v2.colors.border.light,
-                ),
-                startY = 0f,
-                endY = 400f
+        TierType.BRONZE ->
+            TierStyle(
+                icon = R.drawable.tier_bronze,
+                titleText = stringResource(R.string.vault_tier_bronze),
+                discountText = stringResource(R.string.vault_tier_bronze_discount),
+                amountText = formatVultAmount(1500),
+                gradient =
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                Color(0xFFDB5727).copy(alpha = 0.5f),
+                                Theme.v2.colors.border.light,
+                            ),
+                        startY = 0f,
+                        endY = 400f,
+                    ),
             )
-        )
 
-        TierType.SILVER -> TierStyle(
-            icon = R.drawable.tier_silver,
-            titleText = stringResource(R.string.vault_tier_silver),
-            discountText = stringResource(R.string.vault_tier_silver_discount),
-            amountText = formatVultAmount(3000),
-            gradient = Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFFC9D6E8).copy(alpha = 0.5f),
-                    Theme.v2.colors.border.light,
-                ),
-                startY = 0f,
-                endY = 400f
+        TierType.SILVER ->
+            TierStyle(
+                icon = R.drawable.tier_silver,
+                titleText = stringResource(R.string.vault_tier_silver),
+                discountText = stringResource(R.string.vault_tier_silver_discount),
+                amountText = formatVultAmount(3000),
+                gradient =
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                Color(0xFFC9D6E8).copy(alpha = 0.5f),
+                                Theme.v2.colors.border.light,
+                            ),
+                        startY = 0f,
+                        endY = 400f,
+                    ),
             )
-        )
 
-        TierType.GOLD -> TierStyle(
-            icon = R.drawable.tier_gold,
-            titleText = stringResource(R.string.vault_tier_gold),
-            discountText = stringResource(R.string.vault_tier_gold_discount),
-            amountText = formatVultAmount(7500),
-            gradient = Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFFFFC25C).copy(alpha = 0.5f),
-                    Theme.v2.colors.border.light,
-                ),
-                startY = 0f,
-                endY = 400f
+        TierType.GOLD ->
+            TierStyle(
+                icon = R.drawable.tier_gold,
+                titleText = stringResource(R.string.vault_tier_gold),
+                discountText = stringResource(R.string.vault_tier_gold_discount),
+                amountText = formatVultAmount(7500),
+                gradient =
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                Color(0xFFFFC25C).copy(alpha = 0.5f),
+                                Theme.v2.colors.border.light,
+                            ),
+                        startY = 0f,
+                        endY = 400f,
+                    ),
             )
-        )
 
-        TierType.PLATINUM -> TierStyle(
-            icon = R.drawable.tier_platinum,
-            titleText = stringResource(R.string.vault_tier_platinum),
-            discountText = stringResource(R.string.vault_tier_platinum_discount),
-            amountText = formatVultAmount(15000),
-            gradient = Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFF33E6BF).copy(alpha = 0.5f),
-                    Theme.v2.colors.border.normal,
-                ),
-                startY = 0f,
-                endY = 400f
+        TierType.PLATINUM ->
+            TierStyle(
+                icon = R.drawable.tier_platinum,
+                titleText = stringResource(R.string.vault_tier_platinum),
+                discountText = stringResource(R.string.vault_tier_platinum_discount),
+                amountText = formatVultAmount(15000),
+                gradient =
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                Color(0xFF33E6BF).copy(alpha = 0.5f),
+                                Theme.v2.colors.border.normal,
+                            ),
+                        startY = 0f,
+                        endY = 400f,
+                    ),
             )
-        )
 
-        TierType.DIAMOND -> TierStyle(
-            icon = R.drawable.tier_diamond,
-            titleText = stringResource(R.string.vault_tier_diamond),
-            discountText = stringResource(R.string.vault_tier_diamond_discount),
-            amountText = formatVultAmount(100000),
-            gradient = Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFF9747FF).copy(alpha = 0.5f),
-                    Theme.v2.colors.border.normal,
-                ),
-                startY = 0f,
-                endY = 400f
+        TierType.DIAMOND ->
+            TierStyle(
+                icon = R.drawable.tier_diamond,
+                titleText = stringResource(R.string.vault_tier_diamond),
+                discountText = stringResource(R.string.vault_tier_diamond_discount),
+                amountText = formatVultAmount(100000),
+                gradient =
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                Color(0xFF9747FF).copy(alpha = 0.5f),
+                                Theme.v2.colors.border.normal,
+                            ),
+                        startY = 0f,
+                        endY = 400f,
+                    ),
             )
-        )
 
-        TierType.ULTIMATE -> TierStyle(
-            icon = R.drawable.tier_ultimate,
-            titleText = stringResource(R.string.vault_tier_ultimate),
-            discountText = stringResource(R.string.vault_tier_ultimate_discount),
-            amountText = formatVultAmount(1000000),
-            borderBackground = R.drawable.ultimate_background
-        )
+        TierType.ULTIMATE ->
+            TierStyle(
+                icon = R.drawable.tier_ultimate,
+                titleText = stringResource(R.string.vault_tier_ultimate),
+                discountText = stringResource(R.string.vault_tier_ultimate_discount),
+                amountText = formatVultAmount(1000000),
+                borderBackground = R.drawable.ultimate_background,
+            )
     }
 }
 
@@ -469,8 +442,14 @@ internal data class TierStyle(
     val borderBackground: Int? = null,
 )
 
-
-internal enum class TierType { BRONZE, SILVER, GOLD, PLATINUM, DIAMOND, ULTIMATE }
+internal enum class TierType {
+    BRONZE,
+    SILVER,
+    GOLD,
+    PLATINUM,
+    DIAMOND,
+    ULTIMATE,
+}
 
 internal fun TierType?.applyExtraDiscount(hasNFT: Boolean): TierType? {
     if (!hasNFT) {
@@ -501,10 +480,8 @@ private fun formatVultAmount(vultAmount: Int): String {
 private fun DiscountTiersScreenPreview() {
     MaterialTheme {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             TierCard(tierType = TierType.BRONZE, onClickUnlock = {}, onClickCard = {})
             TierCard(tierType = TierType.SILVER, onClickUnlock = {}, onClickCard = {})

@@ -22,13 +22,13 @@ fun StakingDetails.toEntity(vaultId: String): StakingDetailsEntity {
 fun StakingDetailsEntity.toDomainModel(): StakingDetails {
     val coins = Coins.all
 
-    val coin = coins.find { it.id == this.coinId }
-        ?: throw IllegalStateException("Coin not found for id: ${this.coinId}")
-    
-    val rewardsCoin = this.rewardsCoinId?.let { rewardsCoinId ->
-        coins.find { it.id == rewardsCoinId }
-    }
-    
+    val coin =
+        coins.find { it.id == this.coinId }
+            ?: throw IllegalStateException("Coin not found for id: ${this.coinId}")
+
+    val rewardsCoin =
+        this.rewardsCoinId?.let { rewardsCoinId -> coins.find { it.id == rewardsCoinId } }
+
     return StakingDetails(
         id = this.id,
         coin = coin,

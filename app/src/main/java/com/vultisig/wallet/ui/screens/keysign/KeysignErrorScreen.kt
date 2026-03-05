@@ -6,12 +6,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.errors.ErrorView
 
-
 @Composable
-internal fun KeysignErrorScreen(
-    errorMessage: String = "",
-    tryAgain: () -> Unit,
-) {
+internal fun KeysignErrorScreen(errorMessage: String = "", tryAgain: () -> Unit) {
     val errorLabel: String
     val infoText: String?
     when {
@@ -40,8 +36,6 @@ internal fun KeysignErrorScreen(
         onButtonClick = tryAgain,
     )
 }
-
-
 
 @Preview(showBackground = true, name = "KeysignErrorScreen Preview")
 @Composable

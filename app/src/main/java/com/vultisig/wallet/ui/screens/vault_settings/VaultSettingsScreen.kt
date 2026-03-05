@@ -72,16 +72,12 @@ private fun VaultSettingsScreen(
     val settingGroups = uiModel.settingGroups
 
     V2Scaffold(
-        title = if (uiModel.isAdvanceSetting)
-            stringResource(R.string.vault_settings_advanced_title)
-        else
-            stringResource(R.string.vault_settings_title),
+        title =
+            if (uiModel.isAdvanceSetting) stringResource(R.string.vault_settings_advanced_title)
+            else stringResource(R.string.vault_settings_title),
         onBackClick = onBackClick,
     ) {
-        Column(
-            Modifier
-                .verticalScroll(rememberScrollState())
-        ) {
+        Column(Modifier.verticalScroll(rememberScrollState())) {
             settingGroups.filter(VaultSettingsGroupUiModel::isVisible).forEach { group ->
                 SettingsBox(title = group.title?.asString()) {
                     val enabledSettings = group.items.filter(VaultSettingsItem::enabled)
@@ -90,14 +86,14 @@ private fun VaultSettingsScreen(
                             item = item.value,
                             onClick = { onSettingsClick(item) },
                             isLastItem = index == enabledSettings.lastIndex,
-                            tint = if (item is VaultSettingsItem.Delete)
-                                Theme.v2.colors.alerts.error else null
+                            tint =
+                                if (item is VaultSettingsItem.Delete) Theme.v2.colors.alerts.error
+                                else null,
                         )
                     }
                 }
                 UiSpacer(14.dp)
             }
-
 
             if (uiModel.isBackupVaultBottomSheetVisible) {
                 BackupMethodBottomSheet(
@@ -113,13 +109,11 @@ private fun VaultSettingsScreen(
                     biometricTextFieldState,
                     onToggleVisibilityClick,
                     onSaveBiometricsClick,
-                    uiModel
+                    uiModel,
                 )
             }
         }
     }
-
-
 }
 
 @Composable
@@ -128,24 +122,22 @@ private fun BiometricFastSignBottomSheet(
     biometricTextFieldState: TextFieldState,
     onToggleVisibilityClick: () -> Unit,
     onSaveBiometricsClick: () -> Unit,
-    uiModel: VaultSettingsState
+    uiModel: VaultSettingsState,
 ) {
-    VsModalBottomSheet(
-        onDismissRequest = onDismissBiometricsBottomSheet,
-    ) {
+    VsModalBottomSheet(onDismissRequest = onDismissBiometricsBottomSheet) {
         BiometricFastSignBottomSheetContent(
             passwordTextFieldState = biometricTextFieldState,
             onToggleVisibilityClick = onToggleVisibilityClick,
             onSaveClick = onSaveBiometricsClick,
-            hint = uiModel.biometricsEnableUiModel.passwordHint?.asString()
-                ?: stringResource(R.string.import_file_screen_hint_password),
+            hint =
+                uiModel.biometricsEnableUiModel.passwordHint?.asString()
+                    ?: stringResource(R.string.import_file_screen_hint_password),
             errorMessage = uiModel.biometricsEnableUiModel.passwordErrorMessage?.asString(),
             isSaveEnabled = uiModel.biometricsEnableUiModel.isSaveEnabled,
             isPasswordVisible = uiModel.biometricsEnableUiModel.isPasswordVisible,
         )
     }
 }
-
 
 @Preview
 @Composable
@@ -159,49 +151,39 @@ private fun BiometricFastSignBottomSheetContent(
     isPasswordVisible: Boolean = true,
 ) {
     Column(
-        Modifier
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+        Modifier.padding(16.dp).verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(R.string.vault_password_biometeric_enable_biometrics_fast_signing),
+            text =
+                stringResource(R.string.vault_password_biometeric_enable_biometrics_fast_signing),
             style = Theme.brockmann.headings.subtitle,
             color = Theme.v2.colors.text.primary,
         )
 
-        FadingHorizontalDivider(
-            modifier = Modifier.padding(
-                vertical = 24.dp
-            )
-        )
+        FadingHorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
 
         VsTextInputField(
             textFieldState = passwordTextFieldState,
-            type = VsTextInputFieldType.Password(
-                isVisible = isPasswordVisible,
-                onVisibilityClick = onToggleVisibilityClick
-            ),
+            type =
+                VsTextInputFieldType.Password(
+                    isVisible = isPasswordVisible,
+                    onVisibilityClick = onToggleVisibilityClick,
+                ),
             hint = hint,
             footNote = errorMessage,
-            innerState = if (errorMessage != null)
-                VsTextInputFieldInnerState.Error
-            else VsTextInputFieldInnerState.Default,
+            innerState =
+                if (errorMessage != null) VsTextInputFieldInnerState.Error
+                else VsTextInputFieldInnerState.Default,
         )
-
 
         UiSpacer(14.dp)
 
         VsButton(
-            state = if (isSaveEnabled)
-                VsButtonState.Enabled
-            else
-                VsButtonState.Disabled,
+            state = if (isSaveEnabled) VsButtonState.Enabled else VsButtonState.Disabled,
             label = stringResource(R.string.add_vault_save),
             onClick = onSaveClick,
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
-

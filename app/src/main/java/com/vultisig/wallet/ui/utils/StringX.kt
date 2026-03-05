@@ -1,21 +1,24 @@
 package com.vultisig.wallet.ui.utils
 
 internal fun String.getAddressFromQrCode(): String {
-    val removedSlashPrefix = if (contains("/")) {
-        substringAfterLast("/")
-    } else {
-        this
-    }
-    val removedPrefix = if (removedSlashPrefix.contains(":")) {
-        removedSlashPrefix.substringAfter(":")
-    } else {
-        removedSlashPrefix
-    }
-    val removedSuffix = if (removedPrefix.contains("?")) {
-        removedPrefix.substringBefore("?")
-    } else {
-        removedPrefix
-    }
+    val removedSlashPrefix =
+        if (contains("/")) {
+            substringAfterLast("/")
+        } else {
+            this
+        }
+    val removedPrefix =
+        if (removedSlashPrefix.contains(":")) {
+            removedSlashPrefix.substringAfter(":")
+        } else {
+            removedSlashPrefix
+        }
+    val removedSuffix =
+        if (removedPrefix.contains("?")) {
+            removedPrefix.substringBefore("?")
+        } else {
+            removedPrefix
+        }
     return removedSuffix
 }
 

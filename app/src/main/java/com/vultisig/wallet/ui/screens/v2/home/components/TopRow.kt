@@ -12,7 +12,7 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 @Composable
 internal fun TopRow(
     vaultName: String,
-    isFastVault : Boolean,
+    isFastVault: Boolean,
     onOpenSettingsClick: () -> Unit = {},
     onToggleVaultListClick: () -> Unit = {},
 ) {
@@ -20,11 +20,9 @@ internal fun TopRow(
         ChooseVaultButton(
             vaultName = vaultName,
             isFastVault = isFastVault,
-            onClick = onToggleVaultListClick
+            onClick = onToggleVaultListClick,
         )
-        UiSpacer(
-            weight = 1f
-        )
+        UiSpacer(weight = 1f)
 
         VsCircleButton(
             onClick = onOpenSettingsClick,

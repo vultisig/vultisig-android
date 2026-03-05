@@ -8,7 +8,6 @@ fun Coins.getCoinBy(chain: Chain, ticker: String): Coin? {
     return coins[chain]?.first { it.ticker.equals(ticker, ignoreCase = true) }
 }
 
-
 fun String.getChain(): Chain {
     return when (this) {
         "RUNE" -> Chain.ThorChain

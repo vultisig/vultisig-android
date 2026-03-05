@@ -17,15 +17,15 @@ fun Modifier.dashedBorder(
 ) = drawBehind {
     drawRoundRect(
         color = color,
-        style = Stroke(
-            width = width.toPx(),
-            pathEffect = PathEffect.dashPathEffect(
-                floatArrayOf(
-                    dashLength.toPx(),
-                    intervalLength.toPx()
-                ), 0f
-            )
-        ),
-        cornerRadius = CornerRadius(cornerRadius.toPx())
+        style =
+            Stroke(
+                width = width.toPx(),
+                pathEffect =
+                    PathEffect.dashPathEffect(
+                        floatArrayOf(dashLength.toPx(), intervalLength.toPx()),
+                        0f,
+                    ),
+            ),
+        cornerRadius = CornerRadius(cornerRadius.toPx()),
     )
 }

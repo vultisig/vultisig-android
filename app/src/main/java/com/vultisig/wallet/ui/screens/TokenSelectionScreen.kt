@@ -27,14 +27,10 @@ import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun TokenSelectionScreen(
-    viewModel: TokenSelectionViewModel = hiltViewModel(),
-) {
+internal fun TokenSelectionScreen(viewModel: TokenSelectionViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.checkCustomToken()
-    }
+    LaunchedEffect(Unit) { viewModel.checkCustomToken() }
 
     TokenSelectionScreen(
         searchTextFieldState = viewModel.searchTextFieldState,
@@ -45,10 +41,9 @@ internal fun TokenSelectionScreen(
         onDoneClick = viewModel::onCommitChanges,
         onAddCustomToken = viewModel::navigateToCustomTokenScreen,
         onCancelClick = viewModel::back,
-        onSetSearchText = viewModel::setSearchText
+        onSetSearchText = viewModel::setSearchText,
     )
 }
-
 
 @Composable
 internal fun TokenSelectionScreen(
@@ -64,11 +59,7 @@ internal fun TokenSelectionScreen(
 ) {
 
     TokenSelectionList(
-        items = state.tokens.map {
-            GridTokenUiModel.SingleToken(
-                data = it
-            )
-        },
+        items = state.tokens.map { GridTokenUiModel.SingleToken(data = it) },
         titleContent = {
             Column {
                 Text(
@@ -82,37 +73,32 @@ internal fun TokenSelectionScreen(
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary,
                 )
-
             }
         },
         mapper = {
             TokenSelectionGridUiModel(
-                tokenSelectionUiModel = TokenUiSingle(
-                    name = it.data.coin.ticker,
-                    logo = getCoinLogo(logoName = it.data.coin.logo),
-                ),
-                isChecked = it.data.isEnabled
+                tokenSelectionUiModel =
+                    TokenUiSingle(
+                        name = it.data.coin.ticker,
+                        logo = getCoinLogo(logoName = it.data.coin.logo),
+                    ),
+                isChecked = it.data.isEnabled,
             )
         },
         searchTextFieldState = searchTextFieldState,
         onDoneClick = onDoneClick,
         onCancelClick = onCancelClick,
         onCheckChange = { isSelected, uiCoin ->
-            if(isSelected)
-                onEnableToken(uiCoin.coin)
-            else
-                onDisableToken(uiCoin.coin)
+            if (isSelected) onEnableToken(uiCoin.coin) else onDisableToken(uiCoin.coin)
         },
-        plusUiModel = GridPlusUiModel(
-            title = stringResource(R.string.deposit_option_custom),
-            onClick = onAddCustomToken
-        ).takeIf { hasCustomToken },
-        notFoundContent = {
-            Column {
-
-            }
-        },
-        onSetSearchText = onSetSearchText
+        plusUiModel =
+            GridPlusUiModel(
+                    title = stringResource(R.string.deposit_option_custom),
+                    onClick = onAddCustomToken,
+                )
+                .takeIf { hasCustomToken },
+        notFoundContent = { Column {} },
+        onSetSearchText = onSetSearchText,
     )
 }
 
@@ -121,31 +107,21 @@ internal fun TokenSelectionScreen(
 fun TokenSelectionPreview() {
     TokenSelectionScreen(
         searchTextFieldState = TextFieldState(),
-        state = TokenSelectionUiModel(
-            tokens = listOf(
-                TokenUiModel(
-                    coin= Coins.Ethereum.ETH,
-                    isEnabled = true
-                ),
-                TokenUiModel(
-                    coin= Coins.Ethereum.USDC,
-                    isEnabled = false
-                ),
-                TokenUiModel(
-                    coin= Coins.Ethereum.DAI,
-                    isEnabled = true
-                ),
-                TokenUiModel(
-                    coin= Coins.Ethereum.GRT,
-                    isEnabled = false
-                ),
-            )
-        ),
+        state =
+            TokenSelectionUiModel(
+                tokens =
+                    listOf(
+                        TokenUiModel(coin = Coins.Ethereum.ETH, isEnabled = true),
+                        TokenUiModel(coin = Coins.Ethereum.USDC, isEnabled = false),
+                        TokenUiModel(coin = Coins.Ethereum.DAI, isEnabled = true),
+                        TokenUiModel(coin = Coins.Ethereum.GRT, isEnabled = false),
+                    )
+            ),
         hasCustomToken = true,
-        onEnableToken = {  },
-        onDisableToken = {  },
-        onAddCustomToken = {  },
-        onDoneClick = {  },
-        onCancelClick = {  },
+        onEnableToken = {},
+        onDisableToken = {},
+        onAddCustomToken = {},
+        onDoneClick = {},
+        onCancelClick = {},
     )
 }

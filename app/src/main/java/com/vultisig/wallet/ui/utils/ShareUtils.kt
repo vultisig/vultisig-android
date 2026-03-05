@@ -17,7 +17,11 @@ import java.util.Date
 private const val DEFAULT_WIDTH = 500f
 
 enum class ShareType {
-    SEND, SWAP, KEYGEN, RESHARE, TOKENADDRESS
+    SEND,
+    SWAP,
+    KEYGEN,
+    RESHARE,
+    TOKENADDRESS,
 }
 
 fun Context.share(bitmap: Bitmap, fileName: String) {
@@ -27,17 +31,16 @@ fun Context.share(bitmap: Bitmap, fileName: String) {
         val newFile = File(cachePath, fileName)
 
         FileOutputStream(newFile).use { stream ->
-            val resizedBitmap = if (bitmap.width < DEFAULT_WIDTH) {
-                val scaleFactor = DEFAULT_WIDTH / bitmap.width
-                bitmap.getResizedBitmap(DEFAULT_WIDTH, bitmap.height * scaleFactor)
-            } else bitmap
+            val resizedBitmap =
+                if (bitmap.width < DEFAULT_WIDTH) {
+                    val scaleFactor = DEFAULT_WIDTH / bitmap.width
+                    bitmap.getResizedBitmap(DEFAULT_WIDTH, bitmap.height * scaleFactor)
+                } else bitmap
 
             resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
         }
 
-        val contentUri = FileProvider.getUriForFile(
-            this, "$packageName.provider", newFile
-        )
+        val contentUri = FileProvider.getUriForFile(this, "$packageName.provider", newFile)
         if (contentUri != null) {
             val shareIntent = Intent()
             shareIntent.setAction(Intent.ACTION_SEND)
@@ -45,10 +48,7 @@ fun Context.share(bitmap: Bitmap, fileName: String) {
             shareIntent.setDataAndType(contentUri, contentResolver.getType(contentUri))
             shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri)
             startActivity(
-                Intent.createChooser(
-                    shareIntent,
-                    getString(R.string.share_qr_utils_choose_an_app)
-                )
+                Intent.createChooser(shareIntent, getString(R.string.share_qr_utils_choose_an_app))
             )
         }
     } catch (e: IOException) {
@@ -56,10 +56,10 @@ fun Context.share(bitmap: Bitmap, fileName: String) {
     }
 }
 
- internal fun shareFileName(vault: Vault, shareType: ShareType): String {
+internal fun shareFileName(vault: Vault, shareType: ShareType): String {
     val uid =
-        ("${vault.name} - ${vault.pubKeyECDSA} - " +
-                "${vault.pubKeyEDDSA} - ${vault.hexChainCode}").sha256()
+        ("${vault.name} - ${vault.pubKeyECDSA} - " + "${vault.pubKeyEDDSA} - ${vault.hexChainCode}")
+            .sha256()
 
     return shareFileName(vault.name, uid, shareType)
 }
@@ -69,10 +69,7 @@ internal fun shareVaultDetailName(vaultName: String, vaultPart: String) =
 
 internal fun shareFileName(vaultName: String, uid: String, shareType: ShareType): String {
     val date = Date()
-    val format = SimpleDateFormat(
-        "yyyy-MM-dd-HH-mm-ss",
-        java.util.Locale.getDefault()
-    )
+    val format = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", java.util.Locale.getDefault())
     val formattedDate = format.format(date)
     return "Vault${shareType.toStringValue()}-${vaultName}-${uid.takeLast(3)}-${formattedDate}.png"
 }
@@ -86,17 +83,12 @@ private fun ShareType.toStringValue(): String {
         ShareType.TOKENADDRESS -> "TokenAddress"
     }
 }
-private fun Bitmap.getResizedBitmap(
-    newWidth: Float,
-    newHeight: Float
-): Bitmap {
+
+private fun Bitmap.getResizedBitmap(newWidth: Float, newHeight: Float): Bitmap {
     val scaleWidth = newWidth / width
     val scaleHeight = newHeight / height
     val matrix = Matrix()
     matrix.postScale(scaleWidth, scaleHeight)
-    val resizedBitmap = Bitmap.createBitmap(
-        this, 0, 0,
-        width, height, matrix, false
-    )
+    val resizedBitmap = Bitmap.createBitmap(this, 0, 0, width, height, matrix, false)
     return resizedBitmap
 }

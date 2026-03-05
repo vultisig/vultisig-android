@@ -18,20 +18,18 @@ class DepositMemoAssetsValidatorUseCaseImpl @Inject constructor() :
 
         val (chainName, assetsInfo) = assets.split(".", limit = 2)
 
-        return isValidChainName(chainName) && when {
-            isValidAssetWithAddress(assetsInfo) -> true
-            isValidAssetInfo(assetsInfo) -> true
-            else -> false
-        }
+        return isValidChainName(chainName) &&
+            when {
+                isValidAssetWithAddress(assetsInfo) -> true
+                isValidAssetInfo(assetsInfo) -> true
+                else -> false
+            }
     }
 
-    private fun isValidChainName(chainName: String) =
-        chainName.matches(chainNameRegex)
+    private fun isValidChainName(chainName: String) = chainName.matches(chainNameRegex)
 
-    private fun isValidAssetInfo(assetsInfo: String) =
-        assetsInfo.matches(assetInfoRegex)
+    private fun isValidAssetInfo(assetsInfo: String) = assetsInfo.matches(assetInfoRegex)
 
     private fun isValidAssetWithAddress(assetsInfo: String) =
         assetsInfo.matches(assetWithAddressRegex)
-
 }

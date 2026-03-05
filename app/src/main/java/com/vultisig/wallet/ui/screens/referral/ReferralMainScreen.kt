@@ -99,33 +99,31 @@ private fun ReferralScreen(
         title = stringResource(R.string.referral_screen_title),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
-                .imePadding()
-                .navigationBarsPadding(),
+            modifier =
+                Modifier.fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
+                    .imePadding()
+                    .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Image(
                     painter = painterResource(id = R.drawable.crypto_natives_v2),
                     contentDescription = "ReferralImage",
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
 
             UiSpacer(1f)
 
             StyledText(
-                parts = listOf(
-                    StyledTextPart(stringResource(R.string.referral_save)),
-                    StyledTextPart("10%", Theme.v2.colors.primary.accent4),
-                    StyledTextPart(stringResource(R.string.referral_add_referral))
-                ),
+                parts =
+                    listOf(
+                        StyledTextPart(stringResource(R.string.referral_save)),
+                        StyledTextPart("10%", Theme.v2.colors.primary.accent4),
+                        StyledTextPart(stringResource(R.string.referral_add_referral)),
+                    ),
                 fontSize = 16.sp,
                 fontFamily = Theme.brockmann.body.m.medium.fontFamily,
                 fontWeight = Theme.brockmann.body.m.medium.fontWeight,
@@ -144,7 +142,7 @@ private fun ReferralScreen(
                     onPasteIcon(content)
                 },
                 footNote = state.referralMessage?.asString(),
-                focusRequester = null, //focusRequester,
+                focusRequester = null, // focusRequester,
                 imeAction = ImeAction.Go,
                 keyboardType = KeyboardType.Text,
                 enabled = state.isSaveEnabled,
@@ -153,62 +151,63 @@ private fun ReferralScreen(
             UiSpacer(16.dp)
 
             VsButton(
-                label = if (state.isSaveEnabled) {
-                    stringResource(R.string.referral_save_referral_code)
-                } else {
-                    stringResource(R.string.referral_edit_referred)
-                },
-                modifier = Modifier
-                    .fillMaxWidth(),
+                label =
+                    if (state.isSaveEnabled) {
+                        stringResource(R.string.referral_save_referral_code)
+                    } else {
+                        stringResource(R.string.referral_edit_referred)
+                    },
+                modifier = Modifier.fillMaxWidth(),
                 variant = VsButtonVariant.Secondary,
                 state = VsButtonState.Enabled,
                 onClick = onSavedOrEditExternalReferral,
             )
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        color = Theme.v2.colors.border.light,
-                    )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = Theme.v2.colors.border.light,
+                )
 
-                    Text(
-                        text = stringResource(R.string.referral_or),
-                        modifier = Modifier.padding(16.dp),
-                        color = Theme.v2.colors.text.primary,
-                        style = Theme.brockmann.supplementary.caption,
-                        textAlign = TextAlign.Center,
-                    )
+                Text(
+                    text = stringResource(R.string.referral_or),
+                    modifier = Modifier.padding(16.dp),
+                    color = Theme.v2.colors.text.primary,
+                    style = Theme.brockmann.supplementary.caption,
+                    textAlign = TextAlign.Center,
+                )
 
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        color = Theme.v2.colors.border.light,
-                    )
-                }
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = Theme.v2.colors.border.light,
+                )
+            }
 
-                StyledText(
-                    parts = listOf(
+            StyledText(
+                parts =
+                    listOf(
                         StyledTextPart(stringResource(R.string.referral_create_code_and_earn)),
                         StyledTextPart("20%", Theme.v2.colors.primary.accent4),
-                        StyledTextPart(stringResource(R.string.referral_on_referred_swaps))
+                        StyledTextPart(stringResource(R.string.referral_on_referred_swaps)),
                     ),
-                    fontSize = 14.sp,
-                    fontFamily = Theme.brockmann.body.m.regular.fontFamily,
-                    fontWeight = Theme.brockmann.body.m.regular.fontWeight
-                )
+                fontSize = 14.sp,
+                fontFamily = Theme.brockmann.body.m.regular.fontFamily,
+                fontWeight = Theme.brockmann.body.m.regular.fontWeight,
+            )
 
             UiSpacer(16.dp)
 
             VsButton(
-                label = if (state.isCreateEnabled) {
-                    stringResource(R.string.referral_create_referral)
-                } else {
-                    stringResource(R.string.referral_edit_referral)
-                },
-                modifier = Modifier
-                    .fillMaxWidth(),
+                label =
+                    if (state.isCreateEnabled) {
+                        stringResource(R.string.referral_create_referral)
+                    } else {
+                        stringResource(R.string.referral_edit_referral)
+                    },
+                modifier = Modifier.fillMaxWidth(),
                 variant = VsButtonVariant.Primary,
                 state = VsButtonState.Enabled,
                 onClick = onCreateOrEditReferral,
@@ -229,11 +228,13 @@ private fun ReferralScreenPreview() {
         onPasteIcon = {},
         onSavedOrEditExternalReferral = {},
         onCreateOrEditReferral = {},
-        state = ReferralUiState(
-            referralMessage = null,
-            referralMessageState = com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState.Default,
-            isCreateEnabled = true,
-        ),
+        state =
+            ReferralUiState(
+                referralMessage = null,
+                referralMessageState =
+                    com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState.Default,
+                isCreateEnabled = true,
+            ),
         clipboardData = clipboardData,
         referralState = referralState,
     )
@@ -251,11 +252,13 @@ private fun ReferralScreenWithReferralPreview() {
         onPasteIcon = {},
         onSavedOrEditExternalReferral = {},
         onCreateOrEditReferral = {},
-        state = ReferralUiState(
-            referralMessage = null,
-            referralMessageState = com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState.Default,
-            isCreateEnabled = false,
-        ),
+        state =
+            ReferralUiState(
+                referralMessage = null,
+                referralMessageState =
+                    com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState.Default,
+                isCreateEnabled = false,
+            ),
         clipboardData = clipboardData,
         referralState = referralState,
     )

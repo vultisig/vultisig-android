@@ -29,14 +29,14 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import timber.log.Timber
 import tss.KeysignResponse
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 class MldsaKeysign(
     val keysignCommittee: List<String>,
@@ -46,7 +46,6 @@ class MldsaKeysign(
     val vault: Vault,
     val encryptionKeyHex: String,
     val isInitiateDevice: Boolean,
-
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
 ) {
@@ -104,14 +103,15 @@ class MldsaKeysign(
             val ids = byteArray.toGoSlice()
             val decodedMsgData = message.hexToByteArray()
             val msgSlice = decodedMsgData.toGoSlice()
-            val err = mldsa_sign_setupmsg_new(
-                MldsaSecurityLevel.MlDsa44,
-                keyIdSlice,
-                ids,
-                msgSlice,
-                null,
-                buf
-            )
+            val err =
+                mldsa_sign_setupmsg_new(
+                    MldsaSecurityLevel.MlDsa44,
+                    keyIdSlice,
+                    ids,
+                    msgSlice,
+                    null,
+                    buf,
+                )
             if (err != LIB_OK) {
                 error("fail to setup MLDSA keysign message, error: $err")
             }
@@ -139,16 +139,12 @@ class MldsaKeysign(
     private fun getOutboundMessageReceiver(
         handle: Handle,
         message: go_slice,
-        idx: Long
+        idx: Long,
     ): ByteArray {
         val bufReceiver = tss_buffer()
         try {
-            val receiverResult = mldsa_sign_session_message_receiver(
-                handle,
-                message,
-                idx,
-                bufReceiver
-            )
+            val receiverResult =
+                mldsa_sign_session_message_receiver(handle, message, idx, bufReceiver)
             if (receiverResult != LIB_OK) {
                 Timber.d("fail to get receiver message, error: $receiverResult")
                 return byteArrayOf()
@@ -190,7 +186,9 @@ class MldsaKeysign(
                     break
                 }
                 val receiverString = String(receiverArray, Charsets.UTF_8)
-                Timber.d("sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}")
+                Timber.d(
+                    "sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}"
+                )
                 messenger?.send(localPartyID, receiverString, encodedOutboundMessage)
             }
         }
@@ -229,7 +227,7 @@ class MldsaKeysign(
     private suspend fun processInboundMessage(
         handle: Handle,
         msgs: List<Message>,
-        messageID: String
+        messageID: String,
     ): Boolean {
         val sortedMsgs = msgs.sortedBy { it.sequenceNo }
         for (msg in sortedMsgs) {
@@ -239,10 +237,11 @@ class MldsaKeysign(
                 continue
             }
             Timber.d("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
-            val decryptedBody = encryption.decrypt(
-                Base64.decode(msg.body),
-                Numeric.hexStringToByteArray(encryptionKeyHex)
-            ) ?: error("fail to decrypt message body")
+            val decryptedBody =
+                encryption.decrypt(
+                    Base64.decode(msg.body),
+                    Numeric.hexStringToByteArray(encryptionKeyHex),
+                ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
             val decryptedBodySlice = decodedMsg.toGoSlice()
             val isFinished = intArrayOf(0)
@@ -267,10 +266,16 @@ class MldsaKeysign(
     private suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
         this.cache.clear()
         val msgHash = messageToSign.md5()
-        val localMessenger = TssMessenger(
-            mediatorURL, sessionID, encryptionKeyHex,
-            sessionApi, CoroutineScope(Dispatchers.IO), encryption, true
-        )
+        val localMessenger =
+            TssMessenger(
+                mediatorURL,
+                sessionID,
+                encryptionKeyHex,
+                sessionApi,
+                CoroutineScope(Dispatchers.IO),
+                encryption,
+                true,
+            )
         localMessenger.setMessageID(msgHash)
         messenger = localMessenger
         try {
@@ -282,24 +287,26 @@ class MldsaKeysign(
                 sessionApi.uploadSetupMessage(
                     serverUrl = mediatorURL,
                     sessionId = sessionID,
-                    message = Base64.encode(
-                        encryption.encrypt(
-                            Base64.encodeToByteArray(keysignSetupMsg),
-                            Numeric.hexStringToByteArray(encryptionKeyHex)
-                        )
-                    ),
-                    messageId = msgHash
+                    message =
+                        Base64.encode(
+                            encryption.encrypt(
+                                Base64.encodeToByteArray(keysignSetupMsg),
+                                Numeric.hexStringToByteArray(encryptionKeyHex),
+                            )
+                        ),
+                    messageId = msgHash,
                 )
             } else {
-                keysignSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, msgHash)
-                    .let {
-                        encryption.decrypt(
-                            Base64.decode(it),
-                            Numeric.hexStringToByteArray(encryptionKeyHex)
-                        ) ?: error("fail to decrypt MLDSA keysign setup message")
-                    }.let {
-                        Base64.decode(it)
-                    }
+                keysignSetupMsg =
+                    sessionApi
+                        .getSetupMessage(mediatorURL, sessionID, msgHash)
+                        .let {
+                            encryption.decrypt(
+                                Base64.decode(it),
+                                Numeric.hexStringToByteArray(encryptionKeyHex),
+                            ) ?: error("fail to decrypt MLDSA keysign setup message")
+                        }
+                        .let { Base64.decode(it) }
             }
 
             val signingMsg = decodeMessage(keysignSetupMsg)
@@ -319,15 +326,18 @@ class MldsaKeysign(
                     if (result != LIB_OK) {
                         error("fail to create MLDSA keyshare handle from bytes, $result")
                     }
-                    val sessionResult = mldsa_sign_session_from_setup(
-                        MldsaSecurityLevel.MlDsa44,
-                        decodedSetupMsg,
-                        localPartySlice,
-                        keyshareHandle,
-                        handler
-                    )
+                    val sessionResult =
+                        mldsa_sign_session_from_setup(
+                            MldsaSecurityLevel.MlDsa44,
+                            decodedSetupMsg,
+                            localPartySlice,
+                            keyshareHandle,
+                            handler,
+                        )
                     if (sessionResult != LIB_OK) {
-                        error("fail to create MLDSA sign session from setup message, error: $sessionResult")
+                        error(
+                            "fail to create MLDSA sign session from setup message, error: $sessionResult"
+                        )
                     }
                 } finally {
                     mldsa_keyshare_free(keyshareHandle)
@@ -387,4 +397,3 @@ class MldsaKeysign(
         return slice
     }
 }
-

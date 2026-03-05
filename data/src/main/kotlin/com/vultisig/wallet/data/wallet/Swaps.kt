@@ -21,17 +21,22 @@ internal object Swaps {
 
         return when (chain.standard) {
             TokenStandard.UTXO -> {
-                val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preImageHashes)
-                    .checkError()
-                preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
+                val preSigningOutput =
+                    Bitcoin.PreSigningOutput.parseFrom(preImageHashes).checkError()
+                preSigningOutput.hashPublicKeysList.map {
+                    Numeric.toHexStringNoPrefix(it.dataHash.toByteArray())
+                }
             }
 
-            TokenStandard.EVM, TokenStandard.THORCHAIN, TokenStandard.COSMOS , TokenStandard.RIPPLE, TokenStandard.TRC20  ->
-                getPreSigningOutput(preImageHashes)
+            TokenStandard.EVM,
+            TokenStandard.THORCHAIN,
+            TokenStandard.COSMOS,
+            TokenStandard.RIPPLE,
+            TokenStandard.TRC20 -> getPreSigningOutput(preImageHashes)
 
-            TokenStandard.SOL ->{
-                val preSigningOutput = Solana.PreSigningOutput.parseFrom(preImageHashes)
-                    .checkError()
+            TokenStandard.SOL -> {
+                val preSigningOutput =
+                    Solana.PreSigningOutput.parseFrom(preImageHashes).checkError()
                 return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
             }
 
@@ -40,9 +45,7 @@ internal object Swaps {
     }
 
     fun getPreSigningOutput(preImageHashes: ByteArray): List<String> {
-        val preSigningOutput = PreSigningOutput.parseFrom(preImageHashes)
-            .checkError()
+        val preSigningOutput = PreSigningOutput.parseFrom(preImageHashes).checkError()
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
-
 }

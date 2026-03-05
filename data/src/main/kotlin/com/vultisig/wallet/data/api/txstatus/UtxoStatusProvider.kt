@@ -5,24 +5,21 @@ import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
-import timber.log.Timber
 import javax.inject.Inject
+import timber.log.Timber
 
-class UtxoStatusProvider @Inject constructor(
-    private val blockChairApi: BlockChairApi,
-) : TransactionStatusProvider {
-
+class UtxoStatusProvider @Inject constructor(private val blockChairApi: BlockChairApi) :
+    TransactionStatusProvider {
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
-            val response = blockChairApi.getTsStatus(
-                chain,
-                txHash
-            )
-            val (txData, context) = when (response) {
-                is BlockChainStatusDeserialized.Result -> response.data.data?.get(txHash) to response.data.context
-                else -> null to null
-            }
+            val response = blockChairApi.getTsStatus(chain, txHash)
+            val (txData, context) =
+                when (response) {
+                    is BlockChainStatusDeserialized.Result ->
+                        response.data.data?.get(txHash) to response.data.context
+                    else -> null to null
+                }
 
             when {
                 txData == null -> {
@@ -57,10 +54,7 @@ class UtxoStatusProvider @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.tag("UtxoStatusProvider").e(
-                e,
-                "Error checking tx status: $txHash"
-            )
+            Timber.tag("UtxoStatusProvider").e(e, "Error checking tx status: $txHash")
             TransactionResult.Failed(e.message.orEmpty())
         }
     }

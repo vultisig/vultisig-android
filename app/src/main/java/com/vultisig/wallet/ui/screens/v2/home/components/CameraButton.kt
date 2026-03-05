@@ -8,22 +8,17 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 
 @Composable
-internal fun CameraButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
+internal fun CameraButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
     VsCircleButton(
         onClick = onClick,
         icon = R.drawable.camera_2,
         size = VsCircleButtonSize.Medium,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
 @Preview
 @Composable
 internal fun PreviewCameraButton() {
-    CameraButton(
-        onClick = {}
-    )
+    CameraButton(onClick = {})
 }

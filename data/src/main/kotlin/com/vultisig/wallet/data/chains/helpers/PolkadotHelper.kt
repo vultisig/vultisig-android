@@ -19,14 +19,13 @@ import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Polkadot
 
-class PolkadotHelper(
-    private val vaultHexPublicKey: String,
-) {
+class PolkadotHelper(private val vaultHexPublicKey: String) {
     private val coinType = CoinType.POLKADOT
 
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
-        val polkadotSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot
-            ?: throw IllegalArgumentException("Invalid blockChainSpecific")
+        val polkadotSpecific =
+            keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot
+                ?: throw IllegalArgumentException("Invalid blockChainSpecific")
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
 
         // After Asset Hub update, even native DOT transfers use assetTransfer
@@ -34,42 +33,42 @@ class PolkadotHelper(
         // When asset_id is 0, WalletCore encodes it as TransferAllowDeath (Balances.transfer)
         // So we need Balances pallet call indices, not Assets pallet
         // For Asset Hub, Balances pallet is typically module 10, method 0 (transfer_allow_death)
-        val assetTransfer = Polkadot.Balance.AssetTransfer.newBuilder()
-            .setAssetId(0)
-            .setFeeAssetId(0)
-            .setToAddress(toAddress.description())
-            .setValue(ByteString.copyFrom(keysignPayload.toAmount.toByteArray()))
-            .setCallIndices(
-                Polkadot.CallIndices
-                    .newBuilder()
-                    .setCustom(
-                        Polkadot.CustomCallIndices.newBuilder()
-                            .setMethodIndex(0)
-                            .setModuleIndex(10)
-                            .build()
-                    )
-                    .build()
-            ).build()
+        val assetTransfer =
+            Polkadot.Balance.AssetTransfer.newBuilder()
+                .setAssetId(0)
+                .setFeeAssetId(0)
+                .setToAddress(toAddress.description())
+                .setValue(ByteString.copyFrom(keysignPayload.toAmount.toByteArray()))
+                .setCallIndices(
+                    Polkadot.CallIndices.newBuilder()
+                        .setCustom(
+                            Polkadot.CustomCallIndices.newBuilder()
+                                .setMethodIndex(0)
+                                .setModuleIndex(10)
+                                .build()
+                        )
+                        .build()
+                )
+                .build()
 
-        val balanceTransfer = Polkadot.Balance.newBuilder()
-            .setAssetTransfer(assetTransfer)
-            .build()
+        val balanceTransfer = Polkadot.Balance.newBuilder().setAssetTransfer(assetTransfer).build()
 
-        val input = Polkadot.SigningInput.newBuilder()
-            .setGenesisHash(polkadotSpecific.genesisHash.toHexBytesInByteString())
-            .setBlockHash(polkadotSpecific.recentBlockHash.toHexBytesInByteString())
-            .setNonce(polkadotSpecific.nonce.toLong())
-            .setSpecVersion(polkadotSpecific.specVersion.toInt())
-            .setNetwork(coinType.ss58Prefix())
-            .setTransactionVersion(polkadotSpecific.transactionVersion.toInt())
-            .setEra(
-                Polkadot.Era.newBuilder()
-                    .setBlockNumber(polkadotSpecific.currentBlockNumber.toLong())
-                    .setPeriod(64)
-                    .build()
-            )
-            .setBalanceCall(balanceTransfer)
-            .build()
+        val input =
+            Polkadot.SigningInput.newBuilder()
+                .setGenesisHash(polkadotSpecific.genesisHash.toHexBytesInByteString())
+                .setBlockHash(polkadotSpecific.recentBlockHash.toHexBytesInByteString())
+                .setNonce(polkadotSpecific.nonce.toLong())
+                .setSpecVersion(polkadotSpecific.specVersion.toInt())
+                .setNetwork(coinType.ss58Prefix())
+                .setTransactionVersion(polkadotSpecific.transactionVersion.toInt())
+                .setEra(
+                    Polkadot.Era.newBuilder()
+                        .setBlockNumber(polkadotSpecific.currentBlockNumber.toLong())
+                        .setPeriod(64)
+                        .build()
+                )
+                .setBalanceCall(balanceTransfer)
+                .build()
         return input.toByteArray()
     }
 
@@ -102,10 +101,9 @@ class PolkadotHelper(
                 coinType,
                 inputData,
                 allSignatures,
-                publicKeys
+                publicKeys,
             )
-        val output = Polkadot.SigningOutput.parseFrom(compiledWithSignature)
-            .checkError()
+        val output = Polkadot.SigningOutput.parseFrom(compiledWithSignature).checkError()
 
         return Numeric.toHexStringNoPrefix(output.encoded.toByteArray())
     }
@@ -131,18 +129,14 @@ class PolkadotHelper(
         publicKeys.add(publicKey.data())
         val compiledWithSignature =
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
-        val output = Polkadot.SigningOutput.parseFrom(compiledWithSignature)
-            .checkError()
+        val output = Polkadot.SigningOutput.parseFrom(compiledWithSignature).checkError()
 
         return SignedTransactionResult(
-            rawTransaction = Numeric.toHexStringNoPrefix(
-                output.encoded.toByteArray()
-            ),
-            transactionHash = Numeric.toHexString(
-                Utils.blake2bHash(
-                    output.encoded.toByteArray().take(32).toByteArray()
-                )
-            )
+            rawTransaction = Numeric.toHexStringNoPrefix(output.encoded.toByteArray()),
+            transactionHash =
+                Numeric.toHexString(
+                    Utils.blake2bHash(output.encoded.toByteArray().take(32).toByteArray())
+                ),
         )
     }
 

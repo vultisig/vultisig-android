@@ -1,10 +1,10 @@
 package com.vultisig.wallet.data.usecases.backup
 
 import com.vultisig.wallet.data.models.Vault
+import javax.inject.Inject
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import javax.inject.Inject
 
 fun interface CreateZipVaultBackupFileNameUseCase {
     operator fun invoke(vaults: List<Vault>): String
@@ -17,17 +17,17 @@ internal class CreateZipVaultBackupFileNameUseCaseImpl @Inject constructor() :
         return "vaults_backup_${now.date}_${
             now.hour.toString().padStart(
                 2,
-                '0'
+                '0',
             )
         }${
             now.minute.toString().padStart(
                 2,
-                '0'
+                '0',
             )
         }${
             now.second.toString().padStart(
                 2,
-                '0'
+                '0',
             )
         }.zip"
     }

@@ -17,7 +17,6 @@ import com.vultisig.wallet.ui.utils.RequestWriteFilePermissionOnceIfNotGranted
 import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.file.RequestCreateDocument
 
-
 @Composable
 internal fun BackupPasswordScreen(
     model: BackupPasswordViewModel = hiltViewModel<BackupPasswordViewModel>()
@@ -25,7 +24,7 @@ internal fun BackupPasswordScreen(
     val state by model.state.collectAsState()
 
     RequestWriteFilePermissionOnceIfNotGranted(
-        onRequestPermissionResult = model::onPermissionResult,
+        onRequestPermissionResult = model::onPermissionResult
     )
 
     RequestCreateDocument(
@@ -46,24 +45,25 @@ internal fun BackupPasswordScreen(
 
     FastVaultPasswordScreen(
         title = stringResource(R.string.backup_password_topbar_title),
-        state = FastVaultPasswordUiModel(
-            isMoreInfoVisible = state.isMoreInfoVisible,
-            isPasswordVisible = state.isPasswordVisible,
-            isConfirmPasswordVisible = state.isConfirmPasswordVisible,
-            isNextButtonEnabled = state.isNextButtonEnabled,
-            errorMessage = state.passwordErrorMessage,
-            innerState = if (state.passwordErrorMessage != null)
-                VsTextInputFieldInnerState.Error
-            else VsTextInputFieldInnerState.Default
-        ),
+        state =
+            FastVaultPasswordUiModel(
+                isMoreInfoVisible = state.isMoreInfoVisible,
+                isPasswordVisible = state.isPasswordVisible,
+                isConfirmPasswordVisible = state.isConfirmPasswordVisible,
+                isNextButtonEnabled = state.isNextButtonEnabled,
+                errorMessage = state.passwordErrorMessage,
+                innerState =
+                    if (state.passwordErrorMessage != null) VsTextInputFieldInnerState.Error
+                    else VsTextInputFieldInnerState.Default,
+            ),
         passwordTextFieldState = model.passwordTextFieldState,
         confirmPasswordTextFieldState = model.confirmPasswordTextFieldState,
         onBackClick = model::back,
         onNextClick = model::backupEncryptedVault,
-        onShowMoreInfo =model::showMoreInfo,
+        onShowMoreInfo = model::showMoreInfo,
         onHideMoreInfo = model::hideMoreInfo,
         onTogglePasswordVisibilityClick = model::togglePasswordVisibility,
-        onToggleConfirmPasswordVisibilityClick = model::toggleConfirmPasswordVisibility
+        onToggleConfirmPasswordVisibilityClick = model::toggleConfirmPasswordVisibility,
     )
 }
 
@@ -72,17 +72,18 @@ internal fun BackupPasswordScreen(
 private fun BackupPasswordScreenPreview() {
     val passwordTextFieldState = rememberTextFieldState()
     val confirmPasswordTextFieldState = rememberTextFieldState()
-    
+
     FastVaultPasswordScreen(
         title = "Backup Password",
-        state = FastVaultPasswordUiModel(
-            isMoreInfoVisible = false,
-            isPasswordVisible = false,
-            isConfirmPasswordVisible = false,
-            isNextButtonEnabled = false,
-            errorMessage = null,
-            innerState = VsTextInputFieldInnerState.Default
-        ),
+        state =
+            FastVaultPasswordUiModel(
+                isMoreInfoVisible = false,
+                isPasswordVisible = false,
+                isConfirmPasswordVisible = false,
+                isNextButtonEnabled = false,
+                errorMessage = null,
+                innerState = VsTextInputFieldInnerState.Default,
+            ),
         passwordTextFieldState = passwordTextFieldState,
         confirmPasswordTextFieldState = confirmPasswordTextFieldState,
         onBackClick = {},
@@ -90,6 +91,6 @@ private fun BackupPasswordScreenPreview() {
         onShowMoreInfo = {},
         onHideMoreInfo = {},
         onTogglePasswordVisibilityClick = {},
-        onToggleConfirmPasswordVisibilityClick = {}
+        onToggleConfirmPasswordVisibilityClick = {},
     )
 }

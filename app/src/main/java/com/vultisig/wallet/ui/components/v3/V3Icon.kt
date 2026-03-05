@@ -21,33 +21,25 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.v2.modifiers.shinedBottom
 import com.vultisig.wallet.ui.theme.Theme
 
-
 @Composable
-fun V3Icon(
-    @DrawableRes logo: Int,
-){
+fun V3Icon(@DrawableRes logo: Int) {
     Box(
-        modifier = Modifier
-            .size(33.dp)
-            .clip(
-                shape = CircleShape
-            )
-            .background(
-                color = Theme.v2.colors.backgrounds.background
-            )
-            .shinedBottom()
-            .border(
-                width = 2.dp,
-                color = Theme.v2.colors.neutrals.n50.copy(alpha = 0.1f),
-                shape = CircleShape
-            ),
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier.size(33.dp)
+                .clip(shape = CircleShape)
+                .background(color = Theme.v2.colors.backgrounds.background)
+                .shinedBottom()
+                .border(
+                    width = 2.dp,
+                    color = Theme.v2.colors.neutrals.n50.copy(alpha = 0.1f),
+                    shape = CircleShape,
+                ),
+        contentAlignment = Alignment.Center,
     ) {
         Image(
             painter = painterResource(logo),
             contentDescription = "icon",
-            modifier = Modifier
-                .size(size = 18.dp)
+            modifier = Modifier.size(size = 18.dp),
         )
     }
 }
@@ -61,31 +53,20 @@ fun V3Icon(
     shinedBottom: Color? = Theme.v2.colors.neutrals.n50,
 ) {
     Box(
-        modifier = Modifier
-            .size(44.dp)
-            .clip(
-                shape = CircleShape
-            )
-            .background(
-                color = backgroundColor
-            )
-            .then(
-                if (shinedBottom == null) Modifier
-                else Modifier.shinedBottom(
-                    color = shinedBottom
+        modifier =
+            Modifier.size(44.dp)
+                .clip(shape = CircleShape)
+                .background(color = backgroundColor)
+                .then(
+                    if (shinedBottom == null) Modifier
+                    else Modifier.shinedBottom(color = shinedBottom)
                 )
-            )
-            .border(
-                width = borderWidth,
-                color = borderColor,
-                shape = CircleShape
-            ),
-        contentAlignment = Alignment.Center
+                .border(width = borderWidth, color = borderColor, shape = CircleShape),
+        contentAlignment = Alignment.Center,
     ) {
         Image(
             painter = painterResource(logo),
-            modifier = Modifier
-                .size(18.dp),
+            modifier = Modifier.size(18.dp),
             contentDescription = null,
         )
     }
@@ -101,43 +82,23 @@ fun V3Icon(
     tintColor: Color,
 ) {
     Box(
-        modifier = Modifier
-            .size(44.dp)
-            .clip(
-                shape = CircleShape
-            )
-            .background(
-                color = backgroundColor
-            )
-            .then(
-                if (shinedBottom == null) Modifier
-                else Modifier.shinedBottom(
-                    color = shinedBottom
+        modifier =
+            Modifier.size(44.dp)
+                .clip(shape = CircleShape)
+                .background(color = backgroundColor)
+                .then(
+                    if (shinedBottom == null) Modifier
+                    else Modifier.shinedBottom(color = shinedBottom)
                 )
-            )
-            .border(
-                width = borderWidth,
-                color = borderColor,
-                shape = CircleShape
-            ),
-        contentAlignment = Alignment.Center
+                .border(width = borderWidth, color = borderColor, shape = CircleShape),
+        contentAlignment = Alignment.Center,
     ) {
-
-        UiIcon(
-            drawableResId = logo,
-            size = 18.dp,
-            tint = tintColor,
-        )
+        UiIcon(drawableResId = logo, size = 18.dp, tint = tintColor)
     }
 }
 
-
-
-
 @Preview
 @Composable
-private fun V3IconPreview(){
-        V3Icon(
-            logo = R.drawable.icon_shield_solid
-        )
+private fun V3IconPreview() {
+    V3Icon(logo = R.drawable.icon_shield_solid)
 }

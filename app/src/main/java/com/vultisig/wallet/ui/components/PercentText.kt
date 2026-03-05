@@ -14,23 +14,14 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 @Composable
-internal fun PercentText(
-    percent: Int,
-    onPercentClick: (percent: Int) -> Unit,
-) {
+internal fun PercentText(percent: Int, onPercentClick: (percent: Int) -> Unit) {
     Text(
-        modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(colors.backgrounds.secondary)
-            .padding(
-                horizontal = 19.dp,
-                vertical = 5.dp
-            )
-            .clickOnce { onPercentClick(percent) },
-        text = stringResource(
-            R.string.send_percent,
-            percent
-        ),
+        modifier =
+            Modifier.clip(RoundedCornerShape(6.dp))
+                .background(colors.backgrounds.secondary)
+                .padding(horizontal = 19.dp, vertical = 5.dp)
+                .clickOnce { onPercentClick(percent) },
+        text = stringResource(R.string.send_percent, percent),
         color = colors.neutrals.n100,
         style = Theme.menlo.overline2,
     )

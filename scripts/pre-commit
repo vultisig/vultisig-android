@@ -1,0 +1,20 @@
+#!/bin/sh
+# Pre-commit hook: format staged Kotlin files with ktfmt before committing.
+
+echo "ktfmt: formatting Kotlin files..."
+
+./gradlew :app:ktfmtFormat :data:ktfmtFormat --quiet 2>&1
+
+if [ $? -ne 0 ]; then
+  echo "ktfmt: formatting failed. Commit aborted."
+  exit 1
+fi
+
+# Re-stage any .kt files that were modified by the formatter
+FORMATTED=$(git diff --name-only | grep '\.kt$')
+if [ -n "$FORMATTED" ]; then
+  echo "$FORMATTED" | xargs git add
+  echo "ktfmt: re-staged formatted files."
+fi
+
+echo "ktfmt: done."
