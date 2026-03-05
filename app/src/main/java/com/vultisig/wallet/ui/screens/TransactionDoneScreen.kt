@@ -55,20 +55,13 @@ internal fun TransactionDoneView(
         applyScaffoldPaddings = true,
         topBar = {
             if (showToolbar) {
-                VsTopAppBar(
-                    title = "Overview",
-                )
+                VsTopAppBar(title = "Overview")
             }
         },
         content = {
-            FormCard(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-            ) {
+            FormCard(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Column(
-                    modifier = Modifier
-                        .padding(all = 12.dp)
-                        .fillMaxWidth(),
+                    modifier = Modifier.padding(all = 12.dp).fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     if (transactionTypeUiModel !is TransactionTypeUiModel.SignMessage) {
@@ -77,7 +70,7 @@ internal fun TransactionDoneView(
                                 transactionLink = approveTransactionLink,
                                 onUriClick = onUriClick,
                                 transactionHash = approveTransactionHash,
-                                isApproved = true
+                                isApproved = true,
                             )
                             UiHorizontalDivider()
                         }
@@ -89,20 +82,19 @@ internal fun TransactionDoneView(
                     }
 
                     when (transactionTypeUiModel) {
-                        is TransactionTypeUiModel.Deposit -> DepositTransactionDetail(
-                            transactionTypeUiModel.depositTransactionUiModel
-                        )
+                        is TransactionTypeUiModel.Deposit ->
+                            DepositTransactionDetail(
+                                transactionTypeUiModel.depositTransactionUiModel
+                            )
 
-                        is TransactionTypeUiModel.Send -> TransactionDetail(transaction = transactionTypeUiModel.tx)
+                        is TransactionTypeUiModel.Send ->
+                            TransactionDetail(transaction = transactionTypeUiModel.tx)
 
-                        is TransactionTypeUiModel.SignMessage -> CustomMessageDetail(
-                            transactionTypeUiModel.model,
-                            transactionHash
-                        )
+                        is TransactionTypeUiModel.SignMessage ->
+                            CustomMessageDetail(transactionTypeUiModel.model, transactionHash)
 
                         else -> Unit
                     }
-
                 }
             }
         },
@@ -110,12 +102,7 @@ internal fun TransactionDoneView(
             VsButton(
                 label = stringResource(R.string.transaction_done_complete),
                 onClick = onComplete,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 24.dp
-                    ),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
             )
         },
     )
@@ -130,19 +117,25 @@ private fun TxLinkAndHash(
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = stringResource(if (isApproved) R.string.transaction_done_form_approve else R.string.transaction_done_form_title),
+            text =
+                stringResource(
+                    if (isApproved) R.string.transaction_done_form_approve
+                    else R.string.transaction_done_form_title
+                ),
             color = Theme.v2.colors.neutrals.n50,
             style = Theme.montserrat.heading5,
         )
 
         CopyIcon(textToCopy = transactionLink)
 
-        UiIcon(drawableResId = R.drawable.ic_link, size = 20.dp, onClick = {
-            onUriClick(transactionLink)
-        })
+        UiIcon(
+            drawableResId = R.drawable.ic_link,
+            size = 20.dp,
+            onClick = { onUriClick(transactionLink) },
+        )
     }
     Text(
         text = transactionHash,
@@ -161,7 +154,7 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
 
         OtherField(
             title = stringResource(R.string.deposit_screen_amount_title),
-            value = depositTransaction.token.value
+            value = depositTransaction.token.value,
         )
 
         AddressField(
@@ -191,13 +184,13 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
 
         AddressField(
             title = stringResource(R.string.verify_transaction_to_title),
-            address = transaction.dstAddress
+            address = transaction.dstAddress,
         )
 
         if (!transaction.memo.isNullOrEmpty())
             OtherField(
                 title = stringResource(R.string.verify_transaction_memo_title),
-                value = transaction.memo
+                value = transaction.memo,
             )
 
         OtherField(
@@ -210,54 +203,53 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
             value = transaction.token.fiatValue,
         )
 
-        FormDetails(modifier = Modifier
-            .padding(
-                vertical = 12.dp,
-            )
-            .fillMaxWidth(),
-            title = buildAnnotatedString {
-                withStyle(
-                    style = SpanStyle(
-                        color = Theme.v2.colors.neutrals.n100,
-                        fontSize = 14.sp,
-                        fontFamily = Theme.montserrat.subtitle1.fontFamily,
-                        fontWeight = Theme.montserrat.subtitle1.fontWeight,
-
-                        )
-                ) {
-                    append(stringResource(R.string.verify_transaction_network_fee))
-                }
-            },
-            value = buildAnnotatedString {
-                withStyle(
-                    style = SpanStyle(
-                        color = Theme.v2.colors.neutrals.n100,
-                        fontSize = 14.sp,
-                        fontFamily = Theme.montserrat.subtitle1.fontFamily,
-                        fontWeight = Theme.montserrat.subtitle1.fontWeight,
-                    )
-                ) {
-                    append(transaction.networkFeeTokenValue)
-                }
-                withStyle(
-                    style = SpanStyle(
-                        color = Theme.v2.colors.neutrals.n400,
-                        fontSize = 14.sp,
-                        fontFamily = Theme.montserrat.subtitle1.fontFamily,
-                        fontWeight = Theme.montserrat.subtitle1.fontWeight,
-                    )
-                ) {
-                    append(" (~${transaction.networkFeeFiatValue})")
-                }
-            })
+        FormDetails(
+            modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth(),
+            title =
+                buildAnnotatedString {
+                    withStyle(
+                        style =
+                            SpanStyle(
+                                color = Theme.v2.colors.neutrals.n100,
+                                fontSize = 14.sp,
+                                fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                            )
+                    ) {
+                        append(stringResource(R.string.verify_transaction_network_fee))
+                    }
+                },
+            value =
+                buildAnnotatedString {
+                    withStyle(
+                        style =
+                            SpanStyle(
+                                color = Theme.v2.colors.neutrals.n100,
+                                fontSize = 14.sp,
+                                fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                            )
+                    ) {
+                        append(transaction.networkFeeTokenValue)
+                    }
+                    withStyle(
+                        style =
+                            SpanStyle(
+                                color = Theme.v2.colors.neutrals.n400,
+                                fontSize = 14.sp,
+                                fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                            )
+                    ) {
+                        append(" (~${transaction.networkFeeFiatValue})")
+                    }
+                },
+        )
     }
 }
 
 @Composable
-private fun CustomMessageDetail(
-    signMessage: SignMessageTransactionUiModel?,
-    signature: String,
-) {
+private fun CustomMessageDetail(signMessage: SignMessageTransactionUiModel?, signature: String) {
     if (signMessage == null) return
 
     AddressField(
@@ -289,12 +281,13 @@ private fun TransactionDoneViewPreview() {
         onComplete = {},
         onUriClick = {},
         onBack = {},
-        transactionTypeUiModel = TransactionTypeUiModel.Send(
-            TransactionDetailsUiModel(
-                srcAddress = "0x1234567890",
-                dstAddress = "0x1234567890",
-                memo = "some memo",
-            )
-        ),
+        transactionTypeUiModel =
+            TransactionTypeUiModel.Send(
+                TransactionDetailsUiModel(
+                    srcAddress = "0x1234567890",
+                    dstAddress = "0x1234567890",
+                    memo = "some memo",
+                )
+            ),
     )
 }

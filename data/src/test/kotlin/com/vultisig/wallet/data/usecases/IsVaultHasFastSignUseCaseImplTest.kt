@@ -5,13 +5,13 @@ import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import java.io.IOException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.io.IOException
 
 internal class IsVaultHasFastSignUseCaseImplTest {
 
@@ -26,20 +26,14 @@ internal class IsVaultHasFastSignUseCaseImplTest {
 
     @Test
     fun `server vault returns false`() = runTest {
-        val vault = vault(
-            localPartyID = SERVER_PARTY,
-            signers = listOf(SERVER_PARTY, OTHER_DEVICE),
-        )
+        val vault = vault(localPartyID = SERVER_PARTY, signers = listOf(SERVER_PARTY, OTHER_DEVICE))
 
         assertFalse(useCase(vault))
     }
 
     @Test
     fun `server vault does not call API`() = runTest {
-        val vault = vault(
-            localPartyID = SERVER_PARTY,
-            signers = listOf(SERVER_PARTY, OTHER_DEVICE),
-        )
+        val vault = vault(localPartyID = SERVER_PARTY, signers = listOf(SERVER_PARTY, OTHER_DEVICE))
 
         useCase(vault)
 
@@ -48,10 +42,7 @@ internal class IsVaultHasFastSignUseCaseImplTest {
 
     @Test
     fun `fast vault returns true without API call`() = runTest {
-        val vault = vault(
-            localPartyID = LOCAL_DEVICE,
-            signers = listOf(LOCAL_DEVICE, SERVER_PARTY),
-        )
+        val vault = vault(localPartyID = LOCAL_DEVICE, signers = listOf(LOCAL_DEVICE, SERVER_PARTY))
 
         assertTrue(useCase(vault))
         coVerify(exactly = 0) { repository.hasFastSign(any()) }
@@ -76,21 +67,20 @@ internal class IsVaultHasFastSignUseCaseImplTest {
     fun `secure vault propagates exception when API fails`() = runTest {
         coEvery { repository.hasFastSign(ECDSA_KEY) } throws IOException("Network error")
 
-        assertThrows<IOException> {
-            useCase(vault())
-        }
+        assertThrows<IOException> { useCase(vault()) }
     }
 
     private fun vault(
         localPartyID: String = LOCAL_DEVICE,
         signers: List<String> = listOf(LOCAL_DEVICE, OTHER_DEVICE),
-    ) = Vault(
-        id = VAULT_ID,
-        name = "Test",
-        pubKeyECDSA = ECDSA_KEY,
-        localPartyID = localPartyID,
-        signers = signers,
-    )
+    ) =
+        Vault(
+            id = VAULT_ID,
+            name = "Test",
+            pubKeyECDSA = ECDSA_KEY,
+            localPartyID = localPartyID,
+            signers = signers,
+        )
 
     private companion object {
         const val VAULT_ID = "vault-id"

@@ -30,7 +30,7 @@ import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun FastVaultPasswordReminderDialog(
-    model: FastVaultPasswordReminderViewModel = hiltViewModel(),
+    model: FastVaultPasswordReminderViewModel = hiltViewModel()
 ) {
     val state by model.state.collectAsState()
 
@@ -43,7 +43,7 @@ internal fun FastVaultPasswordReminderDialog(
                 onVerifyClick = model::verify,
                 onPasswordVisibilityClick = model::togglePasswordVisibility,
             )
-        }
+        },
     )
 }
 
@@ -55,10 +55,10 @@ private fun FastVaultPasswordReminderDialog(
     onPasswordVisibilityClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .fillMaxWidth()
-            .padding(all = 16.dp),
+        modifier =
+            Modifier.background(Theme.v2.colors.backgrounds.primary)
+                .fillMaxWidth()
+                .padding(all = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -67,8 +67,7 @@ private fun FastVaultPasswordReminderDialog(
             textAlign = TextAlign.Center,
             style = Theme.brockmann.headings.title3,
             color = Theme.v2.colors.text.primary,
-            modifier = Modifier
-                .padding(all = 10.dp),
+            modifier = Modifier.padding(all = 10.dp),
         )
 
         FadingHorizontalDivider()
@@ -78,34 +77,31 @@ private fun FastVaultPasswordReminderDialog(
             textAlign = TextAlign.Center,
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.tertiary,
-            modifier = Modifier
+            modifier = Modifier,
         )
 
         VsTextInputField(
             textFieldState = passwordFieldState,
             hint = stringResource(R.string.keysign_password_title),
-            type = VsTextInputFieldType.Password(
-                isVisible = state.isPasswordVisible,
-                onVisibilityClick = onPasswordVisibilityClick,
-            ),
+            type =
+                VsTextInputFieldType.Password(
+                    isVisible = state.isPasswordVisible,
+                    onVisibilityClick = onPasswordVisibilityClick,
+                ),
             imeAction = ImeAction.Go,
-            onKeyboardAction = {
-                onVerifyClick()
-            },
-            innerState = if (state.error != null)
-                VsTextInputFieldInnerState.Error
-            else VsTextInputFieldInnerState.Default,
+            onKeyboardAction = { onVerifyClick() },
+            innerState =
+                if (state.error != null) VsTextInputFieldInnerState.Error
+                else VsTextInputFieldInnerState.Default,
             footNote = state.error?.asString(),
         )
 
         VsButton(
             label = stringResource(R.string.verify_transaction_screen_title),
             onClick = onVerifyClick,
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
         )
     }
-
 }
 
 @Composable

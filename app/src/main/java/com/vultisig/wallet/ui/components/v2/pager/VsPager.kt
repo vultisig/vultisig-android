@@ -30,19 +30,14 @@ internal fun VsPager(
     var maxHeight by remember { mutableStateOf(140.dp) }
     val density = LocalDensity.current
 
-    val pagerState = rememberPagerState(
-        pageCount = { state.pageCount }
-    )
+    val pagerState = rememberPagerState(pageCount = { state.pageCount })
 
     LaunchedEffect(state) {
         state.clear()
         state.content()
     }
 
-
-    LaunchedEffect(pagerState.currentPage) {
-        state.updateCurrentPage(pagerState.currentPage)
-    }
+    LaunchedEffect(pagerState.currentPage) { state.updateCurrentPage(pagerState.currentPage) }
 
     val pageHeights = remember { mutableStateMapOf<Int, Dp>() }
 
@@ -56,24 +51,23 @@ internal fun VsPager(
         }
     }
 
-    val onPageMeasured = remember(density, updateMaxHeight) {
-        { index: Int, size: IntSize ->
-            val heightDp = with(density) { size.height.toDp() }
-            updateMaxHeight(index, heightDp)
+    val onPageMeasured =
+        remember(density, updateMaxHeight) {
+            { index: Int, size: IntSize ->
+                val heightDp = with(density) { size.height.toDp() }
+                updateMaxHeight(index, heightDp)
+            }
         }
-    }
 
     HorizontalPager(
         state = pagerState,
-        modifier = modifier
-            .heightIn(min = maxHeight),
+        modifier = modifier.heightIn(min = maxHeight),
         key = { it },
         pageSpacing = 8.dp,
     ) { index ->
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .onGloballyPositioned { coordinates ->
+            modifier =
+                Modifier.fillMaxWidth().onGloballyPositioned { coordinates ->
                     onPageMeasured(index, coordinates.size)
                 }
         ) {

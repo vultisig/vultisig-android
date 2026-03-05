@@ -12,11 +12,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.lerp
 
-internal fun Modifier.startScreenAnimations(
-    delay: Int,
-    duration: Int = 200,
-) = composed {
-
+internal fun Modifier.startScreenAnimations(delay: Int, duration: Int = 200) = composed {
     val start = 0f
     val end = 1.0f
     val yStartOffset = 100
@@ -24,24 +20,16 @@ internal fun Modifier.startScreenAnimations(
     val startScale = 0.5f
     val endScale = 1f
 
-    val animationValue = remember {
-        Animatable(start)
-    }
+    val animationValue = remember { Animatable(start) }
 
     LaunchedEffect(Unit) {
         animationValue.animateTo(
             targetValue = end,
-            animationSpec = tween(
-                durationMillis = duration,
-                delayMillis = delay
-            )
+            animationSpec = tween(durationMillis = duration, delayMillis = delay),
         )
     }
 
-    this
-        .scale(lerp(startScale, endScale, animationValue.value))
-        .offset {
-            IntOffset(0, lerp(yStartOffset, yEndOffset, animationValue.value))
-        }
+    this.scale(lerp(startScale, endScale, animationValue.value))
+        .offset { IntOffset(0, lerp(yStartOffset, yEndOffset, animationValue.value)) }
         .alpha(animationValue.value)
 }

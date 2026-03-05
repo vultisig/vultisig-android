@@ -9,22 +9,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 
 @Composable
-internal fun UiSpacer(
-    size: Dp,
-) {
+internal fun UiSpacer(size: Dp) {
     Spacer(modifier = Modifier.size(size))
 }
 
 @Composable
-internal fun ColumnScope.UiSpacer(
-    weight: Float,
-) {
+internal fun ColumnScope.UiSpacer(weight: Float) {
     Spacer(modifier = Modifier.weight(weight))
 }
 
 @Composable
-internal fun RowScope.UiSpacer(
-    weight: Float,
-) {
+internal fun RowScope.UiSpacer(weight: Float) {
     Spacer(modifier = Modifier.weight(weight))
 }

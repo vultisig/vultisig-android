@@ -31,9 +31,7 @@ import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.delay
 
 @Composable
-internal fun ImportSeedphraseScreen(
-    model: ImportSeedphraseViewModel = hiltViewModel(),
-) {
+internal fun ImportSeedphraseScreen(model: ImportSeedphraseViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -67,10 +65,7 @@ internal fun ImportSeedphraseContent(
         onBackClick = onBackClick,
         title = stringResource(R.string.import_seedphrase_title),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = stringResource(R.string.import_seedphrase_subtitle),
                 style = Theme.brockmann.body.s.medium,
@@ -93,11 +88,12 @@ internal fun ImportSeedphraseContent(
             UiSpacer(8.dp)
 
             Text(
-                text = stringResource(
-                    R.string.import_seedphrase_word_count,
-                    state.wordCount,
-                    state.expectedWordCount
-                ),
+                text =
+                    stringResource(
+                        R.string.import_seedphrase_word_count,
+                        state.wordCount,
+                        state.expectedWordCount,
+                    ),
                 style = Theme.brockmann.supplementary.footnote,
                 color = Theme.v2.colors.text.primary,
             )
@@ -105,13 +101,13 @@ internal fun ImportSeedphraseContent(
             Spacer(modifier = Modifier.weight(1f))
 
             VsButton(
-                label = if (state.isImporting)
-                    stringResource(R.string.import_seedphrase_checking)
-                else stringResource(R.string.import_seedphrase_import_button),
+                label =
+                    if (state.isImporting) stringResource(R.string.import_seedphrase_checking)
+                    else stringResource(R.string.import_seedphrase_import_button),
                 onClick = onImportClick,
-                state = if (state.isImportEnabled && !state.isImporting)
-                    VsButtonState.Enabled
-                else VsButtonState.Disabled,
+                state =
+                    if (state.isImportEnabled && !state.isImporting) VsButtonState.Enabled
+                    else VsButtonState.Disabled,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

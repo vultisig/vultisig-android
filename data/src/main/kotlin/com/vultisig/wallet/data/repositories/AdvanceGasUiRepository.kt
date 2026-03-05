@@ -2,11 +2,11 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class AdvanceGasUiRepository @Inject constructor() {
@@ -17,24 +17,25 @@ class AdvanceGasUiRepository @Inject constructor() {
 
     val showSettings = MutableStateFlow(false)
 
-    val shouldShowAdvanceGasSettingsIcon = combine(
-        blockChainSpecific.filterNotNull(),
-        tokenStandard.filterNotNull(),
-        isEnabled
-    ) { blockChainSpecific, tokenStandard, isEnabled ->
-        isEnabled && isAllowedAdvanceGasSettings(blockChainSpecific, tokenStandard)
-    }
+    val shouldShowAdvanceGasSettingsIcon =
+        combine(blockChainSpecific.filterNotNull(), tokenStandard.filterNotNull(), isEnabled) {
+            blockChainSpecific,
+            tokenStandard,
+            isEnabled ->
+            isEnabled && isAllowedAdvanceGasSettings(blockChainSpecific, tokenStandard)
+        }
 
     private fun isAllowedAdvanceGasSettings(
         blockChainSpecific: BlockChainSpecific,
         tokenStandard: TokenStandard,
-    ) = when {
-        blockChainSpecific is BlockChainSpecific.Ethereum &&
+    ) =
+        when {
+            blockChainSpecific is BlockChainSpecific.Ethereum &&
                 tokenStandard == TokenStandard.EVM -> true
-        blockChainSpecific is BlockChainSpecific.UTXO &&
-                tokenStandard == TokenStandard.UTXO -> true
-        else -> false
-    }
+            blockChainSpecific is BlockChainSpecific.UTXO && tokenStandard == TokenStandard.UTXO ->
+                true
+            else -> false
+        }
 
     fun updateBlockChainSpecific(blockChainSpecific: BlockChainSpecific) {
         this.blockChainSpecific.value = blockChainSpecific
@@ -52,12 +53,11 @@ class AdvanceGasUiRepository @Inject constructor() {
         showSettings.value = false
     }
 
-    fun showIcon(){
+    fun showIcon() {
         isEnabled.value = true
     }
 
     fun hideIcon() {
         isEnabled.value = false
     }
-
 }

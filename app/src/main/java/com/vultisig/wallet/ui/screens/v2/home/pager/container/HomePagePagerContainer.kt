@@ -24,39 +24,28 @@ internal fun HomePagePagerContainer(
     content: @Composable () -> Unit,
 ) {
     V2Container(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         type = containerType,
-        borderType = ContainerBorderType.Bordered()
+        borderType = ContainerBorderType.Bordered(),
     ) {
-
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             content()
             VsCircleButton(
                 onClick = onCloseClick,
                 icon = R.drawable.glass,
                 size = VsCircleButtonSize.Custom(size = 40.dp),
-                type = VsCircleButtonType.Custom(
-                    color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.2f)
-                ),
-                modifier = Modifier
-                    .align(alignment = Alignment.TopEnd)
-                    .padding(
-                        all = 8.dp
-                    )
+                type =
+                    VsCircleButtonType.Custom(
+                        color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.2f)
+                    ),
+                modifier = Modifier.align(alignment = Alignment.TopEnd).padding(all = 8.dp),
             )
         }
     }
 }
 
-
 @Preview
 @Composable
 fun HomePagePagerContainerPreview() {
-    HomePagePagerContainer {
-        UpgradeBanner {  }
-    }
+    HomePagePagerContainer { UpgradeBanner {} }
 }
-

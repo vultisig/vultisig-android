@@ -5,53 +5,36 @@ import kotlinx.serialization.Serializable
 
 sealed interface CosmosTHORChainAccountResponse {
     data class Success(val response: THORChainAccountJson) : CosmosTHORChainAccountResponse
+
     data class Error(val response: THORChainAccountErrorJson) : CosmosTHORChainAccountResponse
 }
 
 @Serializable
-data class THORChainAccountJson(
-    @SerialName("account")
-    val account: THORChainAccountValue?,
-)
+data class THORChainAccountJson(@SerialName("account") val account: THORChainAccountValue?)
 
 @Serializable
 data class THORChainAccountErrorJson(
-    @SerialName("message")
-    val message: String,
-    @SerialName("code")
-    val code: Int,
+    @SerialName("message") val message: String,
+    @SerialName("code") val code: Int,
 )
 
 @Serializable
-data class THORChainAccountValueJson(
-    @SerialName("value")
-    val value: THORChainAccountValue?,
-)
+data class THORChainAccountValueJson(@SerialName("value") val value: THORChainAccountValue?)
 
 @Serializable
-data class THORChainAccountResultJson(
-    @SerialName("result")
-    val result: THORChainAccountValueJson?,
-)
+data class THORChainAccountResultJson(@SerialName("result") val result: THORChainAccountValueJson?)
 
 @Serializable
 data class THORChainAccountValue(
-    @SerialName("address")
-    val address: String?,
-    @SerialName("account_number")
-    val accountNumber: String?,
-    @SerialName("sequence")
-    val sequence: String?,
+    @SerialName("address") val address: String?,
+    @SerialName("account_number") val accountNumber: String?,
+    @SerialName("sequence") val sequence: String?,
 )
 
 @Serializable
 data class NativeTxFeeRune(
-    @SerialName("native_tx_fee_rune")
-    val value: String?,
-    @SerialName("tns_register_fee_rune")
-    val registerFeeRune: String?,
-    @SerialName("tns_fee_per_block_rune")
-    val feePerBlock: String?,
-    @SerialName("rune_price_in_tor")
-    val runePriceInTor: String?
+    @SerialName("native_tx_fee_rune") val value: String?,
+    @SerialName("tns_register_fee_rune") val registerFeeRune: String?,
+    @SerialName("tns_fee_per_block_rune") val feePerBlock: String?,
+    @SerialName("rune_price_in_tor") val runePriceInTor: String?,
 )

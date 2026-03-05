@@ -37,13 +37,9 @@ fun BaseDeFiPositionsScreenContent(
     onEditChains: () -> Unit = {},
     tabContent: @Composable () -> Unit = {},
 ) {
-    V2Scaffold(
-        onBackClick = onBackClick,
-    ) {
+    V2Scaffold(onBackClick = onBackClick) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Theme.v2.colors.backgrounds.primary),
+            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
             horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -58,19 +54,14 @@ fun BaseDeFiPositionsScreenContent(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-
-                VsTabGroup(
-                    index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }
-                ) {
+                VsTabGroup(index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }) {
                     tabs.forEach { tab ->
                         tab {
                             VsTab(
                                 label = stringResource(tab.displayNameRes),
-                                onClick = {
-                                    onTabSelected(tab)
-                                },
+                                onClick = { onTabSelected(tab) },
                             )
                         }
                     }
@@ -80,8 +71,7 @@ fun BaseDeFiPositionsScreenContent(
                     V2Container(
                         type = ContainerType.SECONDARY,
                         cornerType = CornerType.Circular,
-                        modifier = Modifier
-                            .clickOnce(onClick = {})
+                        modifier = Modifier.clickOnce(onClick = {}),
                     ) {
                         UiIcon(
                             drawableResId = R.drawable.edit_chain,
@@ -109,59 +99,62 @@ enum class DeFiTab(@androidx.annotation.StringRes val displayNameRes: Int) {
 @Preview(showBackground = true)
 @Composable
 private fun BaseDeFiPositionsScreenContentPreview() {
-        BaseDeFiPositionsScreenContent(
-            state = DefiUiModel(
+    BaseDeFiPositionsScreenContent(
+        state =
+            DefiUiModel(
                 totalAmountPrice = "$12,345.67",
                 isTotalAmountLoading = false,
                 isBalanceVisible = true,
                 supportEditChains = true,
-                selectedTab = DeFiTab.DEPOSITED.displayNameRes
+                selectedTab = DeFiTab.DEPOSITED.displayNameRes,
             ),
-            tabs = listOf(DeFiTab.DEPOSITED, DeFiTab.STAKED),
-            bannerTitle = "USDC Account",
-            onBackClick = {},
-            onTabSelected = {},
-            onEditChains = {},
-            tabContent = {}
-        )
+        tabs = listOf(DeFiTab.DEPOSITED, DeFiTab.STAKED),
+        bannerTitle = "USDC Account",
+        onBackClick = {},
+        onTabSelected = {},
+        onEditChains = {},
+        tabContent = {},
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun BaseDeFiPositionsScreenContentLoadingPreview() {
-        BaseDeFiPositionsScreenContent(
-            state = DefiUiModel(
+    BaseDeFiPositionsScreenContent(
+        state =
+            DefiUiModel(
                 totalAmountPrice = "$0.00",
                 isTotalAmountLoading = true,
                 isBalanceVisible = true,
                 supportEditChains = false,
-                selectedTab = DeFiTab.DEPOSITED.displayNameRes
+                selectedTab = DeFiTab.DEPOSITED.displayNameRes,
             ),
-            tabs = listOf(DeFiTab.DEPOSITED),
-            bannerTitle = "USDC Account",
-            onBackClick = {},
-            onTabSelected = {},
-            onEditChains = {},
-            tabContent = {}
-        )
+        tabs = listOf(DeFiTab.DEPOSITED),
+        bannerTitle = "USDC Account",
+        onBackClick = {},
+        onTabSelected = {},
+        onEditChains = {},
+        tabContent = {},
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun BaseDeFiPositionsScreenContentHiddenBalancePreview() {
-        BaseDeFiPositionsScreenContent(
-            state = DefiUiModel(
+    BaseDeFiPositionsScreenContent(
+        state =
+            DefiUiModel(
                 totalAmountPrice = "$99,999.99",
                 isTotalAmountLoading = false,
                 isBalanceVisible = false,
                 supportEditChains = true,
-                selectedTab = DeFiTab.STAKED.displayNameRes
+                selectedTab = DeFiTab.STAKED.displayNameRes,
             ),
-            tabs = listOf(DeFiTab.DEPOSITED, DeFiTab.STAKED, DeFiTab.BONDED),
-            bannerTitle = "USDC Account",
-            onBackClick = {},
-            onTabSelected = {},
-            onEditChains = {},
-            tabContent = {}
-        )
+        tabs = listOf(DeFiTab.DEPOSITED, DeFiTab.STAKED, DeFiTab.BONDED),
+        bannerTitle = "USDC Account",
+        onBackClick = {},
+        onTabSelected = {},
+        onEditChains = {},
+        tabContent = {},
+    )
 }

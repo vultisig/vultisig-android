@@ -9,4 +9,3 @@ data class SelectPopupUiModel<T>(
     val currentDragPosition: Offset? = null,
     val pressPosition: Offset,
 )
-

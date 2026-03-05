@@ -14,12 +14,12 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.util.password.InputPasswordViewModelDelegate
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class KeysignPasswordUiModel(
     val isPasswordVisible: Boolean = false,
@@ -28,7 +28,9 @@ data class KeysignPasswordUiModel(
 )
 
 @HiltViewModel
-internal class KeysignPasswordViewModel @Inject constructor(
+internal class KeysignPasswordViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vultiSignerRepository: VultiSignerRepository,
@@ -39,24 +41,21 @@ internal class KeysignPasswordViewModel @Inject constructor(
     private val args = savedStateHandle.toRoute<Route.Keysign.Password>()
     private val transactionId: TransactionId = args.transactionId
 
-    private val delegate = InputPasswordViewModelDelegate(
-        vaultId = args.vaultId,
-        navigator = navigator,
-        vultiSignerRepository = vultiSignerRepository,
-        vaultRepository = vaultRepository,
-        vaultDataStoreRepository = vaultDataStoreRepository,
-    )
+    private val delegate =
+        InputPasswordViewModelDelegate(
+            vaultId = args.vaultId,
+            navigator = navigator,
+            vultiSignerRepository = vultiSignerRepository,
+            vaultRepository = vaultRepository,
+            vaultDataStoreRepository = vaultDataStoreRepository,
+        )
 
     val state = MutableStateFlow(KeysignPasswordUiModel())
 
     val passwordFieldState = delegate.passwordFieldState
 
     init {
-        delegate.state
-            .onEach { newState ->
-                state.update { newState }
-            }
-            .launchIn(viewModelScope)
+        delegate.state.onEach { newState -> state.update { newState } }.launchIn(viewModelScope)
     }
 
     fun togglePasswordVisibility() {
@@ -80,5 +79,4 @@ internal class KeysignPasswordViewModel @Inject constructor(
             }
         }
     }
-
 }

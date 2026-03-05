@@ -14,8 +14,8 @@ import java.util.Locale
 @Stable
 internal class SeparateNumberOutputTransformation : OutputTransformation {
 
-    private val format = NumberFormat.getNumberInstance(Locale.getDefault())
-        .apply {
+    private val format =
+        NumberFormat.getNumberInstance(Locale.getDefault()).apply {
             maximumFractionDigits = Int.MAX_VALUE
             maximumIntegerDigits = Int.MAX_VALUE
             if (this is DecimalFormat) {
@@ -47,5 +47,4 @@ internal class SeparateNumberOutputTransformation : OutputTransformation {
             // ignore
         }
     }
-
 }

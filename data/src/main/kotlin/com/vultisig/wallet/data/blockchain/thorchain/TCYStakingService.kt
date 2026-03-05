@@ -11,14 +11,6 @@ import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.utils.SimpleCache
 import com.vultisig.wallet.data.utils.toValue
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.supervisorScope
-import timber.log.Timber
-import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -27,8 +19,18 @@ import javax.inject.Inject
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.pow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.supervisorScope
+import timber.log.Timber
+import wallet.core.jni.CoinType
 
-class TCYStakingService @Inject constructor(
+class TCYStakingService
+@Inject
+constructor(
     private val thorChainApi: ThorChainApi,
     private val tokenPriceRepository: TokenPriceRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
@@ -50,62 +52,73 @@ class TCYStakingService @Inject constructor(
         val systemIncomeBps: Long,
     )
 
-    private val constantsCache = SimpleCache<String, TcyConstants>(
-        defaultExpirationMs = CONSTANTS_CACHE_DURATION_MS
-    )
+    private val constantsCache =
+        SimpleCache<String, TcyConstants>(defaultExpirationMs = CONSTANTS_CACHE_DURATION_MS)
 
-    fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails> = flow {
-        val cachedDetails =
-            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.TCY.id)
-        if (cachedDetails != null) {
-            Timber.d("TCYStakingService: Emitting cached TCY staking position for vault $vaultId")
-            emit(cachedDetails)
-        }
+    fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails> =
+        flow {
+                val cachedDetails =
+                    stakingDetailsRepository.getStakingDetailsByCoindId(
+                        vaultId,
+                        Coins.ThorChain.TCY.id,
+                    )
+                if (cachedDetails != null) {
+                    Timber.d(
+                        "TCYStakingService: Emitting cached TCY staking position for vault $vaultId"
+                    )
+                    emit(cachedDetails)
+                }
 
-        // Fetch fresh data from network
-        val freshDetails = try {
-            getStakingDetailsFromNetwork(address)
-        } catch (e: Exception) {
-            Timber.e(e, "TCYStakingService: Error fetching TCY staking details for vault $vaultId")
+                // Fetch fresh data from network
+                val freshDetails =
+                    try {
+                        getStakingDetailsFromNetwork(address)
+                    } catch (e: Exception) {
+                        Timber.e(
+                            e,
+                            "TCYStakingService: Error fetching TCY staking details for vault $vaultId",
+                        )
 
-            if (cachedDetails != null) {
-                Timber.d("TCYStakingService: Using cached TCY position due to error")
-                emit(cachedDetails)
-                return@flow
+                        if (cachedDetails != null) {
+                            Timber.d("TCYStakingService: Using cached TCY position due to error")
+                            emit(cachedDetails)
+                            return@flow
+                        }
+
+                        throw e
+                    }
+
+                // Emit new fresh positions
+                Timber.d(
+                    "TCYStakingService: Emitting fresh TCY staking position for vault $vaultId"
+                )
+                emit(freshDetails)
+
+                // Update DB cache
+                Timber.d("TCYStakingService: Saving fresh TCY position for vault $vaultId")
+                stakingDetailsRepository.saveStakingDetails(vaultId, freshDetails)
             }
+            .flowOn(Dispatchers.IO)
 
-            throw e
-        }
-
-        // Emit new fresh positions
-        Timber.d("TCYStakingService: Emitting fresh TCY staking position for vault $vaultId")
-        emit(freshDetails)
-
-        // Update DB cache
-        Timber.d("TCYStakingService: Saving fresh TCY position for vault $vaultId")
-        stakingDetailsRepository.saveStakingDetails(vaultId, freshDetails)
-    }.flowOn(Dispatchers.IO)
-
-    suspend fun getStakingDetailsFromNetwork(
-        address: String,
-    ): StakingDetails = supervisorScope {
+    suspend fun getStakingDetailsFromNetwork(address: String): StakingDetails = supervisorScope {
         try {
             // 1. Fetch staked amount
             val stakedResponse = thorChainApi.fetchTcyStakedAmount(address)
             val stakedAmount = stakedResponse.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
             val stakeDecimal = CoinType.THORCHAIN.toValue(stakedAmount)
 
-            val rewardsCoin = Coin(
-                chain = Chain.ThorChain,
-                ticker = "RUNE",
-                logo = "rune",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "thorchain",
-                contractAddress = "",
-                isNativeToken = true
-            )
+            val rewardsCoin =
+                Coin(
+                    chain = Chain.ThorChain,
+                    ticker = "RUNE",
+                    logo = "rune",
+                    address = "",
+                    decimal = 8,
+                    hexPublicKey = "",
+                    priceProviderID = "thorchain",
+                    contractAddress = "",
+                    isNativeToken = true,
+                )
 
             if (stakedAmount == BigInteger.ZERO) {
                 return@supervisorScope StakingDetails(
@@ -116,7 +129,7 @@ class TCYStakingService @Inject constructor(
                     estimatedRewards = null,
                     nextPayoutDate = null,
                     rewards = null,
-                    rewardsCoin = rewardsCoin
+                    rewardsCoin = rewardsCoin,
                 )
             }
 
@@ -133,7 +146,7 @@ class TCYStakingService @Inject constructor(
                 estimatedRewards = estimatedRewardDeferred.await(),
                 nextPayoutDate = nextPayoutDeferred.await(),
                 rewards = null, // TCY auto-distributes, no pending rewards
-                rewardsCoin = rewardsCoin
+                rewardsCoin = rewardsCoin,
             )
         } catch (e: Exception) {
             Timber.e(e, "TCYStakingService: Failed to fetch TCY staking details from network")
@@ -141,23 +154,21 @@ class TCYStakingService @Inject constructor(
         }
     }
 
-    private suspend fun calculateTcyAPY(
-        address: String,
-        stakedAmount: BigDecimal
-    ): Double {
+    private suspend fun calculateTcyAPY(address: String, stakedAmount: BigDecimal): Double {
         return try {
             // Get prices
             val currency = AppCurrency.USD
             val tcyCoin = Coins.ThorChain.TCY
             val runeCoin = Coins.ThorChain.RUNE
-            val tcyPrice = tokenPriceRepository.getCachedPrice(tcyCoin.id, currency)
-                ?: BigDecimal.ZERO
-            val runePrice = tokenPriceRepository.getCachedPrice(runeCoin.id, currency)
-                ?: BigDecimal.ZERO
+            val tcyPrice =
+                tokenPriceRepository.getCachedPrice(tcyCoin.id, currency) ?: BigDecimal.ZERO
+            val runePrice =
+                tokenPriceRepository.getCachedPrice(runeCoin.id, currency) ?: BigDecimal.ZERO
 
-            if (tcyPrice <= BigDecimal.ZERO ||
-                runePrice <= BigDecimal.ZERO ||
-                stakedAmount == BigDecimal.ZERO
+            if (
+                tcyPrice <= BigDecimal.ZERO ||
+                    runePrice <= BigDecimal.ZERO ||
+                    stakedAmount == BigDecimal.ZERO
             ) {
                 return 0.0
             }
@@ -171,9 +182,8 @@ class TCYStakingService @Inject constructor(
             }
 
             // Calculate total RUNE received
-            val totalRuneSatoshis = distributions.sumOf { dist ->
-                dist.amount.toBigIntegerOrNull() ?: BigInteger.ZERO
-            }
+            val totalRuneSatoshis =
+                distributions.sumOf { dist -> dist.amount.toBigIntegerOrNull() ?: BigInteger.ZERO }
             val totalRune = CoinType.THORCHAIN.toValue(totalRuneSatoshis)
 
             // Calculate average daily RUNE
@@ -230,7 +240,8 @@ class TCYStakingService @Inject constructor(
     }
 
     /// Calculate estimated TCY reward based on current module balance and accrual rate
-    /// Logic mirrors: https://github.com/familiarcow/RUNE-Tools TCY.svelte calculateNextDistribution
+    /// Logic mirrors: https://github.com/familiarcow/RUNE-Tools TCY.svelte
+    // calculateNextDistribution
     private suspend fun calculateEstimatedReward(stakedAmount: BigDecimal): BigDecimal? =
         supervisorScope {
             try {
@@ -269,7 +280,7 @@ class TCYStakingService @Inject constructor(
                     currentAccruedRune.divide(
                         blocksSinceLastDistribution.toBigDecimal(),
                         8,
-                        RoundingMode.DOWN
+                        RoundingMode.DOWN,
                     )
 
                 // Calculate total estimated RUNE by next distribution
@@ -286,15 +297,12 @@ class TCYStakingService @Inject constructor(
 
     private suspend fun calculateUserShare(
         stakedAmount: BigDecimal,
-        totalEstimatedRune: BigDecimal
+        totalEstimatedRune: BigDecimal,
     ): BigDecimal {
         val constants = fetchThorchainConstants()
 
-        val rawMultiplier = totalEstimatedRune.divide(
-            constants.minRuneForDistribution,
-            2,
-            RoundingMode.DOWN
-        )
+        val rawMultiplier =
+            totalEstimatedRune.divide(constants.minRuneForDistribution, 2, RoundingMode.DOWN)
 
         // Calculate distribution amount
         val distributionMultiplier = BigDecimal(floor(rawMultiplier.toDouble()))
@@ -326,8 +334,7 @@ class TCYStakingService @Inject constructor(
 
         val minRune =
             data.int64Values.minRuneForTCYStakeDistribution?.toBigDecimal() ?: BigDecimal.ZERO
-        val minRuneDecimal =
-            minRune.divide(10.0.toBigDecimal().pow(8))
+        val minRuneDecimal = minRune.divide(10.0.toBigDecimal().pow(8))
 
         val minTcy =
             data.int64Values.minTcyForTCYStakeDistribution?.toBigDecimal() ?: BigDecimal.ZERO
@@ -335,11 +342,12 @@ class TCYStakingService @Inject constructor(
 
         val bps = data.int64Values.tcyStakeSystemIncomeBps ?: 0L
 
-        val constants = TcyConstants(
-            minRuneForDistribution = minRuneDecimal,
-            minTcyForDistribution = minTcyDecimal,
-            systemIncomeBps = bps
-        )
+        val constants =
+            TcyConstants(
+                minRuneForDistribution = minRuneDecimal,
+                minTcyForDistribution = minTcyDecimal,
+                systemIncomeBps = bps,
+            )
 
         constantsCache.put(CONSTANT_CACHE_KEY, constants)
 
@@ -350,20 +358,22 @@ class TCYStakingService @Inject constructor(
         val response = thorChainApi.fetchTcyStakers()
 
         // Sum all staked amounts (they are in satoshis as strings)
-        val totalSatoshis = response.tcyStakers.fold(BigDecimal.ZERO) { sum, staker ->
-            val amount = try {
-                BigDecimal(staker.amount)
-            } catch (e: Exception) {
-                Timber.e(e)
-                BigDecimal.ZERO
+        val totalSatoshis =
+            response.tcyStakers.fold(BigDecimal.ZERO) { sum, staker ->
+                val amount =
+                    try {
+                        BigDecimal(staker.amount)
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                        BigDecimal.ZERO
+                    }
+                sum + amount
             }
-            sum + amount
-        }
 
         return totalSatoshis.divide(
             BigDecimal.TEN.pow(TCY_DECIMALS),
             TCY_DECIMALS,
-            RoundingMode.DOWN
+            RoundingMode.DOWN,
         )
     }
 }

@@ -43,10 +43,8 @@ private class AnimatePlacementModifierNode(var lookaheadScope: LookaheadScope) :
         return false
     }
 
-
     private val offsetAnimation: DeferredTargetAnimation<IntOffset, AnimationVector2D> =
         DeferredTargetAnimation(IntOffset.VectorConverter)
-
 
     override fun Placeable.PlacementScope.isPlacementApproachInProgress(
         lookaheadCoordinates: LayoutCoordinates
@@ -61,7 +59,7 @@ private class AnimatePlacementModifierNode(var lookaheadScope: LookaheadScope) :
 
     override fun ApproachMeasureScope.approachMeasure(
         measurable: Measurable,
-        constraints: Constraints
+        constraints: Constraints,
     ): MeasureResult {
         val placeable = measurable.measure(constraints)
         return layout(placeable.width, placeable.height) {
@@ -76,9 +74,7 @@ private class AnimatePlacementModifierNode(var lookaheadScope: LookaheadScope) :
 
                 val placementOffset =
                     with(lookaheadScope) {
-                        lookaheadScopeCoordinates
-                            .localPositionOf(coordinates, Offset.Zero)
-                            .round()
+                        lookaheadScopeCoordinates.localPositionOf(coordinates, Offset.Zero).round()
                     }
                 val (x, y) = animatedOffset - placementOffset
                 placeable.place(x, y)
@@ -88,5 +84,3 @@ private class AnimatePlacementModifierNode(var lookaheadScope: LookaheadScope) :
         }
     }
 }
-
-

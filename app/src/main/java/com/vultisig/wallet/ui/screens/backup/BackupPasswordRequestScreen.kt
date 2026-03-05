@@ -42,13 +42,11 @@ import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.file.RequestCreateDocument
 
 @Composable
-internal fun BackupPasswordRequestScreen(
-    model: BackupPasswordRequestViewModel = hiltViewModel()
-) {
+internal fun BackupPasswordRequestScreen(model: BackupPasswordRequestViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     RequestWriteFilePermissionOnceIfNotGranted(
-        onRequestPermissionResult = model::handleWriteFilePermissionStatus,
+        onRequestPermissionResult = model::handleWriteFilePermissionStatus
     )
 
     RequestCreateDocument(
@@ -77,60 +75,40 @@ internal fun BackupPasswordRequestScreen(
 @Preview
 @Composable
 private fun BackupPasswordRequestScreenPreview() {
-    BackupPasswordRequestScreen(
-        onNoPasswordClick = {},
-        onWithPasswordClick = {},
-        onBackClick = {},
-    )
+    BackupPasswordRequestScreen(onNoPasswordClick = {}, onWithPasswordClick = {}, onBackClick = {})
 }
 
 internal object BackupPasswordRequestScreenTags {
     const val BACKUP_WITHOUT_PASSWORD = "BackupPasswordRequestScreen.withoutPassword"
 }
 
-
-
 @Composable
 private fun BackupPasswordRequestScreen(
-    onNoPasswordClick : () -> Unit,
-    onWithPasswordClick : () -> Unit,
-    onBackClick : () -> Unit,
+    onNoPasswordClick: () -> Unit,
+    onWithPasswordClick: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
-    V2Scaffold(
-        onBackClick = onBackClick
-    ) {
+    V2Scaffold(onBackClick = onBackClick) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         ) {
-            UiSpacer(
-                size = 14.dp,
-            )
+            UiSpacer(size = 14.dp)
 
             UiIcon(
-                modifier = Modifier
-                    .size(
-                        64.dp,
-                    )
-                    .background(
-                        color = Theme.v2.colors.backgrounds.tertiary_2,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .clip(
-                        shape = RoundedCornerShape(16.dp),
-                    )
-                    .padding(
-                        all = 16.dp,
-                    ),
+                modifier =
+                    Modifier.size(64.dp)
+                        .background(
+                            color = Theme.v2.colors.backgrounds.tertiary_2,
+                            shape = RoundedCornerShape(16.dp),
+                        )
+                        .clip(shape = RoundedCornerShape(16.dp))
+                        .padding(all = 16.dp),
                 drawableResId = R.drawable.ic_passkeys,
-                size = 32.dp
+                size = 32.dp,
             )
 
-            UiSpacer(
-                size = 36.dp
-            )
+            UiSpacer(size = 36.dp)
 
             Text(
                 text = stringResource(R.string.backup_password_request_title),
@@ -139,50 +117,47 @@ private fun BackupPasswordRequestScreen(
                 textAlign = TextAlign.Center,
             )
 
-            UiSpacer(
-                size = 16.dp,
-            )
+            UiSpacer(size = 16.dp)
 
             BackupCaution(
                 icon = R.drawable.remember,
-                mainText = stringResource(R.string.backup_password_request_caution_secure_without_desc),
-                highlightedWords = listOf(stringResource(R.string.backup_password_request_highlight_secure_without))
+                mainText =
+                    stringResource(R.string.backup_password_request_caution_secure_without_desc),
+                highlightedWords =
+                    listOf(
+                        stringResource(R.string.backup_password_request_highlight_secure_without)
+                    ),
             )
 
-            UiSpacer(
-                size = 16.dp,
-            )
+            UiSpacer(size = 16.dp)
             BackupCaution(
                 icon = R.drawable.backup_passowrd_lock,
                 mainText = stringResource(R.string.backup_password_request_caution_encrypt_desc),
-                highlightedWords = listOf(stringResource(R.string.backup_password_request_highlight_encrypt))
+                highlightedWords =
+                    listOf(stringResource(R.string.backup_password_request_highlight_encrypt)),
             )
 
-            UiSpacer(
-                size = 16.dp,
-            )
+            UiSpacer(size = 16.dp)
             BackupCaution(
                 icon = R.drawable.encrypt,
-                mainText = stringResource(R.string.backup_password_request_caution_cannot_reset_desc),
-                highlightedWords = listOf(stringResource(R.string.backup_password_request_highlight_cannot))
+                mainText =
+                    stringResource(R.string.backup_password_request_caution_cannot_reset_desc),
+                highlightedWords =
+                    listOf(stringResource(R.string.backup_password_request_highlight_cannot)),
             )
 
-            UiSpacer(
-                weight = 1f
-            )
+            UiSpacer(weight = 1f)
 
-            UiSpacer(
-                size = 24.dp
-            )
+            UiSpacer(size = 24.dp)
 
             VsButton(
                 label = stringResource(R.string.backup_password_request_no_password_action),
                 onClick = onNoPasswordClick,
                 variant = VsButtonVariant.Primary,
                 size = VsButtonSize.Medium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag(BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .testTag(BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD),
             )
 
             UiSpacer(12.dp)
@@ -192,53 +167,38 @@ private fun BackupPasswordRequestScreen(
                 onClick = onWithPasswordClick,
                 variant = VsButtonVariant.Secondary,
                 size = VsButtonSize.Medium,
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
             )
-
         }
     }
 }
-
 
 @Composable
 private fun BackupCaution(
     mainText: String,
     highlightedWords: List<String>,
-    @DrawableRes icon: Int
+    @DrawableRes icon: Int,
 ) {
 
-    V2Container(
-        type = ContainerType.SECONDARY,
-        borderType = ContainerBorderType.Bordered()
-    ) {
-
+    V2Container(type = ContainerType.SECONDARY, borderType = ContainerBorderType.Bordered()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    all = 16.dp,
-                ),
+            modifier = Modifier.fillMaxWidth().padding(all = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            UiIcon(
-                drawableResId = icon,
-                size = 20.dp,
-                tint = Theme.v2.colors.primary.accent4,
-            )
+            UiIcon(drawableResId = icon, size = 20.dp, tint = Theme.v2.colors.primary.accent4)
             UiSpacer(16.dp)
 
             Text(
-                text = highlightedText(
-                    mainText = mainText,
-                    highlightedWords = highlightedWords,
-                    mainTextColor = Theme.v2.colors.text.tertiary,
-                    mainTextStyle = Theme.brockmann.supplementary.footnote,
-                    highlightTextColor = Theme.v2.colors.text.primary,
-                    highlightTextStyle = Theme.brockmann.supplementary.footnote,
-                ),
-                modifier = Modifier
-                    .weight(1f),
+                text =
+                    highlightedText(
+                        mainText = mainText,
+                        highlightedWords = highlightedWords,
+                        mainTextColor = Theme.v2.colors.text.tertiary,
+                        mainTextStyle = Theme.brockmann.supplementary.footnote,
+                        highlightTextColor = Theme.v2.colors.text.primary,
+                        highlightTextStyle = Theme.brockmann.supplementary.footnote,
+                    ),
+                modifier = Modifier.weight(1f),
             )
         }
     }
@@ -249,12 +209,8 @@ private fun BackupCaution(
 private fun BackupCautionPreview() {
     BackupCaution(
         icon = R.drawable.device_backup,
-        mainText = "By default, your backup is secure without an extra password, since you store Vault shares in different locations.",
-        highlightedWords = listOf("secure without")
+        mainText =
+            "By default, your backup is secure without an extra password, since you store Vault shares in different locations.",
+        highlightedWords = listOf("secure without"),
     )
 }
-
-
-
-
-

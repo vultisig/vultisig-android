@@ -9,16 +9,16 @@ import timber.log.Timber
 /**
  * Launches a coroutine that catches all exceptions except [CancellationException].
  *
- * Use this instead of [CoroutineScope.launch] for coroutines that perform
- * network calls, deserialization, or other operations that may throw
- * unhandled exceptions. This prevents crashes while still logging the error.
+ * Use this instead of [CoroutineScope.launch] for coroutines that perform network calls,
+ * deserialization, or other operations that may throw unhandled exceptions. This prevents crashes
+ * while still logging the error.
  *
- * [CancellationException] is always re-thrown to preserve coroutine cancellation
- * semantics (e.g. `viewModelScope` cancellation on `ViewModel.onCleared()`).
+ * [CancellationException] is always re-thrown to preserve coroutine cancellation semantics (e.g.
+ * `viewModelScope` cancellation on `ViewModel.onCleared()`).
  *
- * [onError] is intentionally **non-suspend** — it runs synchronously on the
- * coroutine's dispatcher, which is safe for updating `MutableStateFlow` values.
- * If [onError] itself throws, that exception is **not** caught and will propagate normally.
+ * [onError] is intentionally **non-suspend** — it runs synchronously on the coroutine's dispatcher,
+ * which is safe for updating `MutableStateFlow` values. If [onError] itself throws, that exception
+ * is **not** caught and will propagate normally.
  *
  * Usage in a ViewModel:
  * ```

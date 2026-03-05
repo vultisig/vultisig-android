@@ -14,13 +14,11 @@ internal fun WalletExpandedTopbarContent(
     onBuy: () -> Unit,
     onReceive: () -> Unit,
 ) {
-    UiSpacer(
-        40.dp
-    )
+    UiSpacer(40.dp)
     BalanceBanner(
         isVisible = state.isBalanceValueVisible,
         balance = state.totalFiatValue,
-        onToggleVisibility = onToggleBalanceVisibility
+        onToggleVisibility = onToggleBalanceVisibility,
     )
 
     UiSpacer(32.dp)

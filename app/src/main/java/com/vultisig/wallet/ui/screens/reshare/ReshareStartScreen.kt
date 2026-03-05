@@ -58,16 +58,14 @@ private fun ReshareStartScreen(
         containerColor = colors.backgrounds.primary,
         content = {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 20.dp),
+                modifier = Modifier.fillMaxSize().padding(top = 20.dp),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     IconButton(
                         modifier = Modifier.align(Alignment.CenterStart),
-                        onClick = clickOnce(navController::popBackStack)
+                        onClick = clickOnce(navController::popBackStack),
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_caret_left),
@@ -78,15 +76,12 @@ private fun ReshareStartScreen(
                     Image(
                         modifier = Modifier.align(Alignment.Center),
                         painter = painterResource(id = R.drawable.vultisig_icon_text),
-                        contentDescription = "Reshare Image"
+                        contentDescription = "Reshare Image",
                     )
                 }
             }
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(it)
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxSize().padding(it).padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -94,28 +89,24 @@ private fun ReshareStartScreen(
                     text = stringResource(id = R.string.reshare_start_screen_title),
                     color = colors.neutrals.n50,
                     style = Theme.montserrat.heading4,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
                 Text(
                     modifier = Modifier.padding(top = 16.dp),
                     text = stringResource(id = R.string.reshare_start_screen_body),
                     color = colors.neutrals.n50,
                     style = Theme.montserrat.body1,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
-
             }
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .imePadding()
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxSize().imePadding().padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 GradientInfoCard(
                     stringResource(id = R.string.reshare_start_screen_warning),
-                    Brush.vultiGradient()
+                    Brush.vultiGradient(),
                 )
 
                 VsButton(
@@ -151,17 +142,12 @@ private fun ReshareStartScreen(
 
                 UiSpacer(size = 16.dp)
             }
-        })
-
+        },
+    )
 }
 
 @Preview
 @Composable
 private fun PreviewReshareScreen() {
-    ReshareStartScreen(
-        onStartClick = {},
-        onJoinClick = {},
-        navController = rememberNavController(),
-    )
+    ReshareStartScreen(onStartClick = {}, onJoinClick = {}, navController = rememberNavController())
 }
-

@@ -37,10 +37,7 @@ internal fun ToggleVisibilityText(
     onTextLayout: ((TextLayoutResult) -> Unit)? = null,
     style: TextStyle = LocalTextStyle.current,
 ) {
-    AnimatedContent(
-        targetState = isVisible,
-        label = "toggle value visibility"
-    ) {
+    AnimatedContent(targetState = isVisible, label = "toggle value visibility") {
         Text(
             text = if (it) text else HIDE_CHARS,
             modifier = modifier,
@@ -64,4 +61,3 @@ internal fun ToggleVisibilityText(
 }
 
 private val HIDE_CHARS = "• ".repeat(8).trim()
-

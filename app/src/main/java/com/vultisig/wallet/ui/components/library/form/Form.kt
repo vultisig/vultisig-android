@@ -65,13 +65,12 @@ import com.vultisig.wallet.ui.theme.cursorBrush
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
-
 @Composable
 internal fun FormTokenCard(
     selectedTitle: String,
     selectedIcon: ImageModel,
     availableToken: String,
-    chainLogo :Int?,
+    chainLogo: Int?,
     onClick: () -> Unit,
 ) {
     FormCard {
@@ -98,40 +97,31 @@ internal fun TokenCard(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .defaultMinSize(minHeight = 48.dp)
-            .padding(
-                vertical = 8.dp,
-                horizontal = 12.dp
-            )
-            .clickable(onClick = onClick),
+        modifier =
+            Modifier.defaultMinSize(minHeight = 48.dp)
+                .padding(vertical = 8.dp, horizontal = 12.dp)
+                .clickable(onClick = onClick),
     ) {
-
         Box {
             TokenLogo(
                 logo = tokenLogo,
                 title = title,
-                modifier = Modifier
-                    .size(36.dp)
-                    .padding(4.dp)
-                    .align(Alignment.Center),
-                errorLogoModifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Theme.v2.colors.neutrals.n100)
+                modifier = Modifier.size(36.dp).padding(4.dp).align(Alignment.Center),
+                errorLogoModifier =
+                    Modifier.size(36.dp).clip(CircleShape).background(Theme.v2.colors.neutrals.n100),
             )
             if (chainLogo != null)
                 Image(
                     painter = painterResource(id = chainLogo),
                     contentDescription = null,
-                    modifier = Modifier
-                        .size(12.dp)
-                        .border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.neutrals.n50,
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .align(BottomEnd)
+                    modifier =
+                        Modifier.size(12.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.neutrals.n50,
+                                shape = RoundedCornerShape(4.dp),
+                            )
+                            .align(BottomEnd),
                 )
         }
 
@@ -154,10 +144,7 @@ internal fun TokenCard(
         if (actionIcon != null) {
             UiSpacer(size = 8.dp)
 
-            UiIcon(
-                drawableResId = actionIcon,
-                size = 20.dp,
-            )
+            UiIcon(drawableResId = actionIcon, size = 20.dp)
         }
     }
 }
@@ -174,12 +161,8 @@ internal fun FormTextFieldCard(
     hintColor: Color = Theme.v2.colors.neutrals.n100,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    TextFieldValidator(
-        errorText = error,
-    ) {
-        FormEntry(
-            title = title,
-        ) {
+    TextFieldValidator(errorText = error) {
+        FormEntry(title = title) {
             FormTextField(
                 hint = hint,
                 keyboardType = keyboardType,
@@ -193,7 +176,6 @@ internal fun FormTextFieldCard(
     }
 }
 
-
 @Composable
 internal fun FormTextFieldCard(
     hint: String,
@@ -203,21 +185,18 @@ internal fun FormTextFieldCard(
     onLostFocus: () -> Unit = {},
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    TextFieldValidator(
-        errorText = error,
-    ) {
+    TextFieldValidator(errorText = error) {
         FormCard {
             FormTextField(
                 hint = hint,
                 keyboardType = keyboardType,
                 textFieldState = textFieldState,
                 content = content,
-                onLostFocus = onLostFocus
+                onLostFocus = onLostFocus,
             )
         }
     }
 }
-
 
 @Composable
 internal fun FormTextFieldCardWithPercentage(
@@ -231,25 +210,19 @@ internal fun FormTextFieldCardWithPercentage(
     onPercentClick: (percent: Float) -> Unit = {},
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    TextFieldValidator(
-        errorText = error,
-    ) {
-        FormEntryWithPercentage(
-            title = title,
-            onPercentClick = onPercentClick
-        ) {
+    TextFieldValidator(errorText = error) {
+        FormEntryWithPercentage(title = title, onPercentClick = onPercentClick) {
             FormTextField(
                 hint = hint,
                 keyboardType = keyboardType,
                 textFieldState = textFieldState,
                 outputTransformation = outputTransformation,
                 content = content,
-                onLostFocus = onLostFocus
+                onLostFocus = onLostFocus,
             )
         }
     }
 }
-
 
 @Composable
 internal fun FormTextField(
@@ -263,13 +236,10 @@ internal fun FormTextField(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 48.dp)
-            .padding(
-                horizontal = 12.dp,
-                vertical = 14.dp
-            ),
+        modifier =
+            Modifier.fillMaxWidth()
+                .defaultMinSize(minHeight = 48.dp)
+                .padding(horizontal = 12.dp, vertical = 14.dp),
     ) {
         BasicFormTextField(
             hint = hint,
@@ -278,8 +248,7 @@ internal fun FormTextField(
             textFieldState = textFieldState,
             outputTransformation = outputTransformation,
             onLostFocus = onLostFocus,
-            modifier = Modifier
-                .weight(1f),
+            modifier = Modifier.weight(1f),
         )
 
         UiSpacer(size = 8.dp)
@@ -287,7 +256,6 @@ internal fun FormTextField(
         content?.invoke(this)
     }
 }
-
 
 @Composable
 internal fun BasicFormTextField(
@@ -308,17 +276,12 @@ internal fun BasicFormTextField(
         lineLimits = TextFieldLineLimits.SingleLine,
         textStyle = textStyle.copy(color = Theme.v2.colors.neutrals.n100),
         cursorBrush = Theme.cursorBrush,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = keyboardType,
-            imeAction = ImeAction.Done,
-        ),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
         outputTransformation = outputTransformation,
-        onKeyboardAction = {
-            focusManager.clearFocus()
-        },
-        modifier = modifier
-             .onFocusEvent {
-                if (isFocused != it.isFocused ) {
+        onKeyboardAction = { focusManager.clearFocus() },
+        modifier =
+            modifier.onFocusEvent {
+                if (isFocused != it.isFocused) {
                     isFocused = it.isFocused
                     if (!isFocused) {
                         onLostFocus()
@@ -327,17 +290,12 @@ internal fun BasicFormTextField(
             },
         decorator = { textField ->
             if (textFieldState.text.isEmpty()) {
-                Text(
-                    text = hint,
-                    color = hintColor,
-                    style = textStyle,
-                )
+                Text(text = hint, color = hintColor, style = textStyle)
             }
             textField()
-        }
+        },
     )
 }
-
 
 @Composable
 internal fun FormBasicSecureTextField(
@@ -348,33 +306,26 @@ internal fun FormBasicSecureTextField(
     onLostFocus: () -> Unit,
     modifier: Modifier = Modifier,
     textStyle: TextStyle = Theme.menlo.body1,
-    content: @Composable (RowScope.() -> Unit)?
+    content: @Composable (RowScope.() -> Unit)?,
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    TextFieldValidator(
-        errorText = error,
-    ) {
+    TextFieldValidator(errorText = error) {
         FormCard {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 12.dp,
-                        vertical = 6.dp
-                    ),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
             ) {
                 Row(modifier = Modifier.weight(1f)) {
                     BasicSecureTextField(
                         state = textFieldState,
                         textStyle = textStyle.copy(color = Theme.v2.colors.neutrals.n100),
                         cursorBrush = Theme.cursorBrush,
-                        textObfuscationMode = if (isObfuscationMode)
-                            TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
-                        modifier = modifier
-                            .fillMaxWidth()
-                            .onFocusEvent {
+                        textObfuscationMode =
+                            if (isObfuscationMode) TextObfuscationMode.RevealLastTyped
+                            else TextObfuscationMode.Visible,
+                        modifier =
+                            modifier.fillMaxWidth().onFocusEvent {
                                 if (isFocused != it.isFocused) {
                                     isFocused = it.isFocused
                                     if (!isFocused) {
@@ -391,7 +342,7 @@ internal fun FormBasicSecureTextField(
                                 )
                             }
                             textField()
-                        }
+                        },
                     )
                 }
 
@@ -401,19 +352,13 @@ internal fun FormBasicSecureTextField(
     }
 }
 
-
 @Composable
 internal fun FormEntry(
     title: String,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
-    FormTitleContainer(
-        title = title,
-        modifier = modifier,
-    ) {
-        FormCard(content = content)
-    }
+    FormTitleContainer(title = title, modifier = modifier) { FormCard(content = content) }
 }
 
 @Composable
@@ -426,9 +371,7 @@ internal fun FormEntryWithPercentage(
     FormTitleContainerWithPercentage(
         title = title,
         modifier = modifier,
-        onPercentClick = { percent ->
-            onPercentClick(percent / 100f)
-        },
+        onPercentClick = { percent -> onPercentClick(percent / 100f) },
     ) {
         FormCard(content = content)
     }
@@ -440,19 +383,12 @@ internal fun FormTitleContainer(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
-    Column(
-        modifier = modifier
-    ) {
-        Text(
-            text = title,
-            color = Theme.v2.colors.neutrals.n100,
-            style = Theme.montserrat.body1,
-        )
+    Column(modifier = modifier) {
+        Text(text = title, color = Theme.v2.colors.neutrals.n100, style = Theme.montserrat.body1)
         UiSpacer(size = 10.dp)
         content()
     }
 }
-
 
 @Composable
 internal fun FormTitleCollapsibleTextField(
@@ -465,21 +401,14 @@ internal fun FormTitleCollapsibleTextField(
     onLostFocus: () -> Unit,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    var isExpanded by remember {
-        mutableStateOf(isFormVisible)
-    }
-    val arrowDegree = animateFloatAsState(
-        targetValue = if (isExpanded) 180f else 0f,
-        label = "rotate arrow"
-    )
-    Column(
-        modifier = modifier
-    ) {
+    var isExpanded by remember { mutableStateOf(isFormVisible) }
+    val arrowDegree =
+        animateFloatAsState(targetValue = if (isExpanded) 180f else 0f, label = "rotate arrow")
+    Column(modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier
-                .clickable { isExpanded = !isExpanded }
+            modifier = Modifier.clickable { isExpanded = !isExpanded },
         ) {
             Text(
                 text = title,
@@ -489,10 +418,8 @@ internal fun FormTitleCollapsibleTextField(
             Icon(
                 painter = painterResource(id = R.drawable.ic_caret_down),
                 contentDescription = "expand collapse",
-                modifier = Modifier
-                    .width(12.dp)
-                    .rotate(arrowDegree.value),
-                tint = Theme.v2.colors.neutrals.n100
+                modifier = Modifier.width(12.dp).rotate(arrowDegree.value),
+                tint = Theme.v2.colors.neutrals.n100,
             )
         }
         UiSpacer(size = 10.dp)
@@ -517,29 +444,17 @@ internal fun FormTitleContainerWithPercentage(
     onPercentClick: (percent: Int) -> Unit = {},
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
-    Column(
-        modifier = modifier
-    ) {
-
-        Row(
-            modifier = Modifier,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+    Column(modifier = modifier) {
+        Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = title,
                 color = Theme.v2.colors.neutrals.n100,
                 style = Theme.montserrat.body1,
             )
             UiSpacer(weight = 1f)
-            PercentText(
-                25,
-                onPercentClick
-            )
+            PercentText(25, onPercentClick)
             UiSpacer(size = 10.dp)
-            PercentText(
-                50,
-                onPercentClick
-            )
+            PercentText(50, onPercentClick)
         }
 
         UiSpacer(size = 10.dp)
@@ -555,34 +470,18 @@ internal fun FormCard(
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = Theme.v2.colors.backgrounds.secondary,
-        ),
+        colors = CardDefaults.cardColors(containerColor = Theme.v2.colors.backgrounds.secondary),
         shape = RoundedCornerShape(10.dp),
         content = content,
     )
 }
 
 @Composable
-internal fun FormDetails(
-    title: String,
-    value: String,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-    ) {
-        Text(
-            text = title,
-            color = Theme.v2.colors.neutrals.n100,
-            style = Theme.montserrat.body1,
-        )
+internal fun FormDetails(title: String, value: String, modifier: Modifier = Modifier) {
+    Row(modifier = modifier) {
+        Text(text = title, color = Theme.v2.colors.neutrals.n100, style = Theme.montserrat.body1)
         UiSpacer(weight = 1f)
-        Text(
-            text = value,
-            color = Theme.v2.colors.neutrals.n100,
-            style = Theme.menlo.body1
-        )
+        Text(text = value, color = Theme.v2.colors.neutrals.n100, style = Theme.menlo.body1)
     }
 }
 
@@ -593,11 +492,7 @@ internal fun FormDetails2(
     modifier: Modifier = Modifier,
     placeholder: @Composable (() -> Unit)? = null,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             text = title,
             color = Theme.v2.colors.text.tertiary,
@@ -622,13 +517,9 @@ internal fun FormDetails2(
 internal fun FormDetails2(
     title: String,
     modifier: Modifier = Modifier,
-    valueComposable:  @Composable (() -> Unit),
+    valueComposable: @Composable (() -> Unit),
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             text = title,
             color = Theme.v2.colors.text.tertiary,
@@ -645,12 +536,9 @@ internal fun FormDetails2(
     title: AnnotatedString,
     value: AnnotatedString,
     modifier: Modifier = Modifier,
-    placeholder: @Composable (() -> Unit)? = null
+    placeholder: @Composable (() -> Unit)? = null,
 ) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             text = title,
             color = Theme.v2.colors.text.tertiary,
@@ -680,29 +568,21 @@ internal fun FormDetails(
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = title,
-            color = Theme.v2.colors.neutrals.n100,
-            style = Theme.montserrat.body1,
-        )
+        Text(text = title, color = Theme.v2.colors.neutrals.n100, style = Theme.montserrat.body1)
         Text(
             text = value,
             color = Theme.v2.colors.neutrals.n100,
             style = Theme.menlo.body1,
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
         )
     }
 }
 
 @Composable
-internal fun FormError(
-    errorMessage: String,
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+internal fun FormError(errorMessage: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         UiHorizontalDivider()
 
         Text(
@@ -714,29 +594,21 @@ internal fun FormError(
     }
 }
 
-
 @Composable
-internal fun TextFieldValidator(
-    errorText: UiText?,
-    content: @Composable () -> Unit,
-) {
+internal fun TextFieldValidator(errorText: UiText?, content: @Composable () -> Unit) {
     Column {
         content()
-        AnimatedContent(
-            targetState = errorText,
-            label = "error message"
-        ) { errorMessage ->
+        AnimatedContent(targetState = errorText, label = "error message") { errorMessage ->
             if (errorMessage != null) {
                 Column {
                     UiSpacer(size = 8.dp)
                     Text(
                         text = errorMessage.asString(),
                         color = Theme.v2.colors.backgrounds.amber,
-                        style = Theme.menlo.body1
+                        style = Theme.menlo.body1,
                     )
                 }
             }
         }
-
     }
 }

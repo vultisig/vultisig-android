@@ -28,15 +28,12 @@ internal fun NotEnabledContainer(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(all = 24.dp),
+            modifier = Modifier.fillMaxWidth().padding(all = 24.dp),
         ) {
             Image(
                 painter = painterResource(R.drawable.iconcrypto),
                 contentDescription = null,
-                modifier = Modifier
-                    .size(20.dp),
+                modifier = Modifier.size(20.dp),
             )
             UiSpacer(12.dp)
 
@@ -52,7 +49,7 @@ internal fun NotEnabledContainer(
                 text = content,
                 style = Theme.brockmann.supplementary.footnote,
                 color = Theme.v2.colors.text.tertiary,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
 
             if (action != null) {

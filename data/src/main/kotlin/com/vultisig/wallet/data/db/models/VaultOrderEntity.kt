@@ -6,13 +6,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "vaultOrder")
 data class VaultOrderEntity(
-    @PrimaryKey
-    @ColumnInfo(name = "value")
-    override val value: String = "",
-
-    @ColumnInfo(name = "order")
-    override val order: Float,
-
-    @ColumnInfo(name = "parentId")
-    override val parentId: String? = null
+    @PrimaryKey @ColumnInfo(name = "value") override val value: String = "",
+    @ColumnInfo(name = "order") override val order: Float,
+    @ColumnInfo(name = "parentId") override val parentId: String? = null,
 ) : BaseOrderEntity()

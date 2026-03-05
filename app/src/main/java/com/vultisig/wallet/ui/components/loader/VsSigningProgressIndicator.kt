@@ -19,28 +19,17 @@ import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun VsSigningProgressIndicator(
-    text: String,
-) {
+fun VsSigningProgressIndicator(text: String) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                color = Theme.v2.colors.backgrounds.primary,
-            )
-            .padding(
-                horizontal = 16.dp,
-                vertical = 24.dp,
-            ),
+        modifier =
+            Modifier.fillMaxSize()
+                .background(color = Theme.v2.colors.backgrounds.primary)
+                .padding(horizontal = 16.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         UiSpacer(weight = 1f)
 
-        RiveAnimation(
-            animation = R.raw.riv_connecting_with_server,
-            modifier = Modifier
-                .size(24.dp)
-        )
+        RiveAnimation(animation = R.raw.riv_connecting_with_server, modifier = Modifier.size(24.dp))
 
         UiSpacer(16.dp)
 
@@ -62,7 +51,5 @@ fun VsSigningProgressIndicator(
 @Preview
 @Composable
 private fun VsSigningProgressIndicatorPreview() {
-    VsSigningProgressIndicator(
-        text = "Signing transaction...",
-    )
+    VsSigningProgressIndicator(text = "Signing transaction...")
 }

@@ -38,9 +38,7 @@ import com.vultisig.wallet.ui.models.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun SelectNetworkScreen(
-    model: SelectNetworkViewModel = hiltViewModel(),
-) {
+internal fun SelectNetworkScreen(model: SelectNetworkViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     VsModalBottomSheet(
@@ -51,7 +49,7 @@ internal fun SelectNetworkScreen(
                 searchFieldState = model.searchFieldState,
                 onNetworkClick = model::selectNetwork,
             )
-        }
+        },
     )
 }
 
@@ -65,7 +63,6 @@ private fun SelectNetworkScreen(
     V2Scaffold(
         applyDefaultPaddings = false,
         applyScaffoldPaddings = true,
-
         topBar = {
             Column {
                 Text(
@@ -73,31 +70,20 @@ private fun SelectNetworkScreen(
                     style = Theme.brockmann.body.l.medium,
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(all = 16.dp)
+                    modifier = Modifier.fillMaxWidth().padding(all = 16.dp),
                 )
 
-                VsSearchTextField(
-                    fieldState = searchFieldState,
-                )
+                VsSearchTextField(fieldState = searchFieldState)
             }
         },
         content = {
             val networks = state.networks
             if (networks.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .padding(all = 16.dp)
-                ) {
+                Column(modifier = Modifier.padding(all = 16.dp)) {
                     NoFoundContent(message = stringResource(R.string.no_chains_found))
                 }
             } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(
-                        all = 16.dp,
-                    ),
-                ) {
+                LazyColumn(contentPadding = PaddingValues(all = 16.dp)) {
                     item {
                         Row {
                             UiSpacer(18.dp)
@@ -126,29 +112,29 @@ private fun SelectNetworkScreen(
                         val isLast = index == networks.size - 1
                         val rounding = 12.dp
                         val isSelected = state.selectedNetwork == item.chain
-                        val selectedColor = if (isSelected) {
-                            Theme.v2.colors.backgrounds.tertiary_2
-                        } else {
-                            Theme.v2.colors.backgrounds.secondary
-                        }
+                        val selectedColor =
+                            if (isSelected) {
+                                Theme.v2.colors.backgrounds.tertiary_2
+                            } else {
+                                Theme.v2.colors.backgrounds.secondary
+                            }
 
                         NetworkItem(
                             logo = item.logo,
                             title = item.title,
                             value = item.value ?: "",
-                            modifier = Modifier
-                                .clickable(onClick = {
-                                    onNetworkClick(item)
-                                })
-                                .background(
-                                    color = selectedColor,
-                                    shape = RoundedCornerShape(
-                                        topStart = if (isFirst) rounding else 0.dp,
-                                        topEnd = if (isFirst) rounding else 0.dp,
-                                        bottomStart = if (isLast) rounding else 0.dp,
-                                        bottomEnd = if (isLast) rounding else 0.dp,
-                                    )
-                                )
+                            modifier =
+                                Modifier.clickable(onClick = { onNetworkClick(item) })
+                                    .background(
+                                        color = selectedColor,
+                                        shape =
+                                            RoundedCornerShape(
+                                                topStart = if (isFirst) rounding else 0.dp,
+                                                topEnd = if (isFirst) rounding else 0.dp,
+                                                bottomStart = if (isLast) rounding else 0.dp,
+                                                bottomEnd = if (isLast) rounding else 0.dp,
+                                            ),
+                                    ),
                         )
 
                         if (!isLast) {
@@ -160,7 +146,7 @@ private fun SelectNetworkScreen(
                     }
                 }
             }
-        }
+        },
     )
 }
 
@@ -174,21 +160,13 @@ private fun NetworkItem(
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = 20.dp,
-                vertical = 12.dp,
-            )
+        modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
         TokenLogo(
-            errorLogoModifier = Modifier
-                .size(32.dp)
-                .background(Theme.v2.colors.neutrals.n100),
+            errorLogoModifier = Modifier.size(32.dp).background(Theme.v2.colors.neutrals.n100),
             logo = logo,
             title = title,
-            modifier = Modifier
-                .size(32.dp)
+            modifier = Modifier.size(32.dp),
         )
 
         Text(
@@ -213,21 +191,15 @@ private fun NetworkItem(
 @Composable
 private fun SelectNetworkScreenPreview() {
     SelectNetworkScreen(
-        state = SelectNetworkUiModel(
-            selectedNetwork = Chain.Bitcoin,
-            networks = listOf(
-                NetworkUiModel(
-                    chain = Chain.Bitcoin,
-                    logo = "btc",
-                    title = "BTC",
-                ),
-                NetworkUiModel(
-                    chain = Chain.Ethereum,
-                    logo = "eth",
-                    title = "ETH",
-                ),
-            )
-        ),
+        state =
+            SelectNetworkUiModel(
+                selectedNetwork = Chain.Bitcoin,
+                networks =
+                    listOf(
+                        NetworkUiModel(chain = Chain.Bitcoin, logo = "btc", title = "BTC"),
+                        NetworkUiModel(chain = Chain.Ethereum, logo = "eth", title = "ETH"),
+                    ),
+            ),
         searchFieldState = TextFieldState(),
         onNetworkClick = {},
     )

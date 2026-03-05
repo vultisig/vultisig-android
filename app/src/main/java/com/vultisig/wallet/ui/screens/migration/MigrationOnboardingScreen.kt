@@ -32,9 +32,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun MigrationOnboardingScreen(
-    model: MigrationOnboardingViewModel = hiltViewModel(),
-) {
+internal fun MigrationOnboardingScreen(model: MigrationOnboardingViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
     var currentPage by remember { mutableIntStateOf(0) }
     val pages = getPages(state.vaultType)
@@ -55,7 +53,8 @@ internal fun MigrationOnboardingScreen(
             } else {
                 currentPage++
             }
-        })
+        },
+    )
 }
 
 @Composable
@@ -76,7 +75,7 @@ private fun MigrationOnboardingScreen(
                 text = page.text,
                 buttonText = page.buttonText,
             )
-        }
+        },
     )
 }
 
@@ -87,62 +86,64 @@ private data class MigrationOnboardingPage(
 )
 
 @Composable
-private fun getPages(
-    vaultType: Route.VaultInfo.VaultType,
-) = listOfNotNull(
-    MigrationOnboardingPage(
-        animation = R.raw.riv_upgrade_animation,
-        text = listOf(
-            PartiallyGradientTextItem(
-                resId = R.string.migration_onboarding_step_1_text_start,
-                coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-            ),
-            PartiallyGradientTextItem(
-                resId = R.string.migration_onboarding_step_1_text_emphasized,
-                coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary)
-            ),
-            PartiallyGradientTextItem(
-                resId = R.string.migration_onboarding_step_1_text_end,
-                coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-            ),
+private fun getPages(vaultType: Route.VaultInfo.VaultType) =
+    listOfNotNull(
+        MigrationOnboardingPage(
+            animation = R.raw.riv_upgrade_animation,
+            text =
+                listOf(
+                    PartiallyGradientTextItem(
+                        resId = R.string.migration_onboarding_step_1_text_start,
+                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                    ),
+                    PartiallyGradientTextItem(
+                        resId = R.string.migration_onboarding_step_1_text_emphasized,
+                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                    ),
+                    PartiallyGradientTextItem(
+                        resId = R.string.migration_onboarding_step_1_text_end,
+                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                    ),
+                ),
+            buttonText = stringResource(R.string.migration_onboarding_upgrade_now),
         ),
-        buttonText = stringResource(R.string.migration_onboarding_upgrade_now),
-    ),
-    if (vaultType == Route.VaultInfo.VaultType.Secure) {
+        if (vaultType == Route.VaultInfo.VaultType.Secure) {
+            MigrationOnboardingPage(
+                animation = R.raw.riv_choose_vault,
+                text =
+                    listOf(
+                        PartiallyGradientTextItem(
+                            resId = R.string.migration_onboarding_step_3_text_start,
+                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.migration_onboarding_step_3_text_emphasize,
+                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.migration_onboarding_step_3_text_end,
+                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        ),
+                    ),
+                buttonText = stringResource(R.string.peer_discovery_action_next_title),
+            )
+        } else null,
         MigrationOnboardingPage(
             animation = R.raw.riv_choose_vault,
-            text = listOf(
-                PartiallyGradientTextItem(
-                    resId = R.string.migration_onboarding_step_3_text_start,
-                    coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+            text =
+                listOf(
+                    PartiallyGradientTextItem(
+                        resId = R.string.migration_onboarding_step_2_text_start,
+                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                    ),
+                    PartiallyGradientTextItem(
+                        resId = R.string.migration_onboarding_step_2_text_end,
+                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                    ),
                 ),
-                PartiallyGradientTextItem(
-                    resId = R.string.migration_onboarding_step_3_text_emphasize,
-                    coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-                ),
-                PartiallyGradientTextItem(
-                    resId = R.string.migration_onboarding_step_3_text_end,
-                    coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-                ),
-            ),
-            buttonText = stringResource(R.string.peer_discovery_action_next_title)
-        )
-    } else null,
-    MigrationOnboardingPage(
-        animation = R.raw.riv_choose_vault,
-        text = listOf(
-            PartiallyGradientTextItem(
-                resId = R.string.migration_onboarding_step_2_text_start,
-                coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
-            ),
-            PartiallyGradientTextItem(
-                resId = R.string.migration_onboarding_step_2_text_end,
-                coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
-            ),
+            buttonText = stringResource(R.string.peer_discovery_action_next_title),
         ),
-        buttonText = stringResource(R.string.peer_discovery_action_next_title)
-    ),
-)
+    )
 
 @Composable
 internal fun MigrationOnboardingContent(
@@ -152,46 +153,34 @@ internal fun MigrationOnboardingContent(
     onNext: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
         RiveAnimation(
             animation = animation,
             modifier = Modifier.fillMaxWidth(),
             onInit = {
                 // TODO it's not great that it doesn't update with passing new animation into params
-                it.setRiveResource(
-                    animation
-                )
-            }
+                it.setRiveResource(animation)
+            },
         )
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(36.dp),
-            modifier = Modifier
-                .padding(
-                    vertical = 56.dp,
-                    horizontal = 36.dp,
-                )
-                .align(Alignment.BottomCenter)
+            modifier =
+                Modifier.padding(vertical = 56.dp, horizontal = 36.dp).align(Alignment.BottomCenter),
         ) {
             SequenceOfGradientText(
                 listTextItems = text,
                 style = Theme.brockmann.headings.title1,
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             )
 
             VsButton(
                 label = buttonText,
                 onClick = onNext,
                 size = VsButtonSize.Medium,
-                modifier = Modifier
-                    .testTag(MigrationOnboardingScreenTags.NEXT)
+                modifier = Modifier.testTag(MigrationOnboardingScreenTags.NEXT),
             )
         }
     }
@@ -204,7 +193,7 @@ private fun MigrationOnboardingScreenPreview() {
         currentPage = 0,
         pages = getPages(Route.VaultInfo.VaultType.Secure),
         onBackClick = {},
-        onNext = {}
+        onNext = {},
     )
 }
 

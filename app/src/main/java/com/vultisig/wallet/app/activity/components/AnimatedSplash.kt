@@ -1,6 +1,5 @@
 package com.vultisig.wallet.app.activity.components
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
@@ -22,13 +21,10 @@ internal fun AnimatedSplash(
     onSplashComplete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(R.raw.splash_screen_logo)
-    )
+    val composition by
+        rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.splash_screen_logo))
 
-    val lottieState = animateLottieCompositionAsState(
-        composition = composition,
-    )
+    val lottieState = animateLottieCompositionAsState(composition = composition)
 
     LaunchedEffect(lottieState.isAtEnd, isLoading) {
         if (lottieState.progress == 1f && !isLoading) {
@@ -38,13 +34,12 @@ internal fun AnimatedSplash(
 
     LottieAnimation(
         composition = composition,
-        progress = {
-            lottieState.progress
-        },
-        modifier = modifier
-            .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.primary)
-            .wrapContentSize(),
-        contentScale = ContentScale.Fit
+        progress = { lottieState.progress },
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(Theme.v2.colors.backgrounds.primary)
+                .wrapContentSize(),
+        contentScale = ContentScale.Fit,
     )
 }

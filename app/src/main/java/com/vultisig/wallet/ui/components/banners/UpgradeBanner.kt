@@ -21,31 +21,22 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun UpgradeBanner(
-    modifier: Modifier = Modifier,
-) {
+fun UpgradeBanner(modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(12.dp)
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .background(
-                color = Theme.v2.colors.backgrounds.success,
-                shape = shape,
-            )
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.alerts.success,
-                shape = shape,
-            )
-            .padding(all = 12.dp),
+        modifier =
+            modifier
+                .background(color = Theme.v2.colors.backgrounds.success, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.alerts.success, shape = shape)
+                .padding(all = 12.dp),
     ) {
         Image(
             painter = painterResource(R.drawable.ic_migration_upgrade),
             contentDescription = null,
-            modifier = Modifier
-                .size(24.dp)
+            modifier = Modifier.size(24.dp),
         )
 
         Text(

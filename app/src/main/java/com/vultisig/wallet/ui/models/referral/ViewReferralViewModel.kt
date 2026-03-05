@@ -16,6 +16,11 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigInteger
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,11 +29,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import wallet.core.jni.CoinType
-import java.math.BigInteger
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-import javax.inject.Inject
 
 internal data class ReferralViewUiState(
     val referralFriendCode: String = "",
@@ -42,13 +42,15 @@ internal data class ReferralViewUiState(
 )
 
 @HiltViewModel
-internal class ViewReferralViewModel @Inject constructor(
+internal class ViewReferralViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val referralRepository: ReferralCodeSettingsRepository,
     private val vaultRepository: VaultRepository,
     private val thorChainApi: ThorChainApi,
-): ViewModel() {
+) : ViewModel() {
     private var vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
     private var vaultReferralCode: String = requireNotNull(savedStateHandle[ARG_REFERRAL_ID])
 
@@ -60,13 +62,16 @@ internal class ViewReferralViewModel @Inject constructor(
 
     private fun onLoadReferralCodeInfo() {
         viewModelScope.launch {
-            val (vaultName, friendReferralCode) = withContext(Dispatchers.IO) {
-                val vaultDeferred =
-                    async { vaultRepository.get(vaultId)?.name ?: "Default Vault" }
-                val friendReferralDeferred =
-                    async { referralRepository.getExternalReferralBy(vaultId) }
+            val (vaultName, friendReferralCode) =
+                withContext(Dispatchers.IO) {
+                    val vaultDeferred = async {
+                        vaultRepository.get(vaultId)?.name ?: "Default Vault"
+                    }
+                    val friendReferralDeferred = async {
+                        referralRepository.getExternalReferralBy(vaultId)
+                    }
                     vaultDeferred.await() to friendReferralDeferred.await()
-            }
+                }
 
             state.update {
                 it.copy(
@@ -77,19 +82,15 @@ internal class ViewReferralViewModel @Inject constructor(
             }
 
             if (vaultReferralCode.isEmpty()) {
-                state.update {
-                    it.copy(
-                        isLoadingExpirationDate = false,
-                        isLoadingRewards = false,
-                    )
-                }
+                state.update { it.copy(isLoadingExpirationDate = false, isLoadingRewards = false) }
                 return@launch
             }
 
             try {
-                val referralDetails = withContext(Dispatchers.IO) {
-                    thorChainApi.getReferralCodeInfo(vaultReferralCode)
-                }
+                val referralDetails =
+                    withContext(Dispatchers.IO) {
+                        thorChainApi.getReferralCodeInfo(vaultReferralCode)
+                    }
 
                 val rewards =
                     referralDetails.affiliateCollectorRune.toBigIntegerOrNull() ?: BigInteger.ZERO
@@ -142,17 +143,11 @@ internal class ViewReferralViewModel @Inject constructor(
     }
 
     fun navigateToStoreFriendReferralBanner() {
-        viewModelScope.launch {
-            navigator.route(Route.ReferralExternalEdition(vaultId))
-        }
+        viewModelScope.launch { navigator.route(Route.ReferralExternalEdition(vaultId)) }
     }
 
     fun onDismissErrorDialog() {
-        viewModelScope.launch {
-            state.update {
-                it.copy(error = "")
-            }
-        }
+        viewModelScope.launch { state.update { it.copy(error = "") } }
     }
 
     fun onClickedEditReferral() {
@@ -163,15 +158,11 @@ internal class ViewReferralViewModel @Inject constructor(
     }
 
     fun onVaultClicked() {
-        viewModelScope.launch {
-            navigator.route(Route.ReferralListVault(vaultId))
-        }
+        viewModelScope.launch { navigator.route(Route.ReferralListVault(vaultId)) }
     }
 
     fun onCreateReferralClicked() {
-        viewModelScope.launch {
-            navigator.route(Route.ReferralCreation(vaultId))
-        }
+        viewModelScope.launch { navigator.route(Route.ReferralCreation(vaultId)) }
     }
 
     fun onVaultSelected(vaultId: String) {
@@ -179,29 +170,29 @@ internal class ViewReferralViewModel @Inject constructor(
             if (vaultId.isNotEmpty()) {
                 this@ViewReferralViewModel.vaultId = vaultId
             }
-            val vaultReferral = withContext(Dispatchers.IO){
-                referralRepository.getReferralCreatedBy(vaultId)
-            }
+            val vaultReferral =
+                withContext(Dispatchers.IO) { referralRepository.getReferralCreatedBy(vaultId) }
 
             if (vaultReferral != null) {
                 this@ViewReferralViewModel.vaultReferralCode = vaultReferral
                 onLoadReferralCodeInfo()
             } else {
                 try {
-                    val remoteReferral = withContext(Dispatchers.IO) {
-                        val coin = vaultRepository.get(vaultId)?.coins?.find {
-                            it.chain.id == Chain.ThorChain.id && it.isNativeToken
-                        } ?: error("Coin not found")
-                        thorChainApi.getReferralCodesByAddress(coin.address)
-                    }.firstOrNull()
+                    val remoteReferral =
+                        withContext(Dispatchers.IO) {
+                                val coin =
+                                    vaultRepository.get(vaultId)?.coins?.find {
+                                        it.chain.id == Chain.ThorChain.id && it.isNativeToken
+                                    } ?: error("Coin not found")
+                                thorChainApi.getReferralCodesByAddress(coin.address)
+                            }
+                            .firstOrNull()
 
                     remoteReferral?.let {
                         withContext(Dispatchers.IO) {
                             referralRepository.saveReferralCreated(vaultId, it)
                         }
-                    } ?: run {
-                        this@ViewReferralViewModel.vaultReferralCode = ""
-                    }
+                    } ?: run { this@ViewReferralViewModel.vaultReferralCode = "" }
 
                     onLoadReferralCodeInfo()
                 } catch (t: Throwable) {

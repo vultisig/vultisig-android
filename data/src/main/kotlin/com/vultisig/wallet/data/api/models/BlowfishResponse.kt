@@ -5,20 +5,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class BlowfishResponse(
-    @SerialName("warnings")
-    val warnings: List<BlowfishWarning>?,
-    @SerialName("aggregated")
-    val aggregated: BlowfishAggregated?,
+    @SerialName("warnings") val warnings: List<BlowfishWarning>?,
+    @SerialName("aggregated") val aggregated: BlowfishAggregated?,
 )
 
 @Serializable
-data class BlowfishAggregated(
-    @SerialName("warnings")
-    val warnings: List<BlowfishWarning>?,
-)
+data class BlowfishAggregated(@SerialName("warnings") val warnings: List<BlowfishWarning>?)
 
-@Serializable
-data class BlowfishWarning(
-    @SerialName("message")
-    val message: String?,
-)
+@Serializable data class BlowfishWarning(@SerialName("message") val message: String?)

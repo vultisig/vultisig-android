@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,101 +43,82 @@ fun VsHoldableButton(
     onLongClick: () -> Unit,
 ) {
     val isButtonEnabled = enabled == VsButtonState.Enabled || enabled == VsButtonState.Default
-    val backgroundColor = if (isButtonEnabled){
-        Theme.v2.colors.primary.accent3
-    } else {
-        Theme.v2.colors.primary.accent3.copy(alpha = 0.5f)
-    }
-    val fillColor = if (isButtonEnabled){
-        Theme.v2.colors.primary.accent5
-    } else {
-        Theme.v2.colors.primary.accent5.copy(alpha = 0.5f)
-    }
+    val backgroundColor =
+        if (isButtonEnabled) {
+            Theme.v2.colors.primary.accent3
+        } else {
+            Theme.v2.colors.primary.accent3.copy(alpha = 0.5f)
+        }
+    val fillColor =
+        if (isButtonEnabled) {
+            Theme.v2.colors.primary.accent5
+        } else {
+            Theme.v2.colors.primary.accent5.copy(alpha = 0.5f)
+        }
 
     val scope = rememberCoroutineScope()
     val progress = remember { Animatable(0f) }
     var isLongPressed by remember { mutableStateOf(false) }
 
     Box(
-        modifier = modifier
-            .pointerInput(enabled) {
-                if (enabled == VsButtonState.Enabled) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown()
-                        val longClickJob = scope.launch {
-                            try {
-                                progress.animateTo(
-                                    1f,
-                                    tween(
-                                        holdDuration.toInt(),
-                                        easing = LinearEasing
-                                    )
-                                )
-                                if (progress.value >= 1f) {
-                                    isLongPressed = true
-                                    onLongClick()
+        modifier =
+            modifier
+                .pointerInput(enabled) {
+                    if (enabled == VsButtonState.Enabled) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown()
+                            val longClickJob =
+                                scope.launch {
+                                    try {
+                                        progress.animateTo(
+                                            1f,
+                                            tween(holdDuration.toInt(), easing = LinearEasing),
+                                        )
+                                        if (progress.value >= 1f) {
+                                            isLongPressed = true
+                                            onLongClick()
+                                        }
+                                    } catch (e: Exception) {
+                                        Timber.w(e, "Animation cancelled")
+                                    }
                                 }
-                            } catch (e: Exception) {
-                                Timber.w(
-                                    e,
-                                    "Animation cancelled",
 
-                                    )
+                            val up = waitForUpOrCancellation()
+
+                            if (up != null && !isLongPressed) {
+                                if (progress.value < 0.25f) {
+                                    onClick()
+                                }
                             }
-                        }
 
-                        val up = waitForUpOrCancellation()
-
-                        if (up != null && !isLongPressed) {
-                            if (progress.value < 0.25f) {
-                                onClick()
+                            scope.launch {
+                                progress.snapTo(0f)
+                                longClickJob.cancelAndJoin()
+                                isLongPressed = false
                             }
-                        }
-
-                        scope.launch {
-                            progress.snapTo(0f)
-                            longClickJob.cancelAndJoin()
-                            isLongPressed = false
                         }
                     }
                 }
-            }
-            .background(
-                backgroundColor,
-                RoundedCornerShape(percent = 100)
-            ),
+                .background(backgroundColor, RoundedCornerShape(percent = 100))
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clip(RoundedCornerShape(percent = 100))
-        ) {
+        Box(modifier = Modifier.matchParentSize().clip(RoundedCornerShape(percent = 100))) {
             Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(progress.value)
-                    .background(fillColor)
+                modifier =
+                    Modifier.fillMaxHeight().fillMaxWidth(progress.value).background(fillColor)
             )
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(
-                8.dp,
-                Alignment.CenterHorizontally
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    vertical = 14.dp,
-                    horizontal = 32.dp
-                )
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 32.dp),
         ) {
-            val contentColor = if (isButtonEnabled) {
-                Theme.v2.colors.text.primary
-            } else {
-                Theme.v2.colors.text.primary.copy(alpha = 0.5f)
-            }
+            val contentColor =
+                if (isButtonEnabled) {
+                    Theme.v2.colors.text.primary
+                } else {
+                    Theme.v2.colors.text.primary.copy(alpha = 0.5f)
+                }
             if (label != null) {
                 Text(
                     text = label,
@@ -159,7 +139,7 @@ private fun VsHoldableButtonPreview() {
         enabled = VsButtonState.Enabled,
         onLongClick = {},
         onClick = {},
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     )
 }
 
@@ -171,6 +151,6 @@ private fun VsHoldableButtonDisabledPreview() {
         enabled = VsButtonState.Enabled,
         onLongClick = {},
         onClick = {},
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     )
 }

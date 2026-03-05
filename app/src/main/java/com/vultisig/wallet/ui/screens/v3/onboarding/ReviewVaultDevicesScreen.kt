@@ -39,14 +39,9 @@ import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun ReviewVaultDevicesScreen(
-    viewModel: ReviewVaultDevicesViewModel = hiltViewModel(),
-) {
+internal fun ReviewVaultDevicesScreen(viewModel: ReviewVaultDevicesViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
-    ReviewVaultDevicesScreen(
-        uiState = uiState,
-        onEvent = viewModel::onEvent,
-    )
+    ReviewVaultDevicesScreen(uiState = uiState, onEvent = viewModel::onEvent)
 }
 
 @Composable
@@ -59,9 +54,8 @@ private fun ReviewVaultDevicesScreen(
         bottomBar = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
+                modifier =
+                    Modifier.fillMaxWidth().padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
             ) {
                 VsButton(
                     label = stringResource(R.string.review_vault_devices_looks_good),
@@ -76,25 +70,19 @@ private fun ReviewVaultDevicesScreen(
                     text = stringResource(R.string.review_vault_devices_something_wrong),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.secondary,
-                    modifier = Modifier.clickable {
-                        onEvent(ReviewVaultDevicesEvent.SomethingsWrong)
-                    },
+                    modifier =
+                        Modifier.clickable { onEvent(ReviewVaultDevicesEvent.SomethingsWrong) },
                 )
 
                 UiSpacer(size = 12.dp)
             }
-        }
+        },
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-
-            ) {
-
-            RiveAnimation(
-                animation = R.raw.riv_review_devices,
-                modifier = Modifier.width(244.dp)
-            )
+        ) {
+            RiveAnimation(animation = R.raw.riv_review_devices, modifier = Modifier.width(244.dp))
 
             UiSpacer(size = 30.dp)
 
@@ -112,26 +100,24 @@ private fun ReviewVaultDevicesScreen(
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.tertiary,
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
+                modifier =
+                    Modifier.fillMaxWidth().padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
             )
 
             UiSpacer(size = 32.dp)
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(uiState.devices) { device ->
                     VaultDeviceItem(
-                        label = if (device.equals(uiState.localPartyId, ignoreCase = true)) {
-                            stringResource(
-                                R.string.review_vault_devices_this_device_label,
-                                device,
-                            )
-                        } else {
-                            device
-                        },
+                        label =
+                            if (device.equals(uiState.localPartyId, ignoreCase = true)) {
+                                stringResource(
+                                    R.string.review_vault_devices_this_device_label,
+                                    device,
+                                )
+                            } else {
+                                device
+                            }
                     )
                 }
             }
@@ -140,32 +126,24 @@ private fun ReviewVaultDevicesScreen(
 }
 
 @Composable
-private fun VaultDeviceItem(
-    label: String,
-    modifier: Modifier = Modifier,
-) {
+private fun VaultDeviceItem(label: String, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .background(
-                color = Theme.v2.colors.backgrounds.secondary,
-                shape = RoundedCornerShape(16.dp),
-            )
-            .padding(
-                horizontal = 16.dp,
-                vertical = 14.dp
-            ),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(
+                    color = Theme.v2.colors.backgrounds.secondary,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(40.dp)
-                .background(
-                    color = Theme.v2.colors.backgrounds.primary,
-                    shape = CircleShape,
-                ),
+            modifier =
+                Modifier.size(40.dp)
+                    .background(color = Theme.v2.colors.backgrounds.primary, shape = CircleShape),
         ) {
             UiIcon(
                 drawableResId = R.drawable.device_backup,
@@ -176,10 +154,9 @@ private fun VaultDeviceItem(
 
         Text(
             text = label,
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.secondary,
-                )
-
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.text.secondary,
+        )
     }
 }
 
@@ -187,15 +164,11 @@ private fun VaultDeviceItem(
 @Composable
 private fun ReviewVaultDevicesScreenPreview() {
     ReviewVaultDevicesScreen(
-        uiState = ReviewVaultDevicesUiState(
-            localPartyId = "iPhone",
-            devices = listOf(
-                "iPhone",
-                "Extension",
-                "MacBook",
+        uiState =
+            ReviewVaultDevicesUiState(
+                localPartyId = "iPhone",
+                devices = listOf("iPhone", "Extension", "MacBook"),
             ),
-        ),
         onEvent = {},
-
-        )
+    )
 }

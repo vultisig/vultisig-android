@@ -6,9 +6,7 @@ import com.vultisig.wallet.ui.utils.waitUntilShown
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-internal class SummaryPage(
-    private val compose: ComposeTestRule,
-) {
+internal class SummaryPage(private val compose: ComposeTestRule) {
 
     fun waitUntilShown(timeout: Duration = 1.seconds) {
         compose.waitUntilShown("SummaryScreen.agree", timeout)
@@ -21,5 +19,4 @@ internal class SummaryPage(
     fun next() {
         compose.click("SummaryScreen.continue")
     }
-
 }

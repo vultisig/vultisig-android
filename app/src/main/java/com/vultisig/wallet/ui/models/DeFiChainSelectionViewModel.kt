@@ -17,13 +17,13 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class DeFiChainSelectionUiModel(
     val defiChains: List<SelectableDefiChainUiModel> = emptyList(),
@@ -36,7 +36,9 @@ internal data class SelectableDefiChainUiModel(
 )
 
 @HiltViewModel
-internal class DeFiChainSelectionViewModel @Inject constructor(
+internal class DeFiChainSelectionViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
     private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
@@ -62,100 +64,72 @@ internal class DeFiChainSelectionViewModel @Inject constructor(
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
 
-            _uiState.update {
-                it.copy(
-                    isLoading = true
-                )
-            }
-
+            _uiState.update { it.copy(isLoading = true) }
 
             if (vault == null) {
-                _uiState.update {
-                    it.copy(
-                        defiChains = emptyList(),
-                        isLoading = false
-                    )
-                }
+                _uiState.update { it.copy(defiChains = emptyList(), isLoading = false) }
                 return@launch
             }
 
-            val availableChains = vault.coins.map { it.chain }.distinct().filter { it.isDeFiSupported }
+            val availableChains =
+                vault.coins.map { it.chain }.distinct().filter { it.isDeFiSupported }
 
             val savedDeFiChains = defaultDeFiChainsRepository.getDefaultChains(vaultId).first()
 
-            val chains = availableChains.map {
-                 mapChainDefi(it).toSelectable(it in savedDeFiChains)
-            }
-            allChains.update {
-                chains
-            }
-            _uiState.update {
-                it.copy(
-                    defiChains = chains,
-                    isLoading = false
-                )
-            }
+            val chains =
+                availableChains.map { mapChainDefi(it).toSelectable(it in savedDeFiChains) }
+            allChains.update { chains }
+            _uiState.update { it.copy(defiChains = chains, isLoading = false) }
         }
     }
 
     private fun observeSearchQuery() {
         viewModelScope.launch {
-            combine(
-                allChains,
-                searchTextFieldState.textAsFlow(),
-            ) { allChains, query ->
-                allChains.filter { chain ->
-                    query.isBlank() || chain.defiChain.raw.contains(
-                        other = query,
-                        ignoreCase = true
-                    )
+            combine(allChains, searchTextFieldState.textAsFlow()) { allChains, query ->
+                    allChains.filter { chain ->
+                        query.isBlank() ||
+                            chain.defiChain.raw.contains(other = query, ignoreCase = true)
+                    }
                 }
-            }.collect { filtered ->
-                _uiState.update { state ->
-                    state.copy(defiChains = filtered)
+                .collect { filtered ->
+                    _uiState.update { state -> state.copy(defiChains = filtered) }
                 }
-            }
         }
     }
 
-
-    fun toggleChain(checked: Boolean,chain: SelectableDefiChainUiModel) {
-        val chains = _uiState.value.defiChains.map {
-            if (it.defiChain.chain == chain.defiChain.chain) {
-                it.copy(isSelected = checked)
-            } else {
-                it
+    fun toggleChain(checked: Boolean, chain: SelectableDefiChainUiModel) {
+        val chains =
+            _uiState.value.defiChains.map {
+                if (it.defiChain.chain == chain.defiChain.chain) {
+                    it.copy(isSelected = checked)
+                } else {
+                    it
+                }
             }
-        }
 
-        _uiState.update { state ->
-            state.copy(defiChains = chains)
-        }
+        _uiState.update { state -> state.copy(defiChains = chains) }
     }
 
     fun saveSelection() {
         viewModelScope.launch {
-            val chains = _uiState.value.defiChains
-                .filter { it.isSelected }
-                .map { it.defiChain.chain }
-                .toSet()
+            val chains =
+                _uiState.value.defiChains
+                    .filter { it.isSelected }
+                    .map { it.defiChain.chain }
+                    .toSet()
             defaultDeFiChainsRepository.setDefaultChains(vaultId, chains)
             navigator.back()
         }
     }
 
     fun navigateBack() {
-        viewModelScope.launch {
-            navigator.back()
-        }
+        viewModelScope.launch { navigator.back() }
     }
 
     fun onSearch(text: String) {
         searchTextFieldState.setTextAndPlaceCursorAtEnd(text)
     }
 
-    private fun DefiChainUiModel.toSelectable(isSelected: Boolean) = SelectableDefiChainUiModel(
-        defiChain = this,
-        isSelected = isSelected
-    )
+    private fun DefiChainUiModel.toSelectable(isSelected: Boolean) =
+        SelectableDefiChainUiModel(defiChain = this, isSelected = isSelected)
 }

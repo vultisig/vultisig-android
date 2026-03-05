@@ -21,9 +21,8 @@ import com.vultisig.wallet.ui.components.reorderable.utils.ReorderableItem
 import com.vultisig.wallet.ui.components.reorderable.utils.ReorderableLazyListState
 import com.vultisig.wallet.ui.components.reorderable.utils.rememberReorderableLazyListState
 
-
 @Composable
-internal fun <T: Any ,R : Any> VerticalDoubleReorderList(
+internal fun <T : Any, R : Any> VerticalDoubleReorderList(
     modifier: Modifier = Modifier,
     isReorderEnabled: Boolean = true,
     dataT: List<T>,
@@ -42,38 +41,38 @@ internal fun <T: Any ,R : Any> VerticalDoubleReorderList(
 ) {
     val isDraggingEnabled by rememberUpdatedState(newValue = isReorderEnabled)
     val lazyListState = rememberLazyListState()
-    val stateT = rememberReorderableLazyListState(
-        lazyListState = lazyListState,
-        onMove = { from, to ->
-            val before = beforeContents?.size?: 0
-            val i = from.index - before
-            val j = to.index - before
-            onMoveT(i, j)
-        })
+    val stateT =
+        rememberReorderableLazyListState(
+            lazyListState = lazyListState,
+            onMove = { from, to ->
+                val before = beforeContents?.size ?: 0
+                val i = from.index - before
+                val j = to.index - before
+                onMoveT(i, j)
+            },
+        )
 
-    val stateR = rememberReorderableLazyListState(
-        lazyListState = lazyListState,
-        onMove = { from, to ->
-            val before =
-                if (dataT.isEmpty())
-                    midContents?.size?: 0
-                else
-                    (beforeContents?.size?: 0) + dataT.size + (midContents?.size?: 0)
-            val i = from.index - before
-            val j = to.index - before
-            onMoveR(i, j)
-        })
+    val stateR =
+        rememberReorderableLazyListState(
+            lazyListState = lazyListState,
+            onMove = { from, to ->
+                val before =
+                    if (dataT.isEmpty()) midContents?.size ?: 0
+                    else (beforeContents?.size ?: 0) + dataT.size + (midContents?.size ?: 0)
+                val i = from.index - before
+                val j = to.index - before
+                onMoveR(i, j)
+            },
+        )
 
     LazyColumn(
         verticalArrangement = verticalArrangement,
         state = lazyListState,
         contentPadding = contentPadding,
-        modifier = modifier
+        modifier = modifier,
     ) {
         if (dataT.isNotEmpty()) {
-            beforeContents?.forEach { content ->
-                item(content = content)
-            }
+            beforeContents?.forEach { content -> item(content = content) }
             reorderableList(
                 data = dataT,
                 key = keyT,
@@ -84,9 +83,7 @@ internal fun <T: Any ,R : Any> VerticalDoubleReorderList(
         }
 
         if (dataR.isNotEmpty()) {
-            midContents?.forEach { content ->
-                item(content = content)
-            }
+            midContents?.forEach { content -> item(content = content) }
             reorderableList(
                 data = dataR,
                 key = keyR,
@@ -96,9 +93,7 @@ internal fun <T: Any ,R : Any> VerticalDoubleReorderList(
             )
         }
 
-        afterContents?.forEach { content ->
-            item(content = content)
-        }
+        afterContents?.forEach { content -> item(content = content) }
     }
 }
 
@@ -117,27 +112,25 @@ internal fun <T : Any> VerticalReorderList(
 ) {
     val isDraggingEnabled by rememberUpdatedState(newValue = isReorderEnabled)
     val lazyListState = rememberLazyListState()
-    val state = rememberReorderableLazyListState(
-        lazyListState = lazyListState,
-        onMove = { from, to ->
-            val i = from.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
-            val j = to.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
+    val state =
+        rememberReorderableLazyListState(
+            lazyListState = lazyListState,
+            onMove = { from, to ->
+                val i = from.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
+                val j = to.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
 
-            onMove(i, j)
-        })
+                onMove(i, j)
+            },
+        )
 
-    LaunchedEffect(isReorderEnabled) {
-        lazyListState.scrollToItem(0)
-    }
+    LaunchedEffect(isReorderEnabled) { lazyListState.scrollToItem(0) }
     LazyColumn(
         verticalArrangement = verticalArrangement,
         state = lazyListState,
         contentPadding = contentPadding,
-        modifier = modifier
+        modifier = modifier,
     ) {
-        beforeContents?.forEach { content ->
-            item(content = content)
-        }
+        beforeContents?.forEach { content -> item(content = content) }
         reorderableList(
             data = data,
             key = key,
@@ -145,9 +138,7 @@ internal fun <T : Any> VerticalReorderList(
             isDraggingEnabled = isDraggingEnabled,
             content = content,
         )
-        afterContents?.forEach { content ->
-            item(content = content)
-        }
+        afterContents?.forEach { content -> item(content = content) }
     }
 }
 
@@ -161,12 +152,11 @@ private fun <T : Any> LazyListScope.reorderableList(
 ) {
     items(data, key) { item ->
         ReorderableItem(state, key = key(item)) { isDragging ->
-            val elevation =
-                animateDpAsState(if (isDragging) 16.dp else 0.dp, label = "elevation")
+            val elevation = animateDpAsState(if (isDragging) 16.dp else 0.dp, label = "elevation")
             Column(
-                modifier = Modifier
-                    .longPressDraggableHandle(enabled = isDraggingEnabled)
-                    .shadow(elevation.value)
+                modifier =
+                    Modifier.longPressDraggableHandle(enabled = isDraggingEnabled)
+                        .shadow(elevation.value)
             ) {
                 content(item)
             }

@@ -33,12 +33,7 @@ internal fun V2Scaffold(
         bottomBar = bottomBar,
         applyDefaultPaddings = applyDefaultPaddings,
         applyScaffoldPaddings = applyScaffoldPaddings,
-        topBar = {
-            V2Topbar(
-                title = title,
-                onBackClick = onBackClick,
-            )
-        }
+        topBar = { V2Topbar(title = title, onBackClick = onBackClick) },
     )
 }
 
@@ -59,13 +54,7 @@ internal fun V2Scaffold(
         bottomBar = bottomBar,
         applyDefaultPaddings = applyDefaultPaddings,
         applyScaffoldPaddings = applyScaffoldPaddings,
-        topBar = {
-            V2Topbar(
-                title = title,
-                onBackClick = onBackClick,
-                actions = actions,
-            )
-        }
+        topBar = { V2Topbar(title = title, onBackClick = onBackClick, actions = actions) },
     )
 }
 
@@ -91,24 +80,17 @@ internal fun V2Scaffold(
             V2Topbar(
                 title = title,
                 onBackClick = onBackClick,
-                actions = rightIcon?.let {
-                    {
-                        V2TopbarButton(
-                            icon = rightIcon,
-                            onClick = onRightIconClick ?: {}
-                        )
-                    }
-                } ?: {},
+                actions =
+                    rightIcon?.let {
+                        { V2TopbarButton(icon = rightIcon, onClick = onRightIconClick ?: {}) }
+                    } ?: {},
             )
-        }
+        },
     )
 }
 
 @Composable
-internal fun V2TopbarButton(
-    icon: Int,
-    onClick: () -> Unit
-) {
+internal fun V2TopbarButton(icon: Int, onClick: () -> Unit) {
     VsCircleButton(
         icon = icon,
         onClick = onClick,
@@ -135,25 +117,24 @@ internal fun V2Scaffold(
         containerColor = V2Scaffold.CONTAINER_COLOR,
     ) {
         Box(
-            modifier = Modifier
-                .then(
-                    if (applyScaffoldPaddings) {
-                        Modifier.padding(it)
-                    } else {
-                        Modifier
-                    }
-                )
-                .then(
-                    if (applyDefaultPaddings) {
-                        Modifier
-                            .padding(
+            modifier =
+                Modifier.then(
+                        if (applyScaffoldPaddings) {
+                            Modifier.padding(it)
+                        } else {
+                            Modifier
+                        }
+                    )
+                    .then(
+                        if (applyDefaultPaddings) {
+                            Modifier.padding(
                                 horizontal = V2Scaffold.PADDING_HORIZONTAL,
                                 vertical = V2Scaffold.PADDING_VERTICAL,
                             )
-                    } else {
-                        Modifier
-                    }
-                )
+                        } else {
+                            Modifier
+                        }
+                    )
         ) {
             content()
         }
@@ -164,8 +145,5 @@ internal object V2Scaffold {
     internal val PADDING_VERTICAL = 12.dp
     internal val PADDING_HORIZONTAL = 16.dp
     internal val CONTAINER_COLOR: Color
-        @Composable
-        get() = Theme.v2.colors.backgrounds.primary
-
+        @Composable get() = Theme.v2.colors.backgrounds.primary
 }
-

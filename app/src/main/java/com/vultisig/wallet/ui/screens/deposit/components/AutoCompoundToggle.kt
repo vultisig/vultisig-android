@@ -23,34 +23,16 @@ internal fun AutoCompoundToggle(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .padding(all = 12.dp)
-            .toggleable(
-                value = isChecked,
-                onValueChange = onCheckedChange
-            ),
+        modifier =
+            modifier
+                .padding(all = 12.dp)
+                .toggleable(value = isChecked, onValueChange = onCheckedChange),
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = title,
-                color = Theme.v2.colors.neutrals.n100,
-                style = Theme.menlo.body1
-            )
-            Text(
-                text = subtitle,
-                color = Theme.v2.colors.neutrals.n100,
-                style = Theme.menlo.body3,
-            )
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
+            Text(text = title, color = Theme.v2.colors.neutrals.n100, style = Theme.menlo.body1)
+            Text(text = subtitle, color = Theme.v2.colors.neutrals.n100, style = Theme.menlo.body3)
         }
 
-
-        VsSwitch(
-            checked = isChecked,
-            onCheckedChange = onCheckedChange,
-        )
-
+        VsSwitch(checked = isChecked, onCheckedChange = onCheckedChange)
     }
 }

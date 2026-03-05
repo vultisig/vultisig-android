@@ -60,14 +60,10 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun FastVaultVerificationScreen(
-    model: FastVaultVerificationViewModel = hiltViewModel(),
-) {
+internal fun FastVaultVerificationScreen(model: FastVaultVerificationViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
-    V2BottomSheet(
-        onDismissRequest = model::back,
-    ) {
+    V2BottomSheet(onDismissRequest = model::back) {
         FastVaultVerificationScreen(
             state = state,
             codeFieldState = model.codeFieldState,
@@ -77,7 +73,6 @@ internal fun FastVaultVerificationScreen(
             onChangeEmailClick = model::changeEmail,
         )
     }
-
 }
 
 @Composable
@@ -104,35 +99,24 @@ private fun FastVaultVerificationScreen(
 
             KeyboardDetector(
                 onKeyboardIsOpen = {
-                    coroutineScope.launch {
-                        scrollState.animateScrollTo(scrollState.maxValue)
-                    }
+                    coroutineScope.launch { scrollState.animateScrollTo(scrollState.maxValue) }
                 }
             )
 
             Column(
-                Modifier
-                    .imePadding()
-                    .verticalScroll(scrollState),
+                Modifier.imePadding().verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-
-                UiSpacer(
-                    size = 32.dp
-                )
-
-
+                UiSpacer(size = 32.dp)
 
                 V3Icon(
                     logo = R.drawable.icon_shield_solid,
                     shinedBottom = Theme.v2.colors.alerts.info,
                     borderWidth = 1.5.dp,
-                    borderColor = Theme.v2.colors.neutrals.n50.copy(alpha = 0.15f)
+                    borderColor = Theme.v2.colors.neutrals.n50.copy(alpha = 0.15f),
                 )
 
-                UiSpacer(
-                    size = 32.dp
-                )
+                UiSpacer(size = 32.dp)
 
                 Text(
                     text = stringResource(R.string.backup_4_digit_code_received_via_email),
@@ -144,83 +128,75 @@ private fun FastVaultVerificationScreen(
                 Text(
                     text = stringResource(R.string.backup_this_will_activate_the_co_signer),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.tertiary
+                    color = Theme.v2.colors.text.tertiary,
                 )
                 UiSpacer(32.dp)
 
                 Row(
-                    modifier = Modifier
-                        .height(IntrinsicSize.Min)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        6.dp,
-                        alignment = Alignment.CenterHorizontally
-                    ),
+                    modifier = Modifier.height(IntrinsicSize.Min).fillMaxWidth(),
+                    horizontalArrangement =
+                        Arrangement.spacedBy(6.dp, alignment = Alignment.CenterHorizontally),
                     verticalAlignment = CenterVertically,
                 ) {
                     VsCodeInputField(
                         textFieldState = codeFieldState,
                         onChangeInput = onCodeChanged,
                         maxCharacters = FAST_VAULT_VERIFICATION_CODE_LENGTH,
-                        state = when (state.verifyPinState) {
-                            VerifyPinState.Success -> VsCodeInputFieldState.Success
-                            VerifyPinState.Error -> VsCodeInputFieldState.Error
-                            else -> VsCodeInputFieldState.Default
-                        },
-                        modifier = Modifier
-                            .testTag("FastVaultVerificationScreen.codeField")
+                        state =
+                            when (state.verifyPinState) {
+                                VerifyPinState.Success -> VsCodeInputFieldState.Success
+                                VerifyPinState.Error -> VsCodeInputFieldState.Error
+                                else -> VsCodeInputFieldState.Default
+                            },
+                        modifier = Modifier.testTag("FastVaultVerificationScreen.codeField"),
                     )
 
                     Box(
                         contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .background(
-                                color = Theme.v2.colors.backgrounds.secondary,
-                                shape = CircleShape
-                            )
-                            .padding(
-                                horizontal = 20.dp,
-                                vertical = 14.dp
-                            )
-                            .clickable(
-                                enabled = hasClipContent,
-                                onClick = {
-                                    if (hasClipContent) {
-                                        onPasteClick(textToPaste.toString())
-                                    }
-                                },
-                            )
+                        modifier =
+                            Modifier.fillMaxHeight()
+                                .background(
+                                    color = Theme.v2.colors.backgrounds.secondary,
+                                    shape = CircleShape,
+                                )
+                                .padding(horizontal = 20.dp, vertical = 14.dp)
+                                .clickable(
+                                    enabled = hasClipContent,
+                                    onClick = {
+                                        if (hasClipContent) {
+                                            onPasteClick(textToPaste.toString())
+                                        }
+                                    },
+                                ),
                     ) {
                         Text(
                             text = stringResource(R.string.vault_backup_screen_paste),
                             style = Theme.brockmann.body.s.medium,
-                            color = if (hasClipContent) Theme.v2.colors.text.button.primary
-                            else Theme.v2.colors.text.button.disabled,
+                            color =
+                                if (hasClipContent) Theme.v2.colors.text.button.primary
+                                else Theme.v2.colors.text.button.disabled,
                         )
                     }
                 }
 
                 UiSpacer(12.dp)
-                AnimatedContent(
-                    targetState = state.verifyPinState, label = "verifying state"
-                ) { verifyPinState ->
+                AnimatedContent(targetState = state.verifyPinState, label = "verifying state") {
+                    verifyPinState ->
                     when (verifyPinState) {
                         VerifyPinState.Idle -> Unit
 
-                        VerifyPinState.Loading -> Row(
-                            verticalAlignment = CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            VsCircularLoading(
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.vault_backup_verifying_pin),
-                                color = Theme.v2.colors.text.primary,
-                                style = Theme.brockmann.supplementary.footnote
-                            )
-                        }
+                        VerifyPinState.Loading ->
+                            Row(
+                                verticalAlignment = CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                VsCircularLoading(modifier = Modifier.size(16.dp))
+                                Text(
+                                    text = stringResource(R.string.vault_backup_verifying_pin),
+                                    color = Theme.v2.colors.text.primary,
+                                    style = Theme.brockmann.supplementary.footnote,
+                                )
+                            }
 
                         VerifyPinState.Success -> Unit
 
@@ -228,58 +204,49 @@ private fun FastVaultVerificationScreen(
                             Text(
                                 text = stringResource(R.string.vault_backup_error_pin),
                                 color = Theme.v2.colors.alerts.error,
-                                style = Theme.brockmann.supplementary.footnote
+                                style = Theme.brockmann.supplementary.footnote,
                             )
                         }
                     }
                 }
 
-                AnimatedContent(
-                    targetState = state.verifyPinState,
-                    label = "bottomBar"
-                ) { verifyPinState ->
+                AnimatedContent(targetState = state.verifyPinState, label = "bottomBar") {
+                    verifyPinState ->
                     when (verifyPinState) {
                         VerifyPinState.Idle -> {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 24.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Text(
-                                    text = stringResource(
-                                        R.string.vault_backup_screen_email_sent_to, state.sentEmailTo
-                                    ),
+                                    text =
+                                        stringResource(
+                                            R.string.vault_backup_screen_email_sent_to,
+                                            state.sentEmailTo,
+                                        ),
                                     color = Theme.v2.colors.text.tertiary,
                                     style = Theme.brockmann.supplementary.footnote,
                                 )
-                                UiSpacer(
-                                    size = 12.dp
-                                )
+                                UiSpacer(size = 12.dp)
 
                                 Text(
                                     text = stringResource(R.string.backup_use_a_different_email),
                                     color = Theme.v2.colors.text.secondary,
                                     style = Theme.brockmann.body.s.medium,
-                                    modifier = Modifier
-                                        .clip(
-                                            shape = CircleShape
-                                        )
-                                        .background(
-                                            color = Theme.v2.colors.buttons.ctaDisabled
-                                        )
-                                        .border(
-                                            width = 1.dp,
-                                            color = Theme.v2.colors.border.extraLight
-                                        )
-                                        .padding(
-                                            horizontal = 12.dp,
-                                            vertical = 8.dp,
-                                        )
-                                        .clickOnce(
-                                            onClick = onChangeEmailClick,
-                                            coolDownPeriod = 1500L
-                                        ),
+                                    modifier =
+                                        Modifier.clip(shape = CircleShape)
+                                            .background(color = Theme.v2.colors.buttons.ctaDisabled)
+                                            .border(
+                                                width = 1.dp,
+                                                color = Theme.v2.colors.border.extraLight,
+                                            )
+                                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                                            .clickOnce(
+                                                onClick = onChangeEmailClick,
+                                                coolDownPeriod = 1500L,
+                                            ),
                                 )
                             }
                         }
@@ -288,15 +255,20 @@ private fun FastVaultVerificationScreen(
                         VerifyPinState.Success -> Unit
                         VerifyPinState.Error -> {
                             val annotatedString = buildAnnotatedString {
-                                append(stringResource(R.string.vault_backup_screen_donot_recieve_email))
+                                append(
+                                    stringResource(R.string.vault_backup_screen_donot_recieve_email)
+                                )
                                 append(" ")
                                 withStyle(
-                                    style = SpanStyle(
-                                        color = Theme.v2.colors.text.secondary,
-                                        textDecoration = TextDecoration.Underline
-                                    )
+                                    style =
+                                        SpanStyle(
+                                            color = Theme.v2.colors.text.secondary,
+                                            textDecoration = TextDecoration.Underline,
+                                        )
                                 ) {
-                                    append(stringResource(R.string.vault_backup_screen_restart_keygen))
+                                    append(
+                                        stringResource(R.string.vault_backup_screen_restart_keygen)
+                                    )
                                 }
                             }
 
@@ -304,33 +276,30 @@ private fun FastVaultVerificationScreen(
                                 text = annotatedString,
                                 style = Theme.brockmann.supplementary.footnote,
                                 color = Theme.v2.colors.text.tertiary,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 24.dp)
-                                    .clickable(onClick = onChangeEmailClick),
-                                textAlign = TextAlign.Center
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 24.dp)
+                                        .clickable(onClick = onChangeEmailClick),
+                                textAlign = TextAlign.Center,
                             )
                         }
                     }
                 }
             }
-        }
+        },
     )
 }
-
 
 @Preview
 @Composable
 private fun VaultBackupScreenPreview() {
     FastVaultVerificationScreen(
-        state = VaultBackupState(
-            verifyPinState = VerifyPinState.Idle,
-            sentEmailTo = "test@email.com"
-        ),
+        state =
+            VaultBackupState(verifyPinState = VerifyPinState.Idle, sentEmailTo = "test@email.com"),
         codeFieldState = TextFieldState(),
         onBackClick = {},
         onCodeChanged = {},
         onPasteClick = {},
-        onChangeEmailClick = {}
+        onChangeEmailClick = {},
     )
 }

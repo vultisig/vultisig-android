@@ -53,39 +53,32 @@ private fun SecurityScannerEnableScreen(
                 centerText = stringResource(id = R.string.vault_settings_security_screen_title),
                 startIcon = R.drawable.ic_caret_left,
             )
-        },
+        }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
             Text(
                 text = stringResource(id = R.string.vault_settings_security_screen_title_switch),
                 style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.primary
+                color = Theme.v2.colors.text.primary,
             )
             Text(
                 text = stringResource(id = R.string.vault_settings_security_screen_title_content),
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.secondary
+                color = Theme.v2.colors.text.secondary,
             )
 
-            Row (
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                VsSwitch(
-                    checked = uiModel.isSwitchEnabled,
-                    onCheckedChange = onCheckChange,
-                )
+                VsSwitch(checked = uiModel.isSwitchEnabled, onCheckedChange = onCheckChange)
 
                 UiSpacer(12.dp)
 
                 Text(
                     text = if (uiModel.isSwitchEnabled) "ON" else "OFF",
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.primary
+                    color = Theme.v2.colors.text.primary,
                 )
             }
 

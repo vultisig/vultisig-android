@@ -8,5 +8,4 @@ object MayaChainHelper {
 
     fun getAddress(publicKey: PublicKey): String =
         AnyAddress(publicKey, CoinType.THORCHAIN, "maya").description()
-
 }

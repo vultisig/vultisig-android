@@ -10,26 +10,31 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.isSuccess
+import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import timber.log.Timber
-import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
 
 interface SessionApi {
     suspend fun checkCommittee(serverUrl: String, sessionId: String): List<String>
+
     suspend fun startSession(serverUrl: String, sessionId: String, localPartyId: List<String>)
+
     suspend fun startWithCommittee(serverUrl: String, sessionId: String, committee: List<String>)
+
     suspend fun markLocalPartyComplete(
         serverUrl: String,
         sessionId: String,
-        localPartyId: List<String>
+        localPartyId: List<String>,
     )
 
     suspend fun getCompletedParties(serverUrl: String, sessionId: String): List<String>
+
     suspend fun getParticipants(serverUrl: String, sessionId: String): List<String>
+
     suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message)
 
     suspend fun getTssMessages(
@@ -50,16 +55,12 @@ interface SessionApi {
     suspend fun markLocalPartyKeysignComplete(
         serverUrl: String,
         messageId: String,
-        sig: tss.KeysignResponse
+        sig: tss.KeysignResponse,
     )
 
     suspend fun checkKeysignComplete(serverUrl: String, messageId: String): tss.KeysignResponse
 
-    suspend fun getSetupMessage(
-        serverUrl: String,
-        sessionId: String,
-        messageId: String?,
-    ): String
+    suspend fun getSetupMessage(serverUrl: String, sessionId: String, messageId: String?): String
 
     suspend fun uploadSetupMessage(
         serverUrl: String,
@@ -67,18 +68,14 @@ interface SessionApi {
         message: String,
         messageId: String?,
     )
-
 }
 
-internal class SessionApiImpl @Inject constructor(
-    private val json: Json,
-    private val httpClient: HttpClient,
-) : SessionApi {
-    override suspend fun checkCommittee(
-        serverUrl: String,
-        sessionId: String,
-    ): List<String> {
-        return httpClient.get("$serverUrl/start/$sessionId")
+internal class SessionApiImpl
+@Inject
+constructor(private val json: Json, private val httpClient: HttpClient) : SessionApi {
+    override suspend fun checkCommittee(serverUrl: String, sessionId: String): List<String> {
+        return httpClient
+            .get("$serverUrl/start/$sessionId")
             .throwIfUnsuccessful()
             .body<List<String>>()
     }
@@ -88,9 +85,7 @@ internal class SessionApiImpl @Inject constructor(
         sessionId: String,
         localPartyId: List<String>,
     ) {
-        httpClient.post("$serverUrl/$sessionId") {
-            setBody(localPartyId)
-        }.throwIfUnsuccessful()
+        httpClient.post("$serverUrl/$sessionId") { setBody(localPartyId) }.throwIfUnsuccessful()
     }
 
     override suspend fun startWithCommittee(
@@ -98,9 +93,7 @@ internal class SessionApiImpl @Inject constructor(
         sessionId: String,
         committee: List<String>,
     ) {
-        httpClient.post("$serverUrl/start/$sessionId") {
-            setBody(committee)
-        }.throwIfUnsuccessful()
+        httpClient.post("$serverUrl/start/$sessionId") { setBody(committee) }.throwIfUnsuccessful()
     }
 
     override suspend fun markLocalPartyComplete(
@@ -108,33 +101,31 @@ internal class SessionApiImpl @Inject constructor(
         sessionId: String,
         localPartyId: List<String>,
     ) {
-        httpClient.post("$serverUrl/complete/$sessionId") {
-            setBody(localPartyId)
-        }.throwIfUnsuccessful()
+        httpClient
+            .post("$serverUrl/complete/$sessionId") { setBody(localPartyId) }
+            .throwIfUnsuccessful()
     }
 
-    override suspend fun getCompletedParties(
-        serverUrl: String,
-        sessionId: String,
-    ): List<String> {
-        return httpClient.get("$serverUrl/complete/$sessionId")
+    override suspend fun getCompletedParties(serverUrl: String, sessionId: String): List<String> {
+        return httpClient
+            .get("$serverUrl/complete/$sessionId")
             .throwIfUnsuccessful()
             .body<List<String>>()
     }
 
     override suspend fun getParticipants(serverUrl: String, sessionId: String): List<String> {
-        return httpClient.get("$serverUrl/$sessionId")
-            .throwIfUnsuccessful()
-            .body<List<String>>()
+        return httpClient.get("$serverUrl/$sessionId").throwIfUnsuccessful().body<List<String>>()
     }
 
     override suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message) {
-        httpClient.post(serverUrl) {
-            if (!messageId.isNullOrEmpty()) {
-                header(MESSAGE_ID_HEADER_TITLE, messageId)
+        httpClient
+            .post(serverUrl) {
+                if (!messageId.isNullOrEmpty()) {
+                    header(MESSAGE_ID_HEADER_TITLE, messageId)
+                }
+                setBody(json.encodeToString(message))
             }
-            setBody(json.encodeToString(message))
-        }.throwIfUnsuccessful()
+            .throwIfUnsuccessful()
     }
 
     override suspend fun getTssMessages(
@@ -142,48 +133,51 @@ internal class SessionApiImpl @Inject constructor(
         sessionId: String,
         localPartyId: String,
         messageId: String?,
-    ): List<Message> = withContext(Dispatchers.IO) {
-        httpClient.get("$serverUrl/message/$sessionId/$localPartyId") {
-            messageId?.let {
-                header(MESSAGE_ID_HEADER_TITLE, it)
-            }
+    ): List<Message> =
+        withContext(Dispatchers.IO) {
+            httpClient
+                .get("$serverUrl/message/$sessionId/$localPartyId") {
+                    messageId?.let { header(MESSAGE_ID_HEADER_TITLE, it) }
+                }
+                .throwIfUnsuccessful()
+                .body<List<Message>>()
         }
-            .throwIfUnsuccessful()
-            .body<List<Message>>()
-    }
 
     override suspend fun deleteTssMessage(
         serverUrl: String,
         sessionId: String,
         localPartyId: String,
         msgHash: String,
-        messageId: String?
+        messageId: String?,
     ) {
-        httpClient.delete("$serverUrl/message/$sessionId/$localPartyId/$msgHash") {
-            messageId?.let {
-                header(MESSAGE_ID_HEADER_TITLE, it)
+        httpClient
+            .delete("$serverUrl/message/$sessionId/$localPartyId/$msgHash") {
+                messageId?.let { header(MESSAGE_ID_HEADER_TITLE, it) }
             }
-        }.throwIfUnsuccessful()
+            .throwIfUnsuccessful()
     }
 
     override suspend fun markLocalPartyKeysignComplete(
         serverUrl: String,
         messageId: String,
-        sig: tss.KeysignResponse
+        sig: tss.KeysignResponse,
     ) {
-        httpClient.post(serverUrl) {
-            header(MESSAGE_ID_HEADER_TITLE, messageId)
-            setBody(json.encodeToString(sig))
-        }.throwIfUnsuccessful()
+        httpClient
+            .post(serverUrl) {
+                header(MESSAGE_ID_HEADER_TITLE, messageId)
+                setBody(json.encodeToString(sig))
+            }
+            .throwIfUnsuccessful()
     }
 
     override suspend fun checkKeysignComplete(
         serverUrl: String,
-        messageId: String
+        messageId: String,
     ): tss.KeysignResponse {
-        return httpClient.get(serverUrl) {
-            header(MESSAGE_ID_HEADER_TITLE, messageId)
-        }.throwIfUnsuccessful().body<tss.KeysignResponse>()
+        return httpClient
+            .get(serverUrl) { header(MESSAGE_ID_HEADER_TITLE, messageId) }
+            .throwIfUnsuccessful()
+            .body<tss.KeysignResponse>()
     }
 
     override suspend fun getSetupMessage(
@@ -194,15 +188,17 @@ internal class SessionApiImpl @Inject constructor(
         var lastException: Exception? = null
         repeat(MAX_RETRIES) { attempt ->
             try {
-                val response = httpClient.get("$serverUrl/setup-message/$sessionId") {
-                    if (!messageId.isNullOrEmpty()) {
-                        header(MESSAGE_ID_HEADER_TITLE, messageId)
+                val response =
+                    httpClient.get("$serverUrl/setup-message/$sessionId") {
+                        if (!messageId.isNullOrEmpty()) {
+                            header(MESSAGE_ID_HEADER_TITLE, messageId)
+                        }
                     }
-                }
                 if (response.status.isSuccess()) {
                     return response.body()
                 } else {
-                    lastException = Exception("HTTP ${response.status.value}: ${response.status.description}")
+                    lastException =
+                        Exception("HTTP ${response.status.value}: ${response.status.description}")
                 }
             } catch (e: CancellationException) {
                 Timber.e("Retry setup-message cancelled exceptions")
@@ -225,12 +221,14 @@ internal class SessionApiImpl @Inject constructor(
         message: String,
         messageId: String?,
     ) {
-        httpClient.post("$serverUrl/setup-message/$sessionId") {
-            if (!messageId.isNullOrEmpty()) {
-                header(MESSAGE_ID_HEADER_TITLE, messageId)
+        httpClient
+            .post("$serverUrl/setup-message/$sessionId") {
+                if (!messageId.isNullOrEmpty()) {
+                    header(MESSAGE_ID_HEADER_TITLE, messageId)
+                }
+                setBody(message)
             }
-            setBody(message)
-        }.throwIfUnsuccessful()
+            .throwIfUnsuccessful()
     }
 
     companion object {

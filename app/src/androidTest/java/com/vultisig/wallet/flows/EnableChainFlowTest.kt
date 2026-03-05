@@ -51,5 +51,4 @@ class EnableChainFlowTest : VaultTest() {
         accounts.waitUntilShown()
         accounts.assertNotExist(chainName)
     }
-
 }

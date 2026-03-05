@@ -33,31 +33,21 @@ internal fun SettingsItem(
     onClick: () -> Unit = {},
 ) {
     Card(
-        modifier = Modifier
-            .clickOnce(onClick = onClick)
-            .fillMaxWidth(),
+        modifier = Modifier.clickOnce(onClick = onClick).fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Theme.v2.colors.backgrounds.secondary
-        )
+        colors = CardDefaults.cardColors(containerColor = Theme.v2.colors.backgrounds.secondary),
     ) {
         Row(
             modifier = Modifier.padding(all = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                modifier = Modifier
-                    .padding(
-                        end = 12.dp,
-                    )
-                    .size(20.dp),
+                modifier = Modifier.padding(end = 12.dp).size(20.dp),
                 painter = painterResource(id = icon),
                 contentDescription = stringResource(R.string.token_logo),
                 tint = colorTint ?: Theme.v2.colors.neutrals.n100,
             )
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = title,
                     color = colorTint ?: Theme.v2.colors.neutrals.n100,
@@ -84,9 +74,5 @@ internal fun SettingsItem(
 @Preview
 @Composable
 private fun SettingsItemPreview() {
-    SettingsItem(
-        title = "Title",
-        subtitle = "Subtitle",
-        icon = R.drawable.icon_qr
-    )
+    SettingsItem(title = "Title", subtitle = "Subtitle", icon = R.drawable.icon_qr)
 }

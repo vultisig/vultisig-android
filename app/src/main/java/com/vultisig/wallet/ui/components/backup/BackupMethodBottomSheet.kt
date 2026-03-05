@@ -25,8 +25,8 @@ import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
- * Bottom sheet that presents the user with a choice between
- * device (local file) backup and server (email) backup.
+ * Bottom sheet that presents the user with a choice between device (local file) backup and server
+ * (email) backup.
  */
 @Composable
 internal fun BackupMethodBottomSheet(
@@ -34,9 +34,7 @@ internal fun BackupMethodBottomSheet(
     onDeviceBackupClick: () -> Unit,
     onServerBackupClick: () -> Unit,
 ) {
-    VsModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-    ) {
+    VsModalBottomSheet(onDismissRequest = onDismissRequest) {
         BackupMethodBottomSheetContent(
             onDeviceBackupClick = onDeviceBackupClick,
             onServerBackupClick = onServerBackupClick,
@@ -50,9 +48,7 @@ private fun BackupMethodBottomSheetContent(
     onServerBackupClick: () -> Unit,
 ) {
     Column(
-        Modifier
-            .padding(horizontal = 24.dp)
-            .verticalScroll(rememberScrollState()),
+        Modifier.padding(horizontal = 24.dp).verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         UiSpacer(24.dp)
@@ -63,10 +59,7 @@ private fun BackupMethodBottomSheetContent(
             color = Theme.v2.colors.text.primary,
         )
 
-        FadingHorizontalDivider(
-            modifier = Modifier
-                .padding(vertical = 24.dp)
-        )
+        FadingHorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
 
         BackupOption(
             title = stringResource(R.string.backup_device_title),
@@ -96,28 +89,16 @@ private fun BackupOption(
     onClick: () -> Unit,
 ) {
     V2Container(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickOnce(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().clickOnce(onClick = onClick),
         type = ContainerType.SECONDARY,
         borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal),
     ) {
-        Row(
-            modifier = Modifier
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            UiIcon(
-                drawableResId = icon,
-                size = 24.dp,
-                tint = Theme.v2.colors.primary.accent4,
-            )
+        Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+            UiIcon(drawableResId = icon, size = 24.dp, tint = Theme.v2.colors.primary.accent4)
 
             UiSpacer(16.dp)
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
                     style = Theme.brockmann.body.m.medium,

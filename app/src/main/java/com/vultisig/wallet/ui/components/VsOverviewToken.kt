@@ -45,20 +45,11 @@ internal fun VsOverviewToken(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .background(
-                color = Theme.v2.colors.backgrounds.secondary,
-                shape = shape,
-            )
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.light,
-                shape = shape,
-            )
-            .padding(
-                horizontal = 16.dp,
-                vertical = 24.dp,
-            )
+        modifier =
+            modifier
+                .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
+                .padding(horizontal = 16.dp, vertical = 24.dp),
     ) {
         Text(
             text = header,
@@ -74,37 +65,37 @@ internal fun VsOverviewToken(
             TokenLogo(
                 logo = getCoinLogo(token.logo),
                 title = token.ticker,
-                modifier = Modifier
-                    .size(36.dp)
-                    .border(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.light,
-                        shape = CircleShape,
-                    )
-                    .align(Alignment.Center),
-                errorLogoModifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Theme.v2.colors.neutrals.n200),
+                modifier =
+                    Modifier.size(36.dp)
+                        .border(
+                            width = 1.dp,
+                            color = Theme.v2.colors.border.light,
+                            shape = CircleShape,
+                        )
+                        .align(Alignment.Center),
+                errorLogoModifier =
+                    Modifier.size(36.dp).clip(CircleShape).background(Theme.v2.colors.neutrals.n200),
             )
 
-            chainLogo.takeIf { it != getCoinLogo(token.logo) }?.let {
-                Image(
-                    painter = painterResource(id = it),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .offset(x = 5.dp, y = 5.dp)
-                        .size(20.dp)
-                        .clip(CircleShape)
-                        .background(Theme.v2.colors.neutrals.n100, CircleShape)
-                        .border(
-                            width = 2.dp,
-                            color = Theme.v2.colors.backgrounds.primary,
-                            shape = CircleShape
-                        )
-                        .align(BottomEnd)
-                )
-            }
+            chainLogo
+                .takeIf { it != getCoinLogo(token.logo) }
+                ?.let {
+                    Image(
+                        painter = painterResource(id = it),
+                        contentDescription = null,
+                        modifier =
+                            Modifier.offset(x = 5.dp, y = 5.dp)
+                                .size(20.dp)
+                                .clip(CircleShape)
+                                .background(Theme.v2.colors.neutrals.n100, CircleShape)
+                                .border(
+                                    width = 2.dp,
+                                    color = Theme.v2.colors.backgrounds.primary,
+                                    shape = CircleShape,
+                                )
+                                .align(BottomEnd),
+                    )
+                }
         }
 
         UiSpacer(12.dp)
@@ -112,9 +103,7 @@ internal fun VsOverviewToken(
         val text = buildAnnotatedString {
             append(value)
             append(" ")
-            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
-                append(token.ticker)
-            }
+            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(token.ticker) }
         }
 
         Text(
@@ -133,33 +122,34 @@ internal fun VsOverviewToken(
     }
 }
 
-
 @Preview
 @Composable
 private fun VsOverviewTokenPreview() {
     VsOverviewToken(
         header = "You will receive",
-        valuedToken = ValuedToken(
-            token = Coin(
-                chain = Chain.Arbitrum,
-                ticker = "ARB",
-                logo = "https://example.com/eth_logo.png",
-                address = "0x0000000000000000000000000000000000000000",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "ethereum",
-                contractAddress = "",
-                isNativeToken = true
+        valuedToken =
+            ValuedToken(
+                token =
+                    Coin(
+                        chain = Chain.Arbitrum,
+                        ticker = "ARB",
+                        logo = "https://example.com/eth_logo.png",
+                        address = "0x0000000000000000000000000000000000000000",
+                        decimal = 18,
+                        hexPublicKey = "",
+                        priceProviderID = "ethereum",
+                        contractAddress = "",
+                        isNativeToken = true,
+                    ),
+                value = "0.02500000",
+                fiatValue = "$45.00",
             ),
-            value = "0.02500000",
-            fiatValue = "$45.00"
-        ),
-        shape = RoundedWithCutoutShape(
-            cutoutPosition = CutoutPosition.Start,
-            cutoutOffsetX = (-4).dp,
-            cutoutRadius = 18.dp,
-        ),
-        modifier = Modifier
+        shape =
+            RoundedWithCutoutShape(
+                cutoutPosition = CutoutPosition.Start,
+                cutoutOffsetX = (-4).dp,
+                cutoutRadius = 18.dp,
+            ),
+        modifier = Modifier,
     )
 }
-

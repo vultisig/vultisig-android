@@ -4,13 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.OnChainSecurityScannerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import javax.inject.Inject
 
 internal data class SecurityScannerEnableUiModel(
     val isSwitchEnabled: Boolean = true,
@@ -18,9 +18,10 @@ internal data class SecurityScannerEnableUiModel(
 )
 
 @HiltViewModel
-internal class SecurityScannerEnableViewModel @Inject constructor(
-    private val onChainSecurityScannerRepository: OnChainSecurityScannerRepository,
-) : ViewModel() {
+internal class SecurityScannerEnableViewModel
+@Inject
+constructor(private val onChainSecurityScannerRepository: OnChainSecurityScannerRepository) :
+    ViewModel() {
     val uiModel = MutableStateFlow(SecurityScannerEnableUiModel())
 
     init {
@@ -29,9 +30,10 @@ internal class SecurityScannerEnableViewModel @Inject constructor(
 
     private fun initSwitchState() {
         viewModelScope.launch {
-            val switchEnabled = withContext(Dispatchers.IO) {
-                onChainSecurityScannerRepository.getSecurityScannerStatus()
-            }
+            val switchEnabled =
+                withContext(Dispatchers.IO) {
+                    onChainSecurityScannerRepository.getSecurityScannerStatus()
+                }
             uiModel.update { it.copy(isSwitchEnabled = switchEnabled) }
         }
     }

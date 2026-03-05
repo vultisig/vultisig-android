@@ -29,6 +29,7 @@ import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,19 +38,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import javax.inject.Inject
 
 internal data class SwapTransactionUiModel(
     val src: ValuedToken = ValuedToken.Empty,
     val dst: ValuedToken = ValuedToken.Empty,
-
     val networkFee: ValuedToken = ValuedToken.Empty,
     val providerFee: ValuedToken = ValuedToken.Empty,
-
     val totalFee: String = "",
     val networkFeeFormatted: String = "",
     val providerFeeFormatted: String = "",
-
     val hasConsentAllowance: Boolean = false,
 )
 
@@ -59,17 +56,12 @@ internal data class ValuedToken(
     val fiatValue: String, // e.g. $100
 ) {
     companion object {
-        val Empty = ValuedToken(
-            token = Coins.Base.WEWE,
-            value = "0",
-            fiatValue = "0",
-        )
+        val Empty = ValuedToken(token = Coins.Base.WEWE, value = "0", fiatValue = "0")
     }
 }
 
 internal data class VerifySwapUiModel(
     val tx: SwapTransactionUiModel = SwapTransactionUiModel(),
-
     val consentAmount: Boolean = false,
     val consentReceiveAmount: Boolean = false,
     val consentAllowance: Boolean = false,
@@ -80,11 +72,14 @@ internal data class VerifySwapUiModel(
     val vaultName: String = "",
 ) {
     val hasAllConsents: Boolean
-        get() = consentAmount && consentReceiveAmount && (consentAllowance || !tx.hasConsentAllowance)
+        get() =
+            consentAmount && consentReceiveAmount && (consentAllowance || !tx.hasConsentAllowance)
 }
 
 @HiltViewModel
-internal class VerifySwapViewModel @Inject constructor(
+internal class VerifySwapViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val mapTransactionToUiModel: SwapTransactionToUiModelMapper,
@@ -108,20 +103,16 @@ internal class VerifySwapViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val transaction = runCatching {
-                swapTransactionRepository.getTransaction(transactionId)
-            }.getOrElse {
-                navigator.back()
-                return@launch
-            }
+            val transaction =
+                runCatching { swapTransactionRepository.getTransaction(transactionId) }
+                    .getOrElse {
+                        navigator.back()
+                        return@launch
+                    }
             val vaultName = vaultRepository.get(vaultId)?.name
             if (vaultName == null) {
                 state.update {
-                    it.copy(
-                        errorText = UiText.StringResource(
-                            R.string.swap_screen_invalid_vault
-                        )
-                    )
+                    it.copy(errorText = UiText.StringResource(R.string.swap_screen_invalid_vault))
                 }
             }
 
@@ -140,9 +131,7 @@ internal class VerifySwapViewModel @Inject constructor(
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     fun consentReceiveAmount(consent: Boolean) {
@@ -161,12 +150,9 @@ internal class VerifySwapViewModel @Inject constructor(
         state.update { it.copy(errorText = null) }
     }
 
-    private fun keysign(
-        keysignInitType: KeysignInitType,
-    ) {
-        val hasAllConsents = state.value.let {
-            it.consentReceiveAmount && it.consentAmount && it.consentAllowance
-        }
+    private fun keysign(keysignInitType: KeysignInitType) {
+        val hasAllConsents =
+            state.value.let { it.consentReceiveAmount && it.consentAmount && it.consentAllowance }
 
         if (hasAllConsents) {
             viewModelScope.launch {
@@ -175,34 +161,27 @@ internal class VerifySwapViewModel @Inject constructor(
                     transactionId,
                     password.value,
                     Route.Keysign.Keysign.TxType.Swap,
-                    vaultId
+                    vaultId,
                 )
             }
         } else {
             state.update {
                 it.copy(
-                    errorText = UiText.StringResource(
-                        R.string.verify_transaction_error_not_enough_consent
-                    )
+                    errorText =
+                        UiText.StringResource(R.string.verify_transaction_error_not_enough_consent)
                 )
             }
         }
     }
 
     private fun loadPassword() {
-        viewModelScope.launch {
-            password.value = vaultPasswordRepository.getPassword(vaultId)
-        }
+        viewModelScope.launch { password.value = vaultPasswordRepository.getPassword(vaultId) }
     }
 
     private fun loadFastSign() {
         viewModelScope.launch {
             val hasFastSign = isVaultHasFastSignById(vaultId)
-            state.update {
-                it.copy(
-                    hasFastSign = hasFastSign
-                )
-            }
+            state.update { it.copy(hasFastSign = hasFastSign) }
         }
     }
 
@@ -211,46 +190,42 @@ internal class VerifySwapViewModel @Inject constructor(
             try {
                 val chain = transaction.srcToken.chain
                 val isThorchainOrMaya =
-                    transaction.payload is SwapPayload.ThorChain || transaction.payload is SwapPayload.MayaChain
+                    transaction.payload is SwapPayload.ThorChain ||
+                        transaction.payload is SwapPayload.MayaChain
 
-                val isSupported = !isThorchainOrMaya
-                        && chain.standard == TokenStandard.EVM
-                        && securityScannerService.getSupportedChainsByFeature()
-                    .isChainSupported(chain)
-                        && securityScannerService.isSecurityServiceEnabled()
+                val isSupported =
+                    !isThorchainOrMaya &&
+                        chain.standard == TokenStandard.EVM &&
+                        securityScannerService
+                            .getSupportedChainsByFeature()
+                            .isChainSupported(chain) &&
+                        securityScannerService.isSecurityServiceEnabled()
 
                 if (!isSupported) return@launch
 
-                state.update {
-                    it.copy(txScanStatus = TransactionScanStatus.Scanning)
-                }
+                state.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 
                 val securityScannerTransaction =
                     securityScannerService.createSecurityScannerTransaction(transaction)
 
-                val result = withContext(Dispatchers.IO) {
-                    securityScannerService.scanTransaction(securityScannerTransaction)
-                }
+                val result =
+                    withContext(Dispatchers.IO) {
+                        securityScannerService.scanTransaction(securityScannerTransaction)
+                    }
 
-                state.update {
-                    it.copy(
-                        txScanStatus = TransactionScanStatus.Scanned(result)
-                    )
-                }
+                state.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
             } catch (t: Throwable) {
                 val errorMessage = "Security Scanner Failed"
-                Timber.e(
-                    t,
-                    errorMessage
-                )
+                Timber.e(t, errorMessage)
 
                 state.update {
                     val message = t.message ?: errorMessage
                     it.copy(
-                        txScanStatus = TransactionScanStatus.Error(
-                            message = message,
-                            provider = BLOCKAID_PROVIDER,
-                        )
+                        txScanStatus =
+                            TransactionScanStatus.Error(
+                                message = message,
+                                provider = BLOCKAID_PROVIDER,
+                            )
                     )
                 }
             }
@@ -258,11 +233,7 @@ internal class VerifySwapViewModel @Inject constructor(
     }
 
     fun onDismissSecurityScanner() {
-        state.update {
-            it.copy(
-                showScanningWarning = false,
-            )
-        }
+        state.update { it.copy(showScanningWarning = false) }
     }
 
     fun joinKeySign() {
@@ -300,9 +271,7 @@ internal class VerifySwapViewModel @Inject constructor(
         state.update { it.copy(showScanningWarning = false) }
 
         if (!tryToFastSignWithPassword()) {
-            viewModelScope.launch {
-                _fastSignFlow.send(true)
-            }
+            viewModelScope.launch { _fastSignFlow.send(true) }
         }
     }
 

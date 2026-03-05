@@ -28,7 +28,7 @@ internal enum class BannerVariant {
     Warning,
     Info,
     Error,
-    Success
+    Success,
 }
 
 @Composable
@@ -37,82 +37,80 @@ internal fun Banner(
     modifier: Modifier = Modifier,
     variant: BannerVariant = BannerVariant.Info,
     onCloseClick: () -> Unit,
-) = Banner(
-    text = text,
-    modifier = modifier,
-    variant = variant,
-    actions = {
-        Icon(
-            painter = painterResource(R.drawable.x),
-            contentDescription = null,
-            tint = Theme.v2.colors.text.primary,
-            modifier = Modifier
-                .size(24.dp)
-                .background(
-                    color = Theme.v2.colors.backgrounds.tertiary_2,
-                    shape = CircleShape,
-                )
-                .padding(8.dp)
-                .clickable(onClick = onCloseClick)
-        )
-    },
-)
+) =
+    Banner(
+        text = text,
+        modifier = modifier,
+        variant = variant,
+        actions = {
+            Icon(
+                painter = painterResource(R.drawable.x),
+                contentDescription = null,
+                tint = Theme.v2.colors.text.primary,
+                modifier =
+                    Modifier.size(24.dp)
+                        .background(
+                            color = Theme.v2.colors.backgrounds.tertiary_2,
+                            shape = CircleShape,
+                        )
+                        .padding(8.dp)
+                        .clickable(onClick = onCloseClick),
+            )
+        },
+    )
 
 @Composable
 internal fun Banner(
     text: String,
     modifier: Modifier = Modifier,
     variant: BannerVariant = BannerVariant.Info,
-    @SuppressLint("ComposableLambdaParameterNaming")
-    actions: (@Composable () -> Unit)? = null,
+    @SuppressLint("ComposableLambdaParameterNaming") actions: (@Composable () -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(12.dp)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = modifier
-            .background(
-                color = when (variant) {
-                    BannerVariant.Warning -> Theme.v2.colors.backgrounds.alert
-                    BannerVariant.Info -> Theme.v2.colors.backgrounds.secondary
-                    BannerVariant.Error -> Theme.v2.colors.backgrounds.error
-                    BannerVariant.Success -> Theme.v2.colors.backgrounds.success
-                },
-                shape = shape,
-            )
-            .border(
-                width = 1.dp,
-                color = when (variant) {
-                    BannerVariant.Warning -> Color(0x40FFC25C)
-                    BannerVariant.Info -> Theme.v2.colors.border.light
-                    BannerVariant.Error -> Color(0x40FF5C5C)
-                    BannerVariant.Success -> Color(0x4013C89D)
-                },
-                shape = shape,
-            )
-            .padding(
-                all = 16.dp,
-            )
+        modifier =
+            modifier
+                .background(
+                    color =
+                        when (variant) {
+                            BannerVariant.Warning -> Theme.v2.colors.backgrounds.alert
+                            BannerVariant.Info -> Theme.v2.colors.backgrounds.secondary
+                            BannerVariant.Error -> Theme.v2.colors.backgrounds.error
+                            BannerVariant.Success -> Theme.v2.colors.backgrounds.success
+                        },
+                    shape = shape,
+                )
+                .border(
+                    width = 1.dp,
+                    color =
+                        when (variant) {
+                            BannerVariant.Warning -> Color(0x40FFC25C)
+                            BannerVariant.Info -> Theme.v2.colors.border.light
+                            BannerVariant.Error -> Color(0x40FF5C5C)
+                            BannerVariant.Success -> Color(0x4013C89D)
+                        },
+                    shape = shape,
+                )
+                .padding(all = 16.dp),
     ) {
-        val contentColor = when (variant) {
-            BannerVariant.Warning -> Theme.v2.colors.alerts.warning
-            BannerVariant.Info -> Theme.v2.colors.text.secondary
-            BannerVariant.Error -> Theme.v2.colors.alerts.error
-            BannerVariant.Success -> Theme.v2.colors.alerts.success
-        }
+        val contentColor =
+            when (variant) {
+                BannerVariant.Warning -> Theme.v2.colors.alerts.warning
+                BannerVariant.Info -> Theme.v2.colors.text.secondary
+                BannerVariant.Error -> Theme.v2.colors.alerts.error
+                BannerVariant.Success -> Theme.v2.colors.alerts.success
+            }
 
-        UiIcon(
-            drawableResId = R.drawable.ic_info,
-            size = 16.dp,
-            tint = contentColor,
-        )
+        UiIcon(drawableResId = R.drawable.ic_info, size = 16.dp, tint = contentColor)
 
         Text(
             text = text,
             color = contentColor,
             style = Theme.brockmann.supplementary.footnote,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
 
         actions?.invoke()
@@ -122,24 +120,10 @@ internal fun Banner(
 @Preview
 @Composable
 private fun BannerPreview() {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Banner(
-            text = "This is a warning",
-            variant = BannerVariant.Warning
-        )
-        Banner(
-            text = "This is info",
-            variant = BannerVariant.Info
-        )
-        Banner(
-            text = "This is an error",
-            variant = BannerVariant.Error
-        )
-        Banner(
-            text = "This is a success",
-            variant = BannerVariant.Success
-        )
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Banner(text = "This is a warning", variant = BannerVariant.Warning)
+        Banner(text = "This is info", variant = BannerVariant.Info)
+        Banner(text = "This is an error", variant = BannerVariant.Error)
+        Banner(text = "This is a success", variant = BannerVariant.Success)
     }
 }

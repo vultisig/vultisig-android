@@ -10,10 +10,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal interface MappersModule {
 
-    @Binds
-    fun bindVaultIOSToAndroidMapper(
-        impl: VaultFromOldJsonMapperImpl
-    ): VaultFromOldJsonMapper
+    @Binds fun bindVaultIOSToAndroidMapper(impl: VaultFromOldJsonMapperImpl): VaultFromOldJsonMapper
 
     @Binds
     @Singleton
@@ -27,12 +24,5 @@ internal interface MappersModule {
         impl: ReshareMessageToProtoMapperImpl
     ): ReshareMessageToProtoMapper
 
-
-
-    @Binds
-    @Singleton
-    fun bindMapVaultToProto(
-        impl: MapVaultToProtoImpl
-    ): MapVaultToProto
-
+    @Binds @Singleton fun bindMapVaultToProto(impl: MapVaultToProtoImpl): MapVaultToProto
 }

@@ -48,13 +48,9 @@ internal fun GasSettingsScreen(
 ) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) {
-        model.loadData(chain, specific)
-    }
+    LaunchedEffect(Unit) { model.loadData(chain, specific) }
 
-    BasicAlertDialog(
-        onDismissRequest = onDismissGasSettings,
-    ) {
+    BasicAlertDialog(onDismissRequest = onDismissGasSettings) {
         GasSettingsScreen(
             state = state,
             gasLimitState = model.gasLimitState,
@@ -73,23 +69,20 @@ internal fun GasSettingsScreen(
 @Composable
 private fun GasSettingsScreen(
     state: GasSettingsUiModel,
-
     gasLimitState: TextFieldState,
     baseFeeState: TextFieldState,
     priorityFeeState: TextFieldState,
-
     byteFeeState: TextFieldState,
-
     onCloseClick: () -> Unit,
     onSaveClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .background(
-                color = Theme.v2.colors.backgrounds.primary,
-                shape = RoundedCornerShape(16.dp),
-            )
-            .padding(all = 24.dp),
+        modifier =
+            Modifier.background(
+                    color = Theme.v2.colors.backgrounds.primary,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .padding(all = 24.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -105,7 +98,7 @@ private fun GasSettingsScreen(
             Text(
                 text = stringResource(R.string.gas_settings_advanced_gas_fee),
                 style = Theme.brockmann.headings.title3,
-                color = Theme.v2.colors.text.primary
+                color = Theme.v2.colors.text.primary,
             )
         }
 
@@ -126,10 +119,7 @@ private fun GasSettingsScreen(
             }
 
             is BlockChainSpecific.UTXO -> {
-                UTXOSettings(
-                    state = state,
-                    byteFeeState = byteFeeState,
-                )
+                UTXOSettings(state = state, byteFeeState = byteFeeState)
             }
 
             else -> Unit
@@ -140,17 +130,13 @@ private fun GasSettingsScreen(
         VsButton(
             label = stringResource(R.string.add_vault_save),
             onClick = onSaveClick,
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
 
 @Composable
-private fun UTXOSettings(
-    state: GasSettingsUiModel,
-    byteFeeState: TextFieldState,
-) {
+private fun UTXOSettings(state: GasSettingsUiModel, byteFeeState: TextFieldState) {
     FormTextFieldCard(
         title = stringResource(R.string.utxo_settings_byte_fee_title),
         hint = "",
@@ -175,10 +161,7 @@ private fun EthGasSettings(
 
     UiSpacer(8.dp)
 
-    VsTextInputField(
-        textFieldState = baseFeeState,
-        keyboardType = KeyboardType.Number,
-    )
+    VsTextInputField(textFieldState = baseFeeState, keyboardType = KeyboardType.Number)
 
     UiSpacer(14.dp)
 
@@ -190,10 +173,7 @@ private fun EthGasSettings(
 
     UiSpacer(8.dp)
 
-    VsTextInputField(
-        textFieldState = priorityFeeState,
-        keyboardType = KeyboardType.Number,
-    )
+    VsTextInputField(textFieldState = priorityFeeState, keyboardType = KeyboardType.Number)
 
     UiSpacer(14.dp)
 
@@ -205,10 +185,7 @@ private fun EthGasSettings(
 
     UiSpacer(8.dp)
 
-    VsTextInputField(
-        textFieldState = gasLimitState,
-        keyboardType = KeyboardType.Number,
-    )
+    VsTextInputField(textFieldState = gasLimitState, keyboardType = KeyboardType.Number)
 }
 
 @Preview

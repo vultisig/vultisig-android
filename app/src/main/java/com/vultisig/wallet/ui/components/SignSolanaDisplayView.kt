@@ -34,26 +34,17 @@ import timber.log.Timber
 import vultisig.keysign.v1.SignSolana
 
 @Composable
-fun SignSolanaDisplayView(
-    signSolana: SignSolana,
-    modifier: Modifier = Modifier
-) {
+fun SignSolanaDisplayView(signSolana: SignSolana, modifier: Modifier = Modifier) {
     var isExpanded by remember { mutableStateOf(false) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                vertical = 10.dp,
-            )
+        modifier = modifier.fillMaxWidth().padding(vertical = 10.dp),
     ) {
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Absolute.SpaceBetween,
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = stringResource(R.string.solana_raw_transaction),
@@ -61,32 +52,28 @@ fun SignSolanaDisplayView(
                 color = Theme.v2.colors.text.tertiary,
             )
 
-            IconButton(
-                onClick = { isExpanded = !isExpanded },
-                modifier = Modifier.size(10.dp)
-            ) {
+            IconButton(onClick = { isExpanded = !isExpanded }, modifier = Modifier.size(10.dp)) {
                 UiIcon(
                     drawableResId = R.drawable.chevron,
                     tint = Theme.v2.colors.neutrals.n100,
                     size = 8.dp,
-                    modifier = Modifier
-                        .graphicsLayer(rotationZ = if (isExpanded) 180f else 0f)
+                    modifier = Modifier.graphicsLayer(rotationZ = if (isExpanded) 180f else 0f),
                 )
             }
         }
 
         AnimatedVisibility(visible = isExpanded) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 400.dp)
-                    .background(
-                        color = Theme.v2.colors.variables.bordersLight,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .padding(8.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .heightIn(max = 400.dp)
+                        .background(
+                            color = Theme.v2.colors.variables.bordersLight,
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .padding(8.dp)
+                        .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 InstructionsSummarySection(signSolana)
 
@@ -98,20 +85,18 @@ fun SignSolanaDisplayView(
 
 @Composable
 private fun InstructionsSummarySection(signSolana: SignSolana) {
-    val allInstructions = remember(signSolana) {
-        signSolana.rawTransactions.flatMap { tx ->
-            try {
-                val parsed = SolanaTransactionParser.parse(tx)
-                parsed.instructions
-            } catch (e: Exception) {
-                Timber.w(
-                    e,
-                    "Failed to parse Solana transaction"
-                )
-                emptyList()
+    val allInstructions =
+        remember(signSolana) {
+            signSolana.rawTransactions.flatMap { tx ->
+                try {
+                    val parsed = SolanaTransactionParser.parse(tx)
+                    parsed.instructions
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to parse Solana transaction")
+                    emptyList()
+                }
             }
         }
-    }
 
     if (allInstructions.isNotEmpty()) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -124,10 +109,7 @@ private fun InstructionsSummarySection(signSolana: SignSolana) {
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 allInstructions.forEachIndexed { index, instruction ->
-                    InstructionRow(
-                        instruction = instruction,
-                        index = index
-                    )
+                    InstructionRow(instruction = instruction, index = index)
                 }
             }
         }
@@ -135,19 +117,16 @@ private fun InstructionsSummarySection(signSolana: SignSolana) {
 }
 
 @Composable
-private fun InstructionRow(
-    instruction: ParsedSolanaTransaction.ParsedInstruction,
-    index: Int
-) {
+private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstruction, index: Int) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                shape = RoundedCornerShape(8.dp),
-                color = Theme.v2.colors.backgrounds.dark
-            )
-            .padding(6.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Theme.v2.colors.backgrounds.dark,
+                )
+                .padding(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
@@ -172,7 +151,7 @@ private fun InstructionRow(
                 text = "Program: $name",
                 style = Theme.brockmann.button.medium.medium,
                 color = Theme.v2.colors.neutrals.n100,
-                fontSize = 10.sp
+                fontSize = 10.sp,
             )
         }
 
@@ -184,7 +163,8 @@ private fun InstructionRow(
         )
 
         Text(
-            text = "Accounts: ${instruction.accountsCount} | Data length: ${instruction.dataLength} bytes",
+            text =
+                "Accounts: ${instruction.accountsCount} | Data length: ${instruction.dataLength} bytes",
             color = Theme.v2.colors.neutrals.n100,
             style = Theme.brockmann.button.medium.medium,
             fontSize = 10.sp,
@@ -199,17 +179,17 @@ private fun RawTransactionsSection(signSolana: SignSolana) {
             text = stringResource(R.string.raw_transaction_data),
             style = Theme.brockmann.button.medium.regular,
             color = Theme.v2.colors.text.primary,
-            lineHeight = 13.sp
+            lineHeight = 13.sp,
         )
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = Theme.v2.colors.backgrounds.dark,
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .padding(6.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        color = Theme.v2.colors.backgrounds.dark,
+                        shape = RoundedCornerShape(8.dp),
+                    )
+                    .padding(6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             signSolana.rawTransactions.forEach { tx ->
                 Text(
@@ -217,7 +197,7 @@ private fun RawTransactionsSection(signSolana: SignSolana) {
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
                     color = Theme.v2.colors.buttons.primary,
-                    lineHeight = 12.sp
+                    lineHeight = 12.sp,
                 )
             }
         }

@@ -20,10 +20,10 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @Immutable
 internal data class ServerBackupUiState(
@@ -39,14 +39,16 @@ internal data class ServerBackupUiState(
 )
 
 /**
- * ViewModel for the Server Backup screen. Manages email/password input,
- * validation, and the request to resend the vault backup share via email.
+ * ViewModel for the Server Backup screen. Manages email/password input, validation, and the request
+ * to resend the vault backup share via email.
  *
- * Supports pre-filled email and vault name via navigation arguments
- * (e.g. when navigating from the post-keygen onboarding flow).
+ * Supports pre-filled email and vault name via navigation arguments (e.g. when navigating from the
+ * post-keygen onboarding flow).
  */
 @HiltViewModel
-internal class ServerBackupViewModel @Inject constructor(
+internal class ServerBackupViewModel
+@Inject
+constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val requestServerBackup: RequestServerBackupUseCase,
@@ -86,8 +88,8 @@ internal class ServerBackupViewModel @Inject constructor(
     }
 
     /**
-     * Observes email text changes to perform inline validation and
-     * clear any existing error banner when the user edits the email.
+     * Observes email text changes to perform inline validation and clear any existing error banner
+     * when the user edits the email.
      */
     private fun collectEmailInput() {
         viewModelScope.launch {
@@ -95,14 +97,15 @@ internal class ServerBackupViewModel @Inject constructor(
                 val emailStr = typingEmail.toString()
                 val isValid = validateEmail(emailStr)
                 val errorMessage =
-                    UiText.StringResource(R.string.server_backup_email_error)
-                        .takeIf { emailStr.isNotEmpty() && !isValid }
-                        ?: UiText.Empty
-                val innerState = when {
-                    emailStr.isEmpty() -> VsTextInputFieldInnerState.Default
-                    isValid -> VsTextInputFieldInnerState.Success
-                    else -> VsTextInputFieldInnerState.Error
-                }
+                    UiText.StringResource(R.string.server_backup_email_error).takeIf {
+                        emailStr.isNotEmpty() && !isValid
+                    } ?: UiText.Empty
+                val innerState =
+                    when {
+                        emailStr.isEmpty() -> VsTextInputFieldInnerState.Default
+                        isValid -> VsTextInputFieldInnerState.Success
+                        else -> VsTextInputFieldInnerState.Error
+                    }
                 state.update {
                     it.copy(
                         emailInnerState = innerState,
@@ -139,41 +142,36 @@ internal class ServerBackupViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         isLoading = false,
-                        errorBanner = UiText.StringResource(R.string.server_backup_error_bad_request),
+                        errorBanner =
+                            UiText.StringResource(R.string.server_backup_error_bad_request),
                     )
                 }
             }
         ) {
             state.update { it.copy(isLoading = true) }
 
-            val result = requestServerBackup(
-                vaultId = vaultId,
-                email = email,
-                password = password,
-            )
+            val result = requestServerBackup(vaultId = vaultId, email = email, password = password)
 
             when (result) {
                 is ServerBackupResult.Success ->
                     state.update { it.copy(isLoading = false, isSuccess = true) }
 
                 is ServerBackupResult.Error -> {
-                    val errorRes = when (result.type) {
-                        ServerBackupResult.ErrorType.NETWORK_ERROR ->
-                            R.string.server_backup_error_timeout
+                    val errorRes =
+                        when (result.type) {
+                            ServerBackupResult.ErrorType.NETWORK_ERROR ->
+                                R.string.server_backup_error_timeout
 
-                        ServerBackupResult.ErrorType.TOO_MANY_REQUESTS ->
-                            R.string.server_backup_error_too_many_requests
+                            ServerBackupResult.ErrorType.TOO_MANY_REQUESTS ->
+                                R.string.server_backup_error_too_many_requests
 
-                        ServerBackupResult.ErrorType.INVALID_PASSWORD,
-                        ServerBackupResult.ErrorType.BAD_REQUEST,
-                        ServerBackupResult.ErrorType.UNKNOWN ->
-                            R.string.server_backup_error_bad_request
-                    }
+                            ServerBackupResult.ErrorType.INVALID_PASSWORD,
+                            ServerBackupResult.ErrorType.BAD_REQUEST,
+                            ServerBackupResult.ErrorType.UNKNOWN ->
+                                R.string.server_backup_error_bad_request
+                        }
                     state.update {
-                        it.copy(
-                            isLoading = false,
-                            errorBanner = UiText.StringResource(errorRes),
-                        )
+                        it.copy(isLoading = false, errorBanner = UiText.StringResource(errorRes))
                     }
                 }
             }
@@ -183,17 +181,15 @@ internal class ServerBackupViewModel @Inject constructor(
     fun onSuccessClose() = back()
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
-    private fun validateEmail(email: String): Boolean =
-        EMAIL_REGEX.matches(email)
+    private fun validateEmail(email: String): Boolean = EMAIL_REGEX.matches(email)
 
     private companion object {
-        val EMAIL_REGEX = Regex(
-            "[a-zA-Z0-9+._%\\-]{1,256}@[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}(\\.[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25})+"
-        )
+        val EMAIL_REGEX =
+            Regex(
+                "[a-zA-Z0-9+._%\\-]{1,256}@[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}(\\.[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25})+"
+            )
     }
 }

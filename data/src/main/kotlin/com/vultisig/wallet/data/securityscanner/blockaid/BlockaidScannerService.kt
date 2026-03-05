@@ -29,42 +29,58 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             else -> throw UnsupportedOperationException("${chain.name} is not supported")
         }
 
-    private suspend fun scanEvmTransaction(transaction: SecurityScannerTransaction): SecurityScannerResult {
+    private suspend fun scanEvmTransaction(
+        transaction: SecurityScannerTransaction
+    ): SecurityScannerResult {
         return runSecurityScan(transaction) {
-            blockaidRpcClient.scanEVMTransaction(
-                chain = transaction.chain,
-                from = transaction.from,
-                to = transaction.to,
-                amount = transaction.amount.toHexString(),
-                data = transaction.data,
-            ).toSecurityScannerResult(PROVIDER_NAME)
+            blockaidRpcClient
+                .scanEVMTransaction(
+                    chain = transaction.chain,
+                    from = transaction.from,
+                    to = transaction.to,
+                    amount = transaction.amount.toHexString(),
+                    data = transaction.data,
+                )
+                .toSecurityScannerResult(PROVIDER_NAME)
         }
     }
 
-    private suspend fun scanBitcoinTransaction(transaction: SecurityScannerTransaction): SecurityScannerResult {
+    private suspend fun scanBitcoinTransaction(
+        transaction: SecurityScannerTransaction
+    ): SecurityScannerResult {
         return runSecurityScan(transaction) {
-            blockaidRpcClient.scanBitcoinTransaction(
-                address = transaction.from,
-                serializedTransaction = transaction.data,
-            ).toSecurityScannerResult(PROVIDER_NAME)
+            blockaidRpcClient
+                .scanBitcoinTransaction(
+                    address = transaction.from,
+                    serializedTransaction = transaction.data,
+                )
+                .toSecurityScannerResult(PROVIDER_NAME)
         }
     }
 
-    private suspend fun scanSolanaTransaction(transaction: SecurityScannerTransaction): SecurityScannerResult {
+    private suspend fun scanSolanaTransaction(
+        transaction: SecurityScannerTransaction
+    ): SecurityScannerResult {
         return runSecurityScan(transaction) {
-            blockaidRpcClient.scanSolanaTransaction(
-                address = transaction.from,
-                serializedMessage = transaction.data,
-            ).toSolanaSecurityScannerResult(PROVIDER_NAME)
+            blockaidRpcClient
+                .scanSolanaTransaction(
+                    address = transaction.from,
+                    serializedMessage = transaction.data,
+                )
+                .toSolanaSecurityScannerResult(PROVIDER_NAME)
         }
     }
 
-    private suspend fun scanSuiTransaction(transaction: SecurityScannerTransaction): SecurityScannerResult {
+    private suspend fun scanSuiTransaction(
+        transaction: SecurityScannerTransaction
+    ): SecurityScannerResult {
         return runSecurityScan(transaction) {
-            blockaidRpcClient.scanSuiTransaction(
-                address = transaction.from,
-                serializedTransaction = transaction.data,
-            ).toSecurityScannerResult(PROVIDER_NAME)
+            blockaidRpcClient
+                .scanSuiTransaction(
+                    address = transaction.from,
+                    serializedTransaction = transaction.data,
+                )
+                .toSecurityScannerResult(PROVIDER_NAME)
         }
     }
 
@@ -79,9 +95,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
     }
 
     override fun getSupportedChains(): Map<SecurityScannerFeaturesType, List<Chain>> {
-        return mapOf(
-            SecurityScannerFeaturesType.SCAN_TRANSACTION to supportedChains,
-        )
+        return mapOf(SecurityScannerFeaturesType.SCAN_TRANSACTION to supportedChains)
     }
 
     override fun getSupportedFeatures(): List<SecurityScannerFeaturesType> {
@@ -89,19 +103,20 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
     }
 
     private companion object {
-        private val supportedChains = listOf(
-            Chain.Arbitrum,
-            Chain.Avalanche,
-            Chain.Base,
-            Chain.Blast,
-            Chain.BscChain,
-            Chain.Bitcoin,
-            Chain.Ethereum,
-            Chain.Optimism,
-            Chain.Polygon,
-            Chain.Sui,
-            Chain.Solana,
-        )
+        private val supportedChains =
+            listOf(
+                Chain.Arbitrum,
+                Chain.Avalanche,
+                Chain.Base,
+                Chain.Blast,
+                Chain.BscChain,
+                Chain.Bitcoin,
+                Chain.Ethereum,
+                Chain.Optimism,
+                Chain.Polygon,
+                Chain.Sui,
+                Chain.Solana,
+            )
 
         private val PROVIDER_NAME = "blockaid"
     }

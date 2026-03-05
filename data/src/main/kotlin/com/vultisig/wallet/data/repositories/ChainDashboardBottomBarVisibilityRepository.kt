@@ -1,19 +1,19 @@
 package com.vultisig.wallet.data.repositories
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 
 @Singleton
 class ChainDashboardBottomBarVisibilityRepository @Inject constructor() {
     private val isBottomBarVisible = MutableStateFlow(true)
 
-    fun hideBottomBar(){
+    fun hideBottomBar() {
         isBottomBarVisible.update { false }
     }
 
-    fun showBottomBar(){
+    fun showBottomBar() {
         isBottomBarVisible.update { true }
     }
 

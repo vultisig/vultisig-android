@@ -39,7 +39,6 @@ internal data class VaultCeilUiModel(
     val balance: String? = null,
 )
 
-
 @Composable
 internal fun VaultCeil(
     model: VaultCeilUiModel,
@@ -53,9 +52,13 @@ internal fun VaultCeil(
 
     val (logo, containerType) =
         if (isSelected)
-            Theme.v2.colors.backgrounds.tertiary_2 to Theme.v2.colors.backgrounds.tertiary_2 to ContainerType.SECONDARY
+            Theme.v2.colors.backgrounds.tertiary_2 to
+                Theme.v2.colors.backgrounds.tertiary_2 to
+                ContainerType.SECONDARY
         else
-            Theme.v2.colors.backgrounds.secondary to Theme.v2.colors.backgrounds.tertiary_2 to ContainerType.PRIMARY
+            Theme.v2.colors.backgrounds.secondary to
+                Theme.v2.colors.backgrounds.tertiary_2 to
+                ContainerType.PRIMARY
 
     val (logoBackground, logoBorder) = logo
     FormCard {
@@ -65,15 +68,11 @@ internal fun VaultCeil(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickOnce(onClick = { onSelect(model.id) })
-                    .padding(
-                        horizontal = 12.dp,
-                        vertical = 12.dp
-                    )
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .clickOnce(onClick = { onSelect(model.id) })
+                        .padding(horizontal = 12.dp, vertical = 12.dp),
             ) {
-
                 AnimatedVisibility(isInEditMode) {
                     if (isInEditMode) {
                         Row {
@@ -82,50 +81,32 @@ internal fun VaultCeil(
                                 tint = Theme.v2.colors.text.tertiary,
                                 size = 16.dp,
                             )
-                            UiSpacer(
-                                size = 12.dp
-                            )
+                            UiSpacer(size = 12.dp)
                         }
                     }
                 }
 
-
                 Box(
-                    modifier = Modifier
-                        .size(
-                            size = 40.dp
-                        )
-                        .clip(
-                            shape = CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = logoBorder,
-                            shape = CircleShape
-                        )
-                        .background(
-                            color = logoBackground
-                        ),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier.size(size = 40.dp)
+                            .clip(shape = CircleShape)
+                            .border(width = 1.dp, color = logoBorder, shape = CircleShape)
+                            .background(color = logoBackground),
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (model.isFolder) {
                         UiIcon(
                             size = 16.dp,
-                            drawableResId = if (isSelected) R.drawable.folder_selected else R.drawable.folder,
-                            tint = Theme.v2.colors.alerts.info
+                            drawableResId =
+                                if (isSelected) R.drawable.folder_selected else R.drawable.folder,
+                            tint = Theme.v2.colors.alerts.info,
                         )
                     } else {
-                        VaultIcon(
-                            isFastVault = model.isFastVault
-                        )
+                        VaultIcon(isFastVault = model.isFastVault)
                     }
-
                 }
 
-
-                UiSpacer(
-                    size = 12.dp
-                )
+                UiSpacer(size = 12.dp)
 
                 Column {
                     Text(
@@ -136,74 +117,61 @@ internal fun VaultCeil(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.widthIn(max = 140.dp),
                     )
-                    UiSpacer(
-                        size = 2.dp
-                    )
-                    Row(
-                        verticalAlignment = Alignment.Bottom
-                    ) {
+                    UiSpacer(size = 2.dp)
+                    Row(verticalAlignment = Alignment.Bottom) {
                         if (model.isFolder && isSelected && activeVaultName != null) {
                             UiIcon(
                                 drawableResId = R.drawable.ic_check,
                                 tint = Theme.v2.colors.alerts.info,
                                 size = 16.dp,
                             )
-                            UiSpacer(
-                                size = 4.dp
-                            )
+                            UiSpacer(size = 4.dp)
                         }
 
                         if (activeVaultName != null) {
                             Row {
-
                                 ActiveVaultName(
                                     isSelected = isSelected,
                                     isFolder = model.isFolder,
-                                    content = "'"
-                                )
-                                ActiveVaultName(
-                                    isSelected = isSelected,
-                                    isFolder = model.isFolder,
-                                    content = activeVaultName
+                                    content = "'",
                                 )
                                 ActiveVaultName(
                                     isSelected = isSelected,
                                     isFolder = model.isFolder,
-                                    content = "'"
+                                    content = activeVaultName,
+                                )
+                                ActiveVaultName(
+                                    isSelected = isSelected,
+                                    isFolder = model.isFolder,
+                                    content = "'",
                                 )
 
-                                UiSpacer(
-                                    size = 4.dp
-                                )
+                                UiSpacer(size = 4.dp)
 
                                 ActiveVaultName(
                                     isSelected = isSelected,
                                     isFolder = model.isFolder,
-                                    content = stringResource(R.string.vault_ceil_active)
+                                    content = stringResource(R.string.vault_ceil_active),
                                 )
-
                             }
                         } else {
                             Text(
-                                text = if (model.isFolder) "$vaultCounts Vault${if (vaultCounts != 1) "s" else ""}" else model.balance
-                                    ?: "",
+                                text =
+                                    if (model.isFolder)
+                                        "$vaultCounts Vault${if (vaultCounts != 1) "s" else ""}"
+                                    else model.balance ?: "",
                                 style = Theme.brockmann.supplementary.footnote,
-                                color = if (model.isFolder && isSelected)
-                                    Theme.v2.colors.alerts.info else Theme.v2.colors.text.tertiary,
-
-                                )
+                                color =
+                                    if (model.isFolder && isSelected) Theme.v2.colors.alerts.info
+                                    else Theme.v2.colors.text.tertiary,
+                            )
                         }
                     }
                 }
 
+                UiSpacer(weight = 1f)
 
-
-                UiSpacer(
-                    weight = 1f
-                )
-
-                if (trailingContent != null)
-                    trailingContent()
+                if (trailingContent != null) trailingContent()
                 else {
                     if (!model.isFolder) {
 
@@ -213,31 +181,25 @@ internal fun VaultCeil(
                                 tint = Theme.v2.colors.alerts.success,
                                 size = 20.dp,
                             )
-                            UiSpacer(
-                                size = 8.dp
-                            )
+                            UiSpacer(size = 8.dp)
                         }
 
                         Text(
-                            text = stringResource(
-                                id = R.string.vault_list_part_n_of_t,
-                                model.vaultPart,
-                                model.signersSize
-                            ),
+                            text =
+                                stringResource(
+                                    id = R.string.vault_list_part_n_of_t,
+                                    model.vaultPart,
+                                    model.signersSize,
+                                ),
                             style = Theme.brockmann.supplementary.caption,
                             color = Theme.v2.colors.text.tertiary,
-                            modifier = Modifier
-                                .border(
-                                    shape = RoundedCornerShape(
-                                        size = 8.dp
-                                    ),
-                                    color = Theme.v2.colors.border.light,
-                                    width = 1.dp
-                                )
-                                .padding(
-                                    horizontal = 8.dp,
-                                    vertical = 4.dp
-                                )
+                            modifier =
+                                Modifier.border(
+                                        shape = RoundedCornerShape(size = 8.dp),
+                                        color = Theme.v2.colors.border.light,
+                                        width = 1.dp,
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
                         )
                     }
 
@@ -254,16 +216,13 @@ internal fun VaultCeil(
 }
 
 @Composable
-private fun ActiveVaultName(
-    isSelected: Boolean,
-    isFolder: Boolean,
-    content: String,
-) {
+private fun ActiveVaultName(isSelected: Boolean, isFolder: Boolean, content: String) {
     Text(
         text = content,
         style = Theme.brockmann.supplementary.footnote,
-        color = if (isFolder && isSelected)
-            Theme.v2.colors.alerts.info else Theme.v2.colors.text.tertiary,
+        color =
+            if (isFolder && isSelected) Theme.v2.colors.alerts.info
+            else Theme.v2.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier.widthIn(max = 140.dp),
@@ -275,11 +234,7 @@ private fun ActiveVaultName(
 private fun VaultCeilPreview() {
     Column {
         VaultCeil(
-            model = VaultCeilUiModel(
-                id = "1",
-                name = "Vault 1",
-                isFolder = false,
-            ),
+            model = VaultCeilUiModel(id = "1", name = "Vault 1", isFolder = false),
             isInEditMode = true,
             onSelect = {},
             isSelected = true,
@@ -288,15 +243,16 @@ private fun VaultCeilPreview() {
         )
 
         VaultCeil(
-            model = VaultCeilUiModel(
-                id = "2",
-                name = "Vault 2",
-                isFolder = false,
-                isFastVault = true,
-                vaultPart = 2,
-                signersSize = 3,
-                balance = "$102.12"
-            ),
+            model =
+                VaultCeilUiModel(
+                    id = "2",
+                    name = "Vault 2",
+                    isFolder = false,
+                    isFastVault = true,
+                    vaultPart = 2,
+                    signersSize = 3,
+                    balance = "$102.12",
+                ),
             isInEditMode = false,
             onSelect = {},
             isSelected = false,
@@ -305,34 +261,26 @@ private fun VaultCeilPreview() {
         )
 
         VaultCeil(
-            model = VaultCeilUiModel(
-                id = "2",
-                name = "Vault 2",
-                isFolder = false,
-                isFastVault = true,
-                vaultPart = 2,
-                signersSize = 3,
-                balance = "$102.12"
-            ),
+            model =
+                VaultCeilUiModel(
+                    id = "2",
+                    name = "Vault 2",
+                    isFolder = false,
+                    isFastVault = true,
+                    vaultPart = 2,
+                    signersSize = 3,
+                    balance = "$102.12",
+                ),
             isInEditMode = false,
             onSelect = {},
             isSelected = false,
             activeVaultName = null,
             vaultCounts = null,
-            trailingContent = {
-                VsSwitch(
-                    checked = true,
-                    onCheckedChange = {}
-                )
-            }
+            trailingContent = { VsSwitch(checked = true, onCheckedChange = {}) },
         )
 
         VaultCeil(
-            model = VaultCeilUiModel(
-                id = "1",
-                name = "Folder Name",
-                isFolder = true,
-            ),
+            model = VaultCeilUiModel(id = "1", name = "Folder Name", isFolder = true),
             isInEditMode = false,
             onSelect = {},
             isSelected = true,
@@ -341,16 +289,12 @@ private fun VaultCeilPreview() {
         )
 
         VaultCeil(
-            model = VaultCeilUiModel(
-                id = "2",
-                name = "Folder 2",
-                isFolder = true,
-            ),
+            model = VaultCeilUiModel(id = "2", name = "Folder 2", isFolder = true),
             isInEditMode = true,
             onSelect = {},
             isSelected = false,
             activeVaultName = null,
-            vaultCounts = 3
+            vaultCounts = 3,
         )
     }
 }

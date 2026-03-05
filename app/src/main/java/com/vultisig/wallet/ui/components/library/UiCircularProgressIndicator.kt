@@ -38,53 +38,61 @@ internal fun UiCircularProgressIndicator(
     progress: () -> Float,
     modifier: Modifier = Modifier,
     strokeWidth: Dp = ProgressIndicatorDefaults.CircularStrokeWidth,
-    indicatorBrush: Brush = Brush.linearGradient(
-        colorStops = arrayOf(
-            0.0f to Theme.v2.colors.primary.accent2,
-            1.0f to Theme.v2.colors.buttons.primary,
+    indicatorBrush: Brush =
+        Brush.linearGradient(
+            colorStops =
+                arrayOf(
+                    0.0f to Theme.v2.colors.primary.accent2,
+                    1.0f to Theme.v2.colors.buttons.primary,
+                )
         ),
-    ),
 ) {
     val coercedProgress = { progress().coerceIn(0f, 1f) }
 
     val trackColor = Theme.v2.colors.backgrounds.tertiary_2
 
-    val stroke = with(LocalDensity.current) {
-        Stroke(
-            width = strokeWidth.toPx(),
-            cap = StrokeCap.Round,
-        )
-    }
+    val stroke =
+        with(LocalDensity.current) { Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round) }
 
     val targetScale = 0.30f
     val progressToStartScaling = 0.75f
 
     val doneOpacity = coercedProgress().takeIf { it >= progressToStartScaling } ?: 0f
 
-    val circlesScale = if (coercedProgress() > progressToStartScaling) lerp(
-        1.0f,
-        stop = targetScale,
-        (1.0f - targetScale).div(1.0f - progressToStartScaling)
-            .times(coercedProgress() - progressToStartScaling)
-    ) else 1.0f
+    val circlesScale =
+        if (coercedProgress() > progressToStartScaling)
+            lerp(
+                1.0f,
+                stop = targetScale,
+                (1.0f - targetScale)
+                    .div(1.0f - progressToStartScaling)
+                    .times(coercedProgress() - progressToStartScaling),
+            )
+        else 1.0f
 
+    val doneCheckBounceAngel =
+        if ((coercedProgress() >= progressToStartScaling))
+            (140 / (1 - progressToStartScaling)).times(coercedProgress() - progressToStartScaling)
+        else 0.0f
 
-    val doneCheckBounceAngel = if ((coercedProgress() >= progressToStartScaling))
-        (140 / (1 - progressToStartScaling)).times(coercedProgress() - progressToStartScaling)
-    else 0.0f
+    val tickScale =
+        if (coercedProgress() > progressToStartScaling)
+            (coercedProgress() - progressToStartScaling)
+                .div(1 - progressToStartScaling)
+                .times(
+                    // simulate bounce effect
+                    sin(doneCheckBounceAngel.times(PI).div(180))
+                )
+                .toFloat()
+        else 0f
 
-    val tickScale = if (coercedProgress() > progressToStartScaling)
-        (coercedProgress() - progressToStartScaling).div(1 - progressToStartScaling).times(
-            //simulate bounce effect
-            sin(doneCheckBounceAngel.times(PI).div(180))
-        ).toFloat()
-    else 0f
-
-    val tickCircleColor = Theme.v2.colors.buttons.primary.copy(
-        alpha = if (coercedProgress() > progressToStartScaling)
-            (coercedProgress() - progressToStartScaling).div(1.0f - progressToStartScaling)
-        else 0.5f
-    )
+    val tickCircleColor =
+        Theme.v2.colors.buttons.primary.copy(
+            alpha =
+                if (coercedProgress() > progressToStartScaling)
+                    (coercedProgress() - progressToStartScaling).div(1.0f - progressToStartScaling)
+                else 0.5f
+        )
 
     val tickVector = ImageVector.vectorResource(id = R.drawable.done_check)
     val tickPainter = rememberVectorPainter(image = tickVector)
@@ -107,10 +115,11 @@ internal fun UiCircularProgressIndicator(
         val arcDimen = size.width - 2 * diameterOffset
 
         val doneCheckCircleScale =
-            1 - circlesScale + if (coercedProgress() > progressToStartScaling)
-                diameterOffset.times(2).div(arcDimen) else 0f
+            1 - circlesScale +
+                if (coercedProgress() > progressToStartScaling)
+                    diameterOffset.times(2).div(arcDimen)
+                else 0f
         val spaceBetweenDoneCircleAndText = 50
-
 
         scale(circlesScale) {
             drawArc(
@@ -124,7 +133,6 @@ internal fun UiCircularProgressIndicator(
             )
         }
 
-
         scale(circlesScale) {
             drawArc(
                 startAngle = startAngle,
@@ -136,7 +144,6 @@ internal fun UiCircularProgressIndicator(
                 brush = indicatorBrush,
             )
         }
-
 
         scale(doneCheckCircleScale) {
             drawArc(
@@ -150,16 +157,13 @@ internal fun UiCircularProgressIndicator(
             )
         }
 
-
         scale(tickScale) {
             val tickSize = 250f
             translate(
                 left = arcDimen.div(2) - tickSize.div(2) + diameterOffset,
-                top = arcDimen.div(2) - tickSize.div(2) + diameterOffset
+                top = arcDimen.div(2) - tickSize.div(2) + diameterOffset,
             ) {
-                with(tickPainter) {
-                    draw(Size(tickSize, tickSize), alpha = coercedProgress())
-                }
+                with(tickPainter) { draw(Size(tickSize, tickSize), alpha = coercedProgress()) }
             }
         }
 
@@ -167,14 +171,19 @@ internal fun UiCircularProgressIndicator(
             textMeasurer = doneTextMeasurer,
             text = doneText,
             style = doneTextStyle,
-            topLeft = Offset(
-                x = center.x - doneTextMeasurer.measure(doneText, doneTextStyle).size.width.div(2),
-                y = center.y - doneTextMeasurer.measure(
-                    doneText,
-                    doneTextStyle
-                ).size.height.div(2) + arcDimen.times(targetScale).times(coercedProgress())
-                    .plus(spaceBetweenDoneCircleAndText),
-            )
+            topLeft =
+                Offset(
+                    x =
+                        center.x -
+                            doneTextMeasurer.measure(doneText, doneTextStyle).size.width.div(2),
+                    y =
+                        center.y -
+                            doneTextMeasurer.measure(doneText, doneTextStyle).size.height.div(2) +
+                            arcDimen
+                                .times(targetScale)
+                                .times(coercedProgress())
+                                .plus(spaceBetweenDoneCircleAndText),
+                ),
         )
     }
 }

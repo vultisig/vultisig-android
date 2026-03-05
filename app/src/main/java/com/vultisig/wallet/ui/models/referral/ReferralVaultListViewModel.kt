@@ -8,10 +8,10 @@ import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 internal data class ReferralVaultListUiState(
     val vaults: List<VaultItem> = emptyList(),
@@ -35,7 +34,9 @@ internal data class VaultItem(
 )
 
 @HiltViewModel
-internal class ReferralVaultListViewModel @Inject constructor(
+internal class ReferralVaultListViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
@@ -53,44 +54,35 @@ internal class ReferralVaultListViewModel @Inject constructor(
     private fun loadVaults() {
         viewModelScope.launch {
             try {
-                val vaults = withContext(Dispatchers.IO) {
-                    vaultRepository.getAll()
-                }
-                val selectedVault = withContext(Dispatchers.IO) {
-                    referralCodeRepository.getCurrentVaultId()
-                }
+                val vaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+                val selectedVault =
+                    withContext(Dispatchers.IO) { referralCodeRepository.getCurrentVaultId() }
 
-                val vaultToSelect = when {
-                    !selectedVault.isNullOrEmpty() -> selectedVault
-                    else -> vaultId
-                }
+                val vaultToSelect =
+                    when {
+                        !selectedVault.isNullOrEmpty() -> selectedVault
+                        else -> vaultId
+                    }
 
-                val vaultItems = vaults.map { vault ->
-                    val signerIndex = vault.signers.indexOf(vault.localPartyID)
-                    val partNumber = if (signerIndex != -1) signerIndex + 1 else vault.signers.size
-                    val signingInfo = "Part $partNumber of ${vault.signers.size}"
+                val vaultItems =
+                    vaults.map { vault ->
+                        val signerIndex = vault.signers.indexOf(vault.localPartyID)
+                        val partNumber =
+                            if (signerIndex != -1) signerIndex + 1 else vault.signers.size
+                        val signingInfo = "Part $partNumber of ${vault.signers.size}"
 
-                    VaultItem(
-                        id = vault.id,
-                        name = vault.name,
-                        isSelected = vault.id == vaultToSelect,
-                        signingInfo = signingInfo,
-                        isFastVault = vault.isFastVault(),
-                    )
-                }
+                        VaultItem(
+                            id = vault.id,
+                            name = vault.name,
+                            isSelected = vault.id == vaultToSelect,
+                            signingInfo = signingInfo,
+                            isFastVault = vault.isFastVault(),
+                        )
+                    }
 
-                _state.update {
-                    it.copy(
-                        vaults = vaultItems,
-                        error = null
-                    )
-                }
+                _state.update { it.copy(vaults = vaultItems, error = null) }
             } catch (e: Exception) {
-                _state.update {
-                    it.copy(
-                        error = e.message ?: "Failed to load vaults"
-                    )
-                }
+                _state.update { it.copy(error = e.message ?: "Failed to load vaults") }
             }
         }
     }
@@ -103,9 +95,7 @@ internal class ReferralVaultListViewModel @Inject constructor(
     }
 
     fun onBackClick() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     companion object {

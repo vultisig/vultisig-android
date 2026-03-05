@@ -22,14 +22,17 @@ import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import java.math.BigInteger
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import wallet.core.jni.CoinType
-import java.math.BigInteger
 
 class ChainHelpersTest {
-    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+    }
 
     @Test
     fun sendBSCTest() {
@@ -39,11 +42,16 @@ class ChainHelpersTest {
         val erc20Helper = ERC20Helper(CoinType.SMARTCHAIN, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
 
         transactions.forEach { transaction ->
-            val preImageHashes = if (transaction.keysignPayload.coin.isNativeToken) {
-                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
-            } else {
-                erc20Helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
-            }
+            val preImageHashes =
+                if (transaction.keysignPayload.coin.isNativeToken) {
+                    helper.getPreSignedImageHash(
+                        transaction.keysignPayload.toInternalKeySignPayload()
+                    )
+                } else {
+                    erc20Helper.getPreSignedImageHash(
+                        transaction.keysignPayload.toInternalKeySignPayload()
+                    )
+                }
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
     }
@@ -56,11 +64,16 @@ class ChainHelpersTest {
         val erc20Helper = ERC20Helper(CoinType.ETHEREUM, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
 
         transactions.forEach { transaction ->
-            val preImageHashes = if (transaction.keysignPayload.coin.isNativeToken) {
-                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
-            } else {
-                erc20Helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
-            }
+            val preImageHashes =
+                if (transaction.keysignPayload.coin.isNativeToken) {
+                    helper.getPreSignedImageHash(
+                        transaction.keysignPayload.toInternalKeySignPayload()
+                    )
+                } else {
+                    erc20Helper.getPreSignedImageHash(
+                        transaction.keysignPayload.toInternalKeySignPayload()
+                    )
+                }
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
     }
@@ -73,11 +86,16 @@ class ChainHelpersTest {
         val erc20Helper = ERC20Helper(CoinType.POLYGON, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
 
         transactions.forEach { transaction ->
-            val preImageHashes = if (transaction.keysignPayload.coin.isNativeToken) {
-                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
-            } else {
-                erc20Helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
-            }
+            val preImageHashes =
+                if (transaction.keysignPayload.coin.isNativeToken) {
+                    helper.getPreSignedImageHash(
+                        transaction.keysignPayload.toInternalKeySignPayload()
+                    )
+                } else {
+                    erc20Helper.getPreSignedImageHash(
+                        transaction.keysignPayload.toInternalKeySignPayload()
+                    )
+                }
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
     }
@@ -88,7 +106,9 @@ class ChainHelpersTest {
 
         transactions.forEach { transaction ->
             val preImageHashes =
-                RippleHelper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
+                RippleHelper.getPreSignedImageHash(
+                    transaction.keysignPayload.toInternalKeySignPayload()
+                )
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
     }
@@ -99,7 +119,9 @@ class ChainHelpersTest {
 
         transactions.forEach { transaction ->
             val preImageHashes =
-                TonHelper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
+                TonHelper.getPreSignedImageHash(
+                    transaction.keysignPayload.toInternalKeySignPayload()
+                )
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
     }
@@ -149,7 +171,9 @@ class ChainHelpersTest {
 
         transactions.forEach { transaction ->
             val preImageHashes =
-                SuiHelper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
+                SuiHelper.getPreSignedImageHash(
+                    transaction.keysignPayload.toInternalKeySignPayload()
+                )
 
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
@@ -164,8 +188,7 @@ class ChainHelpersTest {
             val coin = payload.coin.coinType
             val helper = TerraHelper(coin, "uluna", 300000L)
 
-            val preImageHashes =
-                helper.getPreSignedImageHash(payload)
+            val preImageHashes = helper.getPreSignedImageHash(payload)
 
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
@@ -228,11 +251,12 @@ class ChainHelpersTest {
     @Test
     fun sendKUJIRATest() {
         val transactions: List<TransactionData> = loadTransactionData(KUJIRA_JSON_FILE)
-        val helper = CosmosHelper(
-            coinType = CoinType.KUJIRA,
-            denom = Chain.Kujira.feeUnit,
-            gasLimit = CosmosHelper.getChainGasLimit(Chain.Kujira),
-        )
+        val helper =
+            CosmosHelper(
+                coinType = CoinType.KUJIRA,
+                denom = Chain.Kujira.feeUnit,
+                gasLimit = CosmosHelper.getChainGasLimit(Chain.Kujira),
+            )
 
         transactions.forEach { transaction ->
             val preImageHashes =
@@ -251,20 +275,15 @@ class ChainHelpersTest {
             val swapPayload = payload.swapPayload as SwapPayload.ThorChain
             var nonceIncrement = BigInteger.ZERO
             var preImageHashes = listOf<String>()
-            payload.approvePayload?.let{
-                val approveImageHashes = swapHelper.getPreSignedApproveImageHash(
-                    it, payload
-                )
-                nonceIncrement =  nonceIncrement.add(BigInteger.ONE)
+            payload.approvePayload?.let {
+                val approveImageHashes = swapHelper.getPreSignedApproveImageHash(it, payload)
+                nonceIncrement = nonceIncrement.add(BigInteger.ONE)
                 preImageHashes = approveImageHashes
             }
             swapPayload.let {
                 print(transaction.name)
                 val swapHashes =
-                    swapHelper.getPreSignedImageHash(
-                        swapPayload.data, payload,
-                        nonceIncrement
-                    )
+                    swapHelper.getPreSignedImageHash(swapPayload.data, payload, nonceIncrement)
                 preImageHashes = preImageHashes + swapHashes
             }
             assertEquals(preImageHashes, transaction.expectedImageHash)
@@ -276,50 +295,66 @@ class ChainHelpersTest {
         val transactions: List<TransactionData> = loadTransactionData(MAYA_SWAP_JSON_FILE)
         transactions.forEach { transaction ->
             val payload = transaction.keysignPayload.toInternalKeySignPayload()
-            val preImageHashes= SigningHelper.getKeysignMessages(payload, Vault(
-                id = "test-vault",
-                name = "Test Vault",
-                pubKeyECDSA = HEX_PUBLIC_KEY,
-                pubKeyEDDSA = HEX_PUBLIC_KEY,
-                hexChainCode = HEX_CHAIN_CODE,
-            ))
+            val preImageHashes =
+                SigningHelper.getKeysignMessages(
+                    payload,
+                    Vault(
+                        id = "test-vault",
+                        name = "Test Vault",
+                        pubKeyECDSA = HEX_PUBLIC_KEY,
+                        pubKeyEDDSA = HEX_PUBLIC_KEY,
+                        hexChainCode = HEX_CHAIN_CODE,
+                    ),
+                )
             assertEquals(preImageHashes, transaction.expectedImageHash.sorted())
         }
     }
+
     @Test
     fun oneInchLifiSwapTest() {
         val transactions: List<TransactionData> = loadTransactionData(LIFI_SWAP_JSON_FILE)
         transactions.forEach { transaction ->
             val payload = transaction.keysignPayload.toInternalKeySignPayload()
-            val preImageHashes= SigningHelper.getKeysignMessages(payload, Vault(
-                id = "test-vault",
-                name = "Test Vault",
-                pubKeyECDSA = HEX_PUBLIC_KEY,
-                pubKeyEDDSA = HEX_PUBLIC_KEY,
-                hexChainCode = HEX_CHAIN_CODE,
-            ))
+            val preImageHashes =
+                SigningHelper.getKeysignMessages(
+                    payload,
+                    Vault(
+                        id = "test-vault",
+                        name = "Test Vault",
+                        pubKeyECDSA = HEX_PUBLIC_KEY,
+                        pubKeyEDDSA = HEX_PUBLIC_KEY,
+                        hexChainCode = HEX_CHAIN_CODE,
+                    ),
+                )
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
     }
+
     @Test
     fun oneInchArbitrumSwapTest() {
         val transactions: List<TransactionData> = loadTransactionData(ARB_SWAP_JSON_FILE)
         transactions.forEach { transaction ->
             val payload = transaction.keysignPayload.toInternalKeySignPayload()
-            val preImageHashes= SigningHelper.getKeysignMessages(payload, Vault(
-                id = "test-vault",
-                name = "Test Vault",
-                pubKeyECDSA = HEX_PUBLIC_KEY,
-                pubKeyEDDSA = HEX_PUBLIC_KEY,
-                hexChainCode = HEX_CHAIN_CODE,
-            ))
+            val preImageHashes =
+                SigningHelper.getKeysignMessages(
+                    payload,
+                    Vault(
+                        id = "test-vault",
+                        name = "Test Vault",
+                        pubKeyECDSA = HEX_PUBLIC_KEY,
+                        pubKeyEDDSA = HEX_PUBLIC_KEY,
+                        hexChainCode = HEX_CHAIN_CODE,
+                    ),
+                )
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
     }
+
     private fun loadTransactionData(jsonFile: String): List<TransactionData> {
         val appContext: Context = InstrumentationRegistry.getInstrumentation().context
-        val data = JsonReader.readJsonFromAsset(appContext, jsonFile)
-            ?: error("Failed can't load payload $jsonFile")
+        val data =
+            JsonReader.readJsonFromAsset(appContext, jsonFile)
+                ?: error("Failed can't load payload $jsonFile")
         return json.decodeFromString(data)
     }
 
@@ -352,6 +387,5 @@ class ChainHelpersTest {
             "75be85178816db3bc71a4f3e64e5c89866d8b7daae827ba9cf4ecd1ed9e645d5"
         private const val HEX_CHAIN_CODE =
             "c9b189a8232b872b8d9ccd867d0db316dd10f56e729c310fe072adf5fd204ae7"
-
     }
 }

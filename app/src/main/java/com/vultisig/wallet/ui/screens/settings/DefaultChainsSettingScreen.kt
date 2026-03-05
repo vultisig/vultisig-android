@@ -47,26 +47,20 @@ internal fun DefaultChainSetting(navController: NavHostController) {
     val viewModel = hiltViewModel<DefaultChainsSettingViewModel>()
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(key1 = Unit) {
-        viewModel.initialize()
-    }
+    LaunchedEffect(key1 = Unit) { viewModel.initialize() }
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.backgrounds.primary),
+        modifier = Modifier.fillMaxSize().background(colors.backgrounds.primary),
         topBar = {
             TopBar(
                 navController = navController,
                 centerText = stringResource(R.string.default_chain_screen_title),
-                startIcon = R.drawable.ic_caret_left
+                startIcon = R.drawable.ic_caret_left,
             )
-        }
+        },
     ) {
         LazyColumn(
-            modifier = Modifier
-                .padding(it)
-                .padding(horizontal = 12.dp),
+            modifier = Modifier.padding(it).padding(horizontal = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -76,9 +70,7 @@ internal fun DefaultChainSetting(navController: NavHostController) {
                     subtitle = chain.subtitle,
                     logo = chain.logo,
                     isChecked = chain in state.selectedDefaultChains,
-                    onCheckedChange = { checked ->
-                        viewModel.changeChaneState(chain,checked)
-                    }
+                    onCheckedChange = { checked -> viewModel.changeChaneState(chain, checked) },
                 )
             }
         }
@@ -95,59 +87,47 @@ internal fun TokenSelection(
 ) {
     val appColor = Theme.v2.colors
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .toggleable(
-                value = isChecked,
-                onValueChange = onCheckedChange,
-                role = androidx.compose.ui.semantics.Role.Switch
-            ),
+        modifier =
+            Modifier.fillMaxWidth()
+                .toggleable(
+                    value = isChecked,
+                    onValueChange = onCheckedChange,
+                    role = androidx.compose.ui.semantics.Role.Switch,
+                ),
         shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = appColor.backgrounds.secondary
-        )
+        colors = CardDefaults.cardColors(containerColor = appColor.backgrounds.secondary),
     ) {
         Row(
             modifier = Modifier.padding(all = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Image(
-                modifier = Modifier
-                    .padding(
-                        end = 12.dp,
-                    )
-                    .size(32.dp)
-                    .clip(CircleShape),
+                modifier = Modifier.padding(end = 12.dp).size(32.dp).clip(CircleShape),
                 painter = painterResource(id = logo),
                 contentDescription = stringResource(R.string.token_logo),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = title,
                     color = appColor.neutrals.n50,
                     style = Theme.montserrat.subtitle1,
                 )
-                Text(
-                    text = subtitle,
-                    color = appColor.neutrals.n50,
-                    style = Theme.montserrat.body3,
-                )
+                Text(text = subtitle, color = appColor.neutrals.n50, style = Theme.montserrat.body3)
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
             VsSwitch(
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = appColor.neutrals.n50,
-                    checkedBorderColor = appColor.backgrounds.teal,
-                    checkedTrackColor = appColor.backgrounds.teal,
-                    uncheckedThumbColor = appColor.neutrals.n50,
-                    uncheckedBorderColor = appColor.variables.bordersLight,
-                    uncheckedTrackColor = appColor.variables.bordersLight
-                ),
+                colors =
+                    SwitchDefaults.colors(
+                        checkedThumbColor = appColor.neutrals.n50,
+                        checkedBorderColor = appColor.backgrounds.teal,
+                        checkedTrackColor = appColor.backgrounds.teal,
+                        uncheckedThumbColor = appColor.neutrals.n50,
+                        uncheckedBorderColor = appColor.variables.bordersLight,
+                        uncheckedTrackColor = appColor.variables.bordersLight,
+                    ),
                 checked = isChecked,
                 onCheckedChange = null,
             )

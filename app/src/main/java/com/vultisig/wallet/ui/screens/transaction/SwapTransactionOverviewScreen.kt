@@ -67,31 +67,29 @@ internal fun SwapTransactionOverviewScreen(
         onBack = onBack,
         tokenContent = {
             Box {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     VsOverviewToken(
                         header = stringResource(R.string.swap_form_from_title),
                         valuedToken = transactionTypeUiModel.src,
-                        shape = RoundedWithCutoutShape(
-                            cutoutPosition = CutoutPosition.End,
-                            cutoutOffsetX = (-4).dp,
-                            cutoutRadius = 18.dp,
-                        ),
-                        modifier = Modifier
-                            .weight(1f),
+                        shape =
+                            RoundedWithCutoutShape(
+                                cutoutPosition = CutoutPosition.End,
+                                cutoutOffsetX = (-4).dp,
+                                cutoutRadius = 18.dp,
+                            ),
+                        modifier = Modifier.weight(1f),
                     )
 
                     VsOverviewToken(
                         header = stringResource(R.string.swap_form_dst_token_title),
                         valuedToken = transactionTypeUiModel.dst,
-                        shape = RoundedWithCutoutShape(
-                            cutoutPosition = CutoutPosition.Start,
-                            cutoutOffsetX = (-4).dp,
-                            cutoutRadius = 18.dp,
-                        ),
-                        modifier = Modifier
-                            .weight(1f),
+                        shape =
+                            RoundedWithCutoutShape(
+                                cutoutPosition = CutoutPosition.Start,
+                                cutoutOffsetX = (-4).dp,
+                                cutoutRadius = 18.dp,
+                            ),
+                        modifier = Modifier.weight(1f),
                     )
                 }
 
@@ -99,16 +97,12 @@ internal fun SwapTransactionOverviewScreen(
                     painter = painterResource(R.drawable.ic_caret_right),
                     contentDescription = null,
                     tint = Theme.v2.colors.text.button.disabled,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .background(
-                            color = Theme.v2.colors.border.light,
-                            shape = CircleShape,
-                        )
-                        .padding(6.dp)
-                        .align(Alignment.Center)
+                    modifier =
+                        Modifier.size(24.dp)
+                            .background(color = Theme.v2.colors.border.light, shape = CircleShape)
+                            .padding(6.dp)
+                            .align(Alignment.Center),
                 )
-
             }
         },
         detailContent = {
@@ -120,24 +114,17 @@ internal fun SwapTransactionOverviewScreen(
                         title = stringResource(R.string.swap_transaction_overview_approval_tx_hash),
                         hash = approveTransactionHash,
                         link = approveTransactionLink,
-                        modifier = Modifier.padding(
-                            vertical = 12.dp,
-                        ),
+                        modifier = Modifier.padding(vertical = 12.dp),
                         onTxHashCopied = { tx ->
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar(
-                                    context.getString(
-                                        R.string.tx_done_address_copied,
-                                        tx
-                                    )
+                                    context.getString(R.string.tx_done_address_copied, tx)
                                 )
                             }
-                        }
+                        },
                     )
 
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
+                    VerifyCardDivider(size = 1.dp)
                 }
 
                 TextDetails(
@@ -145,18 +132,14 @@ internal fun SwapTransactionOverviewScreen(
                     subtitle = transactionTypeUiModel.src.token.address,
                 )
 
-                VerifyCardDivider(
-                    size = 1.dp,
-                )
+                VerifyCardDivider(size = 1.dp)
 
                 TextDetails(
                     title = stringResource(R.string.swap_form_dst_token_title),
                     subtitle = transactionTypeUiModel.dst.token.address,
                 )
 
-                VerifyCardDivider(
-                    size = 1.dp,
-                )
+                VerifyCardDivider(size = 1.dp)
 
                 TextDetails(
                     title = stringResource(R.string.swap_form_total_fees_title),
@@ -167,12 +150,7 @@ internal fun SwapTransactionOverviewScreen(
         bottomBarContent = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 12.dp,
-                    ),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
             ) {
                 if (!progressLink.isNullOrBlank()) {
                     val uriHandler = VsUriHandler()
@@ -180,11 +158,8 @@ internal fun SwapTransactionOverviewScreen(
                         label = stringResource(R.string.swap_transaction_overview_track),
                         variant = VsButtonVariant.Secondary,
                         size = VsButtonSize.Small,
-                        modifier = Modifier
-                            .weight(1f),
-                        onClick = {
-                            uriHandler.openUri(progressLink)
-                        }
+                        modifier = Modifier.weight(1f),
+                        onClick = { uriHandler.openUri(progressLink) },
                     )
                 }
 
@@ -192,34 +167,25 @@ internal fun SwapTransactionOverviewScreen(
                     label = stringResource(R.string.transaction_done_title),
                     variant = VsButtonVariant.Primary,
                     size = VsButtonSize.Small,
-                    modifier = Modifier
-                        .weight(1f),
+                    modifier = Modifier.weight(1f),
                     onClick = onComplete,
                 )
             }
-        }
+        },
     )
 }
 
 @Composable
-internal fun TextDetails(
-    title: String,
-    subtitle: String,
-    showAllContent: Boolean = false,
-) {
-    Details(
-        title = title,
-        modifier = Modifier.padding(
-            vertical = 12.dp,
-        ),
-    ) {
+internal fun TextDetails(title: String, subtitle: String, showAllContent: Boolean = false) {
+    Details(title = title, modifier = Modifier.padding(vertical = 12.dp)) {
         Text(
             text = subtitle,
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
             overflow = if (showAllContent) TextOverflow.Visible else TextOverflow.MiddleEllipsis,
             textAlign = TextAlign.End,
-            modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier.widthIn(max = 100.dp),
+            modifier =
+                if (showAllContent) Modifier.fillMaxWidth() else Modifier.widthIn(max = 100.dp),
             maxLines = if (showAllContent) 5 else 1,
         )
     }
@@ -232,21 +198,14 @@ internal fun Details(
     titleColor: Color? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = modifier
-            .fillMaxWidth()
-
-    ) {
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = modifier.fillMaxWidth()) {
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
             color = titleColor ?: Theme.v2.colors.text.tertiary,
         )
 
-        UiSpacer(
-            weight = 1f
-        )
+        UiSpacer(weight = 1f)
 
         content()
     }
@@ -263,6 +222,6 @@ private fun SwapTransactionOverviewScreenPreview() {
         onComplete = {},
         progressLink = "",
         transactionTypeUiModel = SwapTransactionUiModel(),
-        transactionStatus = TransactionStatus.Broadcasted
+        transactionStatus = TransactionStatus.Broadcasted,
     )
 }

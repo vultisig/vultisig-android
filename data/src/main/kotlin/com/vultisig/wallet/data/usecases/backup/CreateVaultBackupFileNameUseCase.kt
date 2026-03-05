@@ -12,14 +12,16 @@ fun interface CreateVaultBackupFileNameUseCase {
 internal class CreateVaultBackupFileNameUseCaseImpl @Inject constructor() :
     CreateVaultBackupFileNameUseCase {
     override fun invoke(vault: Vault): String {
-        val shareNamePart = when (vault.libType) {
-            SigningLibType.GG20 -> "part"
-            SigningLibType.DKLS, SigningLibType.KeyImport -> "share"
-        }
+        val shareNamePart =
+            when (vault.libType) {
+                SigningLibType.GG20 -> "part"
+                SigningLibType.DKLS,
+                SigningLibType.KeyImport -> "share"
+            }
 
         val fileName =
             "${vault.name}-${vault.pubKeyECDSA.takeLast(4)}" +
-                    "-$shareNamePart${vault.getVaultPart()}of${vault.signers.size}.vult"
+                "-$shareNamePart${vault.getVaultPart()}of${vault.signers.size}.vult"
 
         return fileName
     }

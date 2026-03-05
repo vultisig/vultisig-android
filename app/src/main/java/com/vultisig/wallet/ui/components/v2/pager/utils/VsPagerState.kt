@@ -18,6 +18,7 @@ internal class VsPagerState {
 
     val currentPage: Int
         get() = _currentPage.intValue
+
     private val _currentPage = mutableIntStateOf(0)
 
     fun item(content: @Composable () -> Unit) {
@@ -31,10 +32,6 @@ internal class VsPagerState {
     fun clear() {
         _pages.clear()
     }
-
 }
 
-@Composable
-internal fun rememberVsPagerState(key: Any?) = remember(key1 = key) {
-    VsPagerState()
-}
+@Composable internal fun rememberVsPagerState(key: Any?) = remember(key1 = key) { VsPagerState() }

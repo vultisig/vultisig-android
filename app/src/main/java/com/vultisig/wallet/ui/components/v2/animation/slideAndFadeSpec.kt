@@ -12,24 +12,25 @@ import androidx.compose.animation.togetherWith
 internal fun slideAndFadeSpec(): AnimatedContentTransitionScope<Boolean>.() -> ContentTransform = {
     if (targetState) {
         (slideInHorizontally(
-            animationSpec = tween(),
-            initialOffsetX = { fullWidth -> -fullWidth })
-                + fadeIn(animationSpec = tween()))
+                animationSpec = tween(),
+                initialOffsetX = { fullWidth -> -fullWidth },
+            ) + fadeIn(animationSpec = tween()))
             .togetherWith(
-                exit = slideOutHorizontally(
-                    animationSpec = tween(),
-                    targetOffsetX = { fullWidth -> fullWidth }) + fadeOut(animationSpec = tween())
+                exit =
+                    slideOutHorizontally(
+                        animationSpec = tween(),
+                        targetOffsetX = { fullWidth -> fullWidth },
+                    ) + fadeOut(animationSpec = tween())
             )
     } else {
-        (slideInHorizontally(
-            animationSpec = tween(),
-            initialOffsetX = { fullWidth -> fullWidth }
-        ) + fadeIn(animationSpec = tween()))
+        (slideInHorizontally(animationSpec = tween(), initialOffsetX = { fullWidth -> fullWidth }) +
+                fadeIn(animationSpec = tween()))
             .togetherWith(
-                exit = slideOutHorizontally(
-                    animationSpec = tween(),
-                    targetOffsetX = { fullWidth -> -fullWidth }
-                ) + fadeOut(animationSpec = tween()))
+                exit =
+                    slideOutHorizontally(
+                        animationSpec = tween(),
+                        targetOffsetX = { fullWidth -> -fullWidth },
+                    ) + fadeOut(animationSpec = tween())
+            )
     }
-
 }

@@ -6,9 +6,8 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import javax.inject.Inject
 
-class PolkadotStatusProvider @Inject constructor(
-    private val polkadotApi: PolkadotApi,
-) : TransactionStatusProvider {
+class PolkadotStatusProvider @Inject constructor(private val polkadotApi: PolkadotApi) :
+    TransactionStatusProvider {
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
             val tx = polkadotApi.getTxStatus(txHash)

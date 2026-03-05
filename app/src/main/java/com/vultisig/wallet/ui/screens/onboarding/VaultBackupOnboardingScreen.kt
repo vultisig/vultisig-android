@@ -36,17 +36,12 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun VaultBackupOnboardingScreen(
-    model: VaultBackupOnboardingViewModel = hiltViewModel(),
-) {
+internal fun VaultBackupOnboardingScreen(model: VaultBackupOnboardingViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     BlockBackClick()
 
-    VaultBackupOnboardingScreen(
-        uiState = state,
-        onEvent = model::onEvent,
-    )
+    VaultBackupOnboardingScreen(uiState = state, onEvent = model::onEvent)
 }
 
 @Composable
@@ -55,119 +50,93 @@ internal fun VaultBackupOnboardingScreen(
     onEvent: (VaultBackupOnboardingEvent) -> Unit,
 ) {
     V3Scaffold(
-        onBackClick = {
-            onEvent(VaultBackupOnboardingEvent.Back)
-        },
+        onBackClick = { onEvent(VaultBackupOnboardingEvent.Back) },
         applyDefaultPaddings = false,
         content = {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 RiveAnimation(
                     animation = uiState.rive,
-                    modifier = Modifier
-                        .size(
-                            width = 350.dp,
-                            height = 260.dp,
-                        )
-                        
-                        .dashedBorder(
-                            width = 1.dp,
-                            color = Theme.v2.colors.border.light,
-                            dashLength = 4.dp,
-                            intervalLength = 4.dp,
-                            cornerRadius = 0.dp
-                        )
+                    modifier =
+                        Modifier.size(width = 350.dp, height = 260.dp)
+                            .dashedBorder(
+                                width = 1.dp,
+                                color = Theme.v2.colors.border.light,
+                                dashLength = 4.dp,
+                                intervalLength = 4.dp,
+                                cornerRadius = 0.dp,
+                            ),
                 )
-                UiSpacer(
-                    size = 14.dp
-                )
+                UiSpacer(size = 14.dp)
 
                 Column(
-                    modifier = Modifier
-                        .padding(
+                    modifier =
+                        Modifier.padding(
                             horizontal = V3Scaffold.PADDING_HORIZONTAL,
                             vertical = V3Scaffold.PADDING_VERTICAL,
                         )
                 ) {
                     GradientTitleText(
                         gradientPart = stringResource(R.string.backup_backups),
-                        regularPart = " " + stringResource(R.string.backup_your_new_recovery_method),
-                        style = Theme.brockmann.headings.title2
+                        regularPart =
+                            " " + stringResource(R.string.backup_your_new_recovery_method),
+                        style = Theme.brockmann.headings.title2,
                     )
-                    UiSpacer(
-                        size = 16.dp
-                    )
+                    UiSpacer(size = 16.dp)
 
                     Text(
-                        text = highlightedText(
-                            mainText = stringResource(R.string.backup_backups_power_your_vault),
-                            highlightedWords = listOf(stringResource(R.string.backup_own_keyword)),
-                            mainTextStyle = Theme.brockmann.supplementary.footnote,
-                            mainTextColor = Theme.v2.colors.text.tertiary,
-                            highlightTextStyle = Theme.brockmann.supplementary.footnote.copy(fontWeight = FontWeight.Bold),
-                            highlightTextColor = Theme.v2.colors.alerts.info,
-                        ),
+                        text =
+                            highlightedText(
+                                mainText = stringResource(R.string.backup_backups_power_your_vault),
+                                highlightedWords =
+                                    listOf(stringResource(R.string.backup_own_keyword)),
+                                mainTextStyle = Theme.brockmann.supplementary.footnote,
+                                mainTextColor = Theme.v2.colors.text.tertiary,
+                                highlightTextStyle =
+                                    Theme.brockmann.supplementary.footnote.copy(
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                highlightTextColor = Theme.v2.colors.alerts.info,
+                            )
                     )
-                    UiSpacer(
-                        size = 32.dp
-                    )
+                    UiSpacer(size = 32.dp)
 
                     uiState.tips.forEach { (title, description, logo) ->
-
                         Row {
                             UiIcon(
-                                drawableResId =  logo,
+                                drawableResId = logo,
                                 contentDescription = null,
                                 size = 24.dp,
                                 tint = Theme.v2.colors.alerts.info,
                             )
-                            UiSpacer(
-                                size = 16.dp
-                            )
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                            ) {
+                            UiSpacer(size = 16.dp)
+                            Column(modifier = Modifier.fillMaxWidth()) {
                                 Text(
                                     text = title.asString(),
                                     style = Theme.brockmann.headings.subtitle,
                                     color = Theme.v2.colors.neutrals.n50,
                                 )
-                                UiSpacer(
-                                    size = 4.dp
-                                )
+                                UiSpacer(size = 4.dp)
 
                                 Text(
                                     text = description.asString(),
                                     style = Theme.brockmann.supplementary.footnote,
                                     color = Theme.v2.colors.text.tertiary,
                                 )
-
                             }
                         }
                         UiSpacer(size = 16.dp)
                     }
 
-                    UiSpacer(
-                        weight = 1f
-                    )
+                    UiSpacer(weight = 1f)
 
                     VsButton(
                         label = stringResource(R.string.vault_setup_i_understand),
-                        onClick = {
-                            onEvent(VaultBackupOnboardingEvent.Next)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        onClick = { onEvent(VaultBackupOnboardingEvent.Next) },
+                        modifier = Modifier.fillMaxWidth(),
                     )
-
-
                 }
-
             }
-        }
+        },
     )
 }
 
@@ -180,27 +149,26 @@ internal fun GradientTitleText(
 ) {
     Text(
         modifier = modifier,
-        text = buildAnnotatedString {
-            withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
-                append(gradientPart)
-            }
-            withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) {
-                append(regularPart)
-            }
-        },
+        text =
+            buildAnnotatedString {
+                withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
+                    append(gradientPart)
+                }
+                withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(regularPart) }
+            },
         style = style,
     )
 }
-
 
 @Preview
 @Composable
 private fun VaultBackupOnboardingScreenPreview() {
     VaultBackupOnboardingScreen(
-        uiState = VaultBackupOnboardingUiModel(
-            tips = VaultBackupOnboardingViewModel.FastVaultBackupOnboardingTips,
-            rive = R.raw.riv_keygen,
-        ),
-        onEvent = {}
+        uiState =
+            VaultBackupOnboardingUiModel(
+                tips = VaultBackupOnboardingViewModel.FastVaultBackupOnboardingTips,
+                rive = R.raw.riv_keygen,
+            ),
+        onEvent = {},
     )
 }

@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.screens.vault_settings.components.delete
 
-data class VaultDeleteUiModel (
+data class VaultDeleteUiModel(
     val name: String = "",
     val totalFiatValue: String? = null,
     val pubKeyECDSA: String = "",

@@ -8,12 +8,10 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Preview
 @Composable
-internal fun V2Loading(
-    modifier: Modifier = Modifier,
-){
+internal fun V2Loading(modifier: Modifier = Modifier) {
     CircularProgressIndicator(
         color = Theme.v2.colors.alerts.success,
         trackColor = Theme.v2.colors.border.normal,
-        modifier = modifier
+        modifier = modifier,
     )
 }

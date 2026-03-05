@@ -58,10 +58,7 @@ fun VsTopAppBar(
         onIconLeftClick = onIconLeftClick,
         actions = {
             if (iconRight != null) {
-                VsTopAppBarAction(
-                    icon = iconRight,
-                    onClick = onIconRightClick,
-                )
+                VsTopAppBarAction(icon = iconRight, onClick = onIconRightClick)
             }
         },
         modifier = modifier,
@@ -74,17 +71,13 @@ fun VsTopAppBar(
     title: String? = null,
     @DrawableRes iconLeft: Int? = null,
     onIconLeftClick: (() -> Unit)? = null,
-    @SuppressLint("ComposableLambdaParameterNaming")
-    actions: @Composable RowScope.() -> Unit,
+    @SuppressLint("ComposableLambdaParameterNaming") actions: @Composable RowScope.() -> Unit,
 ) {
     VsTopAppBar(
         title = title,
         navigationContent = {
             if (iconLeft != null) {
-                VsTopAppBarAction(
-                    icon = iconLeft,
-                    onClick = onIconLeftClick,
-                )
+                VsTopAppBarAction(icon = iconLeft, onClick = onIconLeftClick)
             }
         },
         actions = actions,
@@ -110,9 +103,8 @@ fun VsTopAppBar(
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Theme.v2.colors.backgrounds.primary,
-        ),
+        colors =
+            TopAppBarDefaults.topAppBarColors(containerColor = Theme.v2.colors.backgrounds.primary),
         navigationIcon = navigationContent,
         actions = actions,
         modifier = modifier,
@@ -120,10 +112,7 @@ fun VsTopAppBar(
 }
 
 @Composable
-fun VsTopAppBarAction(
-    @DrawableRes icon: Int,
-    onClick: (() -> Unit)?,
-) {
+fun VsTopAppBarAction(@DrawableRes icon: Int, onClick: (() -> Unit)?) {
     VsCircleButton(
         onClick = { onClick?.invoke() },
         size = VsCircleButtonSize.Small,
@@ -147,9 +136,7 @@ fun VsTopAppProgressBar(
             title = {
                 if (title != null) {
                     Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                         text = title,
                         style = Theme.brockmann.headings.title3,
                         color = Theme.v2.colors.text.primary,
@@ -157,19 +144,16 @@ fun VsTopAppProgressBar(
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Theme.v2.colors.backgrounds.primary,
-            ),
-            navigationIcon = {
-                navigationContent()
-            },
+            colors =
+                TopAppBarDefaults.topAppBarColors(
+                    containerColor = Theme.v2.colors.backgrounds.primary
+                ),
+            navigationIcon = { navigationContent() },
             actions = actions,
             modifier = modifier.padding(end = 16.dp),
         )
         DashedProgressIndicator(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
             progress = progress,
             totalNumberOfBars = total,
         )

@@ -18,15 +18,13 @@ internal fun UiIcon(
     tint: Color = Theme.v2.colors.neutrals.n100,
     contentDescription: String? = null,
     onClick: (() -> Unit)? = null,
-) = Icon(
-    painter = painterResource(id = drawableResId),
-    contentDescription = contentDescription,
-    tint = tint,
-    modifier = modifier
-        .size(size)
-        .then(
-            if (onClick != null)
-                Modifier.clickOnce(onClick = onClick)
-            else Modifier
-        ),
-)
+) =
+    Icon(
+        painter = painterResource(id = drawableResId),
+        contentDescription = contentDescription,
+        tint = tint,
+        modifier =
+            modifier
+                .size(size)
+                .then(if (onClick != null) Modifier.clickOnce(onClick = onClick) else Modifier),
+    )

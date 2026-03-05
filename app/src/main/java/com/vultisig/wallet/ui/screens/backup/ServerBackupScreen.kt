@@ -59,14 +59,12 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 /**
- * Server Backup screen that allows users to request their vault backup share
- * to be resent via email. Collects email and the vault encryption password,
- * then calls the VultiSigner `/vault/resend` endpoint.
+ * Server Backup screen that allows users to request their vault backup share to be resent via
+ * email. Collects email and the vault encryption password, then calls the VultiSigner
+ * `/vault/resend` endpoint.
  */
 @Composable
-internal fun ServerBackupScreen(
-    model: ServerBackupViewModel = hiltViewModel(),
-) {
+internal fun ServerBackupScreen(model: ServerBackupViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     ServerBackupScreen(
@@ -104,18 +102,14 @@ private fun ServerBackupScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.server_backup_get_started),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
                 onClick = onSubmit,
                 state = if (canSubmit) VsButtonState.Enabled else VsButtonState.Disabled,
             )
-        }
+        },
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             val errorBannerText = state.errorBanner.asString()
@@ -153,10 +147,7 @@ private fun ServerBackupScreen(
             )
 
             if (state.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(32.dp),
                         color = Theme.v2.colors.buttons.primary,
@@ -168,32 +159,23 @@ private fun ServerBackupScreen(
     }
 
     if (state.isSuccess) {
-        ServerBackupSuccessBottomSheet(
-            onClose = onSuccessClose,
-        )
+        ServerBackupSuccessBottomSheet(onClose = onSuccessClose)
     }
 }
 
 private val SectionShape = RoundedCornerShape(12.dp)
 
 @Composable
-private fun Modifier.sectionCard(): Modifier = this
-    .fillMaxWidth()
-    .border(1.dp, Theme.v2.colors.border.light, SectionShape)
-    .clip(SectionShape)
-    .background(Theme.v2.colors.backgrounds.secondary)
-    .padding(16.dp)
+private fun Modifier.sectionCard(): Modifier =
+    this.fillMaxWidth()
+        .border(1.dp, Theme.v2.colors.border.light, SectionShape)
+        .clip(SectionShape)
+        .background(Theme.v2.colors.backgrounds.secondary)
+        .padding(16.dp)
 
 @Composable
-private fun ConfirmedRow(
-    label: String,
-    value: String,
-    onEditClick: (() -> Unit)? = null,
-) {
-    Row(
-        modifier = Modifier.sectionCard(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+private fun ConfirmedRow(label: String, value: String, onEditClick: (() -> Unit)? = null) {
+    Row(modifier = Modifier.sectionCard(), verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
@@ -235,9 +217,7 @@ private fun EmailSection(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier.sectionCard(),
-    ) {
+    Column(modifier = Modifier.sectionCard()) {
         Text(
             text = stringResource(R.string.server_backup_email_label),
             style = Theme.brockmann.body.s.medium,
@@ -275,9 +255,7 @@ private fun PasswordSection(
     onToggleVisibility: () -> Unit,
     onSubmit: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier.sectionCard(),
-    ) {
+    Column(modifier = Modifier.sectionCard()) {
         Text(
             text = stringResource(R.string.server_backup_password_label),
             style = Theme.brockmann.body.s.medium,
@@ -296,10 +274,11 @@ private fun PasswordSection(
 
         VsTextInputField(
             textFieldState = passwordFieldState,
-            type = VsTextInputFieldType.Password(
-                isVisible = isPasswordVisible,
-                onVisibilityClick = onToggleVisibility,
-            ),
+            type =
+                VsTextInputFieldType.Password(
+                    isVisible = isPasswordVisible,
+                    onVisibilityClick = onToggleVisibility,
+                ),
             hint = stringResource(R.string.server_backup_password_label),
             onKeyboardAction = { onSubmit() },
         )
@@ -307,21 +286,15 @@ private fun PasswordSection(
 }
 
 @Composable
-private fun ErrorBanner(
-    text: String,
-) {
+private fun ErrorBanner(text: String) {
     val errorColor = Theme.v2.colors.alerts.error
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(SectionShape)
-            .background(errorColor.copy(alpha = 0.15f))
-            .border(
-                width = 1.dp,
-                shape = SectionShape,
-                color = errorColor.copy(alpha = 0.25f),
-            )
-            .padding(16.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(SectionShape)
+                .background(errorColor.copy(alpha = 0.15f))
+                .border(width = 1.dp, shape = SectionShape, color = errorColor.copy(alpha = 0.25f))
+                .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -341,49 +314,36 @@ private fun ErrorBanner(
 }
 
 @Composable
-private fun ServerBackupSuccessBottomSheet(
-    onClose: () -> Unit,
-) {
+private fun ServerBackupSuccessBottomSheet(onClose: () -> Unit) {
     val context = LocalContext.current
 
-    VsModalBottomSheet(
-        onDismissRequest = onClose,
-    ) {
+    VsModalBottomSheet(onDismissRequest = onClose) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             UiSpacer(24.dp)
 
-            val infiniteTransition = rememberInfiniteTransition(
-                label = "dashes_rotation",
-            )
-            val dashesRotation by infiniteTransition.animateFloat(
-                initialValue = 0f,
-                targetValue = 360f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(
-                        durationMillis = 40000,
-                        easing = LinearEasing,
-                    ),
-                ),
-                label = "dashes_rotation",
-            )
+            val infiniteTransition = rememberInfiniteTransition(label = "dashes_rotation")
+            val dashesRotation by
+                infiniteTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 360f,
+                    animationSpec =
+                        infiniteRepeatable(
+                            animation = tween(durationMillis = 40000, easing = LinearEasing)
+                        ),
+                    label = "dashes_rotation",
+                )
 
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Image(
                     painter = painterResource(R.drawable.il_server_backup_success_dashes),
                     contentDescription = null,
-                    modifier = Modifier
-                        .matchParentSize()
-                        .rotate(dashesRotation),
+                    modifier = Modifier.matchParentSize().rotate(dashesRotation),
                 )
                 Image(
                     painter = painterResource(R.drawable.il_server_backup_success),
@@ -415,21 +375,22 @@ private fun ServerBackupSuccessBottomSheet(
 
             Text(
                 text = stringResource(R.string.server_backup_success_check_email),
-                style = Theme.brockmann.body.s.medium.copy(
-                    textDecoration = TextDecoration.Underline,
-                ),
+                style =
+                    Theme.brockmann.body.s.medium.copy(textDecoration = TextDecoration.Underline),
                 color = Theme.v2.colors.buttons.primary,
-                modifier = Modifier.clickOnce {
-                    val intent = Intent(Intent.ACTION_MAIN).apply {
-                        addCategory(Intent.CATEGORY_APP_EMAIL)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    try {
-                        context.startActivity(intent)
-                    } catch (_: Exception) {
-                        // No email client available
-                    }
-                },
+                modifier =
+                    Modifier.clickOnce {
+                        val intent =
+                            Intent(Intent.ACTION_MAIN).apply {
+                                addCategory(Intent.CATEGORY_APP_EMAIL)
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        try {
+                            context.startActivity(intent)
+                        } catch (_: Exception) {
+                            // No email client available
+                        }
+                    },
             )
 
             UiSpacer(32.dp)
@@ -450,10 +411,7 @@ private fun ServerBackupSuccessBottomSheet(
 @Composable
 private fun ServerBackupScreenPreview() {
     ServerBackupScreen(
-        state = ServerBackupUiState(
-            vaultName = "Main Vault",
-            isNameConfirmed = true,
-        ),
+        state = ServerBackupUiState(vaultName = "Main Vault", isNameConfirmed = true),
         emailFieldState = rememberTextFieldState(),
         passwordFieldState = rememberTextFieldState(),
         onEditEmail = {},
@@ -468,7 +426,5 @@ private fun ServerBackupScreenPreview() {
 @Preview
 @Composable
 private fun ServerBackupSuccessPreview() {
-    ServerBackupSuccessBottomSheet(
-        onClose = {},
-    )
+    ServerBackupSuccessBottomSheet(onClose = {})
 }

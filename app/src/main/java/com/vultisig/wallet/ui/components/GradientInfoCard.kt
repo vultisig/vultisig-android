@@ -25,46 +25,32 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun GradientInfoCard(text: String, gradient: Brush = Brush.vultiGradient()) {
     Card(
-        modifier = Modifier
-            .padding(bottom = 16.dp)
-            .border(
-                width = 1.dp,
-                brush = gradient,
-                shape = RoundedCornerShape(12.dp)
-            ),
-        colors = CardDefaults.cardColors(
-            containerColor = Theme.v2.colors.backgrounds.transparent,
-        )
+        modifier =
+            Modifier.padding(bottom = 16.dp)
+                .border(width = 1.dp, brush = gradient, shape = RoundedCornerShape(12.dp)),
+        colors = CardDefaults.cardColors(containerColor = Theme.v2.colors.backgrounds.transparent),
     ) {
         Row(
             horizontalArrangement = Arrangement.Absolute.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             UiIcon(
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        top = 16.dp,
-                        bottom = 16.dp
-                    )
-                    .graphicsLayer(alpha = 0.99f)
-                    .drawWithCache {
-                        onDrawWithContent {
-                            drawContent()
-                            drawRect(gradient, blendMode = BlendMode.SrcAtop)
-                        }
-                    },
+                modifier =
+                    Modifier.padding(start = 16.dp, top = 16.dp, bottom = 16.dp)
+                        .graphicsLayer(alpha = 0.99f)
+                        .drawWithCache {
+                            onDrawWithContent {
+                                drawContent()
+                                drawRect(gradient, blendMode = BlendMode.SrcAtop)
+                            }
+                        },
                 drawableResId = R.drawable.ic_info,
                 size = 20.dp,
             )
             Text(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.padding(16.dp).fillMaxWidth(),
                 text = text,
-                style = Theme.menlo.body2.copy(
-                    fontSize = 12.sp,
-                ).copy(textAlign = TextAlign.Center),
+                style = Theme.menlo.body2.copy(fontSize = 12.sp).copy(textAlign = TextAlign.Center),
                 color = Theme.v2.colors.neutrals.n100,
             )
         }

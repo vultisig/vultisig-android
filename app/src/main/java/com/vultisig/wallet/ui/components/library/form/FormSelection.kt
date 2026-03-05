@@ -42,23 +42,17 @@ internal fun <T> FormSelection(
         AnimatedVisibility(visible = isListExpanded) {
             Column {
                 options.forEach { option ->
-                    UiHorizontalDivider(
-                        modifier = Modifier
-                            .padding(horizontal = 12.dp)
-                    )
+                    UiHorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp))
 
                     SelectionCard(
                         title = mapTypeToString(option),
-                        actionIcon = if (selected == option)
-                            R.drawable.check
-                        else null,
+                        actionIcon = if (selected == option) R.drawable.check else null,
                         onClick = {
                             isListExpanded = false
                             onSelectOption(option)
-                        }
+                        },
                     )
                 }
-
             }
         }
     }
@@ -72,13 +66,10 @@ internal fun SelectionCard(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .defaultMinSize(minHeight = 48.dp)
-            .padding(
-                vertical = 8.dp,
-                horizontal = 12.dp
-            )
-            .clickable(onClick = onClick),
+        modifier =
+            Modifier.defaultMinSize(minHeight = 48.dp)
+                .padding(vertical = 8.dp, horizontal = 12.dp)
+                .clickable(onClick = onClick),
     ) {
         Text(
             text = title,
@@ -90,10 +81,7 @@ internal fun SelectionCard(
         if (actionIcon != null) {
             UiSpacer(size = 8.dp)
 
-            UiIcon(
-                drawableResId = actionIcon,
-                size = 20.dp,
-            )
+            UiIcon(drawableResId = actionIcon, size = 20.dp)
         }
     }
 }
@@ -105,6 +93,6 @@ private fun FormSelectionPreview() {
         selected = "Rune",
         options = listOf("Rune", "BTC", "ETH", "BNB"),
         onSelectOption = {},
-        mapTypeToString = { it }
+        mapTypeToString = { it },
     )
 }

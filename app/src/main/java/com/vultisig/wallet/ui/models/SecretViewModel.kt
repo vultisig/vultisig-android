@@ -7,19 +7,19 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-internal data class SecretUiModel(
-    val isDklsEnabled: Boolean = false,
-)
+internal data class SecretUiModel(val isDklsEnabled: Boolean = false)
 
 @HiltViewModel
-internal class SecretViewModel @Inject constructor(
+internal class SecretViewModel
+@Inject
+constructor(
     private val secretSettingsRepository: SecretSettingsRepository,
-    private val navigator: Navigator<Destination>
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
     val state = MutableStateFlow(SecretUiModel())
@@ -33,15 +33,10 @@ internal class SecretViewModel @Inject constructor(
     }
 
     fun toggleDkls(state: Boolean) {
-        viewModelScope.launch {
-            secretSettingsRepository.setDklsEnabled(state)
-        }
+        viewModelScope.launch { secretSettingsRepository.setDklsEnabled(state) }
     }
 
-    fun back(){
-        viewModelScope.launch {
-            navigator.back()
-        }
+    fun back() {
+        viewModelScope.launch { navigator.back() }
     }
-
 }

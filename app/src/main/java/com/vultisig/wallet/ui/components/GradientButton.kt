@@ -23,33 +23,30 @@ internal fun GradientButton(
 ) {
     Text(
         text = text,
-        color = if (isSelected)
-            Theme.v2.colors.backgrounds.primary
-        else
-            Theme.v2.colors.backgrounds.teal,
+        color =
+            if (isSelected) Theme.v2.colors.backgrounds.primary
+            else Theme.v2.colors.backgrounds.teal,
         style = Theme.montserrat.subtitle1,
         textAlign = TextAlign.Center,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        modifier = modifier
-            .clickable(onClick = onClick)
-            .then(
-                if (isSelected) {
-                    Modifier.background(
-                        brush = Brush.vultiGradient(),
-                        shape = RoundedCornerShape(30.dp)
-                    )
-                } else {
-                    Modifier.border(
-                        width = 1.dp,
-                        brush = Brush.vultiGradient(),
-                        shape = RoundedCornerShape(30.dp),
-                    )
-                }
-            )
-            .padding(
-                vertical = 12.dp,
-                horizontal = 12.dp,
-            ),
+        modifier =
+            modifier
+                .clickable(onClick = onClick)
+                .then(
+                    if (isSelected) {
+                        Modifier.background(
+                            brush = Brush.vultiGradient(),
+                            shape = RoundedCornerShape(30.dp),
+                        )
+                    } else {
+                        Modifier.border(
+                            width = 1.dp,
+                            brush = Brush.vultiGradient(),
+                            shape = RoundedCornerShape(30.dp),
+                        )
+                    }
+                )
+                .padding(vertical = 12.dp, horizontal = 12.dp),
     )
 }

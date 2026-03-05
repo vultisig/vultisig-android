@@ -27,17 +27,11 @@ internal fun UiAlertDialog(
             )
         },
         text = {
-            Text(
-                text = text,
-                color = Theme.v2.colors.neutrals.n100,
-                style = Theme.montserrat.body2,
-            )
+            Text(text = text, color = Theme.v2.colors.neutrals.n100, style = Theme.montserrat.body2)
         },
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(
-                onClick = onDismiss
-            ) {
+            TextButton(onClick = onDismiss) {
                 Text(
                     text = confirmTitle,
                     color = Theme.v2.colors.neutrals.n100,
@@ -51,11 +45,5 @@ internal fun UiAlertDialog(
 @Preview
 @Composable
 private fun UiAlertDialogPreview() {
-    MaterialTheme {
-        UiAlertDialog(
-            title = "Error",
-            text = "Something went wrong",
-            onDismiss = {},
-        )
-    }
+    MaterialTheme { UiAlertDialog(title = "Error", text = "Something went wrong", onDismiss = {}) }
 }

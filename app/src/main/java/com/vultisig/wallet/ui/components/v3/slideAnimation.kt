@@ -11,20 +11,20 @@ import androidx.compose.animation.togetherWith
 
 internal fun slideDown(): ContentTransform =
     (slideInVertically { height -> -height } + fadeIn()).togetherWith(
-        slideOutVertically { height -> height } + fadeOut())
-
+        slideOutVertically { height -> height } + fadeOut()
+    )
 
 internal fun slideUp(): ContentTransform =
     (slideInVertically { height -> height } + fadeIn()).togetherWith(
-        slideOutVertically { height -> -height } + fadeOut())
-
+        slideOutVertically { height -> -height } + fadeOut()
+    )
 
 internal fun slideLeft(): ContentTransform =
     (slideInHorizontally { width -> width } + fadeIn()).togetherWith(
-        slideOutHorizontally { width -> -width } + fadeOut())
-
+        slideOutHorizontally { width -> -width } + fadeOut()
+    )
 
 internal fun slideRight(): ContentTransform =
     (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(
-        slideOutHorizontally { width -> width } + fadeOut())
-
+        slideOutHorizontally { width -> width } + fadeOut()
+    )

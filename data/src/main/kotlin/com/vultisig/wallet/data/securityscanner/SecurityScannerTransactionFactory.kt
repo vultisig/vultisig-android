@@ -15,16 +15,18 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import java.math.BigInteger
 import kotlinx.coroutines.coroutineScope
 import wallet.core.jni.Base58
 import wallet.core.jni.CoinType
-import java.math.BigInteger
 
 class SecurityScannerTransactionFactory(
     private val solanaApi: SolanaApi,
     private val suiApi: SuiApi,
 ) : SecurityScannerTransactionFactoryContract {
-    override suspend fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
+    override suspend fun createSecurityScannerTransaction(
+        transaction: Transaction
+    ): SecurityScannerTransaction {
         val chain = transaction.token.chain
         return when (chain.standard) {
             TokenStandard.EVM -> createEVMSecurityScannerTransaction(transaction)
@@ -35,7 +37,9 @@ class SecurityScannerTransactionFactory(
         }
     }
 
-    override suspend fun createSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
+    override suspend fun createSecurityScannerTransaction(
+        transaction: SwapTransaction
+    ): SecurityScannerTransaction {
         val chain = transaction.srcToken.chain
         return when (chain.standard) {
             TokenStandard.EVM -> createEVMSecurityScannerTransaction(transaction)
@@ -43,7 +47,9 @@ class SecurityScannerTransactionFactory(
         }
     }
 
-    private fun createEVMSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
+    private fun createEVMSecurityScannerTransaction(
+        transaction: SwapTransaction
+    ): SecurityScannerTransaction {
         return when (val payload = transaction.payload) {
             is SwapPayload.EVM ->
                 buildSwapSecurityScannerTransaction(
@@ -52,8 +58,8 @@ class SecurityScannerTransactionFactory(
                     to = payload.data.quote.tx.to,
                     amount = payload.data.quote.tx.value,
                     data = payload.data.quote.tx.data,
-                    isApprovalRequired = transaction.isApprovalRequired
-            )
+                    isApprovalRequired = transaction.isApprovalRequired,
+                )
 
             else -> throw SecurityScannerException("Not supported provider for EVM")
         }
@@ -90,7 +96,9 @@ class SecurityScannerTransactionFactory(
         }
     }
 
-    private fun createEVMSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
+    private fun createEVMSecurityScannerTransaction(
+        transaction: Transaction
+    ): SecurityScannerTransaction {
         val transferType: SecurityTransactionType
         val amount: BigInteger
         val data: String
@@ -120,24 +128,29 @@ class SecurityScannerTransactionFactory(
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    private suspend fun createSOLSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction =
-        coroutineScope {
-            val vaultHexPubKey = Base58.decodeNoCheck(transaction.srcAddress).toHexString()
-            val solanaHelper = SolanaHelper(vaultHexPubKey)
+    private suspend fun createSOLSecurityScannerTransaction(
+        transaction: Transaction
+    ): SecurityScannerTransaction = coroutineScope {
+        val vaultHexPubKey = Base58.decodeNoCheck(transaction.srcAddress).toHexString()
+        val solanaHelper = SolanaHelper(vaultHexPubKey)
 
-            val solanaBlockchainSpecific = transaction.blockChainSpecific
-            require(solanaBlockchainSpecific is BlockChainSpecific.Solana) {
-                "Error Blockchain Specific is not Solana ${transaction.blockChainSpecific}"
-            }
+        val solanaBlockchainSpecific = transaction.blockChainSpecific
+        require(solanaBlockchainSpecific is BlockChainSpecific.Solana) {
+            "Error Blockchain Specific is not Solana ${transaction.blockChainSpecific}"
+        }
 
-            val (solanaUpdatedSpecific, type) = if (transaction.token.isNativeToken) {
+        val (solanaUpdatedSpecific, type) =
+            if (transaction.token.isNativeToken) {
                 transaction.blockChainSpecific to SecurityTransactionType.COIN_TRANSFER
             } else {
-                val fromAddressPubKey = solanaBlockchainSpecific.fromAddressPubKey
-                    ?: solanaApi.getTokenAssociatedAccountByOwner(
-                        transaction.token.address,
-                        transaction.token.contractAddress
-                    ).first
+                val fromAddressPubKey =
+                    solanaBlockchainSpecific.fromAddressPubKey
+                        ?: solanaApi
+                            .getTokenAssociatedAccountByOwner(
+                                transaction.token.address,
+                                transaction.token.contractAddress,
+                            )
+                            .first
 
                 BlockChainSpecific.Solana(
                     recentBlockHash = solanaBlockchainSpecific.recentBlockHash,
@@ -149,7 +162,8 @@ class SecurityScannerTransactionFactory(
                 ) to SecurityTransactionType.TOKEN_TRANSFER
             }
 
-            val keySignPayload = KeysignPayload(
+        val keySignPayload =
+            KeysignPayload(
                 coin = transaction.token,
                 toAddress = transaction.dstAddress,
                 toAmount = transaction.tokenValue.value,
@@ -161,44 +175,47 @@ class SecurityScannerTransactionFactory(
                 wasmExecuteContractPayload = null,
             )
 
-            val transactionZeroX = solanaHelper.getZeroSignedTransaction(keySignPayload)
+        val transactionZeroX = solanaHelper.getZeroSignedTransaction(keySignPayload)
 
-            SecurityScannerTransaction(
-                chain = transaction.token.chain,
-                type = type,
-                from = transaction.srcAddress,
-                to = transaction.dstAddress,
-                amount = BigInteger.ZERO, // encoded in tx
-                data = transactionZeroX,
-            )
-        }
+        SecurityScannerTransaction(
+            chain = transaction.token.chain,
+            type = type,
+            from = transaction.srcAddress,
+            to = transaction.dstAddress,
+            amount = BigInteger.ZERO, // encoded in tx
+            data = transactionZeroX,
+        )
+    }
 
-    private suspend fun createSUISecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
+    private suspend fun createSUISecurityScannerTransaction(
+        transaction: Transaction
+    ): SecurityScannerTransaction {
         val suiBlockchainSpecific = transaction.blockChainSpecific
         require(suiBlockchainSpecific is BlockChainSpecific.Sui) {
             "Error Blockchain Specific is not SUI ${transaction.blockChainSpecific}"
         }
 
-        val coins = suiBlockchainSpecific.coins.ifEmpty {
-            suiApi.getAllCoins(transaction.srcAddress)
-        }
-        val updatedSuiBlockChainSpecific = BlockChainSpecific.Sui(
-            referenceGasPrice = suiBlockchainSpecific.referenceGasPrice,
-            coins = coins,
-            gasBudget = SUI_DEFAULT_GAS_BUDGET,
-        )
+        val coins =
+            suiBlockchainSpecific.coins.ifEmpty { suiApi.getAllCoins(transaction.srcAddress) }
+        val updatedSuiBlockChainSpecific =
+            BlockChainSpecific.Sui(
+                referenceGasPrice = suiBlockchainSpecific.referenceGasPrice,
+                coins = coins,
+                gasBudget = SUI_DEFAULT_GAS_BUDGET,
+            )
 
-        val keySignPayload = KeysignPayload(
-            coin = transaction.token,
-            toAddress = transaction.dstAddress,
-            toAmount = transaction.tokenValue.value,
-            blockChainSpecific = updatedSuiBlockChainSpecific,
-            memo = transaction.memo,
-            vaultPublicKeyECDSA = "", // no need for SUI prehash
-            vaultLocalPartyID = "", // no need for SUI prehash
-            libType = null, // no need for SUI prehash
-            wasmExecuteContractPayload = null,
-        )
+        val keySignPayload =
+            KeysignPayload(
+                coin = transaction.token,
+                toAddress = transaction.dstAddress,
+                toAmount = transaction.tokenValue.value,
+                blockChainSpecific = updatedSuiBlockChainSpecific,
+                memo = transaction.memo,
+                vaultPublicKeyECDSA = "", // no need for SUI prehash
+                vaultLocalPartyID = "", // no need for SUI prehash
+                libType = null, // no need for SUI prehash
+                wasmExecuteContractPayload = null,
+            )
 
         val serializedTransaction = SuiHelper.getZeroSignedTransaction(keySignPayload)
 
@@ -212,27 +229,31 @@ class SecurityScannerTransactionFactory(
         )
     }
 
-    private fun createBTCSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
-        val keySignPayload = KeysignPayload(
-            coin = transaction.token,
-            toAddress = transaction.dstAddress,
-            toAmount = transaction.tokenValue.value,
-            blockChainSpecific = transaction.blockChainSpecific,
-            utxos = transaction.utxos,
-            memo = transaction.memo,
-            vaultPublicKeyECDSA = "", // no need for BTC
-            vaultLocalPartyID = "", // no need for BTC
-            libType = null, // no need for BTC
-            wasmExecuteContractPayload = null,
-        )
+    private fun createBTCSecurityScannerTransaction(
+        transaction: Transaction
+    ): SecurityScannerTransaction {
+        val keySignPayload =
+            KeysignPayload(
+                coin = transaction.token,
+                toAddress = transaction.dstAddress,
+                toAmount = transaction.tokenValue.value,
+                blockChainSpecific = transaction.blockChainSpecific,
+                utxos = transaction.utxos,
+                memo = transaction.memo,
+                vaultPublicKeyECDSA = "", // no need for BTC
+                vaultLocalPartyID = "", // no need for BTC
+                libType = null, // no need for BTC
+                wasmExecuteContractPayload = null,
+            )
 
-        val dummyVault = Vault(
-            id = "dummy",
-            name = "dummy",
-            pubKeyECDSA = "0000000000000000000000000000000000000000000000000000000000000000",
-            hexChainCode = "0000000000000000000000000000000000000000000000000000000000000000"
-        )
-        
+        val dummyVault =
+            Vault(
+                id = "dummy",
+                name = "dummy",
+                pubKeyECDSA = "0000000000000000000000000000000000000000000000000000000000000000",
+                hexChainCode = "0000000000000000000000000000000000000000000000000000000000000000",
+            )
+
         val btcHelper = UtxoHelper.getHelper(dummyVault, CoinType.BITCOIN)
         val zeroSignedTx = btcHelper.getZeroSignedTransaction(keySignPayload)
 

@@ -43,9 +43,7 @@ fun V2BottomSheet(
     title: String? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-    )
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         modifier = modifier.statusBarsPadding(),
         onDismissRequest = onDismissRequest,
@@ -56,32 +54,22 @@ fun V2BottomSheet(
         content = {
             Box {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(
-                            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
-                        )
-                        .background(Theme.v2.colors.backgrounds.primary)
-                        .padding(
-                            all = 16.dp
-                        )
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clip(shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
+                            .background(Theme.v2.colors.backgrounds.primary)
+                            .padding(all = 16.dp)
                 ) {
                     TopRow(leftAction, title, rightAction)
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Theme.v2.colors.backgrounds.primary),
-                        content = content
+                        modifier =
+                            Modifier.fillMaxWidth().background(Theme.v2.colors.backgrounds.primary),
+                        content = content,
                     )
                 }
-                DragHandler(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .align(Alignment.TopCenter)
-                )
+                DragHandler(modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter))
             }
-
-        }
+        },
     )
 }
 
@@ -89,9 +77,7 @@ fun V2BottomSheet(
 @Composable
 fun V2BottomSheet(
     modifier: Modifier = Modifier,
-    sheetState: SheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-    ),
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     onDismissRequest: () -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -104,26 +90,17 @@ fun V2BottomSheet(
         shape = RectangleShape,
         content = {
             Box(
-                modifier = Modifier
-                    .clip(
-                        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
-                    )
+                modifier =
+                    Modifier.clip(shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
             ) {
-
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Theme.v2.colors.backgrounds.primary),
-                    content = content
+                    modifier =
+                        Modifier.fillMaxWidth().background(Theme.v2.colors.backgrounds.primary),
+                    content = content,
                 )
-                DragHandler(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .align(Alignment.TopCenter)
-                )
+                DragHandler(modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter))
             }
-
-        }
+        },
     )
 }
 
@@ -131,27 +108,18 @@ fun V2BottomSheet(
 private fun TopRow(
     leftAction: @Composable (() -> Unit)?,
     title: String?,
-    rightAction: @Composable (() -> Unit)?
+    rightAction: @Composable (() -> Unit)?,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 36.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 36.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.CenterStart
-        ) {
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
             leftAction?.invoke()
         }
 
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center,
-        ) {
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
             title?.let {
                 Text(
                     text = it,
@@ -161,10 +129,7 @@ private fun TopRow(
             }
         }
 
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.CenterEnd
-        ) {
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             rightAction?.invoke()
         }
     }
@@ -173,15 +138,14 @@ private fun TopRow(
 @Composable
 internal fun DragHandler(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier
-            .width(36.dp)
-            .height(5.dp)
-            .clip(CircleShape)
-            .background(Theme.v2.colors.vibrant.primary)
-
+        modifier =
+            modifier
+                .width(36.dp)
+                .height(5.dp)
+                .clip(CircleShape)
+                .background(Theme.v2.colors.vibrant.primary)
     )
 }
-
 
 @Composable
 @Preview
@@ -210,6 +174,6 @@ internal fun V2BottomSheetPreview() {
                 color = Theme.v2.colors.neutrals.n100,
                 style = Theme.brockmann.headings.title3,
             )
-        }
+        },
     )
 }

@@ -22,11 +22,16 @@ import com.vultisig.wallet.data.utils.decimals
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigInteger
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import java.util.UUID
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onEach
@@ -36,12 +41,6 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
-import java.math.BigInteger
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-import java.util.UUID
-import javax.inject.Inject
 
 internal data class CreateReferralUiState(
     val searchStatus: SearchStatusType = SearchStatusType.DEFAULT,
@@ -54,6 +53,7 @@ internal data class CreateReferralUiState(
 
 internal interface FeesReferral {
     data object Loading : FeesReferral
+
     data class Result(
         val registrationFeesToken: String = "",
         val registrationFeesPrice: String = "",
@@ -81,7 +81,9 @@ internal fun SearchStatusType.isError(): Boolean {
 }
 
 @HiltViewModel
-internal class CreateReferralViewModel @Inject constructor(
+internal class CreateReferralViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val thorChainApi: ThorChainApi,
@@ -106,27 +108,22 @@ internal class CreateReferralViewModel @Inject constructor(
 
     private fun loadFees() {
         viewModelScope.launch {
-            state.update {
-                it.copy(fees = FeesReferral.Loading)
-            }
+            state.update { it.copy(fees = FeesReferral.Loading) }
 
-            nativeRuneFees = withContext(Dispatchers.IO) {
-                thorChainApi.getTHORChainReferralFees()
-            }
+            nativeRuneFees = withContext(Dispatchers.IO) { thorChainApi.getTHORChainReferralFees() }
 
-            val fees = withContext(Dispatchers.IO) {
-                calculateFees()
-            }
+            val fees = withContext(Dispatchers.IO) { calculateFees() }
 
             state.update {
                 it.copy(
-                    fees = FeesReferral.Result(
-                        registrationFeesToken = fees.registrationFeesToken,
-                        registrationFeesPrice = fees.registrationFeesPrice,
-                        costFeesTokenAmount = fees.costFeesTokenAmount,
-                        costFeesToken = fees.costFeesToken,
-                        costFeesPrice = fees.costFeesPrice
-                    )
+                    fees =
+                        FeesReferral.Result(
+                            registrationFeesToken = fees.registrationFeesToken,
+                            registrationFeesPrice = fees.registrationFeesPrice,
+                            costFeesTokenAmount = fees.costFeesTokenAmount,
+                            costFeesToken = fees.costFeesToken,
+                            costFeesPrice = fees.costFeesPrice,
+                        )
                 )
             }
         }
@@ -135,10 +132,9 @@ internal class CreateReferralViewModel @Inject constructor(
     private fun loadAddress() {
         viewModelScope.launch {
             try {
-                accountsRepository.loadAddress(vaultId, Chain.ThorChain)
-                    .collect { address ->
-                        this@CreateReferralViewModel.address = address
-                    }
+                accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect { address ->
+                    this@CreateReferralViewModel.address = address
+                }
             } catch (e: Exception) {
                 Timber.e(e)
             }
@@ -149,8 +145,9 @@ internal class CreateReferralViewModel @Inject constructor(
         val registrationTokenFees =
             (nativeRuneFees?.registerFeeRune ?: DEFAULT_REGISTRATION_FEES).toBigInteger()
         val extraFeesPerYear =
-            (nativeRuneFees?.feePerBlock
-                ?: DEFAULT_BLOCK_FEES).toBigInteger() * extraYears.toBigInteger() * BLOCKS_PER_YEAR
+            (nativeRuneFees?.feePerBlock ?: DEFAULT_BLOCK_FEES).toBigInteger() *
+                extraYears.toBigInteger() *
+                BLOCKS_PER_YEAR
 
         val totalCost = registrationTokenFees + extraFeesPerYear
 
@@ -174,44 +171,32 @@ internal class CreateReferralViewModel @Inject constructor(
     private fun loadYearExpiration() {
         val formattedDate = getFormattedDateByAdding(1)
 
-        state.update {
-            it.copy(
-                formattedYearExpiration = formattedDate,
-            )
-        }
+        state.update { it.copy(formattedYearExpiration = formattedDate) }
     }
 
     fun onSearchReferralCode() {
         viewModelScope.launch {
             val referralCode = searchReferralTexFieldState.text.toString().trim()
             validateReferralCode(referralCode)?.let { _ ->
-                state.update {
-                    it.copy(searchStatus = SearchStatusType.VALIDATION_ERROR)
-                }
+                state.update { it.copy(searchStatus = SearchStatusType.VALIDATION_ERROR) }
                 return@launch
             }
 
-            state.update {
-                it.copy(searchStatus = SearchStatusType.IS_SEARCHING)
-            }
+            state.update { it.copy(searchStatus = SearchStatusType.IS_SEARCHING) }
 
             try {
-                val exists = withContext(Dispatchers.IO) {
-                    thorChainApi.existsReferralCode(referralCode)
-                }
-                val status = if (exists) {
-                    SearchStatusType.ERROR
-                } else {
-                    SearchStatusType.SUCCESS
-                }
-                state.update {
-                    it.copy(searchStatus = status)
-                }
+                val exists =
+                    withContext(Dispatchers.IO) { thorChainApi.existsReferralCode(referralCode) }
+                val status =
+                    if (exists) {
+                        SearchStatusType.ERROR
+                    } else {
+                        SearchStatusType.SUCCESS
+                    }
+                state.update { it.copy(searchStatus = status) }
             } catch (t: Throwable) {
                 Timber.e(t)
-                state.update {
-                    it.copy(searchStatus = SearchStatusType.DEFAULT)
-                }
+                state.update { it.copy(searchStatus = SearchStatusType.DEFAULT) }
             }
         }
     }
@@ -222,9 +207,7 @@ internal class CreateReferralViewModel @Inject constructor(
                 .textAsFlow()
                 .onEach {
                     if (state.value.searchStatus != SearchStatusType.DEFAULT) {
-                        state.update {
-                            it.copy(searchStatus = SearchStatusType.DEFAULT)
-                        }
+                        state.update { it.copy(searchStatus = SearchStatusType.DEFAULT) }
                     }
                 }
                 .collect {}
@@ -232,19 +215,13 @@ internal class CreateReferralViewModel @Inject constructor(
     }
 
     fun onDismissError() {
-        viewModelScope.launch {
-            state.update {
-                it.copy(error = null)
-            }
-        }
+        viewModelScope.launch { state.update { it.copy(error = null) } }
     }
 
     fun onCleanReferralClick() {
         viewModelScope.launch {
             searchReferralTexFieldState.clearText()
-            state.update {
-                it.copy(searchStatus = SearchStatusType.DEFAULT)
-            }
+            state.update { it.copy(searchStatus = SearchStatusType.DEFAULT) }
         }
     }
 
@@ -264,16 +241,10 @@ internal class CreateReferralViewModel @Inject constructor(
 
     private suspend fun updateFormattedDate(toAdd: Int) {
         val formattedDate = getFormattedDateByAdding(toAdd.toLong())
-        val newFees = withContext(Dispatchers.IO) {
-            calculateFees(toAdd)
-        }
+        val newFees = withContext(Dispatchers.IO) { calculateFees(toAdd) }
 
         state.update {
-            it.copy(
-                yearExpiration = toAdd,
-                formattedYearExpiration = formattedDate,
-                fees = newFees,
-            )
+            it.copy(yearExpiration = toAdd, formattedYearExpiration = formattedDate, fees = newFees)
         }
     }
 
@@ -282,17 +253,14 @@ internal class CreateReferralViewModel @Inject constructor(
             try {
                 // perform validations
                 val fees = state.value.fees
-                require(fees is FeesReferral.Result) {
-                    "Can't proceed, error calculating toAmount"
-                }
-                val account = address?.accounts?.find { it.token.isNativeToken }
-                    ?: error("Can't load account")
+                require(fees is FeesReferral.Result) { "Can't proceed, error calculating toAmount" }
+                val account =
+                    address?.accounts?.find { it.token.isNativeToken }
+                        ?: error("Can't load account")
                 val balance = account.tokenValue?.value ?: BigInteger.ZERO
                 val totalFees = fees.costFeesTokenAmount.toBigInteger()
                 if (balance < totalFees) {
-                    state.update {
-                        it.copy(error = ReferralError.BALANCE_ERROR)
-                    }
+                    state.update { it.copy(error = ReferralError.BALANCE_ERROR) }
                     return@launch
                 }
 
@@ -300,54 +268,52 @@ internal class CreateReferralViewModel @Inject constructor(
                 val address = account.token.address
                 val referralCode = searchReferralTexFieldState.text.toString()
                 val memo = "~:${referralCode.uppercase()}:THOR:$address:$address"
-                val gasFees = TokenValue(
-                    value = nativeRuneFees?.value?.toBigInteger() ?: "2000000".toBigInteger(),
-                    unit = CoinType.THORCHAIN.symbol,
-                    decimals = CoinType.THORCHAIN.decimals,
-                )
+                val gasFees =
+                    TokenValue(
+                        value = nativeRuneFees?.value?.toBigInteger() ?: "2000000".toBigInteger(),
+                        unit = CoinType.THORCHAIN.symbol,
+                        decimals = CoinType.THORCHAIN.decimals,
+                    )
                 val toAmount = fees.costFeesTokenAmount.toBigInteger()
-                val blockchainSpecific = withContext(Dispatchers.IO) {
-                    blockChainSpecificRepository.getSpecific(
-                        chain = Chain.ThorChain,
-                        address = account.token.address,
-                        token = account.token,
-                        isDeposit = true,
-                        memo = memo,
-                        isSwap = false,
-                        isMaxAmountEnabled = false,
-                        transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
-                        tokenAmountValue = fees.costFeesTokenAmount.toBigInteger(),
-                        gasFee = gasFees,
-                    ).blockChainSpecific
-                }
+                val blockchainSpecific =
+                    withContext(Dispatchers.IO) {
+                        blockChainSpecificRepository
+                            .getSpecific(
+                                chain = Chain.ThorChain,
+                                address = account.token.address,
+                                token = account.token,
+                                isDeposit = true,
+                                memo = memo,
+                                isSwap = false,
+                                isMaxAmountEnabled = false,
+                                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                                tokenAmountValue = fees.costFeesTokenAmount.toBigInteger(),
+                                gasFee = gasFees,
+                            )
+                            .blockChainSpecific
+                    }
 
-                val tx = DepositTransaction(
-                    id = UUID.randomUUID().toString(),
-                    vaultId = vaultId,
-                    srcToken = account.token,
-                    srcAddress = address,
-                    dstAddress = "",
-                    memo = memo,
-                    srcTokenValue = TokenValue(
-                        value = toAmount,
-                        token = account.token,
-                    ),
-                    estimatedFees = gasFees,
-                    estimateFeesFiat = gasFees.value.convertToFiat(),
-                    blockChainSpecific = blockchainSpecific,
-                )
+                val tx =
+                    DepositTransaction(
+                        id = UUID.randomUUID().toString(),
+                        vaultId = vaultId,
+                        srcToken = account.token,
+                        srcAddress = address,
+                        dstAddress = "",
+                        memo = memo,
+                        srcTokenValue = TokenValue(value = toAmount, token = account.token),
+                        estimatedFees = gasFees,
+                        estimateFeesFiat = gasFees.value.convertToFiat(),
+                        blockChainSpecific = blockchainSpecific,
+                    )
 
                 transactionRepository.addTransaction(tx)
 
-                navigator.route(
-                    Route.VerifyDeposit(vaultId, tx.id)
-                )
+                navigator.route(Route.VerifyDeposit(vaultId, tx.id))
             } catch (t: Throwable) {
                 Timber.e(t)
 
-                state.update {
-                    it.copy(error = ReferralError.UNKNOWN_ERROR)
-                }
+                state.update { it.copy(error = ReferralError.UNKNOWN_ERROR) }
             }
         }
     }
@@ -360,21 +326,20 @@ internal class CreateReferralViewModel @Inject constructor(
     }
 
     private suspend fun BigInteger.convertToFiat(): String {
-        val gasFeeParams = Coins.coins[Chain.ThorChain]?.first()?.let { selectedCoin ->
-            GasFeeParams(
-                gasLimit = BigInteger.ONE,
-                gasFee = TokenValue(this, "RUNE", 8),
-                selectedToken = selectedCoin,
-            )
-        } ?: error("Can't calculate fees")
+        val gasFeeParams =
+            Coins.coins[Chain.ThorChain]?.first()?.let { selectedCoin ->
+                GasFeeParams(
+                    gasLimit = BigInteger.ONE,
+                    gasFee = TokenValue(this, "RUNE", 8),
+                    selectedToken = selectedCoin,
+                )
+            } ?: error("Can't calculate fees")
 
         return gasFeeToEstimate.invoke(gasFeeParams).formattedFiatValue
     }
-    
+
     fun setInfoBoxVisibility(visible: Boolean) {
-        state.update {
-            it.copy(showInfoBox = visible)
-        }
+        state.update { it.copy(showInfoBox = visible) }
     }
 
     internal companion object {

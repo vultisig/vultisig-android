@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.JupiterApiImpl.Companion.JUPITER_URL
 import com.vultisig.wallet.data.api.models.BroadcastTransactionRespJson
-import com.vultisig.wallet.data.api.models.SolanaRpcResponseJson
 import com.vultisig.wallet.data.api.models.JupiterTokenResponseJson
 import com.vultisig.wallet.data.api.models.RecentBlockHashResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
@@ -12,6 +11,7 @@ import com.vultisig.wallet.data.api.models.SolanaFeeForMessageResponse
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectJson
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectRespJson
 import com.vultisig.wallet.data.api.models.SolanaMinimumBalanceForRentExemptionJson
+import com.vultisig.wallet.data.api.models.SolanaRpcResponseJson
 import com.vultisig.wallet.data.api.models.SolanaSignatureStatusesResult
 import com.vultisig.wallet.data.api.models.SplAmountRpcResponseJson
 import com.vultisig.wallet.data.api.models.SplResponseAccountJson
@@ -31,6 +31,8 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import java.math.BigInteger
+import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -42,23 +44,31 @@ import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.put
 import timber.log.Timber
-import java.math.BigInteger
-import javax.inject.Inject
 
 interface SolanaApi {
     suspend fun getBalance(address: String): BigInteger
+
     suspend fun getMinimumBalanceForRentExemption(): BigInteger
+
     suspend fun getRecentBlockHash(): String
+
     suspend fun getHighPriorityFee(account: String): String
+
     suspend fun broadcastTransaction(tx: String): String?
+
     suspend fun getSPLTokens(walletAddress: String): List<SplResponseAccountJson>?
+
     suspend fun getSPLTokensInfo(tokens: List<String>): List<SplTokenJson>
+
     suspend fun getSPLTokensInfo2(tokens: List<String>): List<SplTokenInfo>
+
     suspend fun getJupiterTokens(): List<JupiterTokenResponseJson>
+
     suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String?
+
     suspend fun getTokenAssociatedAccountByOwner(
         walletAddress: String,
-        mintAddress: String
+        mintAddress: String,
     ): Pair<String?, Boolean>
 
     suspend fun getFeeForMessage(message: String): BigInteger
@@ -66,7 +76,9 @@ interface SolanaApi {
     suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>?
 }
 
-internal class SolanaApiImp @Inject constructor(
+internal class SolanaApiImp
+@Inject
+constructor(
     private val json: Json,
     private val httpClient: HttpClient,
     private val splTokenSerializer: SplTokenResponseJsonSerializer,
@@ -76,19 +88,17 @@ internal class SolanaApiImp @Inject constructor(
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
     private val splTokensInfoEndpoint2 = "$JUPITER_URL/tokens/v2/search"
     private val jupiterTokensUrl = "$JUPITER_URL/tokens/v2/tag"
+
     override suspend fun getBalance(address: String): BigInteger {
         return try {
-            val payload = RpcPayload(
-                jsonrpc = "2.0",
-                method = "getBalance",
-                params = buildJsonArray {
-                    add(address)
-                },
-                id = 1,
-            )
-            val response = httpClient.post(rpcEndpoint) {
-                setBody(payload)
-            }
+            val payload =
+                RpcPayload(
+                    jsonrpc = "2.0",
+                    method = "getBalance",
+                    params = buildJsonArray { add(address) },
+                    id = 1,
+                )
+            val response = httpClient.post(rpcEndpoint) { setBody(payload) }
             val rpcResp = response.body<SolanaBalanceJson>()
             Timber.tag("solanaApiImp").d(response.toString())
 
@@ -103,39 +113,34 @@ internal class SolanaApiImp @Inject constructor(
         }
     }
 
-    override suspend fun getMinimumBalanceForRentExemption(): BigInteger = try {
-        httpClient.postRpc<SolanaMinimumBalanceForRentExemptionJson>(
-            rpcEndpoint,
-            "getMinimumBalanceForRentExemption",
-            params = buildJsonArray {
-                add(DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION)
-            },
-        ).result
-    } catch (e: Exception) {
-        Timber.e("Error getting minimum balance for rent exemption: ${e.message}")
-        BigInteger.ZERO
-    }
+    override suspend fun getMinimumBalanceForRentExemption(): BigInteger =
+        try {
+            httpClient
+                .postRpc<SolanaMinimumBalanceForRentExemptionJson>(
+                    rpcEndpoint,
+                    "getMinimumBalanceForRentExemption",
+                    params = buildJsonArray { add(DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION) },
+                )
+                .result
+        } catch (e: Exception) {
+            Timber.e("Error getting minimum balance for rent exemption: ${e.message}")
+            BigInteger.ZERO
+        }
 
     override suspend fun getRecentBlockHash(): String {
-        val payload = RpcPayload(
-            jsonrpc = "2.0",
-            method = "getLatestBlockhash",
-            params = buildJsonArray {
-                addJsonObject {
-                    put("commitment", "finalized")
-                }
-            },
-            id = 1,
-        )
-        val response = httpClient.post(rpcEndpoint) {
-            setBody(payload)
-        }
+        val payload =
+            RpcPayload(
+                jsonrpc = "2.0",
+                method = "getLatestBlockhash",
+                params = buildJsonArray { addJsonObject { put("commitment", "finalized") } },
+                id = 1,
+            )
+        val response = httpClient.post(rpcEndpoint) { setBody(payload) }
         val responseContent = response.bodyAsText()
         Timber.tag("solanaApiImp").d(responseContent)
         val rpcResp = response.body<RecentBlockHashResponseJson>()
         if (rpcResp.error != null) {
-            Timber.tag("solanaApiImp")
-                .d("get recent blockhash  error: ${rpcResp.error}")
+            Timber.tag("solanaApiImp").d("get recent blockhash  error: ${rpcResp.error}")
             return ""
         }
         return rpcResp.result?.value?.blockHash ?: error("getRecentBlockHash error")
@@ -144,19 +149,14 @@ internal class SolanaApiImp @Inject constructor(
     @Deprecated("Perform proper calculation in fee service once decouple from helper")
     override suspend fun getHighPriorityFee(account: String): String {
         try {
-            val payload = RpcPayload(
-                jsonrpc = "2.0",
-                method = "getRecentPrioritizationFees",
-                params = buildJsonArray {
-                    addJsonArray {
-                        add(account)
-                    }
-                },
-                id = 1,
-            )
-            val response = httpClient.post(rpcEndpoint) {
-                setBody(payload)
-            }
+            val payload =
+                RpcPayload(
+                    jsonrpc = "2.0",
+                    method = "getRecentPrioritizationFees",
+                    params = buildJsonArray { addJsonArray { add(account) } },
+                    id = 1,
+                )
+            val response = httpClient.post(rpcEndpoint) { setBody(payload) }
             val responseContent = response.bodyAsText()
             Timber.d(responseContent)
             val rpcResp = response.body<SolanaFeeObjectRespJson>()
@@ -176,17 +176,14 @@ internal class SolanaApiImp @Inject constructor(
 
     override suspend fun broadcastTransaction(tx: String): String? {
         try {
-            val requestBody = RpcPayload(
-                jsonrpc = "2.0",
-                method = "sendTransaction",
-                params = buildJsonArray {
-                    add(tx)
-                },
-                id = 1,
-            )
-            val response = httpClient.post(rpcEndpoint) {
-                setBody(requestBody)
-            }
+            val requestBody =
+                RpcPayload(
+                    jsonrpc = "2.0",
+                    method = "sendTransaction",
+                    params = buildJsonArray { add(tx) },
+                    id = 1,
+                )
+            val response = httpClient.post(rpcEndpoint) { setBody(requestBody) }
             val responseRawString = response.bodyAsText()
             val result = response.body<BroadcastTransactionRespJson>()
             result.error?.let { error ->
@@ -198,23 +195,17 @@ internal class SolanaApiImp @Inject constructor(
             Timber.tag("SolanaApiImp").e("Error broadcasting transaction: ${e.message}")
             throw e
         }
-
     }
 
     override suspend fun getSPLTokensInfo(tokens: List<String>): List<SplTokenJson> {
         try {
-            val requestBody = SPLTokenRequestJson(
-                tokens = tokens
-            )
-            val response = httpClient.post(splTokensInfoEndpoint) {
-                setBody(requestBody)
-            }
+            val requestBody = SPLTokenRequestJson(tokens = tokens)
+            val response = httpClient.post(splTokensInfoEndpoint) { setBody(requestBody) }
             val responseRawString = response.bodyAsText()
             when (val result = json.decodeFromString(splTokenSerializer, responseRawString)) {
                 is SplTokenDeserialized.Error -> {
-                    Timber.tag("SolanaApiImp").d(
-                        "Error getting spl tokens: ${result.error.error.message}"
-                    )
+                    Timber.tag("SolanaApiImp")
+                        .d("Error getting spl tokens: ${result.error.error.message}")
                     return emptyList()
                 }
 
@@ -227,28 +218,27 @@ internal class SolanaApiImp @Inject constructor(
     }
 
     override suspend fun getSPLTokensInfo2(tokens: List<String>) = coroutineScope {
-        tokens.map { token ->
-            async {
-                try {
-                    httpClient.get(splTokensInfoEndpoint2) {
-                        parameter("query", token)
-                    }.body<List<SplTokenInfo>>().firstOrNull()
-                } catch (e: Exception) {
-                    Timber.tag("SolanaApiImp")
-                        .e("Error getting spl token for $token message : ${e.message}")
-                    null
+        tokens
+            .map { token ->
+                async {
+                    try {
+                        httpClient
+                            .get(splTokensInfoEndpoint2) { parameter("query", token) }
+                            .body<List<SplTokenInfo>>()
+                            .firstOrNull()
+                    } catch (e: Exception) {
+                        Timber.tag("SolanaApiImp")
+                            .e("Error getting spl token for $token message : ${e.message}")
+                        null
+                    }
                 }
             }
-        }.awaitAll().filterNotNull()
+            .awaitAll()
+            .filterNotNull()
     }
 
     override suspend fun getJupiterTokens(): List<JupiterTokenResponseJson> =
-        httpClient.get(jupiterTokensUrl) {
-            parameter(
-                "query",
-                "verified"
-            )
-        }.body()
+        httpClient.get(jupiterTokensUrl) { parameter("query", "verified") }.body()
 
     override suspend fun getSPLTokens(walletAddress: String): List<SplResponseAccountJson>? =
         coroutineScope {
@@ -256,71 +246,50 @@ internal class SolanaApiImp @Inject constructor(
                 val payload = getSplRpcPayload(walletAddress, PROGRAM_ID_SPL_REQUEST_PARAM)
                 val payloadToken2022 = getSplRpcPayload(walletAddress, TOKEN_PROGRAM_ID_2022)
 
-                val response = async {
-                    httpClient.post(rpcEndpoint) {
-                        setBody(payload)
-                    }
-                }
+                val response = async { httpClient.post(rpcEndpoint) { setBody(payload) } }
 
                 val responseToken2022 = async {
-                    httpClient.post(rpcEndpoint) {
-                        setBody(payloadToken2022)
-                    }
+                    httpClient.post(rpcEndpoint) { setBody(payloadToken2022) }
                 }
 
                 listOf(response, responseToken2022)
                     .awaitAll()
                     .mapNotNull { it.body<SplResponseJson>().result?.accounts }
                     .flatten()
-
             } catch (e: Exception) {
                 Timber.e(e)
                 null
             }
         }
 
-
-    private fun getSplRpcPayload(address: String, programId: String) = RpcPayload(
-        jsonrpc = "2.0",
-        method = "getTokenAccountsByOwner",
-        params = buildJsonArray {
-            add(address)
-            addJsonObject {
-                put(
-                    "programId",
-                    programId
-                )
-            }
-            addJsonObject {
-                put(
-                    "encoding",
-                    ENCODING_SPL_REQUEST_PARAM
-                )
-            }
-        },
-        id = 1,
-    )
-
+    private fun getSplRpcPayload(address: String, programId: String) =
+        RpcPayload(
+            jsonrpc = "2.0",
+            method = "getTokenAccountsByOwner",
+            params =
+                buildJsonArray {
+                    add(address)
+                    addJsonObject { put("programId", programId) }
+                    addJsonObject { put("encoding", ENCODING_SPL_REQUEST_PARAM) }
+                },
+            id = 1,
+        )
 
     override suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String? {
         try {
-            val payload = RpcPayload(
-                jsonrpc = "2.0",
-                method = "getTokenAccountsByOwner",
-                params = buildJsonArray {
-                    add(walletAddress)
-                    addJsonObject {
-                        put("mint", coinAddress)
-                    }
-                    addJsonObject {
-                        put("encoding", ENCODING_SPL_REQUEST_PARAM)
-                    }
-                },
-                id = 1,
-            )
-            val response = httpClient.post(rpcEndpoint) {
-                setBody(payload)
-            }
+            val payload =
+                RpcPayload(
+                    jsonrpc = "2.0",
+                    method = "getTokenAccountsByOwner",
+                    params =
+                        buildJsonArray {
+                            add(walletAddress)
+                            addJsonObject { put("mint", coinAddress) }
+                            addJsonObject { put("encoding", ENCODING_SPL_REQUEST_PARAM) }
+                        },
+                    id = 1,
+                )
+            val response = httpClient.post(rpcEndpoint) { setBody(payload) }
             val responseContent = response.bodyAsText()
             Timber.d(responseContent)
             val rpcResp = response.body<SplAmountRpcResponseJson>()
@@ -345,19 +314,17 @@ internal class SolanaApiImp @Inject constructor(
         mintAddress: String,
     ): Pair<String?, Boolean> {
         try {
-            val response = httpClient.postRpc<SplAmountRpcResponseJson>(
-                url = rpcEndpoint,
-                method = "getTokenAccountsByOwner",
-                params = buildJsonArray {
-                    add(walletAddress)
-                    addJsonObject {
-                        put("mint", mintAddress)
-                    }
-                    addJsonObject {
-                        put("encoding", ENCODING_SPL_REQUEST_PARAM)
-                    }
-                }
-            )
+            val response =
+                httpClient.postRpc<SplAmountRpcResponseJson>(
+                    url = rpcEndpoint,
+                    method = "getTokenAccountsByOwner",
+                    params =
+                        buildJsonArray {
+                            add(walletAddress)
+                            addJsonObject { put("mint", mintAddress) }
+                            addJsonObject { put("encoding", ENCODING_SPL_REQUEST_PARAM) }
+                        },
+                )
             if (response.error != null) {
                 Timber.d("getTokenAssociatedAccountByOwner error: ${response.error}")
                 return Pair(null, false)
@@ -365,7 +332,7 @@ internal class SolanaApiImp @Inject constructor(
             val value = response.value ?: error("getTokenAssociatedAccountByOwner error")
             return Pair(
                 value.value[0].pubKey,
-                value.value[0].account.owner == TOKEN_PROGRAM_ID_2022
+                value.value[0].account.owner == TOKEN_PROGRAM_ID_2022,
             )
         } catch (e: Exception) {
             Timber.e(e)
@@ -374,47 +341,41 @@ internal class SolanaApiImp @Inject constructor(
     }
 
     override suspend fun getFeeForMessage(message: String): BigInteger {
-        val payload = RpcPayload(
-            jsonrpc = "2.0",
-            method = "getFeeForMessage",
-            params = buildJsonArray {
-                add(message)
-                addJsonObject {
-                    put("commitment", "confirmed")
-                }
-            },
-            id = 1,
-        )
+        val payload =
+            RpcPayload(
+                jsonrpc = "2.0",
+                method = "getFeeForMessage",
+                params =
+                    buildJsonArray {
+                        add(message)
+                        addJsonObject { put("commitment", "confirmed") }
+                    },
+                id = 1,
+            )
 
-        val response = httpClient.post(rpcEndpoint) {
-            setBody(payload)
-        }
+        val response = httpClient.post(rpcEndpoint) { setBody(payload) }
 
         val rpcResp = response.bodyOrThrow<SolanaFeeForMessageResponse>()
 
         return rpcResp.result?.value ?: error("Error fetching getFeeForMessage")
     }
 
-    override suspend fun checkStatus(txHash: String): SolanaRpcResponseJson<SolanaSignatureStatusesResult>? {
+    override suspend fun checkStatus(
+        txHash: String
+    ): SolanaRpcResponseJson<SolanaSignatureStatusesResult>? {
         try {
 
             val params = buildJsonArray {
-                addJsonArray {
-                    add(JsonPrimitive(txHash))
-                }
-                addJsonObject {
-                    put(
-                        "searchTransactionHistory",
-                        true
-                    )
-                }
+                addJsonArray { add(JsonPrimitive(txHash)) }
+                addJsonObject { put("searchTransactionHistory", true) }
             }
 
-            val response: SolanaRpcResponseJson<SolanaSignatureStatusesResult> = httpClient.postRpc(
-                url = rpcEndpoint,
-                method = "getSignatureStatuses",
-                params = params,
-            )
+            val response: SolanaRpcResponseJson<SolanaSignatureStatusesResult> =
+                httpClient.postRpc(
+                    url = rpcEndpoint,
+                    method = "getSignatureStatuses",
+                    params = params,
+                )
 
             return response
         } catch (e: Exception) {
@@ -429,8 +390,7 @@ internal class SolanaApiImp @Inject constructor(
     companion object {
         private const val PROGRAM_ID_SPL_REQUEST_PARAM =
             "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        private const val TOKEN_PROGRAM_ID_2022 =
-            "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        private const val TOKEN_PROGRAM_ID_2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
         private const val ENCODING_SPL_REQUEST_PARAM = "jsonParsed"
         private const val DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION = 165
     }

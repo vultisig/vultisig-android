@@ -38,53 +38,37 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.file.RequestCreateDocument
 
 @Composable
-internal fun BackupVaultScreen(
-    model: BackupVaultViewModel = hiltViewModel(),
-) {
+internal fun BackupVaultScreen(model: BackupVaultViewModel = hiltViewModel()) {
     RequestCreateDocument(
         mimeType = MimeType.OCTET_STREAM.value,
         onDocumentCreated = model::saveContentToUriResult,
         createDocumentRequestFlow = model.createDocumentRequestFlow,
     )
 
-    BackupVaultScreen(
-        onBackupClick = model::backup,
-    )
+    BackupVaultScreen(onBackupClick = model::backup)
 }
 
 @Composable
-private fun BackupVaultScreen(
-    onBackupClick: () -> Unit,
-) {
-    var isNextEnabled by remember {
-        mutableStateOf(false)
-    }
+private fun BackupVaultScreen(onBackupClick: () -> Unit) {
+    var isNextEnabled by remember { mutableStateOf(false) }
     V3Scaffold(
         onBackClick = {},
         content = {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 UiSpacer(70.dp)
 
                 RiveAnimation(
                     animation = R.raw.riv_backup_vault_splash,
-                    modifier = Modifier.size(
-                        width = 266.dp,
-                        height = 170.dp
-                    ),
-                    fit = Fit.COVER
+                    modifier = Modifier.size(width = 266.dp, height = 170.dp),
+                    fit = Fit.COVER,
                 )
 
                 UiSpacer(70.dp)
 
-                V3Icon(
-                    shinedBottom = Theme.v2.colors.alerts.info,
-                    logo = R.drawable.arrow_cloude,
-                )
+                V3Icon(shinedBottom = Theme.v2.colors.alerts.info, logo = R.drawable.arrow_cloude)
 
                 UiSpacer(24.dp)
 
@@ -95,35 +79,37 @@ private fun BackupVaultScreen(
                     textAlign = TextAlign.Center,
                 )
 
-                UiSpacer(
-                    size = 32.dp
-                )
+                UiSpacer(size = 32.dp)
 
                 Text(
-                    text = buildAnnotatedString {
-                        append(stringResource(R.string.backup_vault_screen_export_prefix))
-                        withStyle(
-                            style = Theme.brockmann.body.s.medium.toSpanStyle()
-                                .copy(color = Theme.v2.colors.neutrals.n50)
-                        ) {
-                            append(" encrypted ")
-                        }
-                        append(stringResource(R.string.backup_vault_screen_password_suffix))
-                        append("\n")
-                        withStyle(
-                                style = Theme.brockmann.body.s.medium.toSpanStyle()
-                                    .copy(color = Theme.v2.colors.text.secondary),
-
-                        ) {
-                            append(" ")
-                            append(stringResource(R.string.backup_vault_screen_cloud_tip))
-                            append(" ")
-                        }
-                    },
+                    text =
+                        buildAnnotatedString {
+                            append(stringResource(R.string.backup_vault_screen_export_prefix))
+                            withStyle(
+                                style =
+                                    Theme.brockmann.body.s.medium
+                                        .toSpanStyle()
+                                        .copy(color = Theme.v2.colors.neutrals.n50)
+                            ) {
+                                append(" encrypted ")
+                            }
+                            append(stringResource(R.string.backup_vault_screen_password_suffix))
+                            append("\n")
+                            withStyle(
+                                style =
+                                    Theme.brockmann.body.s.medium
+                                        .toSpanStyle()
+                                        .copy(color = Theme.v2.colors.text.secondary)
+                            ) {
+                                append(" ")
+                                append(stringResource(R.string.backup_vault_screen_cloud_tip))
+                                append(" ")
+                            }
+                        },
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 12.dp)
+                    modifier = Modifier.padding(horizontal = 12.dp),
                 )
             }
         },
@@ -132,42 +118,32 @@ private fun BackupVaultScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-
                 VsCheckField(
-                    modifier = Modifier
-                        .testTag("SummaryScreen.agree"),
+                    modifier = Modifier.testTag("SummaryScreen.agree"),
                     title = stringResource(R.string.backup_i_understand_how_to_save_this_backup),
                     isChecked = isNextEnabled,
-                    onCheckedChange = {
-                        isNextEnabled = it
-                    },
+                    onCheckedChange = { isNextEnabled = it },
                 )
                 VsButton(
                     label = stringResource(R.string.backup_vault_screen_save_backup),
                     iconLeft = R.drawable.ic_download,
                     onClick = onBackupClick,
-                    state = VsButtonState.Enabled.takeIf { isNextEnabled }
-                        ?: VsButtonState.Disabled,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = 16.dp,
-                            vertical = 10.dp,
-                        )
-                        .testTag(BackupVaultScreenTags.BACKUP_NOW)
+                    state =
+                        VsButtonState.Enabled.takeIf { isNextEnabled } ?: VsButtonState.Disabled,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                            .testTag(BackupVaultScreenTags.BACKUP_NOW),
                 )
             }
-        }
+        },
     )
-
 }
 
 @Preview
 @Composable
 private fun BackupVaultScreenPreview() {
-    BackupVaultScreen(
-        onBackupClick = {},
-    )
+    BackupVaultScreen(onBackupClick = {})
 }
 
 internal object BackupVaultScreenTags {

@@ -9,8 +9,6 @@ import kotlinx.coroutines.launch
 
 object SharedPrefsMasterKeyInitializer {
     init {
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            getOrCreate(AES256_GCM_SPEC)
-        }
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch { getOrCreate(AES256_GCM_SPEC) }
     }
 }

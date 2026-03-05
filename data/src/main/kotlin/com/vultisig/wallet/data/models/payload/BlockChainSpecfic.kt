@@ -1,15 +1,12 @@
 package com.vultisig.wallet.data.models.payload
 
+import java.math.BigInteger
 import vultisig.keysign.v1.CosmosIbcDenomTrace
 import vultisig.keysign.v1.SuiCoin
 import vultisig.keysign.v1.TransactionType
-import java.math.BigInteger
 
 sealed class BlockChainSpecific {
-    data class UTXO(
-        val byteFee: BigInteger,
-        val sendMaxAmount: Boolean
-    ) : BlockChainSpecific()
+    data class UTXO(val byteFee: BigInteger, val sendMaxAmount: Boolean) : BlockChainSpecific()
 
     data class Ethereum(
         val maxFeePerGasWei: BigInteger,
@@ -52,7 +49,7 @@ sealed class BlockChainSpecific {
     data class Sui(
         val referenceGasPrice: BigInteger,
         val gasBudget: BigInteger,
-        val coins: List<SuiCoin>
+        val coins: List<SuiCoin>,
     ) : BlockChainSpecific()
 
     data class Polkadot(
@@ -75,11 +72,8 @@ sealed class BlockChainSpecific {
         val isActiveDestination: Boolean = false,
     ) : BlockChainSpecific()
 
-    data class Ripple(
-        val sequence: ULong,
-        val gas: ULong,
-        val lastLedgerSequence: ULong,
-    ) : BlockChainSpecific()
+    data class Ripple(val sequence: ULong, val gas: ULong, val lastLedgerSequence: ULong) :
+        BlockChainSpecific()
 
     data class Tron(
         val timestamp: ULong,
@@ -90,12 +84,9 @@ sealed class BlockChainSpecific {
         val blockHeaderTxTrieRoot: String,
         val blockHeaderParentHash: String,
         val blockHeaderWitnessAddress: String,
-        val gasFeeEstimation : ULong,
+        val gasFeeEstimation: ULong,
     ) : BlockChainSpecific()
 
-    data class Cardano(
-        val byteFee: Long,
-        val sendMaxAmount: Boolean,
-        val ttl: ULong
-    ) : BlockChainSpecific()
+    data class Cardano(val byteFee: Long, val sendMaxAmount: Boolean, val ttl: ULong) :
+        BlockChainSpecific()
 }

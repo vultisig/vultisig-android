@@ -27,29 +27,19 @@ internal fun AccountList(
             key(account.chainName) {
                 Column {
                     AccountItem(
-                        modifier = Modifier.Companion.padding(
-                            horizontal = 16.dp,
-                            vertical = 12.dp
-                        ),
+                        modifier = Modifier.Companion.padding(horizontal = 16.dp, vertical = 12.dp),
                         account = account,
                         isBalanceVisible = isBalanceVisible,
-                        onClick = {
-                            onAccountClick(account)
-                        },
+                        onClick = { onAccountClick(account) },
                         onCopy = {
                             snackbarState.show(
-                                context.getString(
-                                    R.string.address_copied,
-                                    account.chainName
-                                ),
+                                context.getString(R.string.address_copied, account.chainName)
                             )
                         },
                     )
 
                     if (index != accounts.lastIndex) {
-                        UiHorizontalDivider(
-                            color = Theme.v2.colors.border.light,
-                        )
+                        UiHorizontalDivider(color = Theme.v2.colors.border.light)
                     }
                 }
             }

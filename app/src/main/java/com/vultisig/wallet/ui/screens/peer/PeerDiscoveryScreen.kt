@@ -88,9 +88,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun KeygenPeerDiscoveryScreen(
-    model: KeygenPeerDiscoveryViewModel = hiltViewModel(),
-) {
+internal fun KeygenPeerDiscoveryScreen(model: KeygenPeerDiscoveryViewModel = hiltViewModel()) {
     KeepScreenOn()
 
     val state by model.state.collectAsState()
@@ -103,10 +101,7 @@ internal fun KeygenPeerDiscoveryScreen(
     val warning = state.warning
     when {
         error != null -> {
-            Error(
-                state = error,
-                onTryAgainClick = model::tryAgain,
-            )
+            Error(state = error, onTryAgainClick = model::tryAgain)
         }
 
         warning != null -> {
@@ -120,11 +115,12 @@ internal fun KeygenPeerDiscoveryScreen(
         connectingToServer != null -> {
 
             val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keygen).value ?: return
-            val vmi = rememberViewModelInstance(
-                file = riveFile,
-                source = ViewModelSource.Named("ViewModel").defaultInstance()
-            )
-            
+            val vmi =
+                rememberViewModelInstance(
+                    file = riveFile,
+                    source = ViewModelSource.Named("ViewModel").defaultInstance(),
+                )
+
             var showRive by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) {
                 kotlinx.coroutines.delay(300)
@@ -136,7 +132,7 @@ internal fun KeygenPeerDiscoveryScreen(
                     file = riveFile,
                     viewModelInstance = vmi,
                     modifier = Modifier.fillMaxSize(),
-                    fit = Fit.Cover()
+                    fit = Fit.Cover(),
                 )
             }
         }
@@ -145,9 +141,7 @@ internal fun KeygenPeerDiscoveryScreen(
             PeerDiscoveryScreen(
                 state = state,
                 onBackClick = model::back,
-                onHelpClick = {
-                    uriHandler.openUri(VsAuxiliaryLinks.CREATE_VAULT)
-                },
+                onHelpClick = { uriHandler.openUri(VsAuxiliaryLinks.CREATE_VAULT) },
                 onShareQrClick = { model.shareQr(context) },
                 onCloseHintClick = model::closeDevicesHint,
                 onSwitchModeClick = model::switchMode,
@@ -189,87 +183,69 @@ internal fun PeerDiscoveryScreen(
         onBackClick = onBackClick,
         actions = {
             if (showHelp) {
-                VsTopAppBarAction(
-                    icon = R.drawable.ic_question_mark,
-                    onClick = onHelpClick,
-                )
+                VsTopAppBarAction(icon = R.drawable.ic_question_mark, onClick = onHelpClick)
 
-                UiSpacer(
-                    size = 8.dp
-                )
+                UiSpacer(size = 8.dp)
             }
 
-            VsTopAppBarAction(
-                icon = R.drawable.ic_share,
-                onClick = onShareQrClick,
-            )
+            VsTopAppBarAction(icon = R.drawable.ic_share, onClick = onShareQrClick)
         },
         bottomBar = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier
-                    .padding(
-                        vertical = 12.dp,
-                        horizontal = 24.dp,
-                    )
+                modifier = Modifier.padding(vertical = 12.dp, horizontal = 24.dp),
             ) {
                 VsButton(
-                    label = if (hasEnoughDevices) stringResource(R.string.peer_discovery_action_next_title)
-                    else stringResource(R.string.peer_discovery_waiting_for_devices_action),
-                    state = if (hasEnoughDevices)
-                        VsButtonState.Enabled
-                    else VsButtonState.Disabled,
+                    label =
+                        if (hasEnoughDevices)
+                            stringResource(R.string.peer_discovery_action_next_title)
+                        else stringResource(R.string.peer_discovery_waiting_for_devices_action),
+                    state = if (hasEnoughDevices) VsButtonState.Enabled else VsButtonState.Disabled,
                     onClick = onNextClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Text(
-                    text = buildNetworkModeText(
-                        network = state.network,
-                        onSwitchModeClick = onSwitchModeClick
-                    ),
+                    text =
+                        buildNetworkModeText(
+                            network = state.network,
+                            onSwitchModeClick = onSwitchModeClick,
+                        ),
                     color = Theme.v2.colors.text.tertiary,
                     style = Theme.brockmann.supplementary.caption,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
         },
         content = {
-
             Box {
                 if (state.showQrHelpModal) {
-                    ShowQrHelperBottomSheet(
-                        onDismiss = onDismissQrHelpModal
-                    )
+                    ShowQrHelperBottomSheet(onDismiss = onDismissQrHelpModal)
                 }
 
                 Column(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState()),
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     QrCodeContainer(
                         qrCode = state.qr,
-                        modifier = if (isKeySign) {
-                            Modifier
-                                .padding(vertical = 36.dp)
-                                .fillMaxWidth()
-                        } else {
-                            Modifier
-                                .padding(vertical = 20.dp)
-                                .fillMaxWidth(0.80f)
-                        },
+                        modifier =
+                            if (isKeySign) {
+                                Modifier.padding(vertical = 36.dp).fillMaxWidth()
+                            } else {
+                                Modifier.padding(vertical = 20.dp).fillMaxWidth(0.80f)
+                            },
                         devicesSize = devicesSize,
                     )
 
-                    AnimatedVisibility(
-                        visible = state.showDevicesHint,
-                    ) {
+                    AnimatedVisibility(visible = state.showDevicesHint) {
                         Column {
                             Banner(
-                                text = stringResource(R.string.peer_discovery_recommended_devices_hint),
+                                text =
+                                    stringResource(
+                                        R.string.peer_discovery_recommended_devices_hint
+                                    ),
                                 variant = BannerVariant.Info,
                                 onCloseClick = onCloseHintClick,
                                 modifier = Modifier.fillMaxWidth(),
@@ -278,9 +254,7 @@ internal fun PeerDiscoveryScreen(
                         }
                     }
 
-                    AnimatedVisibility(
-                        visible = state.network == NetworkOption.Local
-                    ) {
+                    AnimatedVisibility(visible = state.network == NetworkOption.Local) {
                         Column {
                             LocalModeHint()
                             UiSpacer(16.dp)
@@ -290,14 +264,15 @@ internal fun PeerDiscoveryScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = stringResource(
-                                R.string.peer_discovery_devices_n_of_n,
-                                selectedDevicesSize,
-                                state.minimumDevicesDisplayed,
-                            ),
+                            text =
+                                stringResource(
+                                    R.string.peer_discovery_devices_n_of_n,
+                                    selectedDevicesSize,
+                                    state.minimumDevicesDisplayed,
+                                ),
                             textAlign = TextAlign.Center,
                             style = Theme.brockmann.headings.title2,
                             color = Theme.v2.colors.text.primary,
@@ -307,24 +282,24 @@ internal fun PeerDiscoveryScreen(
 
                         if (state.qr != null) {
                             Box(
-                                modifier = Modifier
-                                    .clickable { isExpanded = true }
-                                    .background(
-                                        Theme.v2.colors.backgrounds.secondary,
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .border(
-                                        width = 1.dp,
-                                        color = Theme.v2.colors.border.normal,
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                                modifier =
+                                    Modifier.clickable { isExpanded = true }
+                                        .background(
+                                            Theme.v2.colors.backgrounds.secondary,
+                                            shape = RoundedCornerShape(8.dp),
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = Theme.v2.colors.border.normal,
+                                            shape = RoundedCornerShape(8.dp),
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 UiIcon(
                                     drawableResId = R.drawable.enlarge,
                                     size = 20.dp,
                                     tint = Theme.v2.colors.text.primary,
-                                    contentDescription = "Enlarge QR code"
+                                    contentDescription = "Enlarge QR code",
                                 )
                             }
                         }
@@ -337,34 +312,27 @@ internal fun PeerDiscoveryScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-
                         PeerDeviceItem(
                             title = state.localPartyId,
                             caption = stringResource(R.string.peer_discovery_this_device),
                             state = PeerDeviceState.ThisDevice,
-                            modifier = Modifier
-                                .weight(1f)
-                                .animateContentSize(),
+                            modifier = Modifier.weight(1f).animateContentSize(),
                         )
 
-                        state.devices.forEachIndexed {index, device ->
+                        state.devices.forEachIndexed { index, device ->
                             val nameParts = device.split("-")
-                            val name = nameParts.take(nameParts.size - 1)
-                                .joinToString(separator = "")
+                            val name =
+                                nameParts.take(nameParts.size - 1).joinToString(separator = "")
 
                             val suffix = nameParts.lastOrNull() ?: ""
                             PeerDeviceItem(
                                 title = name,
                                 caption = suffix,
-                                state = if (device in state.selectedDevices)
-                                    PeerDeviceState.Selected
-                                else PeerDeviceState.NotSelected,
-                                onClick = {
-                                    onDeviceClick(device)
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .animateContentSize(),
+                                state =
+                                    if (device in state.selectedDevices) PeerDeviceState.Selected
+                                    else PeerDeviceState.NotSelected,
+                                onClick = { onDeviceClick(device) },
+                                modifier = Modifier.weight(1f).animateContentSize(),
                             )
                         }
 
@@ -374,15 +342,14 @@ internal fun PeerDiscoveryScreen(
                             val ordinalDeviceIndex = ordinalFormatter.format(arrayOf(totalIndex))
 
                             PeerDeviceItem(
-                                title = stringResource(
-                                    R.string.peer_discovery_scan_with_n_device,
-                                    ordinalDeviceIndex
-                                ),
+                                title =
+                                    stringResource(
+                                        R.string.peer_discovery_scan_with_n_device,
+                                        ordinalDeviceIndex,
+                                    ),
                                 caption = null,
                                 state = PeerDeviceState.Waiting,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .animateContentSize(),
+                                modifier = Modifier.weight(1f).animateContentSize(),
                             )
 
                             // Spacer to preserve 2-column layout spacing
@@ -394,62 +361,65 @@ internal fun PeerDiscoveryScreen(
                 }
 
                 if (isExpanded && state.qr != null) {
-                    ExpandedQrOverlay(
-                        qrCode = state.qr,
-                        onDismiss = { isExpanded = false }
-                    )
+                    ExpandedQrOverlay(qrCode = state.qr, onDismiss = { isExpanded = false })
                 }
             }
         },
-
-        )
-
+    )
 }
 
 @Composable
-private fun buildNetworkModeText(
-    network: NetworkOption,
-    onSwitchModeClick: () -> Unit,
-) =
+private fun buildNetworkModeText(network: NetworkOption, onSwitchModeClick: () -> Unit) =
     when (network) {
-        NetworkOption.Internet -> buildAnnotatedString {
-            append(stringResource(R.string.peer_discovery_switch_network_mode_want_to_sign_privately))
-            append(" ")
-            withLink(
-                link = LinkAnnotation.Clickable(
-                    tag = "Switch to local mode",
-                    linkInteractionListener = {
-                        onSwitchModeClick()
-                    },
-                    styles = TextLinkStyles(
-                        style = SpanStyle(
-                            textDecoration = TextDecoration.Underline,
-                        )
+        NetworkOption.Internet ->
+            buildAnnotatedString {
+                append(
+                    stringResource(
+                        R.string.peer_discovery_switch_network_mode_want_to_sign_privately
                     )
-                ),
-            ) {
-                append(stringResource(R.string.peer_discovery_switch_network_mode_switch_to_local))
+                )
+                append(" ")
+                withLink(
+                    link =
+                        LinkAnnotation.Clickable(
+                            tag = "Switch to local mode",
+                            linkInteractionListener = { onSwitchModeClick() },
+                            styles =
+                                TextLinkStyles(
+                                    style = SpanStyle(textDecoration = TextDecoration.Underline)
+                                ),
+                        )
+                ) {
+                    append(
+                        stringResource(R.string.peer_discovery_switch_network_mode_switch_to_local)
+                    )
+                }
             }
-        }
 
-        NetworkOption.Local -> buildAnnotatedString {
-            withLink(
-                link = LinkAnnotation.Clickable(
-                    tag = "Switch to internet mode",
-                    linkInteractionListener = {
-                        onSwitchModeClick()
-                    },
-                    styles = TextLinkStyles(
-                        style = SpanStyle(
-                            color = Theme.v2.colors.text.primary,
-                            textDecoration = TextDecoration.Underline,
+        NetworkOption.Local ->
+            buildAnnotatedString {
+                withLink(
+                    link =
+                        LinkAnnotation.Clickable(
+                            tag = "Switch to internet mode",
+                            linkInteractionListener = { onSwitchModeClick() },
+                            styles =
+                                TextLinkStyles(
+                                    style =
+                                        SpanStyle(
+                                            color = Theme.v2.colors.text.primary,
+                                            textDecoration = TextDecoration.Underline,
+                                        )
+                                ),
+                        )
+                ) {
+                    append(
+                        stringResource(
+                            R.string.peer_discovery_switch_network_mode_switch_to_internet
                         )
                     )
-                ),
-            ) {
-                append(stringResource(R.string.peer_discovery_switch_network_mode_switch_to_internet))
+                }
             }
-        }
     }
 
 @Composable
@@ -458,19 +428,16 @@ private fun QrCodeContainer(
     devicesSize: Int = 0,
     qrCode: BitmapPainter? = null,
 ) {
-    Box(
-        modifier = modifier
-            .aspectRatio(1f)
-    ) {
+    Box(modifier = modifier.aspectRatio(1f)) {
         RiveAnimation(
             animation = R.raw.riv_qr_scanned,
             onInit = { riveAnimationView ->
                 if (devicesSize > 1)
                     riveAnimationView.fireState(
                         stateMachineName = "State Machine 1",
-                        inputName = "isSucces"
+                        inputName = "isSucces",
                     )
-            }
+            },
         )
         AnimatedVisibility(
             modifier = Modifier.padding(28.dp),
@@ -482,8 +449,7 @@ private fun QrCodeContainer(
                     painter = qrCode,
                     contentDescription = "QR",
                     contentScale = ContentScale.FillWidth,
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
@@ -491,10 +457,7 @@ private fun QrCodeContainer(
 }
 
 @Composable
-private fun ExpandedQrOverlay(
-    qrCode: BitmapPainter,
-    onDismiss: () -> Unit,
-) {
+private fun ExpandedQrOverlay(qrCode: BitmapPainter, onDismiss: () -> Unit) {
     val scale = remember { Animatable(0.8f) }
     val alpha = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
@@ -506,46 +469,36 @@ private fun ExpandedQrOverlay(
 
     suspend fun close() {
         coroutineScope {
-            launch {
-                scale.animateTo(0.8f, tween(300))
-            }
-            launch {
-                alpha.animateTo(0f, tween(300))
-            }
+            launch { scale.animateTo(0.8f, tween(300)) }
+            launch { alpha.animateTo(0f, tween(300)) }
         }
         onDismiss()
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = alpha.value * 0.9f))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                scope.launch { close() }
-            },
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier.fillMaxSize()
+                .background(Color.Black.copy(alpha = alpha.value * 0.9f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) {
+                    scope.launch { close() }
+                },
+        contentAlignment = Alignment.Center,
     ) {
         IconButton(
-            onClick = {
-                scope.launch { close() }
-            },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
-                .graphicsLayer(
-                    scaleX = scale.value,
-                    scaleY = scale.value,
-                    alpha = alpha.value
-                )
+            onClick = { scope.launch { close() } },
+            modifier =
+                Modifier.align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .graphicsLayer(scaleX = scale.value, scaleY = scale.value, alpha = alpha.value),
         ) {
             Icon(
                 painter = painterResource(android.R.drawable.ic_menu_close_clear_cancel),
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(28.dp),
             )
         }
 
@@ -553,16 +506,13 @@ private fun ExpandedQrOverlay(
             painter = qrCode,
             contentDescription = null,
             contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer(
-                    scaleX = scale.value,
-                    scaleY = scale.value,
-                    alpha = alpha.value
-                )
+            modifier =
+                Modifier.fillMaxSize()
+                    .graphicsLayer(scaleX = scale.value, scaleY = scale.value, alpha = alpha.value),
         )
     }
 }
+
 @Composable
 private fun LocalModeHint() {
     val shape = RoundedCornerShape(12.dp)
@@ -570,20 +520,11 @@ private fun LocalModeHint() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                color = Theme.v2.colors.backgrounds.secondary,
-                shape = shape,
-            )
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.primary.accent4,
-                shape = shape,
-            )
-            .padding(
-                all = 16.dp,
-            )
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.primary.accent4, shape = shape)
+                .padding(all = 16.dp),
     ) {
         UiIcon(
             drawableResId = R.drawable.ic_cloud_off,
@@ -603,7 +544,7 @@ private enum class PeerDeviceState {
     Selected,
     NotSelected,
     Waiting,
-    ThisDevice
+    ThisDevice,
 }
 
 @Composable
@@ -619,59 +560,58 @@ private fun PeerDeviceItem(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .background(
-                color = when (state) {
-                    PeerDeviceState.Selected, PeerDeviceState.ThisDevice ->
-                        Theme.v2.colors.backgrounds.state.neutral
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(
+                    color =
+                        when (state) {
+                            PeerDeviceState.Selected,
+                            PeerDeviceState.ThisDevice -> Theme.v2.colors.backgrounds.state.neutral
 
-                    PeerDeviceState.NotSelected ,PeerDeviceState.Waiting ->
-                        Theme.v2.colors.backgrounds.tertiary
-                },
-                shape = shape,
-            )
-            .then(
-                when (state) {
-                    PeerDeviceState.Selected -> Modifier.border(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.light,
-                        shape = shape,
-                    )
+                            PeerDeviceState.NotSelected,
+                            PeerDeviceState.Waiting -> Theme.v2.colors.backgrounds.tertiary
+                        },
+                    shape = shape,
+                )
+                .then(
+                    when (state) {
+                        PeerDeviceState.Selected ->
+                            Modifier.border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.border.light,
+                                shape = shape,
+                            )
 
-                    PeerDeviceState.ThisDevice -> Modifier.border(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.light,
-                        shape = shape,
-                    )
+                        PeerDeviceState.ThisDevice ->
+                            Modifier.border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.border.light,
+                                shape = shape,
+                            )
 
-                    PeerDeviceState.Waiting -> Modifier.dashedBorder(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.extraLight,
-                        cornerRadius = 16.dp,
-                        dashLength = 4.dp,
-                        intervalLength = 4.dp,
-                    )
+                        PeerDeviceState.Waiting ->
+                            Modifier.dashedBorder(
+                                width = 1.dp,
+                                color = Theme.v2.colors.border.extraLight,
+                                cornerRadius = 16.dp,
+                                dashLength = 4.dp,
+                                intervalLength = 4.dp,
+                            )
 
-                    PeerDeviceState.NotSelected -> Modifier.border(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.light,
-                        shape = shape,
-                    )
-                }
-            )
-            .padding(
-                horizontal = 20.dp,
-                vertical = 16.dp,
-            )
-            .clickable(onClick = onClick)
+                        PeerDeviceState.NotSelected ->
+                            Modifier.border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.border.light,
+                                shape = shape,
+                            )
+                    }
+                )
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .clickable(onClick = onClick),
     ) {
         if (state == PeerDeviceState.Waiting) {
-            RiveAnimation(
-                animation = R.raw.riv_searching_device,
-                modifier = Modifier
-                    .size(44.dp)
-            )
+            RiveAnimation(animation = R.raw.riv_searching_device, modifier = Modifier.size(44.dp))
         }
 
         if (state == PeerDeviceState.Selected || state == PeerDeviceState.ThisDevice) {
@@ -680,18 +620,13 @@ private fun PeerDeviceItem(
                 borderColor = Theme.v2.colors.alerts.success,
                 borderWidth = 2.dp,
                 shinedBottom = Theme.v2.colors.alerts.success,
-                tintColor = Theme.v2.colors.alerts.success
+                tintColor = Theme.v2.colors.alerts.success,
             )
         }
 
-        UiSpacer(
-            size = 4.dp
-        )
+        UiSpacer(size = 4.dp)
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             val titleLines = if (caption == null) 2 else 1
 
             Text(
@@ -715,34 +650,28 @@ private fun PeerDeviceItem(
             }
         }
 
-
-        UiSpacer(
-            weight = 1f,
-        )
+        UiSpacer(weight = 1f)
     }
 }
 
 @Composable
-internal fun ConnectingToServer(
-    isSuccess: Boolean,
-) {
+internal fun ConnectingToServer(isSuccess: Boolean) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(all = 24.dp),
+        modifier =
+            Modifier.fillMaxSize()
+                .background(Theme.v2.colors.backgrounds.primary)
+                .padding(all = 24.dp),
     ) {
         RiveAnimation(
             animation = R.raw.riv_connecting_with_server,
-            modifier = Modifier
-                .size(24.dp),
+            modifier = Modifier.size(24.dp),
             onInit = {
                 if (isSuccess) {
                     it.fireState("State Machine 1", "Succes")
                 }
-            }
+            },
         )
 
         UiSpacer(24.dp)
@@ -766,23 +695,20 @@ internal fun ConnectingToServer(
 }
 
 @Composable
-private fun Error(
-    state: ErrorUiModel,
-    onTryAgainClick: () -> Unit,
-) {
+private fun Error(state: ErrorUiModel, onTryAgainClick: () -> Unit) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(all = 24.dp),
+        modifier =
+            Modifier.fillMaxSize()
+                .background(Theme.v2.colors.backgrounds.primary)
+                .padding(all = 24.dp),
     ) {
         ErrorView(
             title = state.title.asString(),
             description = state.description.asString(),
             onButtonClick = onTryAgainClick,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -791,10 +717,7 @@ private fun Error(
 @Composable
 private fun PeerDiscoveryScreenPreview() {
     PeerDiscoveryScreen(
-        state = PeerDiscoveryUiModel(
-            localPartyId = "Device",
-            network = NetworkOption.Local,
-        ),
+        state = PeerDiscoveryUiModel(localPartyId = "Device", network = NetworkOption.Local),
         onBackClick = {},
         onHelpClick = {},
         onShareQrClick = {},
@@ -802,6 +725,6 @@ private fun PeerDiscoveryScreenPreview() {
         onSwitchModeClick = {},
         onDeviceClick = {},
         onNextClick = {},
-        onDismissQrHelpModal = {}
+        onDismissQrHelpModal = {},
     )
 }

@@ -10,8 +10,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -60,9 +60,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.WalletExpandedTopbarCon
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun VaultAccountsScreen(
-    viewModel: VaultAccountsViewModel = hiltViewModel(),
-) {
+internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
 
     if (state.showMonthlyBackupReminder) {
@@ -90,10 +88,7 @@ internal fun VaultAccountsScreen(
         onDismissBanner = viewModel::tempRemoveBanner,
         onCryptoConnectionTypeClick = viewModel::setCryptoConnectionType,
     )
-
 }
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -116,16 +111,10 @@ internal fun VaultAccountsScreen(
 ) {
 
     val snackbarState = rememberVsSnackbarState()
-    var isTabMenu by remember {
-        mutableStateOf(true)
-    }
-    val isBottomBarVisible = remember {
-        derivedStateOf { isTabMenu }
-    }
+    var isTabMenu by remember { mutableStateOf(true) }
+    val isBottomBarVisible = remember { derivedStateOf { isTabMenu } }
 
-    val isShowingSearchResult = remember {
-        derivedStateOf { isTabMenu.not() }
-    }
+    val isShowingSearchResult = remember { derivedStateOf { isTabMenu.not() } }
 
     val isWallet = state.cryptoConnectionType == CryptoConnectionType.Wallet
 
@@ -136,17 +125,14 @@ internal fun VaultAccountsScreen(
         isRefreshing = state.isRefreshing,
         onRefresh = onRefresh,
         topBarCollapsedContent = {
-            Column(
-                modifier = Modifier
-                    .padding(top = 16.dp)
-            ) {
+            Column(modifier = Modifier.padding(top = 16.dp)) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Theme.v2.colors.backgrounds.primary)
-                        .padding(horizontal = 16.dp),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .background(Theme.v2.colors.backgrounds.primary)
+                            .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     ChooseVaultButton(
                         vaultName = state.vaultName,
@@ -154,17 +140,13 @@ internal fun VaultAccountsScreen(
                         onClick = onToggleVaultListClick,
                     )
 
-                    Column(
-                        horizontalAlignment = Alignment.End,
-                    ) {
+                    Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = stringResource(R.string.home_portfolio_balance),
                             color = Theme.v2.colors.text.tertiary,
-                            style = Theme.brockmann.body.s.medium
+                            style = Theme.brockmann.body.s.medium,
                         )
-                        UiSpacer(
-                            size = 2.dp
-                        )
+                        UiSpacer(size = 2.dp)
 
                         LoadableValue(
                             value = state.totalFiatValue,
@@ -175,17 +157,11 @@ internal fun VaultAccountsScreen(
                     }
                 }
 
-                UiSpacer(
-                    size = 16.dp
-                )
+                UiSpacer(size = 16.dp)
 
-                UiHorizontalDivider(
-                    color = Theme.v2.colors.border.light,
-                )
+                UiHorizontalDivider(color = Theme.v2.colors.border.light)
 
-                UiSpacer(
-                    size = 16.dp
-                )
+                UiSpacer(size = 16.dp)
             }
         },
         topBarExpandedContent = {
@@ -196,17 +172,13 @@ internal fun VaultAccountsScreen(
                     vaultName = state.vaultName,
                     isFastVault = state.isFastVault,
                 )
-                AnimatedContent(
-                    targetState = isWallet,
-                    transitionSpec = slideAndFadeSpec(),
-                ) { isWalletTabSelected ->
+                AnimatedContent(targetState = isWallet, transitionSpec = slideAndFadeSpec()) {
+                    isWalletTabSelected ->
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        UiSpacer(
-                            size = 24.dp
-                        )
+                        UiSpacer(size = 24.dp)
                         if (isWalletTabSelected) {
                             WalletExpandedTopbarContent(
                                 state = state,
@@ -224,97 +196,81 @@ internal fun VaultAccountsScreen(
                         }
                     }
                 }
-
             }
         },
-        bottomBarContent = if (isBottomBarVisible.value) {
-            {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .align(Alignment.BottomCenter),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        CryptoConnectionSelect(
-                            onTypeClick = onCryptoConnectionTypeClick,
-                            activeType = state.cryptoConnectionType
-                        )
-                        CameraButton(
-                            onClick = openCamera
-                        )
+        bottomBarContent =
+            if (isBottomBarVisible.value) {
+                {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .align(Alignment.BottomCenter),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            CryptoConnectionSelect(
+                                onTypeClick = onCryptoConnectionTypeClick,
+                                activeType = state.cryptoConnectionType,
+                            )
+                            CameraButton(onClick = openCamera)
+                        }
                     }
                 }
-            }
-        } else {
-            {}
-        },
+            } else {
+                {}
+            },
         content = { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                 LazyColumn(
-                    modifier = Modifier
-                        .background(Theme.v2.colors.backgrounds.primary)
-                        .fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 30.dp)
+                    modifier =
+                        Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 30.dp),
                 ) {
                     item {
                         AnimatedVisibility(
-                            visible = state.isBannerVisible && state.cryptoConnectionType== CryptoConnectionType.Wallet,
+                            visible =
+                                state.isBannerVisible &&
+                                    state.cryptoConnectionType == CryptoConnectionType.Wallet,
                             enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically()
+                            exit = fadeOut() + shrinkVertically(),
                         ) {
                             Banners(
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .padding(bottom = 16.dp),
+                                modifier =
+                                    Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
                                 hasMigration = state.showMigration,
                                 onMigrateClick = onMigrateClick,
                                 context = context,
-                                onDismissBanner = onDismissBanner
+                                onDismissBanner = onDismissBanner,
                             )
                         }
                     }
 
                     item {
                         HomePageTabMenuAndSearchBar(
-                            modifier = Modifier
-                                .animateItem()
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 16.dp),
+                            modifier =
+                                Modifier.animateItem()
+                                    .padding(horizontal = 16.dp)
+                                    .padding(bottom = 16.dp),
                             onEditClick = onChooseChains,
                             isTabMenu = isTabMenu,
-                            onSearchClick = {
-                                isTabMenu = false
-                            },
-                            onCancelSearchClick = {
-                                isTabMenu = true
-                            },
+                            onSearchClick = { isTabMenu = false },
+                            onCancelSearchClick = { isTabMenu = true },
                             searchTextFieldState = state.searchTextFieldState,
                         )
                     }
 
                     item {
-                        TopShineContainer(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                        ) {
+                        TopShineContainer(modifier = Modifier.padding(horizontal = 16.dp)) {
                             if (isShowingSearchResult.value && state.noChainFound) {
-                                NoChainFound(
-                                    onChooseChains = onChooseChains,
-                                )
+                                NoChainFound(onChooseChains = onChooseChains)
                             } else {
                                 if (state.getAccounts.isEmpty()) {
                                     NotEnabledContainer(
-                                        title = stringResource(R.string.home_page_no_chains_enabled),
-                                        content = stringResource(R.string.home_page_no_chain_enabled_desc),
+                                        title =
+                                            stringResource(R.string.home_page_no_chains_enabled),
+                                        content =
+                                            stringResource(R.string.home_page_no_chain_enabled_desc),
                                     )
                                 } else {
                                     AccountList(
@@ -329,25 +285,18 @@ internal fun VaultAccountsScreen(
                     }
                 }
                 if (isTabMenu) {
-                    BottomFadeEffect(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter),
-                    )
+                    BottomFadeEffect(modifier = Modifier.align(Alignment.BottomCenter))
                 }
             }
-        }
+        },
     )
 }
-
 
 @Preview
 @Composable
 private fun PreviewVaultAccountsScreen() {
-    VaultAccountsScreen(
-        state = VaultAccountsUiModel()
-    )
+    VaultAccountsScreen(state = VaultAccountsUiModel())
 }
-
 
 internal object VaultAccountsScreenTags {
     const val MIGRATE = "VaultAccountsScreen.migrate"

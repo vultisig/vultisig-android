@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -49,41 +48,32 @@ internal fun OnboardingContent(
         delay(1000)
         buttonVisibility = true
     }
-    Box(
-        modifier = Modifier
-            .fillMaxSize(),
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         RiveAnimation(
             animation = riveAnimation,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter),
+            modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter),
             onInit = { riveAnimationView ->
                 riveAnimationView.setNumberState(
                     stateMachineName = ONBOARDING_STATE_MACHINE_NAME,
                     inputName = ONBOARDING_INPUT_NAME,
-                    value = state.pageIndex.toFloat()
+                    value = state.pageIndex.toFloat(),
                 )
-            }
+            },
         )
 
         AnimatedVisibility(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(start = 24.dp, end = 24.dp, bottom = 120.dp),
+            modifier =
+                Modifier.align(Alignment.BottomCenter)
+                    .padding(start = 24.dp, end = 24.dp, bottom = 120.dp),
             visible = textVisibility,
             enter = fadeIn(tween(200)),
             exit = fadeOut(tween(200)),
         ) {
-            textDescription(
-                currentPageIndex,
-            )
+            textDescription(currentPageIndex)
         }
 
         AnimatedVisibility(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp),
             visible = buttonVisibility,
             enter = fadeIn(tween(200)),
             exit = fadeOut(tween(200)),
@@ -94,8 +84,7 @@ internal fun OnboardingContent(
                 size = VsIconButtonSize.Medium,
                 icon = R.drawable.ic_caret_right,
                 onClick = nextClick,
-                modifier = Modifier
-                    .testTag(OnboardingContentTags.NEXT)
+                modifier = Modifier.testTag(OnboardingContentTags.NEXT),
             )
         }
     }
@@ -103,7 +92,6 @@ internal fun OnboardingContent(
 
 private const val ONBOARDING_INPUT_NAME = "Index"
 private const val ONBOARDING_STATE_MACHINE_NAME = "State Machine 1"
-
 
 internal object OnboardingContentTags {
     const val NEXT = "OnboardingContent.next"

@@ -27,48 +27,32 @@ internal fun DefiExpandedTopbarContent(
 ) {
 
     Box(
-        modifier = Modifier
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.light,
-                shape = RoundedCornerShape(
-                    size = 16.dp
+        modifier =
+            Modifier.border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = RoundedCornerShape(size = 16.dp),
                 )
-            )
-            .clip(
-                shape = RoundedCornerShape(
-                    size = 16.dp
-                )
-            )
+                .clip(shape = RoundedCornerShape(size = 16.dp))
     ) {
-
         CoinsAround()
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    vertical = 16.dp
-                )
-                .align(
-                    Alignment.Center
-                ),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp).align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = stringResource(R.string.home_defi_portfolio),
                 color = Theme.v2.colors.text.primary,
-                style = Theme.brockmann.body.l.medium
+                style = Theme.brockmann.body.l.medium,
             )
 
-            UiSpacer(
-                size = 16.dp
-            )
+            UiSpacer(size = 16.dp)
             BalanceBanner(
                 isVisible = state.isBalanceValueVisible,
                 balance = state.totalDeFiValue,
-                onToggleVisibility = onToggleBalanceVisibility
+                onToggleVisibility = onToggleBalanceVisibility,
             )
         }
     }
@@ -76,9 +60,6 @@ internal fun DefiExpandedTopbarContent(
 
 @Preview
 @Composable
-fun PreviewDefiExpandedTopbarContent(){
-    DefiExpandedTopbarContent(
-        state = VaultAccountsUiModel(),
-        onToggleBalanceVisibility = {}
-    )
+fun PreviewDefiExpandedTopbarContent() {
+    DefiExpandedTopbarContent(state = VaultAccountsUiModel(), onToggleBalanceVisibility = {})
 }

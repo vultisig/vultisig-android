@@ -7,7 +7,9 @@ import kotlinx.coroutines.flow.combine
 
 sealed interface PasswordState {
     data object Valid : PasswordState
+
     data object Mismatch : PasswordState
+
     data object Empty : PasswordState
 }
 
@@ -17,15 +19,13 @@ class PasswordViewModelDelegate {
     val confirmPasswordTextFieldState = TextFieldState()
 
     fun validatePasswords(): Flow<PasswordState> =
-        combine(
-            passwordTextFieldState.textAsFlow(),
-            confirmPasswordTextFieldState.textAsFlow()
-        ) { password, confirmPassword ->
+        combine(passwordTextFieldState.textAsFlow(), confirmPasswordTextFieldState.textAsFlow()) {
+            password,
+            confirmPassword ->
             when {
                 password.isEmpty() || confirmPassword.isEmpty() -> PasswordState.Empty
                 password.toString() == confirmPassword.toString() -> PasswordState.Valid
                 else -> PasswordState.Mismatch
             }
         }
-
 }

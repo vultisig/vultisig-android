@@ -39,46 +39,36 @@ internal fun TokenSelectionItem(
     onCheckedChange: ((Boolean) -> Unit)? = null,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Theme.v2.colors.backgrounds.secondary
-        )
+        colors = CardDefaults.cardColors(containerColor = Theme.v2.colors.backgrounds.secondary),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(all = 12.dp)
-                .clickable { onCheckedChange?.invoke(!isChecked) },
+            modifier =
+                Modifier.padding(all = 12.dp).clickable { onCheckedChange?.invoke(!isChecked) },
         ) {
             Box {
-                val tokenLogoModifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
+                val tokenLogoModifier = Modifier.size(32.dp).clip(CircleShape)
                 TokenLogo(
-                    errorLogoModifier = tokenLogoModifier
-                        .background(Theme.v2.colors.neutrals.n100),
+                    errorLogoModifier = tokenLogoModifier.background(Theme.v2.colors.neutrals.n100),
                     logo = logo,
                     title = title,
-                    modifier = tokenLogoModifier
+                    modifier = tokenLogoModifier,
                 )
                 if (chainLogo != null)
                     Image(
                         painter = painterResource(id = chainLogo),
                         contentDescription = null,
-                        modifier = Modifier
-                            .size(16.dp)
-                            .border(
-                                width = 1.dp,
-                                color = Theme.v2.colors.backgrounds.secondary,
-                                shape = CircleShape
-                            )
-                            .background(
-                                Theme.v2.colors.neutrals.n200,
-                                CircleShape
-                            )
-                            .align(Alignment.BottomEnd)
+                        modifier =
+                            Modifier.size(16.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = Theme.v2.colors.backgrounds.secondary,
+                                    shape = CircleShape,
+                                )
+                                .background(Theme.v2.colors.neutrals.n200, CircleShape)
+                                .align(Alignment.BottomEnd),
                     )
             }
 
@@ -86,8 +76,7 @@ internal fun TokenSelectionItem(
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier
-                    .weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = title,
@@ -103,14 +92,15 @@ internal fun TokenSelectionItem(
 
             if (hasTokenSwitch) {
                 VsSwitch(
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Theme.v2.colors.neutrals.n50,
-                        checkedBorderColor = Theme.v2.colors.backgrounds.teal,
-                        checkedTrackColor = Theme.v2.colors.backgrounds.teal,
-                        uncheckedThumbColor = Theme.v2.colors.neutrals.n50,
-                        uncheckedBorderColor = Theme.v2.colors.backgrounds.tertiary_2,
-                        uncheckedTrackColor = Theme.v2.colors.backgrounds.tertiary_2
-                    ),
+                    colors =
+                        SwitchDefaults.colors(
+                            checkedThumbColor = Theme.v2.colors.neutrals.n50,
+                            checkedBorderColor = Theme.v2.colors.backgrounds.teal,
+                            checkedTrackColor = Theme.v2.colors.backgrounds.teal,
+                            uncheckedThumbColor = Theme.v2.colors.neutrals.n50,
+                            uncheckedBorderColor = Theme.v2.colors.backgrounds.tertiary_2,
+                            uncheckedTrackColor = Theme.v2.colors.backgrounds.tertiary_2,
+                        ),
                     checked = isChecked,
                     onCheckedChange = null,
                 )

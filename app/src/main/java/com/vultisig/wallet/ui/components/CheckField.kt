@@ -23,30 +23,19 @@ internal fun CheckField(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = 4.dp,
-                vertical = 8.dp,
-            )
-            .toggleable(
-                value = isChecked,
-                onValueChange = { checked ->
-                    onCheckedChange(checked)
-                }
-            )
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 8.dp)
+                .toggleable(
+                    value = isChecked,
+                    onValueChange = { checked -> onCheckedChange(checked) },
+                ),
     ) {
-        UiCheckbox(
-            checked = isChecked,
-            onCheckedChange = onCheckedChange
-        )
+        UiCheckbox(checked = isChecked, onCheckedChange = onCheckedChange)
 
         UiSpacer(size = 8.dp)
 
-        Text(
-            text = title,
-            color = Theme.v2.colors.neutrals.n100,
-            style = textStyle,
-        )
+        Text(text = title, color = Theme.v2.colors.neutrals.n100, style = textStyle)
     }
 }

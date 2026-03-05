@@ -31,7 +31,7 @@ internal fun RoundedBorderWithLeaf(
     leafYLength: Dp = 24.dp,
     checkMarkScale: Float = 2f,
     checkMarkWidth: Float = 4f,
-    checkMarkOffset: Offset = Offset(-4f, 8f)
+    checkMarkOffset: Offset = Offset(-4f, 8f),
 ) {
 
     val cornerRadiusPx = cornerRadius.toPx()
@@ -39,45 +39,38 @@ internal fun RoundedBorderWithLeaf(
     val leafWidthPx = leafXLength.toPx()
     val leafHeighPx = leafYLength.toPx()
 
-
-    Canvas(
-        modifier = modifier.size(borderSize)
-    ) {
+    Canvas(modifier = modifier.size(borderSize)) {
         val canvasWidth = size.width
         val borderExcludedWidth = canvasWidth - borderWidthPx
         val canvasHeight = size.height
         val borderExcludedHeight = canvasHeight - borderWidthPx
 
-
         val borderStartTop = borderWidthPx / 2
         val borderStartLeft = borderWidthPx / 2
 
-        val borderPath = Path().apply {
-            addRoundRect(
-                RoundRect(
-                    left = borderStartLeft,
-                    top = borderStartTop,
-                    right = borderStartLeft + borderExcludedWidth,
-                    bottom = borderStartTop + borderExcludedHeight,
-                    cornerRadius = CornerRadius(
-                        x = cornerRadiusPx,
-                        y = cornerRadiusPx,
+        val borderPath =
+            Path().apply {
+                addRoundRect(
+                    RoundRect(
+                        left = borderStartLeft,
+                        top = borderStartTop,
+                        right = borderStartLeft + borderExcludedWidth,
+                        bottom = borderStartTop + borderExcludedHeight,
+                        cornerRadius = CornerRadius(x = cornerRadiusPx, y = cornerRadiusPx),
                     )
                 )
-            )
-        }
-
+            }
 
         drawPath(
             path = borderPath,
             color = borderColor,
-            style = Stroke(
-                width = borderWidthPx,
-                cap = StrokeCap.Companion.Round,
-                join = StrokeJoin.Companion.Round
-            )
+            style =
+                Stroke(
+                    width = borderWidthPx,
+                    cap = StrokeCap.Companion.Round,
+                    join = StrokeJoin.Companion.Round,
+                ),
         )
-
 
         val leafStartTop = borderExcludedHeight - leafHeighPx
         val leafStartLeft = borderExcludedWidth - leafWidthPx
@@ -85,68 +78,69 @@ internal fun RoundedBorderWithLeaf(
 
         leafPath.op(
             path1 = borderPath,
-            path2 = Path().apply {
-                addRoundRect(
-                    RoundRect(
-                        left = leafStartLeft,
-                        top = leafStartTop,
-                        right = leafStartLeft + borderExcludedWidth,
-                        bottom = leafStartTop + borderExcludedHeight,
-                        cornerRadius = CornerRadius(
-                            x = cornerRadiusPx,
-                            y = cornerRadiusPx
+            path2 =
+                Path().apply {
+                    addRoundRect(
+                        RoundRect(
+                            left = leafStartLeft,
+                            top = leafStartTop,
+                            right = leafStartLeft + borderExcludedWidth,
+                            bottom = leafStartTop + borderExcludedHeight,
+                            cornerRadius = CornerRadius(x = cornerRadiusPx, y = cornerRadiusPx),
                         )
                     )
+                },
+            operation = PathOperation.Companion.Intersect,
+        )
+
+        drawPath(path = leafPath, color = leafColor)
+
+        val checkMarkStartPoint =
+            Offset(
+                x = leafPath.getBounds().center.x + checkMarkOffset.x,
+                y = leafPath.getBounds().center.y + checkMarkOffset.y,
+            )
+
+        val checkMarkPath =
+            Path().apply {
+                moveTo(
+                    Offset(
+                            x = checkMarkStartPoint.x - 2f * checkMarkScale,
+                            y = checkMarkStartPoint.y - 2f * checkMarkScale,
+                        )
+                        .x,
+                    Offset(
+                            x = checkMarkStartPoint.x - 2f * checkMarkScale,
+                            y = checkMarkStartPoint.y - 2f * checkMarkScale,
+                        )
+                        .y,
                 )
-            },
-            operation = PathOperation.Companion.Intersect
-        )
-
-
-        drawPath(
-            path = leafPath,
-            color = leafColor,
-        )
-
-        val checkMarkStartPoint = Offset(
-            x = leafPath.getBounds().center.x + checkMarkOffset.x,
-            y = leafPath.getBounds().center.y + checkMarkOffset.y
-        )
-
-        val checkMarkPath = Path().apply {
-            moveTo(
-                Offset(
-                    x = checkMarkStartPoint.x - 2f * checkMarkScale,
-                    y = checkMarkStartPoint.y - 2f * checkMarkScale
-                ).x, Offset(
-                    x = checkMarkStartPoint.x - 2f * checkMarkScale,
-                    y = checkMarkStartPoint.y - 2f * checkMarkScale
-                ).y
-            )
-            lineTo(
-                x = checkMarkStartPoint.x,
-                y = checkMarkStartPoint.y
-            )
-            lineTo(
-                x = Offset(
-                    x = checkMarkStartPoint.x + 5f * checkMarkScale,
-                    y = checkMarkStartPoint.y - 6f * checkMarkScale
-                ).x,
-                y = Offset(
-                    x = checkMarkStartPoint.x + 5f * checkMarkScale,
-                    y = checkMarkStartPoint.y - 6f * checkMarkScale
-                ).y
-            )
-        }
+                lineTo(x = checkMarkStartPoint.x, y = checkMarkStartPoint.y)
+                lineTo(
+                    x =
+                        Offset(
+                                x = checkMarkStartPoint.x + 5f * checkMarkScale,
+                                y = checkMarkStartPoint.y - 6f * checkMarkScale,
+                            )
+                            .x,
+                    y =
+                        Offset(
+                                x = checkMarkStartPoint.x + 5f * checkMarkScale,
+                                y = checkMarkStartPoint.y - 6f * checkMarkScale,
+                            )
+                            .y,
+                )
+            }
 
         drawPath(
             checkMarkPath,
             checkMarkColor,
-            style = Stroke(
-                width = checkMarkWidth,
-                cap = StrokeCap.Companion.Round,
-                join = StrokeJoin.Companion.Round
-            )
+            style =
+                Stroke(
+                    width = checkMarkWidth,
+                    cap = StrokeCap.Companion.Round,
+                    join = StrokeJoin.Companion.Round,
+                ),
         )
     }
 }

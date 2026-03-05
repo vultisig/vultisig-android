@@ -12,11 +12,11 @@ import javax.inject.Inject
 
 private const val TAG = "TokenRefreshWorker"
 
-interface DiscoverTokenUseCase: (String?, String?) -> Unit
+interface DiscoverTokenUseCase : (String?, String?) -> Unit
 
-internal class DiscoverTokenUseCaseImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
-) : DiscoverTokenUseCase {
+internal class DiscoverTokenUseCaseImpl
+@Inject
+constructor(@ApplicationContext private val context: Context) : DiscoverTokenUseCase {
     override fun invoke(vaultId: String?, chainId: String?) {
         val dataBuilder = Data.Builder()
         if (!vaultId.isNullOrBlank()) {
@@ -27,14 +27,15 @@ internal class DiscoverTokenUseCaseImpl @Inject constructor(
         }
         val workData = dataBuilder.build()
 
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            TAG,
-            ExistingWorkPolicy.REPLACE,
-            OneTimeWorkRequestBuilder<TokenRefreshWorker>()
-                .setInputData(workData)
-                .setConstraints(Constraints.Builder().build())
-                .addTag(TAG)
-                .build()
-        )
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork(
+                TAG,
+                ExistingWorkPolicy.REPLACE,
+                OneTimeWorkRequestBuilder<TokenRefreshWorker>()
+                    .setInputData(workData)
+                    .setConstraints(Constraints.Builder().build())
+                    .addTag(TAG)
+                    .build(),
+            )
     }
 }

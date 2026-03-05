@@ -24,23 +24,13 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal interface DataUsecasesModule {
 
-    @Binds
-    @Singleton
-    fun bindBroadcastTxUseCase(
-        impl: BroadcastTxUseCaseImpl
-    ): BroadcastTxUseCase
+    @Binds @Singleton fun bindBroadcastTxUseCase(impl: BroadcastTxUseCaseImpl): BroadcastTxUseCase
+
+    @Binds @Singleton fun bindEncryption(impl: AesEncryption): Encryption
 
     @Binds
     @Singleton
-    fun bindEncryption(
-        impl: AesEncryption
-    ): Encryption
-
-    @Binds
-    @Singleton
-    fun bindDiscoverTokenUseCase(
-        impl: DiscoverTokenUseCaseImpl
-    ): DiscoverTokenUseCase
+    fun bindDiscoverTokenUseCase(impl: DiscoverTokenUseCaseImpl): DiscoverTokenUseCase
 
     @Binds
     @Singleton
@@ -50,57 +40,33 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
-    fun bindPullTssMessagesUseCase(
-        impl: PullTssMessagesUseCaseImpl
-    ): PullTssMessagesUseCase
+    fun bindPullTssMessagesUseCase(impl: PullTssMessagesUseCaseImpl): PullTssMessagesUseCase
 
     @Binds
     @Singleton
-    fun bindGenerateRandomName(
-        impl: GenerateRandomUniqueNameImpl
-    ): GenerateRandomUniqueName
+    fun bindGenerateRandomName(impl: GenerateRandomUniqueNameImpl): GenerateRandomUniqueName
 
-    @Binds
-    @Singleton
-    fun bindGenerateUniqueName(
-        impl: GenerateUniqueNameImpl
-    ): GenerateUniqueName
+    @Binds @Singleton fun bindGenerateUniqueName(impl: GenerateUniqueNameImpl): GenerateUniqueName
 
-    @Binds
-    @Singleton
-    fun bindIsVaultNameValid(
-        impl: IsVaultNameValidImpl
-    ): IsVaultNameValid
+    @Binds @Singleton fun bindIsVaultNameValid(impl: IsVaultNameValidImpl): IsVaultNameValid
 
     @Binds
     @Singleton
     fun bindMakeQrCodeBitmapShareFormat(
-        impl: MakeQrCodeBitmapShareFormatImpl,
+        impl: MakeQrCodeBitmapShareFormatImpl
     ): MakeQrCodeBitmapShareFormat
 
-    @Binds
-    @Singleton
-    fun bindGenerateQrCodeBitmap(
-        impl: GenerateQrBitmapImpl,
-    ): GenerateQrBitmap
+    @Binds @Singleton fun bindGenerateQrCodeBitmap(impl: GenerateQrBitmapImpl): GenerateQrBitmap
+
+    @Binds @Singleton fun bindGetOrderedVaults(impl: GetOrderedVaultsImpl): GetOrderedVaults
 
     @Binds
     @Singleton
-    fun bindGetOrderedVaults(
-        impl: GetOrderedVaultsImpl
-    ): GetOrderedVaults
+    fun bindConvertWeiToGwei(impl: ConvertWeiToGweiUseCaseImpl): ConvertWeiToGweiUseCase
 
     @Binds
     @Singleton
-    fun bindConvertWeiToGwei(
-        impl: ConvertWeiToGweiUseCaseImpl
-    ): ConvertWeiToGweiUseCase
-
-    @Binds
-    @Singleton
-    fun bindConvertGweiToWei(
-        impl: ConvertGweiToWeiUseCaseImpl
-    ): ConvertGweiToWeiUseCase
+    fun bindConvertGweiToWei(impl: ConvertGweiToWeiUseCaseImpl): ConvertGweiToWeiUseCase
 
     @Binds
     @Singleton
@@ -108,35 +74,23 @@ internal interface DataUsecasesModule {
         impl: GetAvailableTokenBalanceUseCaseImpl
     ): GetAvailableTokenBalanceUseCase
 
-    @Binds
-    @Singleton
-    fun bindSearchTokenUseCase(
-        impl: SearchTokenUseCaseImpl
-    ): SearchTokenUseCase
+    @Binds @Singleton fun bindSearchTokenUseCase(impl: SearchTokenUseCaseImpl): SearchTokenUseCase
 
     @Binds
     @Singleton
-    fun bindSearchSolTokenUseCase(
-        impl: SearchSolTokenUseCaseImpl
-    ): SearchSolTokenUseCase
+    fun bindSearchSolTokenUseCase(impl: SearchSolTokenUseCaseImpl): SearchSolTokenUseCase
 
     @Binds
     @Singleton
-    fun bindSearchEvmTokenUseCase(
-        impl: SearchEvmTokenUseCaseImpl
-    ): SearchEvmTokenUseCase
+    fun bindSearchEvmTokenUseCase(impl: SearchEvmTokenUseCaseImpl): SearchEvmTokenUseCase
 
     @Binds
     @Singleton
-    fun bindGenerateServerPartyId(
-        impl: GenerateServerPartyIdImpl
-    ): GenerateServerPartyId
+    fun bindGenerateServerPartyId(impl: GenerateServerPartyIdImpl): GenerateServerPartyId
 
     @Binds
     @Singleton
-    fun bindGenerateServiceName(
-        impl: GenerateServiceNameImpl
-    ): GenerateServiceName
+    fun bindGenerateServiceName(impl: GenerateServiceNameImpl): GenerateServiceName
 
     @Binds
     @Singleton
@@ -152,9 +106,7 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
-    fun bindThorchainBondUseCase(
-        impl: ThorchainBondUseCaseImpl
-    ): ThorchainBondUseCase
+    fun bindThorchainBondUseCase(impl: ThorchainBondUseCaseImpl): ThorchainBondUseCase
 
     @Binds
     @Singleton
@@ -176,9 +128,7 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
-    fun bindSearchKujiraTokenUseCase(
-        impl: SearchKujiraTokenUseCaseImpl
-    ): SearchKujiraTokenUseCase
+    fun bindSearchKujiraTokenUseCase(impl: SearchKujiraTokenUseCaseImpl): SearchKujiraTokenUseCase
 
     @Binds
     @Singleton
@@ -198,65 +148,51 @@ internal interface DataUsecasesModule {
         impl: RequestServerBackupUseCaseImpl
     ): RequestServerBackupUseCase
 
+    @Binds
+    @Singleton
+    fun bindOneInchToCoinsUseCase(impl: OneInchToCoinsUseCaseImpl): OneInchToCoinsUseCase
 
     @Binds
     @Singleton
-    fun bindOneInchToCoinsUseCase(
-        impl: OneInchToCoinsUseCaseImpl
-    ): OneInchToCoinsUseCase
-
-    @Binds
-    @Singleton
-    fun bindGetChainTokenUseCase(
-        impl: GetChainTokensUseCaseImpl
-    ): GetChainTokensUseCase
+    fun bindGetChainTokenUseCase(impl: GetChainTokensUseCaseImpl): GetChainTokensUseCase
 
     @Binds
     @Singleton
     fun bindCreateZipVaultBackupFileNameUseCase(
-        impl: CreateZipVaultBackupFileNameUseCaseImpl,
+        impl: CreateZipVaultBackupFileNameUseCaseImpl
     ): CreateZipVaultBackupFileNameUseCase
 
     @Binds
     @Singleton
     fun bindValidateMayaTransactionHeightUseCase(
-        impl: ValidateMayaTransactionHeightUseCaseImpl,
+        impl: ValidateMayaTransactionHeightUseCaseImpl
     ): ValidateMayaTransactionHeightUseCase
 
     @Binds
     @Singleton
     fun bindParseCosmosMessageUseCase(
-        impl: ParseCosmosMessageUseCaseImpl,
+        impl: ParseCosmosMessageUseCaseImpl
     ): ParseCosmosMessageUseCase
 
     @Binds
     @Singleton
-    fun bindValidateMnemonicUseCase(
-        impl: ValidateMnemonicUseCaseImpl,
-    ): ValidateMnemonicUseCase
+    fun bindValidateMnemonicUseCase(impl: ValidateMnemonicUseCaseImpl): ValidateMnemonicUseCase
 
     @Binds
     @Singleton
     fun bindCheckMnemonicDuplicateUseCase(
-        impl: CheckMnemonicDuplicateUseCaseImpl,
+        impl: CheckMnemonicDuplicateUseCaseImpl
     ): CheckMnemonicDuplicateUseCase
 
     @Binds
     @Singleton
-    fun bindExtractMasterKeysUseCase(
-        impl: ExtractMasterKeysUseCaseImpl,
-    ): ExtractMasterKeysUseCase
+    fun bindExtractMasterKeysUseCase(impl: ExtractMasterKeysUseCaseImpl): ExtractMasterKeysUseCase
 
     @Binds
     @Singleton
-    fun bindScanChainBalancesUseCase(
-        impl: ScanChainBalancesUseCaseImpl,
-    ): ScanChainBalancesUseCase
+    fun bindScanChainBalancesUseCase(impl: ScanChainBalancesUseCaseImpl): ScanChainBalancesUseCase
 
     @Binds
     @Singleton
-    fun bindDeriveChainKeyUseCase(
-        impl: DeriveChainKeyUseCaseImpl,
-    ): DeriveChainKeyUseCase
-
+    fun bindDeriveChainKeyUseCase(impl: DeriveChainKeyUseCaseImpl): DeriveChainKeyUseCase
 }

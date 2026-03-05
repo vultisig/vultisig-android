@@ -77,9 +77,7 @@ internal fun TxDoneScaffold(
     BackHandler(onBack = onBack)
 
     Scaffold(
-        snackbarHost = {
-            SnackbarHost(snackbarHostState)
-        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             if (showToolbar) {
@@ -99,12 +97,10 @@ internal fun TxDoneScaffold(
                 coroutineScope = coroutineScope,
                 snackbarHostState = snackbarHostState,
                 context = context,
-                detailContent = detailContent
+                detailContent = detailContent,
             )
         },
-        bottomBar = {
-            bottomBarContent()
-        }
+        bottomBar = { bottomBarContent() },
     )
 }
 
@@ -118,30 +114,23 @@ private fun SuccessTransaction(
     coroutineScope: CoroutineScope,
     snackbarHostState: SnackbarHostState,
     context: Context,
-    detailContent: @Composable (() -> Unit)
+    detailContent: @Composable (() -> Unit),
 ) {
 
-    var isTransactionDetailVisible by remember {
-        mutableStateOf(false)
-    }
+    var isTransactionDetailVisible by remember { mutableStateOf(false) }
 
     Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
-            .padding(
-                horizontal = 16.dp,
-                vertical = 8.dp,
-            ),
+        modifier =
+            modifier
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         AnimatedVisibility(isTransactionDetailVisible.not()) {
             val isTransactionPending = transactionStatus == TransactionStatus.Pending
             val isTransactionFailed = transactionStatus is TransactionStatus.Failed
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 300.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
                 contentAlignment = Alignment.Center,
-
             ) {
                 if (isTransactionPending) {
                     TransactionPending()
@@ -149,37 +138,32 @@ private fun SuccessTransaction(
                     ErrorWaves(
                         title = "Transaction failed",
                         errorState = ErrorState.CRITICAL,
-                        modifier = Modifier.offset(
-                            y = (20).dp
-                        )
+                        modifier = Modifier.offset(y = (20).dp),
                     )
                 } else {
                     Image(
                         painter = painterResource(R.drawable.img_tx_overview_bg),
                         contentDescription = null,
                         alignment = Alignment.Center,
-                        modifier = Modifier
-                            .padding(horizontal = 48.dp)
-                            .fillMaxWidth(),
+                        modifier = Modifier.padding(horizontal = 48.dp).fillMaxWidth(),
                     )
                 }
-                if(isTransactionFailed.not()) {
+                if (isTransactionFailed.not()) {
                     Text(
-                        text = stringResource(
-                            if (isTransactionPending) R.string.transaction_status_pending else
-                                R.string.tx_transaction_successful_screen_title
-                        ),
+                        text =
+                            stringResource(
+                                if (isTransactionPending) R.string.transaction_status_pending
+                                else R.string.tx_transaction_successful_screen_title
+                            ),
                         textAlign = TextAlign.Center,
-                        style = Theme.brockmann.body.l.medium
-                            .copy(
-                                brush = Theme.v2.colors.gradients.primary,
+                        style =
+                            Theme.brockmann.body.l.medium.copy(
+                                brush = Theme.v2.colors.gradients.primary
                             ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
-                            .padding(
-                                bottom = 48.dp,
-                            ),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 48.dp),
                     )
                 }
             }
@@ -190,78 +174,62 @@ private fun SuccessTransaction(
         UiSpacer(8.dp)
 
         Column(
-            modifier = Modifier
-                .background(
-                    color = Theme.v2.colors.backgrounds.disabled,
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.light,
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                )
-                .padding(horizontal = 24.dp, vertical = 8.dp),
+            modifier =
+                Modifier.background(
+                        color = Theme.v2.colors.backgrounds.disabled,
+                        shape = RoundedCornerShape(16.dp),
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.border.light,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    )
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
         ) {
             if (transactionHash.isNotEmpty()) {
                 TxDetails(
                     title = stringResource(R.string.tx_overview_screen_tx_hash),
                     hash = transactionHash,
                     link = transactionLink,
-                    modifier = Modifier.padding(
-                        vertical = 12.dp,
-                    ),
+                    modifier = Modifier.padding(vertical = 12.dp),
                     onTxHashCopied = { tx ->
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar(
-                                context.getString(
-                                    R.string.tx_done_address_copied,
-                                    tx
-                                )
+                                context.getString(R.string.tx_done_address_copied, tx)
                             )
                         }
                     },
                 )
 
-                VerifyCardDivider(
-                    size = 1.dp,
-                )
+                VerifyCardDivider(size = 1.dp)
             }
 
             AnimatedVisibility(isTransactionDetailVisible.not()) {
                 Details(
                     title = stringResource(R.string.tx_done_transaction_details),
-                    modifier = Modifier
-                        .clickable(onClick = {
-                            isTransactionDetailVisible = true
-                        })
-                        .padding(vertical = 12.dp),
+                    modifier =
+                        Modifier.clickable(onClick = { isTransactionDetailVisible = true })
+                            .padding(vertical = 12.dp),
                     titleColor = Theme.v2.colors.text.secondary,
                     content = {
                         UiIcon(
                             R.drawable.ic_caret_right,
-                            modifier = Modifier
-                                .weight(1f)
-                                .wrapContentSize(align = Alignment.CenterEnd),
-                            size = 16.dp
+                            modifier =
+                                Modifier.weight(1f).wrapContentSize(align = Alignment.CenterEnd),
+                            size = 16.dp,
                         )
-                    }
+                    },
                 )
             }
 
-            AnimatedVisibility(isTransactionDetailVisible) {
-                detailContent()
-            }
+            AnimatedVisibility(isTransactionDetailVisible) { detailContent() }
         }
     }
 }
 
 @Composable
 private fun TransactionPending(modifier: Modifier = Modifier) {
-    RiveAnimation(
-        animation = R.raw.riv_transaction_pending,
-        modifier = modifier
-            .fillMaxWidth()
-    )
+    RiveAnimation(animation = R.raw.riv_transaction_pending, modifier = modifier.fillMaxWidth())
 }
 
 @Preview
@@ -275,8 +243,7 @@ private fun SuccessTransactionPreview() {
                     header = "token header",
                     valuedToken = ValuedToken.Empty,
                     shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             },
             transactionHash = "tx hash",
@@ -287,37 +254,27 @@ private fun SuccessTransactionPreview() {
             context = LocalContext.current,
             detailContent = {
                 Column {
-
                     TextDetails(
                         title = stringResource(R.string.tx_overview_screen_tx_from),
                         subtitle = "tx.from",
                     )
 
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
+                    VerifyCardDivider(size = 1.dp)
 
                     TextDetails(
                         title = stringResource(R.string.tx_overview_screen_tx_to),
                         subtitle = " tx.to",
                     )
 
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
+                    VerifyCardDivider(size = 1.dp)
 
                     Details(
-                        modifier = Modifier.padding(
-                            vertical = 12.dp,
-                        ),
-                        title = stringResource(R.string.tx_overview_screen_tx_network)
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        title = stringResource(R.string.tx_overview_screen_tx_network),
                     ) {
                         Row(
                             modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(
-                                4.dp,
-                                Alignment.End
-                            ),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             val chain = Chain.Ethereum
@@ -325,8 +282,7 @@ private fun SuccessTransactionPreview() {
                             Image(
                                 painter = painterResource(chain.logo),
                                 contentDescription = null,
-                                modifier = Modifier
-                                    .size(16.dp),
+                                modifier = Modifier.size(16.dp),
                             )
 
                             Text(
@@ -340,9 +296,7 @@ private fun SuccessTransactionPreview() {
                         }
                     }
 
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
+                    VerifyCardDivider(size = 1.dp)
 
                     UiSpacer(12.dp)
 
@@ -351,7 +305,7 @@ private fun SuccessTransactionPreview() {
                         fiatGas = "tx.networkFeeFiatValue",
                     )
                 }
-            }
+            },
         )
     }
 }

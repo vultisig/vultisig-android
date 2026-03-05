@@ -38,7 +38,8 @@ fun rememberScroller(
 }
 
 @Stable
-class Scroller internal constructor(
+class Scroller
+internal constructor(
     private val scrollableState: ScrollableState,
     private val scope: CoroutineScope,
     private val pixelPerSecondProvider: () -> Float,
@@ -50,13 +51,15 @@ class Scroller internal constructor(
     }
 
     internal enum class Direction {
-        BACKWARD, FORWARD;
+        BACKWARD,
+        FORWARD;
 
         val opposite: Direction
-            get() = when (this) {
-                BACKWARD -> FORWARD
-                FORWARD -> BACKWARD
-            }
+            get() =
+                when (this) {
+                    BACKWARD -> FORWARD
+                    FORWARD -> BACKWARD
+                }
     }
 
     private data class ScrollInfo(
@@ -85,13 +88,10 @@ class Scroller internal constructor(
         if (!canScroll(direction)) return false
 
         if (programmaticScrollJob == null) {
-            programmaticScrollJob = scope.launch {
-                scrollLoop()
-            }
+            programmaticScrollJob = scope.launch { scrollLoop() }
         }
 
-        val scrollInfo =
-            ScrollInfo(direction, speedMultiplier, maxScrollDistanceProvider, onScroll)
+        val scrollInfo = ScrollInfo(direction, speedMultiplier, maxScrollDistanceProvider, onScroll)
 
         scrollInfoChannel.trySend(scrollInfo)
         return true
@@ -119,19 +119,19 @@ class Scroller internal constructor(
                 continue
             }
             val maxScrollDistanceDuration = maxScrollDistance / pixelPerMs
-            val duration =
-                maxScrollDistanceDuration.toLong().coerceIn(1L, MAX_SCROLL_DURATION)
-            val scrollDistance =
-                maxScrollDistance * (duration / maxScrollDistanceDuration)
-            val diff = scrollDistance.let {
-                when (direction) {
-                    Direction.BACKWARD -> -it
-                    Direction.FORWARD -> it
+            val duration = maxScrollDistanceDuration.toLong().coerceIn(1L, MAX_SCROLL_DURATION)
+            val scrollDistance = maxScrollDistance * (duration / maxScrollDistanceDuration)
+            val diff =
+                scrollDistance.let {
+                    when (direction) {
+                        Direction.BACKWARD -> -it
+                        Direction.FORWARD -> it
+                    }
                 }
-            }
 
             scrollableState.animateScrollBy(
-                diff, tween(durationMillis = duration.toInt(), easing = LinearEasing)
+                diff,
+                tween(durationMillis = duration.toInt(), easing = LinearEasing),
             )
         }
     }
@@ -150,8 +150,6 @@ class Scroller internal constructor(
     }
 
     internal fun tryStop() {
-        scope.launch {
-            stop()
-        }
+        scope.launch { stop() }
     }
 }

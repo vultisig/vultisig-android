@@ -8,7 +8,5 @@ internal interface DurationToUiStringMapper : MapperFunc<Duration, String>
 
 internal class DurationToUiStringMapperImpl @Inject constructor() : DurationToUiStringMapper {
 
-    override fun invoke(from: Duration): String =
-        from.toString()
-
+    override fun invoke(from: Duration): String = from.toString()
 }

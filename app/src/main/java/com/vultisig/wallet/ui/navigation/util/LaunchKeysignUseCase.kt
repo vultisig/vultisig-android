@@ -17,9 +17,9 @@ internal fun interface LaunchKeysignUseCase {
     )
 }
 
-internal class LaunchKeysignUseCaseImpl @Inject constructor(
-    private val navigator: Navigator<Destination>,
-) : LaunchKeysignUseCase {
+internal class LaunchKeysignUseCaseImpl
+@Inject
+constructor(private val navigator: Navigator<Destination>) : LaunchKeysignUseCase {
 
     override suspend fun invoke(
         keysignInitType: KeysignInitType,
@@ -56,5 +56,4 @@ internal class LaunchKeysignUseCaseImpl @Inject constructor(
             }
         )
     }
-
 }

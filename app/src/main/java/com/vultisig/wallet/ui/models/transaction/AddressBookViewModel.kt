@@ -19,13 +19,13 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class AddressBookUiModel(
     val isEditModeEnabled: Boolean = false,
@@ -41,7 +41,9 @@ internal data class AddressBookEntryUiModel(
 )
 
 @HiltViewModel
-internal class AddressBookViewModel @Inject constructor(
+internal class AddressBookViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val addressBookRepository: AddressBookRepository,
@@ -67,58 +69,58 @@ internal class AddressBookViewModel @Inject constructor(
     fun loadData() {
         val chain = chainId?.let(Chain::fromRaw)
         viewModelScope.launch {
-            orderRepository.loadOrders(null).map { orders ->
-                val orderMap = orders.associateBy { it.value }
+            orderRepository
+                .loadOrders(null)
+                .map { orders ->
+                    val orderMap = orders.associateBy { it.value }
 
-                val entries = addressBookRepository.getEntries()
-                    .let { entries ->
-                        if (chain != null) {
-                            entries.filter { it.chain == chain }
-                        } else {
-                            entries
+                    val entries =
+                        addressBookRepository.getEntries().let { entries ->
+                            if (chain != null) {
+                                entries.filter { it.chain == chain }
+                            } else {
+                                entries
+                            }
+                        }
+
+                    entries.forEach {
+                        if (it.id !in orderMap) {
+                            orderRepository.insert(null, it.id)
                         }
                     }
 
-                entries.forEach {
-                    if (it.id !in orderMap) {
-                        orderRepository.insert(null, it.id)
-                    }
+                    entries.sortedByDescending { orderMap[it.id]?.order }
                 }
-
-                entries.sortedByDescending {
-                    orderMap[it.id]?.order
-                }
-            }.collect(addressBookEntries)
+                .collect(addressBookEntries)
         }
     }
 
     private fun collectEntries() {
         viewModelScope.launch {
-            addressBookEntries.map { entries ->
-                entries.map {
-                    AddressBookEntryUiModel(
-                        model = it,
-                        image = it.chain.logo,
-                        name = it.title,
-                        network = it.chain.name.capitalize(Locale.current),
-                        address = it.address,
-                    )
+            addressBookEntries
+                .map { entries ->
+                    entries.map {
+                        AddressBookEntryUiModel(
+                            model = it,
+                            image = it.chain.logo,
+                            name = it.title,
+                            network = it.chain.name.capitalize(Locale.current),
+                            address = it.address,
+                        )
+                    }
                 }
-            }.collect { entries ->
-                state.update { state ->
-                    state.copy(entries = entries)
-                }
-            }
+                .collect { entries -> state.update { state -> state.copy(entries = entries) } }
         }
     }
 
-    fun clickAddress(model: AddressBookEntryUiModel) = viewModelScope.launch {
-        if (state.value.isEditModeEnabled) {
-            editAddress(model.model)
-        } else {
-            selectAddress(model)
+    fun clickAddress(model: AddressBookEntryUiModel) =
+        viewModelScope.launch {
+            if (state.value.isEditModeEnabled) {
+                editAddress(model.model)
+            } else {
+                selectAddress(model)
+            }
         }
-    }
 
     private suspend fun selectAddress(model: AddressBookEntryUiModel) {
         if (requestId != null) {
@@ -128,11 +130,9 @@ internal class AddressBookViewModel @Inject constructor(
     }
 
     private suspend fun editAddress(model: AddressBookEntry) {
-        navigator.route(Route.AddressEntry(
-            chainId = model.chain.id,
-            address = model.address,
-            vaultId = vaultId
-        ))
+        navigator.route(
+            Route.AddressEntry(chainId = model.chain.id, address = model.address, vaultId = vaultId)
+        )
     }
 
     fun deleteAddress(model: AddressBookEntryUiModel) {
@@ -148,31 +148,26 @@ internal class AddressBookViewModel @Inject constructor(
     }
 
     fun addAddress() {
-        viewModelScope.launch {
-            navigator.route(Route.AddressEntry(vaultId = vaultId))
-        }
+        viewModelScope.launch { navigator.route(Route.AddressEntry(vaultId = vaultId)) }
     }
 
     fun move(from: Int, to: Int) {
-        val updatedPositionsList = addressBookEntries.value.toMutableList().apply {
-            add(to, removeAt(from))
-        }
+        val updatedPositionsList =
+            addressBookEntries.value.toMutableList().apply { add(to, removeAt(from)) }
         addressBookEntries.value = updatedPositionsList
 
         reIndexJob?.cancel()
-        reIndexJob = viewModelScope.launch {
-            delay(500)
-            val midOrder = updatedPositionsList[to].id
-            val upperOrder = updatedPositionsList.getOrNull(to + 1)?.id
-            val lowerOrder = updatedPositionsList.getOrNull(to - 1)?.id
-            orderRepository.updateItemOrder(null, upperOrder, midOrder, lowerOrder)
-        }
+        reIndexJob =
+            viewModelScope.launch {
+                delay(500)
+                val midOrder = updatedPositionsList[to].id
+                val upperOrder = updatedPositionsList.getOrNull(to + 1)?.id
+                val lowerOrder = updatedPositionsList.getOrNull(to - 1)?.id
+                orderRepository.updateItemOrder(null, upperOrder, midOrder, lowerOrder)
+            }
     }
 
-    fun back(){
-        viewModelScope.launch {
-            navigator.back()
-        }
+    fun back() {
+        viewModelScope.launch { navigator.back() }
     }
-
 }

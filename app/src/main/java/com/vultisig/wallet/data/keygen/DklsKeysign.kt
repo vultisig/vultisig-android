@@ -27,14 +27,14 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import timber.log.Timber
 import tss.KeysignResponse
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 class DKLSKeysign(
     val keysignCommittee: List<String>,
@@ -46,7 +46,6 @@ class DKLSKeysign(
     val chainPath: String,
     val isInitiateDevice: Boolean,
     val publicKeyOverride: String? = null,
-
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
 ) {
@@ -60,10 +59,11 @@ class DKLSKeysign(
             sessionApi = sessionApi,
             coroutineScope = CoroutineScope(Dispatchers.IO),
             encryption = encryption,
-            isEncryptionGCM = true
+            isEncryptionGCM = true,
         )
     private val cache = mutableMapOf<String, Any>()
     val signatures = mutableMapOf<String, KeysignResponse>()
+
     private fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
             if (ks.pubKey == publicKeyECDSA) {
@@ -125,7 +125,6 @@ class DKLSKeysign(
                 }
             }
 
-
             val decodedMsgData = message.hexToByteArray()
             val msgSlice = decodedMsgData.toGoSlice()
             val err = dkls_sign_setupmsg_new(keyIdSlice, chainPathSlice, msgSlice, ids, buf)
@@ -156,7 +155,7 @@ class DKLSKeysign(
     private fun getOutboundMessageReceiver(
         handle: Handle,
         message: go_slice,
-        idx: Long
+        idx: Long,
     ): ByteArray {
         val bufReceiver = tss_buffer()
         try {
@@ -203,7 +202,9 @@ class DKLSKeysign(
                     break
                 }
                 val receiverString = String(receiverArray, Charsets.UTF_8)
-                println("sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}")
+                println(
+                    "sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}"
+                )
                 messenger.send(localPartyID, receiverString, encodedOutboundMessage)
             }
         }
@@ -215,8 +216,8 @@ class DKLSKeysign(
         val start = System.nanoTime()
         while (true) {
             try {
-                val msgs = sessionApi
-                    .getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
+                val msgs =
+                    sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
 
                 if (msgs.isNotEmpty()) {
                     if (processInboundMessage(handle, msgs, messageID)) {
@@ -241,7 +242,7 @@ class DKLSKeysign(
     private suspend fun processInboundMessage(
         handle: Handle,
         msgs: List<Message>,
-        messageID: String
+        messageID: String,
     ): Boolean {
         val sortedMsgs = msgs.sortedBy { it.sequenceNo }
         for (msg in sortedMsgs) {
@@ -251,10 +252,11 @@ class DKLSKeysign(
                 continue
             }
             println("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
-            val decryptedBody = encryption.decrypt(
-                Base64.decode(msg.body),
-                Numeric.hexStringToByteArray(encryptionKeyHex)
-            ) ?: error("fail to decrypt message body")
+            val decryptedBody =
+                encryption.decrypt(
+                    Base64.decode(msg.body),
+                    Numeric.hexStringToByteArray(encryptionKeyHex),
+                ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
             val decryptedBodySlice = decodedMsg.toGoSlice()
             val isFinished = intArrayOf(0)
@@ -278,10 +280,16 @@ class DKLSKeysign(
 
     private suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
         val msgHash = messageToSign.md5()
-        val localMessenger = TssMessenger(
-            mediatorURL, sessionID, encryptionKeyHex,
-            sessionApi, CoroutineScope(Dispatchers.IO), encryption, true
-        )
+        val localMessenger =
+            TssMessenger(
+                mediatorURL,
+                sessionID,
+                encryptionKeyHex,
+                sessionApi,
+                CoroutineScope(Dispatchers.IO),
+                encryption,
+                true,
+            )
         localMessenger.setMessageID(msgHash)
         messenger = localMessenger
         try {
@@ -293,24 +301,26 @@ class DKLSKeysign(
                 sessionApi.uploadSetupMessage(
                     serverUrl = mediatorURL,
                     sessionId = sessionID,
-                    message = Base64.encode(
-                        encryption.encrypt(
-                            Base64.encodeToByteArray(keysignSetupMsg),
-                            Numeric.hexStringToByteArray(encryptionKeyHex)
-                        )
-                    ),
-                    messageId = msgHash
+                    message =
+                        Base64.encode(
+                            encryption.encrypt(
+                                Base64.encodeToByteArray(keysignSetupMsg),
+                                Numeric.hexStringToByteArray(encryptionKeyHex),
+                            )
+                        ),
+                    messageId = msgHash,
                 )
             } else {
-                keysignSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, msgHash)
-                    .let {
-                        encryption.decrypt(
-                            Base64.decode(it),
-                            Numeric.hexStringToByteArray(encryptionKeyHex)
-                        )!!
-                    }.let {
-                        Base64.decode(it)
-                    }
+                keysignSetupMsg =
+                    sessionApi
+                        .getSetupMessage(mediatorURL, sessionID, msgHash)
+                        .let {
+                            encryption.decrypt(
+                                Base64.decode(it),
+                                Numeric.hexStringToByteArray(encryptionKeyHex),
+                            )!!
+                        }
+                        .let { Base64.decode(it) }
             }
 
             val signingMsg = decodeMessage(keysignSetupMsg)
@@ -328,12 +338,13 @@ class DKLSKeysign(
             if (result != LIB_OK) {
                 error("fail to create keyshare handle from bytes, $result")
             }
-            val sessionResult = dkls_sign_session_from_setup(
-                decodedSetupMsg,
-                localPartySlice,
-                keyshareHandle,
-                handler
-            )
+            val sessionResult =
+                dkls_sign_session_from_setup(
+                    decodedSetupMsg,
+                    localPartySlice,
+                    keyshareHandle,
+                    handler,
+                )
             if (sessionResult != LIB_OK) {
                 error("fail to create sign session from setup message, error: $sessionResult")
             }

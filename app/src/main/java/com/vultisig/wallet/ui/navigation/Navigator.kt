@@ -1,10 +1,10 @@
 package com.vultisig.wallet.ui.navigation
 
+import javax.inject.Inject
+import kotlin.reflect.KClass
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import timber.log.Timber
-import javax.inject.Inject
-import kotlin.reflect.KClass
 
 internal typealias VsNavigator = Navigator<Destination>
 
@@ -21,13 +21,9 @@ internal interface Navigator<Dest> {
     suspend fun navigate(destination: Dest)
 
     suspend fun navigate(dst: Dest, opts: NavigationOptions)
-
 }
 
-internal data class NavigateAction<Dst>(
-    val dst: Dst,
-    val opts: NavigationOptions? = null,
-)
+internal data class NavigateAction<Dst>(val dst: Dst, val opts: NavigationOptions? = null)
 
 internal data class NavigationOptions(
     val popUpTo: String? = null,
@@ -59,7 +55,6 @@ internal class NavigatorImpl<Dst> @Inject constructor() : Navigator<Dst> {
         Timber.d("navigate($destination, $opts)")
         this.destination.emit(NavigateAction(dst, opts))
     }
-
 }
 
 internal suspend fun Navigator<Destination>.back() {

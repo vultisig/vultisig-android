@@ -34,17 +34,13 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ShowQrHelperBottomSheet(
-    onDismiss: () -> Unit,
-) {
+internal fun ShowQrHelperBottomSheet(onDismiss: () -> Unit) {
     ModalBottomSheet(
         containerColor = Theme.v2.colors.backgrounds.secondary,
         shape = RoundedCornerShape(24.dp),
         dragHandle = null,
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(
-            skipPartiallyExpanded = true
-        )
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         ScanQrHelpModalContent(onDismiss)
     }
@@ -55,26 +51,23 @@ private fun ScanQrHelpModalContent(onGotItClick: () -> Unit) {
     Box {
         Column(
             horizontalAlignment = CenterHorizontally,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .padding(horizontal = 35.dp),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(Theme.v2.colors.backgrounds.secondary)
+                    .padding(horizontal = 35.dp),
         ) {
             Image(
                 painter = painterResource(R.drawable.scan_qr_help),
-                modifier = Modifier
-                    .width(290.dp),
+                modifier = Modifier.width(290.dp),
                 contentDescription = null,
-                contentScale = ContentScale.FillWidth
+                contentScale = ContentScale.FillWidth,
             )
             UiSpacer(36.dp)
             Text(
                 buildAnnotatedString {
                     append(stringResource(R.string.scan_qr_code_modal_scan_the))
                     append(" ")
-                    withStyle(
-                        style = SpanStyle(brush = Theme.v2.colors.gradients.primary)
-                    ) {
+                    withStyle(style = SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
                         append(stringResource(R.string.scan_qr_code_modal_qr_code))
                     }
                 },
@@ -86,14 +79,13 @@ private fun ScanQrHelpModalContent(onGotItClick: () -> Unit) {
                 text = stringResource(R.string.scan_qr_code_modal_annotation),
                 color = Theme.v2.colors.text.secondary,
                 style = Theme.brockmann.body.s.medium,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
             UiSpacer(36.dp)
             VsButton(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 label = stringResource(id = R.string.scan_qr_code_modal_next),
-                onClick = onGotItClick
+                onClick = onGotItClick,
             )
             UiSpacer(48.dp)
         }
@@ -101,19 +93,15 @@ private fun ScanQrHelpModalContent(onGotItClick: () -> Unit) {
     }
 }
 
-
 @Composable
 private fun BoxScope.HandlerLine() {
     Box(
-        modifier = Modifier
-            .align(TopCenter)
-            .padding(top = 12.dp)
-            .width(64.dp)
-            .height(4.dp)
-            .background(
-                color = Theme.v2.colors.border.normal,
-                shape = CircleShape,
-            )
+        modifier =
+            Modifier.align(TopCenter)
+                .padding(top = 12.dp)
+                .width(64.dp)
+                .height(4.dp)
+                .background(color = Theme.v2.colors.border.normal, shape = CircleShape)
     )
 }
 

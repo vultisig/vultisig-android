@@ -11,13 +11,15 @@ import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
 
 internal interface SwapTransactionToUiModelMapper :
     SuspendMapperFunc<SwapTransaction, SwapTransactionUiModel>
 
-internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
+internal class SwapTransactionToUiModelMapperImpl
+@Inject
+constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
@@ -27,69 +29,64 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
 ) : SwapTransactionToUiModelMapper {
     override suspend fun invoke(from: SwapTransaction): SwapTransactionUiModel {
         val currency = appCurrencyRepository.currency.first()
-        val provider = resolveProviderUseCase(
-            SwapSelectionContext(
-                from.srcToken,
-                from.dstToken,
-                from.srcTokenValue
-            )
-        ) ?: error("provider not found")
+        val provider =
+            resolveProviderUseCase(
+                SwapSelectionContext(from.srcToken, from.dstToken, from.srcTokenValue)
+            ) ?: error("provider not found")
 
-        val tokenValue = when (provider) {
-            SwapProvider.THORCHAIN, SwapProvider.MAYA ->
-                from.dstToken
+        val tokenValue =
+            when (provider) {
+                SwapProvider.THORCHAIN,
+                SwapProvider.MAYA -> from.dstToken
 
-            SwapProvider.ONEINCH, SwapProvider.KYBER ->
-                tokenRepository.getNativeToken(from.srcToken.chain.id)
+                SwapProvider.ONEINCH,
+                SwapProvider.KYBER -> tokenRepository.getNativeToken(from.srcToken.chain.id)
 
-            SwapProvider.LIFI -> getLiFiProviderFee(from)
+                SwapProvider.LIFI -> getLiFiProviderFee(from)
 
-            SwapProvider.JUPITER ->
-                from.srcToken
-        }
+                SwapProvider.JUPITER -> from.srcToken
+            }
 
-        val quotesFeesFiat = convertTokenValueToFiat(
-            tokenValue,
-            from.estimatedFees,
-            currency
-        )
+        val quotesFeesFiat = convertTokenValueToFiat(tokenValue, from.estimatedFees, currency)
 
         return SwapTransactionUiModel(
-            src = ValuedToken(
-                value = mapTokenValueToDecimalUiString(from.srcTokenValue),
-                token = from.srcToken,
-                fiatValue = fiatValueToStringMapper(
-                    convertTokenValueToFiat(
-                        from.srcToken,
-                        from.srcTokenValue,
-                        currency
-                    )
+            src =
+                ValuedToken(
+                    value = mapTokenValueToDecimalUiString(from.srcTokenValue),
+                    token = from.srcToken,
+                    fiatValue =
+                        fiatValueToStringMapper(
+                            convertTokenValueToFiat(from.srcToken, from.srcTokenValue, currency)
+                        ),
                 ),
-            ),
-            dst = ValuedToken(
-                value = mapTokenValueToDecimalUiString(from.expectedDstTokenValue),
-                token = from.dstToken,
-                fiatValue = fiatValueToStringMapper(
-                    convertTokenValueToFiat(
-                        from.dstToken,
-                        from.expectedDstTokenValue,
-                        currency
-                    )
+            dst =
+                ValuedToken(
+                    value = mapTokenValueToDecimalUiString(from.expectedDstTokenValue),
+                    token = from.dstToken,
+                    fiatValue =
+                        fiatValueToStringMapper(
+                            convertTokenValueToFiat(
+                                from.dstToken,
+                                from.expectedDstTokenValue,
+                                currency,
+                            )
+                        ),
                 ),
-            ),
             hasConsentAllowance = from.isApprovalRequired,
-            providerFee = ValuedToken(
-                token = tokenValue,
-                value = from.estimatedFees.value.toString(),
-                fiatValue = fiatValueToStringMapper(quotesFeesFiat),
-            ),
-            networkFee = ValuedToken(
-                token = from.srcToken,
-                value = mapTokenValueToDecimalUiString(from.gasFees),
-                fiatValue = fiatValueToStringMapper(from.gasFeeFiatValue),
-            ),
-            networkFeeFormatted = mapTokenValueToDecimalUiString(from.gasFees)
-                    + " ${from.gasFees.unit}",
+            providerFee =
+                ValuedToken(
+                    token = tokenValue,
+                    value = from.estimatedFees.value.toString(),
+                    fiatValue = fiatValueToStringMapper(quotesFeesFiat),
+                ),
+            networkFee =
+                ValuedToken(
+                    token = from.srcToken,
+                    value = mapTokenValueToDecimalUiString(from.gasFees),
+                    fiatValue = fiatValueToStringMapper(from.gasFeeFiatValue),
+                ),
+            networkFeeFormatted =
+                mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
             totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue),
         )
     }

@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
@@ -21,11 +20,11 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import javax.inject.Inject
 
 internal data class CustomTokenUiModel(
     val isLoading: Boolean = false,
@@ -33,12 +32,13 @@ internal data class CustomTokenUiModel(
     val token: Coin? = null,
     val price: String = "",
     @DrawableRes val chainLogo: Int,
-    val isInitial: Boolean = true
+    val isInitial: Boolean = true,
 )
 
-
 @HiltViewModel
-internal class CustomTokenViewModel @Inject constructor(
+internal class CustomTokenViewModel
+@Inject
+constructor(
     private val searchToken: SearchTokenUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val requestResultRepository: RequestResultRepository,
@@ -47,22 +47,14 @@ internal class CustomTokenViewModel @Inject constructor(
 ) : ViewModel() {
     val searchFieldState: TextFieldState = TextFieldState()
     private val chainId = savedStateHandle.toRoute<Route.CustomToken>().chainId
-    val uiModel = MutableStateFlow(
-        CustomTokenUiModel(chainLogo = Chain.fromRaw(chainId).logo)
-    )
+    val uiModel = MutableStateFlow(CustomTokenUiModel(chainLogo = Chain.fromRaw(chainId).logo))
+
     fun searchCustomToken() {
         viewModelScope.launch {
-            uiModel.update {
-                it.copy(
-                    isInitial = false
-                )
-            }
+            uiModel.update { it.copy(isInitial = false) }
             showLoading()
             val searchedToken: CoinAndFiatValue? =
-                searchToken(
-                    chainId,
-                    searchFieldState.text.toString()
-                )
+                searchToken(chainId, searchFieldState.text.toString())
 
             if (searchedToken == null) {
                 showError()
@@ -74,7 +66,7 @@ internal class CustomTokenViewModel @Inject constructor(
                         isLoading = false,
                         hasError = false,
                         token = searchedToken.coin,
-                        price = price
+                        price = price,
                     )
                 }
             }
@@ -82,26 +74,11 @@ internal class CustomTokenViewModel @Inject constructor(
     }
 
     private fun showError() {
-        uiModel.update {
-            it.copy(
-                isLoading = false,
-                hasError = true,
-                token = null,
-                price = "",
-            )
-        }
+        uiModel.update { it.copy(isLoading = false, hasError = true, token = null, price = "") }
     }
 
-
     private fun showLoading() {
-        uiModel.update {
-            it.copy(
-                isLoading = true,
-                hasError = false,
-                token = null,
-                price = "",
-            )
-        }
+        uiModel.update { it.copy(isLoading = true, hasError = false, token = null, price = "") }
     }
 
     fun pasteToSearchField(data: String?) {
@@ -116,16 +93,12 @@ internal class CustomTokenViewModel @Inject constructor(
         }
     }
 
-    fun back(){
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+    fun back() {
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
-    fun close(){
-        uiModel.update {
-            it.copy(isInitial = true)
-        }
+    fun close() {
+        uiModel.update { it.copy(isInitial = true) }
         searchFieldState.clearText()
     }
 }

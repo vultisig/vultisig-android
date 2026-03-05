@@ -34,10 +34,10 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.transaction.AddAddressEntryUiModel
-import com.vultisig.wallet.ui.models.transaction.AddressEntryViewModel
 import com.vultisig.wallet.ui.models.NetworkUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
+import com.vultisig.wallet.ui.models.transaction.AddAddressEntryUiModel
+import com.vultisig.wallet.ui.models.transaction.AddressEntryViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
@@ -61,7 +61,6 @@ internal fun AddAddressEntryScreen(
     )
 }
 
-
 @Preview
 @Composable
 private fun AddAddressEntryScreenPreview() {
@@ -71,7 +70,6 @@ private fun AddAddressEntryScreenPreview() {
         addressTextFieldState = rememberTextFieldState(),
     )
 }
-
 
 @Composable
 internal fun AddAddressEntryScreen(
@@ -92,29 +90,17 @@ internal fun AddAddressEntryScreen(
             VsButton(
                 label = stringResource(R.string.add_vault_save),
                 onClick = onSaveAddressClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        vertical = 24.dp,
-                        horizontal = 16.dp,
-                    ),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 16.dp),
             )
-        }
+        },
     ) {
         Column {
-
             SelectChain(
                 selectedChain = state.selectedChain,
-                modifier = Modifier.clickOnce(
-                    onClick = {
-                        onSelectChainClick(state.selectedChain)
-                    }
-                )
+                modifier = Modifier.clickOnce(onClick = { onSelectChainClick(state.selectedChain) }),
             )
 
-            UiSpacer(
-                size = 12.dp
-            )
+            UiSpacer(size = 12.dp)
 
             VsTextInputField(
                 label = stringResource(R.string.add_address_title_label),
@@ -122,15 +108,12 @@ internal fun AddAddressEntryScreen(
                 textFieldState = titleTextFieldState,
                 keyboardType = KeyboardType.Text,
                 footNote = state.titleError?.asString(),
-                innerState = if (state.titleError != null)
-                    VsTextInputFieldInnerState.Error
-                else VsTextInputFieldInnerState.Default
+                innerState =
+                    if (state.titleError != null) VsTextInputFieldInnerState.Error
+                    else VsTextInputFieldInnerState.Default,
             )
 
-
-            UiSpacer(
-                size = 12.dp
-            )
+            UiSpacer(size = 12.dp)
             val clipboardData = VsClipboardService.getClipboardData()
 
             VsTextInputField(
@@ -143,58 +126,43 @@ internal fun AddAddressEntryScreen(
                 autoCorrectEnabled = false,
                 trailingIcon2 = R.drawable.copy2,
                 onTrailingIcon2Click = {
-                    clipboardData.value?.let { clipBoard ->
-                        onSetOutputAddress(clipBoard)
-                    }
+                    clipboardData.value?.let { clipBoard -> onSetOutputAddress(clipBoard) }
                 },
                 footNote = state.addressError?.asString(),
-                innerState = if (state.addressError != null)
-                    VsTextInputFieldInnerState.Error
-                else VsTextInputFieldInnerState.Default
+                innerState =
+                    if (state.addressError != null) VsTextInputFieldInnerState.Error
+                    else VsTextInputFieldInnerState.Default,
             )
-
-
         }
     }
 }
 
-
 @Composable
-internal fun SelectChain(
-    modifier: Modifier = Modifier,
-    selectedChain: NetworkUiModel?
-) {
-    Column(
-        modifier = modifier
-    ) {
+internal fun SelectChain(modifier: Modifier = Modifier, selectedChain: NetworkUiModel?) {
+    Column(modifier = modifier) {
         Text(
             text = stringResource(R.string.select_chain_chain_title),
             color = Theme.v2.colors.text.primary,
             style = Theme.brockmann.body.s.medium,
         )
 
-        UiSpacer(
-            size = 8.dp
-        )
+        UiSpacer(size = 8.dp)
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(size = 12.dp)
-                )
-                .background(
-                    color = Theme.v2.colors.backgrounds.secondary,
-                    shape = RoundedCornerShape(size = 12.dp)
-                )
-                .padding(
-                    all = 16.dp
-                ),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier.fillMaxWidth()
+                    .border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.border.light,
+                        shape = RoundedCornerShape(size = 12.dp),
+                    )
+                    .background(
+                        color = Theme.v2.colors.backgrounds.secondary,
+                        shape = RoundedCornerShape(size = 12.dp),
+                    )
+                    .padding(all = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-
             if (selectedChain == null) {
                 Text(
                     text = stringResource(R.string.address_entry_select),
@@ -205,10 +173,8 @@ internal fun SelectChain(
                 TokenLogo(
                     logo = selectedChain.logo,
                     title = selectedChain.title,
-                    modifier = Modifier
-                        .size(32.dp),
-                    errorLogoModifier = Modifier
-                        .size(32.dp)
+                    modifier = Modifier.size(32.dp),
+                    errorLogoModifier = Modifier.size(32.dp),
                 )
                 UiSpacer(size = 6.dp)
                 Text(
@@ -218,33 +184,22 @@ internal fun SelectChain(
                 )
             }
 
-            UiSpacer(
-                weight = 1f
-            )
+            UiSpacer(weight = 1f)
 
-
-            UiIcon(
-                drawableResId = R.drawable.ic_caret_right,
-                size = 16.dp,
-            )
+            UiIcon(drawableResId = R.drawable.ic_caret_right, size = 16.dp)
         }
-
     }
 }
 
 private class SelectChainPreviewParameterProvider : PreviewParameterProvider<NetworkUiModel?> {
     override val values: Sequence<NetworkUiModel?>
-        get() = sequenceOf(
-            null,
-            Chain.Ethereum.toNetworkUiModel(),
-        )
+        get() = sequenceOf(null, Chain.Ethereum.toNetworkUiModel())
 }
 
 @Preview
 @Composable
 private fun SelectChainPreview(
-    @PreviewParameter(SelectChainPreviewParameterProvider::class)
-    chain: NetworkUiModel?,
+    @PreviewParameter(SelectChainPreviewParameterProvider::class) chain: NetworkUiModel?
 ) {
     SelectChain(selectedChain = chain)
 }

@@ -41,7 +41,7 @@ class MediatorService : Service() {
             val name = intent.getStringExtra("serverName")
             name?.let {
                 if (isRunning) {
-                    if (serverName == name) {// when the same server is started again,
+                    if (serverName == name) { // when the same server is started again,
                         broadcastServiceStarted()
                         return START_NOT_STICKY
                     } else {

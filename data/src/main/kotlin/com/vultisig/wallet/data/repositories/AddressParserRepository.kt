@@ -8,25 +8,26 @@ import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.data.utils.Numeric
 import javax.inject.Inject
 
-
 interface AddressParserRepository {
     suspend fun resolveName(input: String, chain: Chain): String
 
     suspend fun isEnsNameService(input: String): Boolean
 }
 
-internal class AddressParserRepositoryImpl @Inject constructor(
+internal class AddressParserRepositoryImpl
+@Inject
+constructor(
     private val evmApiFactory: EvmApiFactory,
     private val thorChainApi: ThorChainApi,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : AddressParserRepository {
 
     private val supportedEns = listOf(".eth", ".sol")
+
     override suspend fun resolveName(input: String, chain: Chain): String {
         return when {
             // address is already valid address, let's return it
-            chainAccountAddressRepository.isValid(chain, input) ->
-                input
+            chainAccountAddressRepository.isValid(chain, input) -> input
             // might be ens name, try to resolve it
             isEnsNameService(input) -> {
                 val namehash = input.namehash()
@@ -62,4 +63,3 @@ private fun String.namehash(): String {
 
     return Numeric.toHexString(node)
 }
-

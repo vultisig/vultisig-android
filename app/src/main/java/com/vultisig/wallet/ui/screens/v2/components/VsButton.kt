@@ -22,15 +22,8 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun VsButton(
-    modifier: Modifier = Modifier,
-    label: String? = null,
-    onClick: () -> Unit,
-) {
-    VsButton(
-        modifier = modifier,
-        onClick = onClick,
-    ) {
+fun VsButton(modifier: Modifier = Modifier, label: String? = null, onClick: () -> Unit) {
+    VsButton(modifier = modifier, onClick = onClick) {
         if (label != null) {
             Text(
                 text = label,
@@ -48,10 +41,7 @@ fun VsButton(
     borderColor: Color = Theme.v2.colors.border.primaryAccent4,
     borderWidth: Dp = 1.dp,
     shape: Shape = RoundedCornerShape(percent = 100),
-    contentPadding: PaddingValues = PaddingValues(
-        vertical = 14.dp,
-        horizontal = 32.dp
-    ),
+    contentPadding: PaddingValues = PaddingValues(vertical = 14.dp, horizontal = 32.dp),
     enabled: Boolean = true,
     onClick: () -> Unit,
     content: @Composable RowScope.() -> Unit,
@@ -59,19 +49,13 @@ fun VsButton(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        modifier = modifier
-            .clip(shape)
-            .background(
-                color = backgroundColor,
-                shape = shape
-            )
-            .border(
-                width = borderWidth,
-                color = borderColor,
-                shape = shape,
-            )
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(contentPadding)
+        modifier =
+            modifier
+                .clip(shape)
+                .background(color = backgroundColor, shape = shape)
+                .border(width = borderWidth, color = borderColor, shape = shape)
+                .clickable(enabled = enabled, onClick = onClick)
+                .padding(contentPadding),
     ) {
         content()
     }
@@ -87,10 +71,7 @@ fun VsButton(
     borderColor: Color = Theme.v2.colors.border.primaryAccent4,
     borderWidth: Dp = 1.dp,
     shape: Shape = RoundedCornerShape(percent = 100),
-    contentPadding: PaddingValues = PaddingValues(
-        vertical = 14.dp,
-        horizontal = 32.dp
-    ),
+    contentPadding: PaddingValues = PaddingValues(vertical = 14.dp, horizontal = 32.dp),
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
@@ -104,10 +85,6 @@ fun VsButton(
         enabled = enabled,
         onClick = onClick,
     ) {
-        Text(
-            text = label,
-            style = textStyle,
-            color = textColor,
-        )
+        Text(text = label, style = textStyle, color = textColor)
     }
 }

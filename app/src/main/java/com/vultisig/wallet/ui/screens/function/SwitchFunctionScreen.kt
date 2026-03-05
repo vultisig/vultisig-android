@@ -19,17 +19,14 @@ internal fun SwitchFunctionScreen(
     selectedToken: TokenMergeInfo,
     coinList: List<TokenMergeInfo>,
     onSelectCoin: (TokenMergeInfo) -> Unit,
-
     dstAddress: TextFieldState,
     onDstAddressLostFocus: () -> Unit,
     dstAddressError: UiText?,
     onSetDstAddress: (String) -> Unit,
-
     thorAddress: TextFieldState,
     onThorAddressLostFocus: () -> Unit,
     thorAddressError: UiText?,
     onSetThorAddress: (String) -> Unit,
-
     balance: UiText,
     amountFieldState: TextFieldState,
     onAmountLostFocus: () -> Unit,
@@ -77,10 +74,7 @@ internal fun SwitchFunctionScreen(
     }
 
     FormTextFieldCard(
-        title = stringResource(
-            R.string.deposit_form_amount_title,
-            balance.asString()
-        ),
+        title = stringResource(R.string.deposit_form_amount_title, balance.asString()),
         hint = stringResource(R.string.send_amount_currency_hint),
         keyboardType = KeyboardType.Number,
         textFieldState = amountFieldState,

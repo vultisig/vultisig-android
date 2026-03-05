@@ -5,10 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CardanoUtxoResponseJson(
-    @SerialName("tx_hash")
-    val txHash: String? = null,
-    @SerialName("tx_index")
-    val txIndex: Long? = null,
-    @SerialName("value")
-    val value: String? = null,
+    @SerialName("tx_hash") val txHash: String? = null,
+    @SerialName("tx_index") val txIndex: Long? = null,
+    @SerialName("value") val value: String? = null,
 )

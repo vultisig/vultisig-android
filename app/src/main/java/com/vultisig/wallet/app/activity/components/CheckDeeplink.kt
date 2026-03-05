@@ -6,9 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 
 @Composable
-internal fun Activity.CheckDeeplink(
-    onDeeplinkFound: (Uri) -> Unit,
-) {
+internal fun Activity.CheckDeeplink(onDeeplinkFound: (Uri) -> Unit) {
     LaunchedEffect(Unit) {
         val uri = intent.data
         if (uri != null) {

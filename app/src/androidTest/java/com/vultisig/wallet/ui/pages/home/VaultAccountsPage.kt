@@ -10,9 +10,7 @@ import com.vultisig.wallet.ui.screens.home.VaultAccountsScreenTags
 import com.vultisig.wallet.ui.utils.click
 import com.vultisig.wallet.ui.utils.waitUntilShown
 
-internal class VaultAccountsPage(
-    private val compose: ComposeTestRule
-) {
+internal class VaultAccountsPage(private val compose: ComposeTestRule) {
 
     fun waitUntilShown() {
         compose.waitUntilShown("VaultAccountsScreen.chooseChains")
@@ -27,14 +25,10 @@ internal class VaultAccountsPage(
     }
 
     fun assertNotExist(chain: String) {
-        compose.onNodeWithText(chain)
-            .assertDoesNotExist()
+        compose.onNodeWithText(chain).assertDoesNotExist()
     }
 
     fun migrate() {
         compose.click(VaultAccountsScreenTags.MIGRATE)
     }
-
 }
-
-

@@ -28,14 +28,8 @@ import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
 
 @Composable
-internal fun SecurityScannerBadget(
-    status: TransactionScanStatus,
-) {
-    Row(
-        modifier = Modifier
-            .height(24.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+internal fun SecurityScannerBadget(status: TransactionScanStatus) {
+    Row(modifier = Modifier.height(24.dp), verticalAlignment = Alignment.CenterVertically) {
         when (status) {
             is TransactionScanStatus.Scanned -> {
                 ScanStatusContentWithLogo(
@@ -50,7 +44,7 @@ internal fun SecurityScannerBadget(
                 CircularProgressIndicator(
                     color = Theme.v2.colors.text.secondary,
                     modifier = Modifier.size(16.dp),
-                    strokeWidth = 2.dp
+                    strokeWidth = 2.dp,
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))
@@ -59,7 +53,7 @@ internal fun SecurityScannerBadget(
                     text = stringResource(R.string.security_scanner_transaction_scanning),
                     fontSize = 14.sp,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.secondary
+                    color = Theme.v2.colors.text.secondary,
                 )
             }
 
@@ -88,7 +82,7 @@ private fun ScanStatusContentWithLogo(
         imageVector = image,
         contentDescription = image.name,
         tint = imageColor,
-        modifier = Modifier.size(16.dp)
+        modifier = Modifier.size(16.dp),
     )
 
     Spacer(modifier = Modifier.width(6.dp))
@@ -97,7 +91,7 @@ private fun ScanStatusContentWithLogo(
         text = message,
         fontSize = 14.sp,
         style = Theme.brockmann.supplementary.footnote,
-        color = Theme.v2.colors.text.secondary
+        color = Theme.v2.colors.text.secondary,
     )
 
     Spacer(modifier = Modifier.width(4.dp))
@@ -105,10 +99,9 @@ private fun ScanStatusContentWithLogo(
     Image(
         painter = painterResource(id = getSecurityScannerLogo(providerLogoId)),
         contentDescription = "Provider Logo",
-        modifier = Modifier.height(16.dp)
+        modifier = Modifier.height(16.dp),
     )
 }
-
 
 internal fun getSecurityScannerLogo(provider: String): Int {
     return when (provider) {

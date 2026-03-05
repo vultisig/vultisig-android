@@ -53,55 +53,53 @@ internal fun QrAddressScreen(navController: NavHostController) {
                 centerText = title,
                 startIcon = R.drawable.ic_caret_left,
                 endIcon = R.drawable.qr_share,
-                onEndIconClick = { viewModel.shareQRCode(context) }
+                onEndIconClick = { viewModel.shareQRCode(context) },
             )
-        },
+        }
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .fillMaxWidth()
-                .padding(it)
-                .background(background),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier =
+                Modifier.fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth()
+                    .padding(it)
+                    .background(background),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             UiSpacer(size = 42.dp)
             Text(
                 modifier = Modifier.padding(horizontal = 32.dp),
                 textAlign = TextAlign.Center,
-                text = stringResource(id = R.string.qr_address_screen_description, chainName, address),
-                style = Theme.menlo.body1
-                    .copy(fontWeight = FontWeight.Bold),
+                text =
+                    stringResource(id = R.string.qr_address_screen_description, chainName, address),
+                style = Theme.menlo.body1.copy(fontWeight = FontWeight.Bold),
             )
             UiSpacer(size = 42.dp)
 
-            BoxWithConstraints(
-                Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
+            BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 if (address.isNotEmpty()) {
                     QRCodeKeyGenImage(
                         bitmapPainter = bitmapPainter,
-                        modifier = Modifier
-                            .width(min(maxHeight, maxWidth))
-                            .padding(all = 48.dp)
-                            .aspectRatio(1f)
-                            .extractBitmap { bitmap ->
-                                if (bitmapPainter != null) {
-                                    viewModel.saveShareQrBitmap(
-                                        context,
-                                        bitmap,
-                                        background.toArgb(),
-                                        title,
-                                        BitmapFactory.decodeResource(
-                                            context.resources, R.drawable.ic_share_qr_logo
+                        modifier =
+                            Modifier.width(min(maxHeight, maxWidth))
+                                .padding(all = 48.dp)
+                                .aspectRatio(1f)
+                                .extractBitmap { bitmap ->
+                                    if (bitmapPainter != null) {
+                                        viewModel.saveShareQrBitmap(
+                                            context,
+                                            bitmap,
+                                            background.toArgb(),
+                                            title,
+                                            BitmapFactory.decodeResource(
+                                                context.resources,
+                                                R.drawable.ic_share_qr_logo,
+                                            ),
                                         )
-                                    )
-                                } else {
-                                    bitmap.recycle()
-                                }
-                            },
+                                    } else {
+                                        bitmap.recycle()
+                                    }
+                                },
                     )
                 }
             }

@@ -63,14 +63,15 @@ internal fun VerifyDepositScreen(
     val context = LocalContext.current
     val promptTitle = stringResource(R.string.biometry_keysign_login_button)
 
-    val authorize: () -> Unit = remember(context) {
-        {
-            context.launchBiometricPrompt(
-                promptTitle = promptTitle,
-                onAuthorizationSuccess = viewModel::authFastSign,
-            )
+    val authorize: () -> Unit =
+        remember(context) {
+            {
+                context.launchBiometricPrompt(
+                    promptTitle = promptTitle,
+                    onAuthorizationSuccess = viewModel::authFastSign,
+                )
+            }
         }
-    }
 
     val errorText = state.errorText
     if (errorText != null) {
@@ -113,32 +114,26 @@ internal fun VerifyDepositScreen(
                 )
             }
         },
-        modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
-            .fillMaxSize(),
+        modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize(),
         content = { contentPadding ->
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .padding(contentPadding)
-                    .padding(all = 16.dp)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                modifier =
+                    Modifier.padding(contentPadding)
+                        .padding(all = 16.dp)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
             ) {
-
                 val tx = state.depositTransactionUiModel
 
-
                 Column(
-                    modifier = Modifier
-                        .background(
-                            color = Theme.v2.colors.backgrounds.secondary,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(
-                            all = 24.dp,
-                        )
+                    modifier =
+                        Modifier.background(
+                                color = Theme.v2.colors.backgrounds.secondary,
+                                shape = RoundedCornerShape(16.dp),
+                            )
+                            .padding(all = 24.dp)
                 ) {
                     Text(
                         text = stringResource(R.string.verify_deposit_sending),
@@ -148,76 +143,74 @@ internal fun VerifyDepositScreen(
 
                     UiSpacer(24.dp)
 
-                    SwapToken(
-                        valuedToken = tx.token,
-                        isLoading = state.isLoading,
-                    )
+                    SwapToken(valuedToken = tx.token, isLoading = state.isLoading)
 
                     UiSpacer(12.dp)
 
                     VerifyCardDivider(8.dp)
 
-                    tx.srcAddress.takeIf { it.isNotEmpty() }?.let {
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_from_title),
-                            subtitle = tx.srcAddress
-                        )
+                    tx.srcAddress
+                        .takeIf { it.isNotEmpty() }
+                        ?.let {
+                            VerifyCardDetails(
+                                title = stringResource(R.string.verify_transaction_from_title),
+                                subtitle = tx.srcAddress,
+                            )
 
-                        VerifyCardDivider(0.dp)
-                    }
-
+                            VerifyCardDivider(0.dp)
+                        }
 
                     if (tx.dstAddress.isNotEmpty()) {
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_to_title),
-                            subtitle = tx.dstAddress
+                            subtitle = tx.dstAddress,
                         )
                         VerifyCardDivider(0.dp)
                     }
                     if (tx.thorAddress.isNotEmpty()) {
                         VerifyCardDetails(
                             title = stringResource(R.string.thor_address),
-                            subtitle = tx.thorAddress
+                            subtitle = tx.thorAddress,
                         )
                         VerifyCardDivider(0.dp)
                     }
                     if (tx.operation.isNotEmpty()) {
                         VerifyCardDetails(
                             title = stringResource(R.string.operation),
-                            subtitle = tx.operation
+                            subtitle = tx.operation,
                         )
                         VerifyCardDivider(0.dp)
                     }
 
-
                     if (tx.memo.isNotEmpty()) {
-                        if (tx.dstAddress.isNotEmpty())
-                            VerifyCardDivider(0.dp)
+                        if (tx.dstAddress.isNotEmpty()) VerifyCardDivider(0.dp)
 
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_memo_title),
                             subtitle = tx.memo,
-                            showAllContent = true
+                            showAllContent = true,
                         )
                     }
 
-                    if (tx.token.value.isNotEmpty() && try {
-                            tx.token.value.toBigInteger() > BigInteger.ZERO
-                        } catch (e: Exception) {
-                            false
-                        }
+                    if (
+                        tx.token.value.isNotEmpty() &&
+                            try {
+                                tx.token.value.toBigInteger() > BigInteger.ZERO
+                            } catch (e: Exception) {
+                                false
+                            }
                     ) {
                         VerifyCardDivider(0.dp)
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_amount_title),
-                            subtitle = (tx.token.value)
+                            subtitle = (tx.token.value),
                         )
                     }
 
                     val hasContent =
-                        tx.srcAddress.isNotEmpty()
-                                || tx.dstAddress.isNotEmpty()
-                                || tx.memo.isNotEmpty()
+                        tx.srcAddress.isNotEmpty() ||
+                            tx.dstAddress.isNotEmpty() ||
+                            tx.memo.isNotEmpty()
 
                     if (hasContent) {
                         VerifyCardDivider(0.dp)
@@ -225,11 +218,7 @@ internal fun VerifyDepositScreen(
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                vertical = 12.dp,
-                            )
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                     ) {
                         Text(
                             text = stringResource(R.string.verify_deposit_network),
@@ -246,17 +235,12 @@ internal fun VerifyDepositScreen(
                             val chain = state.depositTransactionUiModel.token.token.chain
 
                             if (state.isLoading) {
-                                UiPlaceholderLoader(
-                                    modifier = Modifier
-                                        .height(20.dp)
-                                        .width(150.dp)
-                                )
+                                UiPlaceholderLoader(modifier = Modifier.height(20.dp).width(150.dp))
                             } else {
                                 Image(
                                     painter = painterResource(chain.logo),
                                     contentDescription = null,
-                                    modifier = Modifier
-                                        .size(16.dp),
+                                    modifier = Modifier.size(16.dp),
                                 )
 
                                 Text(
@@ -287,14 +271,8 @@ internal fun VerifyDepositScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 12.dp
-                    )
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
             ) {
-
                 if (state.hasFastSign) {
                     Text(
                         text = stringResource(R.string.verify_deposit_hold_paired),
@@ -310,41 +288,44 @@ internal fun VerifyDepositScreen(
                     )
                 } else {
                     VsButton(
-                        state = state.isLoading.takeIf { it }?.let { VsButtonState.Disabled }
-                            ?: VsButtonState.Enabled,
+                        state =
+                            state.isLoading.takeIf { it }?.let { VsButtonState.Disabled }
+                                ?: VsButtonState.Enabled,
                         label = confirmTitle,
                         onClick = onConfirm,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
-        }
+        },
     )
 }
-
 
 @Preview
 @Composable
 private fun VerifyDepositScreenPreview() {
     VerifyDepositScreen(
-        state = VerifyDepositUiModel(
-            depositTransactionUiModel = DepositTransactionUiModel(
-                token = ValuedToken(
-                    token = Coins.ThorChain.RUNE,
-                    value = "1 RUNE",
-                    fiatValue = "$1.37"
-                ),
-                networkFeeFiatValue = "$0.03",
-                networkFeeTokenValue = "0.02 RUNE",
-                srcAddress = "123abc456bca",
-                dstAddress = "123abc456bca",
-                thorAddress = "123abc456bca",
-                operation = "mint",
-                memo = "BOND:addressHere"
+        state =
+            VerifyDepositUiModel(
+                depositTransactionUiModel =
+                    DepositTransactionUiModel(
+                        token =
+                            ValuedToken(
+                                token = Coins.ThorChain.RUNE,
+                                value = "1 RUNE",
+                                fiatValue = "$1.37",
+                            ),
+                        networkFeeFiatValue = "$0.03",
+                        networkFeeTokenValue = "0.02 RUNE",
+                        srcAddress = "123abc456bca",
+                        dstAddress = "123abc456bca",
+                        thorAddress = "123abc456bca",
+                        operation = "mint",
+                        memo = "BOND:addressHere",
+                    )
             ),
-        ),
         confirmTitle = "title",
         onConfirm = {},
-        onFastSignClick = {}
+        onFastSignClick = {},
     )
 }

@@ -8,16 +8,19 @@ import javax.inject.Inject
 
 interface OneInchToCoinsUseCase : suspend (Map<String, OneInchTokenJson>, Chain) -> List<Coin>
 
-internal class  OneInchToCoinsUseCaseImpl @Inject constructor() : OneInchToCoinsUseCase {
+internal class OneInchToCoinsUseCaseImpl @Inject constructor() : OneInchToCoinsUseCase {
     override suspend fun invoke(
         tokenResult: Map<String, OneInchTokenJson>,
-        chain: Chain
-    ): List<Coin>  =
-        tokenResult.asSequence()
+        chain: Chain,
+    ): List<Coin> =
+        tokenResult
+            .asSequence()
             .map { it.value }
             .map {
-                val supportedCoin = Coins.coins.getOrDefault(chain, emptyList())
-                    .firstOrNull { coin -> coin.id == "${it.symbol}-${chain.id}" }
+                val supportedCoin =
+                    Coins.coins.getOrDefault(chain, emptyList()).firstOrNull { coin ->
+                        coin.id == "${it.symbol}-${chain.id}"
+                    }
                 Coin(
                     contractAddress = it.address,
                     chain = chain,
@@ -31,5 +34,4 @@ internal class  OneInchToCoinsUseCaseImpl @Inject constructor() : OneInchToCoins
                 )
             }
             .toList()
-
 }

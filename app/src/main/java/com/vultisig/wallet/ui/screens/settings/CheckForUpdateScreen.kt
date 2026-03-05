@@ -31,7 +31,6 @@ import com.vultisig.wallet.ui.models.settings.CheckForUpdateViewModel
 import com.vultisig.wallet.ui.screens.transaction.shadeCircle
 import com.vultisig.wallet.ui.theme.Theme
 
-
 @Composable
 internal fun CheckForUpdateScreen() {
 
@@ -42,11 +41,9 @@ internal fun CheckForUpdateScreen() {
         model = state.value,
         onBackClick = model::back,
         onUpdateClick = model::update,
-        onClickSecret = model::clickSecret
+        onClickSecret = model::clickSecret,
     )
-
 }
-
 
 @Composable
 internal fun CheckForUpdateScreen(
@@ -55,55 +52,38 @@ internal fun CheckForUpdateScreen(
     onUpdateClick: () -> Unit = {},
     onClickSecret: () -> Unit = {},
 ) {
-    V2Scaffold(
-        onBackClick = onBackClick,
-        title = stringResource(R.string.check_updates_title),
-    ) {
+    V2Scaffold(onBackClick = onBackClick, title = stringResource(R.string.check_updates_title)) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .shadeCircle(),
+            modifier = Modifier.fillMaxSize().shadeCircle(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-
             Image(
                 painter = painterResource(R.drawable.vultisig),
                 contentDescription = "app logo",
                 modifier = Modifier.size(72.dp),
             )
 
-            UiSpacer(
-                size = 40.dp
-            )
+            UiSpacer(size = 40.dp)
 
             Text(
                 text =
-                    if (model.isUpdateAvailable)
-                        stringResource(R.string.update_available)
-                    else
-                        stringResource(R.string.app_up_to_date),
+                    if (model.isUpdateAvailable) stringResource(R.string.update_available)
+                    else stringResource(R.string.app_up_to_date),
                 style = Theme.brockmann.button.medium.large,
-                color = Theme.v2.colors.neutrals.n50
+                color = Theme.v2.colors.neutrals.n50,
             )
 
-            UiSpacer(
-                size = 12.dp
-            )
+            UiSpacer(size = 12.dp)
 
             AppVersionText(
-                modifier = Modifier
-                    .padding(top = 12.dp, bottom = 24.dp)
-                    .clickable(onClick = onClickSecret)
+                modifier =
+                    Modifier.padding(top = 12.dp, bottom = 24.dp).clickable(onClick = onClickSecret)
             )
-
-
 
             if (model.isUpdateAvailable) {
 
-                UiSpacer(
-                    size = 30.dp
-                )
+                UiSpacer(size = 30.dp)
 
                 VsButton(
                     label = stringResource(R.string.update),
@@ -112,7 +92,6 @@ internal fun CheckForUpdateScreen(
                     size = VsButtonSize.Medium,
                 )
             }
-
         }
     }
 }
@@ -120,24 +99,17 @@ internal fun CheckForUpdateScreen(
 internal class CheckForUpdatePreviewParameterProvider :
     PreviewParameterProvider<CheckForUpdateUiModel> {
     override val values: Sequence<CheckForUpdateUiModel>
-        get() = sequenceOf(
-            CheckForUpdateUiModel(
-                isUpdateAvailable = true,
-                currentVersion = "1.0.23"
-            ),
-            CheckForUpdateUiModel(
-                isUpdateAvailable = false,
-                currentVersion = "1.0.23"
-            ),
-        )
+        get() =
+            sequenceOf(
+                CheckForUpdateUiModel(isUpdateAvailable = true, currentVersion = "1.0.23"),
+                CheckForUpdateUiModel(isUpdateAvailable = false, currentVersion = "1.0.23"),
+            )
 }
-
 
 @Preview
 @Composable
 private fun CheckForUpdateScreenPreview(
-    @PreviewParameter(CheckForUpdatePreviewParameterProvider::class)
-    model: CheckForUpdateUiModel,
+    @PreviewParameter(CheckForUpdatePreviewParameterProvider::class) model: CheckForUpdateUiModel
 ) {
     CheckForUpdateScreen(model)
 }

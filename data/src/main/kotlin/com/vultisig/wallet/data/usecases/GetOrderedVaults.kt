@@ -3,24 +3,25 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 interface GetOrderedVaults : suspend (String?) -> Flow<List<Vault>>
 
-internal class GetOrderedVaultsImpl @Inject constructor(
+internal class GetOrderedVaultsImpl
+@Inject
+constructor(
     private val vaultRepository: VaultRepository,
     private val vaultOrderRepository: VaultOrderRepository,
-): GetOrderedVaults {
+) : GetOrderedVaults {
     override suspend fun invoke(parentId: String?): Flow<List<Vault>> =
         vaultOrderRepository.loadOrders(parentId).map { orders ->
             val addressAndOrderMap = mutableMapOf<Vault, Float>()
             vaultRepository.getAll().forEach { eachVault ->
                 val order = orders.find { it.value == eachVault.id }
 
-                val orderValue = order?.order
-                    ?: vaultOrderRepository.insert(null, eachVault.id)
+                val orderValue = order?.order ?: vaultOrderRepository.insert(null, eachVault.id)
                 if (order?.parentId == parentId) {
                     addressAndOrderMap[eachVault] = orderValue
                 }

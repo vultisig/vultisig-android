@@ -6,13 +6,15 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
 
 internal interface DepositTransactionToUiModelMapper :
     SuspendMapperFunc<DepositTransaction, DepositTransactionUiModel>
 
-internal class DepositTransactionUiModelMapperImpl @Inject constructor(
+internal class DepositTransactionUiModelMapperImpl
+@Inject
+constructor(
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
@@ -24,17 +26,15 @@ internal class DepositTransactionUiModelMapperImpl @Inject constructor(
         val currency = appCurrencyRepository.currency.first()
         return DepositTransactionUiModel(
             srcAddress = from.srcAddress,
-            token = ValuedToken(
-                token = from.srcToken,
-                value = mapTokenValueToDecimalUiString(from.srcTokenValue),
-                fiatValue = fiatValueToStringMapper(
-                    convertTokenValueToFiat(
-                        from.srcToken,
-                        from.srcTokenValue,
-                        currency
-                    )
+            token =
+                ValuedToken(
+                    token = from.srcToken,
+                    value = mapTokenValueToDecimalUiString(from.srcTokenValue),
+                    fiatValue =
+                        fiatValueToStringMapper(
+                            convertTokenValueToFiat(from.srcToken, from.srcTokenValue, currency)
+                        ),
                 ),
-            ),
             networkFeeFiatValue = from.estimateFeesFiat,
             networkFeeTokenValue = mapTokenValueToStringWithUnit(from.estimatedFees),
             memo = from.memo,

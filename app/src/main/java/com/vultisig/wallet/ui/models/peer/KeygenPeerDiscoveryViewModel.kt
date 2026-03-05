@@ -63,6 +63,10 @@ import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -77,10 +81,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 private const val MIN_KEYGEN_DEVICES = 2
 
@@ -100,34 +100,32 @@ data class PeerDiscoveryUiModel(
     val warning: ErrorUiModel? = null,
 )
 
-data class ConnectingToServerUiModel(
-    val isSuccess: Boolean = false,
-)
+data class ConnectingToServerUiModel(val isSuccess: Boolean = false)
 
 enum class NetworkOption {
-    Internet, Local,
+    Internet,
+    Local,
 }
 
 @HiltViewModel
-internal class KeygenPeerDiscoveryViewModel @Inject constructor(
+internal class KeygenPeerDiscoveryViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
-
     private val generateQrBitmap: GenerateQrBitmap,
     private val compressQr: CompressQrUseCase,
     private val createQrCodeSharingBitmap: CreateQrCodeSharingBitmapUseCase,
     generateServiceName: GenerateServiceName,
     private val discoverParticipants: DiscoverParticipantsUseCase,
     private val generateServerPartyId: GenerateServerPartyId,
-
     private val secretSettingsRepository: SecretSettingsRepository,
     private val vultiSignerRepository: VultiSignerRepository,
     private val qrHelperModalRepository: QrHelperModalRepository,
     private val vaultRepository: VaultRepository,
     private val keyImportRepository: KeyImportRepository,
     extractMasterKeys: ExtractMasterKeysUseCase,
-
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
     private val networkUtils: NetworkUtils,
@@ -135,10 +133,13 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     private val args = savedStateHandle.toRoute<Route.Keygen.PeerDiscovery>()
 
-    val state = MutableStateFlow(PeerDiscoveryUiModel(
-        minimumDevices = args.deviceCount ?: MIN_KEYGEN_DEVICES,
-        minimumDevicesDisplayed = (args.deviceCount ?: (MIN_KEYGEN_DEVICES + 1)),
-    ))
+    val state =
+        MutableStateFlow(
+            PeerDiscoveryUiModel(
+                minimumDevices = args.deviceCount ?: MIN_KEYGEN_DEVICES,
+                minimumDevicesDisplayed = (args.deviceCount ?: (MIN_KEYGEN_DEVICES + 1)),
+            )
+        )
 
     private val sessionId = Uuid.random().toHexString()
     private val serviceName = generateServiceName()
@@ -147,13 +148,16 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     // For KeyImport, derive the BIP32 chain code from the mnemonic so the vault can
     // derive addresses for chains not explicitly imported. For other actions, use a random hex.
-    private var hexChainCode: String = if (args.action == TssAction.KeyImport) {
-        val mnemonic = keyImportRepository.get()?.mnemonic
-            ?: error("KeyImport requires a mnemonic in KeyImportRepository")
-        extractMasterKeys(mnemonic)?.hexChainCode ?: error("Failed to extract master chaincode from mnemonic for KeyImport")
-    } else {
-        Utils.encryptionKeyHex
-    }
+    private var hexChainCode: String =
+        if (args.action == TssAction.KeyImport) {
+            val mnemonic =
+                keyImportRepository.get()?.mnemonic
+                    ?: error("KeyImport requires a mnemonic in KeyImportRepository")
+            extractMasterKeys(mnemonic)?.hexChainCode
+                ?: error("Failed to extract master chaincode from mnemonic for KeyImport")
+        } else {
+            Utils.encryptionKeyHex
+        }
     private var localPartyId = Utils.deviceName(context)
     private val vaultName: String = args.vaultName
     private var libType = SigningLibType.GG20
@@ -178,10 +182,11 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private fun showNetworkWarning() {
         state.update {
             it.copy(
-                warning = ErrorUiModel(
-                    title = R.string.key_gen_discovery_no_connection_available.asUiText(),
-                    description = R.string.key_gen_discovery_enable_wifi.asUiText()
-                )
+                warning =
+                    ErrorUiModel(
+                        title = R.string.key_gen_discovery_no_connection_available.asUiText(),
+                        description = R.string.key_gen_discovery_enable_wifi.asUiText(),
+                    )
             )
         }
     }
@@ -189,9 +194,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private fun isConnected() = networkUtils.isNetworkAvailable()
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     fun shareQr(activity: Context) {
@@ -199,54 +202,48 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
         val scaleModifier = 4
 
-        val scaledQr = qr.scale(
-            width = qr.width * scaleModifier,
-            height = qr.height * scaleModifier,
-            filter = false
-        )
+        val scaledQr =
+            qr.scale(
+                width = qr.width * scaleModifier,
+                height = qr.height * scaleModifier,
+                filter = false,
+            )
 
-        val shareBitmap = createQrCodeSharingBitmap(
-            scaledQr,
-            R.string.qr_title_join_keygen,
-            R.string.qr_title_join_keygen_description,
-        )
+        val shareBitmap =
+            createQrCodeSharingBitmap(
+                scaledQr,
+                R.string.qr_title_join_keygen,
+                R.string.qr_title_join_keygen_description,
+            )
 
-        activity.share(
-            shareBitmap,
-            shareFileName(vaultName, vaultName.sha256(), ShareType.KEYGEN)
-        )
+        activity.share(shareBitmap, shareFileName(vaultName, vaultName.sha256(), ShareType.KEYGEN))
     }
 
     fun closeDevicesHint() {
-        state.update {
-            it.copy(
-                showDevicesHint = false,
-            )
-        }
+        state.update { it.copy(showDevicesHint = false) }
     }
 
     fun switchMode() {
         state.update {
             it.copy(
-                network = when (it.network) {
-                    NetworkOption.Internet -> NetworkOption.Local
-                    NetworkOption.Local -> NetworkOption.Internet
-                },
+                network =
+                    when (it.network) {
+                        NetworkOption.Internet -> NetworkOption.Local
+                        NetworkOption.Local -> NetworkOption.Internet
+                    },
                 devices = emptyList(),
                 selectedDevices = emptyList(),
             )
         }
-        viewModelScope.launch {
-            startPeerDiscovery()
-        }
+        viewModelScope.launch { startPeerDiscovery() }
     }
 
     fun selectDevice(device: ParticipantName) {
         state.update {
             it.copy(
-                selectedDevices = if (device in it.selectedDevices)
-                    it.selectedDevices - device
-                else it.selectedDevices + device
+                selectedDevices =
+                    if (device in it.selectedDevices) it.selectedDevices - device
+                    else it.selectedDevices + device
             )
         }
     }
@@ -258,9 +255,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     fun next() {
         discoverParticipantsJob?.cancel()
         viewModelScope.launch {
-            val existingVault = args.vaultId?.let {
-                vaultRepository.get(it)
-            }
+            val existingVault = args.vaultId?.let { vaultRepository.get(it) }
 
             navigator.route(
                 Route.Keygen.Generating(
@@ -273,27 +268,28 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                     keygenCommittee = listOf(localPartyId) + state.value.selectedDevices,
                     encryptionKeyHex = encryptionKeyHex,
                     isInitiatingDevice = true,
-                    libType = when (args.action) {
-                        TssAction.Migrate -> SigningLibType.DKLS
-                        TssAction.KeyImport -> SigningLibType.KeyImport
-                        else -> libType
-                    },
-
+                    libType =
+                        when (args.action) {
+                            TssAction.Migrate -> SigningLibType.DKLS
+                            TssAction.KeyImport -> SigningLibType.KeyImport
+                            else -> libType
+                        },
                     email = email,
                     password = password,
                     hint = args.hint,
-
                     vaultId = args.vaultId,
-                    oldCommittee = existingVault?.signers
-                        ?.filter { state.value.selectedDevices.contains(it) || it == localPartyId }
-                        ?: emptyList(),
+                    oldCommittee =
+                        existingVault?.signers?.filter {
+                            state.value.selectedDevices.contains(it) || it == localPartyId
+                        } ?: emptyList(),
                     oldResharePrefix = existingVault?.resharePrefix ?: "",
                     deviceCount = args.deviceCount,
                 ),
-                opts = NavigationOptions(
-                    popUpToRoute = Route.Keygen.PeerDiscovery::class,
-                    inclusive = false,
-                )
+                opts =
+                    NavigationOptions(
+                        popUpToRoute = Route.Keygen.PeerDiscovery::class,
+                        inclusive = false,
+                    ),
             )
         }
     }
@@ -306,9 +302,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
         viewModelScope.launch {
             setupLibType()
 
-            val existingVault = args.vaultId?.let {
-                vaultRepository.get(it)
-            }
+            val existingVault = args.vaultId?.let { vaultRepository.get(it) }
 
             if (existingVault != null) {
                 libType = existingVault.libType
@@ -328,15 +322,11 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 }
             }
 
-            state.update {
-                it.copy(
-                    error = null,
-                    warning = null
-                )
-            }
+            state.update { it.copy(error = null, warning = null) }
 
             if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
-                // For active vault, we should present PeerDiscovery screen, so the other device can join
+                // For active vault, we should present PeerDiscovery screen, so the other device can
+                // join
                 // Also need to request the server to join the upgrade process
                 if (args.action == TssAction.Migrate && signers.count() > 2) {
                     startPeerDiscovery()
@@ -355,17 +345,11 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
         val isRelayEnabled = state.value.network == NetworkOption.Internet
 
-        val keygenPayload = createKeygenPayload(
-            isRelayEnabled = isRelayEnabled
-        )
+        val keygenPayload = createKeygenPayload(isRelayEnabled = isRelayEnabled)
 
         loadQr(keygenPayload)
 
-        state.update {
-            it.copy(
-                localPartyId = localPartyId,
-            )
-        }
+        state.update { it.copy(localPartyId = localPartyId) }
 
         if (isRelayEnabled) {
             serverUrl = VULTISIG_RELAY_URL
@@ -390,9 +374,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                     if (devices.size == 1) {
                         state.update {
                             it.copy(
-                                connectingToServer = it.connectingToServer?.copy(
-                                    isSuccess = true
-                                )
+                                connectingToServer = it.connectingToServer?.copy(isSuccess = true)
                             )
                         }
 
@@ -406,125 +388,128 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             Timber.e(e, "Failed to connect to Vultiserver")
             state.update {
                 it.copy(
-                    error = ErrorUiModel(
-                        title = UiText.StringResource(R.string.error_view_default_title),
-                        description = UiText.DynamicString(
-                            e.message ?: context.getString(R.string.error_view_default_description)
-                        ),
-                    )
+                    error =
+                        ErrorUiModel(
+                            title = UiText.StringResource(R.string.error_view_default_title),
+                            description =
+                                UiText.DynamicString(
+                                    e.message
+                                        ?: context.getString(
+                                            R.string.error_view_default_description
+                                        )
+                                ),
+                        )
                 )
             }
         }
     }
 
     private fun startParticipantDiscovery(
-        onDiscovered: (suspend (devices: List<ParticipantName>) -> Unit)? = null,
+        onDiscovered: (suspend (devices: List<ParticipantName>) -> Unit)? = null
     ) {
         discoverParticipantsJob?.cancel()
-        discoverParticipantsJob = viewModelScope.launch {
-            discoverParticipants(serverUrl, sessionId, localPartyId)
-                .collect { devices ->
+        discoverParticipantsJob =
+            viewModelScope.launch {
+                discoverParticipants(serverUrl, sessionId, localPartyId).collect { devices ->
                     val currentState = state.value
                     val existingDevices = currentState.devices.toSet()
                     val newDevices = devices - existingDevices
 
-                    val selectedDevices =
-                        currentState.selectedDevices.toSet() + newDevices
+                    val selectedDevices = currentState.selectedDevices.toSet() + newDevices
 
                     state.update {
-                        it.copy(
-                            devices = devices,
-                            selectedDevices = selectedDevices.toList()
-                        )
+                        it.copy(devices = devices, selectedDevices = selectedDevices.toList())
                     }
 
                     onDiscovered?.invoke(devices)
                 }
-        }
+            }
     }
 
     private suspend fun checkQrHelperModalIsVisited() {
         val showQrHelpModal = !qrHelperModalRepository.isVisited()
-        state.update {
-            it.copy(
-                showQrHelpModal = showQrHelpModal
-            )
-        }
+        state.update { it.copy(showQrHelpModal = showQrHelpModal) }
     }
 
     private suspend fun loadQr(data: String) {
-        val qrBitmap = withContext(Dispatchers.IO) {
-            generateQrBitmap(data, colors.neutrals.n50, Color.Transparent, null)
-        }
+        val qrBitmap =
+            withContext(Dispatchers.IO) {
+                generateQrBitmap(data, colors.neutrals.n50, Color.Transparent, null)
+            }
         this@KeygenPeerDiscoveryViewModel.qrBitmap.value = qrBitmap
-        val bitmapPainter = BitmapPainter(
-            qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
-        )
+        val bitmapPainter =
+            BitmapPainter(qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None)
         state.update { it.copy(qr = bitmapPainter) }
     }
 
     private suspend fun setupLibType() {
-        libType = if (secretSettingsRepository.isDklsEnabled.first()) {
-            SigningLibType.DKLS
-        } else {
-            SigningLibType.GG20
-        }
+        libType =
+            if (secretSettingsRepository.isDklsEnabled.first()) {
+                SigningLibType.DKLS
+            } else {
+                SigningLibType.GG20
+            }
     }
 
-    private fun createKeygenPayload(
-        isRelayEnabled: Boolean,
-    ) = when (args.action) {
-        TssAction.KEYGEN ->
-            "https://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
+    private fun createKeygenPayload(isRelayEnabled: Boolean) =
+        when (args.action) {
+            TssAction.KEYGEN ->
+                "https://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
                     compressQr(
-                        protoBuf.encodeToByteArray(
-                            KeygenMessageProto(
-                                sessionId = sessionId,
-                                hexChainCode = hexChainCode,
-                                serviceName = serviceName,
-                                encryptionKeyHex = encryptionKeyHex,
-                                useVultisigRelay = isRelayEnabled,
-                                vaultName = vaultName,
-                                libType = libType.toProto(),
+                            protoBuf.encodeToByteArray(
+                                KeygenMessageProto(
+                                    sessionId = sessionId,
+                                    hexChainCode = hexChainCode,
+                                    serviceName = serviceName,
+                                    encryptionKeyHex = encryptionKeyHex,
+                                    useVultisigRelay = isRelayEnabled,
+                                    vaultName = vaultName,
+                                    libType = libType.toProto(),
+                                )
                             )
                         )
-                    ).encodeBase64()
-        TssAction.KeyImport ->
-            "https://vultisig.com?type=NewVault&tssType=KeyImport&jsonData=" +
+                        .encodeBase64()
+            TssAction.KeyImport ->
+                "https://vultisig.com?type=NewVault&tssType=KeyImport&jsonData=" +
                     compressQr(
-                        protoBuf.encodeToByteArray(
-                            KeygenMessageProto(
-                                sessionId = sessionId,
-                                hexChainCode = hexChainCode,
-                                serviceName = serviceName,
-                                encryptionKeyHex = encryptionKeyHex,
-                                useVultisigRelay = isRelayEnabled,
-                                vaultName = vaultName,
-                                libType = SigningLibType.KeyImport.toProto(),
-                                chains = keyImportRepository.get()?.chainSettings?.map { it.chain.raw }
-                                    ?: emptyList(),
+                            protoBuf.encodeToByteArray(
+                                KeygenMessageProto(
+                                    sessionId = sessionId,
+                                    hexChainCode = hexChainCode,
+                                    serviceName = serviceName,
+                                    encryptionKeyHex = encryptionKeyHex,
+                                    useVultisigRelay = isRelayEnabled,
+                                    vaultName = vaultName,
+                                    libType = SigningLibType.KeyImport.toProto(),
+                                    chains =
+                                        keyImportRepository.get()?.chainSettings?.map {
+                                            it.chain.raw
+                                        } ?: emptyList(),
+                                )
                             )
                         )
-                    ).encodeBase64()
-        TssAction.ReShare, TssAction.Migrate ->
-            "https://vultisig.com?type=NewVault&tssType=${args.action.toLinkTssType()}&jsonData=" +
+                        .encodeBase64()
+            TssAction.ReShare,
+            TssAction.Migrate ->
+                "https://vultisig.com?type=NewVault&tssType=${args.action.toLinkTssType()}&jsonData=" +
                     compressQr(
-                        protoBuf.encodeToByteArray(
-                            ReshareMessageProto(
-                                sessionId = sessionId,
-                                hexChainCode = hexChainCode,
-                                serviceName = serviceName,
-                                publicKeyEcdsa = pubKeyEcdsa,
-                                oldParties = signers,
-                                encryptionKeyHex = encryptionKeyHex,
-                                useVultisigRelay = isRelayEnabled,
-                                oldResharePrefix = resharePrefix,
-                                vaultName = args.vaultName,
-                                libType = libType.toProto(),
+                            protoBuf.encodeToByteArray(
+                                ReshareMessageProto(
+                                    sessionId = sessionId,
+                                    hexChainCode = hexChainCode,
+                                    serviceName = serviceName,
+                                    publicKeyEcdsa = pubKeyEcdsa,
+                                    oldParties = signers,
+                                    encryptionKeyHex = encryptionKeyHex,
+                                    useVultisigRelay = isRelayEnabled,
+                                    oldResharePrefix = resharePrefix,
+                                    vaultName = args.vaultName,
+                                    libType = libType.toProto(),
+                                )
                             )
                         )
-                    ).encodeBase64()
-    }
+                        .encodeBase64()
+        }
 
     private fun TssAction.toLinkTssType(): String =
         when (this) {
@@ -564,7 +549,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                             localPartyId = generateServerPartyId(),
                             encryptionPassword = password,
                             email = email,
-                            libType = libType.toJson()
+                            libType = libType.toJson(),
                         )
                     )
                 }
@@ -576,7 +561,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                             sessionId = sessionId,
                             hexEncryptionKey = encryptionKeyHex,
                             encryptionPassword = password,
-                            email = email
+                            email = email,
                         )
                     )
                 }
@@ -593,8 +578,9 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                             encryptionPassword = password,
                             email = email,
                             libType = SigningLibType.DKLS.toJson(),
-                            chains = keyImportRepository.get()?.chainSettings?.map { it.chain.raw }
-                                ?: emptyList()
+                            chains =
+                                keyImportRepository.get()?.chainSettings?.map { it.chain.raw }
+                                    ?: emptyList(),
                         )
                     )
                 }
@@ -605,11 +591,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     fun dismissQrHelpModal() {
         viewModelScope.launch {
             qrHelperModalRepository.visited()
-            state.update {
-                it.copy(
-                    showQrHelpModal = false
-                )
-            }
+            state.update { it.copy(showQrHelpModal = false) }
         }
     }
 
@@ -627,20 +609,21 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == MediatorService.SERVICE_ACTION) {
-                Timber.d("onReceive: Mediator service started")
-                // send a request to local mediator server to start the session
-                GlobalScope.launch(Dispatchers.IO) {
-                    delay(1000) // back off a second
-                    startSessionWithRetry()
-                }
+    private val serviceStartedReceiver: BroadcastReceiver =
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                if (intent.action == MediatorService.SERVICE_ACTION) {
+                    Timber.d("onReceive: Mediator service started")
+                    // send a request to local mediator server to start the session
+                    GlobalScope.launch(Dispatchers.IO) {
+                        delay(1000) // back off a second
+                        startSessionWithRetry()
+                    }
 
-                startParticipantDiscovery()
+                    startParticipantDiscovery()
+                }
             }
         }
-    }
 
     private suspend fun startSessionWithRetry() {
         repeat(3) { attempt ->
@@ -650,18 +633,20 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                     sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
                 return
             } catch (e: Exception) {
-                Timber.tag("startSessionAndDiscovery").e(
-                    e,
-                    "Attempt ${attempt + 1} failed"
-                )
+                Timber.tag("startSessionAndDiscovery").e(e, "Attempt ${attempt + 1} failed")
                 if (attempt >= 2) {
                     Timber.tag("startSessionAndDiscovery").e("All attempts to start session failed")
                     state.update {
                         it.copy(
-                            error = ErrorUiModel(
-                                title = UiText.StringResource(R.string.error_view_default_title),
-                                description = UiText.StringResource(R.string.error_view_default_description),
-                            )
+                            error =
+                                ErrorUiModel(
+                                    title =
+                                        UiText.StringResource(R.string.error_view_default_title),
+                                    description =
+                                        UiText.StringResource(
+                                            R.string.error_view_default_description
+                                        ),
+                                )
                         )
                     }
                 }
@@ -671,14 +656,10 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     private suspend fun isSessionStarted(): Boolean {
         return try {
-            sessionApi.getParticipants(
-                serverUrl,
-                sessionId
-            ).isNotEmpty()
+            sessionApi.getParticipants(serverUrl, sessionId).isNotEmpty()
         } catch (e: Exception) {
             Timber.e(e, "Failed to get session participants, assuming session not started")
             false
         }
     }
-
 }

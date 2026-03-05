@@ -10,7 +10,7 @@ enum class SwapProvider {
 }
 
 fun SwapProvider.getSwapProviderId(): String {
-    return when(this) {
+    return when (this) {
         SwapProvider.JUPITER -> "Jupiter"
         SwapProvider.KYBER -> "KyberSwap"
         SwapProvider.LIFI -> "LI.FI"

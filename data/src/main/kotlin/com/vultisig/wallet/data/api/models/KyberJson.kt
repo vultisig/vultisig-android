@@ -10,7 +10,9 @@ sealed class KyberSwapError(message: String) : Exception(message) {
         KyberSwapError(message)
 
     class TransactionWillRevert(message: String) : KyberSwapError(message)
+
     class InsufficientAllowance(message: String) : KyberSwapError(message)
+
     class InsufficientFunds(message: String) : KyberSwapError(message)
 }
 
@@ -19,36 +21,51 @@ data class KyberSwapRouteResponse(
     val code: Int,
     val message: String,
     val data: RouteData,
-    val requestId: String
+    val requestId: String,
 ) {
-    @Serializable
-    data class RouteData(
-        val routeSummary: RouteSummary,
-        val routerAddress: String
-    )
+    @Serializable data class RouteData(val routeSummary: RouteSummary, val routerAddress: String)
 
     @Serializable
     data class RouteSummary(
-        val tokenIn: String, val amountIn: String, val amountInUsd: String,
-        val tokenInMarketPriceAvailable: Boolean? = null, val tokenOut: String,
-        val amountOut: String, val amountOutUsd: String,
-        val tokenOutMarketPriceAvailable: Boolean? = null, val gas: String,
-        val gasPrice: String, val gasUsd: String, val l1FeeUsd: String? = null,
-        val additionalCostUsd: String? = null, val additionalCostMessage: String? = null,
-        val extraFee: ExtraFee? = null, val route: List<List<RouteStep>>, val routeID: String,
-        val checksum: String, val timestamp: Int
+        val tokenIn: String,
+        val amountIn: String,
+        val amountInUsd: String,
+        val tokenInMarketPriceAvailable: Boolean? = null,
+        val tokenOut: String,
+        val amountOut: String,
+        val amountOutUsd: String,
+        val tokenOutMarketPriceAvailable: Boolean? = null,
+        val gas: String,
+        val gasPrice: String,
+        val gasUsd: String,
+        val l1FeeUsd: String? = null,
+        val additionalCostUsd: String? = null,
+        val additionalCostMessage: String? = null,
+        val extraFee: ExtraFee? = null,
+        val route: List<List<RouteStep>>,
+        val routeID: String,
+        val checksum: String,
+        val timestamp: Int,
     ) {
         @Serializable
         data class ExtraFee(
-            val feeAmount: String, val chargeFeeBy: String, val isInBps: Boolean,
-            val feeReceiver: String
+            val feeAmount: String,
+            val chargeFeeBy: String,
+            val isInBps: Boolean,
+            val feeReceiver: String,
         )
 
         @Serializable
         data class RouteStep(
-            val pool: String, val tokenIn: String, val tokenOut: String, val swapAmount: String,
-            val amountOut: String, val exchange: String, val poolType: String,
-            val poolExtra: JsonElement? = null, val extra: JsonElement? = null
+            val pool: String,
+            val tokenIn: String,
+            val tokenOut: String,
+            val swapAmount: String,
+            val amountOut: String,
+            val exchange: String,
+            val poolType: String,
+            val poolExtra: JsonElement? = null,
+            val extra: JsonElement? = null,
         )
     }
 }
@@ -57,25 +74,30 @@ data class KyberSwapRouteResponse(
 data class KyberSwapBuildRequest(
     val routeSummary: KyberSwapRouteResponse.RouteSummary,
     val sender: String,
-    val referral : String?=null,
+    val referral: String? = null,
     val recipient: String,
-    val slippageTolerance: Double ,
+    val slippageTolerance: Double,
     val deadline: Int,
-    val enableGasEstimation: Boolean ,
-    val source: String ,
-    val ignoreCappedSlippage: Boolean
+    val enableGasEstimation: Boolean,
+    val source: String,
+    val ignoreCappedSlippage: Boolean,
 )
 
 @Serializable
 data class KyberSwapErrorResponse(
-    val code: Int, val message: String, val details: List<String>? = null,
-    val requestId: String? = null
+    val code: Int,
+    val message: String,
+    val details: List<String>? = null,
+    val requestId: String? = null,
 )
 
 @Serializable
 data class KyberSwapToken(
-    val address: String, val symbol: String, val name: String, val decimals: Int,
-    val logoURI: String? = null
+    val address: String,
+    val symbol: String,
+    val name: String,
+    val decimals: Int,
+    val logoURI: String? = null,
 ) {
     val logoUrl: String?
         get() = logoURI
@@ -92,16 +114,11 @@ fun KyberSwapToken.toCoinMeta(chain: Chain): Coin {
         contractAddress = this.address,
         isNativeToken = false,
         address = "",
-        hexPublicKey = ""
+        hexPublicKey = "",
     )
 }
 
 @Serializable
-data class KyberSwapTokensResponse(
-    val data: TokensData
-) {
-    @Serializable
-    data class TokensData(
-        val tokens: List<KyberSwapToken>
-    )
+data class KyberSwapTokensResponse(val data: TokensData) {
+    @Serializable data class TokensData(val tokens: List<KyberSwapToken>)
 }

@@ -25,17 +25,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.path
+import java.math.BigInteger
+import javax.inject.Inject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import timber.log.Timber
-import java.math.BigInteger
-import javax.inject.Inject
 
 interface TronApi {
 
-    suspend fun getBalance(
-        coin: Coin,
-    ): BigInteger
+    suspend fun getBalance(coin: Coin): BigInteger
 
     suspend fun broadcastTransaction(tx: String): String?
 
@@ -46,7 +44,7 @@ interface TronApi {
         contractAddressBase58: String,
         recipientAddressHex: String,
         functionSelector: String,
-        amount: BigInteger
+        amount: BigInteger,
     ): TronTriggerConstantContractJson
 
     suspend fun getChainParameters(): TronChainParametersJson
@@ -57,26 +55,20 @@ interface TronApi {
 
     suspend fun getContractMetadata(contract: String): TronContractInfoJson
 
-    suspend fun getTsStatus(
-        chain: Chain,
-        txHash: String,
-    ): TronTransactionStatusResponse?
+    suspend fun getTsStatus(chain: Chain, txHash: String): TronTransactionStatusResponse?
 }
 
-internal class TronApiImpl @Inject constructor(
-    private val httpClient: HttpClient,
-) : TronApi {
+internal class TronApiImpl @Inject constructor(private val httpClient: HttpClient) : TronApi {
 
     private val tronGrid = "https://api.vultisig.com/tron"
 
     override suspend fun broadcastTransaction(tx: String): String {
-        val httpResponse = httpClient.post(tronGrid) {
-            url {
-                path("tron", "wallet", "broadcasttransaction")
+        val httpResponse =
+            httpClient.post(tronGrid) {
+                url { path("tron", "wallet", "broadcasttransaction") }
+                contentType(ContentType.Application.Json)
+                setBody(tx)
             }
-            contentType(ContentType.Application.Json)
-            setBody(tx)
-        }
         val tronBroadcastTxResponseJson = httpResponse.body<TronBroadcastTxResponseJson>()
         return tronBroadcastTxResponseJson.txId.takeIf {
             tronBroadcastTxResponseJson.code in listOf(null, DUP_TRANSACTION_ERROR_CODE)
@@ -84,24 +76,19 @@ internal class TronApiImpl @Inject constructor(
     }
 
     override suspend fun getSpecific() =
-        httpClient.post(tronGrid) {
-            url {
-                path("tron", "wallet", "getnowblock")
-            }
-        }.body<TronSpecificBlockJson>()
+        httpClient
+            .post(tronGrid) { url { path("tron", "wallet", "getnowblock") } }
+            .body<TronSpecificBlockJson>()
 
     override suspend fun getTriggerConstantContractFee(
         ownerAddressBase58: String,
         contractAddressBase58: String,
         recipientAddressHex: String,
         functionSelector: String,
-        amount: BigInteger
+        amount: BigInteger,
     ): TronTriggerConstantContractJson {
         val parameter =
-            buildTrc20TransferParameters(
-                recipientBaseHex = recipientAddressHex,
-                amount = amount
-            )
+            buildTrc20TransferParameters(recipientBaseHex = recipientAddressHex, amount = amount)
         val body = buildJsonObject {
             put("owner_address", ownerAddressBase58)
             put("contract_address", contractAddressBase58)
@@ -110,21 +97,19 @@ internal class TronApiImpl @Inject constructor(
             put("visible", true)
         }
 
-        return httpClient.post(tronGrid) {
-            url {
-                path("tron", "walletsolidity", "triggerconstantcontract")
+        return httpClient
+            .post(tronGrid) {
+                url { path("tron", "walletsolidity", "triggerconstantcontract") }
+                setBody(body)
+                accept(ContentType.Application.Json)
             }
-            setBody(body)
-            accept(ContentType.Application.Json)
-        }.bodyOrThrow<TronTriggerConstantContractJson>()
+            .bodyOrThrow<TronTriggerConstantContractJson>()
     }
 
     override suspend fun getChainParameters(): TronChainParametersJson {
-        return httpClient.post(tronGrid) {
-            url {
-                path("tron", "wallet", "getchainparameters")
-            }
-        }.bodyOrThrow<TronChainParametersJson>()
+        return httpClient
+            .post(tronGrid) { url { path("tron", "wallet", "getchainparameters") } }
+            .bodyOrThrow<TronChainParametersJson>()
     }
 
     override suspend fun getBalance(coin: Coin): BigInteger {
@@ -139,8 +124,7 @@ internal class TronApiImpl @Inject constructor(
                 account.trc20
                     .asSequence()
                     .mapNotNull { it[coin.contractAddress]?.toBigIntegerOrNull() }
-                    .firstOrNull()
-                    ?: BigInteger.ZERO
+                    .firstOrNull() ?: BigInteger.ZERO
             }
         } catch (e: Exception) {
             Timber.e(e, "error getting tron balance")
@@ -149,54 +133,48 @@ internal class TronApiImpl @Inject constructor(
     }
 
     override suspend fun getAccountResource(address: String): TronAccountResourceJson {
-        return httpClient.post(tronGrid) {
-            url {
-                path("tron", "wallet", "getaccountresource")
+        return httpClient
+            .post(tronGrid) {
+                url { path("tron", "wallet", "getaccountresource") }
+                contentType(ContentType.Application.Json)
+                setBody(TronAccountRequestJson(address, true))
             }
-            contentType(ContentType.Application.Json)
-            setBody(TronAccountRequestJson(address, true))
-        }.bodyOrThrow<TronAccountResourceJson>()
+            .bodyOrThrow<TronAccountResourceJson>()
     }
 
     override suspend fun getAccount(address: String): TronAccountJson {
-        return httpClient.post(tronGrid) {
-            url {
-                appendPathSegments("/wallet/getaccount")
+        return httpClient
+            .post(tronGrid) {
+                url { appendPathSegments("/wallet/getaccount") }
+                contentType(ContentType.Application.Json)
+                setBody(TronAccountRequestJson(address, true))
             }
-            contentType(ContentType.Application.Json)
-            setBody(TronAccountRequestJson(address, true))
-        }.bodyOrThrow<TronAccountJson>()
+            .bodyOrThrow<TronAccountJson>()
     }
 
     override suspend fun getContractMetadata(contract: String): TronContractInfoJson {
-        return httpClient.post(tronGrid) {
-            url {
-                appendPathSegments("/wallet/getcontractinfo")
+        return httpClient
+            .post(tronGrid) {
+                url { appendPathSegments("/wallet/getcontractinfo") }
+                contentType(ContentType.Application.Json)
+                setBody(TronContractRequestJson(contract))
             }
-            contentType(ContentType.Application.Json)
-            setBody(TronContractRequestJson(contract))
-        }.bodyOrThrow<TronContractInfoJson>()
+            .bodyOrThrow<TronContractInfoJson>()
     }
 
-    override suspend fun getTsStatus(
-        chain: Chain,
-        txHash: String,
-    ): TronTransactionStatusResponse? {
+    override suspend fun getTsStatus(chain: Chain, txHash: String): TronTransactionStatusResponse? {
 
         return try {
-            httpClient.post(tronGrid) {
-                url {
-                    path("tron", "walletsolidity", "gettransactionbyid")
+            httpClient
+                .post(tronGrid) {
+                    url { path("tron", "walletsolidity", "gettransactionbyid") }
+                    setBody(mapOf("value" to txHash))
                 }
-                setBody(
-                    mapOf("value" to txHash)
-                )
-            }.body<TronTransactionStatusResponse?>()
+                .body<TronTransactionStatusResponse?>()
         } catch (_: Exception) {
             null
         }
     }
-
 
     companion object {
         const val TRANSFER_FUNCTION_SELECTOR = "transfer(address,uint256)"

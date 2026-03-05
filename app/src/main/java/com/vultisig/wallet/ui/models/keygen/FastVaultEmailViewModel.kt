@@ -15,10 +15,10 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class FastVaultEmailState(
     val errorMessage: UiText = UiText.Empty,
@@ -26,10 +26,10 @@ internal data class FastVaultEmailState(
 )
 
 @HiltViewModel
-internal class FastVaultEmailViewModel @Inject constructor(
-    private val navigator: Navigator<Destination>,
-    savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+internal class FastVaultEmailViewModel
+@Inject
+constructor(private val navigator: Navigator<Destination>, savedStateHandle: SavedStateHandle) :
+    ViewModel() {
 
     val state = MutableStateFlow(FastVaultEmailState())
     val emailFieldState = TextFieldState()
@@ -44,23 +44,18 @@ internal class FastVaultEmailViewModel @Inject constructor(
         collectEmailInput()
     }
 
-
     private fun collectEmailInput() {
         viewModelScope.launch {
             emailFieldState.textAsFlow().collect { typingEmail ->
                 val isEmailValid = validateEmail(typingEmail)
                 val errorMessage =
-                    UiText.StringResource(R.string.keygen_email_error)
-                        .takeIf { typingEmail.isNotEmpty() && !isEmailValid } ?: UiText.Empty
-                val innerState = getInnerState(
-                    email = typingEmail.toString(),
-                    isEmailValid = isEmailValid
-                )
+                    UiText.StringResource(R.string.keygen_email_error).takeIf {
+                        typingEmail.isNotEmpty() && !isEmailValid
+                    } ?: UiText.Empty
+                val innerState =
+                    getInnerState(email = typingEmail.toString(), isEmailValid = isEmailValid)
                 state.update { state ->
-                    state.copy(
-                        errorMessage = errorMessage,
-                        innerState = innerState
-                    )
+                    state.copy(errorMessage = errorMessage, innerState = innerState)
                 }
             }
         }
@@ -69,21 +64,16 @@ internal class FastVaultEmailViewModel @Inject constructor(
     private fun validateEmail(typingEmail: CharSequence) =
         Patterns.EMAIL_ADDRESS.matcher(typingEmail).matches()
 
-    private fun getInnerState(
-        email: String,
-        isEmailValid: Boolean,
-    ) = if (email.isEmpty())
-        VsTextInputFieldInnerState.Default
-    else {
-        if (isEmailValid)
-            VsTextInputFieldInnerState.Success
-        else VsTextInputFieldInnerState.Error
-    }
+    private fun getInnerState(email: String, isEmailValid: Boolean) =
+        if (email.isEmpty()) VsTextInputFieldInnerState.Default
+        else {
+            if (isEmailValid) VsTextInputFieldInnerState.Success
+            else VsTextInputFieldInnerState.Error
+        }
 
     fun navigateToPassword() {
         viewModelScope.launch {
-            if (!validateEmail(emailFieldState.text.toString()))
-                return@launch
+            if (!validateEmail(emailFieldState.text.toString())) return@launch
             val enteredEmail = emailFieldState.text.toString()
 
             if (!args.password.isNullOrBlank()) {
@@ -114,8 +104,6 @@ internal class FastVaultEmailViewModel @Inject constructor(
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 }

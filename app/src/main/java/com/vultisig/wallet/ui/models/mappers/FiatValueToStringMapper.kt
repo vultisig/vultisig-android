@@ -8,14 +8,14 @@ import javax.inject.Inject
 
 internal interface FiatValueToStringMapper : SuspendMapperFunc<FiatValue, String>
 
-internal class FiatValueToStringMapperImpl @Inject constructor(
-    private val appCurrencyRepository: AppCurrencyRepository
-) : FiatValueToStringMapper {
+internal class FiatValueToStringMapperImpl
+@Inject
+constructor(private val appCurrencyRepository: AppCurrencyRepository) : FiatValueToStringMapper {
 
-    override suspend fun invoke(from: FiatValue): String = from.let {
-        val currencyFormat = appCurrencyRepository.getCurrencyFormat()
-        currencyFormat.currency = Currency.getInstance(it.currency)
-        currencyFormat.format(it.value)
-    }
-
+    override suspend fun invoke(from: FiatValue): String =
+        from.let {
+            val currencyFormat = appCurrencyRepository.getCurrencyFormat()
+            currencyFormat.currency = Currency.getInstance(it.currency)
+            currencyFormat.format(it.value)
+        }
 }

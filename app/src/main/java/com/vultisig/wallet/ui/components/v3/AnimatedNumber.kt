@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 
-
 @Composable
 fun <T> AnimatedNumber(
     modifier: Modifier = Modifier,
@@ -26,9 +25,7 @@ fun <T> AnimatedNumber(
 
     var oldNumber by remember { mutableStateOf(text) }
 
-    SideEffect {
-        oldNumber = text
-    }
+    SideEffect { oldNumber = text }
 
     Row(modifier = modifier) {
         val numberString = formatter(text)
@@ -46,17 +43,11 @@ fun <T> AnimatedNumber(
                             slideDown()
                         }
                     },
-                    label = "animatedNumberChar"
+                    label = "animatedNumberChar",
                 ) { targetChar ->
-                    Text(
-                        text = targetChar.toString(),
-                        style = style,
-                        color = color,
-                    )
+                    Text(text = targetChar.toString(), style = style, color = color)
                 }
             }
         }
     }
 }
-
-

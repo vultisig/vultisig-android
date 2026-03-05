@@ -1,10 +1,10 @@
 package com.vultisig.wallet.data.keygen
 
+import java.math.BigInteger
+import kotlin.math.ceil
 import org.bouncycastle.asn1.ASN1EncodableVector
 import org.bouncycastle.asn1.ASN1Integer
 import org.bouncycastle.asn1.DERSequence
-import java.math.BigInteger
-import kotlin.math.ceil
 
 object DklsHelper {
     fun getThreshold(input: Int): Long {
@@ -27,15 +27,13 @@ object DklsHelper {
         return byteArray.toByteArray()
     }
 
-
     fun createDERSignature(r: ByteArray, s: ByteArray): ByteArray {
         val vector = ASN1EncodableVector()
         // Ensure R and S are positive and correctly formatted
-        vector.add(ASN1Integer(BigInteger(1,r)))
-        vector.add(ASN1Integer(BigInteger(1,s)))
+        vector.add(ASN1Integer(BigInteger(1, r)))
+        vector.add(ASN1Integer(BigInteger(1, s)))
         // Create DER sequence
         val derSequence = DERSequence(vector)
         return derSequence.encoded
     }
-
 }

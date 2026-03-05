@@ -3,13 +3,13 @@ package com.vultisig.wallet.data.models.payload
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
+import java.math.BigInteger
 import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.SignSolana
 import vultisig.keysign.v1.TronTransferAssetContractPayload
 import vultisig.keysign.v1.TronTransferContractPayload
 import vultisig.keysign.v1.TronTriggerSmartContractPayload
 import vultisig.keysign.v1.WasmExecuteContractPayload
-import java.math.BigInteger
 
 data class KeysignPayload(
     val coin: Coin,
@@ -34,4 +34,7 @@ data class KeysignPayload(
     val defiAction: DeFiAction = DeFiAction.NONE,
 )
 
-enum class DeFiAction { NONE, CIRCLE_USDC_WITHDRAW }
+enum class DeFiAction {
+    NONE,
+    CIRCLE_USDC_WITHDRAW,
+}

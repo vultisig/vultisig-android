@@ -12,17 +12,9 @@ internal fun NavController.route(route: String, opts: NavigationOptions? = null)
         popBackStack()
     } else {
         try {
-            navigate(route) {
-                buildOptions(
-                    this,
-                    opts
-                )
-            }
+            navigate(route) { buildOptions(this, opts) }
         } catch (e: Exception) {
-            Timber.e(
-                e,
-                "Navigation failed for route: $route"
-            )
+            Timber.e(e, "Navigation failed for route: $route")
         }
     }
 }
@@ -33,42 +25,25 @@ internal fun NavController.route(route: NavigateAction<Any>) {
     val (dst, opts) = route
 
     try {
-        navigate(dst) {
-            buildOptions(
-                this,
-                opts
-            )
-        }
+        navigate(dst) { buildOptions(this, opts) }
     } catch (e: Exception) {
-        Timber.e(
-            e,
-            "Navigation failed for route: $dst"
-        )
+        Timber.e(e, "Navigation failed for route: $dst")
     }
 }
 
 @SuppressLint("RestrictedApi")
-private fun NavController.buildOptions(
-    builder: NavOptionsBuilder,
-    opts: NavigationOptions?
-) {
+private fun NavController.buildOptions(builder: NavOptionsBuilder, opts: NavigationOptions?) {
     with(builder) {
         launchSingleTop = true
         if (opts != null) {
             if (opts.popUpTo != null) {
-                popUpTo(opts.popUpTo) {
-                    inclusive = opts.inclusive
-                }
+                popUpTo(opts.popUpTo) { inclusive = opts.inclusive }
             }
             if (opts.popUpToRoute != null) {
-                popUpTo(klass = opts.popUpToRoute) {
-                    inclusive = opts.inclusive
-                }
+                popUpTo(klass = opts.popUpToRoute) { inclusive = opts.inclusive }
             }
             if (opts.clearBackStack) {
-                popUpTo(graph.id) {
-                    inclusive = true
-                }
+                popUpTo(graph.id) { inclusive = true }
             }
         }
     }

@@ -21,55 +21,49 @@ internal fun defaultPositionsBondDialog(): List<PositionUiModelDialog> =
 internal fun defaultPositionsStakingDialog(): List<PositionUiModelDialog> =
     thorchainSupportStakingDeFi.toPositionDialogModels()
 
-internal fun List<Coin>.toPositionDialogModels(): List<PositionUiModelDialog> =
-    map { coin ->
-        PositionUiModelDialog(
-            logo = getCoinLogo(coin.logo),
-            ticker = coin.ticker,
-            isSelected = true,
-        )
-    }
+internal fun List<Coin>.toPositionDialogModels(): List<PositionUiModelDialog> = map { coin ->
+    PositionUiModelDialog(logo = getCoinLogo(coin.logo), ticker = coin.ticker, isSelected = true)
+}
 
 val defiSupportedChains: List<Chain>
-    get() = listOf(
-        Chain.ThorChain,
-        Chain.Ethereum
-    )
+    get() = listOf(Chain.ThorChain, Chain.Ethereum)
 
 internal val thorchainSupportStakingDeFi: List<Coin>
-    get() = listOf(
-        Coins.ThorChain.RUJI,
-        Coins.ThorChain.TCY,
-        Coins.ThorChain.sTCY,
-        Coins.ThorChain.yRUNE,
-        Coins.ThorChain.yTCY,
-    )
+    get() =
+        listOf(
+            Coins.ThorChain.RUJI,
+            Coins.ThorChain.TCY,
+            Coins.ThorChain.sTCY,
+            Coins.ThorChain.yRUNE,
+            Coins.ThorChain.yTCY,
+        )
 
 internal val thorchainSupportsBonDeFi: List<Coin>
-    get() = listOf(
-        Coins.ThorChain.RUNE,
-    )
+    get() = listOf(Coins.ThorChain.RUNE)
 
-internal enum class DeFiProviders { CIRCLE }
+internal enum class DeFiProviders {
+    CIRCLE
+}
 
-internal fun defaultSelectedPositionsDialog(): List<String> = 
+internal fun defaultSelectedPositionsDialog(): List<String> =
     (thorchainSupportsBonDeFi + thorchainSupportStakingDeFi).map { it.ticker }
 
-internal fun List<String>.hasBondPositions(): Boolean = 
-    any { ticker -> thorchainSupportsBonDeFi.any { it.ticker == ticker } }
+internal fun List<String>.hasBondPositions(): Boolean = any { ticker ->
+    thorchainSupportsBonDeFi.any { it.ticker == ticker }
+}
 
-internal fun List<String>.hasStakingPositions(): Boolean = 
-    any { ticker -> thorchainSupportStakingDeFi.any { it.ticker == ticker } }
+internal fun List<String>.hasStakingPositions(): Boolean = any { ticker ->
+    thorchainSupportStakingDeFi.any { it.ticker == ticker }
+}
 
-internal fun emptyBondedTabUiModel() = BondedTabUiModel(
-    isLoading = false,
-    totalBondedAmount = "0 ${Chain.ThorChain.coinType.symbol}",
-    nodes = emptyList()
-)
+internal fun emptyBondedTabUiModel() =
+    BondedTabUiModel(
+        isLoading = false,
+        totalBondedAmount = "0 ${Chain.ThorChain.coinType.symbol}",
+        nodes = emptyList(),
+    )
 
-internal fun emptyStakingTabUiModel() = StakingTabUiModel(
-    positions = emptyList()
-)
+internal fun emptyStakingTabUiModel() = StakingTabUiModel(positions = emptyList())
 
 internal fun DeFiNavActions.getContractByDeFiAction(): String? {
     return when (this) {
@@ -113,8 +107,7 @@ internal const val STAKING_TCY_COMPOUND_CONTRACT =
 internal const val YRUNE_CONTRACT =
     "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt"
 
-internal const val YTCY_CONTRACT =
-    "thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px"
+internal const val YTCY_CONTRACT = "thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px"
 
 internal const val YRUNE_YTCY_AFFILIATE_CONTRACT =
     "thor1v3f7h384r8hw6r3dtcgfq6d5fq842u6cjzeuu8nr0cp93j7zfxyquyrfl8"

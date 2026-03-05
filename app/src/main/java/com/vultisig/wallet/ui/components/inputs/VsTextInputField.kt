@@ -51,15 +51,11 @@ import com.vultisig.wallet.ui.theme.cursorBrush
 internal sealed interface VsTextInputFieldType {
     data object Text : VsTextInputFieldType
 
-    data class Password(
-        val isVisible: Boolean,
-        val onVisibilityClick: () -> Unit,
-    ) : VsTextInputFieldType
+    data class Password(val isVisible: Boolean, val onVisibilityClick: () -> Unit) :
+        VsTextInputFieldType
 
-    data class MultiLine(
-        val minLines: Int,
-        val maxLines: Int = Int.MAX_VALUE,
-    ) : VsTextInputFieldType
+    data class MultiLine(val minLines: Int, val maxLines: Int = Int.MAX_VALUE) :
+        VsTextInputFieldType
 }
 
 internal enum class VsTextInputFieldInnerState {
@@ -93,20 +89,17 @@ internal fun VsTextInputField(
     autoCorrectEnabled: Boolean = true,
     enabled: Boolean = true,
 ) {
-    var focused by remember {
-        mutableStateOf(false)
-    }
+    var focused by remember { mutableStateOf(false) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
-            .animateContentSize()
-            .clickable(onClick = { focusRequester?.requestFocus() }),
+        modifier =
+            modifier.animateContentSize().clickable(onClick = { focusRequester?.requestFocus() }),
     ) {
         if (!label.isNullOrBlank() || labelIcon != null) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (!label.isNullOrBlank()) {
                     Text(
@@ -120,7 +113,7 @@ internal fun VsTextInputField(
                         painter = painterResource(labelIcon),
                         tint = Theme.v2.colors.text.tertiary,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(16.dp),
                     )
                 }
             }
@@ -129,29 +122,32 @@ internal fun VsTextInputField(
         val textFieldBackgroundShape = RoundedCornerShape(12.dp)
 
         Row(
-            modifier = Modifier
-                .border(
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = when (innerState) {
-                            VsTextInputFieldInnerState.Success -> Theme.v2.colors.alerts.success
-                            VsTextInputFieldInnerState.Error -> Theme.v2.colors.alerts.error
-                            VsTextInputFieldInnerState.Default ->
-                                if (focused) Theme.v2.colors.border.normal
-                                else Theme.v2.colors.border.light
-                        }
-                    ),
-                    shape = textFieldBackgroundShape,
-                )
-                .clip(textFieldBackgroundShape)
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .padding(all = 16.dp),
+            modifier =
+                Modifier.border(
+                        border =
+                            BorderStroke(
+                                width = 1.dp,
+                                color =
+                                    when (innerState) {
+                                        VsTextInputFieldInnerState.Success ->
+                                            Theme.v2.colors.alerts.success
+                                        VsTextInputFieldInnerState.Error ->
+                                            Theme.v2.colors.alerts.error
+                                        VsTextInputFieldInnerState.Default ->
+                                            if (focused) Theme.v2.colors.border.normal
+                                            else Theme.v2.colors.border.light
+                                    },
+                            ),
+                        shape = textFieldBackgroundShape,
+                    )
+                    .clip(textFieldBackgroundShape)
+                    .background(Theme.v2.colors.backgrounds.secondary)
+                    .padding(all = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
         ) {
-            val inputTextStyle = Theme.brockmann.body.m.medium.copy(
-                color = Theme.v2.colors.text.primary
-            )
+            val inputTextStyle =
+                Theme.brockmann.body.m.medium.copy(color = Theme.v2.colors.text.primary)
 
             when (type) {
                 is VsTextInputFieldType.Password -> {
@@ -159,57 +155,52 @@ internal fun VsTextInputField(
                         state = textFieldState,
                         textStyle = inputTextStyle,
                         cursorBrush = Theme.cursorBrush,
-                        keyboardOptions = KeyboardOptions(
-                            autoCorrectEnabled = false,
-                            keyboardType = KeyboardType.Password,
-                            imeAction = imeAction
-                        ),
+                        keyboardOptions =
+                            KeyboardOptions(
+                                autoCorrectEnabled = false,
+                                keyboardType = KeyboardType.Password,
+                                imeAction = imeAction,
+                            ),
                         onKeyboardAction = onKeyboardAction,
-                        textObfuscationMode = if (type.isVisible)
-                            TextObfuscationMode.Visible
-                        else TextObfuscationMode.RevealLastTyped,
-                        modifier = Modifier
-                            .weight(1f)
-                            .then(
-                                if (focusRequester != null)
-                                    Modifier.focusRequester(focusRequester)
-                                else Modifier
-                            )
-                            .then(
-                                if (onKeyEvent != null)
-                                    Modifier.onKeyEvent(onKeyEvent)
-                                else Modifier
-                            )
-                            .onFocusChanged {
-                                focused = it.isFocused
-                                onFocusChanged?.invoke(it.isFocused)
-                            }
-                            .testTag(TEXT_INPUT_FIELD_TAG),
+                        textObfuscationMode =
+                            if (type.isVisible) TextObfuscationMode.Visible
+                            else TextObfuscationMode.RevealLastTyped,
+                        modifier =
+                            Modifier.weight(1f)
+                                .then(
+                                    if (focusRequester != null)
+                                        Modifier.focusRequester(focusRequester)
+                                    else Modifier
+                                )
+                                .then(
+                                    if (onKeyEvent != null) Modifier.onKeyEvent(onKeyEvent)
+                                    else Modifier
+                                )
+                                .onFocusChanged {
+                                    focused = it.isFocused
+                                    onFocusChanged?.invoke(it.isFocused)
+                                }
+                                .testTag(TEXT_INPUT_FIELD_TAG),
                         decorator = { textField ->
                             TextInputFieldHint(
                                 textFieldState = textFieldState,
                                 hint = hint,
-                                modifier = Modifier
-                                    .weight(1f),
+                                modifier = Modifier.weight(1f),
                             )
                             textField()
-                        }
+                        },
                     )
 
                     if (textFieldState.text.isNotEmpty()) {
                         Icon(
-                            painter = painterResource(
-                                if (type.isVisible)
-                                    R.drawable.visible else
-                                    invisibleIcon
-                            ),
+                            painter =
+                                painterResource(
+                                    if (type.isVisible) R.drawable.visible else invisibleIcon
+                                ),
                             tint = Theme.v2.colors.text.button.primary,
                             contentDescription = null,
-                            modifier = Modifier
-                                .size(20.dp)
-                                .clickable(
-                                    onClick = type.onVisibilityClick
-                                )
+                            modifier =
+                                Modifier.size(20.dp).clickable(onClick = type.onVisibilityClick),
                         )
                     }
                 }
@@ -217,42 +208,37 @@ internal fun VsTextInputField(
                 else -> {
                     BasicTextField(
                         state = textFieldState,
-                        lineLimits = if (type is VsTextInputFieldType.MultiLine)
-                            TextFieldLineLimits.MultiLine(
-                                type.minLines,
-                                type.maxLines
-                            )
-                        else TextFieldLineLimits.SingleLine,
+                        lineLimits =
+                            if (type is VsTextInputFieldType.MultiLine)
+                                TextFieldLineLimits.MultiLine(type.minLines, type.maxLines)
+                            else TextFieldLineLimits.SingleLine,
                         textStyle = inputTextStyle,
                         cursorBrush = Theme.cursorBrush,
-                        keyboardOptions = KeyboardOptions(
-                            autoCorrectEnabled = autoCorrectEnabled,
-                            keyboardType = keyboardType,
-                            imeAction = imeAction,
-                        ),
+                        keyboardOptions =
+                            KeyboardOptions(
+                                autoCorrectEnabled = autoCorrectEnabled,
+                                keyboardType = keyboardType,
+                                imeAction = imeAction,
+                            ),
                         onKeyboardAction = onKeyboardAction,
-                        modifier = Modifier
-                            .testTag(TEXT_INPUT_FIELD_TAG)
-                            .weight(1f)
-                            .then(
-                                if (focusRequester != null)
-                                    Modifier.focusRequester(focusRequester)
-                                else Modifier
-                            )
-                            .then(
-                                if (onKeyEvent != null)
-                                    Modifier.onKeyEvent(onKeyEvent)
-                                else Modifier
-                            )
-                            .onFocusChanged {
-                                focused = it.isFocused
-                                onFocusChanged?.invoke(it.isFocused)
-                            },
+                        modifier =
+                            Modifier.testTag(TEXT_INPUT_FIELD_TAG)
+                                .weight(1f)
+                                .then(
+                                    if (focusRequester != null)
+                                        Modifier.focusRequester(focusRequester)
+                                    else Modifier
+                                )
+                                .then(
+                                    if (onKeyEvent != null) Modifier.onKeyEvent(onKeyEvent)
+                                    else Modifier
+                                )
+                                .onFocusChanged {
+                                    focused = it.isFocused
+                                    onFocusChanged?.invoke(it.isFocused)
+                                },
                         decorator = { textField ->
-                            TextInputFieldHint(
-                                textFieldState = textFieldState,
-                                hint = hint,
-                            )
+                            TextInputFieldHint(textFieldState = textFieldState, hint = hint)
                             textField()
                         },
                         enabled = enabled,
@@ -273,12 +259,12 @@ internal fun VsTextInputField(
                                 painter = painterResource(trailingIcon),
                                 tint = Theme.v2.colors.text.button.primary,
                                 contentDescription = null,
-                                modifier = Modifier
-                                    .width(20.dp)
-                                    .clickOnce(
-                                        onClick = onTrailingIconClick ?: {},
-                                        enabled = onTrailingIconClick != null
-                                    )
+                                modifier =
+                                    Modifier.width(20.dp)
+                                        .clickOnce(
+                                            onClick = onTrailingIconClick ?: {},
+                                            enabled = onTrailingIconClick != null,
+                                        ),
                             )
                         }
 
@@ -288,12 +274,12 @@ internal fun VsTextInputField(
                                 painter = painterResource(trailingIcon2),
                                 tint = Theme.v2.colors.text.button.primary,
                                 contentDescription = null,
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .clickOnce(
-                                        onClick = onTrailingIcon2Click ?: {},
-                                        enabled = onTrailingIcon2Click != null
-                                    )
+                                modifier =
+                                    Modifier.size(20.dp)
+                                        .clickOnce(
+                                            onClick = onTrailingIcon2Click ?: {},
+                                            enabled = onTrailingIcon2Click != null,
+                                        ),
                             )
                         }
                     }
@@ -304,12 +290,13 @@ internal fun VsTextInputField(
         if (footNote != null) {
             Text(
                 text = footNote,
-                color = when (innerState) {
-                    VsTextInputFieldInnerState.Success -> Theme.v2.colors.alerts.success
-                    VsTextInputFieldInnerState.Error -> Theme.v2.colors.alerts.error
-                    VsTextInputFieldInnerState.Default -> Theme.v2.colors.text.primary
-                },
-                style = Theme.brockmann.supplementary.footnote
+                color =
+                    when (innerState) {
+                        VsTextInputFieldInnerState.Success -> Theme.v2.colors.alerts.success
+                        VsTextInputFieldInnerState.Error -> Theme.v2.colors.alerts.error
+                        VsTextInputFieldInnerState.Default -> Theme.v2.colors.text.primary
+                    },
+                style = Theme.brockmann.supplementary.footnote,
             )
         }
     }
@@ -330,7 +317,6 @@ private fun TextInputFieldHint(
         )
     }
 }
-
 
 @Preview(widthDp = 400)
 @Composable
@@ -362,27 +348,27 @@ private fun PasswordTypePreview() {
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = true) {},
             innerState = VsTextInputFieldInnerState.Default,
-            initialText = "some password"
+            initialText = "some password",
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = false) {},
             innerState = VsTextInputFieldInnerState.Default,
-            initialText = "some password"
+            initialText = "some password",
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = true) {},
             innerState = VsTextInputFieldInnerState.Default,
-            initialText = ""
+            initialText = "",
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = true) {},
             innerState = VsTextInputFieldInnerState.Success,
-            initialText = "some password"
+            initialText = "some password",
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = false) {},
             innerState = VsTextInputFieldInnerState.Error,
-            initialText = "some password"
+            initialText = "some password",
         )
     }
 }
@@ -437,7 +423,4 @@ private fun VsTextInputPreviewMaker(
     )
 }
 
-
-
 internal const val TEXT_INPUT_FIELD_TAG = "textInputField"
-

@@ -1,6 +1,5 @@
 package com.vultisig.wallet.presenter.keysign
 
-
 import org.junit.Test
 
 class KeysignMessageTest {
@@ -66,5 +65,4 @@ class KeysignMessageTest {
         print(gson.toJson(result1))
         */
     }
-
 }
