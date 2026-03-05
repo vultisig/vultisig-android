@@ -102,6 +102,9 @@ private fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClick
                                     append(
                                         stringResource(R.string.backup_vault_screen_export_prefix)
                                     )
+                                    append(
+                                        ""
+                                    )
                                 }
                                 withStyle(
                                     style =
