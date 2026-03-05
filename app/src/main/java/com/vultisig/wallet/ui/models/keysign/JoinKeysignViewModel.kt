@@ -427,7 +427,7 @@ constructor(
         return true
     }
 
-    private fun getNormalizedCustomMessage(customMessage: CustomMessagePayload) =
+    private fun getNormalizedCustomMessage(customMessage: CustomMessagePayload): String {
         // For "eth_signTypedData_v4", the extension sends both the message and the domain
         // as pre-hashed values. Because these fields are already hashed, the original data
         // cannot be decoded from the resulting hex string.
@@ -437,10 +437,19 @@ constructor(
         // https://github.com/ethers-io/ethers.js/blob/98c49d091eb84a9146dfba8476f18e4c3e3d1d31/src.ts/hash/typed-data.ts#L520
         // https://github.com/vultisig/vultisig-windows/blob/e7e5b388ca022c9e3f02a85346336b837857a856/core/inpage-provider/popup/view/resolvers/signMessage/overview/index.tsx#L36
         if (customMessage.method.equals(other = ETH_SIGN_TYPED_DATA_V4, ignoreCase = true)) {
-            customMessage.message
-        } else {
-            customMessage.message.normalizeMessageFormat()
+            return customMessage.message
         }
+
+        // Chains that send pre-hashed messages (e.g., "0x" + hex hash).
+        // Don't try to decode as UTF-8 — it produces garbage for raw hashes.
+        // Display the hex hash directly so the user can verify it.
+        val chain = customMessage.chain.lowercase()
+        if (chain in setOf("dash", "solana")) {
+            return customMessage.message
+        }
+
+        return customMessage.message.normalizeMessageFormat()
+    }
 
     private suspend fun handleKeysignMessage(proto: KeysignMessageProto): Boolean {
         val message = mapKeysignMessageFromProto(proto)

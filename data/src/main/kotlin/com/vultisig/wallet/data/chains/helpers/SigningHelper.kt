@@ -25,6 +25,12 @@ import wallet.core.jni.EthereumAbi
 object SigningHelper {
     private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
 
+    // Chains that provide pre-hashed messages and should not have Keccak256 applied.
+    // These chains use their own message hashing scheme (e.g., Dash uses double-SHA256
+    // with a "DarkCoin Signed Message" magic prefix, Solana signs raw message bytes).
+    // Applying Keccak256 on top produces signatures that fail native verification.
+    private val RAW_HASH_CHAINS = setOf("dash", "solana")
+
     @OptIn(ExperimentalStdlibApi::class)
     fun getKeysignMessages(messagePayload: CustomMessagePayload): List<String> {
         if (messagePayload.method.equals(ETH_SIGN_TYPED_DATA_V4, ignoreCase = true)) {
@@ -37,6 +43,13 @@ object SigningHelper {
             } else {
                 messagePayload.message.toByteArray()
             }
+
+        // Skip Keccak256 for chains that pre-hash their messages
+        val chain = messagePayload.chain.lowercase()
+        if (chain in RAW_HASH_CHAINS) {
+            return listOf(processedBytes.toHexString())
+        }
+
         return listOf(processedBytes.toKeccak256ByteArray().toHexString())
     }
 
