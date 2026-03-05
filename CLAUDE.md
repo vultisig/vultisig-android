@@ -1,5 +1,15 @@
 # Vultisig Android - Claude Code Instructions
 
+## Security Tier
+
+STANDARD
+
+## Critical Boundaries
+
+- TSS/crypto JNI bindings — do not modify without crypto-team review.
+- `commondata/` — Git submodule. Do not edit directly, changes go in the commondata repo.
+- `fastlane/` — Automated deployment configs. Changes affect releases.
+
 ## Project Overview
 
 **Vultisig** is an Android cryptocurrency wallet application built with modern Android development practices. The app provides secure multi-signature wallet functionality with threshold signature scheme (TSS) support.
