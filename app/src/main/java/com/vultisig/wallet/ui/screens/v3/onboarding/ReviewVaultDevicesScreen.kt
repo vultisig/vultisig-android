@@ -88,10 +88,6 @@ private fun ReviewVaultDevicesScreen(
                 animation = R.raw.riv_review_devices,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .size(
-                        width = 350.dp,
-                        height = 260.dp
-                    )
                     .dashedBorder(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
