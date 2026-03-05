@@ -10,9 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -32,6 +31,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
+import com.vultisig.wallet.ui.components.util.dashedBorder
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesEvent
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
@@ -55,7 +55,9 @@ private fun ReviewVaultDevicesScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier =
-                    Modifier.fillMaxWidth().padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
             ) {
                 VsButton(
                     label = stringResource(R.string.review_vault_devices_looks_good),
@@ -82,7 +84,22 @@ private fun ReviewVaultDevicesScreen(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            RiveAnimation(animation = R.raw.riv_review_devices, modifier = Modifier.width(244.dp))
+            RiveAnimation(
+                animation = R.raw.riv_review_devices,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .size(
+                        width = 350.dp,
+                        height = 260.dp
+                    )
+                    .dashedBorder(
+                        width = 1.dp,
+                        color = Theme.v2.colors.border.light,
+                        dashLength = 4.dp,
+                        intervalLength = 4.dp,
+                        cornerRadius = 0.dp,
+                    ),
+            )
 
             UiSpacer(size = 30.dp)
 
@@ -101,13 +118,15 @@ private fun ReviewVaultDevicesScreen(
                 color = Theme.v2.colors.text.tertiary,
                 textAlign = TextAlign.Center,
                 modifier =
-                    Modifier.fillMaxWidth().padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
             )
 
             UiSpacer(size = 32.dp)
 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(uiState.devices) { device ->
+                itemsIndexed(uiState.devices) { index, device ->
                     VaultDeviceItem(
                         label =
                             if (device.equals(uiState.localPartyId, ignoreCase = true)) {
@@ -117,7 +136,8 @@ private fun ReviewVaultDevicesScreen(
                                 )
                             } else {
                                 device
-                            }
+                            },
+                        subtitle = stringResource(R.string.review_vault_devices_device_index, index + 1),
                     )
                 }
             }
@@ -126,7 +146,7 @@ private fun ReviewVaultDevicesScreen(
 }
 
 @Composable
-private fun VaultDeviceItem(label: String, modifier: Modifier = Modifier) {
+private fun VaultDeviceItem(label: String, subtitle: String, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -137,13 +157,20 @@ private fun VaultDeviceItem(label: String, modifier: Modifier = Modifier) {
                     color = Theme.v2.colors.backgrounds.secondary,
                     shape = RoundedCornerShape(16.dp),
                 )
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 14.dp
+                ),
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier =
-                Modifier.size(40.dp)
-                    .background(color = Theme.v2.colors.backgrounds.primary, shape = CircleShape),
+                Modifier
+                    .size(40.dp)
+                    .background(
+                        color = Theme.v2.colors.backgrounds.primary,
+                        shape = CircleShape
+                    ),
         ) {
             UiIcon(
                 drawableResId = R.drawable.device_backup,
@@ -152,11 +179,18 @@ private fun VaultDeviceItem(label: String, modifier: Modifier = Modifier) {
             )
         }
 
-        Text(
-            text = label,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.secondary,
-        )
+        Column {
+            Text(
+                text = label,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.primary,
+            )
+            Text(
+                text = subtitle,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+            )
+        }
     }
 }
 
