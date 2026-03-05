@@ -117,17 +117,14 @@ private fun VultBackupSummaryScreen(
                     .testTag("SummaryScreen.continue"),
         )
 
-        // Hidden for KeyImport vaults where chains are fixed at import time
-        if (state.isChainSelectionEnabled) {
-            UiSpacer(size = 16.dp)
+        UiSpacer(size = 16.dp)
 
-            VsButton(
-                onClick = onChooseChains,
-                label = stringResource(id = string.vault_backup_summary_choose_chains),
-                variant = VsButtonVariant.Secondary,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            )
-        }
+        VsButton(
+            onClick = onChooseChains,
+            label = stringResource(id = string.vault_backup_summary_choose_chains),
+            variant = VsButtonVariant.Secondary,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        )
 
         UiSpacer(32.dp)
     }
