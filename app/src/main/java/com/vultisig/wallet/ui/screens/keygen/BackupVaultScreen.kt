@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,21 +36,28 @@ import com.vultisig.wallet.ui.components.v3.V3Icon
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.keygen.BackupVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.file.RequestCreateDocument
 
 @Composable
 internal fun BackupVaultScreen(model: BackupVaultViewModel = hiltViewModel()) {
+    val title by model.title.collectAsState()
+
     RequestCreateDocument(
         mimeType = MimeType.OCTET_STREAM.value,
         onDocumentCreated = model::saveContentToUriResult,
         createDocumentRequestFlow = model.createDocumentRequestFlow,
     )
 
-    BackupVaultScreen(onBackupClick = model::backup)
+    BackupVaultScreen(
+        title = title.asString(),
+        isFastVault = model.isFastVault,
+        onBackupClick = model::backup,
+    )
 }
 
 @Composable
-private fun BackupVaultScreen(onBackupClick: () -> Unit) {
+private fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClick: () -> Unit) {
     var isNextEnabled by remember { mutableStateOf(false) }
     V3Scaffold(
         onBackClick = {},
@@ -73,7 +81,7 @@ private fun BackupVaultScreen(onBackupClick: () -> Unit) {
                 UiSpacer(24.dp)
 
                 Text(
-                    text = stringResource(R.string.backup_save_backup_to_the_cloud),
+                    text = title,
                     style = Theme.brockmann.headings.title2,
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
@@ -143,7 +151,11 @@ private fun BackupVaultScreen(onBackupClick: () -> Unit) {
 @Preview
 @Composable
 private fun BackupVaultScreenPreview() {
-    BackupVaultScreen(onBackupClick = {})
+    BackupVaultScreen(
+        title = "Save backup 2 of 3 to the cloud",
+        isFastVault = false,
+        onBackupClick = {},
+    )
 }
 
 internal object BackupVaultScreenTags {
