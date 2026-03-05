@@ -88,13 +88,6 @@ private fun ReviewVaultDevicesScreen(
                 animation = R.raw.riv_review_devices,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .dashedBorder(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.light,
-                        dashLength = 4.dp,
-                        intervalLength = 4.dp,
-                        cornerRadius = 0.dp,
-                    ),
             )
 
             UiSpacer(size = 30.dp)
