@@ -18,7 +18,7 @@ git submodule update --init --recursive
 ## Before You Change Code
 
 1. Run `./gradlew test` to establish baseline
-2. If touching crypto/JNI: read `brain/architecture/mpc-tss.md`
+2. If touching crypto/JNI: extra caution required — changes affect signing across all platforms
 3. If touching commondata/: that's a submodule — changes go in the commondata repo
 4. If adding/removing strings: update ALL 9 locale files (see Localization in CLAUDE.md)
 5. If deleting a screen: follow the full deletion checklist in CLAUDE.md

@@ -6,7 +6,7 @@ STANDARD
 
 ## Critical Boundaries
 
-- TSS/crypto JNI bindings — do not modify without crypto-team review.
+- TSS/crypto JNI bindings — do not modify without explicit review from maintainers.
 - `commondata/` — Git submodule. Do not edit directly, changes go in the commondata repo.
 - `fastlane/` — Automated deployment configs. Changes affect releases.
 
