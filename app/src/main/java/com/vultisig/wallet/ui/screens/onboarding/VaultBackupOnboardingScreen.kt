@@ -95,7 +95,7 @@ internal fun VaultBackupOnboardingScreen(
                                     Theme.brockmann.supplementary.footnote.copy(
                                         fontWeight = FontWeight.Bold
                                     ),
-                                highlightTextColor = Theme.v2.colors.alerts.info,
+                                highlightTextColor = Theme.v2.colors.text.primary,
                             )
                     )
                     UiSpacer(size = 32.dp)
