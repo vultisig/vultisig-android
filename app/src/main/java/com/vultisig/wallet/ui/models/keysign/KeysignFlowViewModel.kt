@@ -38,6 +38,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
+import com.vultisig.wallet.data.notifications.PushNotificationManager
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -139,6 +140,7 @@ constructor(
     private val addressBookRepository: AddressBookRepository,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
+    private val pushNotificationManager: PushNotificationManager,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -371,6 +373,10 @@ constructor(
                 data
 
         addressProvider.update(_keysignMessage.value)
+
+        viewModelScope.launch {
+            pushNotificationManager.notifyVaultDevices(vault, _keysignMessage.value)
+        }
     }
 
     private fun startParticipantDiscovery(vault: Vault) {

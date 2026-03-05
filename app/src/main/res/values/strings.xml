@@ -1,4 +1,16 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Push Notifications -->
+    <string name="notifications">Notifications</string>
+    <string name="push_notifications">Push notifications</string>
+    <string name="enable_push_notifications">Enable push notifications</string>
+    <string name="notifications_are_here">Notifications are here</string>
+    <string name="notifications_description">Stay updated on your vault activity, like when another device initiates a transaction signing.</string>
+    <string name="choose_vaults_for_notifications">Choose vaults for notifications</string>
+    <string name="enable_notifications_for_vault">Enable notifications for %s</string>
+    <string name="not_now">Not now</string>
+    <string name="vault_notifications">Vault notifications</string>
+    <string name="enable_all">Enable all</string>
+
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Total Bonded Rune</string>

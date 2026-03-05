@@ -1,0 +1,118 @@
+package com.vultisig.wallet.ui.screens.settings
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VsSwitch
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.models.settings.NotificationsSettingsUiState
+import com.vultisig.wallet.ui.models.settings.NotificationsSettingsViewModel
+import com.vultisig.wallet.ui.models.settings.VaultNotificationUiModel
+import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
+import com.vultisig.wallet.ui.theme.Theme
+
+@Composable
+internal fun NotificationsSettingsScreen() {
+    val viewModel = hiltViewModel<NotificationsSettingsViewModel>()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    NotificationsSettingsScreen(
+        state = state,
+        onMasterToggle = viewModel::onMasterToggle,
+        onVaultToggle = viewModel::onVaultToggle,
+        onBackClick = viewModel::back,
+    )
+}
+
+@Composable
+private fun NotificationsSettingsScreen(
+    state: NotificationsSettingsUiState,
+    onMasterToggle: (Boolean) -> Unit,
+    onVaultToggle: (String, Boolean) -> Unit,
+    onBackClick: () -> Unit,
+) {
+    V2Scaffold(title = stringResource(R.string.notifications), onBackClick = onBackClick) {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            SettingsBox(title = stringResource(R.string.push_notifications)) {
+                NotificationToggleRow(
+                    label = stringResource(R.string.push_notifications),
+                    isChecked = state.masterEnabled,
+                    onToggle = onMasterToggle,
+                )
+            }
+
+            if (state.masterEnabled && state.vaults.isNotEmpty()) {
+                UiSpacer(size = 14.dp)
+                SettingsBox(title = stringResource(R.string.vault_notifications)) {
+                    state.vaults.forEachIndexed { index, vault ->
+                        VaultNotificationRow(
+                            vault = vault,
+                            onToggle = { enabled -> onVaultToggle(vault.vaultId, enabled) },
+                            isLastItem = index == state.vaults.lastIndex,
+                        )
+                    }
+                }
+            }
+
+            UiSpacer(size = 24.dp)
+        }
+    }
+}
+
+@Composable
+private fun NotificationToggleRow(label: String, isChecked: Boolean, onToggle: (Boolean) -> Unit) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = label,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.primary,
+                modifier = Modifier.weight(1f),
+            )
+            VsSwitch(checked = isChecked, onCheckedChange = onToggle)
+        }
+        FadingHorizontalDivider()
+    }
+}
+
+@Composable
+private fun VaultNotificationRow(
+    vault: VaultNotificationUiModel,
+    onToggle: (Boolean) -> Unit,
+    isLastItem: Boolean,
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = vault.vaultName,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.primary,
+                modifier = Modifier.weight(1f),
+            )
+            VsSwitch(checked = vault.isEnabled, onCheckedChange = onToggle)
+        }
+        if (!isLastItem) {
+            FadingHorizontalDivider()
+        }
+    }
+}

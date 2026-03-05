@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.dao.VaultDao
 import com.vultisig.wallet.data.db.dao.VaultMetadataDao
+import com.vultisig.wallet.data.db.dao.VaultNotificationSettingsDao
 import com.vultisig.wallet.data.db.dao.VaultOrderDao
 import com.vultisig.wallet.data.db.migrations.MIGRATION_10_11
 import com.vultisig.wallet.data.db.migrations.MIGRATION_11_12
@@ -31,6 +32,7 @@ import com.vultisig.wallet.data.db.migrations.MIGRATION_23_24
 import com.vultisig.wallet.data.db.migrations.MIGRATION_24_25
 import com.vultisig.wallet.data.db.migrations.MIGRATION_25_26
 import com.vultisig.wallet.data.db.migrations.MIGRATION_26_27
+import com.vultisig.wallet.data.db.migrations.MIGRATION_27_28
 import com.vultisig.wallet.data.db.migrations.MIGRATION_2_3
 import com.vultisig.wallet.data.db.migrations.MIGRATION_3_4
 import com.vultisig.wallet.data.db.migrations.MIGRATION_4_5
@@ -88,6 +90,7 @@ internal interface DatabaseModule {
                     MIGRATION_24_25,
                     MIGRATION_25_26,
                     MIGRATION_26_27,
+                    MIGRATION_27_28,
                 )
                 .build()
 
@@ -145,5 +148,11 @@ internal interface DatabaseModule {
         @Singleton
         fun provideStakingDetailsDao(appDatabase: AppDatabase): StakingDetailsDao =
             appDatabase.stakingDetailsDao()
+
+        @Provides
+        @Singleton
+        fun provideVaultNotificationSettingsDao(
+            appDatabase: AppDatabase
+        ): VaultNotificationSettingsDao = appDatabase.vaultNotificationSettingsDao()
     }
 }

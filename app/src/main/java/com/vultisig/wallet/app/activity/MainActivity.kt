@@ -2,6 +2,10 @@
 
 package com.vultisig.wallet.app.activity
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -16,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -27,6 +32,7 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.vultisig.wallet.app.activity.components.AnimatedSplash
 import com.vultisig.wallet.app.activity.components.CheckDeeplink
 import com.vultisig.wallet.app.activity.components.MainActivityContent
+import com.vultisig.wallet.app.services.VultisigFirebaseMessagingService
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 import dagger.hilt.android.AndroidEntryPoint
@@ -39,6 +45,16 @@ class MainActivity : AppCompatActivity() {
     private val mainViewModel: MainViewModel by viewModels<MainViewModel>()
 
     @Inject lateinit var appUpdateManager: AppUpdateManager
+
+    private val pushNotificationReceiver =
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val qrCodeData =
+                    intent.getStringExtra(VultisigFirebaseMessagingService.EXTRA_QR_CODE_DATA)
+                        ?: return
+                mainViewModel.onPushNotificationReceived(qrCodeData)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -94,6 +110,26 @@ class MainActivity : AppCompatActivity() {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainViewModel.startUpdateEvent.collect { startImmediateUpdate() }
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val filter = IntentFilter(VultisigFirebaseMessagingService.PUSH_NOTIFICATION_ACTION)
+        ContextCompat.registerReceiver(
+            this,
+            pushNotificationReceiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+    }
+
+    override fun onPause() {
+        super.onPause()
+        try {
+            unregisterReceiver(pushNotificationReceiver)
+        } catch (e: IllegalArgumentException) {
+            Timber.w(e, "Receiver was not registered")
         }
     }
 

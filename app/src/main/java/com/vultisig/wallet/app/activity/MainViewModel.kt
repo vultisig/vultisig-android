@@ -87,6 +87,13 @@ constructor(
             .launchIn(viewModelScope)
     }
 
+    fun onPushNotificationReceived(qrCodeData: String) {
+        viewModelScope.launch {
+            delay(1.seconds)
+            navigator.route(Route.Keysign.Join(vaultId = "", qr = qrCodeData))
+        }
+    }
+
     fun openUri(uri: Uri) {
         viewModelScope.launch {
             delay(1.seconds)
