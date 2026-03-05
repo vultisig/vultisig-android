@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -19,7 +18,6 @@ import javax.inject.Inject
 internal data class VaultBackupSummaryUiModel(
     val vaultType: Route.VaultInfo.VaultType,
     val vaultShares: Int = 0,
-    val isChainSelectionEnabled: Boolean = true,
 )
 
 @HiltViewModel
@@ -43,8 +41,6 @@ internal class VaultBackupSummaryViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         vaultShares = vault.signers.size,
-                        // KeyImport vaults have a fixed set of chains chosen during import
-                        isChainSelectionEnabled = vault.libType != SigningLibType.KeyImport,
                     )
                 }
             }

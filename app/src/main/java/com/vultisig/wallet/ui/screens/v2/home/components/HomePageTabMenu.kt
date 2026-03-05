@@ -34,7 +34,6 @@ internal fun HomePageTabMenu(
     modifier: Modifier = Modifier,
     onPortfolioClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
-    isEditVisible: Boolean = true,
     onSearchClick: () -> Unit = {},
 ) {
     Row(
@@ -95,21 +94,18 @@ internal fun HomePageTabMenu(
                 )
             }
 
-            // Hidden for KeyImport vaults where chains are fixed at import time
-            if (isEditVisible) {
-                V2Container(
-                    modifier = Modifier.clickOnce(onClick = onEditClick),
-                    cornerType = CornerType.Circular,
-                    type = ContainerType.SECONDARY,
-                    borderType = ContainerBorderType.Borderless
-                ) {
-                    UiIcon(
-                        drawableResId = R.drawable.edit_chain,
-                        size = 16.dp,
-                        tint = Theme.v2.colors.primary.accent4,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
+            V2Container(
+                modifier = Modifier.clickOnce(onClick = onEditClick),
+                cornerType = CornerType.Circular,
+                type = ContainerType.SECONDARY,
+                borderType = ContainerBorderType.Borderless
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.edit_chain,
+                    size = 16.dp,
+                    tint = Theme.v2.colors.primary.accent4,
+                    modifier = Modifier.padding(12.dp)
+                )
             }
         }
     }

@@ -73,7 +73,6 @@ internal data class VaultAccountsUiModel(
     val isBannerVisible: Boolean = true,
     val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
     val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
-    val isChainSelectionEnabled: Boolean = true,
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.isSwapSupported }
     val noChainFound: Boolean
@@ -349,9 +348,6 @@ internal class VaultAccountsViewModel @Inject constructor(
                 it.copy(
                     vaultName = vault.name,
                     isFastVault = vault.isFastVault(),
-                    // KeyImport vaults have a fixed set of chains chosen during import,
-                    // so chain selection is disabled on the home screen
-                    isChainSelectionEnabled = vault.libType != SigningLibType.KeyImport,
                 )
             }
             val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()

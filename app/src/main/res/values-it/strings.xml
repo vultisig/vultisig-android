@@ -587,6 +587,7 @@
     <string name="chain_selection_select_chains">Seleziona catene</string>
     <string name="chain_selection_select_defi_chains">Seleziona catene DeFi</string>
     <string name="chain_selection_no_chains_found">Nessuna catena trovata</string>
+    <string name="chain_selection_key_import_warning">A causa di limitazioni tecniche dell\'importazione delle chiavi e dei portafogli basati su seed, è possibile selezionare solo le catene pre-generate.</string>
     <string name="transaction_type_button_functions">Funzioni</string>
     <string name="copy_address">Copia indirizzo</string>
     <string name="chain_tokens_qr_receive_label">Ricevi %1$s</string>

@@ -588,6 +588,7 @@
     <string name="chain_selection_select_chains">Odaberite lance</string>
     <string name="chain_selection_select_defi_chains">Odaberite DeFi lance</string>
     <string name="chain_selection_no_chains_found">Nisu pronađeni lanci</string>
+    <string name="chain_selection_key_import_warning">Zbog tehničkih ograničenja uvoza ključeva i novčanika temeljenih na seed-frazi, mogu se odabrati samo unaprijed generirani lanci.</string>
     <string name="transaction_type_button_functions">Funkcije</string>
     <string name="copy_address">Kopiraj adresu</string>
     <string name="chain_tokens_qr_receive_label">Primi %1$s</string>

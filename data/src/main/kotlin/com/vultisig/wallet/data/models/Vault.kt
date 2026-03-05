@@ -133,6 +133,21 @@ fun Vault.getEddsaSigningKey(chain: Chain): String {
     return pubKeyEDDSA
 }
 
+/**
+ * Returns `true` when this vault has a pre-generated key for [chain].
+ *
+ * For non-KeyImport vaults every chain is supported (returns `true`).
+ * For KeyImport vaults only chains with an exact entry in [chainPublicKeys] are allowed.
+ */
+fun Vault.hasPreGeneratedKey(chain: Chain): Boolean {
+    if (libType != SigningLibType.KeyImport) return true
+
+    val expectedIsEddsa = chain.TssKeysignType == TssKeyType.EDDSA
+    return chainPublicKeys.any {
+        it.chain == chain.raw && it.isEddsa == expectedIsEddsa && it.publicKey.isNotBlank()
+    }
+}
+
 fun Vault.getPubKeyByChain(chain: Chain): String {
     if (libType == SigningLibType.KeyImport) {
         val expectedIsEddsa = chain.TssKeysignType == TssKeyType.EDDSA

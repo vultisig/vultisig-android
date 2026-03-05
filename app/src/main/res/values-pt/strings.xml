@@ -585,6 +585,7 @@
     <string name="chain_selection_select_chains">Selecionar correntes</string>
     <string name="chain_selection_select_defi_chains">Selecionar correntes DeFi</string>
     <string name="chain_selection_no_chains_found">Nenhuma corrente encontrada</string>
+    <string name="chain_selection_key_import_warning">Devido a limitações técnicas da importação de chaves e carteiras baseadas em seed, apenas correntes pré-geradas podem ser selecionadas.</string>
     <string name="transaction_type_button_functions">Funções</string>
     <string name="copy_address">Copiar endereço</string>
     <string name="chain_tokens_qr_receive_label">Receber %1$s</string>

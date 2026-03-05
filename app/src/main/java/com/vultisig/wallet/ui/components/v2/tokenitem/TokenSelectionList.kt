@@ -54,6 +54,7 @@ internal fun <T> TokenSelectionList(
     onCancelClick: () -> Unit,
     plusUiModel: GridPlusUiModel? = null,
     onSetSearchText: (String) -> Unit = {},
+    bannerContent: (@Composable () -> Unit)? = null,
 ) {
     TokenSelectionList(
         groups = listOf(
@@ -85,7 +86,8 @@ internal fun <T> TokenSelectionList(
         },
         onDoneClick = onDoneClick,
         onCancelClick = onCancelClick,
-        onPasteClick = onSetSearchText
+        onPasteClick = onSetSearchText,
+        bannerContent = bannerContent,
     )
 }
 
@@ -99,6 +101,7 @@ internal fun <T> TokenSelectionList(
     onDoneClick: () -> Unit,
     onCancelClick: () -> Unit,
     onPasteClick: (String) -> Unit = {},
+    bannerContent: (@Composable () -> Unit)? = null,
 ) {
     V2BottomSheet(
         onDismissRequest = onCancelClick,
@@ -151,6 +154,7 @@ internal fun <T> TokenSelectionList(
                     columns = GridCells.Adaptive(minSize = 74.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = if (bannerContent != null) Modifier.weight(1f) else Modifier,
                 ) {
                     groups.forEach { (title, items, mapper, plusUiModel) ->
                         title?.let {
@@ -178,6 +182,8 @@ internal fun <T> TokenSelectionList(
 
                     }
                 }
+
+            bannerContent?.invoke()
         }
     }
 
