@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.notifications
+package com.vultisig.wallet.data.services
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
@@ -9,6 +9,8 @@ import com.vultisig.wallet.data.api.NotifyRequest
 import com.vultisig.wallet.data.db.dao.VaultNotificationSettingsDao
 import com.vultisig.wallet.data.db.models.VaultNotificationSettingsEntity
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.isSecureVault
+import com.vultisig.wallet.data.repositories.VaultRepository
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,6 +23,7 @@ class PushNotificationManager
 @Inject
 constructor(
     private val notificationApi: NotificationApi,
+    private val vaultRepository: VaultRepository,
     private val vaultNotificationSettingsDao: VaultNotificationSettingsDao,
     private val encryptedPrefs: SharedPreferences,
 ) {
@@ -59,7 +62,8 @@ constructor(
         vaultNotificationSettingsDao.markPrompted(vaultId)
     }
 
-    suspend fun setVaultOptIn(vault: Vault, enabled: Boolean) {
+    suspend fun setVaultOptIn(vaultId: String, enabled: Boolean) {
+        val vault = vaultRepository.get(vaultId)?.takeIf { it.isSecureVault() } ?: return
         ensureSettingsExist(vault.id)
         vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
 
@@ -81,8 +85,9 @@ constructor(
         }
     }
 
-    suspend fun setAllVaultsOptIn(vaults: List<Vault>, enabled: Boolean) {
-        vaults.forEach { vault -> setVaultOptIn(vault, enabled) }
+    suspend fun setAllVaultsOptIn(enabled: Boolean) {
+        val allVaults = vaultRepository.getAll().filter { it.isSecureVault() }
+        allVaults.forEach { vault -> setVaultOptIn(vaultId = vault.id, enabled) }
     }
 
     suspend fun notifyVaultDevices(vault: Vault, qrCodeData: String) {

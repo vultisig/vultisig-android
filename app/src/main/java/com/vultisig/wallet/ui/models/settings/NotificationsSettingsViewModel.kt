@@ -3,8 +3,8 @@ package com.vultisig.wallet.ui.models.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.isFastVault
-import com.vultisig.wallet.data.notifications.PushNotificationManager
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.back
@@ -69,20 +69,15 @@ constructor(
     fun onMasterToggle(enabled: Boolean) {
         viewModelScope.launch {
             if (enabled) {
-                val allVaults = vaultRepository.getAll()
-                pushNotificationManager.setAllVaultsOptIn(allVaults, enabled = true)
+                pushNotificationManager.setAllVaultsOptIn(enabled = true)
             } else {
-                val allVaults = vaultRepository.getAll()
-                pushNotificationManager.setAllVaultsOptIn(allVaults, enabled = false)
+                pushNotificationManager.setAllVaultsOptIn(enabled = false)
             }
         }
     }
 
     fun onVaultToggle(vaultId: String, enabled: Boolean) {
-        viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
-            pushNotificationManager.setVaultOptIn(vault, enabled)
-        }
+        viewModelScope.launch { pushNotificationManager.setVaultOptIn(vaultId, enabled) }
     }
 
     fun back() {

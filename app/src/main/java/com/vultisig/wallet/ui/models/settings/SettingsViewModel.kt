@@ -262,7 +262,13 @@ constructor(
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.general),
                         items =
-                            listOf(Language("English"), Currency("USD"), AddressBook, ReferralCode),
+                            listOf(
+                                Language("English"),
+                                Currency("USD"),
+                                AddressBook,
+                                ReferralCode,
+                                Notifications,
+                            ),
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.support),

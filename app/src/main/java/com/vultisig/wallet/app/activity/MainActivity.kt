@@ -32,7 +32,7 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.vultisig.wallet.app.activity.components.AnimatedSplash
 import com.vultisig.wallet.app.activity.components.CheckDeeplink
 import com.vultisig.wallet.app.activity.components.MainActivityContent
-import com.vultisig.wallet.app.services.VultisigFirebaseMessagingService
+import com.vultisig.wallet.data.services.VultisigFirebaseMessagingService
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 import dagger.hilt.android.AndroidEntryPoint

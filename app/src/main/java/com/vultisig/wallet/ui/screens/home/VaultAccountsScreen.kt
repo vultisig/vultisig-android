@@ -46,6 +46,8 @@ import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.NotificationsIntroBottomSheet
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultNotificationOptInBottomSheet
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.Banners
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
@@ -68,6 +70,22 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
             onDismiss = viewModel::dismissBackupReminder,
             onBackup = viewModel::backupVault,
             onDoNotRemind = viewModel::doNotRemindBackup,
+        )
+    }
+
+    if (state.showNotificationIntroSheet) {
+        NotificationsIntroBottomSheet(
+            onEnable = viewModel::onNotificationEnable,
+            onNotNow = viewModel::onNotificationNotNow,
+            onDismissRequest = viewModel::onNotificationNotNow,
+        )
+    }
+
+    if (state.showNotificationVaultSheet) {
+        VaultNotificationOptInBottomSheet(
+            vaults = state.notificationIntroVaults,
+            onEnableVault = viewModel::onNotificationVaultToggle,
+            onDismissRequest = viewModel::onNotificationVaultSheetDismiss,
         )
     }
 

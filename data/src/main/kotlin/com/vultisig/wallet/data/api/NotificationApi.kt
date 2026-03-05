@@ -15,7 +15,7 @@ import kotlinx.serialization.Serializable
 data class DeviceRegistrationRequest(
     @SerialName("vault_id") val vaultId: String,
     @SerialName("party_name") val partyName: String,
-    val token: String,
+    @SerialName("token") val token: String,
     @SerialName("device_type") val deviceType: String = "android",
 )
 

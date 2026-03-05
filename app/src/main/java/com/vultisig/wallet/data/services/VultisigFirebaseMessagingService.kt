@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.services
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.vultisig.wallet.data.notifications.PushNotificationManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
