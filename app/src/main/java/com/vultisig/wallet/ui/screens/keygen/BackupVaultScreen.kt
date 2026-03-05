@@ -63,28 +63,20 @@ private fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClick
         onBackClick = {},
         content = {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 UiSpacer(70.dp)
 
                 RiveAnimation(
                     animation = R.raw.riv_backup_vault_splash,
-                    modifier = Modifier.size(
-                        width = 266.dp,
-                        height = 170.dp
-                    ),
+                    modifier = Modifier.size(width = 266.dp, height = 170.dp),
                     fit = Fit.COVER,
                 )
 
                 UiSpacer(70.dp)
 
-                V3Icon(
-                    shinedBottom = Theme.v2.colors.alerts.info,
-                    logo = R.drawable.arrow_cloude
-                )
+                V3Icon(shinedBottom = Theme.v2.colors.alerts.info, logo = R.drawable.arrow_cloude)
 
                 UiSpacer(24.dp)
 
@@ -99,41 +91,75 @@ private fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClick
 
                 Text(
                     text =
-                        buildAnnotatedString {
-                            withStyle(
-                                style =
-                                    Theme.brockmann.body.s.medium
-                                        .toSpanStyle()
-                                        .copy(color = Theme.v2.colors.text.tertiary)
-                            ) {
-                                append(stringResource(R.string.backup_vault_screen_export_prefix))
+                        if (!isFastVault)
+                            buildAnnotatedString {
+                                withStyle(
+                                    style =
+                                        Theme.brockmann.body.s.medium
+                                            .toSpanStyle()
+                                            .copy(color = Theme.v2.colors.text.tertiary)
+                                ) {
+                                    append(
+                                        stringResource(R.string.backup_vault_screen_export_prefix)
+                                    )
+                                }
+                                withStyle(
+                                    style =
+                                        Theme.brockmann.body.s.medium
+                                            .toSpanStyle()
+                                            .copy(color = Theme.v2.colors.text.secondary)
+                                ) {
+                                    append(
+                                        stringResource(
+                                            R.string
+                                                .backup_export_this_backup_file_then_save_it_to_the_cloud
+                                        )
+                                    )
+                                }
                             }
-                            withStyle(
-                                style =
-                                    Theme.brockmann.body.s.medium
-                                        .toSpanStyle()
-                                        .copy(color = Theme.v2.colors.text.primary)
-                            ) {
-                                append(" encrypted ")
-                            }
-                            withStyle(
-                                style =
-                                    Theme.brockmann.body.s.medium
-                                        .toSpanStyle()
-                                        .copy(color = Theme.v2.colors.text.tertiary)
-                            ) {
-                                append(stringResource(R.string.backup_vault_screen_password_suffix))
-                            }
-                            append("\n")
-                            withStyle(
-                                style =
-                                    Theme.brockmann.body.s.medium
-                                        .toSpanStyle()
-                                        .copy(color = Theme.v2.colors.text.secondary)
-                            ) {
-                                append(" ")
-                                append(stringResource(R.string.backup_vault_screen_cloud_tip))
-                                append(" ")
+                        else {
+                            buildAnnotatedString {
+                                withStyle(
+                                    style =
+                                        Theme.brockmann.body.s.medium
+                                            .toSpanStyle()
+                                            .copy(color = Theme.v2.colors.text.tertiary)
+                                ) {
+                                    append(
+                                        stringResource(R.string.backup_vault_screen_export_prefix)
+                                    )
+                                }
+                                withStyle(
+                                    style =
+                                        Theme.brockmann.body.s.medium
+                                            .toSpanStyle()
+                                            .copy(color = Theme.v2.colors.text.primary)
+                                ) {
+                                    append(
+                                        " ${stringResource(R.string.backup_vault_screen_encrypted)} "
+                                    )
+                                }
+                                withStyle(
+                                    style =
+                                        Theme.brockmann.body.s.medium
+                                            .toSpanStyle()
+                                            .copy(color = Theme.v2.colors.text.tertiary)
+                                ) {
+                                    append(
+                                        stringResource(R.string.backup_vault_screen_password_suffix)
+                                    )
+                                }
+                                append("\n")
+                                withStyle(
+                                    style =
+                                        Theme.brockmann.body.s.medium
+                                            .toSpanStyle()
+                                            .copy(color = Theme.v2.colors.text.secondary)
+                                ) {
+                                    append(" ")
+                                    append(stringResource(R.string.backup_vault_screen_cloud_tip))
+                                    append(" ")
+                                }
                             }
                         },
                     style = Theme.brockmann.body.s.medium,
@@ -161,12 +187,8 @@ private fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClick
                     state =
                         VsButtonState.Enabled.takeIf { isNextEnabled } ?: VsButtonState.Disabled,
                     modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                horizontal = 16.dp,
-                                vertical = 10.dp
-                            )
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
                             .testTag(BackupVaultScreenTags.BACKUP_NOW),
                 )
             }

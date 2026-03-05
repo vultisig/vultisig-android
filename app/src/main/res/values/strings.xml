@@ -1044,6 +1044,7 @@
     <string name="backup_incorrect_code_try_again">Incorrect code. Try again.</string>
     <string name="backup_save_backup_to_the_cloud">Save backup to the cloud</string>
     <string name="backup_vault_screen_export_prefix">Export this backup file, then save it to the cloud. It is</string>
+    <string name="backup_vault_screen_encrypted">encrypted</string>
     <string name="backup_vault_screen_password_suffix">with the password set earlier to unlock your Vault.</string>
     <string name="backup_vault_screen_cloud_tip">Use a different cloud service or account for each backup. When you\'re finished, delete the file from this device.</string>
     <string name="backup_vault_screen_save_backup">Save backup</string>

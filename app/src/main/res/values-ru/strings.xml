@@ -994,6 +994,7 @@
     <string name="backup_incorrect_code_try_again">Неверный код. Попробуйте снова.</string>
     <string name="backup_save_backup_to_the_cloud">Сохранить резервную копию в облаке</string>
     <string name="backup_vault_screen_export_prefix">Экспортируйте этот файл резервной копии, затем сохраните его в облаке. Он</string>
+    <string name="backup_vault_screen_encrypted">зашифрован</string>
     <string name="backup_vault_screen_password_suffix">паролем, установленным ранее, для разблокировки вашего хранилища.</string>
     <string name="backup_vault_screen_cloud_tip">Используйте разные облачные сервисы или аккаунты для каждой копии. Когда закончите, удалите файл с этого устройства.</string>
     <string name="backup_vault_screen_save_backup">Сохранить резервную копию</string>

@@ -1336,6 +1336,7 @@
     <string name="backup_incorrect_code_try_again">代码不正确。请再试一次。</string>
     <string name="backup_save_backup_to_the_cloud">将备份保存到云端</string>
     <string name="backup_vault_screen_export_prefix">导出此备份文件，然后保存到云端。它是</string>
+    <string name="backup_vault_screen_encrypted">加密的</string>
     <string name="backup_vault_screen_password_suffix">以之前设置的密码加密，用于解锁您的金库。</string>
     <string name="backup_vault_screen_cloud_tip">每份备份请使用不同的云服务或账户。完成后，请从此设备删除该文件。</string>
     <string name="backup_vault_screen_save_backup">保存备份</string>
