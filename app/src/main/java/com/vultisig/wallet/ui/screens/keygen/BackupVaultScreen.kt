@@ -182,7 +182,6 @@ private fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClick
                 )
                 VsButton(
                     label = stringResource(R.string.backup_vault_screen_save_backup),
-                    iconLeft = R.drawable.ic_download,
                     onClick = onBackupClick,
                     state =
                         VsButtonState.Enabled.takeIf { isNextEnabled } ?: VsButtonState.Disabled,
