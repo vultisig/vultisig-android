@@ -115,7 +115,7 @@ internal fun VaultBackupOnboardingScreen(
                                     style = Theme.brockmann.headings.subtitle,
                                     color = Theme.v2.colors.neutrals.n50,
                                 )
-                                UiSpacer(size = 4.dp)
+                                UiSpacer(size = 8.dp)
 
                                 Text(
                                     text = description.asString(),
