@@ -79,7 +79,7 @@ internal fun HintBox(
     onDismissClick: () -> Unit,
 ) {
     AnimatedVisibility(visible = isVisible, enter = fadeIn(), exit = fadeOut()) {
-        Popup(offset = offset, onDismissRequest = onDismissClick) {
+        Popup(offset = offset, onDismissRequest = null) {
             HintBoxPopupContent(
                 modifier = modifier,
                 title = title,
