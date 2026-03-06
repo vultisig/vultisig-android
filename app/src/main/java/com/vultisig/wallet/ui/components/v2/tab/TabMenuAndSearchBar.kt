@@ -49,10 +49,13 @@ internal fun TabMenuAndSearchBar(
                 V2Container(
                     type = ContainerType.SECONDARY,
                     cornerType = CornerType.Circular,
-                    modifier = Modifier.clickOnce(onClick = {
-                        searchTextFieldState.clearText()
-                        onCancelSearchClick()
-                    }),
+                    modifier =
+                        Modifier.clickOnce(
+                            onClick = {
+                                searchTextFieldState.clearText()
+                                onCancelSearchClick()
+                            }
+                        ),
                 ) {
                     UiIcon(
                         drawableResId = R.drawable.close_2,
