@@ -1264,13 +1264,14 @@
     <string name="import_seedphrase_checking">检查中…</string>
 
     <string name="key_import_chains_title">选择链</string>
-    <string name="key_import_chains_scanning">正在搜索活跃链…</string>
-    <string name="key_import_chains_scanning_desc">正在检查您的钱包在所有支持链上的现有余额</string>
-    <string name="key_import_chains_select_manually">手动选择</string>
-    <string name="key_import_chains_found_title">发现活跃链</string>
-    <string name="key_import_chains_found_desc">我们在以下链上发现了余额。您可以继续或自定义选择。</string>
-    <string name="key_import_chains_continue">继续</string>
-    <string name="key_import_chains_customize">自定义</string>
+    <string name="key_import_chains_scanning">正在搜索链…</string>
+    <string name="key_import_chains_scanning_desc">我们正在检查哪些区块链对您的助记词有活跃地址。</string>
+    <string name="key_import_chains_scanning_desc_highlight">此过程最多可能需要2分钟。</string>
+    <string name="key_import_chains_select_manually">手动选择链</string>
+    <string name="key_import_chains_found_title">我们发现了 %d 条活跃链</string>
+    <string name="key_import_chains_found_desc">每增加一条链都会增加生成保险库的时间和超时的可能性。</string>
+    <string name="key_import_chains_continue">开始</string>
+    <string name="key_import_chains_customize">自定义链</string>
     <string name="key_import_chains_no_active_title">未发现活跃链</string>
     <string name="key_import_chains_no_active_desc">未找到任何余额。请手动选择您要导入的链。</string>
     <string name="key_import_chains_select_title">选择链 (%1$d)</string>

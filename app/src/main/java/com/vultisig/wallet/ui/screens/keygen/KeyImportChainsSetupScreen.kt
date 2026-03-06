@@ -2,6 +2,8 @@ package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,7 +19,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,9 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.logo
@@ -38,6 +43,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridItem
@@ -106,34 +112,57 @@ internal fun KeyImportChainsSetupContent(
 
 @Composable
 private fun ScanningContent(onSelectManually: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        CircularProgressIndicator(
-            color = Theme.v2.colors.buttons.primary,
-            modifier = Modifier.size(48.dp),
-        )
-        UiSpacer(24.dp)
-        Text(
-            text = stringResource(R.string.key_import_chains_scanning),
-            style = Theme.brockmann.headings.subtitle,
-            color = Theme.v2.colors.text.primary,
-        )
-        UiSpacer(8.dp)
-        Text(
-            text = stringResource(R.string.key_import_chains_scanning_desc),
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.tertiary,
-            textAlign = TextAlign.Center,
-        )
-        UiSpacer(32.dp)
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp)) {
+        Spacer(modifier = Modifier.weight(1f))
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            RiveAnimation(
+                animation = R.raw.riv_connecting_with_server,
+                modifier = Modifier.size(24.dp),
+                fit = Fit.CONTAIN,
+            )
+
+            UiSpacer(24.dp)
+
+            Text(
+                text = stringResource(R.string.key_import_chains_scanning),
+                style = Theme.brockmann.headings.title2,
+                color = Theme.v2.colors.text.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            UiSpacer(12.dp)
+
+            val descText = buildAnnotatedString {
+                append(stringResource(R.string.key_import_chains_scanning_desc))
+                withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) {
+                    append(stringResource(R.string.key_import_chains_scanning_desc_highlight))
+                }
+            }
+
+            Text(
+                text = descText,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.tertiary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
         VsButton(
             label = stringResource(R.string.key_import_chains_select_manually),
             variant = VsButtonVariant.Secondary,
             onClick = onSelectManually,
+            modifier = Modifier.fillMaxWidth(),
         )
+
+        UiSpacer(16.dp)
     }
 }
 
@@ -143,41 +172,81 @@ private fun ActiveChainsContent(
     onContinue: () -> Unit,
     onCustomize: () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text(
-            text = stringResource(R.string.key_import_chains_found_title),
-            style = Theme.brockmann.headings.subtitle,
-            color = Theme.v2.colors.text.primary,
-        )
-        UiSpacer(8.dp)
-        Text(
-            text = stringResource(R.string.key_import_chains_found_desc),
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.tertiary,
-        )
-        UiSpacer(16.dp)
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp)) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            UiSpacer(16.dp)
+
+            Image(
+                painter = painterResource(R.drawable.ic_active_chain),
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+            )
+
+            UiSpacer(24.dp)
+
+            Text(
+                text = stringResource(R.string.key_import_chains_found_title, chains.size),
+                style = Theme.brockmann.headings.title2,
+                color = Theme.v2.colors.text.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            )
+
+            UiSpacer(8.dp)
+
+            Text(
+                text = stringResource(R.string.key_import_chains_found_desc),
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.tertiary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            )
+        }
+
+        UiSpacer(32.dp)
 
         LazyColumn(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(chains) { item -> ChainListItem(chain = item.chain, isSelected = true) }
+            items(chains, key = { it.chain.id }) { item -> ActiveChainItem(chain = item.chain) }
         }
 
         UiSpacer(16.dp)
 
         VsButton(
             label = stringResource(R.string.key_import_chains_continue),
+            variant = VsButtonVariant.CTA,
             onClick = onContinue,
             modifier = Modifier.fillMaxWidth(),
         )
-        UiSpacer(8.dp)
-        VsButton(
-            label = stringResource(R.string.key_import_chains_customize),
-            variant = VsButtonVariant.Secondary,
-            onClick = onCustomize,
-            modifier = Modifier.fillMaxWidth(),
-        )
+
+        UiSpacer(20.dp)
+
+        Row(
+            modifier =
+                Modifier.fillMaxWidth().clickable(onClick = onCustomize).padding(vertical = 12.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_edit_pencil),
+                contentDescription = null,
+                tint = Theme.v2.colors.text.primary,
+                modifier = Modifier.size(16.dp),
+            )
+            UiSpacer(8.dp)
+            Text(
+                text = stringResource(R.string.key_import_chains_customize),
+                style = Theme.brockmann.button.medium.small,
+                color = Theme.v2.colors.text.primary,
+            )
+        }
+
+        UiSpacer(16.dp)
     }
 }
 
@@ -264,33 +333,27 @@ private fun CustomizeChainsContent(
 }
 
 @Composable
-private fun ChainListItem(chain: Chain, isSelected: Boolean) {
+private fun ActiveChainItem(chain: Chain) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(Theme.v2.colors.backgrounds.tertiary_2)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .clip(RoundedCornerShape(20.dp))
+                .background(Theme.v2.colors.variables.backgroundsSurface1)
+                .border(1.dp, Theme.v2.colors.variables.bordersLight, RoundedCornerShape(20.dp))
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.Center,
     ) {
         Image(
             painter = painterResource(chain.logo),
             contentDescription = chain.raw,
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(36.dp),
         )
+        UiSpacer(4.dp)
         Text(
             text = chain.raw,
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
-            modifier = Modifier.weight(1f),
         )
-        if (isSelected) {
-            Icon(
-                painter = painterResource(R.drawable.check),
-                contentDescription = null,
-                tint = Theme.v2.colors.alerts.success,
-            )
-        }
     }
 }
