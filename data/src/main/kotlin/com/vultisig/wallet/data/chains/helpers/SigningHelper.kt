@@ -45,8 +45,8 @@ object SigningHelper {
             }
 
         // Skip Keccak256 for chains that pre-hash their messages
-        val chain = messagePayload.chain.lowercase()
-        if (chain in RAW_HASH_CHAINS) {
+        val chain = messagePayload.chain?.lowercase()
+        if (chain != null && chain in RAW_HASH_CHAINS) {
             return listOf(processedBytes.toHexString())
         }
 

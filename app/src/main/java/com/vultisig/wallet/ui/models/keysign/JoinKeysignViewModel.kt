@@ -443,8 +443,8 @@ constructor(
         // Chains that send pre-hashed messages (e.g., "0x" + hex hash).
         // Don't try to decode as UTF-8 — it produces garbage for raw hashes.
         // Display the hex hash directly so the user can verify it.
-        val chain = customMessage.chain.lowercase()
-        if (chain in setOf("dash", "solana")) {
+        val chain = customMessage.chain?.lowercase()
+        if (chain != null && chain in setOf("dash", "solana")) {
             return customMessage.message
         }
 
