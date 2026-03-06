@@ -308,3 +308,15 @@ When deleting a screen, go through this checklist:
 ---
 
 **Note**: This is an active project with frequent updates. Always pull latest changes from `main` before starting new work.
+
+## Knowledge Base
+
+For deeper context, see [vultisig-knowledge](https://github.com/vultisig/vultisig-knowledge). Read only when needed:
+
+| Situation | Read |
+|-----------|------|
+| First time in this repo | [repos/vultisig-android.md](https://github.com/vultisig/vultisig-knowledge/blob/main/repos/vultisig-android.md) |
+| Touching crypto/TSS code | [architecture/mpc-tss-explained.md](https://github.com/vultisig/vultisig-knowledge/blob/main/architecture/mpc-tss-explained.md) |
+| Signing flow details | [architecture/signing-flow.md](https://github.com/vultisig/vultisig-knowledge/blob/main/architecture/signing-flow.md) |
+| Cross-repo gotchas | [coding/gotchas.md](https://github.com/vultisig/vultisig-knowledge/blob/main/coding/gotchas.md) (see Android section) |
+| Cross-platform changes | [repos/index.md](https://github.com/vultisig/vultisig-knowledge/blob/main/repos/index.md) (dependency graph) |
