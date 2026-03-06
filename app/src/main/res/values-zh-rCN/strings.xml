@@ -1268,8 +1268,10 @@
     <string name="key_import_chains_scanning_desc">我们正在检查哪些区块链对您的助记词有活跃地址。</string>
     <string name="key_import_chains_scanning_desc_highlight">此过程最多可能需要2分钟。</string>
     <string name="key_import_chains_select_manually">手动选择链</string>
-    <string name="key_import_chains_found_title">我们发现了 %d 条活跃链</string>
-    <string name="key_import_chains_found_desc">每增加一条链都会增加生成保险库的时间和超时的可能性。</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="other">我们发现了 %d 条活跃链</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">每增加一条链都会增加生成金库的时间和超时的可能性。</string>
     <string name="key_import_chains_continue">开始</string>
     <string name="key_import_chains_customize">自定义链</string>
     <string name="key_import_chains_no_active_title">未发现活跃链</string>

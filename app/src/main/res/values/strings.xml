@@ -969,10 +969,13 @@
     <string name="import_seedphrase_checking">Checking…</string>
     <string name="key_import_chains_title">Select Chains</string>
     <string name="key_import_chains_scanning">Scanning for chains…</string>
-    <string name="key_import_chains_scanning_desc">"We\'re checking which blockchains have active addresses for your seed phrase. "</string>
+    <string name="key_import_chains_scanning_desc">We\'re checking which blockchains have active addresses for your seed phrase.</string>
     <string name="key_import_chains_scanning_desc_highlight">This process can take up to 2 minutes.</string>
     <string name="key_import_chains_select_manually">Select chains manually</string>
-    <string name="key_import_chains_found_title">We found %d active chains</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">We found %d active chain</item>
+        <item quantity="other">We found %d active chains</item>
+    </plurals>
     <string name="key_import_chains_found_desc">Each extra chain increases the time to generate your vault and possibility of a timeout.</string>
     <string name="key_import_chains_continue">Get started</string>
     <string name="key_import_chains_customize">Customize chains</string>

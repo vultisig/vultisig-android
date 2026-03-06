@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -188,7 +189,12 @@ private fun ActiveChainsContent(
             UiSpacer(24.dp)
 
             Text(
-                text = stringResource(R.string.key_import_chains_found_title, chains.size),
+                text =
+                    pluralStringResource(
+                        R.plurals.key_import_chains_found_title,
+                        chains.size,
+                        chains.size,
+                    ),
                 style = Theme.brockmann.headings.title2,
                 color = Theme.v2.colors.text.primary,
                 textAlign = TextAlign.Center,

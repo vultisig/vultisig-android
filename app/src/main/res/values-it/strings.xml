@@ -928,10 +928,13 @@
 
     <string name="key_import_chains_title">Seleziona catene</string>
     <string name="key_import_chains_scanning">Ricerca catene…</string>
-    <string name="key_import_chains_scanning_desc">"Stiamo verificando quali catene hanno indirizzi attivi per la tua frase seed. "</string>
+    <string name="key_import_chains_scanning_desc">Stiamo verificando quali catene hanno indirizzi attivi per la tua frase seed.</string>
     <string name="key_import_chains_scanning_desc_highlight">Questo processo può richiedere fino a 2 minuti.</string>
     <string name="key_import_chains_select_manually">Seleziona catene manualmente</string>
-    <string name="key_import_chains_found_title">Abbiamo trovato %d catene attive</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">Abbiamo trovato %d catena attiva</item>
+        <item quantity="other">Abbiamo trovato %d catene attive</item>
+    </plurals>
     <string name="key_import_chains_found_desc">Ogni catena aggiuntiva aumenta il tempo per generare il tuo vault e la possibilità di un timeout.</string>
     <string name="key_import_chains_continue">Inizia</string>
     <string name="key_import_chains_customize">Personalizza catene</string>

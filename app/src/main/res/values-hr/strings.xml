@@ -927,10 +927,14 @@
 
     <string name="key_import_chains_title">Odaberi lance</string>
     <string name="key_import_chains_scanning">Traženje lanaca…</string>
-    <string name="key_import_chains_scanning_desc">"Provjeravamo koji lanci imaju aktivne adrese za vašu frazu za oporavak. "</string>
+    <string name="key_import_chains_scanning_desc">Provjeravamo koji lanci imaju aktivne adrese za vašu frazu za oporavak.</string>
     <string name="key_import_chains_scanning_desc_highlight">Ovaj proces može trajati do 2 minute.</string>
     <string name="key_import_chains_select_manually">Ručno odaberi lance</string>
-    <string name="key_import_chains_found_title">Pronašli smo %d aktivnih lanaca</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">Pronašli smo %d aktivan lanac</item>
+        <item quantity="few">Pronašli smo %d aktivna lanca</item>
+        <item quantity="other">Pronašli smo %d aktivnih lanaca</item>
+    </plurals>
     <string name="key_import_chains_found_desc">Svaki dodatni lanac povećava vrijeme za generiranje vašeg trezora i mogućnost isteka vremena.</string>
     <string name="key_import_chains_continue">Započni</string>
     <string name="key_import_chains_customize">Prilagodi lance</string>
