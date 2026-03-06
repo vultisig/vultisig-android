@@ -78,4 +78,11 @@ for pattern in "${SECRET_PATTERNS[@]}"; do
   fi
 done
 
+# ── Environment variable exposure ─────────────────────────────────
+if echo "$INPUT" | grep -qiE "\b(printenv|export -p)\b|echo.*(TOKEN|API_KEY|SECRET|PASSWORD|CREDENTIAL)|env\s*$|env\s*\|"; then
+  echo "BLOCKED: Environment variable exposure detected."
+  echo "Agents must not read or print secrets from the environment."
+  exit 2
+fi
+
 exit 0

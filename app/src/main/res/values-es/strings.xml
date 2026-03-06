@@ -925,13 +925,17 @@
     <string name="import_seedphrase_checking">Verificando…</string>
 
     <string name="key_import_chains_title">Seleccionar cadenas</string>
-    <string name="key_import_chains_scanning">Buscando cadenas activas…</string>
-    <string name="key_import_chains_scanning_desc">Verificando su billetera en busca de saldos existentes en todas las cadenas compatibles</string>
-    <string name="key_import_chains_select_manually">Seleccionar manualmente</string>
-    <string name="key_import_chains_found_title">Cadenas activas encontradas</string>
-    <string name="key_import_chains_found_desc">Encontramos saldos en las siguientes cadenas. Puede continuar o personalizar su selección.</string>
-    <string name="key_import_chains_continue">Continuar</string>
-    <string name="key_import_chains_customize">Personalizar</string>
+    <string name="key_import_chains_scanning">Buscando cadenas…</string>
+    <string name="key_import_chains_scanning_desc">Estamos verificando qué cadenas tienen direcciones activas para su frase semilla.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">Este proceso puede tardar hasta 2 minutos.</string>
+    <string name="key_import_chains_select_manually">Seleccionar cadenas manualmente</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">Encontramos %d cadena activa</item>
+        <item quantity="other">Encontramos %d cadenas activas</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Cada cadena adicional aumenta el tiempo para generar su bóveda y la posibilidad de un tiempo de espera agotado.</string>
+    <string name="key_import_chains_continue">Comenzar</string>
+    <string name="key_import_chains_customize">Personalizar cadenas</string>
     <string name="key_import_chains_no_active_title">No se encontraron cadenas activas</string>
     <string name="key_import_chains_no_active_desc">No pudimos encontrar saldos. Seleccione las cadenas que desea importar manualmente.</string>
     <string name="key_import_chains_select_title">Seleccionar cadenas (%1$d)</string>

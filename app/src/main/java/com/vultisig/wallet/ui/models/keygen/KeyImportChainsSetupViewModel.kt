@@ -262,6 +262,14 @@ constructor(
     }
 
     fun back() {
-        viewModelScope.launch { navigator.back() }
+        val currentState = _state.value
+        if (
+            currentState.screenState == ChainsSetupState.CustomizeChains &&
+                currentState.activeChains.isNotEmpty()
+        ) {
+            _state.update { it.copy(screenState = ChainsSetupState.ActiveChains) }
+        } else {
+            viewModelScope.launch { navigator.back() }
+        }
     }
 }
