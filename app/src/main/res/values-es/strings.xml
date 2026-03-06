@@ -926,7 +926,7 @@
 
     <string name="key_import_chains_title">Seleccionar cadenas</string>
     <string name="key_import_chains_scanning">Buscando cadenas…</string>
-    <string name="key_import_chains_scanning_desc">Estamos verificando qué cadenas tienen direcciones activas para su frase semilla.</string>
+    <string name="key_import_chains_scanning_desc">Estamos verificando qué cadenas tienen direcciones activas para su frase semilla.\u0020</string>
     <string name="key_import_chains_scanning_desc_highlight">Este proceso puede tardar hasta 2 minutos.</string>
     <string name="key_import_chains_select_manually">Seleccionar cadenas manualmente</string>
     <plurals name="key_import_chains_found_title">

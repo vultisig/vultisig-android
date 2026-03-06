@@ -969,7 +969,7 @@
     <string name="import_seedphrase_checking">Checking…</string>
     <string name="key_import_chains_title">Select Chains</string>
     <string name="key_import_chains_scanning">Scanning for chains…</string>
-    <string name="key_import_chains_scanning_desc">We\'re checking which blockchains have active addresses for your seed phrase.</string>
+    <string name="key_import_chains_scanning_desc">We\'re checking which blockchains have active addresses for your seed phrase.\u0020</string>
     <string name="key_import_chains_scanning_desc_highlight">This process can take up to 2 minutes.</string>
     <string name="key_import_chains_select_manually">Select chains manually</string>
     <plurals name="key_import_chains_found_title">

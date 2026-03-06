@@ -927,7 +927,7 @@
 
     <string name="key_import_chains_title">Odaberi lance</string>
     <string name="key_import_chains_scanning">Traženje lanaca…</string>
-    <string name="key_import_chains_scanning_desc">Provjeravamo koji lanci imaju aktivne adrese za vašu frazu za oporavak.</string>
+    <string name="key_import_chains_scanning_desc">Provjeravamo koji lanci imaju aktivne adrese za vašu frazu za oporavak.\u0020</string>
     <string name="key_import_chains_scanning_desc_highlight">Ovaj proces može trajati do 2 minute.</string>
     <string name="key_import_chains_select_manually">Ručno odaberi lance</string>
     <plurals name="key_import_chains_found_title">

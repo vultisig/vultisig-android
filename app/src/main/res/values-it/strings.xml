@@ -928,7 +928,7 @@
 
     <string name="key_import_chains_title">Seleziona catene</string>
     <string name="key_import_chains_scanning">Ricerca catene…</string>
-    <string name="key_import_chains_scanning_desc">Stiamo verificando quali catene hanno indirizzi attivi per la tua frase seed.</string>
+    <string name="key_import_chains_scanning_desc">Stiamo verificando quali catene hanno indirizzi attivi per la tua frase seed.\u0020</string>
     <string name="key_import_chains_scanning_desc_highlight">Questo processo può richiedere fino a 2 minuti.</string>
     <string name="key_import_chains_select_manually">Seleziona catene manualmente</string>
     <plurals name="key_import_chains_found_title">

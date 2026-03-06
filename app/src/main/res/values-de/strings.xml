@@ -928,7 +928,7 @@
 
     <string name="key_import_chains_title">Blockchains auswählen</string>
     <string name="key_import_chains_scanning">Suche nach Blockchains…</string>
-    <string name="key_import_chains_scanning_desc">Wir prüfen, welche Blockchains aktive Adressen für Ihre Seed-Phrase haben.</string>
+    <string name="key_import_chains_scanning_desc">Wir prüfen, welche Blockchains aktive Adressen für Ihre Seed-Phrase haben.\u0020</string>
     <string name="key_import_chains_scanning_desc_highlight">Dieser Vorgang kann bis zu 2 Minuten dauern.</string>
     <string name="key_import_chains_select_manually">Blockchains manuell auswählen</string>
     <plurals name="key_import_chains_found_title">

@@ -923,7 +923,7 @@
 
     <string name="key_import_chains_title">Выберите цепочки</string>
     <string name="key_import_chains_scanning">Поиск цепочек…</string>
-    <string name="key_import_chains_scanning_desc">Мы проверяем, какие цепочки имеют активные адреса для вашей сид-фразы.</string>
+    <string name="key_import_chains_scanning_desc">Мы проверяем, какие цепочки имеют активные адреса для вашей сид-фразы.\u0020</string>
     <string name="key_import_chains_scanning_desc_highlight">Этот процесс может занять до 2 минут.</string>
     <string name="key_import_chains_select_manually">Выбрать цепочки вручную</string>
     <plurals name="key_import_chains_found_title">
