@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.keygen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -48,6 +49,6 @@ constructor(
     }
 
     fun navigateToImportSeedphrase() {
-        viewModelScope.launch { navigator.route(Route.KeyImport.ImportSeedphrase) }
+        viewModelScope.safeLaunch { navigator.route(Route.KeyImport.FeatureSpotlight) }
     }
 }

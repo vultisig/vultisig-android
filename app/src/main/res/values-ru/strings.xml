@@ -896,6 +896,17 @@
     <string name="raw_transaction_data">Исходные данные транзакции</string>
     <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">Прежде чем начать...</string>
+    <string name="key_import_spotlight_heading_part1">"Вы вступаете в новую эру,\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"оставляя старые сид-фразы позади. "</string>
+    <string name="key_import_spotlight_heading_part2">Вам понадобится:</string>
+    <string name="key_import_spotlight_seedphrase_title">Ваша сид-фраза</string>
+    <string name="key_import_spotlight_seedphrase_desc">Введите её, создайте хранилище, не оглядывайтесь назад</string>
+    <string name="key_import_spotlight_device_title">Как минимум одно устройство</string>
+    <string name="key_import_spotlight_device_desc">Подойдёт любое устройство, на котором работает Vultisig.</string>
+    <string name="key_import_spotlight_get_started">Начать</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Импортировать сид-фразу</string>
     <string name="import_seedphrase_title">Введите вашу сид-фразу</string>
