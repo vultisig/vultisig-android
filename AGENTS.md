@@ -39,3 +39,13 @@ git submodule update --init --recursive
 - JNI crypto bindings — do not modify without review
 - Credential requirements: WalletCore needs GitHub auth token
 - Always test keygen and keysign flows after refactoring
+
+## Knowledge Base
+
+For deeper context beyond this file, see [vultisig-knowledge](https://github.com/vultisig/vultisig-knowledge).
+
+Key docs for this repo:
+- [repos/vultisig-android.md](https://github.com/vultisig/vultisig-knowledge/blob/main/repos/vultisig-android.md)
+- [architecture/mpc-tss-explained.md](https://github.com/vultisig/vultisig-knowledge/blob/main/architecture/mpc-tss-explained.md)
+- [architecture/signing-flow.md](https://github.com/vultisig/vultisig-knowledge/blob/main/architecture/signing-flow.md)
+- [coding/gotchas.md](https://github.com/vultisig/vultisig-knowledge/blob/main/coding/gotchas.md) (see Android section)
