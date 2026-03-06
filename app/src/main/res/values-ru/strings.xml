@@ -922,13 +922,19 @@
     <string name="import_seedphrase_checking">Проверка…</string>
 
     <string name="key_import_chains_title">Выберите цепочки</string>
-    <string name="key_import_chains_scanning">Поиск активных цепочек…</string>
-    <string name="key_import_chains_scanning_desc">Проверка вашего кошелька на наличие балансов во всех поддерживаемых цепочках</string>
-    <string name="key_import_chains_select_manually">Выбрать вручную</string>
-    <string name="key_import_chains_found_title">Найдены активные цепочки</string>
-    <string name="key_import_chains_found_desc">Мы нашли балансы в следующих цепочках. Вы можете продолжить или настроить выбор.</string>
-    <string name="key_import_chains_continue">Продолжить</string>
-    <string name="key_import_chains_customize">Настроить</string>
+    <string name="key_import_chains_scanning">Поиск цепочек…</string>
+    <string name="key_import_chains_scanning_desc">Мы проверяем, какие цепочки имеют активные адреса для вашей сид-фразы.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">Этот процесс может занять до 2 минут.</string>
+    <string name="key_import_chains_select_manually">Выбрать цепочки вручную</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">Мы нашли %d активную цепочку</item>
+        <item quantity="few">Мы нашли %d активные цепочки</item>
+        <item quantity="many">Мы нашли %d активных цепочек</item>
+        <item quantity="other">Мы нашли %d активных цепочек</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Каждая дополнительная цепочка увеличивает время создания хранилища и вероятность тайм-аута.</string>
+    <string name="key_import_chains_continue">Начать</string>
+    <string name="key_import_chains_customize">Настроить цепочки</string>
     <string name="key_import_chains_no_active_title">Активные цепочки не найдены</string>
     <string name="key_import_chains_no_active_desc">Балансы не найдены. Выберите цепочки для импорта вручную.</string>
     <string name="key_import_chains_select_title">Выберите цепочки (%1$d)</string>

@@ -926,13 +926,17 @@
     <string name="import_seedphrase_checking">Verificando…</string>
 
     <string name="key_import_chains_title">Selecionar cadeias</string>
-    <string name="key_import_chains_scanning">Procurando cadeias ativas…</string>
-    <string name="key_import_chains_scanning_desc">Verificando sua carteira em busca de saldos existentes em todas as cadeias suportadas</string>
-    <string name="key_import_chains_select_manually">Selecionar manualmente</string>
-    <string name="key_import_chains_found_title">Cadeias ativas encontradas</string>
-    <string name="key_import_chains_found_desc">Encontramos saldos nas seguintes cadeias. Você pode continuar ou personalizar sua seleção.</string>
-    <string name="key_import_chains_continue">Continuar</string>
-    <string name="key_import_chains_customize">Personalizar</string>
+    <string name="key_import_chains_scanning">Procurando cadeias…</string>
+    <string name="key_import_chains_scanning_desc">Estamos verificando quais cadeias possuem endereços ativos para sua frase semente.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">Este processo pode levar até 2 minutos.</string>
+    <string name="key_import_chains_select_manually">Selecionar cadeias manualmente</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">Encontramos %d cadeia ativa</item>
+        <item quantity="other">Encontramos %d cadeias ativas</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Cada cadeia adicional aumenta o tempo para gerar seu cofre e a possibilidade de o tempo limite ser atingido.</string>
+    <string name="key_import_chains_continue">Começar</string>
+    <string name="key_import_chains_customize">Personalizar cadeias</string>
     <string name="key_import_chains_no_active_title">Nenhuma cadeia ativa encontrada</string>
     <string name="key_import_chains_no_active_desc">Não encontramos nenhum saldo. Selecione manualmente as cadeias que deseja importar.</string>
     <string name="key_import_chains_select_title">Selecionar cadeias (%1$d)</string>
