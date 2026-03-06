@@ -900,6 +900,17 @@
     <string name="raw_transaction_data">Dados brutos de transação</string>
     <string name="solana_raw_transaction">Transação bruta de Solana</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">Antes de começar...</string>
+    <string name="key_import_spotlight_heading_part1">"Você está entrando em uma nova era,\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"deixando as velhas frases semente para trás. "</string>
+    <string name="key_import_spotlight_heading_part2">Você vai precisar de:</string>
+    <string name="key_import_spotlight_seedphrase_title">Sua frase semente</string>
+    <string name="key_import_spotlight_seedphrase_desc">Digite-a, crie um cofre, nunca mais olhe para trás</string>
+    <string name="key_import_spotlight_device_title">Pelo menos um dispositivo</string>
+    <string name="key_import_spotlight_device_desc">Qualquer dispositivo que possa executar o Vultisig funcionará.</string>
+    <string name="key_import_spotlight_get_started">Começar</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Importar frase semente</string>
     <string name="import_seedphrase_title">Digite sua frase semente</string>

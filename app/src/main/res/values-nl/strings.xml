@@ -896,6 +896,17 @@
     <string name="raw_transaction_data">Ruwe transactiegegevens</string>
     <string name="solana_raw_transaction">Solana Ruwe transactie</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">Voordat u begint...</string>
+    <string name="key_import_spotlight_heading_part1">"U betreedt een nieuw tijdperk,\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"oude herstelzinnen achter u latend. "</string>
+    <string name="key_import_spotlight_heading_part2">U heeft nodig:</string>
+    <string name="key_import_spotlight_seedphrase_title">Uw herstelzin</string>
+    <string name="key_import_spotlight_seedphrase_desc">Voer het in, maak een kluis aan, kijk nooit meer om</string>
+    <string name="key_import_spotlight_device_title">Minstens één apparaat</string>
+    <string name="key_import_spotlight_device_desc">Elk apparaat dat Vultisig kan draaien werkt.</string>
+    <string name="key_import_spotlight_get_started">Aan de slag</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Herstelzin importeren</string>
     <string name="import_seedphrase_title">Voer uw herstelzin in</string>

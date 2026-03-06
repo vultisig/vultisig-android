@@ -943,6 +943,17 @@
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
     <string name="vault_count_recommended">Recommended</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">Before you start...</string>
+    <string name="key_import_spotlight_heading_part1">"You are entering a new era,\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"leaving old seed phrases behind. "</string>
+    <string name="key_import_spotlight_heading_part2">You\'ll need:</string>
+    <string name="key_import_spotlight_seedphrase_title">Your seedphrase</string>
+    <string name="key_import_spotlight_seedphrase_desc">Enter it, create a vault, never look back</string>
+    <string name="key_import_spotlight_device_title">At least one device</string>
+    <string name="key_import_spotlight_device_desc">Any device that can run Vultisig will work.</string>
+    <string name="key_import_spotlight_get_started">Get started</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Import Seed Phrase</string>
     <string name="import_seedphrase_title">Enter Your Seed Phrase</string>

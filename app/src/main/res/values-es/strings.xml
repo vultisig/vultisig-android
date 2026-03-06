@@ -899,6 +899,17 @@
     <string name="raw_transaction_data">Datos de transacciones sin procesar</string>
     <string name="solana_raw_transaction">Transacción sin procesar de Solana</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">Antes de empezar...</string>
+    <string name="key_import_spotlight_heading_part1">"Estás entrando en una nueva era,\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"dejando atrás las viejas frases semilla. "</string>
+    <string name="key_import_spotlight_heading_part2">Necesitarás:</string>
+    <string name="key_import_spotlight_seedphrase_title">Tu frase semilla</string>
+    <string name="key_import_spotlight_seedphrase_desc">Ingrésala, crea una bóveda, no mires atrás</string>
+    <string name="key_import_spotlight_device_title">Al menos un dispositivo</string>
+    <string name="key_import_spotlight_device_desc">Cualquier dispositivo que pueda ejecutar Vultisig funcionará.</string>
+    <string name="key_import_spotlight_get_started">Comenzar</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Importar frase semilla</string>
     <string name="import_seedphrase_title">Ingrese su frase semilla</string>

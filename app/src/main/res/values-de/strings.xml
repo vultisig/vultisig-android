@@ -901,6 +901,17 @@
     <string name="raw_transaction_data">Rohdaten der Transaktion</string>
     <string name="solana_raw_transaction">Solana-Rohdaten der Transaktion</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">Bevor Sie beginnen...</string>
+    <string name="key_import_spotlight_heading_part1">"Sie betreten eine neue Ära,\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"lassen alte Seed-Phrasen hinter sich. "</string>
+    <string name="key_import_spotlight_heading_part2">Sie benötigen:</string>
+    <string name="key_import_spotlight_seedphrase_title">Ihre Seed-Phrase</string>
+    <string name="key_import_spotlight_seedphrase_desc">Geben Sie sie ein, erstellen Sie einen Tresor, schauen Sie nie zurück</string>
+    <string name="key_import_spotlight_device_title">Mindestens ein Gerät</string>
+    <string name="key_import_spotlight_device_desc">Jedes Gerät, das Vultisig ausführen kann, funktioniert.</string>
+    <string name="key_import_spotlight_get_started">Loslegen</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Seed-Phrase importieren</string>
     <string name="import_seedphrase_title">Seed-Phrase eingeben</string>
