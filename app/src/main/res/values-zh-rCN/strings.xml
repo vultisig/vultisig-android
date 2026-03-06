@@ -1238,6 +1238,17 @@
     <string name="raw_transaction_data">原始交易数据</string>
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">在您开始之前...</string>
+    <string name="key_import_spotlight_heading_part1">"您正在进入一个新时代，\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"告别旧的助记词。 "</string>
+    <string name="key_import_spotlight_heading_part2">您需要：</string>
+    <string name="key_import_spotlight_seedphrase_title">您的助记词</string>
+    <string name="key_import_spotlight_seedphrase_desc">输入它，创建金库，永不回头</string>
+    <string name="key_import_spotlight_device_title">至少一台设备</string>
+    <string name="key_import_spotlight_device_desc">任何能运行 Vultisig 的设备都可以。</string>
+    <string name="key_import_spotlight_get_started">开始</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">导入助记词</string>
     <string name="import_seedphrase_title">输入您的助记词</string>
