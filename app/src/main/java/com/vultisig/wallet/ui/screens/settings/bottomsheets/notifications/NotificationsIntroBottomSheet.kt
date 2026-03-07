@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -29,6 +31,7 @@ import androidx.compose.ui.Alignment
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsSwitch
+import com.vultisig.wallet.ui.components.VsSwitchV3
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
@@ -174,7 +177,7 @@ internal fun VaultNotificationOptInBottomSheetContent(
             textAlign = TextAlign.Center
         )
 
-        UiSpacer(size = 15.dp)
+        UiSpacer(size = 32.dp)
         Column(
             modifier = Modifier
                 .background(
@@ -183,15 +186,15 @@ internal fun VaultNotificationOptInBottomSheetContent(
                         12.dp
                     )
                 )
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp
-                )
+
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 17.dp
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -200,27 +203,46 @@ internal fun VaultNotificationOptInBottomSheetContent(
                     color = Theme.v2.colors.text.primary,
                     modifier = Modifier.weight(1f),
                 )
-                VsSwitch(
+                VsSwitchV3(
                     checked = allEnabled,
                     onCheckedChange = onEnableAll,
-                    modifier= Modifier
-                        .width(40.dp)
-                        .height(24.dp)
                 )
             }
 
             vaults.forEach { vault ->
-                HorizontalDivider(color = Theme.v2.colors.border.normal)
+                HorizontalDivider(
+                    color = Theme.v2.colors.variables.bordersLight,
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 16.dp,
+                        )
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp),
+                        .padding(
+                            horizontal = 16.dp,
+                            vertical = 12.dp
+                        ),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     VaultIcon(
                         isFastVault = vault.isFastVault,
-                        size = 20.dp
+                        size = 20.dp,
+                        modifier = Modifier
+                            .border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.variables.bordersLight,
+                                shape = RoundedCornerShape(size = 99.dp)
+                            )
+                            .background(
+                                color = Theme.v2.colors.variables.backgroundsSurface12,
+                                shape = RoundedCornerShape(size = 99.dp)
+                            )
+                            .padding(
+                                12.dp
+                            )
                     )
                     Text(
                         text = vault.vaultName,
@@ -228,7 +250,7 @@ internal fun VaultNotificationOptInBottomSheetContent(
                         color = Theme.v2.colors.text.primary,
                         modifier = Modifier.weight(1f),
                     )
-                    VsSwitch(
+                    VsSwitchV3(
                         checked = vault.isEnabled,
                         onCheckedChange = { enabled ->
                             onEnableVault(
@@ -236,9 +258,6 @@ internal fun VaultNotificationOptInBottomSheetContent(
                                 enabled
                             )
                         },
-                        modifier= Modifier
-                            .width(40.dp)
-                            .height(24.dp)
                     )
                 }
 
@@ -281,18 +300,25 @@ private fun VaultNotificationOptInBottomSheetContentPreview() {
                 listOf(
                     VaultIntroItem(
                         vaultId = "1",
-                        vaultName = "Main Vault",
-                        isEnabled = true
+                        vaultName = "Vault 1",
+                        isEnabled = true,
                     ),
                     VaultIntroItem(
                         vaultId = "2",
-                        vaultName = "Savings Vault",
+                        vaultName = "Vault 2",
+                        isEnabled = true,
+                        isFastVault = true
+                    ),
+                    VaultIntroItem(
+                        vaultId = "3",
+                        vaultName = "Vault 3",
                         isEnabled = false
                     ),
                     VaultIntroItem(
                         vaultId = "3",
-                        vaultName = "Cold Storage",
-                        isEnabled = true
+                        vaultName = "Vault 4",
+                        isEnabled = false,
+                        isFastVault = true
                     ),
                 ),
             onEnableVault = { _, _ -> },
