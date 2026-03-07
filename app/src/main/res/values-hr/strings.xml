@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Push Notifications -->
+    <string name="notifications">Obavijesti</string>
+    <string name="push_notifications">Push obavijesti</string>
+    <string name="push_notifications_failed">Slanje push obavijesti nije uspjelo</string>
+    <string name="push_notifications_sent">Obavijest je uspješno poslana</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Primite obavijest kada je potreban vaš potpis ili uređaj zatraži pristup.</string>
+    <string name="enable_push_notifications">Omogući push obavijesti</string>
+    <string name="keysign_notification_channel_name">Zahtjevi za potpisivanje</string>
+    <string name="keysign_notification_title">Potpiši transakciju</string>
+    <string name="keysign_notification_body">Čeka vas novi zahtjev za potpisivanje</string>
+    <string name="notifications_intro_enable">Aktiviraj</string>
+    <string name="notifications_are_here">Sigurne obavijesti su ovdje</string>
+    <string name="notifications_description">Primajte upozorenja kada drugi uređaj zatraži pristup vašem trezoru ili kada je potreban vaš potpis.</string>
+    <string name="choose_vaults_for_notifications">Odaberite trezore za obavijesti</string>
+    <string name="notifications_vault_sheet_subtitle">Možete upravljati obavijestima u postavkama sustava.</string>
+    <string name="enable_notifications_for_vault">Omogući obavijesti za %s</string>
+    <string name="not_now">Ne sada</string>
+    <string name="vault_notifications">Obavijesti trezora</string>
+    <string name="enable_all">Omogući sve</string>
+
     <string name="try_again">Pokušajte ponovno</string>
     <string name="vault_settings_title">Postavke trezora</string>
     <string name="vault_settings_details_title">Detalji</string>
@@ -1082,4 +1102,10 @@
     <string name="server_backup_error_timeout">Poslužitelju je trebalo predugo za odgovor. Provjerite svoju internetsku vezu i pokušajte ponovno.</string>
     <string name="server_backup_error_too_many_requests">Previše zahtjeva za sigurnosnu kopiju. Pokušajte ponovno kasnije.</string>
     <string name="server_backup_error_bad_request">Nešto je pošlo po krivu. Provjerite svoje podatke i pokušajte ponovno.</string>
+    <string name="resend_notification">Ponovo pošalji obavijest</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Ponovo pošalji obavijest za %d sekundu</item>
+        <item quantity="few">Ponovo pošalji obavijest za %d sekunde</item>
+        <item quantity="other">Ponovo pošalji obavijest za %d sekundi</item>
+    </plurals>
 </resources>

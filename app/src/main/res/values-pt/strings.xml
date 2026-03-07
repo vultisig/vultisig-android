@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Push Notifications -->
+    <string name="notifications">Notificações</string>
+    <string name="push_notifications">Notificações push</string>
+    <string name="push_notifications_failed">Falha ao enviar notificação push</string>
+    <string name="push_notifications_sent">Notificação enviada com sucesso</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Receba uma notificação quando a sua assinatura for necessária ou um dispositivo solicitar acesso.</string>
+    <string name="enable_push_notifications">Ativar notificações push</string>
+    <string name="keysign_notification_channel_name">Solicitações de assinatura</string>
+    <string name="keysign_notification_title">Assinar transação</string>
+    <string name="keysign_notification_body">Há uma nova solicitação de assinatura aguardando você</string>
+    <string name="notifications_intro_enable">Ativar</string>
+    <string name="notifications_are_here">Notificações seguras chegaram</string>
+    <string name="notifications_description">Receba alertas quando outro dispositivo solicitar entrar no seu cofre ou quando a sua assinatura for necessária.</string>
+    <string name="choose_vaults_for_notifications">Escolher cofres para notificações</string>
+    <string name="notifications_vault_sheet_subtitle">Pode gerir as notificações nas definições do sistema.</string>
+    <string name="enable_notifications_for_vault">Ativar notificações para %s</string>
+    <string name="not_now">Agora não</string>
+    <string name="vault_notifications">Notificações do cofre</string>
+    <string name="enable_all">Ativar tudo</string>
+
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
     <string name="signing_error_please_try_again_s">Erro ao Assinar. Por favor, tente novamente. %s</string>
@@ -1081,4 +1101,9 @@
     <string name="server_backup_error_timeout">O servidor demorou demasiado a responder. Verifique a sua ligação à Internet e tente novamente.</string>
     <string name="server_backup_error_too_many_requests">Demasiados pedidos de backup. Tente novamente mais tarde.</string>
     <string name="server_backup_error_bad_request">Algo correu mal. Verifique os seus dados e tente novamente.</string>
+    <string name="resend_notification">Reenviar notificação</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Reenviar notificação em %d segundo</item>
+        <item quantity="other">Reenviar notificação em %d segundos</item>
+    </plurals>
 </resources>

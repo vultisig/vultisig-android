@@ -79,6 +79,7 @@ fun V2BottomSheet(
     modifier: Modifier = Modifier,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     onDismissRequest: () -> Unit = {},
+    displayDragHandler: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) {
     ModalBottomSheet(
@@ -98,7 +99,9 @@ fun V2BottomSheet(
                         Modifier.fillMaxWidth().background(Theme.v2.colors.backgrounds.primary),
                     content = content,
                 )
-                DragHandler(modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter))
+                if (displayDragHandler) {
+                    DragHandler(modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter))
+                }
             }
         },
     )

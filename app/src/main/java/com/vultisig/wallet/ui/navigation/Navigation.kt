@@ -489,6 +489,8 @@ internal sealed class Route {
 
     @Serializable data class SetupVaultInfo(val count: Int)
 
+    @Serializable data object NotificationSettings
+
     @Serializable data object ChooseVaultCount
 
     @Serializable

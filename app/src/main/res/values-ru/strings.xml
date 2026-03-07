@@ -1,4 +1,24 @@
 <resources>
+    <!-- Push Notifications -->
+    <string name="notifications">Уведомления</string>
+    <string name="push_notifications">Push-уведомления</string>
+    <string name="push_notifications_failed">Ошибка отправки push-уведомления</string>
+    <string name="push_notifications_sent">Уведомление успешно отправлено</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Получайте уведомления, когда требуется ваша подпись или устройство запрашивает доступ.</string>
+    <string name="enable_push_notifications">Включить push-уведомления</string>
+    <string name="keysign_notification_channel_name">Запросы на подписание</string>
+    <string name="keysign_notification_title">Подписать транзакцию</string>
+    <string name="keysign_notification_body">Новый запрос на подписание ожидает вас</string>
+    <string name="notifications_intro_enable">Включить</string>
+    <string name="notifications_are_here">Безопасные уведомления здесь</string>
+    <string name="notifications_description">Получайте уведомления, когда другое устройство запрашивает доступ к вашему хранилищу или когда требуется ваша подпись.</string>
+    <string name="choose_vaults_for_notifications">Выбрать хранилища для уведомлений</string>
+    <string name="notifications_vault_sheet_subtitle">Вы можете управлять уведомлениями в настройках системы.</string>
+    <string name="enable_notifications_for_vault">Включить уведомления для %s</string>
+    <string name="not_now">Не сейчас</string>
+    <string name="vault_notifications">Уведомления хранилища</string>
+    <string name="enable_all">Включить все</string>
+
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Логотип токена</string>
     <string name="tokens">Токены</string>
@@ -1079,4 +1099,10 @@
     <string name="server_backup_error_timeout">Сервер слишком долго отвечал. Проверьте подключение к интернету и попробуйте снова.</string>
     <string name="server_backup_error_too_many_requests">Слишком много запросов на резервное копирование. Попробуйте позже.</string>
     <string name="server_backup_error_bad_request">Что-то пошло не так. Проверьте свои данные и попробуйте снова.</string>
+    <string name="resend_notification">Повторно отправить уведомление</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Повторно отправить уведомление через %d секунду</item>
+        <item quantity="few">Повторно отправить уведомление через %d секунды</item>
+        <item quantity="other">Повторно отправить уведомление через %d секунд</item>
+    </plurals>
 </resources>

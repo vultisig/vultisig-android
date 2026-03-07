@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Push Notifications -->
+    <string name="notifications">Notificaciones</string>
+    <string name="push_notifications">Notificaciones push</string>
+    <string name="push_notifications_failed">Error al enviar la notificación push</string>
+    <string name="push_notifications_sent">Notificación enviada correctamente</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Recibe una notificación cuando se requiera tu firma o un dispositivo solicite acceso.</string>
+    <string name="enable_push_notifications">Habilitar notificaciones push</string>
+    <string name="keysign_notification_channel_name">Solicitudes de firma</string>
+    <string name="keysign_notification_title">Firmar transacción</string>
+    <string name="keysign_notification_body">Hay una nueva solicitud de firma esperándote</string>
+    <string name="notifications_intro_enable">Activar</string>
+    <string name="notifications_are_here">Las notificaciones seguras ya están aquí</string>
+    <string name="notifications_description">Recibe alertas cuando otro dispositivo solicite unirse a tu bóveda o cuando se requiera tu firma.</string>
+    <string name="choose_vaults_for_notifications">Elegir bóvedas para notificaciones</string>
+    <string name="notifications_vault_sheet_subtitle">Puedes gestionar las notificaciones en la configuración del sistema.</string>
+    <string name="enable_notifications_for_vault">Habilitar notificaciones para %s</string>
+    <string name="not_now">Ahora no</string>
+    <string name="vault_notifications">Notificaciones de bóveda</string>
+    <string name="enable_all">Habilitar todo</string>
+
     <string name="keysign">Signo de clave</string>
     <string name="danger_icon">Icono de peligro</string>
     <string name="signing_error_please_try_again_s">Error al Firmar. Por favor intenta de nuevo. %s</string>
@@ -1080,4 +1100,9 @@
     <string name="server_backup_error_timeout">El servidor tardó demasiado en responder. Verifique su conexión a Internet e inténtelo de nuevo.</string>
     <string name="server_backup_error_too_many_requests">Demasiadas solicitudes de copia de seguridad. Inténtelo de nuevo más tarde.</string>
     <string name="server_backup_error_bad_request">Algo salió mal. Verifique sus datos e inténtelo de nuevo.</string>
+    <string name="resend_notification">Reenviar notificación</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Reenviar notificación en %d segundo</item>
+        <item quantity="other">Reenviar notificación en %d segundos</item>
+    </plurals>
 </resources>

@@ -73,7 +73,7 @@ constructor(
 
             _isLoading.value = false
 
-            snackbarFlow.collectMessage { snakeBarHostState.show(it) }
+            snackbarFlow.collectMessage { (message, type) -> snakeBarHostState.show(message, type) }
         }
 
         viewModelScope.launch { initializeThorChainNetworkId() }
@@ -85,6 +85,13 @@ constructor(
             .onEach { _isOffline.value = it }
             .catch { Timber.w(it, "Connectivity flow failed") }
             .launchIn(viewModelScope)
+    }
+
+    fun onPushNotificationReceived(qrCodeData: String) {
+        viewModelScope.launch {
+            delay(1.seconds)
+            navigator.route(Route.Keysign.Join(vaultId = "", qr = qrCodeData))
+        }
     }
 
     fun openUri(uri: Uri) {

@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Push Notifications -->
+    <string name="notifications">Notifiche</string>
+    <string name="push_notifications">Notifiche push</string>
+    <string name="push_notifications_failed">Invio notifica push non riuscito</string>
+    <string name="push_notifications_sent">Notifica inviata con successo</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Ricevi una notifica quando è richiesta la tua firma o un dispositivo richiede l\'accesso.</string>
+    <string name="enable_push_notifications">Abilita notifiche push</string>
+    <string name="keysign_notification_channel_name">Richieste di firma</string>
+    <string name="keysign_notification_title">Firma transazione</string>
+    <string name="keysign_notification_body">C\'è una nuova richiesta di firma in attesa</string>
+    <string name="notifications_intro_enable">Attiva</string>
+    <string name="notifications_are_here">Le notifiche sicure sono arrivate</string>
+    <string name="notifications_description">Ricevi avvisi quando un altro dispositivo richiede di unirsi al tuo vault o quando è richiesta la tua firma.</string>
+    <string name="choose_vaults_for_notifications">Scegli i vault per le notifiche</string>
+    <string name="notifications_vault_sheet_subtitle">Puoi gestire le notifiche nelle impostazioni di sistema.</string>
+    <string name="enable_notifications_for_vault">Abilita notifiche per %s</string>
+    <string name="not_now">Non ora</string>
+    <string name="vault_notifications">Notifiche vault</string>
+    <string name="enable_all">Abilita tutto</string>
+
     <string name="try_again">Riprova</string>
     <string name="vault_settings_title">Impostazioni del Vault</string>
     <string name="vault_settings_details_title">Dettagli</string>
@@ -1082,4 +1102,9 @@
     <string name="server_backup_error_timeout">Il server ha impiegato troppo tempo per rispondere. Controlla la tua connessione Internet e riprova.</string>
     <string name="server_backup_error_too_many_requests">Troppe richieste di backup. Riprova più tardi.</string>
     <string name="server_backup_error_bad_request">Qualcosa è andato storto. Controlla i tuoi dati e riprova.</string>
+    <string name="resend_notification">Reinvia notifica</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Reinvia notifica in %d secondo</item>
+        <item quantity="other">Reinvia notifica in %d secondi</item>
+    </plurals>
 </resources>

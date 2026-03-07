@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.models.isFastVault
+import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.toDefi
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -29,6 +30,7 @@ import com.vultisig.wallet.data.repositories.TiersNFTRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
+import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
@@ -38,11 +40,13 @@ import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultIntroItem
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -51,6 +55,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -62,6 +67,9 @@ internal data class VaultAccountsUiModel(
     val isFastVault: Boolean = false,
     val showBackupWarning: Boolean = false,
     val showMonthlyBackupReminder: Boolean = false,
+    val showNotificationIntroSheet: Boolean = false,
+    val showNotificationVaultSheet: Boolean = false,
+    val notificationIntroVaults: List<VaultIntroItem> = emptyList(),
     val showMigration: Boolean = false,
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
@@ -123,6 +131,7 @@ constructor(
     private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
     private val tiersNFTRepository: TiersNFTRepository,
     private val remoteNFTService: TierRemoteNFTService,
+    private val pushNotificationManager: PushNotificationManager,
 ) : ViewModel() {
 
     private var requestedVaultId: String? = savedStateHandle.toRoute<Route.Home>().openVaultId
@@ -133,6 +142,10 @@ constructor(
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
     private var loadDeFiBalancesJob: Job? = null
+    private var hasCheckedNotificationPrompt = false
+
+    private val _requestNotificationPermission = Channel<Unit>(Channel.BUFFERED)
+    val requestNotificationPermission = _requestNotificationPermission.receiveAsFlow()
 
     init {
         collectCryptoConnectionType()
@@ -182,6 +195,7 @@ constructor(
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
         enableVultTokenIfNeeded(vaultId)
         loadDeFiBalances(vaultId, vaultChanged)
+        checkNotificationPrompt(vaultId)
     }
 
     private fun enableVultTokenIfNeeded(vaultId: VaultId) {
@@ -431,7 +445,7 @@ constructor(
         }
         updateRefreshing(false)
 
-        Timber.d("Update updateUiStateFromList", "$this")
+        Timber.d("Update updateUiStateFromList: %s", "$this")
     }
 
     private fun List<AccountUiModel>.filteredAccounts(searchQuery: String): List<AccountUiModel> {
@@ -526,6 +540,72 @@ constructor(
         if (type == CryptoConnectionType.Defi) {
             loadDeFiBalances(vaultId, true)
         }
+    }
+
+    private fun checkNotificationPrompt(vaultId: String) {
+        if (hasCheckedNotificationPrompt) return
+        viewModelScope.launch {
+            val currentVault = vaultRepository.get(vaultId) ?: return@launch
+            if (!currentVault.isSecureVault()) return@launch
+            hasCheckedNotificationPrompt = true
+
+            val eligibleVaults = vaultRepository.getAll().filter { it.isSecureVault() }
+            val unprompted =
+                eligibleVaults.filter {
+                    pushNotificationManager.isVaultOptedIn(it.id).not() &&
+                        !pushNotificationManager.hasPromptedVault(it.id)
+                }
+            if (unprompted.isEmpty()) return@launch
+
+            val introVaults =
+                unprompted.map { vault ->
+                    VaultIntroItem(
+                        vaultId = vault.id,
+                        vaultName = vault.name,
+                        isEnabled = false,
+                        isFastVault = vault.isFastVault(),
+                    )
+                }
+            uiState.update {
+                it.copy(showNotificationIntroSheet = true, notificationIntroVaults = introVaults)
+            }
+        }
+    }
+
+    fun onNotificationEnable() {
+        viewModelScope.launch {
+            // Mark as prompted now so we don't re-prompt even if permission is denied
+            uiState.value.notificationIntroVaults.forEach { vault ->
+                pushNotificationManager.markVaultPrompted(vault.vaultId)
+            }
+            uiState.update { it.copy(showNotificationIntroSheet = false) }
+            _requestNotificationPermission.send(Unit)
+        }
+    }
+
+    fun onNotificationPermissionResult(granted: Boolean) {
+        if (granted) {
+            uiState.update { it.copy(showNotificationVaultSheet = true) }
+        }
+    }
+
+    fun onNotificationNotNow() {
+        uiState.update { it.copy(showNotificationIntroSheet = false) }
+    }
+
+    fun onNotificationVaultToggle(vaultId: String, enabled: Boolean) {
+        uiState.update { state ->
+            val notificationIntroVaults =
+                state.notificationIntroVaults.map { vault ->
+                    if (vault.vaultId == vaultId) vault.copy(isEnabled = enabled) else vault
+                }
+            state.copy(notificationIntroVaults = notificationIntroVaults)
+        }
+        viewModelScope.launch { pushNotificationManager.setVaultOptIn(vaultId, enabled) }
+    }
+
+    fun onNotificationVaultSheetDismiss() {
+        uiState.update { it.copy(showNotificationVaultSheet = false) }
     }
 
     companion object {

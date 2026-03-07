@@ -1,4 +1,24 @@
 <resources>
+    <!-- Push Notifications -->
+    <string name="notifications">Meldingen</string>
+    <string name="push_notifications">Pushmeldingen</string>
+    <string name="push_notifications_failed">Pushmelding mislukt</string>
+    <string name="push_notifications_sent">Melding succesvol verzonden</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Ontvang een melding wanneer uw handtekening vereist is of een apparaat toegang aanvraagt.</string>
+    <string name="enable_push_notifications">Pushmeldingen inschakelen</string>
+    <string name="keysign_notification_channel_name">Ondertekeningsverzoeken</string>
+    <string name="keysign_notification_title">Transactie ondertekenen</string>
+    <string name="keysign_notification_body">Er wacht een nieuw ondertekeningsverzoek op u</string>
+    <string name="notifications_intro_enable">Inschakelen</string>
+    <string name="notifications_are_here">Veilige meldingen zijn hier</string>
+    <string name="notifications_description">Ontvang meldingen wanneer een ander apparaat verzoekt lid te worden van uw kluis of wanneer uw handtekening vereist is.</string>
+    <string name="choose_vaults_for_notifications">Kluizen kiezen voor meldingen</string>
+    <string name="notifications_vault_sheet_subtitle">U kunt meldingen beheren in de systeeminstellingen.</string>
+    <string name="enable_notifications_for_vault">Meldingen inschakelen voor %s</string>
+    <string name="not_now">Niet nu</string>
+    <string name="vault_notifications">Kluismeldingen</string>
+    <string name="enable_all">Alles inschakelen</string>
+
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
@@ -1077,4 +1097,9 @@
     <string name="server_backup_error_timeout">De server deed er te lang over om te reageren. Controleer uw internetverbinding en probeer het opnieuw.</string>
     <string name="server_backup_error_too_many_requests">Te veel back-upverzoeken. Probeer het later opnieuw.</string>
     <string name="server_backup_error_bad_request">Er is iets misgegaan. Controleer uw gegevens en probeer het opnieuw.</string>
+    <string name="resend_notification">Melding opnieuw sturen</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Melding opnieuw sturen in %d seconde</item>
+        <item quantity="other">Melding opnieuw sturen in %d seconden</item>
+    </plurals>
 </resources>

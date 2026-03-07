@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Push Notifications -->
+    <string name="notifications">通知</string>
+    <string name="push_notifications">推送通知</string>
+    <string name="push_notifications_failed">推送通知失败</string>
+    <string name="push_notifications_sent">通知发送成功</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">当需要您的签名或设备请求访问时，您将收到通知。</string>
+    <string name="enable_push_notifications">启用推送通知</string>
+    <string name="keysign_notification_channel_name">签名请求</string>
+    <string name="keysign_notification_title">签署交易</string>
+    <string name="keysign_notification_body">有一个新的签名请求等待您处理</string>
+    <string name="notifications_intro_enable">启用</string>
+    <string name="notifications_are_here">安全通知已到来</string>
+    <string name="notifications_description">当另一台设备请求加入您的金库或需要您的签名时，接收提醒。</string>
+    <string name="choose_vaults_for_notifications">选择接收通知的金库</string>
+    <string name="notifications_vault_sheet_subtitle">您可以在系统设置中管理通知。</string>
+    <string name="enable_notifications_for_vault">为 %s 启用通知</string>
+    <string name="not_now">暂不</string>
+    <string name="vault_notifications">金库通知</string>
+    <string name="enable_all">全部启用</string>
+
     <!-- Deposit Options -->
     <string name="deposit_option_bond">绑定</string>
     <string name="deposit_option_unbond">解绑</string>
@@ -1418,4 +1438,8 @@
     <string name="server_backup_error_timeout">服务器响应时间过长，请检查您的网络连接并重试。</string>
     <string name="server_backup_error_too_many_requests">备份请求过多。请稍后重试。</string>
     <string name="server_backup_error_bad_request">出错了。请检查您的信息并重试。</string>
+    <string name="resend_notification">重新发送通知</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="other">%d 秒后重新发送通知</item>
+    </plurals>
 </resources>
