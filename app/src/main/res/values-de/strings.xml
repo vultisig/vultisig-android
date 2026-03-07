@@ -1099,4 +1099,9 @@
     <string name="server_backup_error_timeout">Der Server hat zu lange gebraucht, um zu antworten. Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</string>
     <string name="server_backup_error_too_many_requests">Zu viele Sicherungsanfragen. Bitte versuchen Sie es später erneut.</string>
     <string name="server_backup_error_bad_request">Etwas ist schiefgelaufen. Bitte überprüfen Sie Ihre Angaben und versuchen Sie es erneut.</string>
+    <string name="resend_notification">Benachrichtigung erneut senden</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Benachrichtigung in %d Sekunde erneut senden</item>
+        <item quantity="other">Benachrichtigung in %d Sekunden erneut senden</item>
+    </plurals>
 </resources>

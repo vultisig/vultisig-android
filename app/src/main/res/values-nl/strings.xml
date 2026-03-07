@@ -1094,4 +1094,9 @@
     <string name="server_backup_error_timeout">De server deed er te lang over om te reageren. Controleer uw internetverbinding en probeer het opnieuw.</string>
     <string name="server_backup_error_too_many_requests">Te veel back-upverzoeken. Probeer het later opnieuw.</string>
     <string name="server_backup_error_bad_request">Er is iets misgegaan. Controleer uw gegevens en probeer het opnieuw.</string>
+    <string name="resend_notification">Melding opnieuw sturen</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Melding opnieuw sturen in %d seconde</item>
+        <item quantity="other">Melding opnieuw sturen in %d seconden</item>
+    </plurals>
 </resources>

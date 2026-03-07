@@ -1098,4 +1098,9 @@
     <string name="server_backup_error_timeout">O servidor demorou demasiado a responder. Verifique a sua ligação à Internet e tente novamente.</string>
     <string name="server_backup_error_too_many_requests">Demasiados pedidos de backup. Tente novamente mais tarde.</string>
     <string name="server_backup_error_bad_request">Algo correu mal. Verifique os seus dados e tente novamente.</string>
+    <string name="resend_notification">Reenviar notificação</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Reenviar notificação em %d segundo</item>
+        <item quantity="other">Reenviar notificação em %d segundos</item>
+    </plurals>
 </resources>

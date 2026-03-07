@@ -1096,4 +1096,10 @@
     <string name="server_backup_error_timeout">Сервер слишком долго отвечал. Проверьте подключение к интернету и попробуйте снова.</string>
     <string name="server_backup_error_too_many_requests">Слишком много запросов на резервное копирование. Попробуйте позже.</string>
     <string name="server_backup_error_bad_request">Что-то пошло не так. Проверьте свои данные и попробуйте снова.</string>
+    <string name="resend_notification">Повторно отправить уведомление</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Повторно отправить уведомление через %d секунду</item>
+        <item quantity="few">Повторно отправить уведомление через %d секунды</item>
+        <item quantity="other">Повторно отправить уведомление через %d секунд</item>
+    </plurals>
 </resources>

@@ -1099,4 +1099,10 @@
     <string name="server_backup_error_timeout">Poslužitelju je trebalo predugo za odgovor. Provjerite svoju internetsku vezu i pokušajte ponovno.</string>
     <string name="server_backup_error_too_many_requests">Previše zahtjeva za sigurnosnu kopiju. Pokušajte ponovno kasnije.</string>
     <string name="server_backup_error_bad_request">Nešto je pošlo po krivu. Provjerite svoje podatke i pokušajte ponovno.</string>
+    <string name="resend_notification">Ponovo pošalji obavijest</string>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Ponovo pošalji obavijest za %d sekundu</item>
+        <item quantity="few">Ponovo pošalji obavijest za %d sekunde</item>
+        <item quantity="other">Ponovo pošalji obavijest za %d sekundi</item>
+    </plurals>
 </resources>

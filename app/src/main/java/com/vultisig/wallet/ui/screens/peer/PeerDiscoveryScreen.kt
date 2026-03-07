@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -236,9 +237,13 @@ internal fun PeerDiscoveryScreen(
                         qrCode = state.qr,
                         modifier =
                             if (isKeySign) {
-                                Modifier.padding(vertical = 36.dp).fillMaxWidth()
+                                Modifier
+                                    .padding(vertical = 36.dp)
+                                    .fillMaxWidth()
                             } else {
-                                Modifier.padding(vertical = 20.dp).fillMaxWidth(0.80f)
+                                Modifier
+                                    .padding(vertical = 20.dp)
+                                    .fillMaxWidth(0.80f)
                             },
                         devicesSize = devicesSize,
                     )
@@ -287,7 +292,8 @@ internal fun PeerDiscoveryScreen(
                         if (state.qr != null) {
                             Box(
                                 modifier =
-                                    Modifier.clickable { isExpanded = true }
+                                    Modifier
+                                        .clickable { isExpanded = true }
                                         .background(
                                             Theme.v2.colors.backgrounds.secondary,
                                             shape = RoundedCornerShape(8.dp),
@@ -297,7 +303,10 @@ internal fun PeerDiscoveryScreen(
                                             color = Theme.v2.colors.border.normal,
                                             shape = RoundedCornerShape(8.dp),
                                         )
-                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                        .padding(
+                                            horizontal = 12.dp,
+                                            vertical = 6.dp
+                                        )
                             ) {
                                 UiIcon(
                                     drawableResId = R.drawable.enlarge,
@@ -327,7 +336,9 @@ internal fun PeerDiscoveryScreen(
                             title = state.localPartyId,
                             caption = stringResource(R.string.peer_discovery_this_device),
                             state = PeerDeviceState.ThisDevice,
-                            modifier = Modifier.weight(1f).animateContentSize(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .animateContentSize(),
                         )
 
                         state.devices.forEachIndexed { index, device ->
@@ -343,7 +354,9 @@ internal fun PeerDiscoveryScreen(
                                     if (device in state.selectedDevices) PeerDeviceState.Selected
                                     else PeerDeviceState.NotSelected,
                                 onClick = { onDeviceClick(device) },
-                                modifier = Modifier.weight(1f).animateContentSize(),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .animateContentSize(),
                             )
                         }
 
@@ -360,7 +373,9 @@ internal fun PeerDiscoveryScreen(
                                     ),
                                 caption = null,
                                 state = PeerDeviceState.Waiting,
-                                modifier = Modifier.weight(1f).animateContentSize(),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .animateContentSize(),
                             )
 
                             // Spacer to preserve 2-column layout spacing
@@ -395,11 +410,22 @@ private fun ResendNotificationButton(remainingSeconds: Int, onClick: () -> Unit)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier =
-            Modifier.clip(shape = shape)
+            Modifier
+                .clip(shape = shape)
                 .then(if (isEnabled) Modifier.clickOnce(onClick = onClick) else Modifier)
-                .background(color = bgColor, shape = shape)
-                .border(color = borderColor, width = 1.dp, shape = shape)
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .background(
+                    color = bgColor,
+                    shape = shape
+                )
+                .border(
+                    color = borderColor,
+                    width = 1.dp,
+                    shape = shape
+                )
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 8.dp
+                ),
     ) {
         UiIcon(drawableResId = R.drawable.ic_bell, tint = contentColor, size = 16.dp)
 
@@ -407,8 +433,12 @@ private fun ResendNotificationButton(remainingSeconds: Int, onClick: () -> Unit)
 
         Text(
             text =
-                if (isEnabled) "Resend notification"
-                else "Resend notification in ${remainingSeconds}s",
+                if (isEnabled) stringResource(R.string.resend_notification)
+                else pluralStringResource(
+                    R.plurals.resend_notification_in_seconds,
+                    remainingSeconds,
+                    remainingSeconds,
+                ),
             style = Theme.brockmann.supplementary.caption,
             color = contentColor,
         )
@@ -524,7 +554,8 @@ private fun ExpandedQrOverlay(qrCode: BitmapPainter, onDismiss: () -> Unit) {
 
     Box(
         modifier =
-            Modifier.fillMaxSize()
+            Modifier
+                .fillMaxSize()
                 .background(Color.Black.copy(alpha = alpha.value * 0.9f))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
@@ -537,9 +568,14 @@ private fun ExpandedQrOverlay(qrCode: BitmapPainter, onDismiss: () -> Unit) {
         IconButton(
             onClick = { scope.launch { close() } },
             modifier =
-                Modifier.align(Alignment.TopEnd)
+                Modifier
+                    .align(Alignment.TopEnd)
                     .padding(16.dp)
-                    .graphicsLayer(scaleX = scale.value, scaleY = scale.value, alpha = alpha.value),
+                    .graphicsLayer(
+                        scaleX = scale.value,
+                        scaleY = scale.value,
+                        alpha = alpha.value
+                    ),
         ) {
             Icon(
                 painter = painterResource(android.R.drawable.ic_menu_close_clear_cancel),
@@ -554,8 +590,13 @@ private fun ExpandedQrOverlay(qrCode: BitmapPainter, onDismiss: () -> Unit) {
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier =
-                Modifier.fillMaxSize()
-                    .graphicsLayer(scaleX = scale.value, scaleY = scale.value, alpha = alpha.value),
+                Modifier
+                    .fillMaxSize()
+                    .graphicsLayer(
+                        scaleX = scale.value,
+                        scaleY = scale.value,
+                        alpha = alpha.value
+                    ),
         )
     }
 }
@@ -568,9 +609,17 @@ private fun LocalModeHint() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier =
-            Modifier.fillMaxWidth()
-                .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
-                .border(width = 1.dp, color = Theme.v2.colors.primary.accent4, shape = shape)
+            Modifier
+                .fillMaxWidth()
+                .background(
+                    color = Theme.v2.colors.backgrounds.secondary,
+                    shape = shape
+                )
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.primary.accent4,
+                    shape = shape
+                )
                 .padding(all = 16.dp),
     ) {
         UiIcon(
@@ -654,7 +703,10 @@ private fun PeerDeviceItem(
                             )
                     }
                 )
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(
+                    horizontal = 20.dp,
+                    vertical = 16.dp
+                )
                 .clickable(onClick = onClick),
     ) {
         if (state == PeerDeviceState.Waiting) {
@@ -707,7 +759,8 @@ internal fun ConnectingToServer(isSuccess: Boolean) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
-            Modifier.fillMaxSize()
+            Modifier
+                .fillMaxSize()
                 .background(Theme.v2.colors.backgrounds.primary)
                 .padding(all = 24.dp),
     ) {
@@ -747,7 +800,8 @@ private fun Error(state: ErrorUiModel, onTryAgainClick: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
-            Modifier.fillMaxSize()
+            Modifier
+                .fillMaxSize()
                 .background(Theme.v2.colors.backgrounds.primary)
                 .padding(all = 24.dp),
     ) {

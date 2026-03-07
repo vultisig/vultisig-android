@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Switch
@@ -21,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -71,19 +73,22 @@ internal fun VsSwitchV3(
                 .clip(RoundedCornerShape(50))
                 .background(trackColor)
                 .then(
-                    if (enabled && onCheckedChange != null)
-                        Modifier.clickable(
+                    if (onCheckedChange != null)
+                        Modifier.toggleable(
+                            value = checked,
+                            enabled = enabled,
+                            role = Role.Switch,
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() },
-                        ) {
-                            onCheckedChange(!checked)
-                        }
+                            onValueChange = onCheckedChange,
+                        )
                     else Modifier
                 )
     ) {
         Box(
             modifier =
-                Modifier.offset(x = thumbOffset)
+                Modifier
+                    .offset(x = thumbOffset)
                     .align(Alignment.CenterStart)
                     .padding(vertical = 2.dp)
                     .size(27.dp)
