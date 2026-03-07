@@ -3,6 +3,9 @@
     <!-- Push Notifications -->
     <string name="notifications">Notifiche</string>
     <string name="push_notifications">Notifiche push</string>
+    <string name="push_notifications_failed">Invio notifica push non riuscito</string>
+    <string name="push_notifications_sent">Notifica inviata con successo</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Ricevi una notifica quando è richiesta la tua firma o un dispositivo richiede l\'accesso.</string>
     <string name="enable_push_notifications">Abilita notifiche push</string>
     <string name="notifications_intro_enable">Attiva</string>
     <string name="notifications_are_here">Le notifiche sicure sono arrivate</string>

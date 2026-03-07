@@ -3,6 +3,9 @@
     <!-- Push Notifications -->
     <string name="notifications">通知</string>
     <string name="push_notifications">推送通知</string>
+    <string name="push_notifications_failed">推送通知失败</string>
+    <string name="push_notifications_sent">通知发送成功</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">当需要您的签名或设备请求访问时，您将收到通知。</string>
     <string name="enable_push_notifications">启用推送通知</string>
     <string name="notifications_intro_enable">启用</string>
     <string name="notifications_are_here">安全通知已到来</string>
