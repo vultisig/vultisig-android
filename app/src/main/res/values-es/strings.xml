@@ -916,6 +916,17 @@
     <string name="raw_transaction_data">Datos de transacciones sin procesar</string>
     <string name="solana_raw_transaction">Transacción sin procesar de Solana</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">Antes de empezar...</string>
+    <string name="key_import_spotlight_heading_part1">"Estás entrando en una nueva era,\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"dejando atrás las viejas frases semilla. "</string>
+    <string name="key_import_spotlight_heading_part2">Necesitarás:</string>
+    <string name="key_import_spotlight_seedphrase_title">Tu frase semilla</string>
+    <string name="key_import_spotlight_seedphrase_desc">Ingrésala, crea una bóveda, no mires atrás</string>
+    <string name="key_import_spotlight_device_title">Al menos un dispositivo</string>
+    <string name="key_import_spotlight_device_desc">Cualquier dispositivo que pueda ejecutar Vultisig funcionará.</string>
+    <string name="key_import_spotlight_get_started">Comenzar</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Importar frase semilla</string>
     <string name="import_seedphrase_title">Ingrese su frase semilla</string>
@@ -931,13 +942,17 @@
     <string name="import_seedphrase_checking">Verificando…</string>
 
     <string name="key_import_chains_title">Seleccionar cadenas</string>
-    <string name="key_import_chains_scanning">Buscando cadenas activas…</string>
-    <string name="key_import_chains_scanning_desc">Verificando su billetera en busca de saldos existentes en todas las cadenas compatibles</string>
-    <string name="key_import_chains_select_manually">Seleccionar manualmente</string>
-    <string name="key_import_chains_found_title">Cadenas activas encontradas</string>
-    <string name="key_import_chains_found_desc">Encontramos saldos en las siguientes cadenas. Puede continuar o personalizar su selección.</string>
-    <string name="key_import_chains_continue">Continuar</string>
-    <string name="key_import_chains_customize">Personalizar</string>
+    <string name="key_import_chains_scanning">Buscando cadenas…</string>
+    <string name="key_import_chains_scanning_desc">Estamos verificando qué cadenas tienen direcciones activas para su frase semilla.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">Este proceso puede tardar hasta 2 minutos.</string>
+    <string name="key_import_chains_select_manually">Seleccionar cadenas manualmente</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">Encontramos %d cadena activa</item>
+        <item quantity="other">Encontramos %d cadenas activas</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Cada cadena adicional aumenta el tiempo para generar su bóveda y la posibilidad de un tiempo de espera agotado.</string>
+    <string name="key_import_chains_continue">Comenzar</string>
+    <string name="key_import_chains_customize">Personalizar cadenas</string>
     <string name="key_import_chains_no_active_title">No se encontraron cadenas activas</string>
     <string name="key_import_chains_no_active_desc">No pudimos encontrar saldos. Seleccione las cadenas que desea importar manualmente.</string>
     <string name="key_import_chains_select_title">Seleccionar cadenas (%1$d)</string>

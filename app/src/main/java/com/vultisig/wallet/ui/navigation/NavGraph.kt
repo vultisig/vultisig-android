@@ -77,6 +77,7 @@ import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseScreen
 import com.vultisig.wallet.ui.screens.keygen.JoinKeygenScreen
 import com.vultisig.wallet.ui.screens.keygen.KeyImportChainsSetupScreen
 import com.vultisig.wallet.ui.screens.keygen.KeyImportDeviceCountScreen
+import com.vultisig.wallet.ui.screens.keygen.KeyImportFeatureSpotlightScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenScreen
 import com.vultisig.wallet.ui.screens.keygen.NameVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.StartScreen
@@ -248,6 +249,8 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         composable<ChooseVaultType> { ChooseVaultScreen() }
 
         // key import
+        composable<Route.KeyImport.FeatureSpotlight> { KeyImportFeatureSpotlightScreen() }
+
         composable<Route.KeyImport.ImportSeedphrase> { ImportSeedphraseScreen() }
 
         composable<Route.KeyImport.ChainsSetup> { KeyImportChainsSetupScreen() }

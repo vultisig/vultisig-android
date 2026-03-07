@@ -196,6 +196,8 @@ internal sealed class Route {
     @Serializable data object ChooseVaultType
 
     data object KeyImport {
+        @Serializable data object FeatureSpotlight
+
         @Serializable data object ImportSeedphrase
 
         @Serializable data object ChainsSetup

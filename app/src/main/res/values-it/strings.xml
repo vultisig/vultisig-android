@@ -918,6 +918,17 @@
     <string name="raw_transaction_data">Dati grezzi sulle transazioni</string>
     <string name="solana_raw_transaction">Transazioni grezze Solana</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">Prima di iniziare...</string>
+    <string name="key_import_spotlight_heading_part1">"Stai entrando in una nuova era,\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"lasciandoti alle spalle le vecchie frasi seed. "</string>
+    <string name="key_import_spotlight_heading_part2">Avrai bisogno di:</string>
+    <string name="key_import_spotlight_seedphrase_title">La tua frase seed</string>
+    <string name="key_import_spotlight_seedphrase_desc">Inseriscila, crea un vault, non guardare indietro</string>
+    <string name="key_import_spotlight_device_title">Almeno un dispositivo</string>
+    <string name="key_import_spotlight_device_desc">Qualsiasi dispositivo che possa eseguire Vultisig funzionerà.</string>
+    <string name="key_import_spotlight_get_started">Inizia</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Importa frase seed</string>
     <string name="import_seedphrase_title">Inserisci la tua frase seed</string>
@@ -933,13 +944,17 @@
     <string name="import_seedphrase_checking">Verifica in corso…</string>
 
     <string name="key_import_chains_title">Seleziona catene</string>
-    <string name="key_import_chains_scanning">Ricerca catene attive…</string>
-    <string name="key_import_chains_scanning_desc">Verifica del portafoglio per saldi esistenti su tutte le catene supportate</string>
-    <string name="key_import_chains_select_manually">Seleziona manualmente</string>
-    <string name="key_import_chains_found_title">Catene attive trovate</string>
-    <string name="key_import_chains_found_desc">Abbiamo trovato saldi sulle seguenti catene. Puoi continuare o personalizzare la selezione.</string>
-    <string name="key_import_chains_continue">Continua</string>
-    <string name="key_import_chains_customize">Personalizza</string>
+    <string name="key_import_chains_scanning">Ricerca catene…</string>
+    <string name="key_import_chains_scanning_desc">Stiamo verificando quali catene hanno indirizzi attivi per la tua frase seed.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">Questo processo può richiedere fino a 2 minuti.</string>
+    <string name="key_import_chains_select_manually">Seleziona catene manualmente</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">Abbiamo trovato %d catena attiva</item>
+        <item quantity="other">Abbiamo trovato %d catene attive</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Ogni catena aggiuntiva aumenta il tempo per generare il tuo vault e la possibilità di un timeout.</string>
+    <string name="key_import_chains_continue">Inizia</string>
+    <string name="key_import_chains_customize">Personalizza catene</string>
     <string name="key_import_chains_no_active_title">Nessuna catena attiva trovata</string>
     <string name="key_import_chains_no_active_desc">Non sono stati trovati saldi. Seleziona manualmente le catene che vuoi importare.</string>
     <string name="key_import_chains_select_title">Seleziona catene (%1$d)</string>

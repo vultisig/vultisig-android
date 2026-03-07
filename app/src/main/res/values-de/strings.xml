@@ -918,6 +918,17 @@
     <string name="raw_transaction_data">Rohdaten der Transaktion</string>
     <string name="solana_raw_transaction">Solana-Rohdaten der Transaktion</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">Bevor Sie beginnen...</string>
+    <string name="key_import_spotlight_heading_part1">"Sie betreten eine neue Ära,\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"lassen alte Seed-Phrasen hinter sich. "</string>
+    <string name="key_import_spotlight_heading_part2">Sie benötigen:</string>
+    <string name="key_import_spotlight_seedphrase_title">Ihre Seed-Phrase</string>
+    <string name="key_import_spotlight_seedphrase_desc">Geben Sie sie ein, erstellen Sie einen Tresor, schauen Sie nie zurück</string>
+    <string name="key_import_spotlight_device_title">Mindestens ein Gerät</string>
+    <string name="key_import_spotlight_device_desc">Jedes Gerät, das Vultisig ausführen kann, funktioniert.</string>
+    <string name="key_import_spotlight_get_started">Loslegen</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Seed-Phrase importieren</string>
     <string name="import_seedphrase_title">Seed-Phrase eingeben</string>
@@ -933,13 +944,17 @@
     <string name="import_seedphrase_checking">Überprüfung…</string>
 
     <string name="key_import_chains_title">Blockchains auswählen</string>
-    <string name="key_import_chains_scanning">Suche nach aktiven Blockchains…</string>
-    <string name="key_import_chains_scanning_desc">Ihr Wallet wird auf vorhandene Guthaben in allen unterstützten Blockchains überprüft</string>
-    <string name="key_import_chains_select_manually">Manuell auswählen</string>
-    <string name="key_import_chains_found_title">Aktive Blockchains gefunden</string>
-    <string name="key_import_chains_found_desc">Wir haben Guthaben auf den folgenden Blockchains gefunden. Sie können fortfahren oder Ihre Auswahl anpassen.</string>
-    <string name="key_import_chains_continue">Weiter</string>
-    <string name="key_import_chains_customize">Anpassen</string>
+    <string name="key_import_chains_scanning">Suche nach Blockchains…</string>
+    <string name="key_import_chains_scanning_desc">Wir prüfen, welche Blockchains aktive Adressen für Ihre Seed-Phrase haben.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">Dieser Vorgang kann bis zu 2 Minuten dauern.</string>
+    <string name="key_import_chains_select_manually">Blockchains manuell auswählen</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">Wir haben %d aktive Blockchain gefunden</item>
+        <item quantity="other">Wir haben %d aktive Blockchains gefunden</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Jede zusätzliche Blockchain erhöht die Zeit zur Erstellung Ihres Tresors und die Möglichkeit eines Timeouts.</string>
+    <string name="key_import_chains_continue">Loslegen</string>
+    <string name="key_import_chains_customize">Blockchains anpassen</string>
     <string name="key_import_chains_no_active_title">Keine aktiven Blockchains gefunden</string>
     <string name="key_import_chains_no_active_desc">Es wurden keine Guthaben gefunden. Bitte wählen Sie die Blockchains manuell aus, die Sie importieren möchten.</string>
     <string name="key_import_chains_select_title">Blockchains auswählen (%1$d)</string>
