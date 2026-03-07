@@ -6,18 +6,17 @@ labels: enhancement
 assignees: ''
 ---
 
-<!-- Agent-ready issue template. Fill as much as you can — the more detail, the faster the implementation. -->
-
----
+<!-- Fill in the AGENT block: priority = critical|high|medium|low, size = tiny|small|medium -->
+<!-- AGENT
 type: "feature"
-priority: ""              <!-- critical | high | medium | low -->
-size: ""                  <!-- tiny (1 file) | small (1-3 files) | medium (3-8 files) -->
+priority: ""
+size: ""
 platform: [android]
 files:
-  read: []                <!-- Files for context -->
-  write: []               <!-- Files to create or modify -->
+  read: []
+  write: []
 verify: ["./gradlew assembleDebug"]
----
+-->
 
 # [Add] <what to build> [<screen/area>]
 
