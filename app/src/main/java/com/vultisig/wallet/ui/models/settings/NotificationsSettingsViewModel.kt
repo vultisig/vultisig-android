@@ -11,6 +11,7 @@ import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
@@ -36,7 +37,7 @@ constructor(
     private val pushNotificationManager: PushNotificationManager,
 ) : ViewModel() {
     private val _state = MutableStateFlow(NotificationsSettingsUiState())
-    val state = _state
+    val state = _state.asStateFlow()
 
     init {
         viewModelScope.launch {

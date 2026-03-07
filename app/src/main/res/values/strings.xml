@@ -2,6 +2,8 @@
     <!-- Push Notifications -->
     <string name="notifications">Notifications</string>
     <string name="push_notifications">Push notifications</string>
+    <string name="push_notifications_failed">Push notification failed</string>
+    <string name="push_notifications_sent">Notification sent successfully</string>
     <string name="enable_push_notifications">Enable push notifications</string>
     <string name="notifications_intro_enable">Enable</string>
     <string name="notifications_are_here">Secure Notifications are here</string>
@@ -1126,4 +1128,5 @@
     <string name="server_backup_error_timeout">The server took too long to respond, please check your internet connection and try again.</string>
     <string name="server_backup_error_too_many_requests">Too many backup requests. Please try again later.</string>
     <string name="server_backup_error_bad_request">Something went wrong. Please check your details and try again.</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Get notified when your signature is required or a device requests access.</string>
 </resources>

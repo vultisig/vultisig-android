@@ -47,6 +47,7 @@ internal fun VsSwitch(
         colors = colors,
     )
 }
+
 @Composable
 internal fun VsSwitchV3(
     checked: Boolean,
@@ -54,13 +55,13 @@ internal fun VsSwitchV3(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    val trackColor =
-        if (checked) Theme.v2.colors.primary.accent4 else Theme.v2.colors.text.tertiary
+    val trackColor = if (checked) Theme.v2.colors.primary.accent4 else Theme.v2.colors.text.tertiary
 
-    val thumbOffset by animateDpAsState(
-        targetValue = if (checked) 22.dp else 2.dp,
-        label = "VsSwitchV3.thumbOffset",
-    )
+    val thumbOffset by
+        animateDpAsState(
+            targetValue = if (checked) 22.dp else 2.dp,
+            label = "VsSwitchV3.thumbOffset",
+        )
 
     Box(
         modifier =
@@ -74,19 +75,20 @@ internal fun VsSwitchV3(
                         Modifier.clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() },
-                        ) { onCheckedChange(!checked) }
+                        ) {
+                            onCheckedChange(!checked)
+                        }
                     else Modifier
-                ),
+                )
     ) {
         Box(
             modifier =
-                Modifier
-                    .offset(x = thumbOffset)
+                Modifier.offset(x = thumbOffset)
                     .align(Alignment.CenterStart)
                     .padding(vertical = 2.dp)
                     .size(27.dp)
                     .clip(CircleShape)
-                    .background(Theme.v2.colors.neutrals.n50),
+                    .background(Theme.v2.colors.neutrals.n50)
         )
     }
 }

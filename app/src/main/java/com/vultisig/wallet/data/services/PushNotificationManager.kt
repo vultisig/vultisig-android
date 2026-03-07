@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.services
 
+import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.vultisig.wallet.data.api.DeviceRegistrationRequest
@@ -62,6 +63,9 @@ constructor(
         vaultNotificationSettingsDao.markPrompted(vaultId)
     }
 
+    @SuppressLint(
+        "ImplicitSamInstance"
+    ) // False positive: DeviceUnregisterRequest is a data class, not a SAM interface
     suspend fun setVaultOptIn(vaultId: String, enabled: Boolean) {
         val vault = vaultRepository.get(vaultId)?.takeIf { it.isSecureVault() } ?: return
         ensureSettingsExist(vault.id)

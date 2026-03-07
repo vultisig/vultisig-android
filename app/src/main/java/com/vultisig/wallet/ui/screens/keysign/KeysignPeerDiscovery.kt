@@ -130,6 +130,8 @@ internal fun KeysignPeerDiscovery(
         onShareQrClick = { sharedViewModel.shareQRCode(activity) },
         onStopParticipantDiscovery = viewModel::moveToKeysignState,
         onBackClick = viewModel::back,
+        onResentNotification = viewModel::resentNotification,
+        resendCooldownSeconds = uiModel.resendCooldownSeconds,
     )
 }
 
@@ -148,6 +150,8 @@ private fun KeysignPeerDiscovery(
     onStopParticipantDiscovery: () -> Unit = {},
     onShareQrClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
+    onResentNotification: () -> Unit = {},
+    resendCooldownSeconds: Int = 0,
 ) {
     if (isLookingForVultiServer) {
         ConnectingToServer(false)
@@ -166,6 +170,8 @@ private fun KeysignPeerDiscovery(
                     showDevicesHint = false,
                     connectingToServer = null,
                     error = null,
+                    isKeysign = true,
+                    resendCooldownSeconds = resendCooldownSeconds,
                 ),
             onBackClick = onBackClick,
             showHelp = false,
@@ -189,6 +195,7 @@ private fun KeysignPeerDiscovery(
                 }
             },
             onNextClick = onStopParticipantDiscovery,
+            onResentNotification = onResentNotification,
         )
     }
 }
@@ -197,13 +204,13 @@ private fun KeysignPeerDiscovery(
 @Composable
 private fun KeysignPeerDiscoveryPreview() {
     KeysignPeerDiscovery(
-        isLookingForVultiServer = true,
+        isLookingForVultiServer = false,
         selectionState = listOf("1", "2"),
         localPartyId = "1",
         minimumDevices = 2,
         participants = listOf("1", "2", "3"),
         bitmapPainter =
             BitmapPainter(createBitmap(1, 1).asImageBitmap(), filterQuality = FilterQuality.None),
-        networkPromptOption = NetworkOption.Local,
+        networkPromptOption = NetworkOption.Internet,
     )
 }

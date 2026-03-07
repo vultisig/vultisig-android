@@ -55,31 +55,19 @@ fun V2BottomSheet(
             Box {
                 Column(
                     modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(
-                                shape = RoundedCornerShape(
-                                    topStart = 32.dp,
-                                    topEnd = 32.dp
-                                )
-                            )
+                        Modifier.fillMaxWidth()
+                            .clip(shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
                             .background(Theme.v2.colors.backgrounds.primary)
                             .padding(all = 16.dp)
                 ) {
                     TopRow(leftAction, title, rightAction)
                     Box(
                         modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .background(Theme.v2.colors.backgrounds.primary),
+                            Modifier.fillMaxWidth().background(Theme.v2.colors.backgrounds.primary),
                         content = content,
                     )
                 }
-                DragHandler(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .align(Alignment.TopCenter)
-                )
+                DragHandler(modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter))
             }
         },
     )
@@ -108,17 +96,11 @@ fun V2BottomSheet(
             ) {
                 Box(
                     modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .background(Theme.v2.colors.backgrounds.primary),
+                        Modifier.fillMaxWidth().background(Theme.v2.colors.backgrounds.primary),
                     content = content,
                 )
                 if (displayDragHandler) {
-                    DragHandler(
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .align(Alignment.TopCenter)
-                    )
+                    DragHandler(modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter))
                 }
             }
         },
@@ -132,9 +114,7 @@ private fun TopRow(
     rightAction: @Composable (() -> Unit)?,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 36.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 36.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {

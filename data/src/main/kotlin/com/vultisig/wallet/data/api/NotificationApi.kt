@@ -55,11 +55,7 @@ internal class NotificationApiImpl @Inject constructor(private val http: HttpCli
     }
 
     override suspend fun isVaultRegistered(vaultId: String): Boolean {
-        return http
-            .get("$NOTIFICATION_BASE_URL/vault/$vaultId")
-            .throwIfUnsuccessful()
-            .status
-            .isSuccess()
+        return http.get("$NOTIFICATION_BASE_URL/vault/$vaultId").status.isSuccess()
     }
 
     override suspend fun notify(request: NotifyRequest) {

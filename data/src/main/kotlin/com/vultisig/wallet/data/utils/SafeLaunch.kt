@@ -37,7 +37,7 @@ import timber.log.Timber
  * @return the [Job] for the launched coroutine.
  */
 fun CoroutineScope.safeLaunch(
-    onError: (Throwable) -> Unit = { Timber.e(it, "Unhandled exception in coroutine") },
+    onError: suspend (Throwable) -> Unit = { Timber.e(it, "Unhandled exception in coroutine") },
     block: suspend CoroutineScope.() -> Unit,
 ): Job = launch {
     try {

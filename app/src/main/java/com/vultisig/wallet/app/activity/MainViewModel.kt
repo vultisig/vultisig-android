@@ -73,7 +73,7 @@ constructor(
 
             _isLoading.value = false
 
-            snackbarFlow.collectMessage { snakeBarHostState.show(it) }
+            snackbarFlow.collectMessage { (message, type) -> snakeBarHostState.show(message, type) }
         }
 
         viewModelScope.launch { initializeThorChainNetworkId() }

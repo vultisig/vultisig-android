@@ -38,6 +38,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -69,6 +70,7 @@ import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
@@ -149,6 +151,7 @@ internal fun KeygenPeerDiscoveryScreen(model: KeygenPeerDiscoveryViewModel = hil
                 onNextClick = model::next,
                 onDismissQrHelpModal = model::dismissQrHelpModal,
                 isKeySign = false,
+                onResentNotification = {},
             )
         }
     }
@@ -163,6 +166,7 @@ internal fun PeerDiscoveryScreen(
     onCloseHintClick: () -> Unit,
     onSwitchModeClick: () -> Unit,
     onDeviceClick: (ParticipantName) -> Unit,
+    onResentNotification: () -> Unit,
     onNextClick: () -> Unit,
     onDismissQrHelpModal: () -> Unit,
     showHelp: Boolean = true,
@@ -305,7 +309,14 @@ internal fun PeerDiscoveryScreen(
                         }
                     }
 
-                    UiSpacer(24.dp)
+                    if (isKeySign) {
+                        ResendNotificationButton(
+                            remainingSeconds = state.resendCooldownSeconds,
+                            onClick = onResentNotification,
+                        )
+                    }
+
+                    UiSpacer(size = 24.dp)
 
                     FlowRow(
                         maxItemsInEachRow = 1,
@@ -366,6 +377,42 @@ internal fun PeerDiscoveryScreen(
             }
         },
     )
+}
+
+@Composable
+private fun ResendNotificationButton(remainingSeconds: Int, onClick: () -> Unit) {
+    UiSpacer(10.dp)
+
+    val isEnabled = remainingSeconds == 0
+    val shape = RoundedCornerShape(12.dp)
+    val contentColor = if (isEnabled) Theme.v2.colors.alerts.info else Theme.v2.colors.text.tertiary
+    val bgColor =
+        if (isEnabled) Theme.v2.colors.backgrounds.disabled
+        else Theme.v2.colors.backgrounds.tertiary
+    val borderColor =
+        if (isEnabled) Theme.v2.colors.border.light else Theme.v2.colors.border.extraLight
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier =
+            Modifier.clip(shape = shape)
+                .then(if (isEnabled) Modifier.clickOnce(onClick = onClick) else Modifier)
+                .background(color = bgColor, shape = shape)
+                .border(color = borderColor, width = 1.dp, shape = shape)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+    ) {
+        UiIcon(drawableResId = R.drawable.ic_bell, tint = contentColor, size = 16.dp)
+
+        UiSpacer(size = 6.dp)
+
+        Text(
+            text =
+                if (isEnabled) "Resend notification"
+                else "Resend notification in ${remainingSeconds}s",
+            style = Theme.brockmann.supplementary.caption,
+            color = contentColor,
+        )
+    }
 }
 
 @Composable
@@ -717,7 +764,13 @@ private fun Error(state: ErrorUiModel, onTryAgainClick: () -> Unit) {
 @Composable
 private fun PeerDiscoveryScreenPreview() {
     PeerDiscoveryScreen(
-        state = PeerDiscoveryUiModel(localPartyId = "Device", network = NetworkOption.Local),
+        state =
+            PeerDiscoveryUiModel(
+                localPartyId = "Device",
+                network = NetworkOption.Local,
+                isKeysign = true,
+            ),
+        onResentNotification = {},
         onBackClick = {},
         onHelpClick = {},
         onShareQrClick = {},
