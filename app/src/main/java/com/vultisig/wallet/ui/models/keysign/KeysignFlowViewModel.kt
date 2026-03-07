@@ -112,6 +112,7 @@ data class KeysignFlowUiState(
     val isSwap: Boolean = false,
     val qrBitmapPainter: BitmapPainter? = null,
     val isLoading: Boolean = false,
+    val enableNotification: Boolean = false,
     val resendCooldownSeconds: Int = 0,
 )
 
@@ -291,11 +292,14 @@ constructor(
                     }
                 }
 
+            val isOptedIn = pushNotificationManager.isVaultOptedIn(vault.id)
+
             uiState.update {
                 it.copy(
                     vault = vault,
                     isSwap = shareViewModel.keysignPayload?.swapPayload != null,
                     toAddress = keysignPayload?.toAddress ?: "",
+                    enableNotification = isOptedIn,
                 )
             }
 
@@ -384,17 +388,28 @@ constructor(
 
         addressProvider.update(_keysignMessage.value)
 
-        viewModelScope.launch { sendNotification() }
+        sendNotification()
     }
 
-    private suspend fun sendNotification() {
-        val vault = _currentVault ?: return
-        pushNotificationManager.notifyVaultDevices(vault, _keysignMessage.value)
-        snackbarFlow.showMessage(
-            context.getString(R.string.push_notifications_sent),
-            SnackbarType.Success,
-        )
-        startResendCooldown()
+    fun sendNotification() {
+        if (uiState.value.resendCooldownSeconds > 0) return
+        viewModelScope.safeLaunch(
+            onError = {
+                snackbarFlow.showMessage(
+                    UiText.StringResource(R.string.push_notifications_failed).asString(context),
+                    type = SnackbarType.Warning,
+                )
+            }
+        ) {
+            val vault = _currentVault ?: return@safeLaunch
+            if (!pushNotificationManager.isVaultOptedIn(vault.id)) return@safeLaunch
+            pushNotificationManager.notifyVaultDevices(vault, _keysignMessage.value)
+            snackbarFlow.showMessage(
+                message = context.getString(R.string.push_notifications_sent),
+                type = SnackbarType.Success,
+            )
+            startResendCooldown()
+        }
     }
 
     private fun startResendCooldown() {
@@ -649,20 +664,6 @@ constructor(
         viewModelScope.launch {
             transactionStatusServiceManager.cancelPollingAndRemoveNotification()
             navigator.route(Route.Home(), NavigationOptions(clearBackStack = true))
-        }
-    }
-
-    fun resentNotification() {
-        if (uiState.value.resendCooldownSeconds > 0) return
-        viewModelScope.safeLaunch(
-            onError = {
-                snackbarFlow.showMessage(
-                    UiText.StringResource(R.string.push_notifications_failed).asString(context),
-                    type = SnackbarType.Warning,
-                )
-            }
-        ) {
-            sendNotification()
         }
     }
 }

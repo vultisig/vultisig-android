@@ -263,11 +263,11 @@ constructor(
                         title = UiText.StringResource(R.string.general),
                         items =
                             listOf(
+                                Notifications,
                                 Language("English"),
                                 Currency("USD"),
                                 AddressBook,
                                 ReferralCode,
-                                Notifications,
                             ),
                     ),
                     SettingsGroupUiModel(
@@ -332,7 +332,7 @@ constructor(
             }
 
             Notifications -> {
-                viewModelScope.launch { navigator.route(Route.NotificationSettings(vaultId)) }
+                viewModelScope.launch { navigator.route(Route.NotificationSettings) }
             }
 
             VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_WEBSITE))

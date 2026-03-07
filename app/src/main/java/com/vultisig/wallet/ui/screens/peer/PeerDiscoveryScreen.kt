@@ -151,7 +151,6 @@ internal fun KeygenPeerDiscoveryScreen(model: KeygenPeerDiscoveryViewModel = hil
                 onDeviceClick = model::selectDevice,
                 onNextClick = model::next,
                 onDismissQrHelpModal = model::dismissQrHelpModal,
-                isKeySign = false,
                 onResentNotification = {},
             )
         }
@@ -171,7 +170,6 @@ internal fun PeerDiscoveryScreen(
     onNextClick: () -> Unit,
     onDismissQrHelpModal: () -> Unit,
     showHelp: Boolean = true,
-    isKeySign: Boolean = true,
 ) {
     val selectedDevicesSize = state.selectedDevices.size + 1 // we always have our device
     val devicesSize = state.devices.size + 1
@@ -236,14 +234,10 @@ internal fun PeerDiscoveryScreen(
                     QrCodeContainer(
                         qrCode = state.qr,
                         modifier =
-                            if (isKeySign) {
-                                Modifier
-                                    .padding(vertical = 36.dp)
-                                    .fillMaxWidth()
+                            if (state.enableNotification) {
+                                Modifier.padding(vertical = 36.dp).fillMaxWidth()
                             } else {
-                                Modifier
-                                    .padding(vertical = 20.dp)
-                                    .fillMaxWidth(0.80f)
+                                Modifier.padding(vertical = 20.dp).fillMaxWidth(0.80f)
                             },
                         devicesSize = devicesSize,
                     )
@@ -318,7 +312,7 @@ internal fun PeerDiscoveryScreen(
                         }
                     }
 
-                    if (isKeySign) {
+                    if (state.enableNotification) {
                         ResendNotificationButton(
                             remainingSeconds = state.resendCooldownSeconds,
                             onClick = onResentNotification,
@@ -822,7 +816,7 @@ private fun PeerDiscoveryScreenPreview() {
             PeerDiscoveryUiModel(
                 localPartyId = "Device",
                 network = NetworkOption.Local,
-                isKeysign = true,
+                enableNotification = true,
             ),
         onResentNotification = {},
         onBackClick = {},

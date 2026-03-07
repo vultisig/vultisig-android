@@ -46,6 +46,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -54,6 +55,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -141,6 +143,9 @@ constructor(
     private var loadAccountsJob: Job? = null
     private var loadDeFiBalancesJob: Job? = null
     private var hasCheckedNotificationPrompt = false
+
+    private val _requestNotificationPermission = Channel<Unit>(Channel.BUFFERED)
+    val requestNotificationPermission = _requestNotificationPermission.receiveAsFlow()
 
     init {
         collectCryptoConnectionType()
@@ -539,10 +544,10 @@ constructor(
 
     private fun checkNotificationPrompt(vaultId: String) {
         if (hasCheckedNotificationPrompt) return
-        hasCheckedNotificationPrompt = true
         viewModelScope.launch {
             val currentVault = vaultRepository.get(vaultId) ?: return@launch
             if (!currentVault.isSecureVault()) return@launch
+            hasCheckedNotificationPrompt = true
 
             val eligibleVaults = vaultRepository.getAll().filter { it.isSecureVault() }
             val unprompted =
@@ -569,12 +574,18 @@ constructor(
 
     fun onNotificationEnable() {
         viewModelScope.launch {
+            // Mark as prompted now so we don't re-prompt even if permission is denied
             uiState.value.notificationIntroVaults.forEach { vault ->
                 pushNotificationManager.markVaultPrompted(vault.vaultId)
             }
-            uiState.update {
-                it.copy(showNotificationIntroSheet = false, showNotificationVaultSheet = true)
-            }
+            uiState.update { it.copy(showNotificationIntroSheet = false) }
+            _requestNotificationPermission.send(Unit)
+        }
+    }
+
+    fun onNotificationPermissionResult(granted: Boolean) {
+        if (granted) {
+            uiState.update { it.copy(showNotificationVaultSheet = true) }
         }
     }
 
@@ -583,16 +594,14 @@ constructor(
     }
 
     fun onNotificationVaultToggle(vaultId: String, enabled: Boolean) {
-        viewModelScope.launch {
-            pushNotificationManager.setVaultOptIn(vaultId, enabled)
-            uiState.update { state ->
-                val notificationIntroVaults =
-                    state.notificationIntroVaults.map { vault ->
-                        if (vault.vaultId == vaultId) vault.copy(isEnabled = enabled) else vault
-                    }
-                state.copy(notificationIntroVaults = notificationIntroVaults)
-            }
+        uiState.update { state ->
+            val notificationIntroVaults =
+                state.notificationIntroVaults.map { vault ->
+                    if (vault.vaultId == vaultId) vault.copy(isEnabled = enabled) else vault
+                }
+            state.copy(notificationIntroVaults = notificationIntroVaults)
         }
+        viewModelScope.launch { pushNotificationManager.setVaultOptIn(vaultId, enabled) }
     }
 
     fun onNotificationVaultSheetDismiss() {

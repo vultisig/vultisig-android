@@ -61,6 +61,11 @@ class MainActivity : AppCompatActivity() {
         splashScreen.setKeepOnScreenCondition { false }
         super.onCreate(savedInstanceState)
 
+        // Handle notification tap when app was killed
+        intent?.getStringExtra(VultisigFirebaseMessagingService.EXTRA_QR_CODE_DATA)?.let {
+            mainViewModel.onPushNotificationReceived(it)
+        }
+
         val systemBarStyle =
             SystemBarStyle.auto(
                 colors.backgrounds.primary.toArgb(),
@@ -111,6 +116,13 @@ class MainActivity : AppCompatActivity() {
                 mainViewModel.startUpdateEvent.collect { startImmediateUpdate() }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val qrCodeData =
+            intent.getStringExtra(VultisigFirebaseMessagingService.EXTRA_QR_CODE_DATA) ?: return
+        mainViewModel.onPushNotificationReceived(qrCodeData)
     }
 
     override fun onResume() {

@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -26,7 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.VsSwitchV3
+import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
@@ -132,7 +130,8 @@ internal fun VaultNotificationOptInBottomSheetContent(
 
     Column(
         modifier =
-            Modifier.fillMaxWidth()
+            Modifier.background(Theme.v2.colors.backgrounds.secondary)
+                .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 46.dp, bottom = 21.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -170,7 +169,7 @@ internal fun VaultNotificationOptInBottomSheetContent(
                     color = Theme.v2.colors.text.primary,
                     modifier = Modifier.weight(1f),
                 )
-                VsSwitchV3(checked = allEnabled, onCheckedChange = onEnableAll)
+                VsSwitch(checked = allEnabled, onCheckedChange = onEnableAll)
             }
 
             vaults.forEach { vault ->
@@ -205,7 +204,7 @@ internal fun VaultNotificationOptInBottomSheetContent(
                         color = Theme.v2.colors.text.primary,
                         modifier = Modifier.weight(1f),
                     )
-                    VsSwitchV3(
+                    VsSwitch(
                         checked = vault.isEnabled,
                         onCheckedChange = { enabled -> onEnableVault(vault.vaultId, enabled) },
                     )

@@ -16,7 +16,6 @@ import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 @Singleton
@@ -44,12 +43,6 @@ constructor(
         return vaultNotificationSettingsDao.getByVaultId(vaultId)?.notificationsEnabled == true
     }
 
-    fun observeVaultOptedIn(vaultId: String): Flow<Boolean> {
-        return vaultNotificationSettingsDao.observeByVaultId(vaultId).map {
-            it?.notificationsEnabled == true
-        }
-    }
-
     fun observeAllSettings(): Flow<List<VaultNotificationSettingsEntity>> {
         return vaultNotificationSettingsDao.observeAll()
     }
@@ -69,24 +62,30 @@ constructor(
     suspend fun setVaultOptIn(vaultId: String, enabled: Boolean) {
         val vault = vaultRepository.get(vaultId)?.takeIf { it.isSecureVault() } ?: return
         ensureSettingsExist(vault.id)
-        vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
 
-        val token = getStoredToken() ?: return
-        val vaultId = notificationVaultId(vault)
+        val token = getStoredToken()
+        val notificationVaultId = notificationVaultId(vault)
 
         if (enabled) {
-            notificationApi.registerDevice(
-                DeviceRegistrationRequest(
-                    vaultId = vaultId,
-                    partyName = vault.localPartyID,
-                    token = token,
+            token?.let {
+                notificationApi.registerDevice(
+                    DeviceRegistrationRequest(
+                        vaultId = notificationVaultId,
+                        partyName = vault.localPartyID,
+                        token = it,
+                    )
                 )
-            )
+            }
         } else {
             notificationApi.unregisterDevice(
-                DeviceUnregisterRequest(vaultId = vaultId, partyName = vault.localPartyID)
+                DeviceUnregisterRequest(
+                    vaultId = notificationVaultId,
+                    partyName = vault.localPartyID,
+                )
             )
         }
+
+        vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
     }
 
     suspend fun setAllVaultsOptIn(enabled: Boolean) {

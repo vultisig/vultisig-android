@@ -98,7 +98,7 @@ data class PeerDiscoveryUiModel(
     val connectingToServer: ConnectingToServerUiModel? = null,
     val error: ErrorUiModel? = null,
     val warning: ErrorUiModel? = null,
-    val isKeysign: Boolean,
+    val enableNotification: Boolean,
     val resendCooldownSeconds: Int = 0,
 )
 
@@ -140,7 +140,7 @@ constructor(
             PeerDiscoveryUiModel(
                 minimumDevices = args.deviceCount ?: MIN_KEYGEN_DEVICES,
                 minimumDevicesDisplayed = (args.deviceCount ?: (MIN_KEYGEN_DEVICES + 1)),
-                isKeysign = false,
+                enableNotification = false,
             )
         )
 

@@ -1,5 +1,9 @@
 package com.vultisig.wallet.ui.screens.settings
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +35,22 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun NotificationsSettingsScreen() {
     val viewModel = hiltViewModel<NotificationsSettingsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            viewModel.onNotificationPermissionResult(granted)
+        }
+
+    LaunchedEffect(Unit) {
+        viewModel.requestNotificationPermission.collect {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                // Permission not required below Android 13
+                viewModel.onNotificationPermissionResult(granted = true)
+            }
+        }
+    }
 
     NotificationsSettingsScreen(
         state = state,
