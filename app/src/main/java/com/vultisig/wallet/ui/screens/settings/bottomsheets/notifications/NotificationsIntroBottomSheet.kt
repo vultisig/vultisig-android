@@ -2,27 +2,35 @@
 
 package com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.library.form.VsUiCheckbox
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
-import com.vultisig.wallet.ui.screens.v2.components.VsButton
 import com.vultisig.wallet.ui.theme.Theme
 
 internal data class VaultIntroItem(
@@ -37,22 +45,35 @@ internal fun NotificationsIntroBottomSheet(
     onNotNow: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    V2BottomSheet(onDismissRequest = onDismissRequest) {
-        NotificationsIntroBottomSheetContent(onEnable = onEnable, onNotNow = onNotNow)
+    V2BottomSheet(
+        onDismissRequest = onDismissRequest,
+        displayDragHandler = false
+    ) {
+        NotificationsIntroBottomSheetContent(
+            onEnable = onEnable,
+            onNotNow = onNotNow
+        )
     }
 }
 
 @Composable
 internal fun NotificationsIntroBottomSheetContent(onEnable: () -> Unit, onNotNow: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        UiSpacer(size = 16.dp)
+        Image(
+            painter = painterResource(id = R.drawable.nofitication_banner),
+            contentDescription = stringResource(id = R.string.app_name),
+        )
+
+        UiSpacer(size = 34.dp)
 
         Text(
             text = stringResource(R.string.notifications_are_here),
-            style = Theme.brockmann.headings.title2,
+            style = Theme.brockmann.headings.title3,
             color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.Center,
         )
@@ -61,27 +82,31 @@ internal fun NotificationsIntroBottomSheetContent(onEnable: () -> Unit, onNotNow
 
         Text(
             text = stringResource(R.string.notifications_description),
-            style = Theme.brockmann.body.s.regular,
-            color = Theme.v2.colors.text.secondary,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 20.dp)
         )
 
-        UiSpacer(size = 24.dp)
+        UiSpacer(size = 32.dp)
 
-        VsButton(
-            label = stringResource(R.string.enable_push_notifications),
-            onClick = onEnable,
+        Row(
             modifier = Modifier.fillMaxWidth(),
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = stringResource(R.string.not_now),
-            style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.secondary,
-            modifier = Modifier.clickOnce(onClick = onNotNow),
-        )
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            VsButton(
+                label = stringResource(R.string.not_now),
+                variant = VsButtonVariant.Secondary,
+                onClick = onNotNow,
+                modifier = Modifier.weight(1f),
+            )
+            VsButton(
+                label = stringResource(R.string.notifications_intro_enable),
+                variant = VsButtonVariant.CTA,
+                onClick = onEnable,
+                modifier = Modifier.weight(1f),
+            )
+        }
 
         UiSpacer(size = 16.dp)
     }
@@ -108,7 +133,12 @@ internal fun VaultNotificationOptInBottomSheetContent(
     onEnableVault: (String, Boolean) -> Unit,
     onConfirm: () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp)) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(
+            horizontal = 16.dp,
+            vertical = 24.dp
+        )) {
         Text(
             text = stringResource(R.string.choose_vaults_for_notifications),
             style = Theme.brockmann.headings.title2,
@@ -119,7 +149,9 @@ internal fun VaultNotificationOptInBottomSheetContent(
 
         vaults.forEach { vault ->
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -150,13 +182,17 @@ internal fun VaultNotificationOptInBottomSheetContent(
 @Preview
 @Composable
 private fun NotificationsIntroBottomSheetContentPreview() {
-    V2BottomSheet() { NotificationsIntroBottomSheetContent(onEnable = {}, onNotNow = {}) }
+    V2BottomSheet(
+        displayDragHandler = false
+    ) { NotificationsIntroBottomSheetContent(onEnable = {}, onNotNow = {}) }
 }
 
 @Preview
 @Composable
 private fun VaultNotificationOptInBottomSheetContentPreview() {
-    V2BottomSheet {
+    V2BottomSheet(
+        displayDragHandler = false
+    ) {
         VaultNotificationOptInBottomSheetContent(
             vaults =
                 listOf(

@@ -4,8 +4,9 @@
     <string name="notifications">Notificaciones</string>
     <string name="push_notifications">Notificaciones push</string>
     <string name="enable_push_notifications">Habilitar notificaciones push</string>
-    <string name="notifications_are_here">Las notificaciones ya están aquí</string>
-    <string name="notifications_description">Mantente al día sobre la actividad de tu bóveda, como cuando otro dispositivo inicia una firma de transacción.</string>
+    <string name="notifications_intro_enable">Activar</string>
+    <string name="notifications_are_here">Las notificaciones seguras ya están aquí</string>
+    <string name="notifications_description">Recibe alertas cuando otro dispositivo solicite unirse a tu bóveda o cuando se requiera tu firma.</string>
     <string name="choose_vaults_for_notifications">Elegir bóvedas para notificaciones</string>
     <string name="enable_notifications_for_vault">Habilitar notificaciones para %s</string>
     <string name="not_now">Ahora no</string>

@@ -4,8 +4,9 @@
     <string name="notifications">Benachrichtigungen</string>
     <string name="push_notifications">Push-Benachrichtigungen</string>
     <string name="enable_push_notifications">Push-Benachrichtigungen aktivieren</string>
-    <string name="notifications_are_here">Benachrichtigungen sind da</string>
-    <string name="notifications_description">Bleiben Sie über Ihre Tresoraktivitäten informiert, z. B. wenn ein anderes Gerät eine Transaktionsunterzeichnung einleitet.</string>
+    <string name="notifications_intro_enable">Aktivieren</string>
+    <string name="notifications_are_here">Sichere Benachrichtigungen sind da</string>
+    <string name="notifications_description">Erhalten Sie Benachrichtigungen, wenn ein anderes Gerät Ihrem Tresor beitreten möchte oder wenn Ihre Unterschrift erforderlich ist.</string>
     <string name="choose_vaults_for_notifications">Tresore für Benachrichtigungen auswählen</string>
     <string name="enable_notifications_for_vault">Benachrichtigungen für %s aktivieren</string>
     <string name="not_now">Nicht jetzt</string>

@@ -4,8 +4,9 @@
     <string name="notifications">Notificações</string>
     <string name="push_notifications">Notificações push</string>
     <string name="enable_push_notifications">Ativar notificações push</string>
-    <string name="notifications_are_here">As notificações chegaram</string>
-    <string name="notifications_description">Fique atualizado sobre a atividade do seu cofre, como quando outro dispositivo inicia uma assinatura de transação.</string>
+    <string name="notifications_intro_enable">Ativar</string>
+    <string name="notifications_are_here">Notificações seguras chegaram</string>
+    <string name="notifications_description">Receba alertas quando outro dispositivo solicitar entrar no seu cofre ou quando a sua assinatura for necessária.</string>
     <string name="choose_vaults_for_notifications">Escolher cofres para notificações</string>
     <string name="enable_notifications_for_vault">Ativar notificações para %s</string>
     <string name="not_now">Agora não</string>

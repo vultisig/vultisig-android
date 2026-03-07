@@ -4,8 +4,9 @@
     <string name="notifications">Obavijesti</string>
     <string name="push_notifications">Push obavijesti</string>
     <string name="enable_push_notifications">Omogući push obavijesti</string>
-    <string name="notifications_are_here">Obavijesti su ovdje</string>
-    <string name="notifications_description">Budite u toku s aktivnostima svog trezora, poput kada drugi uređaj pokrene potpisivanje transakcije.</string>
+    <string name="notifications_intro_enable">Aktiviraj</string>
+    <string name="notifications_are_here">Sigurne obavijesti su ovdje</string>
+    <string name="notifications_description">Primajte upozorenja kada drugi uređaj zatraži pristup vašem trezoru ili kada je potreban vaš potpis.</string>
     <string name="choose_vaults_for_notifications">Odaberite trezore za obavijesti</string>
     <string name="enable_notifications_for_vault">Omogući obavijesti za %s</string>
     <string name="not_now">Ne sada</string>

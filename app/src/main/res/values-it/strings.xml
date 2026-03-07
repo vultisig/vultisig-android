@@ -4,8 +4,9 @@
     <string name="notifications">Notifiche</string>
     <string name="push_notifications">Notifiche push</string>
     <string name="enable_push_notifications">Abilita notifiche push</string>
-    <string name="notifications_are_here">Le notifiche sono qui</string>
-    <string name="notifications_description">Rimani aggiornato sull\'attività del tuo vault, ad esempio quando un altro dispositivo avvia la firma di una transazione.</string>
+    <string name="notifications_intro_enable">Attiva</string>
+    <string name="notifications_are_here">Le notifiche sicure sono arrivate</string>
+    <string name="notifications_description">Ricevi avvisi quando un altro dispositivo richiede di unirsi al tuo vault o quando è richiesta la tua firma.</string>
     <string name="choose_vaults_for_notifications">Scegli i vault per le notifiche</string>
     <string name="enable_notifications_for_vault">Abilita notifiche per %s</string>
     <string name="not_now">Non ora</string>
