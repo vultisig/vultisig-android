@@ -22,6 +22,7 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
+import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun TabMenuAndSearchBar(
@@ -42,7 +43,6 @@ internal fun TabMenuAndSearchBar(
                 SearchBar(
                     modifier = Modifier.weight(1f),
                     state = searchTextFieldState,
-                    onCancelClick = {},
                     isInitiallyFocused = isInitiallyFocused,
                 )
                 UiSpacer(size = 8.dp)
@@ -60,6 +60,7 @@ internal fun TabMenuAndSearchBar(
                     UiIcon(
                         drawableResId = R.drawable.close_2,
                         size = 16.dp,
+                        tint = Theme.v2.colors.text.primary,
                         modifier = Modifier.padding(all = 12.dp),
                     )
                 }
