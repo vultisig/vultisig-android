@@ -554,7 +554,7 @@ constructor(
 
             val introVaults =
                 unprompted.map { vault ->
-                    VaultIntroItem(vaultId = vault.id, vaultName = vault.name, isEnabled = false)
+                    VaultIntroItem(vaultId = vault.id, vaultName = vault.name, isEnabled = false, isFastVault = vault.isFastVault())
                 }
             uiState.update {
                 it.copy(showNotificationIntroSheet = true, notificationIntroVaults = introVaults)

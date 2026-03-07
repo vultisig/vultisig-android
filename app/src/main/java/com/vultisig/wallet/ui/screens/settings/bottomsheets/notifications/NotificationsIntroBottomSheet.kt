@@ -12,11 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
@@ -24,19 +24,22 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.Alignment
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.library.form.VsUiCheckbox
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
+import com.vultisig.wallet.ui.components.v2.icons.VaultIcon
 import com.vultisig.wallet.ui.theme.Theme
 
 internal data class VaultIntroItem(
     val vaultId: String,
     val vaultName: String,
     val isEnabled: Boolean,
+    val isFastVault: Boolean = false,
 )
 
 @Composable
@@ -122,6 +125,14 @@ internal fun VaultNotificationOptInBottomSheet(
         VaultNotificationOptInBottomSheetContent(
             vaults = vaults,
             onEnableVault = onEnableVault,
+            onEnableAll = { enabled ->
+                vaults.forEach {
+                    onEnableVault(
+                        it.vaultId,
+                        enabled
+                    )
+                }
+            },
             onConfirm = onDismissRequest,
         )
     }
@@ -131,23 +142,52 @@ internal fun VaultNotificationOptInBottomSheet(
 internal fun VaultNotificationOptInBottomSheetContent(
     vaults: List<VaultIntroItem>,
     onEnableVault: (String, Boolean) -> Unit,
+    onEnableAll: (Boolean) -> Unit,
     onConfirm: () -> Unit,
 ) {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .padding(
-            horizontal = 16.dp,
-            vertical = 24.dp
-        )) {
+    val allEnabled = vaults.isNotEmpty() && vaults.all { it.isEnabled }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 46.dp,
+                bottom = 21.dp
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
             text = stringResource(R.string.choose_vaults_for_notifications),
-            style = Theme.brockmann.headings.title2,
+            style = Theme.brockmann.headings.title3,
             color = Theme.v2.colors.text.primary,
         )
 
-        UiSpacer(size = 16.dp)
+        UiSpacer(size = 12.dp)
 
-        vaults.forEach { vault ->
+        Text(
+            text = stringResource(R.string.notifications_vault_sheet_subtitle),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.tertiary,
+            modifier = Modifier.padding(horizontal = 39.dp),
+            textAlign = TextAlign.Center
+        )
+
+        UiSpacer(size = 15.dp)
+        Column(
+            modifier = Modifier
+                .background(
+                    color = Theme.v2.colors.variables.backgroundsSurface12,
+                    shape = RoundedCornerShape(
+                        12.dp
+                    )
+                )
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 12.dp
+                )
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -155,22 +195,61 @@ internal fun VaultNotificationOptInBottomSheetContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = vault.vaultName,
-                    style = Theme.brockmann.supplementary.footnote,
+                    text = stringResource(R.string.enable_all),
+                    style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.primary,
                     modifier = Modifier.weight(1f),
                 )
-                VsUiCheckbox(
-                    checked = vault.isEnabled,
-                    onCheckedChange = { enabled -> onEnableVault(vault.vaultId, enabled) },
+                VsSwitch(
+                    checked = allEnabled,
+                    onCheckedChange = onEnableAll,
+                    modifier= Modifier
+                        .width(40.dp)
+                        .height(24.dp)
                 )
+            }
+
+            vaults.forEach { vault ->
+                HorizontalDivider(color = Theme.v2.colors.border.normal)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    VaultIcon(
+                        isFastVault = vault.isFastVault,
+                        size = 20.dp
+                    )
+                    Text(
+                        text = vault.vaultName,
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.primary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    VsSwitch(
+                        checked = vault.isEnabled,
+                        onCheckedChange = { enabled ->
+                            onEnableVault(
+                                vault.vaultId,
+                                enabled
+                            )
+                        },
+                        modifier= Modifier
+                            .width(40.dp)
+                            .height(24.dp)
+                    )
+                }
+
             }
         }
 
         UiSpacer(size = 24.dp)
 
         VsButton(
-            label = stringResource(android.R.string.ok),
+            label = stringResource(R.string.address_book_edit_mode_done),
+            variant = VsButtonVariant.CTA,
             onClick = onConfirm,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -184,23 +263,40 @@ internal fun VaultNotificationOptInBottomSheetContent(
 private fun NotificationsIntroBottomSheetContentPreview() {
     V2BottomSheet(
         displayDragHandler = false
-    ) { NotificationsIntroBottomSheetContent(onEnable = {}, onNotNow = {}) }
+    ) {
+        NotificationsIntroBottomSheetContent(
+            onEnable = {},
+            onNotNow = {})
+    }
 }
 
 @Preview
 @Composable
 private fun VaultNotificationOptInBottomSheetContentPreview() {
     V2BottomSheet(
-        displayDragHandler = false
+        displayDragHandler = true
     ) {
         VaultNotificationOptInBottomSheetContent(
             vaults =
                 listOf(
-                    VaultIntroItem(vaultId = "1", vaultName = "Main Vault", isEnabled = true),
-                    VaultIntroItem(vaultId = "2", vaultName = "Savings Vault", isEnabled = false),
-                    VaultIntroItem(vaultId = "3", vaultName = "Cold Storage", isEnabled = true),
+                    VaultIntroItem(
+                        vaultId = "1",
+                        vaultName = "Main Vault",
+                        isEnabled = true
+                    ),
+                    VaultIntroItem(
+                        vaultId = "2",
+                        vaultName = "Savings Vault",
+                        isEnabled = false
+                    ),
+                    VaultIntroItem(
+                        vaultId = "3",
+                        vaultName = "Cold Storage",
+                        isEnabled = true
+                    ),
                 ),
             onEnableVault = { _, _ -> },
+            onEnableAll = {},
             onConfirm = {},
         )
     }

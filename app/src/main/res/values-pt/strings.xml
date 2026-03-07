@@ -8,6 +8,7 @@
     <string name="notifications_are_here">Notificações seguras chegaram</string>
     <string name="notifications_description">Receba alertas quando outro dispositivo solicitar entrar no seu cofre ou quando a sua assinatura for necessária.</string>
     <string name="choose_vaults_for_notifications">Escolher cofres para notificações</string>
+    <string name="notifications_vault_sheet_subtitle">Pode gerir as notificações nas definições do sistema.</string>
     <string name="enable_notifications_for_vault">Ativar notificações para %s</string>
     <string name="not_now">Agora não</string>
     <string name="vault_notifications">Notificações do cofre</string>
