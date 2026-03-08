@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "799570281624",
-    "project_id": "vultisig-9226a",
-    "storage_bucket": "vultisig-9226a.firebasestorage.app"
+    "project_number": "511965318161",
+    "project_id": "wallet-e91fbe15",
+    "storage_bucket": "wallet-e91fbe15.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:799570281624:android:02a6f195c2301349c7bced",
+        "mobilesdk_app_id": "1:511965318161:android:c58763b84800d21429f5b0",
         "android_client_info": {
           "package_name": "com.vultisig.wallet"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDJ-EiEfLJHBK2BmVz3FVYqnOimlCwNBJM"
+          "current_key": "AIzaSyDYA9FCkynov-xq3cW0L_fGYdBL5XYeTfY"
         }
       ],
       "services": {
