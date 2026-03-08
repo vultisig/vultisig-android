@@ -1,25 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Push Notifications -->
-    <string name="notifications">Obavijesti</string>
-    <string name="push_notifications">Push obavijesti</string>
-    <string name="push_notifications_failed">Slanje push obavijesti nije uspjelo</string>
-    <string name="push_notifications_sent">Obavijest je uspješno poslana</string>
-    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Primite obavijest kada je potreban vaš potpis ili uređaj zatraži pristup.</string>
-    <string name="enable_push_notifications">Omogući push obavijesti</string>
-    <string name="keysign_notification_channel_name">Zahtjevi za potpisivanje</string>
-    <string name="keysign_notification_title">Potpiši transakciju</string>
-    <string name="keysign_notification_body">Čeka vas novi zahtjev za potpisivanje</string>
-    <string name="notifications_intro_enable">Aktiviraj</string>
-    <string name="notifications_are_here">Sigurne obavijesti su ovdje</string>
-    <string name="notifications_description">Primajte upozorenja kada drugi uređaj zatraži pristup vašem trezoru ili kada je potreban vaš potpis.</string>
-    <string name="choose_vaults_for_notifications">Odaberite trezore za obavijesti</string>
-    <string name="notifications_vault_sheet_subtitle">Možete upravljati obavijestima u postavkama sustava.</string>
-    <string name="enable_notifications_for_vault">Omogući obavijesti za %s</string>
-    <string name="not_now">Ne sada</string>
-    <string name="vault_notifications">Obavijesti trezora</string>
-    <string name="enable_all">Omogući sve</string>
-
     <string name="try_again">Pokušajte ponovno</string>
     <string name="vault_settings_title">Postavke trezora</string>
     <string name="vault_settings_details_title">Detalji</string>
@@ -363,6 +343,26 @@
     <string name="network_connection_lost">Mrežna veza izgubljena. Provjerite svoju internetsku vezu</string>
     <string name="send_form_polka_reaping_warning">Ostavite dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 DOT (egzistencijalni depozit), račun će biti deaktiviran (požnjet) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati s novim pologom većim od egzistencijalnog pologa u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
     <string name="edit_address_title">Uredi adresu</string>
+    <!-- Push Notifications -->
+    <string name="notifications">Obavijesti</string>
+    <string name="push_notifications">Push obavijesti</string>
+    <string name="push_notifications_failed">Slanje push obavijesti nije uspjelo</string>
+    <string name="push_notifications_sent">Obavijest je uspješno poslana</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Primite obavijest kada je potreban vaš potpis ili uređaj zatraži pristup.</string>
+    <string name="enable_push_notifications">Omogući push obavijesti</string>
+    <string name="keysign_notification_channel_name">Zahtjevi za potpisivanje</string>
+    <string name="keysign_notification_title">Potpiši transakciju</string>
+    <string name="keysign_notification_body">Čeka vas novi zahtjev za potpisivanje</string>
+    <string name="notifications_intro_enable">Aktiviraj</string>
+    <string name="notifications_are_here">Sigurne obavijesti su ovdje</string>
+    <string name="notifications_description">Primajte upozorenja kada drugi uređaj zatraži pristup vašem trezoru ili kada je potreban vaš potpis.</string>
+    <string name="choose_vaults_for_notifications">Odaberite trezore za obavijesti</string>
+    <string name="notifications_vault_sheet_subtitle">Možete upravljati obavijestima u postavkama sustava.</string>
+    <string name="enable_notifications_for_vault">Omogući obavijesti za %s</string>
+    <string name="not_now">Ne sada</string>
+    <string name="vault_notifications">Obavijesti trezora</string>
+    <string name="enable_all">Omogući sve</string>
+
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Ukupno vezanih Rune</string>
@@ -882,7 +882,7 @@
     <string name="energy">Energija</string>
     <string name="bandwidth_dec">Za svaku transakciju na TRON-u, uključujući i standardna slanja tokena i interakcije pametnih ugovora, potrebni su bodovi propusnosti. Svaki korisnik TRON-a dobiva 600 besplatnih bodova propusnosti dnevno, što može pokriti otprilike dva osnovna slanja. Osim toga, možete zaraditi dodatne bodove propusnosti ulaganjem TRX-a, povećavajući svoj dnevni saldo kako biste podržali više transakcija. Ako imate dovoljno bodova propusnosti, možete slati tokene, ulagati TRX ili komunicirati s pametnim ugovorima bez plaćanja TRX-a u naknadama za gorivo.</string>
     <string name="energy_dec">Potrebno za složenije radnje, kao što je interakcija s pametnim ugovorima (npr. zamjene ili transakcije dApp-ova). Za razliku od propusnosti, energija se ne daje besplatno - morate ulagati TRX da biste zaradili energiju. (Napredniji korisnici također mogu steći energiju putem mehanizama najma kao što su JustLend ili Tronifyjeva tržišta najma energije). Međutim, posjedovanje energije može značajno smanjiti ili čak eliminirati naknade za gorivo za interakcije pametnih ugovora, što energiju čini vrijednom za one koji često koriste TRON dApp-ove.</string>
-    
+
     <!-- Bond Form -->
     <string name="bond_node_address">Adresa Čvora</string>
     <string name="bond_operator_fees_basis_point">Naknade operatora (Bazni bodovi)</string>
@@ -954,6 +954,11 @@
         <item quantity="one">Pronašli smo %d aktivan lanac</item>
         <item quantity="few">Pronašli smo %d aktivna lanca</item>
         <item quantity="other">Pronašli smo %d aktivnih lanaca</item>
+    </plurals>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Ponovno pošalji obavijest za %d sekundu</item>
+        <item quantity="few">Ponovno pošalji obavijest za %d sekunde</item>
+        <item quantity="other">Ponovno pošalji obavijest za %d sekundi</item>
     </plurals>
     <string name="key_import_chains_found_desc">Svaki dodatni lanac povećava vrijeme za generiranje vašeg trezora i mogućnost isteka vremena.</string>
     <string name="key_import_chains_continue">Započni</string>
@@ -1104,9 +1109,4 @@
     <string name="server_backup_error_too_many_requests">Previše zahtjeva za sigurnosnu kopiju. Pokušajte ponovno kasnije.</string>
     <string name="server_backup_error_bad_request">Nešto je pošlo po krivu. Provjerite svoje podatke i pokušajte ponovno.</string>
     <string name="resend_notification">Ponovo pošalji obavijest</string>
-    <plurals name="resend_notification_in_seconds">
-        <item quantity="one">Ponovo pošalji obavijest za %d sekundu</item>
-        <item quantity="few">Ponovo pošalji obavijest za %d sekunde</item>
-        <item quantity="other">Ponovo pošalji obavijest za %d sekundi</item>
-    </plurals>
 </resources>

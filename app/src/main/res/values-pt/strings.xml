@@ -1,25 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Push Notifications -->
-    <string name="notifications">Notificações</string>
-    <string name="push_notifications">Notificações push</string>
-    <string name="push_notifications_failed">Falha ao enviar notificação push</string>
-    <string name="push_notifications_sent">Notificação enviada com sucesso</string>
-    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Receba uma notificação quando a sua assinatura for necessária ou um dispositivo solicitar acesso.</string>
-    <string name="enable_push_notifications">Ativar notificações push</string>
-    <string name="keysign_notification_channel_name">Solicitações de assinatura</string>
-    <string name="keysign_notification_title">Assinar transação</string>
-    <string name="keysign_notification_body">Há uma nova solicitação de assinatura aguardando você</string>
-    <string name="notifications_intro_enable">Ativar</string>
-    <string name="notifications_are_here">Notificações seguras chegaram</string>
-    <string name="notifications_description">Receba alertas quando outro dispositivo solicitar entrar no seu cofre ou quando a sua assinatura for necessária.</string>
-    <string name="choose_vaults_for_notifications">Escolher cofres para notificações</string>
-    <string name="notifications_vault_sheet_subtitle">Pode gerir as notificações nas definições do sistema.</string>
-    <string name="enable_notifications_for_vault">Ativar notificações para %s</string>
-    <string name="not_now">Agora não</string>
-    <string name="vault_notifications">Notificações do cofre</string>
-    <string name="enable_all">Ativar tudo</string>
-
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
     <string name="signing_error_please_try_again_s">Erro ao Assinar. Por favor, tente novamente. %s</string>
@@ -362,6 +342,26 @@
     <string name="join_keysign_failed_connect_to_server">Falha ao ligar ao servidor</string>
     <string name="network_connection_lost">Ligação de rede perdida. Verifique a sua ligação com a Internet</string>
     <string name="send_form_polka_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta cair abaixo de 1 DOT (Depósito Existencial), a conta será desativada (recolhida) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
+    <!-- Push Notifications -->
+    <string name="notifications">Notificações</string>
+    <string name="push_notifications">Notificações push</string>
+    <string name="push_notifications_failed">Falha ao enviar notificação push</string>
+    <string name="push_notifications_sent">Notificação enviada com sucesso</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Receba uma notificação quando a sua assinatura for necessária ou um dispositivo solicitar acesso.</string>
+    <string name="enable_push_notifications">Ativar notificações push</string>
+    <string name="keysign_notification_channel_name">Solicitações de assinatura</string>
+    <string name="keysign_notification_title">Assinar transação</string>
+    <string name="keysign_notification_body">Há uma nova solicitação de assinatura aguardando você</string>
+    <string name="notifications_intro_enable">Ativar</string>
+    <string name="notifications_are_here">Notificações seguras chegaram</string>
+    <string name="notifications_description">Receba alertas quando outro dispositivo solicitar entrar no seu cofre ou quando a sua assinatura for necessária.</string>
+    <string name="choose_vaults_for_notifications">Escolher cofres para notificações</string>
+    <string name="notifications_vault_sheet_subtitle">Pode gerir as notificações nas definições do sistema.</string>
+    <string name="enable_notifications_for_vault">Ativar notificações para %s</string>
+    <string name="not_now">Agora não</string>
+    <string name="vault_notifications">Notificações do cofre</string>
+    <string name="enable_all">Ativar tudo</string>
+
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Total de Rune Vinculado</string>
@@ -954,6 +954,10 @@
         <item quantity="one">Encontramos %d cadeia ativa</item>
         <item quantity="other">Encontramos %d cadeias ativas</item>
     </plurals>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Reenviar notificação em %d segundo</item>
+        <item quantity="other">Reenviar notificação em %d segundos</item>
+    </plurals>
     <string name="key_import_chains_found_desc">Cada cadeia adicional aumenta o tempo para gerar seu cofre e a possibilidade de o tempo limite ser atingido.</string>
     <string name="key_import_chains_continue">Começar</string>
     <string name="key_import_chains_customize">Personalizar cadeias</string>
@@ -1103,8 +1107,4 @@
     <string name="server_backup_error_too_many_requests">Demasiados pedidos de backup. Tente novamente mais tarde.</string>
     <string name="server_backup_error_bad_request">Algo correu mal. Verifique os seus dados e tente novamente.</string>
     <string name="resend_notification">Reenviar notificação</string>
-    <plurals name="resend_notification_in_seconds">
-        <item quantity="one">Reenviar notificação em %d segundo</item>
-        <item quantity="other">Reenviar notificação em %d segundos</item>
-    </plurals>
 </resources>
