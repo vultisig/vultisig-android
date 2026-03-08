@@ -837,9 +837,7 @@ constructor(
                 defiType != DeFiNavActions.UNSTAKE_STCY &&
                 defiType != DeFiNavActions.REDEEM_YRUNE &&
                 defiType != DeFiNavActions.MINT_YTCY &&
-                defiType != DeFiNavActions.REDEEM_YTCY &&
-                defiType != DeFiNavActions.DEPOSIT_USDC_CIRCLE &&
-                defiType != DeFiNavActions.WITHDRAW_USDC_CIRCLE
+                defiType != DeFiNavActions.REDEEM_YTCY
         ) {
             return amount
         }
