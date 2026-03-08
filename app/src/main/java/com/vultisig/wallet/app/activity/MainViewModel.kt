@@ -89,8 +89,14 @@ constructor(
 
     fun onPushNotificationReceived(qrCodeData: String) {
         viewModelScope.launch {
+            val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
+            val vaultId = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }?.id ?: ""
+            // Delay is intentional: onPushNotificationReceived is invoked from
+            // onNavigationReady, which fires just before MainActivityContent launches
+            // the route-collector coroutine.  The SharedFlow has no replay buffer, so
+            // we wait one frame to let the collector subscribe before emitting.
             delay(1.seconds)
-            navigator.route(Route.Keysign.Join(vaultId = "", qr = qrCodeData))
+            navigator.route(Route.Keysign.Join(vaultId = vaultId, qr = qrCodeData))
         }
     }
 

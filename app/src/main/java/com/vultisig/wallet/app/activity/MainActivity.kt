@@ -46,6 +46,8 @@ class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var appUpdateManager: AppUpdateManager
 
+    private var cachedPushQrPayload: String? = null
+
     private val pushNotificationReceiver =
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -61,10 +63,9 @@ class MainActivity : AppCompatActivity() {
         splashScreen.setKeepOnScreenCondition { false }
         super.onCreate(savedInstanceState)
 
-        // Handle notification tap when app was killed
-        intent?.getStringExtra(VultisigFirebaseMessagingService.EXTRA_QR_CODE_DATA)?.let {
-            mainViewModel.onPushNotificationReceived(it)
-        }
+        // Handle notification tap when app was killed — defer until nav controller is ready
+        cachedPushQrPayload =
+            intent?.getStringExtra(VultisigFirebaseMessagingService.EXTRA_QR_CODE_DATA)
 
         val systemBarStyle =
             SystemBarStyle.auto(
@@ -100,7 +101,13 @@ class MainActivity : AppCompatActivity() {
                         navController = navController,
                         mainViewModel = mainViewModel,
                         startDestination = screen,
-                        onNavigationReady = { isNavigationReady = true },
+                        onNavigationReady = {
+                            isNavigationReady = true
+                            cachedPushQrPayload?.let { payload ->
+                                mainViewModel.onPushNotificationReceived(payload)
+                                cachedPushQrPayload = null
+                            }
+                        },
                     )
                 }
             }

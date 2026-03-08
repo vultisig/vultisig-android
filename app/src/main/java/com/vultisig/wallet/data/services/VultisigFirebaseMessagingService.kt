@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.services
 
+import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -46,8 +47,19 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
             }
         sendBroadcast(broadcastIntent)
 
-        // Post a system notification so the user can tap it when the app is backgrounded or killed
-        showSystemNotification(qrCodeData)
+        // Post a system notification only when the app is not in the foreground;
+        // foreground handling is done via the broadcast above in MainActivity.
+        if (!isAppInForeground()) {
+            showSystemNotification(qrCodeData)
+        }
+    }
+
+    private fun isAppInForeground(): Boolean {
+        val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        return activityManager.runningAppProcesses?.any {
+            it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND &&
+                it.processName == packageName
+        } == true
     }
 
     private fun showSystemNotification(qrCodeData: String) {
