@@ -246,7 +246,7 @@ constructor(
             val vault = vaultRepository.get(vaultId) ?: return@launch
             if (
                 vault.isFastVault() &&
-                    vaultMetadataRepo.isFastVaultPasswordReminderRequired(vaultId)
+                vaultMetadataRepo.isFastVaultPasswordReminderRequired(vaultId)
             ) {
                 navigator.route(Route.FastVaultPasswordReminder(vaultId))
             }
@@ -351,26 +351,26 @@ constructor(
         loadAccountsJob =
             viewModelScope.launch {
                 combine(
-                        accountsRepository
-                            .loadAddresses(vaultId, isRefresh)
-                            .map { it.sortByAccountsTotalFiatValue() }
-                            .catch {
-                                updateRefreshing(false)
-                                Timber.e(it)
-                            },
-                        uiState.value.searchTextFieldState.textAsFlow(),
-                        uiState.map { it.cryptoConnectionType }.distinctUntilChanged(),
-                    ) { accounts, searchQuery, cryptoConnectionType ->
-                        accounts
-                            .filter {
-                                when (cryptoConnectionType) {
-                                    CryptoConnectionType.Wallet -> true
-                                    CryptoConnectionType.Defi ->
-                                        cryptoConnectionTypeRepository.isDefi(it.chain)
-                                }
+                    accountsRepository
+                        .loadAddresses(vaultId, isRefresh)
+                        .map { it.sortByAccountsTotalFiatValue() }
+                        .catch {
+                            updateRefreshing(false)
+                            Timber.e(it)
+                        },
+                    uiState.value.searchTextFieldState.textAsFlow(),
+                    uiState.map { it.cryptoConnectionType }.distinctUntilChanged(),
+                ) { accounts, searchQuery, cryptoConnectionType ->
+                    accounts
+                        .filter {
+                            when (cryptoConnectionType) {
+                                CryptoConnectionType.Wallet -> true
+                                CryptoConnectionType.Defi ->
+                                    cryptoConnectionTypeRepository.isDefi(it.chain)
                             }
-                            .updateUiStateFromList(searchQuery = searchQuery.toString())
-                    }
+                        }
+                        .updateUiStateFromList(searchQuery = searchQuery.toString())
+                }
                     .launchIn(this)
             }
     }
@@ -380,34 +380,34 @@ constructor(
         loadDeFiBalancesJob =
             viewModelScope.launch {
                 combine(
-                        accountsRepository
-                            .loadDeFiAddresses(vaultId, isRefresh)
-                            .map { addresses -> addresses.sortByAccountsTotalFiatValue() }
-                            .catch { error ->
-                                updateRefreshing(false)
-                                Timber.e(error, "Error loading DeFi balances for vault: $vaultId")
-                            },
-                        uiState.value.searchTextFieldState.textAsFlow(),
-                        defaultDeFiChainsRepository.getDefaultChains(vaultId),
-                    ) { accounts, searchQuery, selectedDeFiChains ->
-                        Timber.d(
-                            "DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts, selected chains: ${selectedDeFiChains.map { it.raw }}"
-                        )
+                    accountsRepository
+                        .loadDeFiAddresses(vaultId, isRefresh)
+                        .map { addresses -> addresses.sortByAccountsTotalFiatValue() }
+                        .catch { error ->
+                            updateRefreshing(false)
+                            Timber.e(error, "Error loading DeFi balances for vault: $vaultId")
+                        },
+                    uiState.value.searchTextFieldState.textAsFlow(),
+                    defaultDeFiChainsRepository.getDefaultChains(vaultId),
+                ) { accounts, searchQuery, selectedDeFiChains ->
+                    Timber.d(
+                        "DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts, selected chains: ${selectedDeFiChains.map { it.raw }}"
+                    )
 
-                        val filteredAccounts =
-                            accounts.filter { address ->
-                                val isSelected = selectedDeFiChains.contains(address.chain)
-                                Timber.d("Chain ${address.chain.raw} is selected: $isSelected")
-                                isSelected
-                            }
+                    val filteredAccounts =
+                        accounts.filter { address ->
+                            val isSelected = selectedDeFiChains.contains(address.chain)
+                            Timber.d("Chain ${address.chain.raw} is selected: $isSelected")
+                            isSelected
+                        }
 
-                        Timber.d("Filtered DeFi accounts: ${filteredAccounts.size} accounts")
+                    Timber.d("Filtered DeFi accounts: ${filteredAccounts.size} accounts")
 
-                        filteredAccounts.updateUiStateFromList(
-                            searchQuery = searchQuery.toString(),
-                            isDefi = true,
-                        )
-                    }
+                    filteredAccounts.updateUiStateFromList(
+                        searchQuery = searchQuery.toString(),
+                        isDefi = true,
+                    )
+                }
                     .launchIn(this)
             }
     }
@@ -550,15 +550,14 @@ constructor(
             hasCheckedNotificationPrompt = true
 
             val eligibleVaults = vaultRepository.getAll().filter { it.isSecureVault() }
-            val unprompted =
+            val unnotifiedVaults =
                 eligibleVaults.filter {
-                    pushNotificationManager.isVaultOptedIn(it.id).not() &&
-                        !pushNotificationManager.hasPromptedVault(it.id)
+                    pushNotificationManager.isVaultOptedIn(it.id).not()
                 }
-            if (unprompted.isEmpty()) return@launch
+            if (unnotifiedVaults.isEmpty()) return@launch
 
             val introVaults =
-                unprompted.map { vault ->
+                unnotifiedVaults.map { vault ->
                     VaultIntroItem(
                         vaultId = vault.id,
                         vaultName = vault.name,
