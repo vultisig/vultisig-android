@@ -6,7 +6,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.http.isSuccess
+import io.ktor.http.HttpStatusCode
 import javax.inject.Inject
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -55,7 +55,10 @@ internal class NotificationApiImpl @Inject constructor(private val http: HttpCli
     }
 
     override suspend fun isVaultRegistered(vaultId: String): Boolean {
-        return http.get("$NOTIFICATION_BASE_URL/vault/$vaultId").status.isSuccess()
+        val response = http.get("$NOTIFICATION_BASE_URL/vault/$vaultId")
+        if (response.status == HttpStatusCode.NotFound) return false
+        response.throwIfUnsuccessful()
+        return true
     }
 
     override suspend fun notify(request: NotifyRequest) {

@@ -67,15 +67,17 @@ constructor(
         val notificationVaultId = notificationVaultId(vault)
 
         if (enabled) {
-            token?.let {
-                notificationApi.registerDevice(
-                    DeviceRegistrationRequest(
-                        vaultId = notificationVaultId,
-                        partyName = vault.localPartyID,
-                        token = it,
-                    )
-                )
+            if (token == null) {
+                Timber.w("Cannot enable notifications: no FCM token available")
+                return
             }
+            notificationApi.registerDevice(
+                DeviceRegistrationRequest(
+                    vaultId = notificationVaultId,
+                    partyName = vault.localPartyID,
+                    token = token,
+                )
+            )
         } else {
             notificationApi.unregisterDevice(
                 DeviceUnregisterRequest(

@@ -12,12 +12,12 @@
     <string name="keysign_notification_body">C\'è una nuova richiesta di firma in attesa</string>
     <string name="notifications_intro_enable">Attiva</string>
     <string name="notifications_are_here">Le notifiche sicure sono arrivate</string>
-    <string name="notifications_description">Ricevi avvisi quando un altro dispositivo richiede di unirsi al tuo vault o quando è richiesta la tua firma.</string>
-    <string name="choose_vaults_for_notifications">Scegli i vault per le notifiche</string>
+    <string name="notifications_description">Ricevi avvisi quando un altro dispositivo richiede di unirsi alla tua cassaforte o quando è richiesta la tua firma.</string>
+    <string name="choose_vaults_for_notifications">Scegli le cassaforti per le notifiche</string>
     <string name="notifications_vault_sheet_subtitle">Puoi gestire le notifiche nelle impostazioni di sistema.</string>
     <string name="enable_notifications_for_vault">Abilita notifiche per %s</string>
     <string name="not_now">Non ora</string>
-    <string name="vault_notifications">Notifiche vault</string>
+    <string name="vault_notifications">Notifiche cassaforte</string>
     <string name="enable_all">Abilita tutto</string>
 
     <string name="try_again">Riprova</string>
@@ -881,7 +881,7 @@
     <string name="energy">Energia</string>
     <string name="bandwidth_dec">I Punti di Larghezza di Banda sono necessari per ogni transazione su TRON, inclusi sia gli invii di token standard che le interazioni con gli smart contract. Ogni utente TRON riceve 600 Punti di Larghezza di Banda gratuiti al giorno, che possono coprire circa due invii base. Inoltre, puoi guadagnare Punti di Larghezza di Banda extra facendo staking di TRX, aumentando il tuo saldo giornaliero per supportare più transazioni. Se hai abbastanza Punti di Larghezza di Banda, puoi inviare token, fare staking di TRX o interagire con gli smart contract senza pagare TRX in commissioni del gas.</string>
     <string name="energy_dec">Necessari per azioni più complesse, come l\'interazione con gli smart contract (ad esempio, swap o transazioni dApp). A differenza della Larghezza di Banda, l\'Energia non viene fornita gratuitamente: è necessario fare staking di TRX per guadagnarla. (Gli utenti più esperti possono anche acquisire Energia tramite meccanismi di leasing come JustLend o i mercati di noleggio dell\'energia di Tronify). Tuttavia, avere Energia può ridurre significativamente o addirittura eliminare le commissioni del gas per le interazioni con gli smart contract, rendendo l\'Energia preziosa per coloro che utilizzano frequentemente le dApp TRON.</string>
-    
+
     <!-- Bond Form -->
     <string name="bond_node_address">Indirizzo del Nodo</string>
     <string name="bond_operator_fees_basis_point">Commissioni operatore (Punti base)</string>
@@ -1102,9 +1102,9 @@
     <string name="server_backup_error_timeout">Il server ha impiegato troppo tempo per rispondere. Controlla la tua connessione Internet e riprova.</string>
     <string name="server_backup_error_too_many_requests">Troppe richieste di backup. Riprova più tardi.</string>
     <string name="server_backup_error_bad_request">Qualcosa è andato storto. Controlla i tuoi dati e riprova.</string>
-    <string name="resend_notification">Reinvia notifica</string>
+    <string name="resend_notification">Reinvia email</string>
     <plurals name="resend_notification_in_seconds">
-        <item quantity="one">Reinvia notifica in %d secondo</item>
-        <item quantity="other">Reinvia notifica in %d secondi</item>
+        <item quantity="one">Reinvia email in %d secondo</item>
+        <item quantity="other">Reinvia email in %d secondi</item>
     </plurals>
 </resources>

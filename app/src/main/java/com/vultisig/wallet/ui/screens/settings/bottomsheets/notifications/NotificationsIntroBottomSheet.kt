@@ -57,7 +57,7 @@ internal fun NotificationsIntroBottomSheetContent(onEnable: () -> Unit, onNotNow
     ) {
         Image(
             painter = painterResource(id = R.drawable.nofitication_banner),
-            contentDescription = stringResource(id = R.string.app_name),
+            contentDescription = null,
         )
 
         UiSpacer(size = 34.dp)
