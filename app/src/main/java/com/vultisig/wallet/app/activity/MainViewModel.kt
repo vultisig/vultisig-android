@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
@@ -88,7 +89,7 @@ constructor(
     }
 
     fun onPushNotificationReceived(qrCodeData: String) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
             val vaultId = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }?.id ?: ""
             // Delay is intentional: onPushNotificationReceived is invoked from

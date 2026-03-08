@@ -141,8 +141,8 @@ class MainActivity : AppCompatActivity() {
         mainViewModel.onPushNotificationReceived(qrCodeData)
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
         val filter = IntentFilter(VultisigFirebaseMessagingService.PUSH_NOTIFICATION_ACTION)
         ContextCompat.registerReceiver(
             this,
@@ -152,8 +152,8 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
         try {
             unregisterReceiver(pushNotificationReceiver)
         } catch (e: IllegalArgumentException) {
