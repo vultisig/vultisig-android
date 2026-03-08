@@ -551,9 +551,7 @@ constructor(
 
             val eligibleVaults = vaultRepository.getAll().filter { it.isSecureVault() }
             val unnotifiedVaults =
-                eligibleVaults.filter {
-                    pushNotificationManager.isVaultOptedIn(it.id).not()
-                }
+                eligibleVaults.filter { pushNotificationManager.isVaultOptedIn(it.id).not() }
             if (unnotifiedVaults.isEmpty()) return@launch
 
             val introVaults =

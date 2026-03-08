@@ -166,7 +166,7 @@ internal sealed class VerifyUiModel {
 internal data class FunctionInfo(val signature: String, val inputs: String)
 
 @HiltViewModel
-internal class  JoinKeysignViewModel
+internal class JoinKeysignViewModel
 @Inject
 constructor(
     savedStateHandle: SavedStateHandle,
