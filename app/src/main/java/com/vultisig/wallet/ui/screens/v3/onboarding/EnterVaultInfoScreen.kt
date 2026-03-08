@@ -121,7 +121,11 @@ internal fun EnterVaultInfoScreen(
                 onTrailingIconClick = { onEvent(EnterVaultInfoEvent.ClearInput) },
                 footNote = uiState.errorMessage?.asString(),
                 imeAction = ImeAction.Go,
-                onKeyboardAction = { onEvent(EnterVaultInfoEvent.Next) },
+                onKeyboardAction = {
+                    if (uiState.isNextButtonEnabled) {
+                        onEvent(EnterVaultInfoEvent.Next)
+                    }
+                },
                 hint = uiState.textFieldHint.asString(),
             )
 
@@ -141,7 +145,11 @@ internal fun EnterVaultInfoScreen(
                     innerState = uiState.innerState,
                     onTrailingIconClick = { onEvent(EnterVaultInfoEvent.ClearConfirmInput) },
                     imeAction = ImeAction.Go,
-                    onKeyboardAction = { onEvent(EnterVaultInfoEvent.Next) },
+                    onKeyboardAction = {
+                        if (uiState.isNextButtonEnabled) {
+                            onEvent(EnterVaultInfoEvent.Next)
+                        }
+                    },
                     hint = uiState.confirmPasswordTextFieldHint.asString(),
                 )
             }
