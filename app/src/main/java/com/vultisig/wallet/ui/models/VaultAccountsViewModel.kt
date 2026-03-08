@@ -142,7 +142,6 @@ constructor(
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
     private var loadDeFiBalancesJob: Job? = null
-    private var hasCheckedNotificationPrompt = false
 
     private val _requestNotificationPermission = Channel<Unit>(Channel.BUFFERED)
     val requestNotificationPermission = _requestNotificationPermission.receiveAsFlow()
@@ -543,20 +542,16 @@ constructor(
     }
 
     private fun checkNotificationPrompt(vaultId: String) {
-        if (hasCheckedNotificationPrompt) return
         viewModelScope.launch {
             val currentVault = vaultRepository.get(vaultId) ?: return@launch
             if (!currentVault.isSecureVault()) return@launch
-            hasCheckedNotificationPrompt = true
+            if (
+                pushNotificationManager.isVaultOptedIn(vaultId) ||
+                    pushNotificationManager.hasPromptedVault(vaultId)
+            )
+                return@launch
 
             val eligibleVaults = vaultRepository.getAll().filter { it.isSecureVault() }
-            val unnotifiedVaults =
-                eligibleVaults.filter {
-                    !pushNotificationManager.isVaultOptedIn(it.id) &&
-                        !pushNotificationManager.hasPromptedVault(it.id)
-                }
-            if (unnotifiedVaults.isEmpty()) return@launch
-
             val introVaults =
                 eligibleVaults.map { vault ->
                     VaultIntroItem(
