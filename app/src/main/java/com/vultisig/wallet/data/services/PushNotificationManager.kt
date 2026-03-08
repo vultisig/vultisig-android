@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.services
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.google.firebase.messaging.FirebaseMessaging
 import com.vultisig.wallet.data.api.DeviceRegistrationRequest
 import com.vultisig.wallet.data.api.DeviceUnregisterRequest
 import com.vultisig.wallet.data.api.NotificationApi
@@ -16,6 +17,7 @@ import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
 @Singleton
@@ -29,8 +31,39 @@ constructor(
 ) {
     fun getStoredToken(): String? = encryptedPrefs.getString(FCM_TOKEN_KEY, null)
 
-    fun onNewToken(token: String) {
+    suspend fun onNewToken(token: String) {
         encryptedPrefs.edit { putString(FCM_TOKEN_KEY, token) }
+        reRegisterAllOptedInVaults(token)
+    }
+
+    suspend fun refreshTokenIfNeeded() {
+        if (getStoredToken() != null) return
+        try {
+            val token = FirebaseMessaging.getInstance().token.await()
+            onNewToken(token)
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to fetch FCM token")
+        }
+    }
+
+    private suspend fun reRegisterAllOptedInVaults(token: String) {
+        val enabledSettings = vaultNotificationSettingsDao.getAllEnabled()
+        enabledSettings.forEach { settings ->
+            val vault =
+                vaultRepository.get(settings.vaultId)?.takeIf { it.isSecureVault() }
+                    ?: return@forEach
+            try {
+                notificationApi.registerDevice(
+                    DeviceRegistrationRequest(
+                        vaultId = notificationVaultId(vault),
+                        partyName = vault.localPartyID,
+                        token = token,
+                    )
+                )
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to re-register vault ${vault.id} with new FCM token")
+            }
+        }
     }
 
     fun notificationVaultId(vault: Vault): String {
@@ -63,13 +96,16 @@ constructor(
         val vault = vaultRepository.get(vaultId)?.takeIf { it.isSecureVault() } ?: return
         ensureSettingsExist(vault.id)
 
+        if (enabled) {
+            refreshTokenIfNeeded()
+        }
+
         val token = getStoredToken()
         val notificationVaultId = notificationVaultId(vault)
 
         if (enabled) {
             if (token == null) {
-                Timber.w("Cannot enable notifications: no FCM token available")
-                return
+                throw IllegalStateException("Cannot enable notifications: no FCM token available")
             }
             notificationApi.registerDevice(
                 DeviceRegistrationRequest(

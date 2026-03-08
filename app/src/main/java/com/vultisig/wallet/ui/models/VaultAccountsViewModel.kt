@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models
 
+import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
@@ -7,6 +8,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -34,6 +36,8 @@ import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
@@ -41,8 +45,10 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultIntroItem
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -113,6 +119,7 @@ internal data class AccountUiModel(
 internal class VaultAccountsViewModel
 @Inject
 constructor(
+    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val requestResultRepository: RequestResultRepository,
@@ -132,6 +139,7 @@ constructor(
     private val tiersNFTRepository: TiersNFTRepository,
     private val remoteNFTService: TierRemoteNFTService,
     private val pushNotificationManager: PushNotificationManager,
+    private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
 
     private var requestedVaultId: String? = savedStateHandle.toRoute<Route.Home>().openVaultId
@@ -595,13 +603,33 @@ constructor(
 
     fun onNotificationVaultToggle(vaultId: String, enabled: Boolean) {
         uiState.update { state ->
-            val notificationIntroVaults =
-                state.notificationIntroVaults.map { vault ->
-                    if (vault.vaultId == vaultId) vault.copy(isEnabled = enabled) else vault
-                }
-            state.copy(notificationIntroVaults = notificationIntroVaults)
+            state.copy(
+                notificationIntroVaults =
+                    state.notificationIntroVaults.map { vault ->
+                        if (vault.vaultId == vaultId) vault.copy(isEnabled = enabled) else vault
+                    }
+            )
         }
-        viewModelScope.launch { pushNotificationManager.setVaultOptIn(vaultId, enabled) }
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.w(e, "Failed to opt in vault $vaultId for notifications")
+                uiState.update { state ->
+                    state.copy(
+                        notificationIntroVaults =
+                            state.notificationIntroVaults.map { vault ->
+                                if (vault.vaultId == vaultId) vault.copy(isEnabled = !enabled)
+                                else vault
+                            }
+                    )
+                }
+                snackbarFlow.showMessage(
+                    context.getString(R.string.push_notifications_failed),
+                    SnackbarType.Error,
+                )
+            }
+        ) {
+            pushNotificationManager.setVaultOptIn(vaultId, enabled)
+        }
     }
 
     fun onNotificationVaultSheetDismiss() {

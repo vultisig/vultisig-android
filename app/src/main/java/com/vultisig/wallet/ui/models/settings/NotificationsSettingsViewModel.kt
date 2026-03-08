@@ -1,14 +1,20 @@
 package com.vultisig.wallet.ui.models.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.PushNotificationManager
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +24,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 internal data class VaultNotificationUiModel(
     val vaultId: String,
@@ -34,9 +41,11 @@ internal data class NotificationsSettingsUiState(
 internal class NotificationsSettingsViewModel
 @Inject
 constructor(
+    @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val pushNotificationManager: PushNotificationManager,
+    private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
     private val _state = MutableStateFlow(NotificationsSettingsUiState())
     val state = _state.asStateFlow()
@@ -76,7 +85,15 @@ constructor(
     }
 
     fun onMasterToggle(enabled: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.w(e, "Failed to opt out all vaults from notifications")
+                snackbarFlow.showMessage(
+                    context.getString(R.string.push_notifications_failed),
+                    SnackbarType.Error,
+                )
+            }
+        ) {
             if (enabled) {
                 pendingVaultId = PENDING_ALL_VAULTS
                 _requestNotificationPermission.send(Unit)
@@ -87,7 +104,15 @@ constructor(
     }
 
     fun onVaultToggle(vaultId: String, enabled: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.w(e, "Failed to opt out vault $vaultId from notifications")
+                snackbarFlow.showMessage(
+                    context.getString(R.string.push_notifications_failed),
+                    SnackbarType.Error,
+                )
+            }
+        ) {
             if (enabled) {
                 pendingVaultId = vaultId
                 _requestNotificationPermission.send(Unit)
@@ -99,7 +124,15 @@ constructor(
 
     fun onNotificationPermissionResult(granted: Boolean) {
         if (!granted) return
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.w(e, "Failed to opt in vault(s) for notifications")
+                snackbarFlow.showMessage(
+                    context.getString(R.string.push_notifications_failed),
+                    SnackbarType.Error,
+                )
+            }
+        ) {
             val pending = pendingVaultId
             if (pending == PENDING_ALL_VAULTS) {
                 pushNotificationManager.setAllVaultsOptIn(enabled = true)
