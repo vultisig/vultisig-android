@@ -55,6 +55,7 @@ import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.utils.TextFieldUtils
+import com.vultisig.wallet.data.utils.thorswapMultiplier
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
@@ -1601,17 +1602,39 @@ constructor(
                                     UiText.StringResource(R.string.network_connection_lost)
 
                                 is SwapException.SmallSwapAmount -> {
-                                    e.message?.let {
+                                    val rawAmount =
+                                        e.message?.let { msg ->
+                                            Regex("""recommended_min_amount_in:\s*(\d+)""")
+                                                .find(msg)
+                                                ?.groupValues
+                                                ?.get(1)
+                                                ?.toLongOrNull()
+                                        }
+                                    if (rawAmount != null) {
+                                        val multiplier = srcToken.thorswapMultiplier
+                                        val tokenAmount =
+                                            BigDecimal(rawAmount)
+                                                .divide(multiplier)
+                                                .movePointRight(srcToken.decimal)
+                                                .toBigInteger()
+                                        val formattedAmount = mapTokenValueToDecimalUiString(
+                                            TokenValue(value = tokenAmount, token = srcToken)
+                                        )
                                         UiText.FormattedText(
                                             R.string.swap_form_minimum_amount,
-                                            listOf(it, uiState.value.selectedSrcToken?.title ?: ""),
+                                            listOf(formattedAmount, uiState.value.selectedSrcToken?.title ?: ""),
                                         )
+                                    } else if (e.message?.toDoubleOrNull() != null) {
+                                        // Internal check: message is a simple amount number
+                                        UiText.FormattedText(
+                                            R.string.swap_form_minimum_amount,
+                                            listOf(e.message ?: "", uiState.value.selectedSrcToken?.title ?: ""),
+                                        )
+                                    } else {
+                                        // API error: show the raw message directly (e.g. "amount less than dust threshold")
+                                        e.message?.let { UiText.DynamicString(it) }
+                                            ?: UiText.StringResource(R.string.swap_error_amount_too_low)
                                     }
-                                        ?: run {
-                                            UiText.StringResource(
-                                                R.string.swap_error_amount_too_low
-                                            )
-                                        }
                                 }
 
                                 is SwapException.InsufficientFunds ->
