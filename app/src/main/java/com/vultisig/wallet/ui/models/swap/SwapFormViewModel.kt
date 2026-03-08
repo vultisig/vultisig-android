@@ -1617,23 +1617,30 @@ constructor(
                                                 .divide(multiplier)
                                                 .movePointRight(srcToken.decimal)
                                                 .toBigInteger()
-                                        val formattedAmount = mapTokenValueToDecimalUiString(
-                                            TokenValue(value = tokenAmount, token = srcToken)
-                                        )
+                                        val formattedAmount =
+                                            mapTokenValueToDecimalUiString(
+                                                TokenValue(value = tokenAmount, token = srcToken)
+                                            )
                                         UiText.FormattedText(
                                             R.string.swap_form_minimum_amount,
-                                            listOf(formattedAmount, uiState.value.selectedSrcToken?.title ?: ""),
+                                            listOf(
+                                                formattedAmount,
+                                                uiState.value.selectedSrcToken?.title ?: "",
+                                            ),
                                         )
                                     } else if (e.message?.toDoubleOrNull() != null) {
-                                        // Internal check: message is a simple amount number
                                         UiText.FormattedText(
                                             R.string.swap_form_minimum_amount,
-                                            listOf(e.message ?: "", uiState.value.selectedSrcToken?.title ?: ""),
+                                            listOf(
+                                                e.message ?: "",
+                                                uiState.value.selectedSrcToken?.title ?: "",
+                                            ),
                                         )
                                     } else {
-                                        // API error: show the raw message directly (e.g. "amount less than dust threshold")
                                         e.message?.let { UiText.DynamicString(it) }
-                                            ?: UiText.StringResource(R.string.swap_error_amount_too_low)
+                                            ?: UiText.StringResource(
+                                                R.string.swap_error_amount_too_low
+                                            )
                                     }
                                 }
 
