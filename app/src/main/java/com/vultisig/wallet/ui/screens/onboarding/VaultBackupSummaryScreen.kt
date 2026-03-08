@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -59,54 +58,50 @@ private fun VultBackupSummaryScreen(
     onNext: () -> Unit,
     onChooseChains: () -> Unit,
 ) {
-    Column(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize()) {
-        Column(
-            modifier =
-                Modifier.background(Theme.v2.colors.backgrounds.primary).weight(1f).fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            RiveAnimation(
-                modifier = Modifier.height(325.dp).fillMaxWidth(),
-                animation = R.raw.riv_onboarding_success,
-            )
+    Column(
+        modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        RiveAnimation(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            animation = R.raw.riv_onboarding_success,
+        )
 
-            UiSpacer(size = 14.dp)
+        UiSpacer(size = 24.dp)
 
-            V3Icon(
-                logo = R.drawable.tick_shield,
-                shinedBottom = Theme.v2.colors.alerts.success,
-                tintColor = Theme.v2.colors.alerts.success,
-                borderWidth = 2.dp,
-            )
+        V3Icon(
+            logo = R.drawable.tick_shield,
+            shinedBottom = Theme.v2.colors.alerts.success,
+            tintColor = Theme.v2.colors.alerts.success,
+            borderWidth = 2.dp,
+        )
 
-            UiSpacer(size = 24.dp)
+        UiSpacer(size = 24.dp)
 
-            Text(
-                text = stringResource(R.string.backup_congrats),
-                style =
-                    Theme.brockmann.headings.title2.copy(brush = Theme.v2.colors.gradients.primary),
-            )
+        Text(
+            text = stringResource(R.string.backup_congrats),
+            style = Theme.brockmann.headings.title2.copy(brush = Theme.v2.colors.gradients.primary),
+        )
 
-            UiSpacer(size = 8.dp)
+        UiSpacer(size = 8.dp)
 
-            Text(
-                text = stringResource(R.string.backup_your_vault_is_ready_to_use),
-                style = Theme.brockmann.headings.title2,
-                color = Theme.v2.colors.text.primary,
-            )
+        Text(
+            text = stringResource(R.string.backup_your_vault_is_ready_to_use),
+            style = Theme.brockmann.headings.title2,
+            color = Theme.v2.colors.text.primary,
+        )
 
-            UiSpacer(size = 12.dp)
+        UiSpacer(size = 12.dp)
 
-            Text(
-                text = stringResource(R.string.backup_you_re_all_set),
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.body.s.medium,
-                modifier = Modifier.padding(horizontal = 48.dp),
-                textAlign = TextAlign.Center,
-            )
+        Text(
+            text = stringResource(R.string.backup_you_re_all_set),
+            color = Theme.v2.colors.text.tertiary,
+            style = Theme.brockmann.body.s.medium,
+            modifier = Modifier.padding(horizontal = 48.dp),
+            textAlign = TextAlign.Center,
+        )
 
-            UiSpacer(weight = 1f)
-        }
+        UiSpacer(size = 48.dp)
 
         VsButton(
             onClick = onNext,

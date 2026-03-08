@@ -1034,6 +1034,7 @@
     <string name="backup_incorrect_code_try_again">Falscher Code. Bitte erneut versuchen.</string>
     <string name="backup_save_backup_to_the_cloud">Backup in der Cloud speichern</string>
     <string name="backup_vault_screen_export_prefix">Exportieren Sie diese Backup-Datei und speichern Sie sie in der Cloud. Sie ist</string>
+    <string name="backup_vault_screen_encrypted">verschlüsselt</string>
     <string name="backup_vault_screen_password_suffix">mit dem zuvor festgelegten Passwort, um Ihren Tresor zu entsperren.</string>
     <string name="backup_vault_screen_cloud_tip">Verwenden Sie für jedes Backup einen anderen Cloud-Dienst oder ein anderes Konto. Wenn Sie fertig sind, löschen Sie die Datei von diesem Gerät.</string>
     <string name="backup_vault_screen_save_backup">Backup speichern</string>

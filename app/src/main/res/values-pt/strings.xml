@@ -1033,6 +1033,7 @@
     <string name="backup_incorrect_code_try_again">Código incorreto. Tente novamente.</string>
     <string name="backup_save_backup_to_the_cloud">Guardar cópia de segurança na nuvem</string>
     <string name="backup_vault_screen_export_prefix">Exporte este ficheiro de cópia de segurança e guarde-o na nuvem. Está</string>
+    <string name="backup_vault_screen_encrypted">encriptado</string>
     <string name="backup_vault_screen_password_suffix">com a palavra-passe definida anteriormente para desbloquear o seu cofre.</string>
     <string name="backup_vault_screen_cloud_tip">Use um serviço de nuvem ou conta diferente para cada cópia. Quando terminar, elimine o ficheiro deste dispositivo.</string>
     <string name="backup_vault_screen_save_backup">Guardar cópia de segurança</string>

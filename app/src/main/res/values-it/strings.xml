@@ -1034,6 +1034,7 @@
     <string name="backup_incorrect_code_try_again">Codice errato. Riprova.</string>
     <string name="backup_save_backup_to_the_cloud">Salva il backup sul cloud</string>
     <string name="backup_vault_screen_export_prefix">Esporta questo file di backup, quindi salvalo sul cloud. È</string>
+    <string name="backup_vault_screen_encrypted">crittografato</string>
     <string name="backup_vault_screen_password_suffix">con la password impostata in precedenza per sbloccare il tuo vault.</string>
     <string name="backup_vault_screen_cloud_tip">Usa un servizio cloud o account diverso per ogni backup. Quando hai finito, elimina il file da questo dispositivo.</string>
     <string name="backup_vault_screen_save_backup">Salva backup</string>
