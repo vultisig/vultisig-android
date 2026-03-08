@@ -900,6 +900,17 @@
     <string name="raw_transaction_data">Sirovi podaci o transakciji</string>
     <string name="solana_raw_transaction">Solana Sirova transakcija</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">Prije nego što počnete...</string>
+    <string name="key_import_spotlight_heading_part1">"Ulazite u novu eru,\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"ostavljajući stare fraze za oporavak iza sebe. "</string>
+    <string name="key_import_spotlight_heading_part2">Trebat će vam:</string>
+    <string name="key_import_spotlight_seedphrase_title">Vaša fraza za oporavak</string>
+    <string name="key_import_spotlight_seedphrase_desc">Unesite je, stvorite trezor, ne osvrćite se</string>
+    <string name="key_import_spotlight_device_title">Barem jedan uređaj</string>
+    <string name="key_import_spotlight_device_desc">Bilo koji uređaj koji može pokrenuti Vultisig će raditi.</string>
+    <string name="key_import_spotlight_get_started">Započni</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Uvezi frazu za oporavak</string>
     <string name="import_seedphrase_title">Unesite svoju frazu za oporavak</string>
@@ -915,13 +926,18 @@
     <string name="import_seedphrase_checking">Provjera…</string>
 
     <string name="key_import_chains_title">Odaberi lance</string>
-    <string name="key_import_chains_scanning">Traženje aktivnih lanaca…</string>
-    <string name="key_import_chains_scanning_desc">Provjera novčanika za postojeća stanja na svim podržanim lancima</string>
-    <string name="key_import_chains_select_manually">Odaberi ručno</string>
-    <string name="key_import_chains_found_title">Pronađeni aktivni lanci</string>
-    <string name="key_import_chains_found_desc">Pronašli smo stanja na sljedećim lancima. Možete nastaviti ili prilagoditi odabir.</string>
-    <string name="key_import_chains_continue">Nastavi</string>
-    <string name="key_import_chains_customize">Prilagodi</string>
+    <string name="key_import_chains_scanning">Traženje lanaca…</string>
+    <string name="key_import_chains_scanning_desc">Provjeravamo koji lanci imaju aktivne adrese za vašu frazu za oporavak.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">Ovaj proces može trajati do 2 minute.</string>
+    <string name="key_import_chains_select_manually">Ručno odaberi lance</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">Pronašli smo %d aktivan lanac</item>
+        <item quantity="few">Pronašli smo %d aktivna lanca</item>
+        <item quantity="other">Pronašli smo %d aktivnih lanaca</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Svaki dodatni lanac povećava vrijeme za generiranje vašeg trezora i mogućnost isteka vremena.</string>
+    <string name="key_import_chains_continue">Započni</string>
+    <string name="key_import_chains_customize">Prilagodi lance</string>
     <string name="key_import_chains_no_active_title">Nisu pronađeni aktivni lanci</string>
     <string name="key_import_chains_no_active_desc">Nismo pronašli nikakva stanja. Ručno odaberite lance koje želite uvesti.</string>
     <string name="key_import_chains_select_title">Odaberi lance (%1$d)</string>

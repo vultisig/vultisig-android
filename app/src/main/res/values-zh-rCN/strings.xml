@@ -1238,6 +1238,17 @@
     <string name="raw_transaction_data">原始交易数据</string>
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">在您开始之前...</string>
+    <string name="key_import_spotlight_heading_part1">"您正在进入一个新时代，\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"告别旧的助记词。 "</string>
+    <string name="key_import_spotlight_heading_part2">您需要：</string>
+    <string name="key_import_spotlight_seedphrase_title">您的助记词</string>
+    <string name="key_import_spotlight_seedphrase_desc">输入它，创建金库，永不回头</string>
+    <string name="key_import_spotlight_device_title">至少一台设备</string>
+    <string name="key_import_spotlight_device_desc">任何能运行 Vultisig 的设备都可以。</string>
+    <string name="key_import_spotlight_get_started">开始</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">导入助记词</string>
     <string name="import_seedphrase_title">输入您的助记词</string>
@@ -1253,13 +1264,16 @@
     <string name="import_seedphrase_checking">检查中…</string>
 
     <string name="key_import_chains_title">选择链</string>
-    <string name="key_import_chains_scanning">正在搜索活跃链…</string>
-    <string name="key_import_chains_scanning_desc">正在检查您的钱包在所有支持链上的现有余额</string>
-    <string name="key_import_chains_select_manually">手动选择</string>
-    <string name="key_import_chains_found_title">发现活跃链</string>
-    <string name="key_import_chains_found_desc">我们在以下链上发现了余额。您可以继续或自定义选择。</string>
-    <string name="key_import_chains_continue">继续</string>
-    <string name="key_import_chains_customize">自定义</string>
+    <string name="key_import_chains_scanning">正在搜索链…</string>
+    <string name="key_import_chains_scanning_desc">我们正在检查哪些区块链对您的助记词有活跃地址。</string>
+    <string name="key_import_chains_scanning_desc_highlight">此过程最多可能需要2分钟。</string>
+    <string name="key_import_chains_select_manually">手动选择链</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="other">我们发现了 %d 条活跃链</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">每增加一条链都会增加生成金库的时间和超时的可能性。</string>
+    <string name="key_import_chains_continue">开始</string>
+    <string name="key_import_chains_customize">自定义链</string>
     <string name="key_import_chains_no_active_title">未发现活跃链</string>
     <string name="key_import_chains_no_active_desc">未找到任何余额。请手动选择您要导入的链。</string>
     <string name="key_import_chains_select_title">选择链 (%1$d)</string>

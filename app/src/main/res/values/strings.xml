@@ -943,6 +943,17 @@
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
     <string name="vault_count_recommended">Recommended</string>
 
+    <!-- Key Import / Feature Spotlight -->
+    <string name="key_import_spotlight_before_you_start">Before you start...</string>
+    <string name="key_import_spotlight_heading_part1">"You are entering a new era,\n"</string>
+    <string name="key_import_spotlight_heading_highlight">"leaving old seed phrases behind. "</string>
+    <string name="key_import_spotlight_heading_part2">You\'ll need:</string>
+    <string name="key_import_spotlight_seedphrase_title">Your seedphrase</string>
+    <string name="key_import_spotlight_seedphrase_desc">Enter it, create a vault, never look back</string>
+    <string name="key_import_spotlight_device_title">At least one device</string>
+    <string name="key_import_spotlight_device_desc">Any device that can run Vultisig will work.</string>
+    <string name="key_import_spotlight_get_started">Get started</string>
+
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Import Seed Phrase</string>
     <string name="import_seedphrase_title">Enter Your Seed Phrase</string>
@@ -957,13 +968,17 @@
     <string name="import_seedphrase_import_button">Import</string>
     <string name="import_seedphrase_checking">Checking…</string>
     <string name="key_import_chains_title">Select Chains</string>
-    <string name="key_import_chains_scanning">Scanning for active chains…</string>
-    <string name="key_import_chains_scanning_desc">Checking your wallet for existing balances across all supported chains</string>
-    <string name="key_import_chains_select_manually">Select Manually</string>
-    <string name="key_import_chains_found_title">Active Chains Found</string>
-    <string name="key_import_chains_found_desc">We found balances on the following chains. You can continue with these or customize your selection.</string>
-    <string name="key_import_chains_continue">Continue</string>
-    <string name="key_import_chains_customize">Customize</string>
+    <string name="key_import_chains_scanning">Scanning for chains…</string>
+    <string name="key_import_chains_scanning_desc">We\'re checking which blockchains have active addresses for your seed phrase.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">This process can take up to 2 minutes.</string>
+    <string name="key_import_chains_select_manually">Select chains manually</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">We found %d active chain</item>
+        <item quantity="other">We found %d active chains</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Each extra chain increases the time to generate your vault and possibility of a timeout.</string>
+    <string name="key_import_chains_continue">Get started</string>
+    <string name="key_import_chains_customize">Customize chains</string>
     <string name="key_import_chains_no_active_title">No Active Chains Found</string>
     <string name="key_import_chains_no_active_desc">We couldn\'t find any balances. Please select the chains you want to import manually.</string>
     <string name="key_import_chains_select_title">Select Chains (%1$d)</string>

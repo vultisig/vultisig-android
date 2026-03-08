@@ -10,13 +10,13 @@ import com.vultisig.wallet.data.repositories.ChainImportSetting
 import com.vultisig.wallet.data.repositories.DerivationPath
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.usecases.ScanChainBalancesUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -89,30 +89,66 @@ constructor(
         else chains.filter { it.chain.raw.contains(query, ignoreCase = true) }
 
     private fun startScanning() {
-        viewModelScope.launch {
-            try {
-                val mnemonic = keyImportRepository.get()?.mnemonic ?: error("No mnemonic found")
-
-                val results = withContext(Dispatchers.IO) { scanChainBalances(mnemonic) }
-                val activeResults = results.filter { it.hasBalance }
-
-                // Build the full chain list for CustomizeChains screen, pre-selecting
-                // chains that have balance. Use the active result's derivation path
-                // (e.g. Phantom for Solana) if one was found with balance.
-                val allChainItems =
-                    Chain.keyImportSupportedChains.map { chain ->
-                        val hasBalance = activeResults.any { it.chain == chain }
-                        ChainItemUiModel(
-                            chain = chain,
-                            derivationPath =
-                                results
-                                    .firstOrNull { it.chain == chain && it.hasBalance }
-                                    ?.derivationPath ?: DerivationPath.Default,
-                            isSelected = hasBalance,
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.e(e, "Failed to scan chain balances")
+                _state.update { current ->
+                    // If user is already in CustomizeChains, don't disturb them
+                    if (current.screenState == ChainsSetupState.CustomizeChains) {
+                        current
+                    } else {
+                        val allChainItems =
+                            Chain.keyImportSupportedChains.map { chain ->
+                                ChainItemUiModel(
+                                    chain = chain,
+                                    derivationPath = DerivationPath.Default,
+                                    isSelected = false,
+                                )
+                            }
+                        current.copy(
+                            screenState = ChainsSetupState.NoActiveChains,
+                            allChains = allChainItems,
+                            filteredChains = allChainItems,
                         )
                     }
+                }
+            }
+        ) {
+            val mnemonic = keyImportRepository.get()?.mnemonic ?: error("No mnemonic found")
 
-                if (activeResults.isNotEmpty()) {
+            val results = withContext(Dispatchers.IO) { scanChainBalances(mnemonic) }
+            val activeResults = results.filter { it.hasBalance }
+
+            // Build the full chain list for CustomizeChains screen, pre-selecting
+            // chains that have balance. Use the active result's derivation path
+            // (e.g. Phantom for Solana) if one was found with balance.
+            val allChainItems =
+                Chain.keyImportSupportedChains.map { chain ->
+                    val hasBalance = activeResults.any { it.chain == chain }
+                    ChainItemUiModel(
+                        chain = chain,
+                        derivationPath =
+                            results
+                                .firstOrNull { it.chain == chain && it.hasBalance }
+                                ?.derivationPath ?: DerivationPath.Default,
+                        isSelected = hasBalance,
+                    )
+                }
+
+            _state.update { current ->
+                if (current.screenState == ChainsSetupState.CustomizeChains) {
+                    val updatedAllChains =
+                        current.allChains.map { item ->
+                            val scannedPath =
+                                allChainItems.firstOrNull { it.chain == item.chain }?.derivationPath
+                                    ?: item.derivationPath
+                            item.copy(derivationPath = scannedPath)
+                        }
+                    current.copy(
+                        allChains = updatedAllChains,
+                        filteredChains = applyFilter(updatedAllChains),
+                    )
+                } else if (activeResults.isNotEmpty()) {
                     val activeItems =
                         activeResults.map { result ->
                             ChainItemUiModel(
@@ -121,30 +157,30 @@ constructor(
                                 isSelected = true,
                             )
                         }
-                    _state.update {
-                        it.copy(
-                            screenState = ChainsSetupState.ActiveChains,
-                            activeChains = activeItems,
-                            allChains = allChainItems,
-                            filteredChains = allChainItems,
-                            selectedCount = activeItems.size,
-                        )
-                    }
+                    current.copy(
+                        screenState = ChainsSetupState.ActiveChains,
+                        activeChains = activeItems,
+                        allChains = allChainItems,
+                        filteredChains = allChainItems,
+                        selectedCount = activeItems.size,
+                    )
                 } else {
-                    _state.update {
-                        it.copy(
-                            screenState = ChainsSetupState.NoActiveChains,
-                            allChains = allChainItems,
-                            filteredChains = allChainItems,
-                            selectedCount = 0,
-                        )
-                    }
+                    current.copy(
+                        screenState = ChainsSetupState.NoActiveChains,
+                        allChains = allChainItems,
+                        filteredChains = allChainItems,
+                        selectedCount = 0,
+                    )
                 }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to scan chain balances")
-                // Fall back to manual selection
+            }
+        }
+    }
+
+    fun selectManually() {
+        _state.update {
+            if (it.allChains.isNotEmpty()) {
+                it.copy(screenState = ChainsSetupState.CustomizeChains)
+            } else {
                 val allChainItems =
                     Chain.keyImportSupportedChains.map { chain ->
                         ChainItemUiModel(
@@ -153,19 +189,13 @@ constructor(
                             isSelected = false,
                         )
                     }
-                _state.update {
-                    it.copy(
-                        screenState = ChainsSetupState.NoActiveChains,
-                        allChains = allChainItems,
-                        filteredChains = allChainItems,
-                    )
-                }
+                it.copy(
+                    screenState = ChainsSetupState.CustomizeChains,
+                    allChains = allChainItems,
+                    filteredChains = applyFilter(allChainItems),
+                )
             }
         }
-    }
-
-    fun selectManually() {
-        _state.update { it.copy(screenState = ChainsSetupState.CustomizeChains) }
     }
 
     fun customize() = selectManually()
@@ -232,6 +262,14 @@ constructor(
     }
 
     fun back() {
-        viewModelScope.launch { navigator.back() }
+        val currentState = _state.value
+        if (
+            currentState.screenState == ChainsSetupState.CustomizeChains &&
+                currentState.activeChains.isNotEmpty()
+        ) {
+            _state.update { it.copy(screenState = ChainsSetupState.ActiveChains) }
+        } else {
+            viewModelScope.launch { navigator.back() }
+        }
     }
 }

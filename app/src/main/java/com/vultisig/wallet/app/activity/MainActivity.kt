@@ -2,6 +2,8 @@
 
 package com.vultisig.wallet.app.activity
 
+import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -41,6 +43,13 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var appUpdateManager: AppUpdateManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Workaround for Android 8.0 (API 26) crash: "Only fullscreen opaque activities can
+        // request orientation". Theme.SplashScreen sets windowIsTranslucent=true on API 26,
+        // which conflicts with screenOrientation in the manifest. Setting it programmatically
+        // here avoids the conflict; API 26 is skipped as it would still crash.
+        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition { false }
         super.onCreate(savedInstanceState)
