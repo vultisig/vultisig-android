@@ -99,7 +99,6 @@ import com.vultisig.wallet.ui.theme.cursorBrush
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
-import java.math.BigDecimal
 
 internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
     contentWithFastSelection<Route.Send.SendMain, Route.Send>(navController = navController) {
@@ -602,17 +601,15 @@ private fun FoldableAmountWidget(
                         BasicTextField(
                             state = primaryFieldState,
                             inputTransformation =
-                                maxBalance
-                                    ?.takeIf { it > BigDecimal.ZERO }
-                                    ?.let { max ->
-                                        InputTransformation {
-                                            val entered =
-                                                asCharSequence().toString().toBigDecimalOrNull()
-                                            if (entered != null && entered > max) {
-                                                revertAllChanges()
-                                            }
+                                maxBalance?.let { max ->
+                                    InputTransformation {
+                                        val entered =
+                                            asCharSequence().toString().toBigDecimalOrNull()
+                                        if (entered != null && entered > max) {
+                                            revertAllChanges()
                                         }
-                                    },
+                                    }
+                                },
                             lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 3),
                             textStyle =
                                 Theme.brockmann.headings.largeTitle.copy(
