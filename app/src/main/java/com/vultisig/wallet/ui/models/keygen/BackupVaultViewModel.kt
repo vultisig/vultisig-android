@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.models.TssAction
@@ -26,6 +27,7 @@ import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
+import com.vultisig.wallet.ui.navigation.Route.VaultInfo
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -36,6 +38,8 @@ import kotlin.reflect.typeOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -64,6 +68,29 @@ constructor(
     private val vault = MutableStateFlow<Vault?>(null)
 
     val createDocumentRequestFlow = MutableSharedFlow<String>()
+    val isFastVault: Boolean = args.vaultType == VaultInfo.VaultType.Fast
+
+    private val _title =
+        MutableStateFlow<UiText>(
+            if (isFastVault) UiText.StringResource(R.string.backup_save_backup_to_the_cloud)
+            else UiText.Empty
+        )
+    val title: StateFlow<UiText> = _title.asStateFlow()
+
+    init {
+        if (!isFastVault) {
+            viewModelScope.launch {
+                val vault = vaultRepository.get(args.vaultId) ?: return@launch
+                val total = vault.signers.size
+                val threshold = Utils.getThreshold(total)
+                _title.value =
+                    UiText.FormattedText(
+                        R.string.vault_setup_save_backup_n_of_n_to_the_cloud,
+                        listOf(threshold, total),
+                    )
+            }
+        }
+    }
 
     fun backup() {
         viewModelScope.launch {

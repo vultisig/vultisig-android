@@ -922,13 +922,17 @@
     <string name="import_seedphrase_checking">Controleren…</string>
 
     <string name="key_import_chains_title">Ketens selecteren</string>
-    <string name="key_import_chains_scanning">Zoeken naar actieve ketens…</string>
-    <string name="key_import_chains_scanning_desc">Uw portemonnee wordt gecontroleerd op bestaande saldi voor alle ondersteunde ketens</string>
-    <string name="key_import_chains_select_manually">Handmatig selecteren</string>
-    <string name="key_import_chains_found_title">Actieve ketens gevonden</string>
-    <string name="key_import_chains_found_desc">We hebben saldi gevonden op de volgende ketens. U kunt doorgaan of uw selectie aanpassen.</string>
-    <string name="key_import_chains_continue">Doorgaan</string>
-    <string name="key_import_chains_customize">Aanpassen</string>
+    <string name="key_import_chains_scanning">Zoeken naar ketens…</string>
+    <string name="key_import_chains_scanning_desc">We controleren welke blockchains actieve adressen hebben voor uw herstelzin.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">Dit proces kan tot 2 minuten duren.</string>
+    <string name="key_import_chains_select_manually">Ketens handmatig selecteren</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">We hebben %d actieve keten gevonden</item>
+        <item quantity="other">We hebben %d actieve ketens gevonden</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Elke extra keten verlengt de tijd die nodig is om uw kluis te genereren en de kans op een time-out.</string>
+    <string name="key_import_chains_continue">Aan de slag</string>
+    <string name="key_import_chains_customize">Ketens aanpassen</string>
     <string name="key_import_chains_no_active_title">Geen actieve ketens gevonden</string>
     <string name="key_import_chains_no_active_desc">Er zijn geen saldi gevonden. Selecteer handmatig de ketens die u wilt importeren.</string>
     <string name="key_import_chains_select_title">Ketens selecteren (%1$d)</string>
@@ -1005,6 +1009,7 @@
     <string name="backup_incorrect_code_try_again">Onjuiste code. Probeer opnieuw.</string>
     <string name="backup_save_backup_to_the_cloud">Back-up opslaan in de cloud</string>
     <string name="backup_vault_screen_export_prefix">Exporteer dit back-upbestand en sla het op in de cloud. Het is</string>
+    <string name="backup_vault_screen_encrypted">versleuteld</string>
     <string name="backup_vault_screen_password_suffix">met het eerder ingestelde wachtwoord om uw kluis te ontgrendelen.</string>
     <string name="backup_vault_screen_cloud_tip">Gebruik voor elke back-up een andere cloudservice of account. Wanneer u klaar bent, verwijdert u het bestand van dit apparaat.</string>
     <string name="backup_vault_screen_save_backup">Back-up opslaan</string>

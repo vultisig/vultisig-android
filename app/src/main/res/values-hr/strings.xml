@@ -926,13 +926,18 @@
     <string name="import_seedphrase_checking">Provjera…</string>
 
     <string name="key_import_chains_title">Odaberi lance</string>
-    <string name="key_import_chains_scanning">Traženje aktivnih lanaca…</string>
-    <string name="key_import_chains_scanning_desc">Provjera novčanika za postojeća stanja na svim podržanim lancima</string>
-    <string name="key_import_chains_select_manually">Odaberi ručno</string>
-    <string name="key_import_chains_found_title">Pronađeni aktivni lanci</string>
-    <string name="key_import_chains_found_desc">Pronašli smo stanja na sljedećim lancima. Možete nastaviti ili prilagoditi odabir.</string>
-    <string name="key_import_chains_continue">Nastavi</string>
-    <string name="key_import_chains_customize">Prilagodi</string>
+    <string name="key_import_chains_scanning">Traženje lanaca…</string>
+    <string name="key_import_chains_scanning_desc">Provjeravamo koji lanci imaju aktivne adrese za vašu frazu za oporavak.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">Ovaj proces može trajati do 2 minute.</string>
+    <string name="key_import_chains_select_manually">Ručno odaberi lance</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">Pronašli smo %d aktivan lanac</item>
+        <item quantity="few">Pronašli smo %d aktivna lanca</item>
+        <item quantity="other">Pronašli smo %d aktivnih lanaca</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Svaki dodatni lanac povećava vrijeme za generiranje vašeg trezora i mogućnost isteka vremena.</string>
+    <string name="key_import_chains_continue">Započni</string>
+    <string name="key_import_chains_customize">Prilagodi lance</string>
     <string name="key_import_chains_no_active_title">Nisu pronađeni aktivni lanci</string>
     <string name="key_import_chains_no_active_desc">Nismo pronašli nikakva stanja. Ručno odaberite lance koje želite uvesti.</string>
     <string name="key_import_chains_select_title">Odaberi lance (%1$d)</string>
@@ -1009,6 +1014,7 @@
     <string name="backup_incorrect_code_try_again">Netočan kôd. Pokušajte ponovo.</string>
     <string name="backup_save_backup_to_the_cloud">Spremi sigurnosnu kopiju u oblak</string>
     <string name="backup_vault_screen_export_prefix">Izvezite ovu datoteku sigurnosne kopije, zatim je spremite u oblak. Ona je</string>
+    <string name="backup_vault_screen_encrypted">šifrirana</string>
     <string name="backup_vault_screen_password_suffix">lozinkom postavljenom ranije za otključavanje vašeg trezora.</string>
     <string name="backup_vault_screen_cloud_tip">Koristite drugi oblak ili račun za svaku sigurnosnu kopiju. Kada završite, izbrišite datoteku s ovog uređaja.</string>
     <string name="backup_vault_screen_save_backup">Spremi sigurnosnu kopiju</string>

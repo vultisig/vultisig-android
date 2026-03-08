@@ -10,9 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -82,7 +81,7 @@ private fun ReviewVaultDevicesScreen(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            RiveAnimation(animation = R.raw.riv_review_devices, modifier = Modifier.width(244.dp))
+            RiveAnimation(animation = R.raw.riv_review_devices, modifier = Modifier.fillMaxWidth())
 
             UiSpacer(size = 30.dp)
 
@@ -107,7 +106,7 @@ private fun ReviewVaultDevicesScreen(
             UiSpacer(size = 32.dp)
 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(uiState.devices) { device ->
+                itemsIndexed(uiState.devices) { index, device ->
                     VaultDeviceItem(
                         label =
                             if (device.equals(uiState.localPartyId, ignoreCase = true)) {
@@ -117,7 +116,9 @@ private fun ReviewVaultDevicesScreen(
                                 )
                             } else {
                                 device
-                            }
+                            },
+                        subtitle =
+                            stringResource(R.string.review_vault_devices_device_index, index + 1),
                     )
                 }
             }
@@ -126,7 +127,7 @@ private fun ReviewVaultDevicesScreen(
 }
 
 @Composable
-private fun VaultDeviceItem(label: String, modifier: Modifier = Modifier) {
+private fun VaultDeviceItem(label: String, subtitle: String, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -152,11 +153,18 @@ private fun VaultDeviceItem(label: String, modifier: Modifier = Modifier) {
             )
         }
 
-        Text(
-            text = label,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.secondary,
-        )
+        Column {
+            Text(
+                text = label,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.primary,
+            )
+            Text(
+                text = subtitle,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+            )
+        }
     }
 }
 

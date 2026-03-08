@@ -968,13 +968,17 @@
     <string name="import_seedphrase_import_button">Import</string>
     <string name="import_seedphrase_checking">Checking…</string>
     <string name="key_import_chains_title">Select Chains</string>
-    <string name="key_import_chains_scanning">Scanning for active chains…</string>
-    <string name="key_import_chains_scanning_desc">Checking your wallet for existing balances across all supported chains</string>
-    <string name="key_import_chains_select_manually">Select Manually</string>
-    <string name="key_import_chains_found_title">Active Chains Found</string>
-    <string name="key_import_chains_found_desc">We found balances on the following chains. You can continue with these or customize your selection.</string>
-    <string name="key_import_chains_continue">Continue</string>
-    <string name="key_import_chains_customize">Customize</string>
+    <string name="key_import_chains_scanning">Scanning for chains…</string>
+    <string name="key_import_chains_scanning_desc">We\'re checking which blockchains have active addresses for your seed phrase.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">This process can take up to 2 minutes.</string>
+    <string name="key_import_chains_select_manually">Select chains manually</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">We found %d active chain</item>
+        <item quantity="other">We found %d active chains</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Each extra chain increases the time to generate your vault and possibility of a timeout.</string>
+    <string name="key_import_chains_continue">Get started</string>
+    <string name="key_import_chains_customize">Customize chains</string>
     <string name="key_import_chains_no_active_title">No Active Chains Found</string>
     <string name="key_import_chains_no_active_desc">We couldn\'t find any balances. Please select the chains you want to import manually.</string>
     <string name="key_import_chains_select_title">Select Chains (%1$d)</string>
@@ -1054,11 +1058,12 @@
     <string name="backup_send_to_email">Send to %1$s</string>
     <string name="backup_incorrect_code_try_again">Incorrect code. Try again.</string>
     <string name="backup_save_backup_to_the_cloud">Save backup to the cloud</string>
-    <string name="backup_vault_screen_export_prefix">Export this backup file, then save it to the cloud. It is</string>
+    <string name="backup_vault_screen_export_prefix">Export this backup file, then save it to the cloud.</string>
+    <string name="backup_vault_screen_encrypted">encrypted</string>
     <string name="backup_vault_screen_password_suffix">with the password set earlier to unlock your Vault.</string>
     <string name="backup_vault_screen_cloud_tip">Use a different cloud service or account for each backup. When you\'re finished, delete the file from this device.</string>
     <string name="backup_vault_screen_save_backup">Save backup</string>
-    <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Export this backup file, then save it to the cloud. It is encrypted with the password set earlier to unlock your Vault. Use a different cloud service or account for each backup. When you’re finished, delete the file from this device.</string>
+    <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Use a different cloud service or account for each backup. When you’re finished, delete the file from this device.</string>
     <string name="backup_i_understand_how_to_save_this_backup">I understand how to save this backup</string>
     <string name="backup_congrats">Congrats!</string>
     <string name="backup_your_vault_is_ready_to_use">Your vault is ready to use</string>

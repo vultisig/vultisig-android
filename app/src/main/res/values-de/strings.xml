@@ -927,13 +927,17 @@
     <string name="import_seedphrase_checking">Überprüfung…</string>
 
     <string name="key_import_chains_title">Blockchains auswählen</string>
-    <string name="key_import_chains_scanning">Suche nach aktiven Blockchains…</string>
-    <string name="key_import_chains_scanning_desc">Ihr Wallet wird auf vorhandene Guthaben in allen unterstützten Blockchains überprüft</string>
-    <string name="key_import_chains_select_manually">Manuell auswählen</string>
-    <string name="key_import_chains_found_title">Aktive Blockchains gefunden</string>
-    <string name="key_import_chains_found_desc">Wir haben Guthaben auf den folgenden Blockchains gefunden. Sie können fortfahren oder Ihre Auswahl anpassen.</string>
-    <string name="key_import_chains_continue">Weiter</string>
-    <string name="key_import_chains_customize">Anpassen</string>
+    <string name="key_import_chains_scanning">Suche nach Blockchains…</string>
+    <string name="key_import_chains_scanning_desc">Wir prüfen, welche Blockchains aktive Adressen für Ihre Seed-Phrase haben.\u0020</string>
+    <string name="key_import_chains_scanning_desc_highlight">Dieser Vorgang kann bis zu 2 Minuten dauern.</string>
+    <string name="key_import_chains_select_manually">Blockchains manuell auswählen</string>
+    <plurals name="key_import_chains_found_title">
+        <item quantity="one">Wir haben %d aktive Blockchain gefunden</item>
+        <item quantity="other">Wir haben %d aktive Blockchains gefunden</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">Jede zusätzliche Blockchain erhöht die Zeit zur Erstellung Ihres Tresors und die Möglichkeit eines Timeouts.</string>
+    <string name="key_import_chains_continue">Loslegen</string>
+    <string name="key_import_chains_customize">Blockchains anpassen</string>
     <string name="key_import_chains_no_active_title">Keine aktiven Blockchains gefunden</string>
     <string name="key_import_chains_no_active_desc">Es wurden keine Guthaben gefunden. Bitte wählen Sie die Blockchains manuell aus, die Sie importieren möchten.</string>
     <string name="key_import_chains_select_title">Blockchains auswählen (%1$d)</string>
@@ -1010,6 +1014,7 @@
     <string name="backup_incorrect_code_try_again">Falscher Code. Bitte erneut versuchen.</string>
     <string name="backup_save_backup_to_the_cloud">Backup in der Cloud speichern</string>
     <string name="backup_vault_screen_export_prefix">Exportieren Sie diese Backup-Datei und speichern Sie sie in der Cloud. Sie ist</string>
+    <string name="backup_vault_screen_encrypted">verschlüsselt</string>
     <string name="backup_vault_screen_password_suffix">mit dem zuvor festgelegten Passwort, um Ihren Tresor zu entsperren.</string>
     <string name="backup_vault_screen_cloud_tip">Verwenden Sie für jedes Backup einen anderen Cloud-Dienst oder ein anderes Konto. Wenn Sie fertig sind, löschen Sie die Datei von diesem Gerät.</string>
     <string name="backup_vault_screen_save_backup">Backup speichern</string>
