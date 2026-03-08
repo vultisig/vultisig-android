@@ -150,7 +150,9 @@ internal fun EnterVaultInfoScreen(
             VsButton(
                 label = stringResource(R.string.enter_email_screen_next),
                 modifier = Modifier.fillMaxWidth().testTag(EnterVaultInfoTags.NEXT_BUTTON),
-                state = if (uiState.isNextButtonEnabled) VsButtonState.Enabled else VsButtonState.Disabled,
+                state =
+                    if (uiState.isNextButtonEnabled) VsButtonState.Enabled
+                    else VsButtonState.Disabled,
             ) {
                 onEvent(EnterVaultInfoEvent.Next)
             }

@@ -80,8 +80,7 @@ private fun VultBackupSummaryScreen(
 
         Text(
             text = stringResource(R.string.backup_congrats),
-            style =
-                Theme.brockmann.headings.title2.copy(brush = Theme.v2.colors.gradients.primary),
+            style = Theme.brockmann.headings.title2.copy(brush = Theme.v2.colors.gradients.primary),
         )
 
         UiSpacer(size = 8.dp)
