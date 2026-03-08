@@ -551,7 +551,10 @@ constructor(
 
             val eligibleVaults = vaultRepository.getAll().filter { it.isSecureVault() }
             val unnotifiedVaults =
-                eligibleVaults.filter { pushNotificationManager.isVaultOptedIn(it.id).not() }
+                eligibleVaults.filter {
+                    !pushNotificationManager.isVaultOptedIn(it.id) &&
+                        !pushNotificationManager.hasPromptedVault(it.id)
+                }
             if (unnotifiedVaults.isEmpty()) return@launch
 
             val introVaults =
@@ -587,7 +590,12 @@ constructor(
     }
 
     fun onNotificationNotNow() {
-        uiState.update { it.copy(showNotificationIntroSheet = false) }
+        viewModelScope.launch {
+            uiState.value.notificationIntroVaults.forEach { vault ->
+                pushNotificationManager.markVaultPrompted(vault.vaultId)
+            }
+            uiState.update { it.copy(showNotificationIntroSheet = false) }
+        }
     }
 
     fun onNotificationVaultToggle(vaultId: String, enabled: Boolean) {
