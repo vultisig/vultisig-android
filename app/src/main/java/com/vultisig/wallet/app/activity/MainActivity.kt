@@ -2,12 +2,12 @@
 
 package com.vultisig.wallet.app.activity
 
-import android.content.pm.ActivityInfo
-import android.os.Build
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
