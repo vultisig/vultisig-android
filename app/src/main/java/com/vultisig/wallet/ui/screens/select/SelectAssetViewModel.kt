@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isLpToken
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -171,6 +172,7 @@ constructor(
                     account.accounts
                         .asSequence()
                         .filter { it.token.id.contains(query, ignoreCase = true) }
+                        .filter { filter != Route.SelectNetwork.Filters.SwapAvailable || !it.token.isLpToken }
                         .sortedWith(
                             compareByDescending<Account> { it.token.isNativeToken }
                                 .thenBy { it.token.ticker }
