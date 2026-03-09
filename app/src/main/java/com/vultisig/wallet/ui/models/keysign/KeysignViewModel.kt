@@ -239,6 +239,8 @@ internal class KeysignViewModel(
             if (!skipBroadcast()) {
                 broadcastTransaction()
                 checkThorChainTxResult()
+            } else {
+                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
             }
             isNavigateToHome = true
         } catch (e: Exception) {
@@ -332,6 +334,8 @@ internal class KeysignViewModel(
             if (!skipBroadcast()) {
                 broadcastTransaction()
                 checkThorChainTxResult()
+            } else {
+                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
             }
             isNavigateToHome = true
         } catch (e: Exception) {
@@ -341,6 +345,8 @@ internal class KeysignViewModel(
     }
 
     private fun skipBroadcast(): Boolean {
+        // Custom message signing has no transaction to broadcast
+        if (keysignPayload == null && customMessagePayload != null) return true
         val flag = keysignPayload?.skipBroadcast ?: false
         Timber.d("SkipBroadcastFlag, value: $flag")
         return flag
