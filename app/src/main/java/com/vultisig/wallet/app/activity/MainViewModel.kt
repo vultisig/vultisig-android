@@ -11,6 +11,7 @@ import com.google.android.play.core.install.model.UpdateAvailability
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
@@ -46,6 +47,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val appUpdateManager: AppUpdateManager,
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
+    private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     networkUtils: NetworkUtils,
 ) : ViewModel() {
 
@@ -97,7 +99,7 @@ constructor(
             // the route-collector coroutine.  The SharedFlow has no replay buffer, so
             // we wait one frame to let the collector subscribe before emitting.
             delay(1.seconds)
-            navigator.route(Route.Keysign.Join(vaultId = vaultId, qr = qrCodeData))
+            navigator.route(getDirectionByQrCodeUseCase(qrCodeData, vaultId))
         }
     }
 
