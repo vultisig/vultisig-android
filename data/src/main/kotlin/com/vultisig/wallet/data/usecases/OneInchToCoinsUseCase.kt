@@ -16,6 +16,7 @@ internal class OneInchToCoinsUseCaseImpl @Inject constructor() : OneInchToCoinsU
         tokenResult
             .asSequence()
             .map { it.value }
+            .filter { it.tags?.contains("POOLS") != true }
             .map {
                 val supportedCoin =
                     Coins.coins.getOrDefault(chain, emptyList()).firstOrNull { coin ->
