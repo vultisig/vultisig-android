@@ -30,11 +30,15 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        Timber.d("FCM message received from: ${message.from}")
+        Timber.d(
+            "FCM message received from: ${message.from}, data keys: ${message.data.keys}, notification: title=${message.notification?.title} body=${message.notification?.body?.take(80)}"
+        )
         val qrCodeData =
             message.data[EXTRA_QR_CODE_DATA]
                 ?: run {
-                    Timber.w("Push notification missing qr_code_data")
+                    Timber.w(
+                        "Push notification missing qr_code_data. Available data keys: ${message.data}"
+                    )
                     return
                 }
 
@@ -74,7 +78,10 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
 
         val tapIntent =
             Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
                 putExtra(EXTRA_QR_CODE_DATA, qrCodeData)
             }
         val pendingIntent =
@@ -105,7 +112,7 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
 
     companion object {
         const val PUSH_NOTIFICATION_ACTION = "com.vultisig.wallet.PUSH_NOTIFICATION"
-        const val EXTRA_QR_CODE_DATA = "qr_code_data"
+        const val EXTRA_QR_CODE_DATA = "message"
         private const val CHANNEL_ID = "keysign_requests_channel"
         private const val NOTIFICATION_ID = 1002
     }

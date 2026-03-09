@@ -294,7 +294,7 @@ private fun CustomizeChainsContent(
     onContinue: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        SearchBar(state = searchTextFieldState, onCancelClick = {}, isInitiallyFocused = false)
+        SearchBar(state = searchTextFieldState, isInitiallyFocused = false)
 
         UiSpacer(14.dp)
 

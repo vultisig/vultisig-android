@@ -44,7 +44,6 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun SearchBar(
     modifier: Modifier = Modifier,
     state: TextFieldState,
-    onCancelClick: () -> Unit,
     isInitiallyFocused: Boolean,
     isPasteEnabled: Boolean = false,
     onPasteClick: (String) -> Unit = {},
@@ -135,5 +134,5 @@ internal fun SearchBar(
 @Preview
 @Composable
 private fun PreviewSearchBar() {
-    SearchBar(state = rememberTextFieldState(), onCancelClick = {}, isInitiallyFocused = true)
+    SearchBar(state = rememberTextFieldState(), isInitiallyFocused = true)
 }
