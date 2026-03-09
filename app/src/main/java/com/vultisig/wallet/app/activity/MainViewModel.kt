@@ -22,6 +22,8 @@ import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,6 +90,7 @@ constructor(
             .launchIn(viewModelScope)
     }
 
+    @OptIn(ExperimentalEncodingApi::class)
     fun onPushNotificationReceived(qrCodeData: String) {
         viewModelScope.safeLaunch {
             val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
@@ -97,7 +100,12 @@ constructor(
             // the route-collector coroutine.  The SharedFlow has no replay buffer, so
             // we wait one frame to let the collector subscribe before emitting.
             delay(1.seconds)
-            navigator.route(Route.Keysign.Join(vaultId = vaultId, qr = qrCodeData))
+            navigator.route(
+                Route.Keysign.Join(
+                    vaultId = vaultId,
+                    qr = Base64.UrlSafe.encode(qrCodeData.toByteArray()),
+                )
+            )
         }
     }
 
