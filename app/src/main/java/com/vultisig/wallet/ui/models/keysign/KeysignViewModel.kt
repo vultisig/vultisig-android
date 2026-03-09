@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
@@ -190,7 +191,10 @@ internal class KeysignViewModel(
                             messageToSign = messagesToSign,
                             chainPath =
                                 this.keysignPayload?.coin?.coinType?.compatibleDerivationPath()
-                                    ?: "m/44'/60'/0'/0/0",
+                                    ?: customMessagePayload?.chain?.let { chainName ->
+                                        Chain.entries.firstOrNull { it.raw.equals(chainName, ignoreCase = true) }
+                                            ?.coinType?.compatibleDerivationPath()
+                                    } ?: "m/44'/60'/0'/0/0",
                             isInitiateDevice = isInitiatingDevice,
                             sessionApi = sessionApi,
                             encryption = encryption,
@@ -423,7 +427,11 @@ internal class KeysignViewModel(
             keysignReq.keysignCommitteeKeys = keysignCommittee.joinToString(",")
             keysignReq.messageToSign = Base64.getEncoder().encodeToString(message.toHexBytes())
             keysignReq.derivePath =
-                keysignPayload?.coin?.coinType?.compatibleDerivationPath() ?: "m/44'/60'/0'/0/0"
+                keysignPayload?.coin?.coinType?.compatibleDerivationPath()
+                    ?: customMessagePayload?.chain?.let { chainName ->
+                        Chain.entries.firstOrNull { it.raw.equals(chainName, ignoreCase = true) }
+                            ?.coinType?.compatibleDerivationPath()
+                    } ?: "m/44'/60'/0'/0/0"
 
             val keysignResp =
                 when (keyType) {
