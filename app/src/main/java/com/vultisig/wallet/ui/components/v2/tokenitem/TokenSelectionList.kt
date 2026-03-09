@@ -128,7 +128,6 @@ internal fun <T> TokenSelectionList(
 
             SearchBar(
                 state = searchTextFieldState,
-                onCancelClick = {},
                 isInitiallyFocused = false,
                 isPasteEnabled = true,
                 onPasteClick = onPasteClick,

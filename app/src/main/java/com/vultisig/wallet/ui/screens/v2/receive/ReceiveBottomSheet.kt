@@ -66,7 +66,7 @@ private fun ReceiveContent(
         )
         UiSpacer(16.dp)
 
-        SearchBar(isInitiallyFocused = false, state = searchFieldState, onCancelClick = {})
+        SearchBar(isInitiallyFocused = false, state = searchFieldState)
 
         UiSpacer(size = 16.dp)
 
