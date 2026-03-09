@@ -40,9 +40,6 @@ data class Coin(
     }
 }
 
-val Coin.isLpToken: Boolean
-    get() = chain == Chain.ThorChain && contractAddress.contains(Regex("""\w+-\w+"""))
-
 fun Coin.allowZeroGas(): Boolean {
     return this.chain == Chain.Polkadot || this.chain == Chain.Tron
 }
