@@ -946,16 +946,7 @@
     <string name="key_import_chains_get_started">Započni</string>
     <string name="key_import_chains_no_results">Nijedan lanac ne odgovara vašem pretraživanju</string>
 
-    <string name="key_import_device_count_title">Odaberi postavke</string>
-    <string name="key_import_device_count_fast">Brzo</string>
-    <string name="key_import_device_count_secure">Sigurno</string>
     <string name="key_import_device_count_get_started">Započni</string>
-    <string name="key_import_device_count_fast_desc_1">1 uređaj + Vultisig poslužitelj</string>
-    <string name="key_import_device_count_fast_desc_2">Brzo i jednostavno postavljanje</string>
-    <string name="key_import_device_count_fast_desc_3">Oporavak putem e-pošte</string>
-    <string name="key_import_device_count_secure_desc_1">Potrebna 2 ili više uređaja</string>
-    <string name="key_import_device_count_secure_desc_2">Maksimalna sigurnost</string>
-    <string name="key_import_device_count_secure_desc_3">Bez poslužitelja treće strane</string>
     <string name="vault_count_recommended">Preporučeno</string>
 
     <string name="welcome_preference_title">Koju vrstu trezora preferirate?</string>
@@ -968,7 +959,7 @@
     <string name="welcome_fast_and_easy">Brzo &amp; jednostavno</string>
     <string name="welcome_fast_and_easy_desc">Potpisujte s samo 1 uređajem. Naš sigurni poslužitelj potpisuje s vama za multisig sigurnost. Kompatibilno s dodacima.</string>
     <string name="welcome_fast_and_easy_highlight">samo 1 uređajem.</string>
-    <string name="welcome_plugin_compatible">Kompatibilno s Tržnicom Dodataka</string>
+    <string name="welcome_plugin_compatible">Kompatibilno s Plugin Store</string>
     <string name="welcome_tip">Savjet: Možete koristiti preglednik kao uređaj</string>
     <string name="welcome_only_your_devices">Samo vaši uređaji</string>
     <string name="welcome_only_your_devices_desc">Samo vaši uređaji su ovlašteni potpisnici. Potpisivanje transakcija zahtijeva 2 uređaja. Potpuna samopohrana na dohvat ruke.</string>

@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.keygen
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshots.Snapshot
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.ChainImportSetting
 import com.vultisig.wallet.data.repositories.DerivationPath
 import com.vultisig.wallet.data.repositories.KeyImportData
@@ -507,7 +508,7 @@ internal class KeyImportChainsSetupViewModelTest {
                     )
                 )
             }
-            coVerify { navigator.route(Route.KeyImport.DeviceCount) }
+            coVerify { navigator.route(Route.ChooseVaultCount(tssAction = TssAction.KeyImport)) }
         }
 
     @Test
@@ -534,7 +535,7 @@ internal class KeyImportChainsSetupViewModelTest {
                     }
                 )
             }
-            coVerify { navigator.route(Route.KeyImport.DeviceCount) }
+            coVerify { navigator.route(Route.ChooseVaultCount(tssAction = TssAction.KeyImport)) }
         }
 
     @Test
@@ -629,7 +630,7 @@ internal class KeyImportChainsSetupViewModelTest {
                     }
                 )
             }
-            coVerify { navigator.route(Route.KeyImport.DeviceCount) }
+            coVerify { navigator.route(Route.ChooseVaultCount(tssAction = TssAction.KeyImport)) }
         }
 
     // --- scanning completing after selectManually ---
