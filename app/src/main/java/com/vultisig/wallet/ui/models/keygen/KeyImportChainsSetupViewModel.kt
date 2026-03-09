@@ -6,6 +6,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.ChainImportSetting
 import com.vultisig.wallet.data.repositories.DerivationPath
 import com.vultisig.wallet.data.repositories.KeyImportRepository
@@ -258,7 +259,9 @@ constructor(
 
         keyImportRepository.setChainSettings(settings)
 
-        viewModelScope.launch { navigator.route(Route.KeyImport.DeviceCount) }
+        viewModelScope.launch {
+            navigator.route(Route.ChooseVaultCount(tssAction = TssAction.KeyImport))
+        }
     }
 
     fun back() {

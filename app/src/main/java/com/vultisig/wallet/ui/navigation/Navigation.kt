@@ -201,8 +201,6 @@ internal sealed class Route {
         @Serializable data object ImportSeedphrase
 
         @Serializable data object ChainsSetup
-
-        @Serializable data object DeviceCount
     }
 
     object VaultInfo {
@@ -489,7 +487,7 @@ internal sealed class Route {
 
     @Serializable data class SetupVaultInfo(val count: Int)
 
-    @Serializable data object ChooseVaultCount
+    @Serializable data class ChooseVaultCount(val tssAction: TssAction = TssAction.KEYGEN)
 
     @Serializable
     data class ReviewVaultDevices(
