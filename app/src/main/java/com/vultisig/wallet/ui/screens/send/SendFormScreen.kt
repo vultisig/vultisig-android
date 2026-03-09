@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,6 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -270,9 +272,14 @@ private fun SendFormScreen(
                 },
                 modifier = Modifier.fillMaxSize(),
             ) {
+                val isCircleMode =
+                    state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
+                        state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
                 Column(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    modifier =
+                        if (isCircleMode) Modifier.fillMaxHeight()
+                        else Modifier.verticalScroll(rememberScrollState()),
                 ) {
                     SendFormContent(
                         state = state,
@@ -366,7 +373,7 @@ private fun SendFormContent(
     onAutoCompoundCheckedChange: (Boolean) -> Unit,
 ) {
     // send asset
-    if (state.defiType == null || state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE) {
+    if (state.defiType == null) {
         FoldableAssetWidget(
             state = state,
             onExpandSection = onExpandSection,
@@ -485,7 +492,8 @@ private fun SendFormContent(
             state.defiType == DeFiNavActions.REDEEM_YRUNE ||
             state.defiType == DeFiNavActions.REDEEM_YTCY ||
             state.defiType == DeFiNavActions.WITHDRAW_RUJI ||
-            state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
+            state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE ||
+            state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE
     ) {
         FoldableAmountWidget(
             state = state,
@@ -525,15 +533,21 @@ private fun FoldableAmountWidget(
     operatorFeeFieldState: TextFieldState,
     slippageTexFieldState: TextFieldState,
 ) {
+    val isCircleMode =
+        state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
+            state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
+
     FoldableSection(
-        expanded = state.expandedSection == SendSections.Amount,
+        expanded = isCircleMode || state.expandedSection == SendSections.Amount,
         onToggle = {
-            if (state.isDstAddressComplete && addressFieldState.text.isNotEmpty()) {
+            if (
+                !isCircleMode && state.isDstAddressComplete && addressFieldState.text.isNotEmpty()
+            ) {
                 onExpandSection(SendSections.Amount)
             }
         },
         expandedTitleActions = {
-            if (state.hasGasSettings) {
+            if (!isCircleMode && state.hasGasSettings) {
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.weight(1f)) {
                     UiIcon(
                         drawableResId = R.drawable.advance_gas_settings,
@@ -546,10 +560,17 @@ private fun FoldableAmountWidget(
         },
         title = stringResource(R.string.send_amount),
     ) {
+        val contentPadding =
+            Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
         Column(
-            modifier = Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
+            modifier =
+                if (isCircleMode) Modifier.fillMaxHeight().then(contentPadding) else contentPadding
         ) {
-            Box(modifier = Modifier.height(211.dp).fillMaxWidth()) {
+            Box(
+                modifier =
+                    if (isCircleMode) Modifier.weight(1f).fillMaxWidth()
+                    else Modifier.height(211.dp).fillMaxWidth()
+            ) {
                 Column(
                     modifier = Modifier.padding(horizontal = 54.dp).align(Alignment.Center),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -572,9 +593,23 @@ private fun FoldableAmountWidget(
                         secondaryFieldState = tokenAmountFieldState
                     }
 
+                    val maxBalance =
+                        if (isCircleMode) state.selectedCoin?.balance?.toBigDecimalOrNull()
+                        else null
+
                     FlowRow(horizontalArrangement = Arrangement.Center) {
                         BasicTextField(
                             state = primaryFieldState,
+                            inputTransformation =
+                                maxBalance?.let { max ->
+                                    InputTransformation {
+                                        val entered =
+                                            asCharSequence().toString().toBigDecimalOrNull()
+                                        if (entered != null && entered > max) {
+                                            revertAllChanges()
+                                        }
+                                    }
+                                },
                             lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 3),
                             textStyle =
                                 Theme.brockmann.headings.largeTitle.copy(
@@ -614,19 +649,34 @@ private fun FoldableAmountWidget(
                         )
                     }
 
+                    val secondaryText =
+                        if (isCircleMode) {
+                            val entered =
+                                tokenAmountFieldState.text.toString().toDoubleOrNull() ?: 0.0
+                            val balance = state.selectedCoin?.balance?.toDoubleOrNull() ?: 0.0
+                            val pct =
+                                if (balance > 0.0) (entered / balance * 100).coerceIn(0.0, 100.0)
+                                else 0.0
+                            "%.1f%%".format(pct)
+                        } else {
+                            "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText"
+                        }
+
                     Text(
-                        text = "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText",
+                        text = secondaryText,
                         color = Theme.v2.colors.text.tertiary,
                         style = Theme.brockmann.body.s.medium,
                         textAlign = TextAlign.Center,
                     )
                 }
 
-                TokenFiatToggle(
-                    isTokenSelected = state.usingTokenAmountInput,
-                    onTokenSelected = { onToogleAmountInputType(it) },
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                )
+                if (!isCircleMode) {
+                    TokenFiatToggle(
+                        isTokenSelected = state.usingTokenAmountInput,
+                        onTokenSelected = { onToogleAmountInputType(it) },
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                    )
+                }
             }
 
             UiSpacer(12.dp)
@@ -654,11 +704,13 @@ private fun FoldableAmountWidget(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier =
-                    Modifier.background(
-                            color = Theme.v2.colors.backgrounds.secondary,
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .padding(all = 16.dp),
+                    if (isCircleMode) Modifier.padding(all = 16.dp)
+                    else
+                        Modifier.background(
+                                color = Theme.v2.colors.backgrounds.secondary,
+                                shape = RoundedCornerShape(12.dp),
+                            )
+                            .padding(all = 16.dp),
             ) {
                 Text(
                     text = stringResource(R.string.send_form_balance_available),
@@ -800,7 +852,7 @@ private fun FoldableAmountWidget(
                 )
             }
 
-            if (state.showGasFee) {
+            if (state.showGasFee && !isCircleMode) {
                 FadingHorizontalDivider(modifier = Modifier.fillMaxWidth())
 
                 UiSpacer(12.dp)
