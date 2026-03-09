@@ -41,7 +41,17 @@ data class Coin(
 }
 
 val Coin.isLpToken: Boolean
-    get() = chain == Chain.ThorChain && contractAddress.startsWith("x/")
+    get() =
+        when (chain) {
+            Chain.ThorChain -> contractAddress.startsWith("x/")
+            Chain.MayaChain ->
+                contractAddress.startsWith("x/bow-") ||
+                    contractAddress.startsWith("x/ghost-vault/") ||
+                    contractAddress.startsWith("x/staking-") ||
+                    contractAddress.startsWith("x/nami-index-") ||
+                    contractAddress == "x/brune"
+            else -> false
+        }
 
 fun Coin.allowZeroGas(): Boolean {
     return this.chain == Chain.Polkadot || this.chain == Chain.Tron
