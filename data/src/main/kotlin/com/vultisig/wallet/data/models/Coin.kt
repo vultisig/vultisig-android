@@ -41,7 +41,7 @@ data class Coin(
 }
 
 val Coin.isLpToken: Boolean
-    get() = contractAddress.startsWith("x/")
+    get() = chain == Chain.ThorChain && contractAddress.startsWith("x/")
 
 fun Coin.allowZeroGas(): Boolean {
     return this.chain == Chain.Polkadot || this.chain == Chain.Tron
