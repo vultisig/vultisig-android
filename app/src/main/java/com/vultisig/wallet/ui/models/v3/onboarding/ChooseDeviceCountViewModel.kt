@@ -85,7 +85,11 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
                     if (count == 1) Route.VaultInfo.VaultType.Fast
                     else Route.VaultInfo.VaultType.Secure
                 navigator.route(
-                    Route.VaultInfo.Name(vaultType = vaultType, tssAction = TssAction.KeyImport)
+                    Route.VaultInfo.Name(
+                        vaultType = vaultType,
+                        tssAction = TssAction.KeyImport,
+                        deviceCount = count,
+                    )
                 )
             } else {
                 navigator.route(Route.SetupVaultInfo(count = count))

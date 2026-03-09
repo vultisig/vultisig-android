@@ -213,7 +213,11 @@ internal sealed class Route {
 
         // required by both vault types
         @Serializable
-        data class Name(val vaultType: VaultType, val tssAction: TssAction = TssAction.KEYGEN)
+        data class Name(
+            val vaultType: VaultType,
+            val tssAction: TssAction = TssAction.KEYGEN,
+            val deviceCount: Int? = null,
+        )
 
         // required only by fast vault
         @Serializable
