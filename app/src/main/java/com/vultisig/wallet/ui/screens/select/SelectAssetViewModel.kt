@@ -172,7 +172,10 @@ constructor(
                     account.accounts
                         .asSequence()
                         .filter { it.token.id.contains(query, ignoreCase = true) }
-                        .filter { filter != Route.SelectNetwork.Filters.SwapAvailable || !it.token.isLpToken }
+                        .filter {
+                            filter != Route.SelectNetwork.Filters.SwapAvailable ||
+                                !it.token.isLpToken
+                        }
                         .sortedWith(
                             compareByDescending<Account> { it.token.isNativeToken }
                                 .thenBy { it.token.ticker }
@@ -193,7 +196,9 @@ constructor(
                 val additionalAssets =
                     allTokens.filter {
                         it.token.id.contains(query, ignoreCase = true) &&
-                            it.token.id !in filteredTokenIds
+                            it.token.id !in filteredTokenIds &&
+                            (filter != Route.SelectNetwork.Filters.SwapAvailable ||
+                                !it.token.isLpToken)
                     }
 
                 state.update { it.copy(assets = filteredAssets + additionalAssets) }
