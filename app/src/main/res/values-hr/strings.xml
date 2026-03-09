@@ -1014,6 +1014,7 @@
     <string name="backup_incorrect_code_try_again">Netočan kôd. Pokušajte ponovo.</string>
     <string name="backup_save_backup_to_the_cloud">Spremi sigurnosnu kopiju u oblak</string>
     <string name="backup_vault_screen_export_prefix">Izvezite ovu datoteku sigurnosne kopije, zatim je spremite u oblak. Ona je</string>
+    <string name="backup_vault_screen_encrypted">šifrirana</string>
     <string name="backup_vault_screen_password_suffix">lozinkom postavljenom ranije za otključavanje vašeg trezora.</string>
     <string name="backup_vault_screen_cloud_tip">Koristite drugi oblak ili račun za svaku sigurnosnu kopiju. Kada završite, izbrišite datoteku s ovog uređaja.</string>
     <string name="backup_vault_screen_save_backup">Spremi sigurnosnu kopiju</string>

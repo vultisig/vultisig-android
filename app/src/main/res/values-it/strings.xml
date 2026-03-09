@@ -861,7 +861,7 @@
     <string name="energy">Energia</string>
     <string name="bandwidth_dec">I Punti di Larghezza di Banda sono necessari per ogni transazione su TRON, inclusi sia gli invii di token standard che le interazioni con gli smart contract. Ogni utente TRON riceve 600 Punti di Larghezza di Banda gratuiti al giorno, che possono coprire circa due invii base. Inoltre, puoi guadagnare Punti di Larghezza di Banda extra facendo staking di TRX, aumentando il tuo saldo giornaliero per supportare più transazioni. Se hai abbastanza Punti di Larghezza di Banda, puoi inviare token, fare staking di TRX o interagire con gli smart contract senza pagare TRX in commissioni del gas.</string>
     <string name="energy_dec">Necessari per azioni più complesse, come l\'interazione con gli smart contract (ad esempio, swap o transazioni dApp). A differenza della Larghezza di Banda, l\'Energia non viene fornita gratuitamente: è necessario fare staking di TRX per guadagnarla. (Gli utenti più esperti possono anche acquisire Energia tramite meccanismi di leasing come JustLend o i mercati di noleggio dell\'energia di Tronify). Tuttavia, avere Energia può ridurre significativamente o addirittura eliminare le commissioni del gas per le interazioni con gli smart contract, rendendo l\'Energia preziosa per coloro che utilizzano frequentemente le dApp TRON.</string>
-    
+
     <!-- Bond Form -->
     <string name="bond_node_address">Indirizzo del Nodo</string>
     <string name="bond_operator_fees_basis_point">Commissioni operatore (Punti base)</string>
@@ -1014,6 +1014,7 @@
     <string name="backup_incorrect_code_try_again">Codice errato. Riprova.</string>
     <string name="backup_save_backup_to_the_cloud">Salva il backup sul cloud</string>
     <string name="backup_vault_screen_export_prefix">Esporta questo file di backup, quindi salvalo sul cloud. È</string>
+    <string name="backup_vault_screen_encrypted">crittografato</string>
     <string name="backup_vault_screen_password_suffix">con la password impostata in precedenza per sbloccare il tuo vault.</string>
     <string name="backup_vault_screen_cloud_tip">Usa un servizio cloud o account diverso per ogni backup. Quando hai finito, elimina il file da questo dispositivo.</string>
     <string name="backup_vault_screen_save_backup">Salva backup</string>

@@ -35,6 +35,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.v2.modifiers.shinedBottom
@@ -120,7 +121,11 @@ internal fun EnterVaultInfoScreen(
                 onTrailingIconClick = { onEvent(EnterVaultInfoEvent.ClearInput) },
                 footNote = uiState.errorMessage?.asString(),
                 imeAction = ImeAction.Go,
-                onKeyboardAction = { onEvent(EnterVaultInfoEvent.Next) },
+                onKeyboardAction = {
+                    if (uiState.isNextButtonEnabled) {
+                        onEvent(EnterVaultInfoEvent.Next)
+                    }
+                },
                 hint = uiState.textFieldHint.asString(),
             )
 
@@ -140,7 +145,11 @@ internal fun EnterVaultInfoScreen(
                     innerState = uiState.innerState,
                     onTrailingIconClick = { onEvent(EnterVaultInfoEvent.ClearConfirmInput) },
                     imeAction = ImeAction.Go,
-                    onKeyboardAction = { onEvent(EnterVaultInfoEvent.Next) },
+                    onKeyboardAction = {
+                        if (uiState.isNextButtonEnabled) {
+                            onEvent(EnterVaultInfoEvent.Next)
+                        }
+                    },
                     hint = uiState.confirmPasswordTextFieldHint.asString(),
                 )
             }
@@ -149,6 +158,9 @@ internal fun EnterVaultInfoScreen(
             VsButton(
                 label = stringResource(R.string.enter_email_screen_next),
                 modifier = Modifier.fillMaxWidth().testTag(EnterVaultInfoTags.NEXT_BUTTON),
+                state =
+                    if (uiState.isNextButtonEnabled) VsButtonState.Enabled
+                    else VsButtonState.Disabled,
             ) {
                 onEvent(EnterVaultInfoEvent.Next)
             }

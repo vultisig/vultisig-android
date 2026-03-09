@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.models.swapAssetName
+import com.vultisig.wallet.data.utils.thorswapMultiplier
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlinx.datetime.Clock
@@ -417,13 +418,6 @@ constructor(
         BigDecimal(this).divide(token.thorswapMultiplier).let {
             TokenValue(value = (it.movePointRight(token.decimal)).toBigInteger(), token = token)
         }
-
-    private val Coin.thorswapMultiplier: BigDecimal
-        get() =
-            when (chain) {
-                Chain.MayaChain -> BigDecimal(1e10)
-                else -> BigDecimal(1e8)
-            }
 
     private fun Coin.swapAssetName(): String =
         if (isNativeToken) {
