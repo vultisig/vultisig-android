@@ -1071,9 +1071,14 @@ constructor(
             }
         } else if (customPayloadId.isNotEmpty() && tempKeysignMessageProto != null) {
             viewModelScope.launch {
-                if (fetchAndHandleCustomMessagePayload(_serverAddress)) {
-                    currentState.value = JoinKeysignState.JoinKeysign
-                } else {
+                try {
+                    if (fetchAndHandleCustomMessagePayload(_serverAddress)) {
+                        currentState.value = JoinKeysignState.JoinKeysign
+                    } else {
+                        currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to fetch custom message payload")
                     currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
                 }
             }
