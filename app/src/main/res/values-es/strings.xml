@@ -909,6 +909,17 @@
     <string name="key_import_spotlight_device_title">Al menos un dispositivo</string>
     <string name="key_import_spotlight_device_desc">Cualquier dispositivo que pueda ejecutar Vultisig funcionará.</string>
     <string name="key_import_spotlight_get_started">Comenzar</string>
+    <!-- Transaction History Screen -->
+    <string name="transaction_history_title">Historial</string>
+    <string name="transaction_history_tab_overview">Resumen</string>
+    <string name="transaction_history_tab_send">Enviar</string>
+    <string name="transaction_history_tab_swap">Intercambiar</string>
+    <string name="transaction_history_empty_title">Aún no hay transacciones</string>
+    <string name="transaction_history_empty_desc">Tu historial de transacciones aparecerá aquí</string>
+    <string name="transaction_status_broadcasted_label">Transmitida</string>
+    <string name="transaction_status_pending_label">Pendiente · %1$s</string>
+    <string name="transaction_status_confirmed_label">Confirmada</string>
+    <string name="transaction_status_failed_label">Fallida</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Importar frase semilla</string>

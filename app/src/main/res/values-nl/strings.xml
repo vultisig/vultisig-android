@@ -906,6 +906,17 @@
     <string name="key_import_spotlight_device_title">Minstens één apparaat</string>
     <string name="key_import_spotlight_device_desc">Elk apparaat dat Vultisig kan draaien werkt.</string>
     <string name="key_import_spotlight_get_started">Aan de slag</string>
+    <!-- Transaction History Screen -->
+    <string name="transaction_history_title">Geschiedenis</string>
+    <string name="transaction_history_tab_overview">Overzicht</string>
+    <string name="transaction_history_tab_send">Versturen</string>
+    <string name="transaction_history_tab_swap">Wisselen</string>
+    <string name="transaction_history_empty_title">Nog geen transacties</string>
+    <string name="transaction_history_empty_desc">Uw transactiegeschiedenis verschijnt hier</string>
+    <string name="transaction_status_broadcasted_label">Uitgezonden</string>
+    <string name="transaction_status_pending_label">In behandeling · %1$s</string>
+    <string name="transaction_status_confirmed_label">Bevestigd</string>
+    <string name="transaction_status_failed_label">Mislukt</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Herstelzin importeren</string>

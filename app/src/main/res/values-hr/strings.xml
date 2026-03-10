@@ -910,6 +910,17 @@
     <string name="key_import_spotlight_device_title">Barem jedan uređaj</string>
     <string name="key_import_spotlight_device_desc">Bilo koji uređaj koji može pokrenuti Vultisig će raditi.</string>
     <string name="key_import_spotlight_get_started">Započni</string>
+    <!-- Transaction History Screen -->
+    <string name="transaction_history_title">Povijest</string>
+    <string name="transaction_history_tab_overview">Pregled</string>
+    <string name="transaction_history_tab_send">Slanje</string>
+    <string name="transaction_history_tab_swap">Zamjena</string>
+    <string name="transaction_history_empty_title">Još nema transakcija</string>
+    <string name="transaction_history_empty_desc">Vaša povijest transakcija prikazat će se ovdje</string>
+    <string name="transaction_status_broadcasted_label">Objavljeno</string>
+    <string name="transaction_status_pending_label">Na čekanju · %1$s</string>
+    <string name="transaction_status_confirmed_label">Potvrđeno</string>
+    <string name="transaction_status_failed_label">Neuspjelo</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Uvezi frazu za oporavak</string>

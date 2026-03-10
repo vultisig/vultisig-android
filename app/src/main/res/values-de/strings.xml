@@ -911,6 +911,17 @@
     <string name="key_import_spotlight_device_title">Mindestens ein Gerät</string>
     <string name="key_import_spotlight_device_desc">Jedes Gerät, das Vultisig ausführen kann, funktioniert.</string>
     <string name="key_import_spotlight_get_started">Loslegen</string>
+    <!-- Transaction History Screen -->
+    <string name="transaction_history_title">Verlauf</string>
+    <string name="transaction_history_tab_overview">Übersicht</string>
+    <string name="transaction_history_tab_send">Senden</string>
+    <string name="transaction_history_tab_swap">Tauschen</string>
+    <string name="transaction_history_empty_title">Noch keine Transaktionen</string>
+    <string name="transaction_history_empty_desc">Ihr Transaktionsverlauf wird hier angezeigt</string>
+    <string name="transaction_status_broadcasted_label">Gesendet</string>
+    <string name="transaction_status_pending_label">Ausstehend · %1$s</string>
+    <string name="transaction_status_confirmed_label">Bestätigt</string>
+    <string name="transaction_status_failed_label">Fehlgeschlagen</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Seed-Phrase importieren</string>
