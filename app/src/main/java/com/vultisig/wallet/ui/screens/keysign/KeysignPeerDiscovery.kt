@@ -130,7 +130,7 @@ internal fun KeysignPeerDiscovery(
         onShareQrClick = { sharedViewModel.shareQRCode(activity) },
         onStopParticipantDiscovery = viewModel::moveToKeysignState,
         onBackClick = viewModel::back,
-        onResentNotification = viewModel::sendNotification,
+        onResendNotification = viewModel::sendNotification,
         resendCooldownSeconds = uiModel.resendCooldownSeconds,
         enableNotification = uiModel.enableNotification,
     )
@@ -151,7 +151,7 @@ private fun KeysignPeerDiscovery(
     onStopParticipantDiscovery: () -> Unit = {},
     onShareQrClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
-    onResentNotification: () -> Unit = {},
+    onResendNotification: () -> Unit = {},
     resendCooldownSeconds: Int = 0,
     enableNotification: Boolean,
 ) {
@@ -197,7 +197,7 @@ private fun KeysignPeerDiscovery(
                 }
             },
             onNextClick = onStopParticipantDiscovery,
-            onResendNotification = onResentNotification,
+            onResendNotification = onResendNotification,
         )
     }
 }

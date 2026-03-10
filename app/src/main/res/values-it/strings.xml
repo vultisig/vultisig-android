@@ -960,8 +960,9 @@
         <item quantity="other">Abbiamo trovato %d catene attive</item>
     </plurals>
     <plurals name="resend_notification_in_seconds">
-        <item quantity="one">Reinvia email in %d secondo</item>
-        <item quantity="other">Reinvia email in %d secondi</item>
+        <item quantity="one">Reinvia notifica in %d secondo</item>
+        <item quantity="many">Reinvia notifica in %d secondi</item>
+        <item quantity="other">Reinvia notifica in %d secondi</item>
     </plurals>
     <string name="key_import_chains_found_desc">Ogni catena aggiuntiva aumenta il tempo per generare il tuo vault e la possibilità di un timeout.</string>
     <string name="key_import_chains_continue">Inizia</string>
@@ -1102,5 +1103,5 @@
     <string name="server_backup_error_timeout">Il server ha impiegato troppo tempo per rispondere. Controlla la tua connessione Internet e riprova.</string>
     <string name="server_backup_error_too_many_requests">Troppe richieste di backup. Riprova più tardi.</string>
     <string name="server_backup_error_bad_request">Qualcosa è andato storto. Controlla i tuoi dati e riprova.</string>
-    <string name="resend_notification">Reinvia email</string>
+    <string name="resend_notification">Reinvia notifica</string>
 </resources>
