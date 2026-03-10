@@ -1,7 +1,5 @@
 package com.vultisig.wallet.data.common
 
-import okio.ByteString.Companion.decodeBase64
-import okio.ByteString.Companion.decodeHex
 import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -9,7 +7,8 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
-
+import okio.ByteString.Companion.decodeBase64
+import okio.ByteString.Companion.decodeHex
 
 @OptIn(ExperimentalEncodingApi::class)
 fun String.encrypt(key: String): String {
@@ -23,6 +22,7 @@ fun String.encrypt(key: String): String {
     val encrypted = cipher.doFinal(this.toByteArray())
     return Base64.encode(iv + encrypted)
 }
+
 fun String.encryptNoEncode(key: String): ByteArray {
     val decodeKey = key.decodeHex()
     val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
@@ -40,7 +40,7 @@ fun String.decrypt(key: String): String {
     val decodedRaw = this.decodeBase64()
     decodedRaw?.let {
         val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
-        val iv  = it.substring(0, cipher.blockSize)
+        val iv = it.substring(0, cipher.blockSize)
         val encrypted = it.substring(cipher.blockSize)
         val secretKeySpec = SecretKeySpec(decodeKey.toByteArray(), "AES")
         val ivParameterSpec = IvParameterSpec(iv.toByteArray())

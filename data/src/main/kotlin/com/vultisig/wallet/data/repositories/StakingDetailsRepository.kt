@@ -10,41 +10,39 @@ import javax.inject.Singleton
 
 interface StakingDetailsRepository {
     suspend fun getStakingDetails(vaultId: String): List<StakingDetails>
-    
+
     suspend fun getStakingDetailsByCoindId(vaultId: String, coinId: String): StakingDetails?
 
     suspend fun getStakingDetailsById(vaultId: String, id: String): StakingDetails?
-    
+
     suspend fun saveStakingDetails(vaultId: String, stakingDetails: StakingDetails)
-    
+
     suspend fun saveAllStakingDetails(vaultId: String, stakingDetailsList: List<StakingDetails>)
-    
+
     suspend fun updateStakingDetails(vaultId: String, stakingDetails: StakingDetails)
-    
+
     suspend fun deleteStakingDetails(vaultId: String)
-    
+
     suspend fun deleteStakingDetails(vaultId: String, coinId: String)
 }
 
 @Singleton
-internal class StakingDetailsRepositoryImpl @Inject constructor(
-    private val stakingDetailsDao: StakingDetailsDao,
-) : StakingDetailsRepository {
+internal class StakingDetailsRepositoryImpl
+@Inject
+constructor(private val stakingDetailsDao: StakingDetailsDao) : StakingDetailsRepository {
 
     override suspend fun getStakingDetails(vaultId: String): List<StakingDetails> {
-        return stakingDetailsDao.getAllByVaultIdSuspend(vaultId)
-            .toDomainModels()
+        return stakingDetailsDao.getAllByVaultIdSuspend(vaultId).toDomainModels()
     }
 
-    override suspend fun getStakingDetailsByCoindId(vaultId: String, coinId: String): StakingDetails? {
-        return stakingDetailsDao.getByVaultIdAndCoinId(vaultId, coinId)
-            ?.toDomainModel()
-    }
-
-    override suspend fun getStakingDetailsById(
+    override suspend fun getStakingDetailsByCoindId(
         vaultId: String,
-        id: String
+        coinId: String,
     ): StakingDetails? {
+        return stakingDetailsDao.getByVaultIdAndCoinId(vaultId, coinId)?.toDomainModel()
+    }
+
+    override suspend fun getStakingDetailsById(vaultId: String, id: String): StakingDetails? {
         return stakingDetailsDao.getByVaultIdAndId(vaultId, id)?.toDomainModel()
     }
 
@@ -52,7 +50,10 @@ internal class StakingDetailsRepositoryImpl @Inject constructor(
         stakingDetailsDao.insert(stakingDetails.toEntity(vaultId))
     }
 
-    override suspend fun saveAllStakingDetails(vaultId: String, stakingDetailsList: List<StakingDetails>) {
+    override suspend fun saveAllStakingDetails(
+        vaultId: String,
+        stakingDetailsList: List<StakingDetails>,
+    ) {
         stakingDetailsDao.insertAll(stakingDetailsList.map { it.toEntity(vaultId) })
     }
 

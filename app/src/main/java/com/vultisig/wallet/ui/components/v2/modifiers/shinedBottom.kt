@@ -7,18 +7,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.translate
 
-internal fun Modifier.shinedBottom() = this
-    .drawBehind {
-        translate(
-            top = this.size.center.y
-        ) {
+internal fun Modifier.shinedBottom(color: Color = Color.White) =
+    this.drawBehind {
+        translate(top = this.size.center.y) {
             drawCircle(
-                brush = Brush.Companion.radialGradient(
-                    colors = listOf(
-                        Color.Companion.White,
-                        Color.Companion.Transparent,
-                    ),
-                ),
+                brush = Brush.radialGradient(colors = listOf(color, Color.Transparent)),
                 alpha = 0.1f,
             )
         }

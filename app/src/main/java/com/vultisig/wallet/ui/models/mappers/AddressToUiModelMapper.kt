@@ -7,10 +7,11 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.models.AccountUiModel
 import javax.inject.Inject
 
-internal interface AddressToUiModelMapper :
-    SuspendMapperFunc<Address, AccountUiModel>
+internal interface AddressToUiModelMapper : SuspendMapperFunc<Address, AccountUiModel>
 
-internal class AddressToUiModelMapperImpl @Inject constructor(
+internal class AddressToUiModelMapperImpl
+@Inject
+constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToStringWithUnitMapper: TokenValueToStringWithUnitMapper,
     private val chainToDefiChainUiMapper: ChainToDefiChainUiMapper,
@@ -25,10 +26,11 @@ internal class AddressToUiModelMapperImpl @Inject constructor(
             chainName = if (isDefiProvider) defiChain.raw else from.chain.raw,
             logo = if (isDefiProvider) defiChain.logo else from.chain.logo,
             address = from.address,
-            nativeTokenAmount = nativeAccount
-                .tokenValue?.let(mapTokenValueToStringWithUnitMapper),
-            fiatAmount = from.accounts.calculateAccountsTotalFiatValue()
-                ?.let { fiatValueToStringMapper(it) },
+            nativeTokenAmount = nativeAccount.tokenValue?.let(mapTokenValueToStringWithUnitMapper),
+            fiatAmount =
+                from.accounts.calculateAccountsTotalFiatValue()?.let {
+                    fiatValueToStringMapper(it)
+                },
             assetsSize = from.accounts.size,
             nativeTokenTicker = nativeAccount.token.ticker,
         )

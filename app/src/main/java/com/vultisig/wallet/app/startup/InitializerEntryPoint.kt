@@ -14,12 +14,9 @@ internal interface InitializerEntryPoint {
     fun getHiltWorkerFactory(): HiltWorkerFactory
 
     companion object {
-        //a helper method to resolve the InitializerEntryPoint from the context
+        // a helper method to resolve the InitializerEntryPoint from the context
         fun resolve(context: Context): InitializerEntryPoint {
-            return EarlyEntryPoints.get(
-                context,
-                InitializerEntryPoint::class.java
-            )
+            return EarlyEntryPoints.get(context, InitializerEntryPoint::class.java)
         }
     }
 }

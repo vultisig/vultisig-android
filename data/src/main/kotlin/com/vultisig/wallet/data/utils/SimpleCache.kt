@@ -5,10 +5,7 @@ package com.vultisig.wallet.data.utils
 class SimpleCache<K, V>(
     private val defaultExpirationMs: Long = 5 * 60 * 1000 // 5 minutes default
 ) {
-    private data class CacheEntry<V>(
-        val value: V,
-        val expiresAt: Long
-    )
+    private data class CacheEntry<V>(val value: V, val expiresAt: Long)
 
     private val cache = mutableMapOf<K, CacheEntry<V>>()
 
@@ -25,15 +22,14 @@ class SimpleCache<K, V>(
 
     fun put(key: K, value: V, customExpirationMs: Long? = null) {
         val expiration = customExpirationMs ?: defaultExpirationMs
-        cache[key] = CacheEntry(
-            value = value,
-            expiresAt = System.currentTimeMillis() + expiration
-        )
+        cache[key] = CacheEntry(value = value, expiresAt = System.currentTimeMillis() + expiration)
     }
 
     suspend fun getOrPut(key: K, compute: suspend () -> V): V {
-        get(key)?.let { return it }
-        
+        get(key)?.let {
+            return it
+        }
+
         val value = compute()
         put(key, value)
         return value

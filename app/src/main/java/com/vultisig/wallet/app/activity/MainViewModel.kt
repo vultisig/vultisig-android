@@ -1,6 +1,5 @@
 package com.vultisig.wallet.app.activity
 
-import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -18,16 +17,16 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.utils.NetworkUtils.observeConnectivityAsFlow
+import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -36,18 +35,17 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
-
 
 @HiltViewModel
-internal class MainViewModel @Inject constructor(
+internal class MainViewModel
+@Inject
+constructor(
     private val navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
     private val appUpdateManager: AppUpdateManager,
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
-    @param:ApplicationContext private val context: Context,
+    networkUtils: NetworkUtils,
 ) : ViewModel() {
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
@@ -55,10 +53,7 @@ internal class MainViewModel @Inject constructor(
     private val _isOffline: MutableState<Boolean> = mutableStateOf(false)
     val isOffline: State<Boolean> = _isOffline
 
-    private val _startUpdateEvent = MutableSharedFlow<Unit>(
-        replay = 0,
-        extraBufferCapacity = 1
-    )
+    private val _startUpdateEvent = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
     val startUpdateEvent = _startUpdateEvent.asSharedFlow()
 
     private val _startDestination: MutableState<Any> = mutableStateOf(Route.Home())
@@ -68,41 +63,27 @@ internal class MainViewModel @Inject constructor(
 
     val route: Flow<NavigateAction<Any>> = navigator.route
 
-    val snakeBarHostState = VSSnackbarState(
-        duration = 1.seconds,
-        coroutineScope = CoroutineScope(Dispatchers.Default)
-    )
+    val snakeBarHostState =
+        VSSnackbarState(duration = 1.seconds, coroutineScope = CoroutineScope(Dispatchers.Default))
 
     init {
         viewModelScope.launch {
-
-            if (vaultRepository.hasVaults())
-                _startDestination.value = Route.Home()
-            else
-                _startDestination.value = Route.AddVault
+            if (vaultRepository.hasVaults()) _startDestination.value = Route.Home()
+            else _startDestination.value = Route.AddVault
 
             _isLoading.value = false
 
-            snackbarFlow.collectMessage {
-                snakeBarHostState.show(it)
-            }
+            snackbarFlow.collectMessage { snakeBarHostState.show(it) }
         }
 
-        viewModelScope.launch {
-            initializeThorChainNetworkId()
-        }
+        viewModelScope.launch { initializeThorChainNetworkId() }
 
-        context
+        networkUtils
             .observeConnectivityAsFlow()
             .map { !it } // offline = not online
             .distinctUntilChanged()
             .onEach { _isOffline.value = it }
-            .catch {
-                Timber.w(
-                    it,
-                    "Connectivity flow failed"
-                )
-            }
+            .catch { Timber.w(it, "Connectivity flow failed") }
             .launchIn(viewModelScope)
     }
 
@@ -111,31 +92,27 @@ internal class MainViewModel @Inject constructor(
             delay(1.seconds)
             val deepLinkHelper = DeepLinkHelper(uri)
             if (deepLinkHelper.isSendDeeplink()) {
-                if(vaultRepository.hasVaults()) {
+                if (vaultRepository.hasVaults()) {
                     navigator.route(
                         Route.VaultList(
-                            openType = Route.VaultList.OpenType.DeepLink(
-                                sendDeepLinkData = SendDeeplinkData(
-                                    assetChain = deepLinkHelper.getAssetChain(),
-                                    assetTicker = deepLinkHelper.getAssetTicker(),
-                                    toAddress = deepLinkHelper.getToAddress(),
-                                    amount = deepLinkHelper.getAmount(),
-                                    memo = deepLinkHelper.getMemo()
+                            openType =
+                                Route.VaultList.OpenType.DeepLink(
+                                    sendDeepLinkData =
+                                        SendDeeplinkData(
+                                            assetChain = deepLinkHelper.getAssetChain(),
+                                            assetTicker = deepLinkHelper.getAssetTicker(),
+                                            toAddress = deepLinkHelper.getToAddress(),
+                                            amount = deepLinkHelper.getAmount(),
+                                            memo = deepLinkHelper.getMemo(),
+                                        )
                                 )
-                            )
                         )
                     )
                 } else {
-                    navigator.route(
-                        Route.ImportVault()
-                    )
+                    navigator.route(Route.ImportVault())
                 }
             } else {
-                navigator.route(
-                    Route.ImportVault(
-                        uri = uri.toString()
-                    )
-                )
+                navigator.route(Route.ImportVault(uri = uri.toString()))
             }
         }
     }

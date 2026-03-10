@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Text
@@ -25,31 +24,19 @@ internal fun VsCheckField(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = 4.dp,
-                vertical = 8.dp,
-            )
-            .toggleable(
-                value = isChecked,
-                onValueChange = { checked ->
-                    onCheckedChange(checked)
-                }
-            )
+        modifier =
+            modifier
+                .padding(horizontal = 4.dp, vertical = 8.dp)
+                .toggleable(
+                    value = isChecked,
+                    onValueChange = { checked -> onCheckedChange(checked) },
+                ),
     ) {
-        VsUiCheckbox(
-            checked = isChecked,
-            onCheckedChange = onCheckedChange
-        )
+        VsUiCheckbox(checked = isChecked, onCheckedChange = onCheckedChange)
 
         UiSpacer(size = 8.dp)
 
-        Text(
-            text = title,
-            color = Theme.v2.colors.neutrals.n100,
-            style = textStyle,
-        )
+        Text(text = title, color = Theme.v2.colors.neutrals.n100, style = textStyle)
     }
 }
 
@@ -57,16 +44,8 @@ internal fun VsCheckField(
 @Composable
 private fun VsCheckFieldPreview() {
     Column {
-        VsCheckField(
-            title = "Checked",
-            isChecked = true,
-            onCheckedChange = {}
-        )
+        VsCheckField(title = "Checked", isChecked = true, onCheckedChange = {})
 
-        VsCheckField(
-            title = "Not checked",
-            isChecked = false,
-            onCheckedChange = {}
-        )
+        VsCheckField(title = "Not checked", isChecked = false, onCheckedChange = {})
     }
 }

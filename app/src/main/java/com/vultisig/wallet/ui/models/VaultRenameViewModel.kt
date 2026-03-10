@@ -18,19 +18,20 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class VaultRenameUiModel(
     val isLoading: Boolean = false,
-    val errorMessage: UiText? = null
+    val errorMessage: UiText? = null,
 )
 
-
 @HiltViewModel
-internal class VaultRenameViewModel @Inject constructor(
+internal class VaultRenameViewModel
+@Inject
+constructor(
     private val vaultRepository: VaultRepository,
     private val navigator: Navigator<Destination>,
     private val isVaultNameValid: IsVaultNameValid,
@@ -43,9 +44,7 @@ internal class VaultRenameViewModel @Inject constructor(
     val uiState = MutableStateFlow(VaultRenameUiModel())
     var isLoading = false
         set(value) {
-            uiState.update {
-                it.copy(isLoading = value)
-            }
+            uiState.update { it.copy(isLoading = value) }
         }
 
     val renameTextFieldState = TextFieldState()
@@ -58,7 +57,6 @@ internal class VaultRenameViewModel @Inject constructor(
         }
     }
 
-
     fun saveName() {
         viewModelScope.launch {
             val error = validateName(renameTextFieldState.text.toString())
@@ -70,18 +68,14 @@ internal class VaultRenameViewModel @Inject constructor(
                 val newName = renameTextFieldState.text.toString()
                 isLoading = true
                 vaultRepository.setVaultName(vault.id, newName)
-                navigator.route(
-                    Route.Home(),
-                    NavigationOptions(clearBackStack = true)
-                )
+                navigator.route(Route.Home(), NavigationOptions(clearBackStack = true))
                 isLoading = false
             }
         }
     }
 
     private suspend fun validateName(newName: String): UiText? {
-        if (newName.isEmpty())
-            return StringResource(R.string.rename_vault_invalid_name)
+        if (newName.isEmpty()) return StringResource(R.string.rename_vault_invalid_name)
         if (!isVaultNameValid(newName)) {
             return StringResource(R.string.vault_name_too_long_error)
         }
@@ -92,20 +86,12 @@ internal class VaultRenameViewModel @Inject constructor(
         return null
     }
 
-    fun clearText(){
+    fun clearText() {
         renameTextFieldState.clearText()
-        uiState.update {
-            it.copy(
-                errorMessage = null
-            )
-        }
+        uiState.update { it.copy(errorMessage = null) }
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(
-                Destination.Back,
-            )
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 }

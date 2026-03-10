@@ -9,9 +9,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.screens.keysign.InputPasswordScreen
 
 @Composable
-internal fun MigrationPasswordScreen(
-    model: MigrationPasswordViewModel = hiltViewModel(),
-) {
+internal fun MigrationPasswordScreen(model: MigrationPasswordViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     InputPasswordScreen(

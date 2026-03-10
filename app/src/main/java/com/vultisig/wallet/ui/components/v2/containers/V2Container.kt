@@ -28,11 +28,13 @@ internal enum class ContainerType {
 
 internal sealed interface ContainerBorderType {
     object Borderless : ContainerBorderType
+
     data class Bordered(val color: Color = colors.border.light) : ContainerBorderType
 }
 
 internal sealed interface CornerType {
     object Circular : CornerType
+
     data class RoundedCornerShape(val size: Dp = 12.dp) : CornerType
 }
 
@@ -44,41 +46,34 @@ internal fun V2Container(
     cornerType: CornerType = CornerType.RoundedCornerShape(),
     content: @Composable () -> Unit,
 ) {
-    val containerColor = when (type) {
-        ContainerType.PRIMARY -> Theme.v2.colors.backgrounds.primary
-        ContainerType.SECONDARY -> Theme.v2.colors.backgrounds.secondary
-        ContainerType.TERTIARY -> Theme.v2.colors.backgrounds.tertiary_2
-    }
+    val containerColor =
+        when (type) {
+            ContainerType.PRIMARY -> Theme.v2.colors.backgrounds.primary
+            ContainerType.SECONDARY -> Theme.v2.colors.backgrounds.secondary
+            ContainerType.TERTIARY -> Theme.v2.colors.backgrounds.tertiary_2
+        }
 
-    val borderColor = when (borderType) {
-        ContainerBorderType.Borderless -> Color.Transparent
-        is ContainerBorderType.Bordered -> borderType.color
-    }
+    val borderColor =
+        when (borderType) {
+            ContainerBorderType.Borderless -> Color.Transparent
+            is ContainerBorderType.Bordered -> borderType.color
+        }
 
-    val shape = when (cornerType) {
-        CornerType.Circular -> CircleShape
-        is CornerType.RoundedCornerShape -> RoundedCornerShape(
-            size = cornerType.size,
-        )
-    }
+    val shape =
+        when (cornerType) {
+            CornerType.Circular -> CircleShape
+            is CornerType.RoundedCornerShape -> RoundedCornerShape(size = cornerType.size)
+        }
 
     val containerColorAnimated by animateColorAsState(containerColor)
     val borderColorAnimated by animateColorAsState(borderColor)
 
-
     Card(
         modifier = modifier,
         shape = shape,
-        colors = CardDefaults.cardColors(
-            containerColor = containerColorAnimated,
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 0.dp
-        ),
-        border = BorderStroke(
-            width = 1.dp,
-            color = borderColorAnimated,
-        )
+        colors = CardDefaults.cardColors(containerColor = containerColorAnimated),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(width = 1.dp, color = borderColorAnimated),
     ) {
         content()
     }
@@ -87,80 +82,61 @@ internal fun V2Container(
 @Preview
 @Composable
 private fun PreviewV2Container() {
-    Column(
-        modifier = Modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-
-        V2Container(
-            type = ContainerType.PRIMARY,
-            borderType = ContainerBorderType.Bordered()
-        ) {
+    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        V2Container(type = ContainerType.PRIMARY, borderType = ContainerBorderType.Bordered()) {
             Text(
                 text = "This is primary bordered container",
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(16.dp),
             )
         }
-        V2Container(
-            type = ContainerType.PRIMARY,
-            borderType = ContainerBorderType.Borderless
-        ) {
+        V2Container(type = ContainerType.PRIMARY, borderType = ContainerBorderType.Borderless) {
             Text(
                 text = "This is primary borderless container",
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(16.dp),
             )
         }
 
         V2Container(
             type = ContainerType.PRIMARY,
-            borderType = ContainerBorderType.Bordered(Theme.v2.colors.alerts.info)
+            borderType = ContainerBorderType.Bordered(Theme.v2.colors.alerts.info),
         ) {
             Text(
                 text = "This is primary custom border color container",
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(16.dp),
             )
         }
-        V2Container(
-            type = ContainerType.SECONDARY,
-            borderType = ContainerBorderType.Bordered()
-        ) {
+        V2Container(type = ContainerType.SECONDARY, borderType = ContainerBorderType.Bordered()) {
             Text(
                 text = "This is secondary bordered container",
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(16.dp),
             )
         }
-        V2Container(
-            type = ContainerType.SECONDARY,
-            borderType = ContainerBorderType.Borderless
-        ) {
+        V2Container(type = ContainerType.SECONDARY, borderType = ContainerBorderType.Borderless) {
             Text(
                 text = "This is secondary borderless container",
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(16.dp),
             )
         }
         V2Container(
             type = ContainerType.SECONDARY,
-            borderType = ContainerBorderType.Bordered(Theme.v2.colors.alerts.info)
+            borderType = ContainerBorderType.Bordered(Theme.v2.colors.alerts.info),
         ) {
             Text(
                 text = "This is secondary custom border color container",
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(16.dp),
             )
         }
-
     }
-
 }
-

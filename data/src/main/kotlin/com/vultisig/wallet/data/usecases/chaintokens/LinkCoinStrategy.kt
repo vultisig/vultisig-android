@@ -6,8 +6,6 @@ internal object LinkCoinStrategy : CoinModificationStrategy {
     override fun modify(item: Coin): Coin {
         require(item.ticker == LINK_TICKER)
         val isBridgeVersion = item.contractAddress == BRIDGED_LINK_CONTRACT_ADDRESS
-        return if (isBridgeVersion)
-            item.copy(ticker = item.ticker + " (Bridged)")
-        else item
+        return if (isBridgeVersion) item.copy(ticker = item.ticker + " (Bridged)") else item
     }
 }

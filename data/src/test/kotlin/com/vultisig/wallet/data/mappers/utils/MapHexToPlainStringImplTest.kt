@@ -1,9 +1,8 @@
 package com.vultisig.wallet.data.mappers.utils
 
-import com.vultisig.wallet.data.mappers.utils.MapHexToPlainStringImpl
-import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import org.junit.Test
 
 class MapHexToPlainStringImplTest {
 
@@ -11,12 +10,8 @@ class MapHexToPlainStringImplTest {
 
     @Test
     fun `uneven length hex fails`() {
-        assertFailsWith<IllegalArgumentException> {
-            mapper("1")
-        }
-        assertFailsWith<IllegalArgumentException> {
-            mapper("123")
-        }
+        assertFailsWith<IllegalArgumentException> { mapper("1") }
+        assertFailsWith<IllegalArgumentException> { mapper("123") }
     }
 
     @Test
@@ -26,5 +21,4 @@ class MapHexToPlainStringImplTest {
         assertEquals("123", mapper("313233"))
         assertEquals("abc", mapper("616263"))
     }
-
 }

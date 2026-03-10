@@ -11,10 +11,11 @@ internal class WorkManagerInitializer : Initializer<WorkManager> {
         val workerFactory =
             InitializerEntryPoint.resolve(context.applicationContext).getHiltWorkerFactory()
 
-        val myConfig = Configuration.Builder()
-            .setMinimumLoggingLevel(android.util.Log.INFO)
-            .setWorkerFactory(workerFactory)
-            .build()
+        val myConfig =
+            Configuration.Builder()
+                .setMinimumLoggingLevel(android.util.Log.INFO)
+                .setWorkerFactory(workerFactory)
+                .build()
         WorkManager.initialize(context, myConfig)
         return WorkManager.getInstance(context)
     }

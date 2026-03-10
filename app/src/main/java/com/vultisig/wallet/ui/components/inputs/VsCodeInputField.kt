@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
@@ -50,7 +50,9 @@ import kotlin.math.roundToInt
 private const val FAST_VAULT_VERIFICATION_CODE_CHARS = 4
 
 internal enum class VsCodeInputFieldState {
-    Default, Success, Error
+    Default,
+    Success,
+    Error,
 }
 
 @Composable
@@ -64,41 +66,28 @@ internal fun VsCodeInputField(
 ) {
     val focusedState = remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-    LaunchedEffect(Unit) {
-        textFieldState.textAsFlow().collect {
-            onChangeInput(it.toString())
-        }
-    }
+    LaunchedEffect(Unit) { textFieldState.textAsFlow().collect { onChangeInput(it.toString()) } }
 
-    Box(
-        modifier = modifier,
-    ) {
+    Box(modifier = modifier) {
         BasicTextField(
             state = textFieldState,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Go,
-            ),
-            inputTransformation = InputTransformation
-                .maxLength(maxCharacters)
-                .then {
+            keyboardOptions =
+                KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Go),
+            inputTransformation =
+                InputTransformation.maxLength(maxCharacters).then {
                     val length = length
                     if (length >= maxCharacters) {
                         delete(maxCharacters - 1, length - 1)
                     }
                 },
             onKeyboardAction = onKeyboardAction,
-            modifier = Modifier
-                .alpha(0.01f)
-                .onFocusChanged {
-                    focusedState.value = it.isFocused
-                }
-                .focusRequester(focusRequester)
-                .testTag(CODE_INPUT_FIELD_TAG),
+            modifier =
+                Modifier.alpha(0.01f)
+                    .onFocusChanged { focusedState.value = it.isFocused }
+                    .focusRequester(focusRequester)
+                    .testTag(CODE_INPUT_FIELD_TAG),
             textStyle = TextStyle.Default.copy(color = Color.Transparent),
         )
 
@@ -110,71 +99,83 @@ internal fun VsCodeInputField(
         val minSizePx = 46.dp.toPx().roundToInt()
         val paddingPx = 24.dp.toPx().roundToInt()
 
-        val onSizeChanged: (IntSize) -> Unit = remember(density) {
-            { size ->
-                val maxDimension = maxOf(size.width, size.height)
-                val totalSize = maxDimension + paddingPx
-                val newSize = maxOf(totalSize, minSizePx)
-                boxSize.intValue = maxOf(newSize, boxSize.intValue)
+        val onSizeChanged: (IntSize) -> Unit =
+            remember(density) {
+                { size ->
+                    val maxDimension = maxOf(size.width, size.height)
+                    val totalSize = maxDimension + paddingPx
+                    val newSize = maxOf(totalSize, minSizePx)
+                    boxSize.intValue = maxOf(newSize, boxSize.intValue)
+                }
             }
-        }
 
-        val boxModifier = remember(boxSize.intValue, density) {
-            if (boxSize.intValue > 0) {
-                Modifier.size(with(density) {
-                    boxSize.intValue.toDp()
-                })
-            } else {
-                Modifier.wrapContentSize()
+        val boxModifier =
+            remember(boxSize.intValue, density) {
+                if (boxSize.intValue > 0) {
+                    val height = with(density) { boxSize.intValue.toDp() }
+                    Modifier.size(width = height * 1.25f, height = height)
+                } else {
+                    Modifier.wrapContentSize()
+                }
             }
-        }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             repeat(maxCharacters) { index ->
                 val isActiveBox = focusedState.value && index == value.length
 
-                val inputBoxShape = RoundedCornerShape(12.dp)
+                val inputBoxShape = CircleShape
                 val inputManager = LocalSoftwareKeyboardController.current
 
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = boxModifier
-                        .background(
-                            color = when {
-                                value.length <= index -> Theme.v2.colors.backgrounds.secondary
-                                else -> when (state) {
-                                    VsCodeInputFieldState.Default -> Theme.v2.colors.backgrounds.secondary
-                                    VsCodeInputFieldState.Success -> Theme.v2.colors.backgrounds.success
-                                    VsCodeInputFieldState.Error -> Theme.v2.colors.backgrounds.error
-                                }
+                    modifier =
+                        boxModifier
+                            .background(
+                                color =
+                                    when {
+                                        value.length <= index ->
+                                            Theme.v2.colors.backgrounds.secondary
+                                        else ->
+                                            when (state) {
+                                                VsCodeInputFieldState.Default ->
+                                                    Theme.v2.colors.backgrounds.secondary
+                                                VsCodeInputFieldState.Success ->
+                                                    Theme.v2.colors.backgrounds.success
+                                                VsCodeInputFieldState.Error ->
+                                                    Theme.v2.colors.backgrounds.error
+                                            }
+                                    },
+                                shape = inputBoxShape,
+                            )
+                            .border(
+                                width =
+                                    when {
+                                        isActiveBox -> 1.5.dp
+                                        else -> 1.dp
+                                    },
+                                color =
+                                    when {
+                                        isActiveBox -> Theme.v2.colors.border.normal
+                                        value.length <= index -> Theme.v2.colors.border.light
+                                        else ->
+                                            when (state) {
+                                                VsCodeInputFieldState.Default ->
+                                                    Theme.v2.colors.border.light
+                                                VsCodeInputFieldState.Success ->
+                                                    Theme.v2.colors.alerts.success
+                                                VsCodeInputFieldState.Error ->
+                                                    Theme.v2.colors.alerts.error
+                                            }
+                                    },
+                                shape = inputBoxShape,
+                            )
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                            ) {
+                                focusRequester.requestFocus()
+                                inputManager?.show()
                             },
-                            shape = inputBoxShape,
-                        )
-                        .border(
-                            width = when {
-                                isActiveBox -> 1.5.dp
-                                else -> 1.dp
-                            },
-                            color = when {
-                                isActiveBox -> Theme.v2.colors.border.normal
-                                value.length <= index -> Theme.v2.colors.border.light
-                                else -> when (state) {
-                                    VsCodeInputFieldState.Default -> Theme.v2.colors.border.light
-                                    VsCodeInputFieldState.Success -> Theme.v2.colors.alerts.success
-                                    VsCodeInputFieldState.Error -> Theme.v2.colors.alerts.error
-                                }
-                            },
-                            shape = inputBoxShape,
-                        )
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) {
-                            focusRequester.requestFocus()
-                            inputManager?.show()
-                        },
                 ) {
                     val displayChar = value.getOrElse(index) { ' ' }
 
@@ -182,9 +183,7 @@ internal fun VsCodeInputField(
                         text = displayChar.toString(),
                         color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.body.m.medium,
-                        modifier = Modifier
-                            .padding(all = 12.dp)
-                            .onSizeChanged(onSizeChanged),
+                        modifier = Modifier.padding(all = 12.dp).onSizeChanged(onSizeChanged),
                     )
                 }
             }
@@ -195,10 +194,7 @@ internal fun VsCodeInputField(
 @Preview
 @Composable
 private fun VsCodeInputFieldPreview() {
-    VsCodeInputField(
-        textFieldState = TextFieldState(),
-        onChangeInput = {},
-    )
+    VsCodeInputField(textFieldState = TextFieldState(), onChangeInput = {})
 }
 
 internal const val CODE_INPUT_FIELD_TAG = "codeInputField"

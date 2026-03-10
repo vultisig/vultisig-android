@@ -36,15 +36,12 @@ internal fun DepositScreen(
 ) {
     val depositNavHostController = rememberNavController()
     val context = LocalContext.current
-    val keysignShareViewModel: KeysignShareViewModel =
-        hiltViewModel(context as MainActivity)
+    val keysignShareViewModel: KeysignShareViewModel = hiltViewModel(context as MainActivity)
 
     val isKeysignFinished by viewModel.isKeysignFinished.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.dst.collect {
-            depositNavHostController.route(it.dst.route, it.opts)
-        }
+        viewModel.dst.collect { depositNavHostController.route(it.dst.route, it.opts) }
     }
 
     val navBackStackEntry by depositNavHostController.currentBackStackEntryAsState()
@@ -52,11 +49,12 @@ internal fun DepositScreen(
     val route = navBackStackEntry?.destination?.route
 
     val shouldUseMainNavigator = route == SendDst.Send.route
-    val topBarNavController = if (shouldUseMainNavigator) {
-        navController
-    } else {
-        depositNavHostController
-    }
+    val topBarNavController =
+        if (shouldUseMainNavigator) {
+            navController
+        } else {
+            depositNavHostController
+        }
 
     val progress: Float
     val title: String
@@ -84,9 +82,7 @@ internal fun DepositScreen(
         title = title,
         showStartIcon = !isKeysignFinished,
         endIcon = qr?.let { R.drawable.qr_share },
-        endIconClick = qr?.let {
-            { keysignShareViewModel.shareQRCode(context) }
-        } ?: {},
+        endIconClick = qr?.let { { keysignShareViewModel.shareQRCode(context) } } ?: {},
         onKeysignFinished = { viewModel.navigateToHome(shouldUseMainNavigator) },
         depositType = depositType,
         bondAddress = bondAddress,
@@ -108,7 +104,6 @@ private fun DepositScreen(
     bondAddress: String? = null,
 ) {
 
-
     V2Scaffold(
         title = title,
         onBackClick = onKeysignFinished.takeIf { showStartIcon },
@@ -123,9 +118,7 @@ private fun DepositScreen(
             popEnterTransition = slideInFromStartEnterTransition(),
             popExitTransition = slideOutToEndExitTransition(),
         ) {
-            composable(
-                route = SendDst.Send.route,
-            ) {
+            composable(route = SendDst.Send.route) {
                 DepositFormScreen(
                     vaultId = vaultId,
                     chainId = chainId,

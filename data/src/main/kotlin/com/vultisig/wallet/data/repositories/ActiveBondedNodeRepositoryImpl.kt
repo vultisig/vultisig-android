@@ -5,10 +5,10 @@ import com.vultisig.wallet.data.db.dao.ActiveBondedNodeDao
 import com.vultisig.wallet.data.db.mappers.toDomainModels
 import com.vultisig.wallet.data.db.mappers.toEntities
 import com.vultisig.wallet.data.db.mappers.toEntity
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 interface ActiveBondedNodeRepository {
     fun getBondedNodesFlow(vaultId: String): Flow<List<BondedNodePosition>>
@@ -25,13 +25,14 @@ interface ActiveBondedNodeRepository {
 }
 
 @Singleton
-internal class ActiveBondedNodeRepositoryImpl @Inject constructor(
-    private val activeBondedNodeDao: ActiveBondedNodeDao
-): ActiveBondedNodeRepository {
+internal class ActiveBondedNodeRepositoryImpl
+@Inject
+constructor(private val activeBondedNodeDao: ActiveBondedNodeDao) : ActiveBondedNodeRepository {
 
     override fun getBondedNodesFlow(vaultId: String): Flow<List<BondedNodePosition>> {
-        return activeBondedNodeDao.getAllByVaultId(vaultId)
-            .map { entities -> entities.toDomainModels() }
+        return activeBondedNodeDao.getAllByVaultId(vaultId).map { entities ->
+            entities.toDomainModels()
+        }
     }
 
     override suspend fun getBondedNodes(vaultId: String): List<BondedNodePosition> {

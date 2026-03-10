@@ -26,14 +26,14 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import timber.log.Timber
 import tss.KeysignResponse
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 class SchnorrKeysign(
     val keysignCommittee: List<String>,
@@ -44,7 +44,6 @@ class SchnorrKeysign(
     val encryptionKeyHex: String,
     val isInitiateDevice: Boolean,
     val publicKeyOverride: String? = null,
-
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
 ) {
@@ -173,7 +172,9 @@ class SchnorrKeysign(
                     break
                 }
                 val receiverString = String(receiverArray, Charsets.UTF_8)
-                Timber.d("sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}")
+                Timber.d(
+                    "sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}"
+                )
                 messenger?.send(localPartyID, receiverString, encodedOutboundMessage)
             }
         }
@@ -185,8 +186,8 @@ class SchnorrKeysign(
         val start = System.nanoTime()
         while (true) {
             try {
-                val msgs = sessionApi
-                    .getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
+                val msgs =
+                    sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
 
                 if (msgs.isNotEmpty()) {
                     if (processInboundMessage(handle, msgs, messageID)) {
@@ -212,7 +213,7 @@ class SchnorrKeysign(
     suspend fun processInboundMessage(
         handle: Handle,
         msgs: List<Message>,
-        messageID: String
+        messageID: String,
     ): Boolean {
         val sortedMsgs = msgs.sortedBy { it.sequenceNo }
         for (msg in sortedMsgs) {
@@ -222,10 +223,11 @@ class SchnorrKeysign(
                 continue
             }
             println("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
-            val decryptedBody = encryption.decrypt(
-                Base64.decode(msg.body),
-                Numeric.hexStringToByteArray(encryptionKeyHex)
-            ) ?: error("fail to decrypt message body")
+            val decryptedBody =
+                encryption.decrypt(
+                    Base64.decode(msg.body),
+                    Numeric.hexStringToByteArray(encryptionKeyHex),
+                ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
             val decryptedBodySlice = decodedMsg.toGoSlice()
             val isFinished = intArrayOf(0)
@@ -249,10 +251,16 @@ class SchnorrKeysign(
 
     suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
         val msgHash = messageToSign.md5()
-        val localMessenger = TssMessenger(
-            mediatorURL, sessionID, encryptionKeyHex, sessionApi,
-            CoroutineScope(Dispatchers.IO), encryption, true
-        )
+        val localMessenger =
+            TssMessenger(
+                mediatorURL,
+                sessionID,
+                encryptionKeyHex,
+                sessionApi,
+                CoroutineScope(Dispatchers.IO),
+                encryption,
+                true,
+            )
         localMessenger.setMessageID(msgHash)
         messenger = localMessenger
         try {
@@ -264,24 +272,26 @@ class SchnorrKeysign(
                 sessionApi.uploadSetupMessage(
                     serverUrl = mediatorURL,
                     sessionId = sessionID,
-                    message = Base64.encode(
-                        encryption.encrypt(
-                            Base64.encodeToByteArray(keysignSetupMsg),
-                            Numeric.hexStringToByteArray(encryptionKeyHex)
-                        )
-                    ),
-                    messageId = msgHash
+                    message =
+                        Base64.encode(
+                            encryption.encrypt(
+                                Base64.encodeToByteArray(keysignSetupMsg),
+                                Numeric.hexStringToByteArray(encryptionKeyHex),
+                            )
+                        ),
+                    messageId = msgHash,
                 )
             } else {
-                keysignSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, msgHash)
-                    .let {
-                        encryption.decrypt(
-                            Base64.decode(it),
-                            Numeric.hexStringToByteArray(encryptionKeyHex)
-                        )!!
-                    }.let {
-                        Base64.decode(it)
-                    }
+                keysignSetupMsg =
+                    sessionApi
+                        .getSetupMessage(mediatorURL, sessionID, msgHash)
+                        .let {
+                            encryption.decrypt(
+                                Base64.decode(it),
+                                Numeric.hexStringToByteArray(encryptionKeyHex),
+                            )!!
+                        }
+                        .let { Base64.decode(it) }
             }
 
             val signingMsg = decodeMessage(keysignSetupMsg)
@@ -299,14 +309,17 @@ class SchnorrKeysign(
             if (result != LIB_OK) {
                 throw RuntimeException("fail to create keyshare handle from bytes, $result")
             }
-            val sessionResult = schnorr_sign_session_from_setup(
-                decodedSetupMsg,
-                localPartySlice,
-                keyshareHandle,
-                handler
-            )
+            val sessionResult =
+                schnorr_sign_session_from_setup(
+                    decodedSetupMsg,
+                    localPartySlice,
+                    keyshareHandle,
+                    handler,
+                )
             if (sessionResult != LIB_OK) {
-                throw RuntimeException("fail to create sign session from setup message, error: $sessionResult")
+                throw RuntimeException(
+                    "fail to create sign session from setup message, error: $sessionResult"
+                )
             }
             processSchnorrOutboundMessage(handler)
             val isFinished = pullInboundMessages(handler, msgHash)

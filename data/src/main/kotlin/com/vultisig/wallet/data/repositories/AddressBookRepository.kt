@@ -19,9 +19,9 @@ interface AddressBookRepository {
     suspend fun entryExists(chainId: String, address: String): Boolean
 }
 
-internal class AddressBookRepositoryImpl @Inject constructor(
-    private val addressBookEntryDao: AddressBookEntryDao,
-) : AddressBookRepository {
+internal class AddressBookRepositoryImpl
+@Inject
+constructor(private val addressBookEntryDao: AddressBookEntryDao) : AddressBookRepository {
 
     override suspend fun getEntries(): List<AddressBookEntry> =
         addressBookEntryDao.getEntries().map { it.toAddressBookEntry() }
@@ -42,18 +42,9 @@ internal class AddressBookRepositoryImpl @Inject constructor(
         return addressBookEntryDao.entryExists(chainId, address)
     }
 
-
     private fun AddressBookEntryEntity.toAddressBookEntry() =
-        AddressBookEntry(
-            chain = Chain.fromRaw(chainId),
-            address = address,
-            title = title,
-        )
+        AddressBookEntry(chain = Chain.fromRaw(chainId), address = address, title = title)
 
-    private fun AddressBookEntry.toEntity() = AddressBookEntryEntity(
-        chainId = chain.id,
-        address = address,
-        title = title,
-    )
-
+    private fun AddressBookEntry.toEntity() =
+        AddressBookEntryEntity(chainId = chain.id, address = address, title = title)
 }

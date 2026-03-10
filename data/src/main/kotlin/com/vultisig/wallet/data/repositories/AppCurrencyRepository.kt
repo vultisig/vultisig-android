@@ -3,13 +3,13 @@ package com.vultisig.wallet.data.repositories
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.sources.AppDataStore
+import java.text.NumberFormat
+import java.util.Locale
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.text.NumberFormat
-import java.util.Locale
-import javax.inject.Inject
 
 interface AppCurrencyRepository {
 
@@ -17,13 +17,11 @@ interface AppCurrencyRepository {
 
     val currency: Flow<AppCurrency>
 
-
     suspend fun setCurrency(currency: AppCurrency)
-
 
     fun getAllCurrencies(): List<AppCurrency>
 
-    suspend fun getCurrencyFormat() : NumberFormat
+    suspend fun getCurrencyFormat(): NumberFormat
 }
 
 internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataStore: AppDataStore) :
@@ -37,8 +35,9 @@ internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataSto
 
     override val currency: Flow<AppCurrency>
         get() =
-            dataStore.readData(stringPreferencesKey(CURRENCY_KEY), defaultCurrency.ticker)
-                .map { AppCurrency.fromTicker(it) ?: defaultCurrency }
+            dataStore.readData(stringPreferencesKey(CURRENCY_KEY), defaultCurrency.ticker).map {
+                AppCurrency.fromTicker(it) ?: defaultCurrency
+            }
 
     override suspend fun setCurrency(currency: AppCurrency) {
         dataStore.editData { preferences ->
@@ -46,20 +45,22 @@ internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataSto
         }
     }
 
-
     override fun getAllCurrencies(): List<AppCurrency> {
         return CURRENCY_LIST
     }
 
-    override suspend fun getCurrencyFormat(): NumberFormat = mutex.withLock {
-        val currentLocale = Locale.getDefault()
-        // Update the currency format in a thread-safe manner when the locale changes or the value is null
-        if (cachedLocale != currentLocale || cachedCurrencyFormat == null) {
-            cachedLocale = currentLocale
-            cachedCurrencyFormat = NumberFormat.getCurrencyInstance(currentLocale)
+    override suspend fun getCurrencyFormat(): NumberFormat =
+        mutex.withLock {
+            val currentLocale = Locale.getDefault()
+            // Update the currency format in a thread-safe manner when the locale changes or the
+            // value is
+            // null
+            if (cachedLocale != currentLocale || cachedCurrencyFormat == null) {
+                cachedLocale = currentLocale
+                cachedCurrencyFormat = NumberFormat.getCurrencyInstance(currentLocale)
+            }
+            requireNotNull(cachedCurrencyFormat)
         }
-        requireNotNull(cachedCurrencyFormat)
-    }
 
     companion object {
         private const val CURRENCY_KEY = "currency_key"

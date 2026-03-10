@@ -24,42 +24,35 @@ object VsBottomSheet {
     @Composable
     fun DragHandle() {
         Box(
-            modifier = Modifier
-                .padding(
-                    all = 12.dp,
-                )
-                .size(
-                    width = 36.dp,
-                    height = 6.dp,
-                )
-                .background(
-                    color = Theme.v2.colors.neutrals.n600,
-                    shape = RoundedCornerShape(16.dp)
-                )
+            modifier =
+                Modifier.padding(all = 12.dp)
+                    .size(width = 36.dp, height = 6.dp)
+                    .background(
+                        color = Theme.v2.colors.neutrals.n600,
+                        shape = RoundedCornerShape(16.dp),
+                    )
         )
     }
-
 }
 
 @Composable
 fun VsModalBottomSheet(
     onDismissRequest: () -> Unit,
+    showDragHandle: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-    )
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
     ModalBottomSheet(
         sheetState = sheetState,
         scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.8f),
-        dragHandle = {
-            VsBottomSheet.DragHandle()
-        },
+        dragHandle =
+            if (showDragHandle) {
+                { VsBottomSheet.DragHandle() }
+            } else null,
         containerColor = Theme.v2.colors.backgrounds.primary,
-        modifier = Modifier
-            .statusBarsPadding(),
+        modifier = Modifier.statusBarsPadding(),
         onDismissRequest = {
             scope.launch {
                 sheetState.hide()

@@ -13,20 +13,15 @@ import androidx.compose.ui.platform.LocalContext
 internal object VsClipboardService {
 
     fun copy(context: Context, value: String) {
-        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-            ?: return
-        val clip = ClipData.newPlainText(
-            value,
-            value
-        )
+        val clipboard =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return
+        val clip = ClipData.newPlainText(value, value)
         clipboard.setPrimaryClip(clip)
     }
 
     @Composable
     fun getClipboardData(): MutableState<String?> {
-        val text = remember {
-            mutableStateOf<String?>(null)
-        }
+        val text = remember { mutableStateOf<String?>(null) }
 
         val clipboardManager =
             LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
@@ -35,13 +30,10 @@ internal object VsClipboardService {
         LaunchedEffect(Unit) {
             try {
                 val clipData: ClipData? = clipboardManager.primaryClip
-                clipData?.let {
-                    text.value = clipData.getItemAt(0).text?.toString()
-                }
+                clipData?.let { text.value = clipData.getItemAt(0).text?.toString() }
             } catch (e: Exception) {
                 text.value = null
             }
-            
         }
 
         return text

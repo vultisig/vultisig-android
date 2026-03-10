@@ -25,22 +25,18 @@ import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.loading.V2ProgressiveLoading
 import com.vultisig.wallet.ui.theme.Theme
 
-
 @Composable
-internal fun VsSnackBar(
-    modifier: Modifier = Modifier,
-    snackbarState: VSSnackbarState,
-) {
+internal fun VsSnackBar(modifier: Modifier = Modifier, snackbarState: VSSnackbarState) {
     val snackbarState by snackbarState.progressState.collectAsState()
-    if (snackbarState.isVisible.not())
-        return
+    if (snackbarState.isVisible.not()) return
     Dialog(
         onDismissRequest = {},
-        properties = DialogProperties(
-            dismissOnClickOutside = false,
-            dismissOnBackPress = false,
-            usePlatformDefaultWidth = false
-        )
+        properties =
+            DialogProperties(
+                dismissOnClickOutside = false,
+                dismissOnBackPress = false,
+                usePlatformDefaultWidth = false,
+            ),
     ) {
         (LocalView.current.parent as DialogWindowProvider).window.apply {
             setGravity(Gravity.BOTTOM)
@@ -49,40 +45,25 @@ internal fun VsSnackBar(
             clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         }
         V2Container(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
             type = ContainerType.TERTIARY,
-            borderType = ContainerBorderType.Bordered(
-                color = Theme.v2.colors.border.normal,
-            ),
-            cornerType = CornerType.RoundedCornerShape(
-                size = 24.dp
-            ),
+            borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal),
+            cornerType = CornerType.RoundedCornerShape(size = 24.dp),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
+                V2ProgressiveLoading(progress = snackbarState.progress)
 
-                V2ProgressiveLoading(
-                    progress = snackbarState.progress,
-                )
-
-                UiSpacer(
-                    size = 8.dp
-                )
+                UiSpacer(size = 8.dp)
                 Text(
                     text = snackbarState.message,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.neutrals.n50
+                    color = Theme.v2.colors.neutrals.n50,
                 )
             }
         }
     }
-
-
 }

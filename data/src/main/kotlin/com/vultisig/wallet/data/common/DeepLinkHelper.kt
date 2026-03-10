@@ -15,19 +15,20 @@ class DeepLinkHelper(input: String) {
     }
 
     init {
-        val parts = runCatching {
-            input.split("?")
-        }.getOrElse { listOf(input) }
+        val parts = runCatching { input.split("?") }.getOrElse { listOf(input) }
 
         scheme = parts[0]
-        parameters = runCatching { parts[1].split("&") }.getOrElse { emptyList() }.associate {
-            val pair = it.split("=", limit = 2)
-            if (pair.size == 2) {
-                pair[0] to Uri.decode(pair[1])
-            } else {
-                pair[0] to ""
-            }
-        }
+        parameters =
+            runCatching { parts[1].split("&") }
+                .getOrElse { emptyList() }
+                .associate {
+                    val pair = it.split("=", limit = 2)
+                    if (pair.size == 2) {
+                        pair[0] to Uri.decode(pair[1])
+                    } else {
+                        pair[0] to ""
+                    }
+                }
     }
 
     fun getJsonData(): String? {
@@ -76,6 +77,7 @@ class DeepLinkHelper(input: String) {
                 "KEYGEN" -> return TssAction.KEYGEN
                 "RESHARE" -> return TssAction.ReShare
                 "MIGRATE" -> return TssAction.Migrate
+                "KEYIMPORT" -> return TssAction.KeyImport
                 else -> return null
             }
         }
@@ -91,22 +93,18 @@ class DeepLinkHelper(input: String) {
             amount: String? = null,
             memo: String? = null,
         ): String {
-            return StringBuilder().apply {
-                append("vultisig://send?")
-                append("assetChain=").append(Uri.encode(assetChain))
-                append("&assetTicker=").append(Uri.encode(assetTicker))
-                append("&toAddress=").append(Uri.encode(toAddress))
+            return StringBuilder()
+                .apply {
+                    append("vultisig://send?")
+                    append("assetChain=").append(Uri.encode(assetChain))
+                    append("&assetTicker=").append(Uri.encode(assetTicker))
+                    append("&toAddress=").append(Uri.encode(toAddress))
 
-                amount?.let {
-                    append("&amount=").append(Uri.encode(it))
-                }
+                    amount?.let { append("&amount=").append(Uri.encode(it)) }
 
-                memo?.let {
-                    append("&memo=").append(Uri.encode(it))
+                    memo?.let { append("&memo=").append(Uri.encode(it)) }
                 }
-            }.toString()
+                .toString()
         }
-
     }
-
 }

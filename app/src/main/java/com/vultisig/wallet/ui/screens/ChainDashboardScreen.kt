@@ -25,26 +25,19 @@ import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionsSc
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 
-
 @Composable
-internal fun ChainDashboardScreen(
-    viewModel: ChainDashboardViewModel = hiltViewModel(),
-) {
+internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewModel()) {
     val uiModel by viewModel.uiState.collectAsState()
 
     Scaffold(
         bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .animateContentSize()
-            ) {
+            Box(modifier = Modifier.fillMaxWidth().animateContentSize()) {
                 if (uiModel.isBottomBarVisible) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .align(Alignment.BottomCenter),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .align(Alignment.BottomCenter),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         CryptoConnectionSelect(
@@ -52,33 +45,27 @@ internal fun ChainDashboardScreen(
                             availableCryptoTypes = uiModel.availableCryptoTypes,
                             onTypeClick = viewModel::updateCryptoConnectionType,
                         )
-                        CameraButton(
-                            onClick = viewModel::openCamera
-                        )
+                        CameraButton(onClick = viewModel::openCamera)
                     }
                 }
             }
         }
-    ){ paddingValues ->
-        Box(
-            modifier = Modifier
-                .padding(
-                    bottom = paddingValues.calculateBottomPadding()
-                )
-        ) {
+    ) { paddingValues ->
+        Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
             when (uiModel.route) {
-                is PositionCircle -> CircleDeFiPositionsScreen(
-                    vaultId = (uiModel.route as PositionCircle).vaultId
-                )
+                is PositionCircle ->
+                    CircleDeFiPositionsScreen(vaultId = (uiModel.route as PositionCircle).vaultId)
 
-                is PositionTokens -> ThorchainDefiPositionsScreen(
-                    vaultId = (uiModel.route as PositionTokens).vaultId
-                )
+                is PositionTokens ->
+                    ThorchainDefiPositionsScreen(
+                        vaultId = (uiModel.route as PositionTokens).vaultId
+                    )
 
-                is Wallet -> ChainTokensScreen(
-                    vaultId = (uiModel.route as Wallet).vaultId,
-                    chainId = (uiModel.route as Wallet).chainId
-                )
+                is Wallet ->
+                    ChainTokensScreen(
+                        vaultId = (uiModel.route as Wallet).vaultId,
+                        chainId = (uiModel.route as Wallet).chainId,
+                    )
 
                 null -> Unit
             }

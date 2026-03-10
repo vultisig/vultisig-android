@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.wallet.Swaps
+import java.math.BigInteger
 import kotlinx.serialization.json.Json
 import tss.KeysignResponse
 import vultisig.keysign.v1.SignAmino
@@ -30,8 +31,6 @@ import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Cosmos
 import wallet.core.jni.proto.Cosmos.Amount
-import java.math.BigInteger
-
 
 @OptIn(ExperimentalStdlibApi::class)
 class ThorChainHelper(
@@ -49,40 +48,27 @@ class ThorChainHelper(
         var THORCHAIN_NETWORK_ID: String = "thorchain-1"
 
         const val MAYA_CHAIN_GAS_UNIT: Long = 2000000000
-        val SECURE_ASSETS_TICKERS = listOf(
-            "BTC",
-            "ETH",
-            "BCH",
-            "LTC",
-            "DOGE",
-            "AVAX",
-            "BNB"
-        )
+        val SECURE_ASSETS_TICKERS = listOf("BTC", "ETH", "BCH", "LTC", "DOGE", "AVAX", "BNB")
 
-        fun maya(
-            vaultHexPublicKey: String,
-            vaultHexChainCode: String,
-        ) = ThorChainHelper(
-            vaultHexPublicKey = vaultHexPublicKey,
-            vaultHexChainCode = vaultHexChainCode,
-            ticker = "CACAO",
-            hrp = "maya",
-            networkId = "mayachain-mainnet-v1",
-            gasUnit = MAYA_CHAIN_GAS_UNIT,
-        )
+        fun maya(vaultHexPublicKey: String, vaultHexChainCode: String) =
+            ThorChainHelper(
+                vaultHexPublicKey = vaultHexPublicKey,
+                vaultHexChainCode = vaultHexChainCode,
+                ticker = "CACAO",
+                hrp = "maya",
+                networkId = "mayachain-mainnet-v1",
+                gasUnit = MAYA_CHAIN_GAS_UNIT,
+            )
 
-        fun thor(
-            vaultHexPublicKey: String,
-            vaultHexChainCode: String,
-        ) = ThorChainHelper(
-            vaultHexPublicKey = vaultHexPublicKey,
-            vaultHexChainCode = vaultHexChainCode,
-            ticker = "RUNE",
-            hrp = null,
-            networkId = THORCHAIN_NETWORK_ID,
-            gasUnit = THOR_CHAIN_GAS_UNIT,
-        )
-
+        fun thor(vaultHexPublicKey: String, vaultHexChainCode: String) =
+            ThorChainHelper(
+                vaultHexPublicKey = vaultHexPublicKey,
+                vaultHexChainCode = vaultHexChainCode,
+                ticker = "RUNE",
+                hrp = null,
+                networkId = THORCHAIN_NETWORK_ID,
+                gasUnit = THOR_CHAIN_GAS_UNIT,
+            )
 
         private val coinType: CoinType = CoinType.THORCHAIN
     }
@@ -97,42 +83,39 @@ class ThorChainHelper(
 
     private fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
         val tokenAddress = keysignPayload.coin.address
-        val fromAddress = if (!hrp.isNullOrEmpty()) {
-            AnyAddress(
-                tokenAddress,
-                coinType,
-                hrp
-            )
-        } else {
-            AnyAddress(
-                tokenAddress,
-                coinType
-            )
-        }.data()
+        val fromAddress =
+            if (!hrp.isNullOrEmpty()) {
+                    AnyAddress(tokenAddress, coinType, hrp)
+                } else {
+                    AnyAddress(tokenAddress, coinType)
+                }
+                .data()
 
         val isDeposit: Boolean
         val cosmosSpecific: BlockChainSpecific.Cosmos
 
         when (val specific = keysignPayload.blockChainSpecific) {
             is BlockChainSpecific.THORChain -> {
-                cosmosSpecific = BlockChainSpecific.Cosmos(
-                    accountNumber = specific.accountNumber,
-                    sequence = specific.sequence,
-                    gas = specific.fee,
-                    ibcDenomTraces = null,
-                    transactionType = specific.transactionType,
-                )
+                cosmosSpecific =
+                    BlockChainSpecific.Cosmos(
+                        accountNumber = specific.accountNumber,
+                        sequence = specific.sequence,
+                        gas = specific.fee,
+                        ibcDenomTraces = null,
+                        transactionType = specific.transactionType,
+                    )
                 isDeposit = specific.isDeposit
             }
 
             is BlockChainSpecific.MayaChain -> {
-                cosmosSpecific = BlockChainSpecific.Cosmos(
-                    accountNumber = specific.accountNumber,
-                    sequence = specific.sequence,
-                    gas = BigInteger.valueOf(MAYA_CHAIN_GAS_UNIT),
-                    ibcDenomTraces = null,
-                    transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
-                )
+                cosmosSpecific =
+                    BlockChainSpecific.Cosmos(
+                        accountNumber = specific.accountNumber,
+                        sequence = specific.sequence,
+                        gas = BigInteger.valueOf(MAYA_CHAIN_GAS_UNIT),
+                        ibcDenomTraces = null,
+                        transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                    )
                 isDeposit = specific.isDeposit
             }
 
@@ -140,10 +123,7 @@ class ThorChainHelper(
         }
 
         val publicKey =
-            PublicKey(
-                keysignPayload.coin.hexPublicKey.hexToByteArray(),
-                PublicKeyType.SECP256K1
-            )
+            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
 
         keysignPayload.signAmino?.let { signAmino ->
             return buildAminoSigningInput(
@@ -154,9 +134,9 @@ class ThorChainHelper(
             )
         }
 
-        val denom = if (keysignPayload.coin.isNativeToken)
-            keysignPayload.coin.ticker.lowercase()
-        else keysignPayload.coin.contractAddress
+        val denom =
+            if (keysignPayload.coin.isNativeToken) keysignPayload.coin.ticker.lowercase()
+            else keysignPayload.coin.contractAddress
 
         keysignPayload.signDirect?.let { signDirect ->
             return buildSignDirectSigningInput(
@@ -164,93 +144,99 @@ class ThorChainHelper(
                 cosmosSpecific = cosmosSpecific,
                 publicKey = publicKey,
                 memo = keysignPayload.memo,
-                denom = denom
+                denom = denom,
             )
         }
 
         val memo = keysignPayload.memo
 
-        val message = if (isDeposit) {
-            if (cosmosSpecific.transactionType.genericWasmMessage()) {
-                val message = Cosmos.Message.newBuilder().apply {
-                    wasmExecuteContractGeneric =
-                        buildThorchainWasmGenericMessage(
-                            keysignPayload,
-                            cosmosSpecific.transactionType
-                        )
-                }.build()
+        val message =
+            if (isDeposit) {
+                if (cosmosSpecific.transactionType.genericWasmMessage()) {
+                    val message =
+                        Cosmos.Message.newBuilder()
+                            .apply {
+                                wasmExecuteContractGeneric =
+                                    buildThorchainWasmGenericMessage(
+                                        keysignPayload,
+                                        cosmosSpecific.transactionType,
+                                    )
+                            }
+                            .build()
 
-                val fee = Cosmos.Fee.newBuilder().apply {
-                    gas = 20_000_000L
-                }.build()
+                    val fee = Cosmos.Fee.newBuilder().apply { gas = 20_000_000L }.build()
 
-                val input = Cosmos.SigningInput.newBuilder().apply {
-                    this.signingMode = Cosmos.SigningMode.Protobuf
-                    this.accountNumber = cosmosSpecific.accountNumber.toLong()
-                    this.chainId = networkId
-                    keysignPayload.memo?.let { this.memo = it }
-                    this.sequence = cosmosSpecific.sequence.toLong()
-                    this.addMessages(message)
-                    this.fee = fee
-                    this.publicKey = ByteString.copyFrom(publicKey.data())
-                    this.mode = Cosmos.BroadcastMode.SYNC
-                }.build()
+                    val input =
+                        Cosmos.SigningInput.newBuilder()
+                            .apply {
+                                this.signingMode = Cosmos.SigningMode.Protobuf
+                                this.accountNumber = cosmosSpecific.accountNumber.toLong()
+                                this.chainId = networkId
+                                keysignPayload.memo?.let { this.memo = it }
+                                this.sequence = cosmosSpecific.sequence.toLong()
+                                this.addMessages(message)
+                                this.fee = fee
+                                this.publicKey = ByteString.copyFrom(publicKey.data())
+                                this.mode = Cosmos.BroadcastMode.SYNC
+                            }
+                            .build()
 
-                return input.toByteArray()
-            }
-            buildThorchainDepositMessage(
-                keysignPayload,
-                fromAddress,
-                memo
-            )
-        } else {
-            if (cosmosSpecific.transactionType == TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT) {
-                val message = Cosmos.Message.newBuilder().apply {
-                    wasmExecuteContractGeneric =
-                        buildThorchainWasmGenericMessage(
-                            keysignPayload,
-                            cosmosSpecific.transactionType
-                        )
-                }.build()
-
-                val fee = Cosmos.Fee.newBuilder().apply {
-                    gas = 20_000_000L
-                }.build()
-
-                val input = Cosmos.SigningInput.newBuilder().apply {
-                    this.signingMode = Cosmos.SigningMode.Protobuf
-                    this.accountNumber = cosmosSpecific.accountNumber.toLong()
-                    this.chainId = networkId
-                    keysignPayload.memo?.let { this.memo = it }
-                    this.sequence = cosmosSpecific.sequence.toLong()
-                    this.addMessages(message)
-                    this.fee = fee
-                    this.publicKey = ByteString.copyFrom(publicKey.data())
-                    this.mode = Cosmos.BroadcastMode.SYNC
-                }.build()
-
-                return input.toByteArray()
+                    return input.toByteArray()
+                }
+                buildThorchainDepositMessage(keysignPayload, fromAddress, memo)
             } else {
-                buildThorchainSendMessage(
-                    keysignPayload,
-                    fromAddress
-                )
-            }
-        }
+                if (
+                    cosmosSpecific.transactionType ==
+                        TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT
+                ) {
+                    val message =
+                        Cosmos.Message.newBuilder()
+                            .apply {
+                                wasmExecuteContractGeneric =
+                                    buildThorchainWasmGenericMessage(
+                                        keysignPayload,
+                                        cosmosSpecific.transactionType,
+                                    )
+                            }
+                            .build()
 
-        val input = Cosmos.SigningInput.newBuilder().apply {
-            this.publicKey = ByteString.copyFrom(publicKey.data())
-            this.signingMode = Cosmos.SigningMode.Protobuf
-            this.chainId = networkId
-            this.accountNumber =cosmosSpecific.accountNumber.toLong()
-            this.sequence = cosmosSpecific.sequence.toLong()
-            this.mode = Cosmos.BroadcastMode.SYNC
-            keysignPayload.memo?.let { this.memo = it }
-            this.addAllMessages(listOf(message))
-            this.fee = Cosmos.Fee.newBuilder().apply {
-                this.gas = gasUnit
-            }.build()
-        }.build()
+                    val fee = Cosmos.Fee.newBuilder().apply { gas = 20_000_000L }.build()
+
+                    val input =
+                        Cosmos.SigningInput.newBuilder()
+                            .apply {
+                                this.signingMode = Cosmos.SigningMode.Protobuf
+                                this.accountNumber = cosmosSpecific.accountNumber.toLong()
+                                this.chainId = networkId
+                                keysignPayload.memo?.let { this.memo = it }
+                                this.sequence = cosmosSpecific.sequence.toLong()
+                                this.addMessages(message)
+                                this.fee = fee
+                                this.publicKey = ByteString.copyFrom(publicKey.data())
+                                this.mode = Cosmos.BroadcastMode.SYNC
+                            }
+                            .build()
+
+                    return input.toByteArray()
+                } else {
+                    buildThorchainSendMessage(keysignPayload, fromAddress)
+                }
+            }
+
+        val input =
+            Cosmos.SigningInput.newBuilder()
+                .apply {
+                    this.publicKey = ByteString.copyFrom(publicKey.data())
+                    this.signingMode = Cosmos.SigningMode.Protobuf
+                    this.chainId = networkId
+                    this.accountNumber = cosmosSpecific.accountNumber.toLong()
+                    this.sequence = cosmosSpecific.sequence.toLong()
+                    this.mode = Cosmos.BroadcastMode.SYNC
+                    keysignPayload.memo?.let { this.memo = it }
+                    this.addAllMessages(listOf(message))
+                    this.fee = Cosmos.Fee.newBuilder().apply { this.gas = gasUnit }.build()
+                }
+                .build()
         return input.toByteArray()
     }
 
@@ -258,149 +244,165 @@ class ThorChainHelper(
         keysignPayload: KeysignPayload,
         transactionType: TransactionType,
     ): Cosmos.Message.WasmExecuteContractGeneric? {
-        val fromAddr = try {
-            AnyAddress(
-                keysignPayload.coin.address,
-                CoinType.THORCHAIN
-            )
-        } catch (e: Exception) {
-            throw Exception("${keysignPayload.coin.address} is invalid")
-        }
+        val fromAddr =
+            try {
+                AnyAddress(keysignPayload.coin.address, CoinType.THORCHAIN)
+            } catch (e: Exception) {
+                throw Exception("${keysignPayload.coin.address} is invalid")
+            }
 
         val wasmGenericMessage =
-            Cosmos.Message.WasmExecuteContractGeneric.newBuilder().apply {
-                senderAddress = fromAddr.description()
-                contractAddress = keysignPayload.toAddress
-                when (transactionType) {
-                    TransactionType.TRANSACTION_TYPE_THOR_MERGE -> {
-                        val memo = keysignPayload.memo?.lowercase()
-                            ?: throw IllegalArgumentException("Missing memo for ${transactionType.name}")
+            Cosmos.Message.WasmExecuteContractGeneric.newBuilder()
+                .apply {
+                    senderAddress = fromAddr.description()
+                    contractAddress = keysignPayload.toAddress
+                    when (transactionType) {
+                        TransactionType.TRANSACTION_TYPE_THOR_MERGE -> {
+                            val memo =
+                                keysignPayload.memo?.lowercase()
+                                    ?: throw IllegalArgumentException(
+                                        "Missing memo for ${transactionType.name}"
+                                    )
 
-                        executeMsg = """{ "deposit": {} }"""
-                        addCoins(
-                            Cosmos.Amount.newBuilder().apply {
-                                denom = memo.removePrefix("merge:")
-                                amount = keysignPayload.toAmount.toString()
-                            }.build()
-                        )
-                    }
-
-                    TransactionType.TRANSACTION_TYPE_THOR_UNMERGE -> {
-                        val memo = keysignPayload.memo?.lowercase()
-                            ?: throw IllegalArgumentException("Missing memo for ${transactionType.name}")
-
-                        val sharesAmount = memo
-                            .takeIf { it.startsWith("unmerge:") }
-                            ?.split(":")
-                            ?.getOrNull(2)
-                            ?: error("Invalid unmerge memo format ${keysignPayload.memo}")
-                        executeMsg = """{ "withdraw": { "share_amount": "$sharesAmount" } }"""
-                    }
-
-                    TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT -> {
-                        requireNotNull(keysignPayload.wasmExecuteContractPayload) {
-                            "Invalid empty WasmExecuteContractPayload"
-                        }
-                        val contractPayload = keysignPayload.wasmExecuteContractPayload
-
-                        val coins = contractPayload.coins.filterNotNull().map { coin ->
-                            Amount.newBuilder().apply {
-                                denom = coin.denom.lowercase()
-                                amount = coin.amount
-                            }.build()
+                            executeMsg = """{ "deposit": {} }"""
+                            addCoins(
+                                Cosmos.Amount.newBuilder()
+                                    .apply {
+                                        denom = memo.removePrefix("merge:")
+                                        amount = keysignPayload.toAmount.toString()
+                                    }
+                                    .build()
+                            )
                         }
 
-                        executeMsg = contractPayload.executeMsg
-                        senderAddress = contractPayload.senderAddress
-                        contractAddress = contractPayload.contractAddress
-                        addAllCoins(coins)
-                    }
+                        TransactionType.TRANSACTION_TYPE_THOR_UNMERGE -> {
+                            val memo =
+                                keysignPayload.memo?.lowercase()
+                                    ?: throw IllegalArgumentException(
+                                        "Missing memo for ${transactionType.name}"
+                                    )
 
-                    else -> error("Unsupported type ${transactionType.name}")
+                            val sharesAmount =
+                                memo.takeIf { it.startsWith("unmerge:") }?.split(":")?.getOrNull(2)
+                                    ?: error("Invalid unmerge memo format ${keysignPayload.memo}")
+                            executeMsg = """{ "withdraw": { "share_amount": "$sharesAmount" } }"""
+                        }
+
+                        TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT -> {
+                            requireNotNull(keysignPayload.wasmExecuteContractPayload) {
+                                "Invalid empty WasmExecuteContractPayload"
+                            }
+                            val contractPayload = keysignPayload.wasmExecuteContractPayload
+
+                            val coins =
+                                contractPayload.coins.filterNotNull().map { coin ->
+                                    Amount.newBuilder()
+                                        .apply {
+                                            denom = coin.denom.lowercase()
+                                            amount = coin.amount
+                                        }
+                                        .build()
+                                }
+
+                            executeMsg = contractPayload.executeMsg
+                            senderAddress = contractPayload.senderAddress
+                            contractAddress = contractPayload.contractAddress
+                            addAllCoins(coins)
+                        }
+
+                        else -> error("Unsupported type ${transactionType.name}")
+                    }
                 }
-            }.build()
+                .build()
         return wasmGenericMessage
     }
 
     private fun buildThorchainDepositMessage(
         keysignPayload: KeysignPayload,
         fromAddress: ByteArray?,
-        memo: String?
+        memo: String?,
     ): Cosmos.Message? {
         val symbol = getTicker(keysignPayload.coin)
         val assetTicker = getTicker(keysignPayload.coin)
         val isSecured = keysignPayload.coin.isSecuredAsset()
-        val chainName = if (isSecured && memo?.contains("SECURE-:") == true) {
-            keysignPayload.coin.ticker
-        } else
-            keysignPayload.coin.getChainName()
+        val chainName =
+            if (isSecured && memo?.contains("SECURE-:") == true) {
+                keysignPayload.coin.ticker
+            } else keysignPayload.coin.getChainName()
 
-        val coin = Cosmos.THORChainCoin.newBuilder().setDecimals(0)
-            .setAsset(
-                Cosmos.THORChainAsset.newBuilder()
-                    .setSecured(isSecured)
-                    .setChain(chainName)
-                    .setTicker(assetTicker)
-                    .setSymbol(symbol)
-                    .setSynth(false)
-                    .build()
-            )
-            .let {
-                if (keysignPayload.toAmount > BigInteger.ZERO) {
-                    it.setAmount(keysignPayload.toAmount.toString())
-                        .setDecimals(keysignPayload.coin.decimal.toLong())
-                } else it
+        val coin =
+            Cosmos.THORChainCoin.newBuilder()
+                .setDecimals(0)
+                .setAsset(
+                    Cosmos.THORChainAsset.newBuilder()
+                        .setSecured(isSecured)
+                        .setChain(chainName)
+                        .setTicker(assetTicker)
+                        .setSymbol(symbol)
+                        .setSynth(false)
+                        .build()
+                )
+                .let {
+                    if (keysignPayload.toAmount > BigInteger.ZERO) {
+                        it.setAmount(keysignPayload.toAmount.toString())
+                            .setDecimals(keysignPayload.coin.decimal.toLong())
+                    } else it
+                }
+
+        return Cosmos.Message.newBuilder()
+            .apply {
+                thorchainDepositMessage =
+                    Cosmos.Message.THORChainDeposit.newBuilder()
+                        .apply {
+                            this.signer = ByteString.copyFrom(fromAddress)
+                            this.memo = memo
+                            this.addCoins(coin)
+                        }
+                        .build()
             }
-
-        return Cosmos.Message.newBuilder().apply {
-            thorchainDepositMessage = Cosmos.Message.THORChainDeposit.newBuilder().apply {
-                this.signer = ByteString.copyFrom(fromAddress)
-                this.memo = memo
-                this.addCoins(coin)
-            }.build()
-        }.build()
+            .build()
     }
 
     private fun buildThorchainSendMessage(
         keysignPayload: KeysignPayload,
-        fromAddress: ByteArray?
+        fromAddress: ByteArray?,
     ): Cosmos.Message {
-        val toAddress = if (!hrp.isNullOrEmpty()) {
-            AnyAddress(
-                keysignPayload.toAddress,
-                coinType,
-                hrp
-            )
-        } else {
-            AnyAddress(
-                keysignPayload.toAddress,
-                coinType
-            )
-        }.data()
+        val toAddress =
+            if (!hrp.isNullOrEmpty()) {
+                    AnyAddress(keysignPayload.toAddress, coinType, hrp)
+                } else {
+                    AnyAddress(keysignPayload.toAddress, coinType)
+                }
+                .data()
 
-        val sendAmount = Cosmos.Amount.newBuilder().apply {
-            this.denom = if (keysignPayload.coin.isNativeToken)
-                keysignPayload.coin.ticker.lowercase()
-            else keysignPayload.coin.contractAddress
-            this.amount = keysignPayload.toAmount.toString()
-        }.build()
+        val sendAmount =
+            Cosmos.Amount.newBuilder()
+                .apply {
+                    this.denom =
+                        if (keysignPayload.coin.isNativeToken)
+                            keysignPayload.coin.ticker.lowercase()
+                        else keysignPayload.coin.contractAddress
+                    this.amount = keysignPayload.toAmount.toString()
+                }
+                .build()
 
-        return Cosmos.Message.newBuilder().apply {
-            thorchainSendMessage = Cosmos.Message.THORChainSend.newBuilder().apply {
-                this.fromAddress = ByteString.copyFrom(fromAddress)
-                this.toAddress = ByteString.copyFrom(toAddress)
-                this.addAllAmounts(listOf(sendAmount))
-            }.build()
-        }.build()
+        return Cosmos.Message.newBuilder()
+            .apply {
+                thorchainSendMessage =
+                    Cosmos.Message.THORChainSend.newBuilder()
+                        .apply {
+                            this.fromAddress = ByteString.copyFrom(fromAddress)
+                            this.toAddress = ByteString.copyFrom(toAddress)
+                            this.addAllAmounts(listOf(sendAmount))
+                        }
+                        .build()
+            }
+            .build()
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val inputData = getPreSignInputData(keysignPayload)
-        return Swaps.getPreSignedImageHash(
-            inputData,
-            coinType,
-            keysignPayload.coin.chain
-        )
+        return Swaps.getPreSignedImageHash(inputData, coinType, keysignPayload.coin.chain)
     }
 
     fun getSignedTransaction(
@@ -408,60 +410,45 @@ class ThorChainHelper(
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val inputData = getPreSignInputData(keysignPayload)
-        return getSignedTransaction(
-            inputData,
-            signatures
-        )
+        return getSignedTransaction(inputData, signatures)
     }
 
     fun getSignedTransaction(
         inputData: ByteArray,
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
-        val thorchainPublicKey = PublicKeyHelper.getDerivedPublicKey(
-            hexPublicKey = vaultHexPublicKey,
-            hexChainCode = vaultHexChainCode,
-            coinType.derivationPath()
-        )
-        val publicKey = PublicKey(
-            thorchainPublicKey.hexToByteArray(),
-            PublicKeyType.SECP256K1
-        )
-        val preHashes = TransactionCompiler.preImageHashes(
-            coinType,
-            inputData
-        )
+        val thorchainPublicKey =
+            PublicKeyHelper.getDerivedPublicKey(
+                hexPublicKey = vaultHexPublicKey,
+                hexChainCode = vaultHexChainCode,
+                coinType.derivationPath(),
+            )
+        val publicKey = PublicKey(thorchainPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+        val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
                 .checkError()
         val allSignatures = DataVector()
         val allPublicKeys = DataVector()
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
-        val signature = signatures[key]?.getSignatureWithRecoveryID()
-            ?: throw Exception("Signature not found")
+        val signature =
+            signatures[key]?.getSignatureWithRecoveryID() ?: throw Exception("Signature not found")
 
-        if (!publicKey.verify(
-                signature,
-                preSigningOutput.dataHash.toByteArray()
-            )
-        ) {
+        if (!publicKey.verify(signature, preSigningOutput.dataHash.toByteArray())) {
             throw Exception("Signature verification failed")
         }
         allSignatures.add(signature)
         allPublicKeys.add(publicKey.data())
-        val compileWithSignature = TransactionCompiler.compileWithSignatures(
-            coinType,
-            inputData,
-            allSignatures,
-            allPublicKeys
-        )
-        val output = Cosmos.SigningOutput.parseFrom(compileWithSignature)
-            .checkError()
+        val compileWithSignature =
+            TransactionCompiler.compileWithSignatures(
+                coinType,
+                inputData,
+                allSignatures,
+                allPublicKeys,
+            )
+        val output = Cosmos.SigningOutput.parseFrom(compileWithSignature).checkError()
         val cosmosSig = Json.decodeFromString<CosmoSignature>(output.serialized)
-        return SignedTransactionResult(
-            output.serialized,
-            cosmosSig.transactionHash(),
-        )
+        return SignedTransactionResult(output.serialized, cosmosSig.transactionHash())
     }
 
     private fun buildSignDirectSigningInput(
@@ -469,38 +456,35 @@ class ThorChainHelper(
         cosmosSpecific: BlockChainSpecific.Cosmos,
         memo: String?,
         publicKey: PublicKey,
-        denom: String
+        denom: String,
     ): ByteArray {
         val bodyBytes = Base64.decode(signDirect.bodyBytes)
         val txBody = Cosmos.SigningInput.parseFrom(bodyBytes)
 
-        val message = Cosmos.Message.newBuilder()
-            .setSignDirectMessage(
-                Cosmos.Message.SignDirect.newBuilder()
-                    .setBodyBytes(ByteString.copyFrom(bodyBytes))
-                    .setAuthInfoBytes(
-                        ByteString.copyFrom(
-                            java.util.Base64.getDecoder().decode(signDirect.authInfoBytes)
+        val message =
+            Cosmos.Message.newBuilder()
+                .setSignDirectMessage(
+                    Cosmos.Message.SignDirect.newBuilder()
+                        .setBodyBytes(ByteString.copyFrom(bodyBytes))
+                        .setAuthInfoBytes(
+                            ByteString.copyFrom(
+                                java.util.Base64.getDecoder().decode(signDirect.authInfoBytes)
+                            )
                         )
-                    )
-                    .build()
-            )
-            .build()
-
-        val inputBuilder = Cosmos.SigningInput.newBuilder()
-            .setPublicKey(ByteString.copyFrom(publicKey.data()))
-            .setSigningMode(Cosmos.SigningMode.Protobuf)
-            .setChainId(coinType.chainId())
-            .setAccountNumber(cosmosSpecific.accountNumber.toLong())
-            .setSequence(cosmosSpecific.sequence.toLong())
-            .setMode(Cosmos.BroadcastMode.SYNC)
-            .addMessages(message)
-            .setFee(
-                buildCosmosFee(
-                    cosmosSpecific,
-                    denom = denom
+                        .build()
                 )
-            )
+                .build()
+
+        val inputBuilder =
+            Cosmos.SigningInput.newBuilder()
+                .setPublicKey(ByteString.copyFrom(publicKey.data()))
+                .setSigningMode(Cosmos.SigningMode.Protobuf)
+                .setChainId(coinType.chainId())
+                .setAccountNumber(cosmosSpecific.accountNumber.toLong())
+                .setSequence(cosmosSpecific.sequence.toLong())
+                .setMode(Cosmos.BroadcastMode.SYNC)
+                .addMessages(message)
+                .setFee(buildCosmosFee(cosmosSpecific, denom = denom))
         if (txBody.memo.isNotEmpty()) {
             inputBuilder.memo = txBody.memo
         } else {
@@ -514,36 +498,35 @@ class ThorChainHelper(
         signAmino: SignAmino,
         cosmosSpecific: BlockChainSpecific.Cosmos,
         publicKey: PublicKey,
-        memo: String?
+        memo: String?,
     ): ByteArray {
-        val inputBuilder = Cosmos.SigningInput.newBuilder()
-            .setPublicKey(ByteString.copyFrom(publicKey.data()))
-            .setSigningMode(Cosmos.SigningMode.JSON)  // Use JSON mode for Amino
-            .setChainId(coinType.chainId())
-            .setAccountNumber(cosmosSpecific.accountNumber.toLong())
-            .setSequence(cosmosSpecific.sequence.toLong())
-            .setMode(Cosmos.BroadcastMode.SYNC)
+        val inputBuilder =
+            Cosmos.SigningInput.newBuilder()
+                .setPublicKey(ByteString.copyFrom(publicKey.data()))
+                .setSigningMode(Cosmos.SigningMode.JSON) // Use JSON mode for Amino
+                .setChainId(coinType.chainId())
+                .setAccountNumber(cosmosSpecific.accountNumber.toLong())
+                .setSequence(cosmosSpecific.sequence.toLong())
+                .setMode(Cosmos.BroadcastMode.SYNC)
 
         signAmino.msgs.forEach { cosmosMsg ->
-            val message = Cosmos.Message.newBuilder()
-                .setRawJsonMessage(
-                    Cosmos.Message.RawJSON.newBuilder()
-                        .setType(cosmosMsg?.type)
-                        .setValue(cosmosMsg?.value)
-                        .build()
-                )
-                .build()
+            val message =
+                Cosmos.Message.newBuilder()
+                    .setRawJsonMessage(
+                        Cosmos.Message.RawJSON.newBuilder()
+                            .setType(cosmosMsg?.type)
+                            .setValue(cosmosMsg?.value)
+                            .build()
+                    )
+                    .build()
             inputBuilder.addMessages(message)
         }
-        val feeBuilder = Cosmos.Fee.newBuilder()
-            .setGas(signAmino.fee?.gas?.toLongOrNull() ?: gasLimit)
+        val feeBuilder =
+            Cosmos.Fee.newBuilder().setGas(signAmino.fee?.gas?.toLongOrNull() ?: gasLimit)
 
         signAmino.fee?.amount?.forEach { amount ->
             feeBuilder.addAmounts(
-                Cosmos.Amount.newBuilder()
-                    .setDenom(amount?.denom)
-                    .setAmount(amount?.amount)
-                    .build()
+                Cosmos.Amount.newBuilder().setDenom(amount?.denom).setAmount(amount?.amount).build()
             )
         }
         inputBuilder.setFee(feeBuilder)
@@ -554,7 +537,8 @@ class ThorChainHelper(
     }
 
     private fun buildCosmosFee(
-        cosmosSpecific: BlockChainSpecific.Cosmos, denom: String
+        cosmosSpecific: BlockChainSpecific.Cosmos,
+        denom: String,
     ): Cosmos.Fee.Builder? {
         return Cosmos.Fee.newBuilder()
             .setGas(gasLimit)
@@ -567,8 +551,6 @@ class ThorChainHelper(
                 )
             )
     }
-
-
 }
 
 fun Coin.getChainName(): String {
@@ -596,5 +578,4 @@ private fun TransactionType.genericWasmMessage(): Boolean =
 
 private fun TransactionType.mergeOrUnMerge(): Boolean =
     this == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
-            this == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE
-
+        this == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE

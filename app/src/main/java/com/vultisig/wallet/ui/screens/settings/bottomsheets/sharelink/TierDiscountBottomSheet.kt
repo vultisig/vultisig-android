@@ -4,14 +4,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -26,7 +23,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
@@ -55,73 +51,62 @@ internal fun TierDiscountBottomSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = null,
     ) {
-        TierDiscountBottomSheetContent(
-            tier = tier,
-            onContinue = onContinue,
-        )
+        TierDiscountBottomSheetContent(tier = tier, onContinue = onContinue)
     }
 }
 
 @Composable
-internal fun TierDiscountBottomSheetContent(
-    tier: TierType,
-    onContinue: () -> Unit,
-) {
+internal fun TierDiscountBottomSheetContent(tier: TierType, onContinue: () -> Unit) {
     val tierStyle = getStyleByTier(tier)
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Theme.v2.colors.backgrounds.secondary)
-            .drawBehind {
-                // Draw dots with 0.05 alpha, starting on 80% of the height
-                // we gradually make them dissapear to match the bottom bar color
-                val baseColor = Color.White
-                val spacingPx = 12.dp.toPx()
-                val radiusPx = 1.dp.toPx()
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .drawBehind {
+                    // Draw dots with 0.05 alpha, starting on 80% of the height
+                    // we gradually make them dissapear to match the bottom bar color
+                    val baseColor = Color.White
+                    val spacingPx = 12.dp.toPx()
+                    val radiusPx = 1.dp.toPx()
 
-                val fadeStartY = size.height * 0.8f
-                val fadeEndY = size.height
-                val maxY = size.height.toInt()
-                val maxX = size.width.toInt()
+                    val fadeStartY = size.height * 0.8f
+                    val fadeEndY = size.height
+                    val maxY = size.height.toInt()
+                    val maxX = size.width.toInt()
 
-                // Precompute step size to avoid float rounding issues
-                val stepY = spacingPx.roundToInt().coerceAtLeast(1)
-                val stepX = spacingPx.roundToInt().coerceAtLeast(1)
+                    // Precompute step size to avoid float rounding issues
+                    val stepY = spacingPx.roundToInt().coerceAtLeast(1)
+                    val stepX = spacingPx.roundToInt().coerceAtLeast(1)
 
-                for (y in 0..maxY step stepY) {
-                    val alphaFactor = when {
-                        y < fadeStartY -> 1f
-                        y > fadeEndY -> 0f
-                        else -> 1f - ((y - fadeStartY) / (fadeEndY - fadeStartY))
-                    }
+                    for (y in 0..maxY step stepY) {
+                        val alphaFactor =
+                            when {
+                                y < fadeStartY -> 1f
+                                y > fadeEndY -> 0f
+                                else -> 1f - ((y - fadeStartY) / (fadeEndY - fadeStartY))
+                            }
 
-                    val alpha = (0.05f * alphaFactor).coerceIn(0f, 0.05f)
-                    if (alpha <= 0f) continue
+                        val alpha = (0.05f * alphaFactor).coerceIn(0f, 0.05f)
+                        if (alpha <= 0f) continue
 
-                    for (x in 0..maxX step stepX) {
-                        drawCircle(
-                            color = baseColor.copy(alpha = alpha),
-                            radius = radiusPx,
-                            center = Offset(x.toFloat(), y.toFloat())
-                        )
+                        for (x in 0..maxX step stepX) {
+                            drawCircle(
+                                color = baseColor.copy(alpha = alpha),
+                                radius = radiusPx,
+                                center = Offset(x.toFloat(), y.toFloat()),
+                            )
+                        }
                     }
                 }
-            }
-            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
     ) {
         Column(
-            modifier = Modifier
-                .padding(32.dp)
-                .fillMaxWidth()
-                .navigationBarsPadding(),
+            modifier = Modifier.padding(32.dp).fillMaxWidth().navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.Top,
         ) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Image(
                     painter = painterResource(id = tierStyle.logoTier),
                     contentDescription = "image",
@@ -130,34 +115,35 @@ internal fun TierDiscountBottomSheetContent(
 
             UiSpacer(32.dp)
 
-
             Text(
-                text = buildAnnotatedString {
-                    append(tierStyle.titlePart1 + " ")
-                    if (tierStyle.tierBackgroundImage != null) {
-                        pushStyle(
-                            Theme.brockmann.headings.title1
-                                .copy(
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            Color(0xFFD8BA7B),
-                                            Color(0xFF794D76)
-                                        )
+                text =
+                    buildAnnotatedString {
+                        append(tierStyle.titlePart1 + " ")
+                        if (tierStyle.tierBackgroundImage != null) {
+                            pushStyle(
+                                Theme.brockmann.headings.title1
+                                    .copy(
+                                        brush =
+                                            Brush.linearGradient(
+                                                colors =
+                                                    listOf(Color(0xFFD8BA7B), Color(0xFF794D76))
+                                            )
                                     )
-                                )
-                                .toSpanStyle()
-                        )
-                    } else {
-                        pushStyle(
-                            Theme.brockmann.headings.title1.copy(
-                                color = tierStyle.tierColor ?: Theme.v2.colors.text.primary
-                            ).toSpanStyle()
-                        )
-                    }
-                    append(tierStyle.titlePart2)
-                    pop()
-                    append(" " + tierStyle.titlePart3)
-                },
+                                    .toSpanStyle()
+                            )
+                        } else {
+                            pushStyle(
+                                Theme.brockmann.headings.title1
+                                    .copy(
+                                        color = tierStyle.tierColor ?: Theme.v2.colors.text.primary
+                                    )
+                                    .toSpanStyle()
+                            )
+                        }
+                        append(tierStyle.titlePart2)
+                        pop()
+                        append(" " + tierStyle.titlePart3)
+                    },
                 style = Theme.brockmann.headings.title1,
                 textAlign = TextAlign.Center,
                 color = Theme.v2.colors.text.primary,
@@ -166,22 +152,22 @@ internal fun TierDiscountBottomSheetContent(
             UiSpacer(32.dp)
 
             Text(
-                text = buildAnnotatedString {
-                    append(tierStyle.descriptionPart1)
-                    pushStyle(
-                        Theme.brockmann.body.s.regular.copy(fontWeight = FontWeight.Bold)
-                            .toSpanStyle()
-                    )
-                    append(" " + tierStyle.descriptionPart2 + " ")
-                    pop()
-                    append(tierStyle.descriptionPart3)
-                },
+                text =
+                    buildAnnotatedString {
+                        append(tierStyle.descriptionPart1)
+                        pushStyle(
+                            Theme.brockmann.body.s.regular
+                                .copy(fontWeight = FontWeight.Bold)
+                                .toSpanStyle()
+                        )
+                        append(" " + tierStyle.descriptionPart2 + " ")
+                        pop()
+                        append(tierStyle.descriptionPart3)
+                    },
                 style = Theme.brockmann.body.s.regular,
                 textAlign = TextAlign.Center,
                 color = Theme.v2.colors.text.primary,
-                modifier = Modifier
-                    .padding(horizontal = 32.dp)
-                    .fillMaxWidth()
+                modifier = Modifier.padding(horizontal = 32.dp).fillMaxWidth(),
             )
 
             UiSpacer(32.dp)
@@ -189,8 +175,7 @@ internal fun TierDiscountBottomSheetContent(
             VsButton(
                 label = stringResource(R.string.vault_tier_unlock),
                 onClick = onContinue,
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -198,109 +183,109 @@ internal fun TierDiscountBottomSheetContent(
 
 @Composable
 private fun TierTitleWithBackgroundImage(tierStyle: BottomSheetTierStyle) {
-    val gradientBrush = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFFD8BA7B),
-            Color(0xFF794D76)
-        )
-    )
+    val gradientBrush = Brush.linearGradient(colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76)))
 
     Text(
-        text = buildAnnotatedString {
-            append(tierStyle.titlePart1 + " ")
+        text =
+            buildAnnotatedString {
+                append(tierStyle.titlePart1 + " ")
 
-            pushStyle(
-                Theme.brockmann.headings.title1
-                    .copy(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFFD8BA7B),
-                                Color(0xFF794D76)
-                            )
+                pushStyle(
+                    Theme.brockmann.headings.title1
+                        .copy(
+                            brush =
+                                Brush.linearGradient(
+                                    colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76))
+                                )
                         )
-                    )
-                    .toSpanStyle()
-            )
-            append(tierStyle.titlePart2)
-            pop()
+                        .toSpanStyle()
+                )
+                append(tierStyle.titlePart2)
+                pop()
 
-            append(" " + tierStyle.titlePart3)
-        },
+                append(" " + tierStyle.titlePart3)
+            },
         style = Theme.brockmann.headings.title1,
         color = Theme.v2.colors.text.primary,
         textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     )
 }
 
 @Composable
 private fun getStyleByTier(tier: TierType): BottomSheetTierStyle {
     return when (tier) {
-        TierType.BRONZE -> BottomSheetTierStyle(
-            logoTier = R.drawable.tier_bronze_bottomsheet,
-            titlePart1 = stringResource(R.string.vault_tier_unlock_bronze_part1),
-            titlePart2 = stringResource(R.string.vault_tier_unlock_bronze_part2),
-            titlePart3 = stringResource(R.string.vault_tier_unlock_bronze_part3),
-            tierColor = Color(0xFFFF6333),
-            descriptionPart1 = stringResource(R.string.vault_tier_bronze_description_part1),
-            descriptionPart2 = stringResource(R.string.vault_tier_bronze_description_part2),
-            descriptionPart3 = stringResource(R.string.vault_tier_bronze_description_part3),
-        )
+        TierType.BRONZE ->
+            BottomSheetTierStyle(
+                logoTier = R.drawable.tier_bronze_bottomsheet,
+                titlePart1 = stringResource(R.string.vault_tier_unlock_bronze_part1),
+                titlePart2 = stringResource(R.string.vault_tier_unlock_bronze_part2),
+                titlePart3 = stringResource(R.string.vault_tier_unlock_bronze_part3),
+                tierColor = Color(0xFFFF6333),
+                descriptionPart1 = stringResource(R.string.vault_tier_bronze_description_part1),
+                descriptionPart2 = stringResource(R.string.vault_tier_bronze_description_part2),
+                descriptionPart3 = stringResource(R.string.vault_tier_bronze_description_part3),
+            )
 
-        TierType.SILVER -> BottomSheetTierStyle(
-            logoTier = R.drawable.tier_silver_bottomsheet,
-            titlePart1 = stringResource(R.string.vault_tier_unlock_silver_part1),
-            titlePart2 = stringResource(R.string.vault_tier_unlock_silver_part2),
-            titlePart3 = stringResource(R.string.vault_tier_unlock_silver_part3),
-            tierColor = Color(0xFFC9D6E8),
-            descriptionPart1 = stringResource(R.string.vault_tier_silver_description_part1),
-            descriptionPart2 = stringResource(R.string.vault_tier_silver_description_part2),
-            descriptionPart3 = stringResource(R.string.vault_tier_silver_description_part3),
-        )
+        TierType.SILVER ->
+            BottomSheetTierStyle(
+                logoTier = R.drawable.tier_silver_bottomsheet,
+                titlePart1 = stringResource(R.string.vault_tier_unlock_silver_part1),
+                titlePart2 = stringResource(R.string.vault_tier_unlock_silver_part2),
+                titlePart3 = stringResource(R.string.vault_tier_unlock_silver_part3),
+                tierColor = Color(0xFFC9D6E8),
+                descriptionPart1 = stringResource(R.string.vault_tier_silver_description_part1),
+                descriptionPart2 = stringResource(R.string.vault_tier_silver_description_part2),
+                descriptionPart3 = stringResource(R.string.vault_tier_silver_description_part3),
+            )
 
-        TierType.GOLD -> BottomSheetTierStyle(
-            logoTier = R.drawable.tier_gold_bottomsheet,
-            titlePart1 = stringResource(R.string.vault_tier_unlock_gold_part1),
-            titlePart2 = stringResource(R.string.vault_tier_unlock_gold_part2),
-            titlePart3 = stringResource(R.string.vault_tier_unlock_gold_part3),
-            tierColor = Color(0xFFFFC25C),
-            descriptionPart1 = stringResource(R.string.vault_tier_gold_description_part1),
-            descriptionPart2 = stringResource(R.string.vault_tier_gold_description_part2),
-            descriptionPart3 = stringResource(R.string.vault_tier_gold_description_part3),
-        )
+        TierType.GOLD ->
+            BottomSheetTierStyle(
+                logoTier = R.drawable.tier_gold_bottomsheet,
+                titlePart1 = stringResource(R.string.vault_tier_unlock_gold_part1),
+                titlePart2 = stringResource(R.string.vault_tier_unlock_gold_part2),
+                titlePart3 = stringResource(R.string.vault_tier_unlock_gold_part3),
+                tierColor = Color(0xFFFFC25C),
+                descriptionPart1 = stringResource(R.string.vault_tier_gold_description_part1),
+                descriptionPart2 = stringResource(R.string.vault_tier_gold_description_part2),
+                descriptionPart3 = stringResource(R.string.vault_tier_gold_description_part3),
+            )
 
-        TierType.PLATINUM -> BottomSheetTierStyle(
-            logoTier = R.drawable.tier_platinium_bottomsheet,
-            titlePart1 = stringResource(R.string.vault_tier_unlock_platinum_part1),
-            titlePart2 = stringResource(R.string.vault_tier_unlock_platinum_part2),
-            titlePart3 = stringResource(R.string.vault_tier_unlock_platinum_part3),
-            tierColor = Color(0xFF38CDCD),
-            descriptionPart1 = stringResource(R.string.vault_tier_platinum_description_part1),
-            descriptionPart2 = stringResource(R.string.vault_tier_platinum_description_part2),
-            descriptionPart3 = stringResource(R.string.vault_tier_platinum_description_part3),
-        )
+        TierType.PLATINUM ->
+            BottomSheetTierStyle(
+                logoTier = R.drawable.tier_platinium_bottomsheet,
+                titlePart1 = stringResource(R.string.vault_tier_unlock_platinum_part1),
+                titlePart2 = stringResource(R.string.vault_tier_unlock_platinum_part2),
+                titlePart3 = stringResource(R.string.vault_tier_unlock_platinum_part3),
+                tierColor = Color(0xFF38CDCD),
+                descriptionPart1 = stringResource(R.string.vault_tier_platinum_description_part1),
+                descriptionPart2 = stringResource(R.string.vault_tier_platinum_description_part2),
+                descriptionPart3 = stringResource(R.string.vault_tier_platinum_description_part3),
+            )
 
-        TierType.DIAMOND -> BottomSheetTierStyle(
-            logoTier = R.drawable.tier_diamond_bottomsheet,
-            titlePart1 = stringResource(R.string.vault_tier_unlock_diamond_part1),
-            titlePart2 = stringResource(R.string.vault_tier_unlock_diamond_part2),
-            titlePart3 = stringResource(R.string.vault_tier_unlock_diamond_part3),
-            tierColor = Color(0xFF9747FF),
-            descriptionPart1 = stringResource(R.string.vault_tier_diamond_description_part1),
-            descriptionPart2 = stringResource(R.string.vault_tier_diamond_description_part2),
-            descriptionPart3 = stringResource(R.string.vault_tier_diamond_description_part3),
-        )
+        TierType.DIAMOND ->
+            BottomSheetTierStyle(
+                logoTier = R.drawable.tier_diamond_bottomsheet,
+                titlePart1 = stringResource(R.string.vault_tier_unlock_diamond_part1),
+                titlePart2 = stringResource(R.string.vault_tier_unlock_diamond_part2),
+                titlePart3 = stringResource(R.string.vault_tier_unlock_diamond_part3),
+                tierColor = Color(0xFF9747FF),
+                descriptionPart1 = stringResource(R.string.vault_tier_diamond_description_part1),
+                descriptionPart2 = stringResource(R.string.vault_tier_diamond_description_part2),
+                descriptionPart3 = stringResource(R.string.vault_tier_diamond_description_part3),
+            )
 
-        TierType.ULTIMATE -> BottomSheetTierStyle(
-            logoTier = R.drawable.tier_ultimate_bottomsheet,
-            titlePart1 = stringResource(R.string.vault_tier_unlock_ultimate_part1),
-            titlePart2 = stringResource(R.string.vault_tier_unlock_ultimate_part2),
-            titlePart3 = stringResource(R.string.vault_tier_unlock_ultimate_part3),
-            tierBackgroundImage = R.drawable.ultimate_background,
-            descriptionPart1 = stringResource(R.string.vault_tier_ultimate_description_part1),
-            descriptionPart2 = stringResource(R.string.vault_tier_ultimate_description_part2),
-            descriptionPart3 = stringResource(R.string.vault_tier_ultimate_description_part3),
-        )
+        TierType.ULTIMATE ->
+            BottomSheetTierStyle(
+                logoTier = R.drawable.tier_ultimate_bottomsheet,
+                titlePart1 = stringResource(R.string.vault_tier_unlock_ultimate_part1),
+                titlePart2 = stringResource(R.string.vault_tier_unlock_ultimate_part2),
+                titlePart3 = stringResource(R.string.vault_tier_unlock_ultimate_part3),
+                tierBackgroundImage = R.drawable.ultimate_background,
+                descriptionPart1 = stringResource(R.string.vault_tier_ultimate_description_part1),
+                descriptionPart2 = stringResource(R.string.vault_tier_ultimate_description_part2),
+                descriptionPart3 = stringResource(R.string.vault_tier_ultimate_description_part3),
+            )
     }
 }
 
@@ -319,44 +304,29 @@ internal data class BottomSheetTierStyle(
 @Preview(showBackground = true)
 @Composable
 private fun TierDiscountBottomSheetPreview() {
-    TierDiscountBottomSheetContent(
-        tier = TierType.GOLD,
-        onContinue = {}
-    )
+    TierDiscountBottomSheetContent(tier = TierType.GOLD, onContinue = {})
 }
 
 @Preview(showBackground = true, name = "Bronze Tier")
 @Composable
 private fun TierDiscountBottomSheetBronzePreview() {
-    TierDiscountBottomSheetContent(
-        tier = TierType.BRONZE,
-        onContinue = {}
-    )
+    TierDiscountBottomSheetContent(tier = TierType.BRONZE, onContinue = {})
 }
 
 @Preview(showBackground = true, name = "Platinum Tier")
 @Composable
 private fun TierDiscountBottomSheetPlatinumPreview() {
-    TierDiscountBottomSheetContent(
-        tier = TierType.PLATINUM,
-        onContinue = {}
-    )
+    TierDiscountBottomSheetContent(tier = TierType.PLATINUM, onContinue = {})
 }
 
 @Preview(showBackground = true, name = "Platinum Tier")
 @Composable
 private fun TierDiscountBottomSheetDiamondPreview() {
-    TierDiscountBottomSheetContent(
-        tier = TierType.DIAMOND,
-        onContinue = {}
-    )
+    TierDiscountBottomSheetContent(tier = TierType.DIAMOND, onContinue = {})
 }
 
 @Preview(showBackground = true, name = "Ultimate Tier")
 @Composable
 private fun TierDiscountBottomSheetUltimatePreview() {
-    TierDiscountBottomSheetContent(
-        tier = TierType.ULTIMATE,
-        onContinue = {}
-    )
+    TierDiscountBottomSheetContent(tier = TierType.ULTIMATE, onContinue = {})
 }

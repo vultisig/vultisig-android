@@ -14,23 +14,14 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 
 @Composable
-internal fun SearchTokenResult(
-    onAddTokenClick: () -> Unit,
-    token: Coin,
-) {
+internal fun SearchTokenResult(onAddTokenClick: () -> Unit, token: Coin) {
     Column {
         SearchedTokenInfo(token)
-        UiSpacer(
-            size = 16.dp
-        )
+        UiSpacer(size = 16.dp)
         VsButton(
-            label = stringResource(
-                R.string.custom_token_add_token,
-                token.ticker
-            ),
+            label = stringResource(R.string.custom_token_add_token, token.ticker),
             onClick = onAddTokenClick,
-            modifier = Modifier.Companion
-                .fillMaxWidth()
+            modifier = Modifier.Companion.fillMaxWidth(),
         )
     }
 }
@@ -38,8 +29,5 @@ internal fun SearchTokenResult(
 @Preview
 @Composable
 private fun SearchTokenResultPreview() {
-    SearchTokenResult(
-        onAddTokenClick = {},
-        token = Coins.Ethereum.GRT,
-    )
+    SearchTokenResult(onAddTokenClick = {}, token = Coins.Ethereum.GRT)
 }

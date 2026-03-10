@@ -44,21 +44,15 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun SearchBar(
     modifier: Modifier = Modifier,
     state: TextFieldState,
-    onCancelClick: () -> Unit,
     isInitiallyFocused: Boolean,
     isPasteEnabled: Boolean = false,
     onPasteClick: (String) -> Unit = {},
 ) {
     var isFocusedState by remember { mutableStateOf(isInitiallyFocused) }
     val focusManager = LocalFocusManager.current
-    val focusRequester = remember {
-        FocusRequester()
-    }
+    val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(key1 = Unit) {
-        if (isInitiallyFocused)
-            focusRequester.requestFocus()
-    }
+    LaunchedEffect(key1 = Unit) { if (isInitiallyFocused) focusRequester.requestFocus() }
 
     LaunchedEffect(key1 = isFocusedState) {
         if (isFocusedState.not()) {
@@ -66,92 +60,72 @@ internal fun SearchBar(
         }
     }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth()
-    ) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
         V2Container(
             type = ContainerType.SECONDARY,
-            borderType = if (isFocusedState)
-                ContainerBorderType.Bordered(
-                    color = Theme.v2.colors.border.normal,
-                )
-            else ContainerBorderType.Borderless,
-            modifier = Modifier
-                .weight(1f),
+            borderType =
+                if (isFocusedState)
+                    ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal)
+                else ContainerBorderType.Borderless,
+            modifier = Modifier.weight(1f),
             cornerType = CornerType.Circular,
         ) {
-
             BasicTextField(
                 state = state,
-                cursorBrush = Brush.linearGradient(
-                    colors = listOf(
-                        Theme.v2.colors.primary.accent4,
-                        Theme.v2.colors.primary.accent4,
-                    )
-                ),
-                modifier = Modifier
-                    .padding(
-                        all = 12.dp,
-                    )
-                    .focusRequester(focusRequester)
-                    .onFocusChanged {
+                cursorBrush =
+                    Brush.linearGradient(
+                        colors =
+                            listOf(Theme.v2.colors.primary.accent4, Theme.v2.colors.primary.accent4)
+                    ),
+                modifier =
+                    Modifier.padding(all = 12.dp).focusRequester(focusRequester).onFocusChanged {
                         isFocusedState = it.isFocused
                     },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Default
-                ),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Default,
+                    ),
                 lineLimits = TextFieldLineLimits.SingleLine,
-                textStyle = Theme.brockmann.supplementary.footnote.copy(
-                    color = Theme.v2.colors.text.primary
-                ),
+                textStyle =
+                    Theme.brockmann.supplementary.footnote.copy(
+                        color = Theme.v2.colors.text.primary
+                    ),
                 decorator = { input ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         UiIcon(
                             drawableResId = R.drawable.ic_search,
                             size = 16.dp,
                             tint = Theme.v2.colors.text.primary,
                         )
-                        UiSpacer(
-                            8.dp,
-                        )
-                        if (state.text.isEmpty()) {
-                            Text(
-                                text = stringResource(R.string.search_bar_search),
-                                color = Theme.v2.colors.text.tertiary,
-                                style = Theme.brockmann.supplementary.footnote,
-                            )
-                            UiSpacer(
-                                weight = 1f
-                            )
-                            if (isPasteEnabled) {
-                                PasteIcon(onPaste = onPasteClick)
+                        UiSpacer(8.dp)
+                        Box(modifier = Modifier.weight(1f)) {
+                            if (state.text.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.search_bar_search),
+                                    color = Theme.v2.colors.text.tertiary,
+                                    style = Theme.brockmann.supplementary.footnote,
+                                )
                             }
-                        } else {
-                            Box(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                input()
-                            }
-                            UiSpacer(
-                                size = 8.dp
-                            )
+                            input()
+                        }
+                        if (state.text.isNotEmpty()) {
+                            UiSpacer(size = 8.dp)
                             UiIcon(
                                 drawableResId = R.drawable.close_circle,
                                 size = 18.dp,
                                 tint = Theme.v2.colors.neutrals.n300,
-                                onClick = {
-                                    state.clearText()
-                                }
+                                onClick = { state.clearText() },
                             )
+                        } else if (isPasteEnabled) {
+                            PasteIcon(onPaste = onPasteClick)
                         }
                     }
-                }
+                },
             )
         }
     }
@@ -160,9 +134,5 @@ internal fun SearchBar(
 @Preview
 @Composable
 private fun PreviewSearchBar() {
-    SearchBar(
-        state = rememberTextFieldState(),
-        onCancelClick = {},
-        isInitiallyFocused = true
-    )
+    SearchBar(state = rememberTextFieldState(), isInitiallyFocused = true)
 }

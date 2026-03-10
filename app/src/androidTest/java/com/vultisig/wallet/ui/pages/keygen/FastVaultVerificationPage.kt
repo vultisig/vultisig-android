@@ -9,19 +9,17 @@ import androidx.compose.ui.test.performTextInput
 import com.vultisig.wallet.ui.components.inputs.CODE_INPUT_FIELD_TAG
 import com.vultisig.wallet.ui.utils.waitUntilShown
 
-class FastVaultVerificationPage(
-    private val compose: ComposeTestRule,
-) {
+class FastVaultVerificationPage(private val compose: ComposeTestRule) {
 
     fun waitUntilShown() {
         compose.waitUntilShown("FastVaultVerificationScreen.codeField")
     }
 
     fun inputCode(code: String) {
-        compose.onNodeWithTag("FastVaultVerificationScreen.codeField")
+        compose
+            .onNodeWithTag("FastVaultVerificationScreen.codeField")
             .onChildren()
             .filterToOne(hasTestTag(CODE_INPUT_FIELD_TAG))
             .performTextInput(code)
     }
-
 }

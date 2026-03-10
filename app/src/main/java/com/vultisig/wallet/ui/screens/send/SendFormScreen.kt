@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,6 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -98,12 +100,11 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
 
-internal fun NavGraphBuilder.sendScreen(
-    navController: NavHostController,
-) {
-    contentWithFastSelection<Route.Send.SendMain, Route.Send>(
-        navController = navController
-    ) { onNetworkDragStart, onNetworkDrag, onNetworkDragEnd ->
+internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
+    contentWithFastSelection<Route.Send.SendMain, Route.Send>(navController = navController) {
+        onNetworkDragStart,
+        onNetworkDrag,
+        onNetworkDragEnd ->
         val viewModel: SendFormViewModel = hiltViewModel()
         val state by viewModel.uiState.collectAsState()
 
@@ -145,7 +146,7 @@ internal fun NavGraphBuilder.sendScreen(
             onSetProviderAddressRequest = viewModel::setProviderAddress,
             onScanProviderAddressRequest = viewModel::scanProviderAddress,
             onAddressProviderBookClick = { viewModel.openAddressBook(AddressBookType.PROVIDER) },
-            onAutoCompound = { viewModel.onAutoCompound(it) }
+            onAutoCompound = { viewModel.onAutoCompound(it) },
         )
 
         val selectedChain = state.selectedCoin?.model?.address?.chain
@@ -161,7 +162,6 @@ internal fun NavGraphBuilder.sendScreen(
         }
     }
 }
-
 
 @Composable
 private fun SendFormScreen(
@@ -184,19 +184,16 @@ private fun SendFormScreen(
     onAddressProviderBookClick: () -> Unit = {},
     onScanProviderAddressRequest: () -> Unit = {},
     onSetProviderAddressRequest: (String) -> Unit = {},
-
     onRefreshRequest: () -> Unit = {},
     onGasSettingsClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onToogleAmountInputType: (Boolean) -> Unit = {},
     onExpandSection: (SendSections) -> Unit = {},
-
     onNetworkDragStart: (Offset) -> Unit,
     onNetworkDrag: (Offset) -> Unit,
     onNetworkDragEnd: () -> Unit,
     onNetworkDragCancel: () -> Unit,
     onNetworkLongPressStarted: (Offset) -> Unit,
-
     onAssetDragStart: (Offset) -> Unit,
     onAssetDrag: (Offset) -> Unit,
     onAssetDragEnd: () -> Unit,
@@ -226,37 +223,36 @@ private fun SendFormScreen(
     }
 
     V2Scaffold(
-        title = when (state.defiType) {
-            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY, DeFiNavActions.STAKE_STCY -> stringResource(R.string.stake_screen_title)
-            DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_STCY -> stringResource(R.string.unstake_screen_title)
-            DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> stringResource(R.string.mint_screen_title)
-            DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> stringResource(R.string.redeem_screen_title)
-            DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
-            DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
-            DeFiNavActions.WITHDRAW_RUJI -> stringResource(R.string.rewards_screen_title)
-            DeFiNavActions.WITHDRAW_USDC_CIRCLE -> stringResource(R.string.withdraw)
-            else -> stringResource(R.string.send_screen_title)
-        },
+        title =
+            when (state.defiType) {
+                DeFiNavActions.STAKE_RUJI,
+                DeFiNavActions.STAKE_TCY,
+                DeFiNavActions.STAKE_STCY -> stringResource(R.string.stake_screen_title)
+                DeFiNavActions.UNSTAKE_TCY,
+                DeFiNavActions.UNSTAKE_RUJI,
+                DeFiNavActions.UNSTAKE_STCY -> stringResource(R.string.unstake_screen_title)
+                DeFiNavActions.MINT_YRUNE,
+                DeFiNavActions.MINT_YTCY -> stringResource(R.string.mint_screen_title)
+                DeFiNavActions.REDEEM_YRUNE,
+                DeFiNavActions.REDEEM_YTCY -> stringResource(R.string.redeem_screen_title)
+                DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
+                DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
+                DeFiNavActions.WITHDRAW_RUJI -> stringResource(R.string.rewards_screen_title)
+                DeFiNavActions.WITHDRAW_USDC_CIRCLE -> stringResource(R.string.withdraw)
+                else -> stringResource(R.string.send_screen_title)
+            },
         onBackClick = onBackClick,
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.send_continue_button),
-                state = if (state.isLoading)
-                    VsButtonState.Disabled
-                else
-                    VsButtonState.Enabled,
+                state = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
                 onClick = {
                     if (!state.isLoading) {
                         focusManager.clearFocus()
                         onSend()
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 12.dp,
-                    ),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
             )
         },
         content = {
@@ -271,16 +267,19 @@ private fun SendFormScreen(
                         modifier = Modifier.align(Alignment.TopCenter),
                         isRefreshing = state.isRefreshing,
                         color = Theme.v2.colors.primary.accent3,
-                        state = pullToRefreshState
+                        state = pullToRefreshState,
                     )
                 },
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
             ) {
+                val isCircleMode =
+                    state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
+                        state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
                 Column(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
+                    modifier =
+                        if (isCircleMode) Modifier.fillMaxHeight()
+                        else Modifier.verticalScroll(rememberScrollState()),
                 ) {
                     SendFormContent(
                         state = state,
@@ -321,7 +320,6 @@ private fun SendFormScreen(
 
                         // trade
                         slippageFieldState = slippageFieldState,
-
                         onAutoCompoundCheckedChange = onAutoCompound,
                     )
                 }
@@ -372,10 +370,10 @@ private fun SendFormContent(
     slippageFieldState: TextFieldState,
 
     // stake tcy
-    onAutoCompoundCheckedChange: (Boolean) -> Unit
+    onAutoCompoundCheckedChange: (Boolean) -> Unit,
 ) {
     // send asset
-    if (state.defiType == null || state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE) {
+    if (state.defiType == null) {
         FoldableAssetWidget(
             state = state,
             onExpandSection = onExpandSection,
@@ -390,7 +388,7 @@ private fun SendFormContent(
             onAssetDrag = onAssetDrag,
             onAssetDragStart = onAssetDragStart,
             onAssetDragEnd = onAssetDragEnd,
-            onAssetLongPressStarted = onAssetLongPressStarted
+            onAssetLongPressStarted = onAssetLongPressStarted,
         )
 
         FoldableDestinationAddressWidget(
@@ -423,17 +421,14 @@ private fun SendFormContent(
 
         UiSpacer(24.dp)
 
-        AnimatedContent(
-            targetState = state.reapingError,
-            label = "error message"
-        ) { errorMessage ->
+        AnimatedContent(targetState = state.reapingError, label = "error message") { errorMessage ->
             if (errorMessage != null) {
                 Column {
                     UiSpacer(size = 8.dp)
                     Text(
                         text = errorMessage.asString(),
                         color = Theme.v2.colors.backgrounds.amber,
-                        style = Theme.menlo.body1
+                        style = Theme.menlo.body1,
                     )
                 }
             }
@@ -473,33 +468,32 @@ private fun SendFormContent(
 
         UiSpacer(24.dp)
 
-        AnimatedContent(
-            targetState = state.reapingError,
-            label = "error message"
-        ) { errorMessage ->
+        AnimatedContent(targetState = state.reapingError, label = "error message") { errorMessage ->
             if (errorMessage != null) {
                 Column {
                     UiSpacer(size = 8.dp)
                     Text(
                         text = errorMessage.asString(),
                         color = Theme.v2.colors.backgrounds.amber,
-                        style = Theme.menlo.body1
+                        style = Theme.menlo.body1,
                     )
                 }
             }
         }
-    } else if (state.defiType == DeFiNavActions.STAKE_RUJI
-        || state.defiType == DeFiNavActions.UNSTAKE_RUJI
-        || state.defiType == DeFiNavActions.STAKE_TCY
-        || state.defiType == DeFiNavActions.UNSTAKE_STCY
-        || state.defiType == DeFiNavActions.STAKE_STCY
-        || state.defiType == DeFiNavActions.UNSTAKE_TCY
-        || state.defiType == DeFiNavActions.MINT_YRUNE
-        || state.defiType == DeFiNavActions.MINT_YTCY
-        || state.defiType == DeFiNavActions.REDEEM_YRUNE
-        || state.defiType == DeFiNavActions.REDEEM_YTCY
-        || state.defiType == DeFiNavActions.WITHDRAW_RUJI
-        || state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
+    } else if (
+        state.defiType == DeFiNavActions.STAKE_RUJI ||
+            state.defiType == DeFiNavActions.UNSTAKE_RUJI ||
+            state.defiType == DeFiNavActions.STAKE_TCY ||
+            state.defiType == DeFiNavActions.UNSTAKE_STCY ||
+            state.defiType == DeFiNavActions.STAKE_STCY ||
+            state.defiType == DeFiNavActions.UNSTAKE_TCY ||
+            state.defiType == DeFiNavActions.MINT_YRUNE ||
+            state.defiType == DeFiNavActions.MINT_YTCY ||
+            state.defiType == DeFiNavActions.REDEEM_YRUNE ||
+            state.defiType == DeFiNavActions.REDEEM_YTCY ||
+            state.defiType == DeFiNavActions.WITHDRAW_RUJI ||
+            state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE ||
+            state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE
     ) {
         FoldableAmountWidget(
             state = state,
@@ -539,22 +533,22 @@ private fun FoldableAmountWidget(
     operatorFeeFieldState: TextFieldState,
     slippageTexFieldState: TextFieldState,
 ) {
+    val isCircleMode =
+        state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
+            state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
+
     FoldableSection(
-        expanded = state.expandedSection == SendSections.Amount,
+        expanded = isCircleMode || state.expandedSection == SendSections.Amount,
         onToggle = {
-            if (state.isDstAddressComplete &&
-                addressFieldState.text.isNotEmpty()
+            if (
+                !isCircleMode && state.isDstAddressComplete && addressFieldState.text.isNotEmpty()
             ) {
                 onExpandSection(SendSections.Amount)
             }
         },
         expandedTitleActions = {
-            if (state.hasGasSettings) {
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier
-                        .weight(1f),
-                ) {
+            if (!isCircleMode && state.hasGasSettings) {
+                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.weight(1f)) {
                     UiIcon(
                         drawableResId = R.drawable.advance_gas_settings,
                         size = 16.dp,
@@ -564,28 +558,21 @@ private fun FoldableAmountWidget(
                 }
             }
         },
-        title = stringResource(R.string.send_amount)
+        title = stringResource(R.string.send_amount),
     ) {
+        val contentPadding =
+            Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
         Column(
-            modifier = Modifier
-                .padding(
-                    start = 12.dp,
-                    top = 16.dp,
-                    end = 12.dp,
-                    bottom = 12.dp,
-                )
+            modifier =
+                if (isCircleMode) Modifier.fillMaxHeight().then(contentPadding) else contentPadding
         ) {
             Box(
-                modifier = Modifier
-                    .height(211.dp)
-                    .fillMaxWidth(),
+                modifier =
+                    if (isCircleMode) Modifier.weight(1f).fillMaxWidth()
+                    else Modifier.height(211.dp).fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier
-                        .padding(
-                            horizontal = 54.dp,
-                        )
-                        .align(Alignment.Center),
+                    modifier = Modifier.padding(horizontal = 54.dp).align(Alignment.Center),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
@@ -606,30 +593,40 @@ private fun FoldableAmountWidget(
                         secondaryFieldState = tokenAmountFieldState
                     }
 
-                    FlowRow(
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
+                    val maxBalance =
+                        if (isCircleMode) state.selectedCoin?.balance?.toBigDecimalOrNull()
+                        else null
+
+                    FlowRow(horizontalArrangement = Arrangement.Center) {
                         BasicTextField(
                             state = primaryFieldState,
-                            lineLimits = TextFieldLineLimits.MultiLine(
-                                maxHeightInLines = 3,
-                            ),
-                            textStyle = Theme.brockmann.headings.largeTitle
-                                .copy(
+                            inputTransformation =
+                                maxBalance?.let { max ->
+                                    InputTransformation {
+                                        val entered =
+                                            asCharSequence().toString().toBigDecimalOrNull()
+                                        if (entered != null && entered > max) {
+                                            revertAllChanges()
+                                        }
+                                    }
+                                },
+                            lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 3),
+                            textStyle =
+                                Theme.brockmann.headings.largeTitle.copy(
                                     color = Theme.v2.colors.text.primary,
                                     textAlign = TextAlign.Center,
                                 ),
                             cursorBrush = Theme.cursorBrush,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Decimal,
-                                imeAction = ImeAction.Send,
-                            ),
+                            keyboardOptions =
+                                KeyboardOptions(
+                                    keyboardType = KeyboardType.Decimal,
+                                    imeAction = ImeAction.Send,
+                                ),
                             onKeyboardAction = {
                                 focusManager.clearFocus()
                                 onSend()
                             },
-                            modifier = Modifier
-                                .width(IntrinsicSize.Min),
+                            modifier = Modifier.width(IntrinsicSize.Min),
                             decorator = { textField ->
                                 if (primaryFieldState.text.isEmpty()) {
                                     Text(
@@ -637,12 +634,11 @@ private fun FoldableAmountWidget(
                                         color = Theme.v2.colors.text.secondary,
                                         style = Theme.brockmann.headings.largeTitle,
                                         textAlign = TextAlign.Center,
-                                        modifier = Modifier
-                                            .wrapContentWidth()
+                                        modifier = Modifier.wrapContentWidth(),
                                     )
                                 }
                                 textField()
-                            }
+                            },
                         )
 
                         Text(
@@ -653,29 +649,39 @@ private fun FoldableAmountWidget(
                         )
                     }
 
+                    val secondaryText =
+                        if (isCircleMode) {
+                            val entered =
+                                tokenAmountFieldState.text.toString().toDoubleOrNull() ?: 0.0
+                            val balance = state.selectedCoin?.balance?.toDoubleOrNull() ?: 0.0
+                            val pct =
+                                if (balance > 0.0) (entered / balance * 100).coerceIn(0.0, 100.0)
+                                else 0.0
+                            "%.1f%%".format(pct)
+                        } else {
+                            "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText"
+                        }
+
                     Text(
-                        text = "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText",
+                        text = secondaryText,
                         color = Theme.v2.colors.text.tertiary,
                         style = Theme.brockmann.body.s.medium,
                         textAlign = TextAlign.Center,
                     )
                 }
 
-                TokenFiatToggle(
-                    isTokenSelected = state.usingTokenAmountInput,
-                    onTokenSelected = {
-                        onToogleAmountInputType(it)
-                    },
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd),
-                )
+                if (!isCircleMode) {
+                    TokenFiatToggle(
+                        isTokenSelected = state.usingTokenAmountInput,
+                        onTokenSelected = { onToogleAmountInputType(it) },
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                    )
+                }
             }
 
             UiSpacer(12.dp)
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 state.amountFractionEntries.forEach { fraction ->
                     PercentageChip(
                         title = fraction.title.asString(),
@@ -687,9 +693,8 @@ private fun FoldableAmountWidget(
                                 onChoosePercentageAmount(fraction)
                             }
                         },
-                        modifier = Modifier
-                            .weight(1f),
-                        isLoading = state.isAmountSelectionLoading
+                        modifier = Modifier.weight(1f),
+                        isLoading = state.isAmountSelectionLoading,
                     )
                 }
             }
@@ -698,14 +703,14 @@ private fun FoldableAmountWidget(
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier
-                    .background(
-                        color = Theme.v2.colors.backgrounds.secondary,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .padding(
-                        all = 16.dp,
-                    )
+                modifier =
+                    if (isCircleMode) Modifier.padding(all = 16.dp)
+                    else
+                        Modifier.background(
+                                color = Theme.v2.colors.backgrounds.secondary,
+                                shape = RoundedCornerShape(12.dp),
+                            )
+                            .padding(all = 16.dp),
             ) {
                 Text(
                     text = stringResource(R.string.send_form_balance_available),
@@ -720,8 +725,7 @@ private fun FoldableAmountWidget(
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.secondary,
                     textAlign = TextAlign.End,
-                    modifier = Modifier
-                        .weight(1f),
+                    modifier = Modifier.weight(1f),
                 )
             }
 
@@ -731,45 +735,38 @@ private fun FoldableAmountWidget(
             if (state.hasMemo && state.defiType == null) {
                 var isMemoExpanded by remember { mutableStateOf(false) }
 
-                val rotationAngle by animateFloatAsState(
-                    targetValue = if (isMemoExpanded) 180f else 0f,
-                    animationSpec = tween(durationMillis = 200),
-                    label = "caretRotation"
-                )
+                val rotationAngle by
+                    animateFloatAsState(
+                        targetValue = if (isMemoExpanded) 180f else 0f,
+                        animationSpec = tween(durationMillis = 200),
+                        label = "caretRotation",
+                    )
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clickable {
-                            isMemoExpanded = !isMemoExpanded
-                        }
-                        .padding(
-                            vertical = 2.dp,
-                        )
+                    modifier =
+                        Modifier.clickable { isMemoExpanded = !isMemoExpanded }
+                            .padding(vertical = 2.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.send_form_add_memo),
                         style = Theme.brockmann.supplementary.caption,
                         color = Theme.v2.colors.text.tertiary,
-                        modifier = Modifier
-                            .weight(1f),
+                        modifier = Modifier.weight(1f),
                     )
 
                     UiIcon(
                         drawableResId = R.drawable.ic_caret_down,
                         tint = Theme.v2.colors.text.primary,
                         size = 16.dp,
-                        modifier = Modifier
-                            .rotate(rotationAngle)
+                        modifier = Modifier.rotate(rotationAngle),
                     )
                 }
 
                 UiSpacer(12.dp)
 
-                AnimatedVisibility(
-                    visible = isMemoExpanded,
-                ) {
+                AnimatedVisibility(visible = isMemoExpanded) {
                     val clipboardData = VsClipboardService.getClipboardData()
                     VsTextInputField(
                         textFieldState = memoFieldState,
@@ -779,14 +776,9 @@ private fun FoldableAmountWidget(
                         onTrailingIconClick = {
                             clipboardData.value
                                 ?.takeIf { it.isNotEmpty() }
-                                ?.let {
-                                    memoFieldState.setTextAndPlaceCursorAtEnd(
-                                        text = it
-                                    )
-                                }
+                                ?.let { memoFieldState.setTextAndPlaceCursorAtEnd(text = it) }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                     )
 
                     UiSpacer(12.dp)
@@ -794,11 +786,7 @@ private fun FoldableAmountWidget(
             }
 
             if (state.defiType == DeFiNavActions.BOND) {
-                Column(
-                    modifier = Modifier.padding(
-                        vertical = 2.dp,
-                    )
-                ) {
+                Column(modifier = Modifier.padding(vertical = 2.dp)) {
                     Text(
                         text = stringResource(R.string.bond_operator_fees_basis_point),
                         style = Theme.brockmann.supplementary.caption,
@@ -817,14 +805,11 @@ private fun FoldableAmountWidget(
                 }
             }
 
-            if (state.defiType == DeFiNavActions.REDEEM_YRUNE
-                || state.defiType == DeFiNavActions.REDEEM_YTCY
+            if (
+                state.defiType == DeFiNavActions.REDEEM_YRUNE ||
+                    state.defiType == DeFiNavActions.REDEEM_YTCY
             ) {
-                Column(
-                    modifier = Modifier.padding(
-                        vertical = 2.dp,
-                    )
-                ) {
+                Column(modifier = Modifier.padding(vertical = 2.dp)) {
                     Text(
                         text = stringResource(R.string.deposit_form_operator_slippage_title),
                         style = Theme.brockmann.supplementary.caption,
@@ -843,7 +828,10 @@ private fun FoldableAmountWidget(
                 }
             }
 
-            if (state.defiType == DeFiNavActions.STAKE_TCY || state.defiType == DeFiNavActions.STAKE_STCY) {
+            if (
+                state.defiType == DeFiNavActions.STAKE_TCY ||
+                    state.defiType == DeFiNavActions.STAKE_STCY
+            ) {
                 AutoCompoundToggle(
                     title = stringResource(R.string.tcy_auto_compound_enable_title),
                     subtitle = stringResource(R.string.tcy_auto_compound_enable_subtitle),
@@ -852,7 +840,10 @@ private fun FoldableAmountWidget(
                 )
             }
 
-            if (state.defiType == DeFiNavActions.UNSTAKE_TCY || state.defiType == DeFiNavActions.UNSTAKE_STCY) {
+            if (
+                state.defiType == DeFiNavActions.UNSTAKE_TCY ||
+                    state.defiType == DeFiNavActions.UNSTAKE_STCY
+            ) {
                 AutoCompoundToggle(
                     title = stringResource(R.string.tcy_auto_compound_unstake_title),
                     subtitle = stringResource(R.string.tcy_auto_compound_unstake_subtitle),
@@ -861,11 +852,8 @@ private fun FoldableAmountWidget(
                 )
             }
 
-            if (state.showGasFee) {
-                FadingHorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                )
+            if (state.showGasFee && !isCircleMode) {
+                FadingHorizontalDivider(modifier = Modifier.fillMaxWidth())
 
                 UiSpacer(12.dp)
 
@@ -893,9 +881,7 @@ private fun FoldableDestinationAddressWidget(
         expanded = state.expandedSection == SendSections.Address,
         complete = state.isDstAddressComplete,
         title = stringResource(R.string.add_address_address_title),
-        onToggle = {
-            onExpandSection(SendSections.Address)
-        },
+        onToggle = { onExpandSection(SendSections.Address) },
         completeTitleContent = {
             Text(
                 text = addressFieldState.text.toString(),
@@ -905,16 +891,10 @@ private fun FoldableDestinationAddressWidget(
                 overflow = TextOverflow.MiddleEllipsis,
                 modifier = Modifier.weight(1f),
             )
-        }
+        },
     ) {
         Column(
-            modifier = Modifier
-                .padding(
-                    start = 12.dp,
-                    top = 16.dp,
-                    end = 12.dp,
-                    bottom = 12.dp,
-                )
+            modifier = Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
         ) {
             Text(
                 text = stringResource(R.string.send_from_address),
@@ -925,24 +905,19 @@ private fun FoldableDestinationAddressWidget(
             UiSpacer(12.dp)
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = Theme.v2.colors.border.light,
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                    )
-                    .background(
-                        color = Theme.v2.colors.backgrounds.secondary,
-                        shape = RoundedCornerShape(12.dp),
-                    )
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 8.dp,
-                    ),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .border(
+                            border =
+                                BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .background(
+                            color = Theme.v2.colors.backgrounds.secondary,
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
                     text = state.srcVaultName,
@@ -964,10 +939,12 @@ private fun FoldableDestinationAddressWidget(
             UiSpacer(16.dp)
 
             Text(
-                text = when (state.defiType) {
-                    DeFiNavActions.BOND, DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
-                    else -> stringResource(R.string.send_to_address)
-                },
+                text =
+                    when (state.defiType) {
+                        DeFiNavActions.BOND,
+                        DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
+                        else -> stringResource(R.string.send_to_address)
+                    },
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption,
             )
@@ -985,44 +962,32 @@ private fun FoldableDestinationAddressWidget(
                 keyboardType = KeyboardType.Text,
                 autoCorrectEnabled = false,
                 imeAction = ImeAction.Next,
-                innerState = if (state.dstAddressError != null)
-                    VsTextInputFieldInnerState.Error
-                else VsTextInputFieldInnerState.Default,
+                innerState =
+                    if (state.dstAddressError != null) VsTextInputFieldInnerState.Error
+                    else VsTextInputFieldInnerState.Default,
                 footNote = state.dstAddressError?.asString(),
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
             )
 
             UiSpacer(16.dp)
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PasteIcon(
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
-                    onPaste = onSetOutputAddress
+                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    onPaste = onSetOutputAddress,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.camera,
                     size = 20.dp,
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
+                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
                     onClick = onScanDstAddressRequest,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.ic_bookmark,
                     size = 20.dp,
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
+                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
                     onClick = onAddressBookClick,
                 )
             }
@@ -1050,9 +1015,7 @@ private fun FoldableBondDestinationAddress(
         expanded = state.expandedSection == SendSections.Address,
         complete = state.isDstAddressComplete,
         title = stringResource(R.string.add_address_address_title),
-        onToggle = {
-            onExpandSection(SendSections.Address)
-        },
+        onToggle = { onExpandSection(SendSections.Address) },
         completeTitleContent = {
             Text(
                 text = addressFieldState.text.toString(),
@@ -1062,22 +1025,19 @@ private fun FoldableBondDestinationAddress(
                 overflow = TextOverflow.MiddleEllipsis,
                 modifier = Modifier.weight(1f),
             )
-        }
+        },
     ) {
         Column(
-            modifier = Modifier
-                .padding(
-                    start = 12.dp,
-                    top = 16.dp,
-                    end = 12.dp,
-                    bottom = 12.dp,
-                )
+            modifier = Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
         ) {
             Text(
-                text = when (state.defiType) {
-                    null, DeFiNavActions.BOND, DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
-                    else -> stringResource(R.string.send_to_address)
-                },
+                text =
+                    when (state.defiType) {
+                        null,
+                        DeFiNavActions.BOND,
+                        DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
+                        else -> stringResource(R.string.send_to_address)
+                    },
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption,
             )
@@ -1095,44 +1055,32 @@ private fun FoldableBondDestinationAddress(
                 keyboardType = KeyboardType.Text,
                 autoCorrectEnabled = false,
                 imeAction = ImeAction.Next,
-                innerState = if (state.dstAddressError != null)
-                    VsTextInputFieldInnerState.Error
-                else VsTextInputFieldInnerState.Default,
+                innerState =
+                    if (state.dstAddressError != null) VsTextInputFieldInnerState.Error
+                    else VsTextInputFieldInnerState.Default,
                 footNote = state.dstAddressError?.asString(),
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
             )
 
             UiSpacer(16.dp)
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PasteIcon(
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
-                    onPaste = onSetOutputAddress
+                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    onPaste = onSetOutputAddress,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.camera,
                     size = 20.dp,
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
+                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
                     onClick = onScanDstAddressRequest,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.ic_bookmark,
                     size = 20.dp,
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
+                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
                     onClick = onAddressBookClick,
                 )
             }
@@ -1153,45 +1101,35 @@ private fun FoldableBondDestinationAddress(
                 keyboardType = KeyboardType.Text,
                 autoCorrectEnabled = false,
                 imeAction = ImeAction.Next,
-                innerState = if (state.bondProviderError != null) {
-                    VsTextInputFieldInnerState.Error
-                } else {
-                    VsTextInputFieldInnerState.Default
-                },
+                innerState =
+                    if (state.bondProviderError != null) {
+                        VsTextInputFieldInnerState.Error
+                    } else {
+                        VsTextInputFieldInnerState.Default
+                    },
                 footNote = state.bondProviderError?.asString(),
                 modifier = Modifier.fillMaxWidth(),
             )
 
             UiSpacer(16.dp)
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PasteIcon(
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
-                    onPaste = onSetOutputProvider
+                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    onPaste = onSetOutputProvider,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.camera,
                     size = 20.dp,
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
+                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
                     onClick = onScanProviderRequest,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.ic_bookmark,
                     size = 20.dp,
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
+                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
                     onClick = onAddressProviderBookClick,
                 )
             }
@@ -1214,29 +1152,23 @@ private fun FoldableAssetWidget(
     onAssetDrag: (Offset) -> Unit,
     onAssetDragStart: (Offset) -> Unit,
     onAssetDragEnd: () -> Unit,
-    onAssetLongPressStarted: (Offset) -> Unit
+    onAssetLongPressStarted: (Offset) -> Unit,
 ) {
     FoldableSection(
         expanded = state.expandedSection == SendSections.Asset,
-        onToggle = {
-            onExpandSection(SendSections.Asset)
-        },
+        onToggle = { onExpandSection(SendSections.Asset) },
         complete = true,
         title = stringResource(R.string.form_token_selection_asset),
         completeTitleContent = {
-            Row(
-                modifier = Modifier.weight(1f)
-            ) {
+            Row(modifier = Modifier.weight(1f)) {
                 val selectedToken = state.selectedCoin
 
                 TokenLogo(
-                    errorLogoModifier = Modifier
-                        .size(16.dp)
-                        .background(Theme.v2.colors.neutrals.n100),
+                    errorLogoModifier =
+                        Modifier.size(16.dp).background(Theme.v2.colors.neutrals.n100),
                     logo = selectedToken?.tokenLogo ?: "",
                     title = selectedToken?.title ?: "",
-                    modifier = Modifier
-                        .size(16.dp)
+                    modifier = Modifier.size(16.dp),
                 )
 
                 UiSpacer(4.dp)
@@ -1247,23 +1179,16 @@ private fun FoldableAssetWidget(
                     color = Theme.v2.colors.text.tertiary,
                 )
             }
-        }
+        },
     ) {
         Column(
-            modifier = Modifier
-                .padding(
-                    start = 12.dp,
-                    top = 16.dp,
-                    end = 12.dp,
-                    bottom = 12.dp,
-                )
+            modifier = Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
         ) {
             ChainSelector(
                 title = stringResource(R.string.send_from_address),
                 // TODO selectedChain should not be nullable
                 //  or default value should be something else
-                chain = state.selectedCoin?.model?.address?.chain
-                    ?: Chain.ThorChain,
+                chain = state.selectedCoin?.model?.address?.chain ?: Chain.ThorChain,
                 onClick = onSelectNetworkRequest,
                 onDragCancel = onNetworkDragCancel,
                 onDrag = onNetworkDrag,
@@ -1274,10 +1199,7 @@ private fun FoldableAssetWidget(
 
             UiSpacer(12.dp)
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-            ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
                 TokenChip(
                     selectedToken = state.selectedCoin,
                     onSelectTokenClick = onSelectTokenRequest,
@@ -1286,21 +1208,20 @@ private fun FoldableAssetWidget(
                     onDragStart = onAssetDragStart,
                     onDragEnd = onAssetDragEnd,
                     onLongPressStarted = onAssetLongPressStarted,
-
-                    )
+                )
 
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .weight(1f),
+                    modifier = Modifier.weight(1f),
                 ) {
                     state.selectedCoin?.let { token ->
                         Text(
-                            text = stringResource(
-                                R.string.form_token_selection_balance,
-                                token.balance ?: ""
-                            ),
+                            text =
+                                stringResource(
+                                    R.string.form_token_selection_balance,
+                                    token.balance ?: "",
+                                ),
                             color = Theme.v2.colors.text.secondary,
                             style = Theme.brockmann.body.s.medium,
                             textAlign = TextAlign.End,
@@ -1324,39 +1245,21 @@ private fun FoldableAssetWidget(
 }
 
 @Composable
-internal fun EstimatedNetworkFee(
-    tokenGas: String,
-    fiatGas: String,
-    isLoading: Boolean = false,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+internal fun EstimatedNetworkFee(tokenGas: String, fiatGas: String, isLoading: Boolean = false) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(R.string.send_form_est_network_fee),
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.tertiary,
         )
 
-        Column(
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier
-                .weight(1f),
-        ) {
+        Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
             if (isLoading) {
-                UiPlaceholderLoader(
-                    modifier = Modifier
-                        .height(20.dp)
-                        .width(150.dp)
-                )
+                UiPlaceholderLoader(modifier = Modifier.height(20.dp).width(150.dp))
 
                 UiSpacer(6.dp)
 
-                UiPlaceholderLoader(
-                    modifier = Modifier
-                        .height(20.dp)
-                        .width(150.dp)
-                )
+                UiPlaceholderLoader(modifier = Modifier.height(20.dp).width(150.dp))
             } else {
                 Text(
                     text = tokenGas,
@@ -1375,37 +1278,35 @@ internal fun EstimatedNetworkFee(
 }
 
 @Composable
-internal fun FadingHorizontalDivider(
-    modifier: Modifier = Modifier,
-) {
+internal fun FadingHorizontalDivider(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Theme.v2.colors.backgrounds.secondary.copy(alpha = 0f),
-                        Color(0xFF284570),
-                        Theme.v2.colors.backgrounds.secondary.copy(alpha = 0f),
-                    ),
-                    startX = 0f,
-                    endX = Float.POSITIVE_INFINITY,
-                    tileMode = TileMode.Clamp
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(
+                    brush =
+                        Brush.horizontalGradient(
+                            colors =
+                                listOf(
+                                    Theme.v2.colors.backgrounds.secondary.copy(alpha = 0f),
+                                    Color(0xFF284570),
+                                    Theme.v2.colors.backgrounds.secondary.copy(alpha = 0f),
+                                ),
+                            startX = 0f,
+                            endX = Float.POSITIVE_INFINITY,
+                            tileMode = TileMode.Clamp,
+                        )
                 )
-            )
     )
 }
 
 @Composable
 private fun Modifier.vsClickableBackground() =
     border(
-        border = BorderStroke(
-            width = 1.dp,
-            color = Theme.v2.colors.border.light,
-        ),
-        shape = RoundedCornerShape(12.dp),
-    )
+            border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
+            shape = RoundedCornerShape(12.dp),
+        )
         .background(
             color = Theme.v2.colors.backgrounds.secondary,
             shape = RoundedCornerShape(12.dp),
@@ -1421,31 +1322,27 @@ private fun PercentageChip(
 ) {
 
     Box(
-        modifier = modifier
-            .clickable(onClick = onClick)
-            .then(
-                if (isSelected)
-                    Modifier.background(
-                        color = Theme.v2.colors.primary.accent3,
-                        shape = CircleShape,
-                    )
-                else
-                    Modifier.border(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.light,
-                        shape = CircleShape,
-                    )
-            )
-            .padding(
-                all = 4.dp,
-            ),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .clickable(onClick = onClick)
+                .then(
+                    if (isSelected)
+                        Modifier.background(
+                            color = Theme.v2.colors.primary.accent3,
+                            shape = CircleShape,
+                        )
+                    else
+                        Modifier.border(
+                            width = 1.dp,
+                            color = Theme.v2.colors.border.light,
+                            shape = CircleShape,
+                        )
+                )
+                .padding(all = 4.dp),
+        contentAlignment = Alignment.Center,
     ) {
         if (isLoading && isSelected) {
-            V2Loading(
-                modifier = Modifier
-                    .size(16.dp)
-            )
+            V2Loading(modifier = Modifier.size(16.dp))
         } else {
             Text(
                 text = title,
@@ -1455,7 +1352,6 @@ private fun PercentageChip(
             )
         }
     }
-
 }
 
 @Composable
@@ -1465,40 +1361,23 @@ private fun TokenFiatToggle(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .height(IntrinsicSize.Min)
-            .background(
-                color = Theme.v2.colors.backgrounds.secondary,
-                shape = CircleShape
-            )
+        modifier =
+            modifier
+                .height(IntrinsicSize.Min)
+                .background(color = Theme.v2.colors.backgrounds.secondary, shape = CircleShape)
     ) {
         LookaheadScope {
             Box(
-                Modifier
-                    .animatePlacementInScope(
-                        lookaheadScope = this@LookaheadScope
-                    )
-                    .padding(
-                        all = 4.dp,
-                    )
-                    .background(
-                        color = Theme.v2.colors.primary.accent3,
-                        shape = CircleShape,
-                    )
+                Modifier.animatePlacementInScope(lookaheadScope = this@LookaheadScope)
+                    .padding(all = 4.dp)
+                    .background(color = Theme.v2.colors.primary.accent3, shape = CircleShape)
                     .padding(all = 8.dp)
                     .size(16.dp)
-                    .align(
-                        if (isTokenSelected)
-                            Alignment.TopCenter
-                        else Alignment.BottomCenter
-                    )
+                    .align(if (isTokenSelected) Alignment.TopCenter else Alignment.BottomCenter)
             )
             Column(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
-                modifier = Modifier
-                    .padding(
-                        all = 4.dp,
-                    )
+                modifier = Modifier.padding(all = 4.dp),
             ) {
                 ToggleButton(
                     drawableResId = R.drawable.ic_coins,
@@ -1515,39 +1394,28 @@ private fun TokenFiatToggle(
 }
 
 @Composable
-private fun ToggleButton(
-    @DrawableRes drawableResId: Int,
-    onClick: () -> Unit,
-) {
+private fun ToggleButton(@DrawableRes drawableResId: Int, onClick: () -> Unit) {
     UiIcon(
         drawableResId = drawableResId,
         size = 16.dp,
         tint = Theme.v2.colors.text.secondary,
-        modifier = Modifier
-            .clip(CircleShape)
-            .clickable(onClick = onClick)
-            .padding(all = 8.dp)
+        modifier = Modifier.clip(CircleShape).clickable(onClick = onClick).padding(all = 8.dp),
     )
 }
-
 
 @Composable
 private fun FoldableSection(
     expanded: Boolean = false,
     complete: Boolean = false,
-
     completeTitleContent: (@Composable RowScope.() -> Unit)? = null,
     expandedTitleActions: (@Composable RowScope.() -> Unit)? = null,
-
     onToggle: () -> Unit = {},
-
     title: String,
-
     content: @Composable () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .border(
+        modifier =
+            Modifier.border(
                 width = 1.dp,
                 color = Theme.v2.colors.border.normal,
                 shape = RoundedCornerShape(12.dp),
@@ -1556,10 +1424,7 @@ private fun FoldableSection(
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .clickable(onClick = onToggle)
-                .padding(all = 16.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.clickable(onClick = onToggle).padding(all = 16.dp).fillMaxWidth(),
         ) {
             Text(
                 text = title,
@@ -1590,16 +1455,8 @@ private fun FoldableSection(
             }
         }
 
-        AnimatedVisibility(
-            visible = expanded,
-        ) {
-            FadingHorizontalDivider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 12.dp,
-                    ),
-            )
+        AnimatedVisibility(visible = expanded) {
+            FadingHorizontalDivider(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp))
 
             content()
         }
@@ -1610,22 +1467,21 @@ private fun FoldableSection(
 @Composable
 private fun SendScreenPreview() {
     SendFormScreen(
-        state = SendFormUiModel(
-            totalGas = UiText.DynamicString("12.5 Eth"),
-            showGasFee = true,
-            estimatedFee = UiText.DynamicString("$3.4"),
-        ),
+        state =
+            SendFormUiModel(
+                totalGas = UiText.DynamicString("12.5 Eth"),
+                showGasFee = true,
+                estimatedFee = UiText.DynamicString("$3.4"),
+            ),
         addressFieldState = TextFieldState(),
         tokenAmountFieldState = TextFieldState(),
         fiatAmountFieldState = TextFieldState(),
         memoFieldState = TextFieldState(),
-
         onNetworkDragStart = {},
         onNetworkDrag = {},
         onNetworkDragEnd = {},
         onNetworkDragCancel = {},
         onNetworkLongPressStarted = {},
-
         onAssetDragStart = {},
         onAssetDrag = {},
         onAssetDragEnd = {},

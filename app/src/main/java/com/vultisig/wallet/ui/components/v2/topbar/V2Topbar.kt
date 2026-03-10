@@ -35,52 +35,43 @@ fun V2Topbar(
                 color = Theme.v2.colors.text.primary,
             )
         },
-        navigationIcon = onBackClick?.let {
-            {
-                Row {
-                    UiSpacer(
-                        size = 12.dp
-                    )
-                    VsCircleButton(
-                        onClick = onBackClick,
-                        size = VsCircleButtonSize.Small,
-                        type = VsCircleButtonType.Secondary,
-                        designType = DesignType.Shined,
-                        icon = R.drawable.ic_caret_left,
-                    )
+        navigationIcon =
+            onBackClick?.let {
+                {
+                    Row {
+                        UiSpacer(size = 12.dp)
+                        VsCircleButton(
+                            onClick = onBackClick,
+                            size = VsCircleButtonSize.Small,
+                            type = VsCircleButtonType.Secondary,
+                            designType = DesignType.Shined,
+                            icon = R.drawable.ic_caret_left,
+                        )
+                    }
                 }
-            }
-        } ?: {},
+            } ?: {},
         actions = {
             actions?.let {
                 it()
-                UiSpacer(
-                    size = 12.dp
-                )
+                UiSpacer(size = 12.dp)
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Theme.v2.colors.backgrounds.primary,
-        ),
-        windowInsets = WindowInsets(0.dp)
+        colors =
+            TopAppBarDefaults.topAppBarColors(containerColor = Theme.v2.colors.backgrounds.primary),
+        windowInsets = WindowInsets(0.dp),
     )
 }
 
 @Preview
 @Composable
 private fun PreviewV2Topbar() {
-    V2Topbar(
-        title = "Title",
-        onBackClick = null
-    )
+    V2Topbar(title = "Title", onBackClick = null)
 }
+
 @Preview
 @Composable
 private fun PreviewV2Topbar2() {
-    V2Topbar(
-        title = "Title",
-        onBackClick = {},
-    )
+    V2Topbar(title = "Title", onBackClick = {})
 }
 
 @Preview
@@ -97,7 +88,7 @@ private fun PreviewV2Topbar3() {
                 designType = DesignType.Shined,
                 icon = R.drawable.camera,
             )
-        }
+        },
     )
 }
 
@@ -115,7 +106,7 @@ private fun PreviewV2Topbar4() {
                 designType = DesignType.Shined,
                 icon = R.drawable.camera,
             )
-        }
+        },
     )
 }
 
@@ -133,26 +124,18 @@ private fun PreviewV2Topbar5() {
                 designType = DesignType.Shined,
                 icon = R.drawable.camera,
             )
-        }
+        },
     )
 }
 
 @Preview
 @Composable
 private fun PreviewV2Topbar6() {
-    V2Topbar(
-        title = "title",
-        onBackClick = null,
-        actions = null
-    )
+    V2Topbar(title = "title", onBackClick = null, actions = null)
 }
 
 @Preview
 @Composable
 private fun PreviewV2Topbar7() {
-    V2Topbar(
-        title = "title",
-        onBackClick = null,
-        actions = { }
-    )
+    V2Topbar(title = "title", onBackClick = null, actions = {})
 }

@@ -5,7 +5,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 enum class DerivationPath {
-    Default, Phantom
+    Default,
+    Phantom,
 }
 
 data class ChainImportSetting(
@@ -22,42 +23,39 @@ data class KeyImportData(
 
 interface KeyImportRepository {
     fun get(): KeyImportData?
+
     fun setMnemonic(mnemonic: String)
+
     fun setChainSettings(settings: List<ChainImportSetting>)
+
     fun clear()
 }
 
 /**
- * In-memory holder for mnemonic and chain settings during the KeyImport flow.
- * Lifecycle: set in ImportSeedphrase → read in PeerDiscovery/Keygen → cleared in
- * KeygenViewModel.finally or on back/error. @Volatile + synchronized ensures
- * visibility across coroutine dispatchers and atomicity of read-modify-write.
+ * In-memory holder for mnemonic and chain settings during the KeyImport flow. Lifecycle: set in
+ * ImportSeedphrase → read in PeerDiscovery/Keygen → cleared in KeygenViewModel.finally or on
+ * back/error. @Volatile + synchronized ensures visibility across coroutine dispatchers and
+ * atomicity of read-modify-write.
  */
 @Singleton
 internal class KeyImportRepositoryImpl @Inject constructor() : KeyImportRepository {
 
-    @Volatile
-    private var data: KeyImportData? = null
+    @Volatile private var data: KeyImportData? = null
 
     override fun get(): KeyImportData? = data
 
     override fun setMnemonic(mnemonic: String) {
-        synchronized(this) {
-            data = KeyImportData(mnemonic = mnemonic)
-        }
+        synchronized(this) { data = KeyImportData(mnemonic = mnemonic) }
     }
 
     override fun setChainSettings(settings: List<ChainImportSetting>) {
         synchronized(this) {
-            data = requireNotNull(data) {
-                "setMnemonic() must be called before setChainSettings()"
-            }.copy(chainSettings = settings)
+            data =
+                data?.copy(chainSettings = settings) ?: KeyImportData("", chainSettings = settings)
         }
     }
 
     override fun clear() {
-        synchronized(this) {
-            data = null
-        }
+        synchronized(this) { data = null }
     }
 }

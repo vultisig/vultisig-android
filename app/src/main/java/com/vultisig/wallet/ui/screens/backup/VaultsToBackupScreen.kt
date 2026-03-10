@@ -45,7 +45,6 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 
-
 @Composable
 internal fun VaultsToBackupScreen() {
     val viewModel = hiltViewModel<VaultsToBackupViewModel>()
@@ -67,12 +66,9 @@ internal fun VaultsToBackupScreen(
 ) {
     V2Scaffold(
         onBackClick = onBackClick,
-        modifier = Modifier
-            .background(color = Theme.v2.colors.backgrounds.primary),
+        modifier = Modifier.background(color = Theme.v2.colors.backgrounds.primary),
     ) {
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val maxHeight = maxHeight
             var headerHeight by remember { mutableStateOf(0.dp) }
             var firstContainerHeight by remember { mutableStateOf(0.dp) }
@@ -81,39 +77,37 @@ internal fun VaultsToBackupScreen(
 
             Column {
                 SelectVaultTypeHeader(
-                    modifier = Modifier.onGloballyPositioned { coordinates ->
-                        headerHeight = with(density) { coordinates.size.height.toDp() }
-                    }
+                    modifier =
+                        Modifier.onGloballyPositioned { coordinates ->
+                            headerHeight = with(density) { coordinates.size.height.toDp() }
+                        }
                 )
 
                 BackupVaultContainer(
-                    modifier = Modifier.onGloballyPositioned { coordinates ->
-                        firstContainerHeight = with(density) { coordinates.size.height.toDp() }
-                    },
+                    modifier =
+                        Modifier.onGloballyPositioned { coordinates ->
+                            firstContainerHeight = with(density) { coordinates.size.height.toDp() }
+                        },
                     title = stringResource(R.string.backup_this_vault_only),
-                    vaults = listOf(
-                        backupVaultUiModel.currentVault,
-                    ),
+                    vaults = listOf(backupVaultUiModel.currentVault),
                     onClick = onCurrentVaultBackupClick,
-                    availableHeight = null
+                    availableHeight = null,
                 )
 
-
                 Box(
-                    modifier = Modifier.onGloballyPositioned { coordinates ->
-                        spacerHeight = with(density) { coordinates.size.height.toDp() }
-                    }
+                    modifier =
+                        Modifier.onGloballyPositioned { coordinates ->
+                            spacerHeight = with(density) { coordinates.size.height.toDp() }
+                        }
                 ) {
-                    UiSpacer(
-                        size = 16.dp,
-                    )
+                    UiSpacer(size = 16.dp)
                 }
 
                 BackupVaultContainer(
                     title = stringResource(R.string.backup_all_vaults),
                     vaults = backupVaultUiModel.vaultsToBackup,
                     onClick = onAllVaultsBackupClick,
-                    availableHeight = maxHeight - headerHeight - firstContainerHeight - spacerHeight
+                    availableHeight = maxHeight - headerHeight - firstContainerHeight - spacerHeight,
                 )
             }
         }
@@ -121,21 +115,15 @@ internal fun VaultsToBackupScreen(
 }
 
 @Composable
-private fun SelectVaultTypeHeader(
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-    ) {
+private fun SelectVaultTypeHeader(modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
         Text(
             text = stringResource(R.string.backup_select_vaults_title),
             style = Theme.brockmann.headings.title1,
             color = Theme.v2.colors.text.primary,
         )
 
-        UiSpacer(
-            size = 12.dp,
-        )
+        UiSpacer(size = 12.dp)
 
         Text(
             text = stringResource(R.string.backup_select_vaults_subtitle),
@@ -143,9 +131,7 @@ private fun SelectVaultTypeHeader(
             color = Theme.v2.colors.text.tertiary,
         )
 
-        UiSpacer(
-            size = 36.dp,
-        )
+        UiSpacer(size = 36.dp)
     }
 }
 
@@ -160,16 +146,9 @@ private fun BackupVaultContainer(
     V2Container(
         type = ContainerType.PRIMARY,
         borderType = ContainerBorderType.Bordered(),
-        modifier = modifier.clickOnce(onClick = onClick)
+        modifier = modifier.clickOnce(onClick = onClick),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = 12.dp,
-                    vertical = 14.dp,
-                ),
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 14.dp)) {
             var headerHeight by remember { mutableStateOf(0.dp) }
             val topSpacerHeight = 12.dp
             val bottomSpacerHeight = 12.dp
@@ -178,11 +157,12 @@ private fun BackupVaultContainer(
             val density = LocalDensity.current
 
             Column(
-                modifier = Modifier.onGloballyPositioned { coordinates ->
-                    if (headerHeight == 0.dp) {
-                        headerHeight = with(density) { coordinates.size.height.toDp() }
+                modifier =
+                    Modifier.onGloballyPositioned { coordinates ->
+                        if (headerHeight == 0.dp) {
+                            headerHeight = with(density) { coordinates.size.height.toDp() }
+                        }
                     }
-                }
             ) {
                 Row {
                     Text(
@@ -205,16 +185,17 @@ private fun BackupVaultContainer(
 
             if (availableHeight != null && headerHeight > 0.dp) {
                 val vaultListMaxHeight =
-                    (availableHeight - headerHeight - topSpacerHeight - bottomSpacerHeight - containerPadding).coerceAtLeast(
-                        0.dp
-                    )
+                    (availableHeight -
+                            headerHeight -
+                            topSpacerHeight -
+                            bottomSpacerHeight -
+                            containerPadding)
+                        .coerceAtLeast(0.dp)
 
                 V2Container(
                     type = ContainerType.SECONDARY,
                     borderType = ContainerBorderType.Borderless,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = vaultListMaxHeight)
+                    modifier = Modifier.fillMaxWidth().heightIn(max = vaultListMaxHeight),
                 ) {
                     BoxWithConstraints {
                         val containerMaxHeight = this.maxHeight
@@ -223,26 +204,26 @@ private fun BackupVaultContainer(
                         Column(Modifier.verticalScroll(rememberScrollState())) {
                             vaults.forEachIndexed { index, vault ->
                                 Box(
-                                    modifier = Modifier.onSizeChanged {
-                                        val itemHeight = with(density) { it.height.toDp() }
-                                        if (itemHeights[index] == null) {
-                                            itemHeights[index] = itemHeight
+                                    modifier =
+                                        Modifier.onSizeChanged {
+                                            val itemHeight = with(density) { it.height.toDp() }
+                                            if (itemHeights[index] == null) {
+                                                itemHeights[index] = itemHeight
 
-                                            var tempHeight = 0.dp
-                                            var count = 0
-                                            for (i in 0..vaults.lastIndex) {
-                                                val h = itemHeights[i]
-                                                    ?: itemHeight
-                                                if (tempHeight + h <= containerMaxHeight) {
-                                                    tempHeight += h
-                                                    count++
-                                                } else {
-                                                    break
+                                                var tempHeight = 0.dp
+                                                var count = 0
+                                                for (i in 0..vaults.lastIndex) {
+                                                    val h = itemHeights[i] ?: itemHeight
+                                                    if (tempHeight + h <= containerMaxHeight) {
+                                                        tempHeight += h
+                                                        count++
+                                                    } else {
+                                                        break
+                                                    }
                                                 }
+                                                visibleItemsCount = count
                                             }
-                                            visibleItemsCount = count
                                         }
-                                    }
                                 ) {
                                     if (index < visibleItemsCount || visibleItemsCount == 0) {
                                         VaultToBackup(
@@ -259,20 +240,16 @@ private fun BackupVaultContainer(
                 V2Container(
                     type = ContainerType.SECONDARY,
                     borderType = ContainerBorderType.Borderless,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column {
                         vaults.forEachIndexed { index, vault ->
-                            VaultToBackup(
-                                model = vault,
-                                isLastItem = index == vaults.lastIndex
-                            )
+                            VaultToBackup(model = vault, isLastItem = index == vaults.lastIndex)
                         }
                     }
                     visibleItemsCount = vaults.size
                 }
             }
-
 
             UiSpacer(size = bottomSpacerHeight)
 
@@ -287,30 +264,20 @@ private fun BackupVaultContainer(
 private fun RemainedCountText(remainedCount: Int?) {
     remainedCount?.let {
         Text(
-            text = stringResource(
-                R.string.more,
-                remainedCount
-            ),
+            text = stringResource(R.string.more, remainedCount),
             color = Theme.v2.colors.text.secondary,
             style = Theme.brockmann.supplementary.footnote,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
 
-
 @Composable
-internal fun VaultToBackup(
-    model: VaultToBackupUiModel,
-    isLastItem: Boolean,
-) {
+internal fun VaultToBackup(model: VaultToBackupUiModel, isLastItem: Boolean) {
     Column {
         Row(
-            modifier = Modifier
-                .padding(
-                    all = 20.dp,
-                ),
+            modifier = Modifier.padding(all = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -325,7 +292,6 @@ internal fun VaultToBackup(
 
             UiSpacer(24.dp)
 
-
             VaultMetaInfo(model)
         }
         if (!isLastItem) {
@@ -336,36 +302,27 @@ internal fun VaultToBackup(
 
 @Composable
 private fun VaultMetaInfo(model: VaultToBackupUiModel) {
-    V2Container(
-        type = ContainerType.SECONDARY,
-        borderType = ContainerBorderType.Bordered(),
-    ) {
+    V2Container(type = ContainerType.SECONDARY, borderType = ContainerBorderType.Bordered()) {
         Row(
-            modifier = Modifier.padding(
-                horizontal = 12.dp,
-                vertical = 8.dp,
-            ),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             VaultIcon(isFastVault = model.isFast)
-            UiSpacer(
-                size = 4.dp,
-            )
+            UiSpacer(size = 4.dp)
 
             Text(
-                text = stringResource(
-                    R.string.vault_details_screen_vault_part_desc,
-                    model.part,
-                    model.size
-                ),
+                text =
+                    stringResource(
+                        R.string.vault_details_screen_vault_part_desc,
+                        model.part,
+                        model.size,
+                    ),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
             )
-
         }
     }
 }
-
 
 @Composable
 @Preview
@@ -374,39 +331,37 @@ internal fun PreviewVaultsToBackupScreen() {
         onBackClick = {},
         onCurrentVaultBackupClick = {},
         onAllVaultsBackupClick = {},
-        backupVaultUiModel = BackupVaultUiModel(
-            currentVault = VaultToBackupUiModel(
-                name = "Vault Name",
-                part = 2,
-                size = 3,
-                isFast = false,
+        backupVaultUiModel =
+            BackupVaultUiModel(
+                currentVault =
+                    VaultToBackupUiModel(name = "Vault Name", part = 2, size = 3, isFast = false),
+                vaultsToBackup =
+                    listOf(
+                        VaultToBackupUiModel(
+                            name = "Main Vault",
+                            part = 2,
+                            size = 3,
+                            isFast = false,
+                        ),
+                        VaultToBackupUiModel(
+                            name = "A longer vault name A longer vault name",
+                            part = 1,
+                            size = 2,
+                            isFast = true,
+                        ),
+                        VaultToBackupUiModel(
+                            name = "Cold Vault",
+                            part = 2,
+                            size = 3,
+                            isFast = false,
+                        ),
+                        VaultToBackupUiModel(
+                            name = "Vault Name",
+                            part = 2,
+                            size = 3,
+                            isFast = false,
+                        ),
+                    ),
             ),
-            vaultsToBackup = listOf(
-                VaultToBackupUiModel(
-                    name = "Main Vault",
-                    part = 2,
-                    size = 3,
-                    isFast = false,
-                ),
-                VaultToBackupUiModel(
-                    name = "A longer vault name A longer vault name",
-                    part = 1,
-                    size = 2,
-                    isFast = true,
-                ),
-                VaultToBackupUiModel(
-                    name = "Cold Vault",
-                    part = 2,
-                    size = 3,
-                    isFast = false,
-                ),
-                VaultToBackupUiModel(
-                    name = "Vault Name",
-                    part = 2,
-                    size = 3,
-                    isFast = false,
-                ),
-            ),
-        )
     )
 }

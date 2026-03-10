@@ -5,14 +5,13 @@ import javax.inject.Inject
 
 internal interface DefaultSwapProviderSelectionStrategy : SwapProviderSelectionStrategy
 
-
-internal class DefaultSwapProviderSelectionStrategyImpl @Inject constructor(
-    private val swapQuoteRepository: SwapQuoteRepository,
-) : DefaultSwapProviderSelectionStrategy {
+internal class DefaultSwapProviderSelectionStrategyImpl
+@Inject
+constructor(private val swapQuoteRepository: SwapQuoteRepository) :
+    DefaultSwapProviderSelectionStrategy {
 
     override val priority = 0
 
     override suspend fun selectProvider(context: SwapSelectionContext) =
         swapQuoteRepository.resolveProvider(context.srcToken, context.dstToken)
-
 }

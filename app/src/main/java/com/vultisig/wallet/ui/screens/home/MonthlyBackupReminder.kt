@@ -31,44 +31,34 @@ internal fun MonthlyBackupReminder(
 ) {
 
     ModalBottomSheet(
-        sheetState = rememberModalBottomSheetState(
-            skipPartiallyExpanded = true,
-        ),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = null,
         containerColor = Theme.v2.colors.backgrounds.primary,
         onDismissRequest = onDismiss,
     ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
             UiSpacer(size = 16.dp)
             Box {
                 UiIcon(
                     modifier = Modifier.align(Alignment.TopEnd),
                     drawableResId = R.drawable.x,
                     size = 20.dp,
-                    onClick = onDismiss
+                    onClick = onDismiss,
                 )
                 Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 40.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp),
                     text = stringResource(id = R.string.monthly_backup_reminder_title),
                     style = Theme.montserrat.subtitle1.copy(fontWeight = FontWeight.Medium),
                     color = Theme.v2.colors.neutrals.n50,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
-
             }
             UiSpacer(size = 16.dp)
 
             VsButton(
                 label = stringResource(R.string.backup_password_screen_title),
                 onClick = onBackup,
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
             )
 
             UiSpacer(size = 16.dp)
@@ -77,8 +67,7 @@ internal fun MonthlyBackupReminder(
                 label = stringResource(R.string.do_not_remind_me_again),
                 variant = VsButtonVariant.Secondary,
                 onClick = onDoNotRemind,
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

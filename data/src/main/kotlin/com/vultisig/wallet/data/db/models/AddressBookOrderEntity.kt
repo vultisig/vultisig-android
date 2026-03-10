@@ -7,14 +7,9 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "addressBookOrder")
 data class AddressBookOrderEntity(
-    @PrimaryKey
-    @ColumnInfo(name = "value")
-    override val value: String = "",
-
-    @ColumnInfo(name = "order")
-    override val order: Float,
+    @PrimaryKey @ColumnInfo(name = "value") override val value: String = "",
+    @ColumnInfo(name = "order") override val order: Float,
 ) : BaseOrderEntity() {
 
-    @Ignore
-    override val parentId: String? = null
+    @Ignore override val parentId: String? = null
 }

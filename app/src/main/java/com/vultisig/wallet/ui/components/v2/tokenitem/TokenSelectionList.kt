@@ -38,9 +38,9 @@ internal data class TokenSelectionGroupUiModel<T>(
 
 internal sealed interface GridTokenUiModel<T> {
     data class SingleToken<T>(val data: T) : GridTokenUiModel<T>
+
     data class PairToken<T>(val data: Pair<T, T>) : GridTokenUiModel<T>
 }
-
 
 @Composable
 internal fun <T> TokenSelectionList(
@@ -54,21 +54,23 @@ internal fun <T> TokenSelectionList(
     onCancelClick: () -> Unit,
     plusUiModel: GridPlusUiModel? = null,
     onSetSearchText: (String) -> Unit = {},
+    bannerContent: (@Composable () -> Unit)? = null,
 ) {
     TokenSelectionList(
-        groups = listOf(
-            TokenSelectionGroupUiModel(
-                items = items,
-                mapper = { gridTokenUiModel ->
-                    when (gridTokenUiModel) {
-                        is SingleToken -> mapper(gridTokenUiModel)
-                        is PairToken -> error("PairToken cannot occur in single-item list")
-                    }
-                },
-                plusUiModel = plusUiModel,
-                title = null,
-            )
-        ),
+        groups =
+            listOf(
+                TokenSelectionGroupUiModel(
+                    items = items,
+                    mapper = { gridTokenUiModel ->
+                        when (gridTokenUiModel) {
+                            is SingleToken -> mapper(gridTokenUiModel)
+                            is PairToken -> error("PairToken cannot occur in single-item list")
+                        }
+                    },
+                    plusUiModel = plusUiModel,
+                    title = null,
+                )
+            ),
         searchTextFieldState = searchTextFieldState,
         titleContent = titleContent,
         notFoundContent = notFoundContent,
@@ -76,16 +78,14 @@ internal fun <T> TokenSelectionList(
             when (uiModel) {
                 is PairToken<T> -> error("PairToken cannot occur in single-item list")
                 is SingleToken<T> -> {
-                    onCheckChange(
-                        isSelected,
-                        uiModel.data
-                    )
+                    onCheckChange(isSelected, uiModel.data)
                 }
             }
         },
         onDoneClick = onDoneClick,
         onCancelClick = onCancelClick,
-        onPasteClick = onSetSearchText
+        onPasteClick = onSetSearchText,
+        bannerContent = bannerContent,
     )
 }
 
@@ -99,6 +99,7 @@ internal fun <T> TokenSelectionList(
     onDoneClick: () -> Unit,
     onCancelClick: () -> Unit,
     onPasteClick: (String) -> Unit = {},
+    bannerContent: (@Composable () -> Unit)? = null,
 ) {
     V2BottomSheet(
         onDismissRequest = onCancelClick,
@@ -116,33 +117,22 @@ internal fun <T> TokenSelectionList(
                 onClick = onDoneClick,
                 size = VsCircleButtonSize.Small,
             )
-
-        }
+        },
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize(),
-        ) {
-            UiSpacer(
-                size = 24.dp
-            )
+        Column(modifier = Modifier.fillMaxSize()) {
+            UiSpacer(size = 24.dp)
 
             titleContent()
 
-            UiSpacer(
-                size = 16.dp
-            )
+            UiSpacer(size = 16.dp)
 
             SearchBar(
                 state = searchTextFieldState,
-                onCancelClick = {},
                 isInitiallyFocused = false,
                 isPasteEnabled = true,
                 onPasteClick = onPasteClick,
             )
-            UiSpacer(
-                size = 24.dp
-            )
+            UiSpacer(size = 24.dp)
 
             if (groups.isEmpty() || (groups.size == 1 && groups[0].items.isEmpty())) {
                 notFoundContent()
@@ -151,36 +141,25 @@ internal fun <T> TokenSelectionList(
                     columns = GridCells.Adaptive(minSize = 74.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = if (bannerContent != null) Modifier.weight(1f) else Modifier,
                 ) {
                     groups.forEach { (title, items, mapper, plusUiModel) ->
-                        title?.let {
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                GridTitle(it)
-                            }
-                        }
+                        title?.let { item(span = { GridItemSpan(maxLineSpan) }) { GridTitle(it) } }
 
-                        plusUiModel?.let {
-                            item {
-                                GridPlus(
-                                    model = it
-                                )
-                            }
-                        }
+                        plusUiModel?.let { item { GridPlus(model = it) } }
 
                         items(items) { item ->
                             GridItem(
                                 uiModel = mapper(item),
-                                onCheckedChange = {
-                                    onCheckChange(it, item)
-                                }
+                                onCheckedChange = { onCheckChange(it, item) },
                             )
                         }
-
                     }
                 }
+
+            bannerContent?.invoke()
         }
     }
-
 }
 
 @Composable
@@ -189,10 +168,9 @@ private fun GridTitle(title: String) {
         text = title,
         style = Theme.brockmann.supplementary.caption,
         color = Theme.v2.colors.text.primary,
-        modifier = Modifier
-            .widthIn(max = 74.dp),
+        modifier = Modifier.widthIn(max = 74.dp),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
@@ -200,132 +178,142 @@ private fun GridTitle(title: String) {
 @Composable
 private fun TokenSelectionListPreview() {
     TokenSelectionList(
-        groups = listOf(
-            TokenSelectionGroupUiModel(
-                title = "Group 1",
-                items = listOf(
-                    SingleToken(data = Coins.Ethereum.ETH),
-                    SingleToken(data = Coins.Bitcoin.BTC),
-                    SingleToken(data = Coins.Solana.SOL),
-                    PairToken(data = Coins.Ethereum.USDC to Coins.Arbitrum.USDC),
-                    SingleToken(data = Coins.Base.DAI),
-                ),
-                mapper = {
-                    val tokenSelectionUiModel = when (it) {
-                        is PairToken<Coin> -> {
-                            TokenUiPair(
-                                left = TokenUiSingle(
-                                    name = it.data.first.ticker,
-                                    logo = getCoinLogo(it.data.first.logo)
-                                ),
-                                right = TokenUiSingle(
-                                    name = it.data.second.ticker,
-                                    logo = getCoinLogo(it.data.second.logo)
-                                ),
-                            )
-                        }
+        groups =
+            listOf(
+                TokenSelectionGroupUiModel(
+                    title = "Group 1",
+                    items =
+                        listOf(
+                            SingleToken(data = Coins.Ethereum.ETH),
+                            SingleToken(data = Coins.Bitcoin.BTC),
+                            SingleToken(data = Coins.Solana.SOL),
+                            PairToken(data = Coins.Ethereum.USDC to Coins.Arbitrum.USDC),
+                            SingleToken(data = Coins.Base.DAI),
+                        ),
+                    mapper = {
+                        val tokenSelectionUiModel =
+                            when (it) {
+                                is PairToken<Coin> -> {
+                                    TokenUiPair(
+                                        left =
+                                            TokenUiSingle(
+                                                name = it.data.first.ticker,
+                                                logo = getCoinLogo(it.data.first.logo),
+                                            ),
+                                        right =
+                                            TokenUiSingle(
+                                                name = it.data.second.ticker,
+                                                logo = getCoinLogo(it.data.second.logo),
+                                            ),
+                                    )
+                                }
 
-                        is SingleToken<Coin> -> {
-                            TokenUiSingle(
-                                name = it.data.ticker,
-                                logo = getCoinLogo(it.data.logo)
-                            )
-                        }
-                    }
-                    TokenSelectionGridUiModel(
-                        isChecked = true,
-                        tokenSelectionUiModel = tokenSelectionUiModel
-                    )
-                },
-                plusUiModel = null,
-            ),
-            TokenSelectionGroupUiModel(
-                title = "Group 2",
-                items = listOf(
-                    SingleToken(data = Coins.Ethereum.USDT),
-                    SingleToken(data = Coins.Polygon.USDC),
-                    SingleToken(data = Coins.Optimism.USDC_e),
-                    PairToken(data = Coins.BscChain.USDT to Coins.Solana.USDT),
+                                is SingleToken<Coin> -> {
+                                    TokenUiSingle(
+                                        name = it.data.ticker,
+                                        logo = getCoinLogo(it.data.logo),
+                                    )
+                                }
+                            }
+                        TokenSelectionGridUiModel(
+                            isChecked = true,
+                            tokenSelectionUiModel = tokenSelectionUiModel,
+                        )
+                    },
+                    plusUiModel = null,
                 ),
-                mapper = {
-                    val tokenSelectionUiModel = when (it) {
-                        is PairToken<Coin> -> {
-                            TokenUiPair(
-                                left = TokenUiSingle(
-                                    name = it.data.first.ticker,
-                                    logo = getCoinLogo(it.data.first.logo)
-                                ),
-                                right = TokenUiSingle(
-                                    name = it.data.second.ticker,
-                                    logo = getCoinLogo(it.data.second.logo)
-                                ),
-                            )
-                        }
+                TokenSelectionGroupUiModel(
+                    title = "Group 2",
+                    items =
+                        listOf(
+                            SingleToken(data = Coins.Ethereum.USDT),
+                            SingleToken(data = Coins.Polygon.USDC),
+                            SingleToken(data = Coins.Optimism.USDC_e),
+                            PairToken(data = Coins.BscChain.USDT to Coins.Solana.USDT),
+                        ),
+                    mapper = {
+                        val tokenSelectionUiModel =
+                            when (it) {
+                                is PairToken<Coin> -> {
+                                    TokenUiPair(
+                                        left =
+                                            TokenUiSingle(
+                                                name = it.data.first.ticker,
+                                                logo = getCoinLogo(it.data.first.logo),
+                                            ),
+                                        right =
+                                            TokenUiSingle(
+                                                name = it.data.second.ticker,
+                                                logo = getCoinLogo(it.data.second.logo),
+                                            ),
+                                    )
+                                }
 
-                        is SingleToken<Coin> -> {
-                            TokenUiSingle(
-                                name = it.data.ticker,
-                                logo = getCoinLogo(it.data.logo)
-                            )
-                        }
-                    }
-                    TokenSelectionGridUiModel(
-                        isChecked = false,
-                        tokenSelectionUiModel = tokenSelectionUiModel
-                    )
-                },
-                plusUiModel = null,
-            ),
-            TokenSelectionGroupUiModel(
-                title = "Group 3",
-                items = listOf(
-                    SingleToken(data = Coins.Ethereum.AAVE),
-                    SingleToken(data = Coins.Ethereum.UNI),
-                    PairToken(data = Coins.Arbitrum.LINK to Coins.Optimism.LINK),
-                    SingleToken(data = Coins.ThorChain.RUNE),
-                    SingleToken(data = Coins.Kujira.KUJI),
-                    SingleToken(data = Coins.Base.AERO),
+                                is SingleToken<Coin> -> {
+                                    TokenUiSingle(
+                                        name = it.data.ticker,
+                                        logo = getCoinLogo(it.data.logo),
+                                    )
+                                }
+                            }
+                        TokenSelectionGridUiModel(
+                            isChecked = false,
+                            tokenSelectionUiModel = tokenSelectionUiModel,
+                        )
+                    },
+                    plusUiModel = null,
                 ),
-                mapper = {
-                    val tokenSelectionUiModel = when (it) {
-                        is PairToken<Coin> -> {
-                            TokenUiPair(
-                                left = TokenUiSingle(
-                                    name = it.data.first.ticker,
-                                    logo = getCoinLogo(it.data.first.logo)
-                                ),
-                                right = TokenUiSingle(
-                                    name = it.data.second.ticker,
-                                    logo = getCoinLogo(it.data.second.logo)
-                                ),
-                            )
-                        }
+                TokenSelectionGroupUiModel(
+                    title = "Group 3",
+                    items =
+                        listOf(
+                            SingleToken(data = Coins.Ethereum.AAVE),
+                            SingleToken(data = Coins.Ethereum.UNI),
+                            PairToken(data = Coins.Arbitrum.LINK to Coins.Optimism.LINK),
+                            SingleToken(data = Coins.ThorChain.RUNE),
+                            SingleToken(data = Coins.Kujira.KUJI),
+                            SingleToken(data = Coins.Base.AERO),
+                        ),
+                    mapper = {
+                        val tokenSelectionUiModel =
+                            when (it) {
+                                is PairToken<Coin> -> {
+                                    TokenUiPair(
+                                        left =
+                                            TokenUiSingle(
+                                                name = it.data.first.ticker,
+                                                logo = getCoinLogo(it.data.first.logo),
+                                            ),
+                                        right =
+                                            TokenUiSingle(
+                                                name = it.data.second.ticker,
+                                                logo = getCoinLogo(it.data.second.logo),
+                                            ),
+                                    )
+                                }
 
-                        is SingleToken<Coin> -> {
-                            TokenUiSingle(
-                                name = it.data.ticker,
-                                logo = getCoinLogo(it.data.logo)
-                            )
-                        }
-                    }
-                    TokenSelectionGridUiModel(
-                        isChecked = false,
-                        tokenSelectionUiModel = tokenSelectionUiModel
-                    )
-                },
-                plusUiModel = GridPlusUiModel(
-                    title = "Add More",
-                    onClick = {},
+                                is SingleToken<Coin> -> {
+                                    TokenUiSingle(
+                                        name = it.data.ticker,
+                                        logo = getCoinLogo(it.data.logo),
+                                    )
+                                }
+                            }
+                        TokenSelectionGridUiModel(
+                            isChecked = false,
+                            tokenSelectionUiModel = tokenSelectionUiModel,
+                        )
+                    },
+                    plusUiModel = GridPlusUiModel(title = "Add More", onClick = {}),
                 ),
             ),
-        ),
         searchTextFieldState = TextFieldState(),
         titleContent = {
             Column {
                 Text(
                     "Select tokens to manage",
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.tertiary
+                    color = Theme.v2.colors.text.tertiary,
                 )
             }
         },
@@ -342,10 +330,9 @@ private fun TokenSelectionListPreview() {
                     println(token)
                 }
             }
-
         },
         onDoneClick = {},
         onCancelClick = {},
-        onPasteClick = {}
+        onPasteClick = {},
     )
 }

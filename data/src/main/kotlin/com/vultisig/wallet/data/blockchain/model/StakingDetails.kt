@@ -5,7 +5,6 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Date
 
-
 data class StakingDetails(
     val id: String, // ticker-chainId-contractAddress-nodeAddress
     val coin: Coin,

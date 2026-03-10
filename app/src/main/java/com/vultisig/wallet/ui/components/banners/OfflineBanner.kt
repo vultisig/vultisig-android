@@ -31,11 +31,11 @@ internal fun OfflineBanner(isOffline: Boolean) {
                 textAlign = TextAlign.Companion.Center,
                 color = Theme.v2.colors.backgrounds.primary,
                 fontSize = 12.sp,
-                modifier = Modifier.Companion
-                    .background(Theme.v2.colors.backgrounds.amber)
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                modifier =
+                    Modifier.Companion.background(Theme.v2.colors.backgrounds.amber)
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
             )
-        }
+        },
     )
 }

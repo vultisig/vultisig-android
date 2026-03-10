@@ -18,23 +18,25 @@ import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import javax.inject.Inject
 
 internal data class ConfirmDeleteVaultState(
     val checkedCautionIndexes: List<Int> = emptyList(),
     val cautionsBeforeDelete: List<Int> = emptyList(),
     val isDeleteButtonEnabled: Boolean = false,
-    val vaultDeleteUiModel: VaultDeleteUiModel = VaultDeleteUiModel()
+    val vaultDeleteUiModel: VaultDeleteUiModel = VaultDeleteUiModel(),
 )
 
 @HiltViewModel
-internal class ConfirmDeleteViewModel @Inject constructor(
+internal class ConfirmDeleteViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
     private val navigator: Navigator<Destination>,
@@ -44,16 +46,18 @@ internal class ConfirmDeleteViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val vaultId: String = savedStateHandle.toRoute<Route.ConfirmDelete>().vaultId
-    val uiModel = MutableStateFlow(
-        ConfirmDeleteVaultState(
-            cautionsBeforeDelete = listOf(
-                R.string.vault_settings_delete_vault_caution1,
-                R.string.vault_settings_delete_vault_caution2,
-                R.string.vault_settings_delete_vault_caution3,
-            ),
-            vaultDeleteUiModel = VaultDeleteUiModel()
+    val uiModel =
+        MutableStateFlow(
+            ConfirmDeleteVaultState(
+                cautionsBeforeDelete =
+                    listOf(
+                        R.string.vault_settings_delete_vault_caution1,
+                        R.string.vault_settings_delete_vault_caution2,
+                        R.string.vault_settings_delete_vault_caution3,
+                    ),
+                vaultDeleteUiModel = VaultDeleteUiModel(),
+            )
         )
-    )
 
     init {
         loadData()
@@ -64,14 +68,15 @@ internal class ConfirmDeleteViewModel @Inject constructor(
             vaultRepository.get(vaultId)?.let { vault ->
                 uiModel.update {
                     it.copy(
-                        vaultDeleteUiModel = VaultDeleteUiModel(
-                            name = vault.name,
-                            pubKeyECDSA = vault.pubKeyECDSA,
-                            pubKeyEDDSA = vault.pubKeyEDDSA,
-                            deviceList = vault.signers,
-                            localPartyId = vault.localPartyID,
-                            vaultPart = vault.getVaultPart()
-                        )
+                        vaultDeleteUiModel =
+                            VaultDeleteUiModel(
+                                name = vault.name,
+                                pubKeyECDSA = vault.pubKeyECDSA,
+                                pubKeyEDDSA = vault.pubKeyEDDSA,
+                                deviceList = vault.signers,
+                                localPartyId = vault.localPartyID,
+                                vaultPart = vault.getVaultPart(),
+                            )
                     )
                 }
             }
@@ -82,32 +87,30 @@ internal class ConfirmDeleteViewModel @Inject constructor(
                         it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
                     }
                 }
-                .catch {
-                    Timber.e(it)
-                }.collect { accounts ->
-                    val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
-                        ?.let { fiatValueToStringMapper(it) }
+                .catch { Timber.e(it) }
+                .collect { accounts ->
+                    val totalFiatValue =
+                        accounts.calculateAddressesTotalFiatValue()?.let {
+                            fiatValueToStringMapper(it)
+                        }
 
                     uiModel.update {
                         it.copy(
-                            vaultDeleteUiModel = it.vaultDeleteUiModel.copy(
-                                totalFiatValue = totalFiatValue
-                            )
+                            vaultDeleteUiModel =
+                                it.vaultDeleteUiModel.copy(totalFiatValue = totalFiatValue)
                         )
                     }
                 }
         }
     }
 
-
     fun changeCheckCaution(index: Int, checked: Boolean) {
         val checkedCautionIndexes = uiModel.value.checkedCautionIndexes.toMutableList()
-        if (checked) checkedCautionIndexes.add(index)
-        else checkedCautionIndexes.remove(index)
+        if (checked) checkedCautionIndexes.add(index) else checkedCautionIndexes.remove(index)
         uiModel.update {
             it.copy(
                 checkedCautionIndexes = checkedCautionIndexes,
-                isDeleteButtonEnabled = checkedCautionIndexes.size == it.cautionsBeforeDelete.size
+                isDeleteButtonEnabled = checkedCautionIndexes.size == it.cautionsBeforeDelete.size,
             )
         }
     }
@@ -117,18 +120,9 @@ internal class ConfirmDeleteViewModel @Inject constructor(
             vaultRepository.delete(vaultId)
             vaultOrderRepository.delete(parentId = null, name = vaultId)
             if (vaultRepository.hasVaults()) {
-                navigator.route(
-                    Route.Home(),
-                    NavigationOptions(
-                        clearBackStack = true
-                    )
-                )
+                navigator.route(Route.Home(), NavigationOptions(clearBackStack = true))
             } else {
-                navigator.route(
-                    Route.AddVault, NavigationOptions(
-                        clearBackStack = true
-                    )
-                )
+                navigator.route(Route.AddVault, NavigationOptions(clearBackStack = true))
             }
         }
     }

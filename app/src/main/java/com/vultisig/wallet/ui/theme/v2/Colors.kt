@@ -18,18 +18,10 @@ data class Colors(
 )
 
 data class Gradients(
-    val primary: Brush = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFF33E6BF),
-            Color(0xFF0439C7),
-        )
-    ),
-    val primaryReversed: Brush = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFF0439C7),
-            Color(0xFF33E6BF),
-        )
-    )
+    val primary: Brush =
+        Brush.linearGradient(colors = listOf(Color(0xFF33E6BF), Color(0xFF0439C7))),
+    val primaryReversed: Brush =
+        Brush.linearGradient(colors = listOf(Color(0xFF0439C7), Color(0xFF33E6BF))),
 )
 
 data class Buttons(
@@ -39,13 +31,12 @@ data class Buttons(
     val disabled: Color = Color(0xFF0B1A3A),
     val disabledError: Color = Color(0xFF501E1E),
     val ctaPrimary: Color = Color(0xFF0B4EFF),
-    val ctaDisabled: Color = Color(0xFF23376D)
+    val ctaDisabled: Color = Color(0xFF23376D),
 )
-
 
 data class Backgrounds(
     val primary: Color = Color(0xFF02122B),
-    val background: Color = Color(0x8002122B),
+    val background: Color = Color(0xFF02122B),
     val secondary: Color = Color(0xFF061B3A),
     val surface2: Color = Color(0xFF12284A),
     val tertiary: Color = Color(0xFF0B1A3A),
@@ -53,7 +44,7 @@ data class Backgrounds(
     val success: Color = Color(0xFF042436),
     val alert: Color = Color(0xFF362B17),
     val error: Color = Color(0xFF2B1111),
-    val neutral: Color = Color(0xFF061B3A),
+    val surface1: Color = Color(0xFF061B3A),
     val surface3: Color = Color(0xFF1B2430),
     val surface4: Color = Color(0xFF072C44),
     val light: Color = Color(0xFF11284B),
@@ -64,7 +55,13 @@ data class Backgrounds(
     val teal: Color = Color(0xFF15D7AC),
     val orange: Color = Color(0xffF7961B),
     val disabled: Color = Color(0x800B1A3A),
-    val dark: Color = Color(0xFF061C3C)
+    val dark: Color = Color(0xFF061C3C),
+    val state: BackgroundStates = BackgroundStates(),
+)
+
+data class BackgroundStates(
+    val success: Color = Color(0xFF13C89D),
+    val neutral: Color = Color(0xFF061B3A),
 )
 
 data class Primary(
@@ -87,7 +84,7 @@ data class TextButton(
     val dark: Color = Color(0xFF02122B),
     val primary: Color = Color(0xFFF0F4FC),
     val disabled: Color = Color(0xFF718096),
-    val dim: Color = Color(0xFF5180FC)
+    val dim: Color = Color(0xFF5180FC),
 )
 
 data class Border(
@@ -102,7 +99,7 @@ data class Alerts(
     val success: Color = Color(0xFF13C89D),
     val error: Color = Color(0xFFFF5C5C),
     val warning: Color = Color(0xFFFFC25C),
-    val info: Color = Color(0xFF5CA7FF)
+    val info: Color = Color(0xFF5CA7FF),
 )
 
 data class Neutrals(
@@ -116,21 +113,15 @@ data class Neutrals(
     val n700: Color = Color(0xFF383A40),
     val n800: Color = Color(0xFF0F1011),
     val n900: Color = Color(0xFF000000),
-
-    )
+)
 
 data class Variables(
     val backgroundsSurface1: Color = Color(0xFF061B3A),
     val bordersLight: Color = Color(0xFF11284A),
     val textPrimary: Color = Color(0xFFF0F4FC),
-    val buttonsCTAPrimary: Color = Color(0xFF0B4EFF)
+    val buttonsCTAPrimary: Color = Color(0xFF0B4EFF),
 )
 
-data class FillsColors(
-    val primary: Color = Color(0x1F787880),
-)
+data class FillsColors(val primary: Color = Color(0x1F787880))
 
-data class Vibrant(
-    val primary: Color = Color(0xFF333333)
-)
-
+data class Vibrant(val primary: Color = Color(0xFF333333))

@@ -20,13 +20,11 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun CircleDeFiPositionsScreen(
     vaultId: VaultId,
-    viewModel: CircleDeFiPositionsViewModel = hiltViewModel()
+    viewModel: CircleDeFiPositionsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.setData(vaultId)
-    }
+    LaunchedEffect(Unit) { viewModel.setData(vaultId) }
 
     CircleDefiPositionScreenContent(
         state = state,
@@ -74,7 +72,7 @@ internal fun CircleDefiPositionScreenContent(
                 onClickCloseWarning = onClickCloseWarning,
                 onClickWithdraw = onClickWithdraw,
             )
-        }
+        },
     )
 }
 
@@ -116,11 +114,12 @@ private fun CircleContentDepositTab(
         HeaderDeFiWidget(
             title = stringResource(R.string.usdc_deposit_title),
             iconRes = R.drawable.usdc,
-            buttonText = if (state.isAccountOpen) {
-                stringResource(R.string.deposit_usdc_button)
-            } else {
-                stringResource(R.string.open_account_button)
-            },
+            buttonText =
+                if (state.isAccountOpen) {
+                    stringResource(R.string.deposit_usdc_button)
+                } else {
+                    stringResource(R.string.open_account_button)
+                },
             onClickAction = onClickDepositOrCreateAccount,
             totalAmount = state.totalDeposit,
             totalPrice = state.totalDepositCurrency,
@@ -144,18 +143,19 @@ private fun CircleDeFiPositionsScreenPreview() {
 @Composable
 private fun CircleDefiPositionScreenContentPreview() {
     CircleDefiPositionScreenContent(
-        state = DefiUiModel(
-            totalAmountPrice = "$12,345.67",
-            isTotalAmountLoading = false,
-            isBalanceVisible = true,
-            supportEditChains = true,
-            selectedTab = DeFiTab.DEPOSITED.displayNameRes,
-            bannerImage = R.drawable.circle_defi_banner
-        ),
+        state =
+            DefiUiModel(
+                totalAmountPrice = "$12,345.67",
+                isTotalAmountLoading = false,
+                isBalanceVisible = true,
+                supportEditChains = true,
+                selectedTab = DeFiTab.DEPOSITED.displayNameRes,
+                bannerImage = R.drawable.circle_defi_banner,
+            ),
         tabs = listOf(DeFiTab.DEPOSITED),
-        onBackClick = { },
-        onTabSelected = { },
-        onEditChains = { }
+        onBackClick = {},
+        onTabSelected = {},
+        onEditChains = {},
     )
 }
 
@@ -163,18 +163,19 @@ private fun CircleDefiPositionScreenContentPreview() {
 @Composable
 private fun CircleDefiPositionScreenContentLoadingPreview() {
     CircleDefiPositionScreenContent(
-        state = DefiUiModel(
-            totalAmountPrice = "$0.00",
-            isTotalAmountLoading = true,
-            isBalanceVisible = true,
-            supportEditChains = false,
-            selectedTab = DeFiTab.DEPOSITED.displayNameRes,
-            bannerImage = R.drawable.circle_defi_banner
-        ),
+        state =
+            DefiUiModel(
+                totalAmountPrice = "$0.00",
+                isTotalAmountLoading = true,
+                isBalanceVisible = true,
+                supportEditChains = false,
+                selectedTab = DeFiTab.DEPOSITED.displayNameRes,
+                bannerImage = R.drawable.circle_defi_banner,
+            ),
         tabs = listOf(DeFiTab.DEPOSITED),
         onBackClick = {},
         onTabSelected = {},
-        onEditChains = {}
+        onEditChains = {},
     )
 }
 
@@ -182,17 +183,18 @@ private fun CircleDefiPositionScreenContentLoadingPreview() {
 @Composable
 private fun CircleDefiPositionScreenContentHiddenBalancePreview() {
     CircleDefiPositionScreenContent(
-        state = DefiUiModel(
-            totalAmountPrice = "$99,999.99",
-            isTotalAmountLoading = false,
-            isBalanceVisible = false,
-            supportEditChains = true,
-            selectedTab = DeFiTab.DEPOSITED.displayNameRes,
-            bannerImage = R.drawable.circle_defi_banner
-        ),
+        state =
+            DefiUiModel(
+                totalAmountPrice = "$99,999.99",
+                isTotalAmountLoading = false,
+                isBalanceVisible = false,
+                supportEditChains = true,
+                selectedTab = DeFiTab.DEPOSITED.displayNameRes,
+                bannerImage = R.drawable.circle_defi_banner,
+            ),
         tabs = listOf(DeFiTab.DEPOSITED),
         onBackClick = {},
         onTabSelected = {},
-        onEditChains = {}
+        onEditChains = {},
     )
 }

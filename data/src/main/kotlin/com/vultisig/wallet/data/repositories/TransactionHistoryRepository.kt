@@ -7,69 +7,73 @@ import com.vultisig.wallet.data.models.CommonTransactionHistoryData
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.toEntity
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 
 interface TransactionHistoryRepository {
-    suspend fun recordTransaction(vaultId: String, txHash: String, txData: TransactionHistoryData, genericData: CommonTransactionHistoryData)
+    suspend fun recordTransaction(
+        vaultId: String,
+        txHash: String,
+        txData: TransactionHistoryData,
+        genericData: CommonTransactionHistoryData,
+    )
+
     suspend fun updateTransactionStatus(txHash: String, result: TransactionResult)
+
     suspend fun getTransaction(txHash: String): TransactionHistoryEntity?
-    fun observeTransactions(vaultId: String, type: TransactionHistoryType): Flow<List<TransactionHistoryEntity>>
+
+    fun observeTransactions(
+        vaultId: String,
+        type: TransactionHistoryType,
+    ): Flow<List<TransactionHistoryEntity>>
+
     suspend fun getPendingTransactions(vaultId: String): List<TransactionHistoryEntity>
+
     suspend fun getAllPendingTransactions(): List<TransactionHistoryEntity>
 }
 
 enum class TransactionHistoryType {
-    OVERVIEW, SWAPS, SEND
+    OVERVIEW,
+    SWAPS,
+    SEND,
 }
 
-class TransactionHistoryRepositoryImpl @Inject constructor(
-    private val dao: TransactionHistoryDao,
-) : TransactionHistoryRepository {
+class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: TransactionHistoryDao) :
+    TransactionHistoryRepository {
 
     override suspend fun recordTransaction(
         vaultId: String,
         txHash: String,
         txData: TransactionHistoryData,
-        genericData: CommonTransactionHistoryData
-    ) = dao.insert(
-        transaction = txData.toEntity(genericData)
-    )
+        genericData: CommonTransactionHistoryData,
+    ) = dao.insert(transaction = txData.toEntity(genericData))
 
-
-    override suspend fun updateTransactionStatus(
-        txHash: String,
-        result: TransactionResult
-    ) {
+    override suspend fun updateTransactionStatus(txHash: String, result: TransactionResult) {
         val now = System.currentTimeMillis()
 
         when (result) {
             is TransactionResult.Confirmed -> {
-                dao.updateToConfirmed(
-                    txHash = txHash,
-                    confirmedAt = now,
-                    lastCheckedAt = now
-                )
+                dao.updateToConfirmed(txHash = txHash, confirmedAt = now, lastCheckedAt = now)
             }
             is TransactionResult.Failed -> {
                 dao.updateToFailed(
                     txHash = txHash,
                     failureReason = result.reason,
-                    lastCheckedAt = now
+                    lastCheckedAt = now,
                 )
             }
             TransactionResult.Pending -> {
                 dao.updateStatus(
                     txHash = txHash,
                     status = TransactionStatus.PENDING,
-                    lastCheckedAt = now
+                    lastCheckedAt = now,
                 )
             }
             TransactionResult.NotFound -> {
                 dao.updateToFailed(
                     txHash = txHash,
                     failureReason = "Transaction not found",
-                    lastCheckedAt = now
+                    lastCheckedAt = now,
                 )
             }
         }
@@ -78,10 +82,9 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
     override suspend fun getTransaction(txHash: String): TransactionHistoryEntity? =
         dao.getByTxHash(txHash)
 
-
     override fun observeTransactions(
         vaultId: String,
-        type: TransactionHistoryType
+        type: TransactionHistoryType,
     ): Flow<List<TransactionHistoryEntity>> {
         return when (type) {
             TransactionHistoryType.OVERVIEW -> dao.observeAllByVault(vaultId)
@@ -93,8 +96,6 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
     override suspend fun getPendingTransactions(vaultId: String): List<TransactionHistoryEntity> =
         dao.getPendingTransactions(vaultId)
 
-
     override suspend fun getAllPendingTransactions(): List<TransactionHistoryEntity> =
         dao.getAllPendingTransactions()
-
 }

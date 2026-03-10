@@ -26,23 +26,19 @@ internal fun ExpandedTopbarContainer(
     val screenWidthPx = windowInfo.containerSize.width.toFloat()
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        shineSpotColor,
-                        backgroundColor
-                    ),
-                    radius = screenWidthPx,
-                    center = Offset(
-                        screenWidthPx / 2,
-                        -screenWidthPx * 0.5f
-                    )
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(
+                    brush =
+                        Brush.radialGradient(
+                            colors = listOf(shineSpotColor, backgroundColor),
+                            radius = screenWidthPx,
+                            center = Offset(screenWidthPx / 2, -screenWidthPx * 0.5f),
+                        )
                 )
-            )
-            .padding(all = 16.dp),
+                .padding(all = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        content = content
+        content = content,
     )
 }

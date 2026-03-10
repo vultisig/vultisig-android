@@ -18,34 +18,18 @@ internal fun TxButtons(
     onReceive: () -> Unit,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(
-            20.dp,
-            Alignment.CenterHorizontally
-        )
+        horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
     ) {
         if (isSwapEnabled) {
-            TransactionTypeButton(
-                txType = TransactionType.SWAP,
-                onClick = onSwap
-            )
+            TransactionTypeButton(txType = TransactionType.SWAP, onClick = onSwap)
         }
 
-        TransactionTypeButton(
-            txType = TransactionType.SEND,
-            onClick = onSend
-        )
+        TransactionTypeButton(txType = TransactionType.SEND, onClick = onSend)
 
-        TransactionTypeButton(
-            txType = TransactionType.BUY,
-            onClick = onBuy
-        )
+        TransactionTypeButton(txType = TransactionType.BUY, onClick = onBuy)
 
-        TransactionTypeButton(
-            txType = TransactionType.RECEIVE,
-            onClick = onReceive
-        )
+        TransactionTypeButton(txType = TransactionType.RECEIVE, onClick = onReceive)
     }
 }

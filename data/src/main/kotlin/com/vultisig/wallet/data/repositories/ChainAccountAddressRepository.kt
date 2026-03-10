@@ -13,40 +13,27 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
-import com.vultisig.wallet.data.utils.compatibleType
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
+import com.vultisig.wallet.data.utils.compatibleType
+import javax.inject.Inject
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
-import javax.inject.Inject
 
 interface ChainAccountAddressRepository {
 
-    suspend fun getAddress(
-        chain: Chain,
-        vault: Vault,
-    ): Pair<String, String>
+    suspend fun getAddress(chain: Chain, vault: Vault): Pair<String, String>
 
-    suspend fun getAddress(
-        coin: Coin,
-        vault: Vault,
-    ): Pair<String, String>
+    suspend fun getAddress(coin: Coin, vault: Vault): Pair<String, String>
 
-    fun isValid(
-        chain: Chain,
-        address: String,
-    ): Boolean
-
+    fun isValid(chain: Chain, address: String): Boolean
 }
 
 internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     ChainAccountAddressRepository {
 
-    override suspend fun getAddress(
-        chain: Chain,
-        vault: Vault,
-    ): Pair<String, String> {
+    override suspend fun getAddress(chain: Chain, vault: Vault): Pair<String, String> {
         // For KeyImport vaults, chain-specific public keys are already derived.
         // Look for exact chain match first, then match by derivation path
         // (e.g., all EVM chains share m/44'/60'/0'/0/0)
@@ -54,32 +41,30 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
 
         when (chain.TssKeysignType) {
             TssKeyType.ECDSA -> {
-                val derivedPublicKey = if (chainPubKey != null) {
-                    chainPubKey.publicKey
-                } else {
-                    PublicKeyHelper.getDerivedPublicKey(
-                        vault.pubKeyECDSA,
-                        vault.hexChainCode,
-                        chain.coinType.compatibleDerivationPath()
-                    )
-                }
+                val derivedPublicKey =
+                    if (chainPubKey != null) {
+                        chainPubKey.publicKey
+                    } else {
+                        PublicKeyHelper.getDerivedPublicKey(
+                            vault.pubKeyECDSA,
+                            vault.hexChainCode,
+                            chain.coinType.compatibleDerivationPath(),
+                        )
+                    }
                 val publicKey =
                     PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
                 if (chain == Chain.MayaChain) {
-                    return Pair(
-                        MayaChainHelper.getAddress(publicKey), derivedPublicKey
-                    )
+                    return Pair(MayaChainHelper.getAddress(publicKey), derivedPublicKey)
                 } else {
-                    val pk = publicKey.takeIf { chain.coinType != CoinType.TRON }
-                        ?: publicKey.uncompressed()
-                    val address = adjustAddressPrefix(
-                        chain.coinType.compatibleType,
-                        chain.coinType.compatibleType.deriveAddressFromPublicKey(pk)
-                    )
-                    return Pair(
-                        address,
-                        derivedPublicKey
-                    )
+                    val pk =
+                        publicKey.takeIf { chain.coinType != CoinType.TRON }
+                            ?: publicKey.uncompressed()
+                    val address =
+                        adjustAddressPrefix(
+                            chain.coinType.compatibleType,
+                            chain.coinType.compatibleType.deriveAddressFromPublicKey(pk),
+                        )
+                    return Pair(address, derivedPublicKey)
                 }
             }
 
@@ -89,64 +74,37 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                 if (chain == Chain.Cardano) {
                     val address = CardanoUtils.createEnterpriseAddress(eddsaPubKey)
 
-                    if (!AnyAddress.isValid(
-                            address,
-                            CoinType.CARDANO
-                        )
-                    ) {
+                    if (!AnyAddress.isValid(address, CoinType.CARDANO)) {
                         error("WalletCore validation failed for Cardano address: $address")
                     }
 
                     return Pair(
-                        AnyAddress(
-                            address,
-                            CoinType.CARDANO,
-                            "ada"
-                        ).description(),
-                        eddsaPubKey
+                        AnyAddress(address, CoinType.CARDANO, "ada").description(),
+                        eddsaPubKey,
                     )
                 }
-                val publicKey =
-                    PublicKey(
-                        eddsaPubKey.hexToByteArray(),
-                        PublicKeyType.ED25519
-                    )
-                return Pair(
-                    chain.coinType.deriveAddressFromPublicKey(publicKey),
-                    eddsaPubKey
-                )
+                val publicKey = PublicKey(eddsaPubKey.hexToByteArray(), PublicKeyType.ED25519)
+                return Pair(chain.coinType.deriveAddressFromPublicKey(publicKey), eddsaPubKey)
             }
         }
-
     }
 
-    override suspend fun getAddress(
-        coin: Coin,
-        vault: Vault,
-    ): Pair<String, String> = getAddress(coin.chain, vault)
+    override suspend fun getAddress(coin: Coin, vault: Vault): Pair<String, String> =
+        getAddress(coin.chain, vault)
 
-    override fun isValid(
-        chain: Chain,
-        address: String,
-    ): Boolean = when (chain) {
-        Chain.MayaChain -> AnyAddress.isValidBech32(
-            address,
-            chain.coinType,
-            "maya"
-        )
+    override fun isValid(chain: Chain, address: String): Boolean =
+        when (chain) {
+            Chain.MayaChain -> AnyAddress.isValidBech32(address, chain.coinType, "maya")
 
-        Chain.Sei -> AnyAddress.isValid(
-            address,
-            CoinType.ETHEREUM
-        )
+            Chain.Sei -> AnyAddress.isValid(address, CoinType.ETHEREUM)
 
-        else -> chain.coinType.validate(address)
-    }
+            else -> chain.coinType.validate(address)
+        }
 
     /**
-     * For KeyImport vaults, find the chain-specific public key.
-     * First tries an exact chain match, then falls back to finding another chain
-     * with the same derivation path (e.g., all EVM chains share m/44'/60'/0'/0/0).
+     * For KeyImport vaults, find the chain-specific public key. First tries an exact chain match,
+     * then falls back to finding another chain with the same derivation path (e.g., all EVM chains
+     * share m/44'/60'/0'/0/0).
      */
     private fun findChainPublicKey(chain: Chain, vault: Vault): ChainPublicKey? {
         if (vault.libType != SigningLibType.KeyImport) return null
@@ -154,20 +112,21 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
         val isEddsa = chain.TssKeysignType == TssKeyType.EDDSA
 
         // Exact chain match
-        val exact = vault.chainPublicKeys.firstOrNull {
-            it.chain == chain.raw && it.isEddsa == isEddsa
-        }
+        val exact =
+            vault.chainPublicKeys.firstOrNull { it.chain == chain.raw && it.isEddsa == isEddsa }
         if (exact != null) return exact
 
         // For ECDSA chains, find another chain with the same derivation path
         if (!isEddsa) {
             val targetDerivePath = chain.coinType.compatibleDerivationPath()
             return vault.chainPublicKeys.firstOrNull { cpk ->
-                !cpk.isEddsa && try {
-                    Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() == targetDerivePath
-                } catch (_: Exception) {
-                    false
-                }
+                !cpk.isEddsa &&
+                    try {
+                        Chain.fromRaw(cpk.chain).coinType.compatibleDerivationPath() ==
+                            targetDerivePath
+                    } catch (_: Exception) {
+                        false
+                    }
             }
         }
 
@@ -178,5 +137,4 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
         if (type == CoinType.BITCOINCASH) {
             address.replace("bitcoincash:", "")
         } else address
-
 }

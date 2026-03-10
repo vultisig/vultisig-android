@@ -39,8 +39,8 @@ import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.models.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.abs
+import kotlinx.coroutines.flow.distinctUntilChanged
 import timber.log.Timber
 
 @Composable
@@ -63,7 +63,6 @@ fun VsCenterHighlightCarousel(
     // Avoid side effects with scrolling programatically to center
     var isProgrammaticScroll by remember { mutableStateOf(false) }
 
-
     // Track the last selected index to detect re-selection
     var lastSelectedIndex by remember { mutableStateOf(-1) }
 
@@ -72,14 +71,18 @@ fun VsCenterHighlightCarousel(
         snapshotFlow { listState.isScrollInProgress }
             .distinctUntilChanged()
             .collect { isScrolling ->
-                Timber.d("VsCenterHighlightCarousel: Scroll state changed, " +
-                        "isScrolling = $isScrolling, isProgrammatic = $isProgrammaticScroll")
+                Timber.d(
+                    "VsCenterHighlightCarousel: Scroll state changed, " +
+                        "isScrolling = $isScrolling, isProgrammatic = $isProgrammaticScroll"
+                )
 
                 if (!isScrolling && !isProgrammaticScroll && chains.isNotEmpty()) {
                     // Calculate which item is in the center after snap
                     val layoutInfo = listState.layoutInfo
-                    Timber.d("VsCenterHighlightCarousel: Layout info - " +
-                            "visible items count = ${layoutInfo.visibleItemsInfo.size}")
+                    Timber.d(
+                        "VsCenterHighlightCarousel: Layout info - " +
+                            "visible items count = ${layoutInfo.visibleItemsInfo.size}"
+                    )
 
                     if (layoutInfo.visibleItemsInfo.isEmpty()) {
                         return@collect
@@ -89,40 +92,54 @@ fun VsCenterHighlightCarousel(
                         (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
 
                     // Find the item closest to center (left or right)
-                    val centerItem = layoutInfo.visibleItemsInfo
-                        .filter { it.index >= 0 && it.index < chains.size }
-                        .minByOrNull { item ->
-                            val itemCenter = item.offset + item.size / 2
-                            val distance = abs(itemCenter - viewportCenter)
-                            Timber.d("VsCenterHighlightCarousel: Item ${item.index} - " +
-                                    "center = $itemCenter, distance = $distance")
-                            distance
-                        }
+                    val centerItem =
+                        layoutInfo.visibleItemsInfo
+                            .filter { it.index >= 0 && it.index < chains.size }
+                            .minByOrNull { item ->
+                                val itemCenter = item.offset + item.size / 2
+                                val distance = abs(itemCenter - viewportCenter)
+                                Timber.d(
+                                    "VsCenterHighlightCarousel: Item ${item.index} - " +
+                                        "center = $itemCenter, distance = $distance"
+                                )
+                                distance
+                            }
 
                     // figure out index and trigger onSelectChain
                     centerItem?.let { item ->
                         val safeIndex = item.index.coerceIn(0, chains.size - 1)
-                        Timber.d("VsCenterHighlightCarousel: Center item found - " +
-                                "index = ${item.index}, safeIndex = $safeIndex, chains.size = ${chains.size}")
+                        Timber.d(
+                            "VsCenterHighlightCarousel: Center item found - " +
+                                "index = ${item.index}, safeIndex = $safeIndex, chains.size = ${chains.size}"
+                        )
 
                         if (safeIndex < chains.size) {
                             if (safeIndex != lastSelectedIndex) {
                                 val selectedChainInCenter = chains[safeIndex].chain
-                                Timber.d("VsCenterHighlightCarousel: Calling onSelectChain " +
-                                        "for ${selectedChainInCenter.name} (${selectedChainInCenter.id})")
+                                Timber.d(
+                                    "VsCenterHighlightCarousel: Calling onSelectChain " +
+                                        "for ${selectedChainInCenter.name} (${selectedChainInCenter.id})"
+                                )
                                 lastSelectedIndex = safeIndex
                                 onSelectChain(selectedChainInCenter)
                             } else {
-                                Timber.d("VsCenterHighlightCarousel: Center unchanged " +
-                                        "(index=$safeIndex); skipping onSelectChain")
+                                Timber.d(
+                                    "VsCenterHighlightCarousel: Center unchanged " +
+                                        "(index=$safeIndex); skipping onSelectChain"
+                                )
                             }
                         } else {
-                            Timber.e("VsCenterHighlightCarousel: Safe index $safeIndex " +
-                                    "still out of bounds for chains list of size ${chains.size}")
+                            Timber.e(
+                                "VsCenterHighlightCarousel: Safe index $safeIndex " +
+                                    "still out of bounds for chains list of size ${chains.size}"
+                            )
                         }
-                    } ?: run {
-                        Timber.e("VsCenterHighlightCarousel: No valid center item could be determined")
                     }
+                        ?: run {
+                            Timber.e(
+                                "VsCenterHighlightCarousel: No valid center item could be determined"
+                            )
+                        }
                 } else if (isProgrammaticScroll && !isScrolling) {
                     isProgrammaticScroll = false
                 }
@@ -136,39 +153,37 @@ fun VsCenterHighlightCarousel(
             lastSelectedIndex = targetIndex
             val layoutInfo = listState.layoutInfo
             val viewportCenter = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
-            val currentCenterItem = layoutInfo.visibleItemsInfo
-                .filter { it.index >= 0 && it.index < chains.size }
-                .minByOrNull { item ->
-                    val itemCenter = item.offset + item.size / 2
-                    abs(itemCenter - viewportCenter)
-                }
+            val currentCenterItem =
+                layoutInfo.visibleItemsInfo
+                    .filter { it.index >= 0 && it.index < chains.size }
+                    .minByOrNull { item ->
+                        val itemCenter = item.offset + item.size / 2
+                        abs(itemCenter - viewportCenter)
+                    }
 
             if (currentCenterItem?.index != targetIndex) {
                 isProgrammaticScroll = true
                 listState.animateScrollToItem(
                     index = targetIndex,
-                    scrollOffset = with(density) {
-                        -(centerOffset.toPx().toInt())
-                    }
+                    scrollOffset = with(density) { -(centerOffset.toPx().toInt()) },
                 )
             }
         }
     }
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(Theme.v2.colors.backgrounds.primary)
-            .padding(vertical = 16.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(Theme.v2.colors.backgrounds.primary)
+                .padding(vertical = 16.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = stringResource(R.string.select_chain_title),
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.body.m.medium,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 16.dp),
             )
 
             Box {
@@ -176,37 +191,39 @@ fun VsCenterHighlightCarousel(
                     state = listState,
                     horizontalArrangement = Arrangement.spacedBy(itemSpacing),
                     verticalAlignment = Alignment.CenterVertically,
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = centerOffset
-                    ),
+                    contentPadding =
+                        androidx.compose.foundation.layout.PaddingValues(horizontal = centerOffset),
                     flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    itemsIndexed(
-                        items = chains,
-                        key = { _, item -> item.chain.id }
-                    ) { index, network ->
+                    itemsIndexed(items = chains, key = { _, item -> item.chain.id }) {
+                        index,
+                        network ->
                         CarouselChainItem(
                             chain = network.chain,
                             logo = network.logo,
-                            modifier = Modifier.width(itemWidth)
+                            modifier = Modifier.width(itemWidth),
                         )
                     }
                 }
 
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .width(itemWidth)
-                        .height(50.dp)
-                        .clip(RoundedCornerShape(30.dp))
-                        .border(
-                            width = 2.dp,
-                            brush = Brush.horizontalGradient(
-                                listOf(Theme.v2.colors.primary.accent4, Theme.v2.colors.buttons.tertiary)
-                            ),
-                            shape = RoundedCornerShape(30.dp)
-                        )
+                    modifier =
+                        Modifier.align(Alignment.Center)
+                            .width(itemWidth)
+                            .height(50.dp)
+                            .clip(RoundedCornerShape(30.dp))
+                            .border(
+                                width = 2.dp,
+                                brush =
+                                    Brush.horizontalGradient(
+                                        listOf(
+                                            Theme.v2.colors.primary.accent4,
+                                            Theme.v2.colors.buttons.tertiary,
+                                        )
+                                    ),
+                                shape = RoundedCornerShape(30.dp),
+                            )
                 )
             }
         }
@@ -214,27 +231,22 @@ fun VsCenterHighlightCarousel(
 }
 
 @Composable
-private fun CarouselChainItem(
-    chain: Chain,
-    logo: ImageModel,
-    modifier: Modifier = Modifier,
-) {
+private fun CarouselChainItem(chain: Chain, logo: ImageModel, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier
-            .height(50.dp)
-            .clip(RoundedCornerShape(30.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
-            .padding(horizontal = 16.dp),
+        modifier =
+            modifier
+                .height(50.dp)
+                .clip(RoundedCornerShape(30.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
         TokenLogo(
-            errorLogoModifier = Modifier
-                .size(32.dp)
-                .background(Theme.v2.colors.neutrals.n100),
+            errorLogoModifier = Modifier.size(32.dp).background(Theme.v2.colors.neutrals.n100),
             logo = logo,
             title = "${chain.raw} logo",
-            modifier = Modifier.size(26.dp)
+            modifier = Modifier.size(26.dp),
         )
 
         Spacer(modifier = Modifier.width(8.dp))

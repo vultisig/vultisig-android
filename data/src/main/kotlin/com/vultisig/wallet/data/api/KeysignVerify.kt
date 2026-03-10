@@ -4,21 +4,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-class KeysignVerify(
-    serverAddress: String,
-    sessionId: String,
-    private val sessionApi: SessionApi,
-) {
+class KeysignVerify(serverAddress: String, sessionId: String, private val sessionApi: SessionApi) {
     private val serverURL = "$serverAddress/complete/$sessionId/keysign"
+
     suspend fun markLocalPartyKeysignComplete(messageId: String, sig: tss.KeysignResponse) {
         withContext(Dispatchers.IO) {
             try {
                 sessionApi.markLocalPartyKeysignComplete(serverURL, messageId, sig)
                 Timber.tag("KeysignVerify").d("markLocalPartyKeysignComplete")
             } catch (e: Exception) {
-                Timber.tag("KeysignVerify").d(
-                    "markLocalPartyKeysignComplete error: ${e.stackTraceToString()}"
-                )
+                Timber.tag("KeysignVerify")
+                    .d("markLocalPartyKeysignComplete error: ${e.stackTraceToString()}")
             }
         }
     }
@@ -34,5 +30,4 @@ class KeysignVerify(
             return@withContext null
         }
     }
-
 }

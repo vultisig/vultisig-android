@@ -5,6 +5,8 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.decrypt
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -12,8 +14,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import timber.log.Timber
 import tss.ServiceImpl
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 fun interface PullTssMessagesUseCase {
     operator fun invoke(
@@ -27,10 +27,10 @@ fun interface PullTssMessagesUseCase {
     ): Flow<Unit>
 }
 
-internal class PullTssMessagesUseCaseImpl @Inject constructor(
-    private val sessionApi: SessionApi,
-    private val encryption: Encryption,
-) : PullTssMessagesUseCase {
+internal class PullTssMessagesUseCaseImpl
+@Inject
+constructor(private val sessionApi: SessionApi, private val encryption: Encryption) :
+    PullTssMessagesUseCase {
 
     override fun invoke(
         serverUrl: String,
@@ -39,18 +39,19 @@ internal class PullTssMessagesUseCaseImpl @Inject constructor(
         hexEncryptionKey: String,
         isEncryptionGcm: Boolean,
         messageId: String?,
-        service: ServiceImpl
+        service: ServiceImpl,
     ): Flow<Unit> = flow {
         val appliedMessageKeys = mutableListOf<String>()
 
         while (currentCoroutineContext().isActive) {
             try {
-                val messages = sessionApi.getTssMessages(serverUrl, sessionId, localPartyId,messageId)
+                val messages =
+                    sessionApi.getTssMessages(serverUrl, sessionId, localPartyId, messageId)
 
                 for (msg in messages.sortedBy { it.sequenceNo }) {
-                    val key = messageId
-                        ?.let { "$sessionId-$localPartyId-$messageId-${msg.hash}" }
-                        ?: "$sessionId-$localPartyId-${msg.hash}"
+                    val key =
+                        messageId?.let { "$sessionId-$localPartyId-$messageId-${msg.hash}" }
+                            ?: "$sessionId-$localPartyId-${msg.hash}"
 
                     // when the message is already in the cache, skip it
                     if (key in appliedMessageKeys) {
@@ -58,18 +59,19 @@ internal class PullTssMessagesUseCaseImpl @Inject constructor(
                     } else {
                         appliedMessageKeys += key
 
-                        val decryptedBody = if (isEncryptionGcm) {
-                            Timber.d("decrypting message with AES+GCM")
+                        val decryptedBody =
+                            if (isEncryptionGcm) {
+                                Timber.d("decrypting message with AES+GCM")
 
-                            encryption.decrypt(
-                                Base64.decode(msg.body, Base64.DEFAULT),
-                                Numeric.hexStringToByteArray(hexEncryptionKey)
-                            )
-                        } else {
-                            Timber.d("decrypting message with AES+CBC")
+                                encryption.decrypt(
+                                    Base64.decode(msg.body, Base64.DEFAULT),
+                                    Numeric.hexStringToByteArray(hexEncryptionKey),
+                                )
+                            } else {
+                                Timber.d("decrypting message with AES+CBC")
 
-                            msg.body.decrypt(hexEncryptionKey).toByteArray(Charsets.UTF_8)
-                        }
+                                msg.body.decrypt(hexEncryptionKey).toByteArray(Charsets.UTF_8)
+                            }
 
                         if (decryptedBody == null) {
                             Timber.e("fail to decrypt message: $key")
@@ -83,7 +85,7 @@ internal class PullTssMessagesUseCaseImpl @Inject constructor(
                                 sessionId,
                                 localPartyId,
                                 msg.hash,
-                                messageId
+                                messageId,
                             )
 
                             Timber.d("Delete message success")
@@ -100,5 +102,4 @@ internal class PullTssMessagesUseCaseImpl @Inject constructor(
             delay(1.seconds)
         }
     }
-
 }

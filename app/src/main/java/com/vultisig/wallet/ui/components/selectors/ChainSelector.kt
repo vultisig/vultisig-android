@@ -27,21 +27,13 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
-
 @Composable
-internal fun ChainSelector(
-    chain: Chain,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-    ) {
-
+internal fun ChainSelector(chain: Chain) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier) {
         Image(
             painter = painterResource(chain.logo),
             contentDescription = null,
-            modifier = Modifier
-                .size(16.dp),
+            modifier = Modifier.size(16.dp),
         )
 
         UiSpacer(4.dp)
@@ -55,8 +47,7 @@ internal fun ChainSelector(
         Image(
             painter = painterResource(R.drawable.ic_chevron_down_small),
             contentDescription = null,
-            modifier = Modifier
-                .size(16.dp),
+            modifier = Modifier.size(16.dp),
         )
     }
 }
@@ -77,35 +68,36 @@ internal fun ChainSelector(
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier
-            .onGloballyPositioned { coordinates ->
-                fieldPosition = coordinates.positionInWindow()
-            }
-            .clickOnce(onClick = onClick)
-            .pointerInput(Unit) {
-
-                detectDragGesturesAfterLongPress(
-                    onDragStart = { offset ->
-                        val screenPosition = Offset(
-                            x = fieldPosition.x + offset.x,
-                            y = fieldPosition.y + offset.y
-                        )
-                        onDragStart(screenPosition)
-                        onLongPressStarted(screenPosition)
-                    },
-                    onDrag = { change: PointerInputChange, _ ->
-                        val localPos = change.position
-                        val screenPos = Offset(
-                            x = fieldPosition.x + localPos.x,
-                            y = fieldPosition.y + localPos.y
-                        )
-                        onDrag(screenPos)
-                        change.consume()
-                    },
-                    onDragEnd = onDragEnd,
-                    onDragCancel = onDragCancel
-                )
-            }
+        modifier =
+            Modifier.onGloballyPositioned { coordinates ->
+                    fieldPosition = coordinates.positionInWindow()
+                }
+                .clickOnce(onClick = onClick)
+                .pointerInput(Unit) {
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = { offset ->
+                            val screenPosition =
+                                Offset(
+                                    x = fieldPosition.x + offset.x,
+                                    y = fieldPosition.y + offset.y,
+                                )
+                            onDragStart(screenPosition)
+                            onLongPressStarted(screenPosition)
+                        },
+                        onDrag = { change: PointerInputChange, _ ->
+                            val localPos = change.position
+                            val screenPos =
+                                Offset(
+                                    x = fieldPosition.x + localPos.x,
+                                    y = fieldPosition.y + localPos.y,
+                                )
+                            onDrag(screenPos)
+                            change.consume()
+                        },
+                        onDragEnd = onDragEnd,
+                        onDragCancel = onDragCancel,
+                    )
+                },
     ) {
         Text(
             text = title,
@@ -113,8 +105,6 @@ internal fun ChainSelector(
             color = Theme.v2.colors.text.tertiary,
         )
 
-        ChainSelector(
-            chain = chain,
-        )
+        ChainSelector(chain = chain)
     }
 }

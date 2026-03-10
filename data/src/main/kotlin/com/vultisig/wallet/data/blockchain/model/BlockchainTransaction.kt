@@ -28,9 +28,6 @@ data class Swap(
     val callData: String,
     val approvalData: String?,
     val limit: BigInteger = BigInteger.ZERO,
-): BlockchainTransaction
+) : BlockchainTransaction
 
-data class VaultData(
-    val vaultHexPublicKey: String,
-    val vaultHexChainCode: String,
-)
+data class VaultData(val vaultHexPublicKey: String, val vaultHexChainCode: String)

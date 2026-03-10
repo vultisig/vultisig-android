@@ -5,7 +5,7 @@ import com.vultisig.wallet.data.models.Chain
 interface BlockaidRpcClientContract {
     suspend fun scanBitcoinTransaction(
         address: String,
-        serializedTransaction: String
+        serializedTransaction: String,
     ): BlockaidTransactionScanResponseJson
 
     suspend fun scanEVMTransaction(
@@ -13,16 +13,16 @@ interface BlockaidRpcClientContract {
         from: String,
         to: String,
         amount: String,
-        data: String
+        data: String,
     ): BlockaidTransactionScanResponseJson
 
     suspend fun scanSolanaTransaction(
         address: String,
-        serializedMessage: String
+        serializedMessage: String,
     ): BlockaidTransactionScanResponseJson
 
     suspend fun scanSuiTransaction(
         address: String,
-        serializedTransaction: String
+        serializedTransaction: String,
     ): BlockaidTransactionScanResponseJson
 }

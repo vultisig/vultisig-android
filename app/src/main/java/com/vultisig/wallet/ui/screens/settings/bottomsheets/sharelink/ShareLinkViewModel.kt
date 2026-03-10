@@ -17,28 +17,26 @@ internal data class ShareOptionUiModel(
     val activityName: String? = null,
     val label: String,
     val icon: Drawable,
-    val isSpecial: Boolean = false // for "More" option
+    val isSpecial: Boolean = false, // for "More" option
 )
 
 internal data class ShareLinkUiModel(
     val link: String = "",
-    val shareOptions: List<ShareOptionUiModel> = emptyList()
+    val shareOptions: List<ShareOptionUiModel> = emptyList(),
 )
-
 
 @HiltViewModel
 internal class ShareLinkViewModel @Inject constructor() : ViewModel() {
 
-    fun getUiModel(context: Context) = ShareLinkUiModel(
-        link = SHARE_LINK,
-        shareOptions = getAvailableShareApps(context)
-    )
+    fun getUiModel(context: Context) =
+        ShareLinkUiModel(link = SHARE_LINK, shareOptions = getAvailableShareApps(context))
 
     private fun getAvailableShareApps(context: Context): List<ShareOptionUiModel> {
-        val shareIntent = Intent().apply {
-            action = Intent.ACTION_SEND
-            type = "text/plain"
-        }
+        val shareIntent =
+            Intent().apply {
+                action = Intent.ACTION_SEND
+                type = "text/plain"
+            }
 
         val packageManager = context.packageManager
         val activities = packageManager.queryIntentActivities(shareIntent, 0)
@@ -48,17 +46,15 @@ internal class ShareLinkViewModel @Inject constructor() : ViewModel() {
                 packageName = resolveInfo.activityInfo.packageName,
                 activityName = resolveInfo.activityInfo.name,
                 label = resolveInfo.loadLabel(packageManager).toString(),
-                icon = resolveInfo.loadIcon(packageManager)
+                icon = resolveInfo.loadIcon(packageManager),
             )
-        } + ShareOptionUiModel(
-            packageName = "",
-            label = context.getString(R.string.share_sheet_more),
-            icon = AppCompatResources.getDrawable(
-                context,
-                R.drawable.plus
-            )!!,
-            isSpecial = true
-        )
+        } +
+            ShareOptionUiModel(
+                packageName = "",
+                label = context.getString(R.string.share_sheet_more),
+                icon = AppCompatResources.getDrawable(context, R.drawable.plus)!!,
+                isSpecial = true,
+            )
     }
 
     fun onShareClick(shareOption: ShareOptionUiModel, context: Context) {
@@ -69,35 +65,29 @@ internal class ShareLinkViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-
     private fun Context.shareAppLink() {
-        val sendIntent = Intent().apply {
-            action = Intent.ACTION_SEND
-            putExtra(
-                Intent.EXTRA_TEXT,
-                SHARE_LINK
-            )
-            type = "text/plain"
-        }
-        val shareIntent = Intent.createChooser(
-            sendIntent,
-            null
-        )
+        val sendIntent =
+            Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, SHARE_LINK)
+                type = "text/plain"
+            }
+        val shareIntent = Intent.createChooser(sendIntent, null)
         startActivity(shareIntent)
     }
 
     private fun Context.shareViaSpecificApp(shareOption: ShareOptionUiModel) {
-        val intent = Intent().apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, SHARE_LINK)
-            type = "text/plain"
-            if (shareOption.activityName != null) {
-                component =
-                    ComponentName(shareOption.packageName, shareOption.activityName)
-            } else {
-                setPackage(shareOption.packageName)
+        val intent =
+            Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, SHARE_LINK)
+                type = "text/plain"
+                if (shareOption.activityName != null) {
+                    component = ComponentName(shareOption.packageName, shareOption.activityName)
+                } else {
+                    setPackage(shareOption.packageName)
+                }
             }
-        }
 
         try {
             startActivity(intent)

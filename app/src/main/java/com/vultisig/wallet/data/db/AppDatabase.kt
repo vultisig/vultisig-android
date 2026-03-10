@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.db.dao.VaultOrderDao
 import com.vultisig.wallet.data.db.models.ActiveBondedNodeEntity
 import com.vultisig.wallet.data.db.models.AddressBookEntryEntity
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
+import com.vultisig.wallet.data.db.models.ChainPublicKeyEntity
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.DisabledCoinEntity
 import com.vultisig.wallet.data.db.models.FolderEntity
@@ -30,33 +31,33 @@ import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.StakingDetailsEntity
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.db.models.TokenValueEntity
-import com.vultisig.wallet.data.db.models.ChainPublicKeyEntity
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultMetadataEntity
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 
 @Database(
-    entities = [
-        VaultEntity::class,
-        KeyShareEntity::class,
-        SignerEntity::class,
-        CoinEntity::class,
-        VaultOrderEntity::class,
-        TokenValueEntity::class,
-        TokenPriceEntity::class,
-        AddressBookEntryEntity::class,
-        AddressBookOrderEntity::class,
-        FolderEntity::class,
-        FolderOrderEntity::class,
-        VaultMetadataEntity::class,
-        DisabledCoinEntity::class,
-        ActiveBondedNodeEntity::class,
-        StakingDetailsEntity::class,
-        ChainPublicKeyEntity::class,
-        TransactionHistoryEntity::class,
-    ],
-    version = 27,
+    entities =
+        [
+            VaultEntity::class,
+            KeyShareEntity::class,
+            SignerEntity::class,
+            CoinEntity::class,
+            VaultOrderEntity::class,
+            TokenValueEntity::class,
+            TokenPriceEntity::class,
+            AddressBookEntryEntity::class,
+            AddressBookOrderEntity::class,
+            FolderEntity::class,
+            FolderOrderEntity::class,
+            VaultMetadataEntity::class,
+            DisabledCoinEntity::class,
+            ActiveBondedNodeEntity::class,
+            StakingDetailsEntity::class,
+            ChainPublicKeyEntity::class,
+            TransactionHistoryEntity::class,
+        ],
+    version = 28,
     exportSchema = false,
 )
 @TypeConverters(
@@ -89,6 +90,4 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun stakingDetailsDao(): StakingDetailsDao
 
     abstract fun transactionHistoryDao(): TransactionHistoryDao
-
-
 }

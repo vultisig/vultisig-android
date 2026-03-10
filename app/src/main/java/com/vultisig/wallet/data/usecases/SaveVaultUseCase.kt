@@ -7,15 +7,17 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
-import javax.inject.Inject
 
 internal interface SaveVaultUseCase : suspend (Vault, Boolean) -> Unit
 
 internal class DuplicateVaultException : IllegalStateException("Vault already exists")
 
-internal class SaveVaultUseCaseImpl @Inject constructor(
+internal class SaveVaultUseCaseImpl
+@Inject
+constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val defaultChainsRepository: DefaultChainsRepository,
@@ -37,37 +39,34 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
 
             val vaultId = vault.id
 
-            val insertedVault = vaultRepository.get(vaultId)
-                ?: error("Vault didn't save properly")
+            val insertedVault = vaultRepository.get(vaultId) ?: error("Vault didn't save properly")
 
-            val nativeTokens = tokenRepository.nativeTokens.first()
-                .associateBy { it.chain }
+            val nativeTokens = tokenRepository.nativeTokens.first().associateBy { it.chain }
 
             // For KeyImport: only add chains the user explicitly selected during import.
             // Each chain's key is already fully derived, so no BIP32 derivation is needed.
-            val chainsToAdd = if (insertedVault.libType == SigningLibType.KeyImport) {
-                insertedVault.chainPublicKeys
-                    .mapNotNull { cpk ->
-                        try { Chain.fromRaw(cpk.chain) } catch (_: Exception) { null }
+            val chainsToAdd =
+                if (insertedVault.libType == SigningLibType.KeyImport) {
+                    insertedVault.chainPublicKeys.mapNotNull { cpk ->
+                        try {
+                            Chain.fromRaw(cpk.chain)
+                        } catch (_: Exception) {
+                            null
+                        }
                     }
-            } else {
-                defaultChainsRepository.selectedDefaultChains.first()
-            }
+                } else {
+                    defaultChainsRepository.selectedDefaultChains.first()
+                }
 
             chainsToAdd
                 .mapNotNull { nativeTokens[it] }
                 .forEach { nativeToken ->
-                    val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-                        nativeToken,
-                        insertedVault
-                    )
-                    val updatedNativeToken = nativeToken.copy(
-                        address = address,
-                        hexPublicKey = derivedPublicKey
-                    )
+                    val (address, derivedPublicKey) =
+                        chainAccountAddressRepository.getAddress(nativeToken, insertedVault)
+                    val updatedNativeToken =
+                        nativeToken.copy(address = address, hexPublicKey = derivedPublicKey)
                     vaultRepository.addTokenToVault(vaultId, updatedNativeToken)
                 }
         }
     }
-
 }

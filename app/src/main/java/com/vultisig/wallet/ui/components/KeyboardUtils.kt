@@ -12,13 +12,11 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
-
 @Composable
 internal fun rememberKeyboardVisibilityAsState(): State<Boolean> {
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     return rememberUpdatedState(isImeVisible)
 }
-
 
 /**
  * A Composable that detects when the on-screen keyboard opens or closes.
@@ -27,27 +25,21 @@ internal fun rememberKeyboardVisibilityAsState(): State<Boolean> {
  * @param onKeyboardIsClose Callback invoked when the keyboard becomes fully hidden.
  */
 @Composable
-internal fun KeyboardDetector(
-    onKeyboardIsOpen: () -> Unit,
-    onKeyboardIsClose: () -> Unit = {},
-) {
+internal fun KeyboardDetector(onKeyboardIsOpen: () -> Unit, onKeyboardIsClose: () -> Unit = {}) {
     val view = LocalView.current
     if (view.isAttachedToWindow.not()) {
         return
     }
     val viewTreeObserver = view.viewTreeObserver
     DisposableEffect(viewTreeObserver) {
-        val listener = ViewTreeObserver.OnGlobalLayoutListener {
-            val isKeyboardOpen = ViewCompat.getRootWindowInsets(view)
-                ?.isVisible(WindowInsetsCompat.Type.ime())
-            if (isKeyboardOpen == true)
-                onKeyboardIsOpen()
-            else onKeyboardIsClose()
-        }
+        val listener =
+            ViewTreeObserver.OnGlobalLayoutListener {
+                val isKeyboardOpen =
+                    ViewCompat.getRootWindowInsets(view)?.isVisible(WindowInsetsCompat.Type.ime())
+                if (isKeyboardOpen == true) onKeyboardIsOpen() else onKeyboardIsClose()
+            }
 
         viewTreeObserver.addOnGlobalLayoutListener(listener)
-        onDispose {
-            viewTreeObserver.removeOnGlobalLayoutListener(listener)
-        }
+        onDispose { viewTreeObserver.removeOnGlobalLayoutListener(listener) }
     }
 }

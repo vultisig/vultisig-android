@@ -11,31 +11,25 @@ import androidx.navigation.compose.dialog
 import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectChainPopup
 import com.vultisig.wallet.ui.navigation.Route
 
-internal inline fun <reified T : Any, reified ParentRoute : Any> NavGraphBuilder.contentWithFastSelection(
+internal inline fun <reified T : Any, reified ParentRoute : Any> NavGraphBuilder
+    .contentWithFastSelection(
     navController: NavHostController,
-    crossinline content: @Composable (
-        onDragStart: (Offset) -> Unit,
-        onDrag: (Offset) -> Unit,
-        onDragEnd: () -> Unit,
-    ) -> Unit
+    crossinline content:
+        @Composable
+        (onDragStart: (Offset) -> Unit, onDrag: (Offset) -> Unit, onDragEnd: () -> Unit) -> Unit,
 ) {
     composable<T> { backStackEntry ->
-        val parentEntry = remember(backStackEntry) {
-            navController.getBackStackEntry<ParentRoute>()
-        }
+        val parentEntry =
+            remember(backStackEntry) { navController.getBackStackEntry<ParentRoute>() }
         val sharedViewModel: FastSelectionPopupSharedViewModel = hiltViewModel(parentEntry)
 
-        content(
-            sharedViewModel::onDragStart,
-            sharedViewModel::onDrag,
-            sharedViewModel::onDragEnd
-        )
+        content(sharedViewModel::onDragStart, sharedViewModel::onDrag, sharedViewModel::onDragEnd)
     }
 
     dialog<Route.SelectNetworkPopup> { backStackEntry ->
         SelectChainPopup<ParentRoute>(
             backStackEntry = backStackEntry,
-            navController = navController
+            navController = navController,
         )
     }
 }

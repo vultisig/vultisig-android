@@ -9,10 +9,7 @@ import java.math.BigInteger
 fun BondedNodePosition.toEntity(vaultId: String): ActiveBondedNodeEntity {
     return ActiveBondedNodeEntity(
         id = this.id,
-        node = BondedNodeEntity(
-            address = this.node.address,
-            state = this.node.state
-        ),
+        node = BondedNodeEntity(address = this.node.address, state = this.node.state),
         amount = this.amount.toString(),
         coinId = coin.id,
         apy = this.apy,
@@ -25,15 +22,12 @@ fun BondedNodePosition.toEntity(vaultId: String): ActiveBondedNodeEntity {
 fun ActiveBondedNodeEntity.toDomainModel(): BondedNodePosition {
     return BondedNodePosition(
         id = this.id,
-        node = BondedNodePosition.BondedNode(
-            address = this.node.address,
-            state = this.node.state
-        ),
+        node = BondedNodePosition.BondedNode(address = this.node.address, state = this.node.state),
         amount = this.amount.toBigIntegerOrNull() ?: BigInteger.ZERO,
         coin = Coins.ThorChain.RUNE,
         apy = this.apy,
         nextReward = this.nextReward,
-        nextChurn = this.nextChurn
+        nextChurn = this.nextChurn,
     )
 }
 

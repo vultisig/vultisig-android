@@ -25,30 +25,25 @@ fun VsPromoBox(
     @DrawableRes icon: Int,
     title: String,
     description: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(
-                color = Theme.v2.colors.backgrounds.secondary,
-                shape = RoundedCornerShape(12.dp),
-            )
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.light,
-                shape = RoundedCornerShape(12.dp),
-            )
-            .padding(
-                all = 16.dp,
-            ),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(
+                    color = Theme.v2.colors.backgrounds.secondary,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .padding(all = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        UiIcon(
-            drawableResId = icon,
-            size = 20.dp,
-            tint = Theme.v2.colors.primary.accent4,
-        )
+        UiIcon(drawableResId = icon, size = 20.dp, tint = Theme.v2.colors.primary.accent4)
 
         UiSpacer(12.dp)
 
@@ -69,41 +64,36 @@ fun VsPromoBox(
 }
 
 @Composable
-fun VsPromoTag(
-    @DrawableRes icon: Int,
-    text: String,
-    modifier: Modifier = Modifier,
-) {
+fun VsPromoTag(@DrawableRes icon: Int, text: String, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier
-            .padding(start = 16.dp)
-            .background(
-                color = Theme.v2.colors.backgrounds.secondary,
-                shape = RoundedCornerShape(
-                    topEnd = 50.dp,
-                    bottomEnd = 50.dp,
-                    topStart = 0.dp,
-                    bottomStart = 0.dp
+        modifier =
+            modifier
+                .padding(start = 16.dp)
+                .background(
+                    color = Theme.v2.colors.backgrounds.secondary,
+                    shape =
+                        RoundedCornerShape(
+                            topEnd = 50.dp,
+                            bottomEnd = 50.dp,
+                            topStart = 0.dp,
+                            bottomStart = 0.dp,
+                        ),
                 )
-            )
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.light,
-                shape = RoundedCornerShape(
-                    topEnd = 50.dp,
-                    bottomEnd = 50.dp,
-                    topStart = 0.dp,
-                    bottomStart = 0.dp
-                ),
-            )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape =
+                        RoundedCornerShape(
+                            topEnd = 50.dp,
+                            bottomEnd = 50.dp,
+                            topStart = 0.dp,
+                            bottomStart = 0.dp,
+                        ),
+                )
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        UiIcon(
-            drawableResId = icon,
-            size = 14.dp,
-            tint = Theme.v2.colors.primary.accent4,
-        )
+        UiIcon(drawableResId = icon, size = 14.dp, tint = Theme.v2.colors.primary.accent4)
 
         UiSpacer(8.dp)
 
@@ -119,16 +109,14 @@ fun VsPromoTag(
 @androidx.compose.ui.tooling.preview.Preview
 private fun ReferralBoxes() {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         UiSpacer(60.dp)
 
         VsPromoTag(
             icon = R.drawable.ic_cup,
-            text = stringResource(R.string.referral_create_info_title)
+            text = stringResource(R.string.referral_create_info_title),
         )
 
         UiSpacer(32.dp)
@@ -136,7 +124,7 @@ private fun ReferralBoxes() {
         VsPromoBox(
             icon = R.drawable.ic_cup,
             title = stringResource(R.string.referral_create_code_title),
-            description = stringResource(R.string.referral_create_code_description)
+            description = stringResource(R.string.referral_create_code_description),
         )
 
         UiSpacer(32.dp)
@@ -144,7 +132,7 @@ private fun ReferralBoxes() {
         VsPromoBox(
             icon = R.drawable.ic_cup,
             title = stringResource(R.string.referral_share_title),
-            description = stringResource(R.string.referral_share_description)
+            description = stringResource(R.string.referral_share_description),
         )
     }
 }

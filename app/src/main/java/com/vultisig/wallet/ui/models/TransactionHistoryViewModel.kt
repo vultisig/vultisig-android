@@ -16,6 +16,12 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,16 +30,14 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
 
 // ── UI models ────────────────────────────────────────────────────────────────
 
-enum class TransactionHistoryTab { OVERVIEW, SEND, SWAP }
+enum class TransactionHistoryTab {
+    OVERVIEW,
+    SEND,
+    SWAP,
+}
 
 data class TransactionHistoryGroupUiModel(
     val dateLabel: String,
@@ -42,8 +46,11 @@ data class TransactionHistoryGroupUiModel(
 
 sealed interface TransactionStatusUiModel {
     data object Broadcasted : TransactionStatusUiModel
+
     data class Pending(val elapsedTime: String) : TransactionStatusUiModel
+
     data object Confirmed : TransactionStatusUiModel
+
     data class Failed(val reason: String?) : TransactionStatusUiModel
 }
 
@@ -98,9 +105,10 @@ data class TransactionHistoryUiState(
     val isRefreshing: Boolean = false,
 )
 
-
 @HiltViewModel
-internal class TransactionHistoryViewModel @Inject constructor(
+internal class TransactionHistoryViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val refreshPendingTransactions: RefreshPendingTransactionsUseCase,
@@ -124,9 +132,7 @@ internal class TransactionHistoryViewModel @Inject constructor(
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.back()
-        }
+        viewModelScope.launch { navigator.back() }
     }
 
     fun refresh() {
@@ -142,9 +148,7 @@ internal class TransactionHistoryViewModel @Inject constructor(
     }
 
     private fun refreshOnEnter() {
-        viewModelScope.launch {
-            runCatching { refreshPendingTransactions(vaultId) }
-        }
+        viewModelScope.launch { runCatching { refreshPendingTransactions(vaultId) } }
     }
 
     private fun startTimeTicker() {
@@ -159,9 +163,8 @@ internal class TransactionHistoryViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeTransactions() {
         viewModelScope.launch {
-            uiState.map {
-                it.selectedTab
-            }
+            uiState
+                .map { it.selectedTab }
                 .flatMapLatest { tab ->
                     transactionHistoryRepository.observeTransactions(
                         vaultId = vaultId,
@@ -169,9 +172,7 @@ internal class TransactionHistoryViewModel @Inject constructor(
                     )
                 }
                 .combine(currentTime) { entities, now ->
-                    entities
-                        .map { it.toUiModel(now) }
-                        .groupByDate(now)
+                    entities.map { it.toUiModel(now) }.groupByDate(now)
                 }
                 .collect { groups ->
                     uiState.update { it.copy(groups = groups, isLoading = false) }
@@ -179,80 +180,81 @@ internal class TransactionHistoryViewModel @Inject constructor(
         }
     }
 
-
-    private fun TransactionHistoryTab.toRepositoryType() = when (this) {
-        TransactionHistoryTab.OVERVIEW -> TransactionHistoryType.OVERVIEW
-        TransactionHistoryTab.SEND -> TransactionHistoryType.SEND
-        TransactionHistoryTab.SWAP -> TransactionHistoryType.SWAPS
-    }
-
-    private fun TransactionHistoryEntity.toUiModel(now: Long): TransactionHistoryItemUiModel {
-        val statusUiModel = when (status) {
-            TransactionStatus.BROADCASTED -> TransactionStatusUiModel.Broadcasted
-            TransactionStatus.PENDING -> TransactionStatusUiModel.Pending(
-                elapsedTime = formatElapsed(now - timestamp)
-            )
-
-            TransactionStatus.CONFIRMED -> TransactionStatusUiModel.Confirmed
-            TransactionStatus.FAILED -> TransactionStatusUiModel.Failed(failureReason)
+    private fun TransactionHistoryTab.toRepositoryType() =
+        when (this) {
+            TransactionHistoryTab.OVERVIEW -> TransactionHistoryType.OVERVIEW
+            TransactionHistoryTab.SEND -> TransactionHistoryType.SEND
+            TransactionHistoryTab.SWAP -> TransactionHistoryType.SWAPS
         }
 
-        return when (type) {
-            TransactionType.SEND -> TransactionHistoryItemUiModel.Send(
-                id = id,
-                txHash = txHash,
-                chain = chain,
-                status = statusUiModel,
-                explorerUrl = explorerUrl,
-                timestamp = timestamp,
-                fromAddress = fromAddress.orEmpty(),
-                toAddress = toAddress.orEmpty(),
-                amount = amount.orEmpty(),
-                token = token.orEmpty(),
-                tokenLogo = tokenLogo.orEmpty(),
-                fiatValue = fiatValue,
-            )
+    private fun TransactionHistoryEntity.toUiModel(now: Long): TransactionHistoryItemUiModel {
+        val statusUiModel =
+            when (status) {
+                TransactionStatus.BROADCASTED -> TransactionStatusUiModel.Broadcasted
+                TransactionStatus.PENDING ->
+                    TransactionStatusUiModel.Pending(elapsedTime = formatElapsed(now - timestamp))
 
-            TransactionType.SWAP -> TransactionHistoryItemUiModel.Swap(
-                id = id,
-                txHash = txHash,
-                chain = chain,
-                status = statusUiModel,
-                explorerUrl = explorerUrl,
-                timestamp = timestamp,
-                fromToken = fromToken.orEmpty(),
-                fromAmount = fromAmount.orEmpty(),
-                fromChain = fromChain.orEmpty(),
-                fromTokenLogo = fromTokenLogo.orEmpty(),
-                toToken = toToken.orEmpty(),
-                toAmount = toAmount.orEmpty(),
-                toChain = toChain.orEmpty(),
-                toTokenLogo = toTokenLogo.orEmpty(),
-                provider = provider.orEmpty(),
-                fiatValue = fiatValue,
-            )
+                TransactionStatus.CONFIRMED -> TransactionStatusUiModel.Confirmed
+                TransactionStatus.FAILED -> TransactionStatusUiModel.Failed(failureReason)
+            }
+
+        return when (type) {
+            TransactionType.SEND ->
+                TransactionHistoryItemUiModel.Send(
+                    id = id,
+                    txHash = txHash,
+                    chain = chain,
+                    status = statusUiModel,
+                    explorerUrl = explorerUrl,
+                    timestamp = timestamp,
+                    fromAddress = fromAddress.orEmpty(),
+                    toAddress = toAddress.orEmpty(),
+                    amount = amount.orEmpty(),
+                    token = token.orEmpty(),
+                    tokenLogo = tokenLogo.orEmpty(),
+                    fiatValue = fiatValue,
+                )
+
+            TransactionType.SWAP ->
+                TransactionHistoryItemUiModel.Swap(
+                    id = id,
+                    txHash = txHash,
+                    chain = chain,
+                    status = statusUiModel,
+                    explorerUrl = explorerUrl,
+                    timestamp = timestamp,
+                    fromToken = fromToken.orEmpty(),
+                    fromAmount = fromAmount.orEmpty(),
+                    fromChain = fromChain.orEmpty(),
+                    fromTokenLogo = fromTokenLogo.orEmpty(),
+                    toToken = toToken.orEmpty(),
+                    toAmount = toAmount.orEmpty(),
+                    toChain = toChain.orEmpty(),
+                    toTokenLogo = toTokenLogo.orEmpty(),
+                    provider = provider.orEmpty(),
+                    fiatValue = fiatValue,
+                )
         }
     }
 
     private fun List<TransactionHistoryItemUiModel>.groupByDate(
-        nowMs: Long,
+        nowMs: Long
     ): List<TransactionHistoryGroupUiModel> {
         val zone = ZoneId.systemDefault()
         val today = Instant.ofEpochMilli(nowMs).atZone(zone).toLocalDate()
         val yesterday = today.minusDays(1)
         val labelFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
 
-        return groupBy { item ->
-            Instant.ofEpochMilli(item.timestamp).atZone(zone).toLocalDate()
-        }
+        return groupBy { item -> Instant.ofEpochMilli(item.timestamp).atZone(zone).toLocalDate() }
             .entries
             .sortedByDescending { it.key }
             .map { (date, items) ->
-                val label = when (date) {
-                    today -> "Today ${date.format(labelFormatter)}"
-                    yesterday -> "Yesterday ${date.format(labelFormatter)}"
-                    else -> date.format(labelFormatter)
-                }
+                val label =
+                    when (date) {
+                        today -> "Today ${date.format(labelFormatter)}"
+                        yesterday -> "Yesterday ${date.format(labelFormatter)}"
+                        else -> date.format(labelFormatter)
+                    }
                 TransactionHistoryGroupUiModel(dateLabel = label, transactions = items)
             }
     }

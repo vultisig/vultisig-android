@@ -10,18 +10,18 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.UUID
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import vultisig.keysign.v1.CustomMessagePayload
-import java.util.UUID
-import javax.inject.Inject
 
-internal data class SignMessageFormUiModel(
-    val isLoading: Boolean = false,
-)
+internal data class SignMessageFormUiModel(val isLoading: Boolean = false)
 
 @HiltViewModel
-internal class SignMessageFormViewModel @Inject constructor(
+internal class SignMessageFormViewModel
+@Inject
+constructor(
     private val sendNavigator: Navigator<SendDst>,
     private val customMessagePayloadRepo: CustomMessagePayloadRepo,
     private val vaultRepository: VaultRepository,
@@ -44,24 +44,22 @@ internal class SignMessageFormViewModel @Inject constructor(
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: return@launch
 
-            val payload = CustomMessagePayloadDto(
-                id = UUID.randomUUID().toString(),
-                vaultId = vaultId,
-                payload = CustomMessagePayload(
-                    method = methodFieldState.text.toString(),
-                    message = messageFieldState.text.toString(),
-                    vaultPublicKeyEcdsa = vault.pubKeyECDSA,
-                    vaultLocalPartyId = vault.localPartyID,
+            val payload =
+                CustomMessagePayloadDto(
+                    id = UUID.randomUUID().toString(),
+                    vaultId = vaultId,
+                    payload =
+                        CustomMessagePayload(
+                            method = methodFieldState.text.toString(),
+                            message = messageFieldState.text.toString(),
+                            vaultPublicKeyEcdsa = vault.pubKeyECDSA,
+                            vaultLocalPartyId = vault.localPartyID,
+                        ),
                 )
-            )
             customMessagePayloadRepo.add(payload)
             sendNavigator.navigate(
-                SendDst.VerifyTransaction(
-                    transactionId = payload.id,
-                    vaultId = vaultId,
-                )
+                SendDst.VerifyTransaction(transactionId = payload.id, vaultId = vaultId)
             )
         }
     }
-
 }

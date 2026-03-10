@@ -13,6 +13,13 @@ export GITHUB_TOKEN=your_github_token
 [How to get a personal github token?] (https://github.com/settings/tokens)
 
 
+## Git hooks setup
+After cloning the repo, install the project git hooks so Kotlin files are automatically formatted before every commit:
+```bash
+sh scripts/install-git-hooks.sh
+```
+This installs a `pre-commit` hook that runs `ktfmtFormat` and re-stages any changed files.
+
 ## Test keygen with emulator
 
 When keygen started , the main device will start a mediator server on port 18080, in order for your

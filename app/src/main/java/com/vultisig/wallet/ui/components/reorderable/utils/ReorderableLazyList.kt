@@ -32,17 +32,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 
-
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun rememberReorderableLazyListState(
     lazyListState: LazyListState,
     scrollThresholdPadding: PaddingValues = PaddingValues(0.dp),
     scrollThreshold: Dp = ReorderableLazyCollectionDefaults.ScrollThreshold,
-    scroller: Scroller = rememberScroller(
-        scrollableState = lazyListState,
-        pixelAmountProvider = { lazyListState.layoutInfo.mainAxisViewportSize * ScrollAmountMultiplier },
-    ),
+    scroller: Scroller =
+        rememberScroller(
+            scrollableState = lazyListState,
+            pixelAmountProvider = {
+                lazyListState.layoutInfo.mainAxisViewportSize * ScrollAmountMultiplier
+            },
+        ),
     onMove: suspend CoroutineScope.(from: LazyListItemInfo, to: LazyListItemInfo) -> Unit,
 ): ReorderableLazyListState {
     val density = LocalDensity.current
@@ -51,91 +53,106 @@ fun rememberReorderableLazyListState(
     val scope = rememberCoroutineScope()
     val onMoveState = rememberUpdatedState(onMove)
     val layoutDirection = LocalLayoutDirection.current
-    val absoluteScrollThresholdPadding = AbsolutePixelPadding(
-        start = with(density) {
-            scrollThresholdPadding.calculateStartPadding(layoutDirection).toPx()
-        },
-        end = with(density) {
-            scrollThresholdPadding.calculateEndPadding(layoutDirection).toPx()
-        },
-        top = with(density) { scrollThresholdPadding.calculateTopPadding().toPx() },
-        bottom = with(density) { scrollThresholdPadding.calculateBottomPadding().toPx() },
-    )
-    val orientation by derivedStateOf { lazyListState.layoutInfo.orientation }
-    val state = remember(
-        scope,
-        lazyListState,
-        scrollThreshold,
-        scrollThresholdPadding,
-        scroller,
-        orientation,
-    ) {
-        ReorderableLazyListState(
-            state = lazyListState,
-            scope = scope,
-            onMoveState = onMoveState,
-            scrollThreshold = scrollThresholdPx,
-            scrollThresholdPadding = absoluteScrollThresholdPadding,
-            scroller = scroller,
-            layoutDirection = layoutDirection,
-            shouldItemMove = when (orientation) {
-                Orientation.Vertical -> { draggingItem, item ->
-                    item.center.y in draggingItem.top..<draggingItem.bottom
-                }
-
-                Orientation.Horizontal -> { draggingItem, item ->
-                    item.center.x in draggingItem.left..<draggingItem.right
-                }
-            },
+    val absoluteScrollThresholdPadding =
+        AbsolutePixelPadding(
+            start =
+                with(density) {
+                    scrollThresholdPadding.calculateStartPadding(layoutDirection).toPx()
+                },
+            end =
+                with(density) {
+                    scrollThresholdPadding.calculateEndPadding(layoutDirection).toPx()
+                },
+            top = with(density) { scrollThresholdPadding.calculateTopPadding().toPx() },
+            bottom = with(density) { scrollThresholdPadding.calculateBottomPadding().toPx() },
         )
-    }
+    val orientation by derivedStateOf { lazyListState.layoutInfo.orientation }
+    val state =
+        remember(
+            scope,
+            lazyListState,
+            scrollThreshold,
+            scrollThresholdPadding,
+            scroller,
+            orientation,
+        ) {
+            ReorderableLazyListState(
+                state = lazyListState,
+                scope = scope,
+                onMoveState = onMoveState,
+                scrollThreshold = scrollThresholdPx,
+                scrollThresholdPadding = absoluteScrollThresholdPadding,
+                scroller = scroller,
+                layoutDirection = layoutDirection,
+                shouldItemMove =
+                    when (orientation) {
+                        Orientation.Vertical -> { draggingItem, item ->
+                                item.center.y in draggingItem.top..<draggingItem.bottom
+                            }
+
+                        Orientation.Horizontal -> { draggingItem, item ->
+                                item.center.x in draggingItem.left..<draggingItem.right
+                            }
+                    },
+            )
+        }
     return state
 }
 
 private val LazyListLayoutInfo.mainAxisViewportSize: Int
-    get() = when (orientation) {
-        Orientation.Vertical -> viewportSize.height
-        Orientation.Horizontal -> viewportSize.width
-    }
+    get() =
+        when (orientation) {
+            Orientation.Vertical -> viewportSize.height
+            Orientation.Horizontal -> viewportSize.width
+        }
 
 private fun LazyListItemInfo.toLazyCollectionItemInfo(orientation: Orientation) =
     object : LazyCollectionItemInfo<LazyListItemInfo> {
         override val index: Int
             get() = this@toLazyCollectionItemInfo.index
+
         override val key: Any
             get() = this@toLazyCollectionItemInfo.key
+
         override val offset: IntOffset
             get() = IntOffset.fromAxis(orientation, this@toLazyCollectionItemInfo.offset)
+
         override val size: IntSize
             get() = IntSize.fromAxis(orientation, this@toLazyCollectionItemInfo.size)
+
         override val data: LazyListItemInfo
             get() = this@toLazyCollectionItemInfo
-
     }
 
 private fun LazyListLayoutInfo.toLazyCollectionLayoutInfo() =
     object : LazyCollectionLayoutInfo<LazyListItemInfo> {
         override val visibleItemsInfo: List<LazyCollectionItemInfo<LazyListItemInfo>>
-            get() = this@toLazyCollectionLayoutInfo.visibleItemsInfo.map {
-                it.toLazyCollectionItemInfo(orientation)
-            }
+            get() =
+                this@toLazyCollectionLayoutInfo.visibleItemsInfo.map {
+                    it.toLazyCollectionItemInfo(orientation)
+                }
+
         override val viewportSize: IntSize
             get() = this@toLazyCollectionLayoutInfo.viewportSize
+
         override val orientation: Orientation
             get() = this@toLazyCollectionLayoutInfo.orientation
+
         override val reverseLayout: Boolean
             get() = this@toLazyCollectionLayoutInfo.reverseLayout
+
         override val beforeContentPadding: Int
             get() = this@toLazyCollectionLayoutInfo.beforeContentPadding
-
     }
 
 private fun LazyListState.toLazyCollectionState() =
     object : LazyCollectionState<LazyListItemInfo> {
         override val firstVisibleItemIndex: Int
             get() = this@toLazyCollectionState.firstVisibleItemIndex
+
         override val firstVisibleItemScrollOffset: Int
             get() = this@toLazyCollectionState.firstVisibleItemScrollOffset
+
         override val layoutInfo: LazyCollectionLayoutInfo<LazyListItemInfo>
             get() = this@toLazyCollectionState.layoutInfo.toLazyCollectionLayoutInfo()
 
@@ -146,25 +163,28 @@ private fun LazyListState.toLazyCollectionState() =
             this@toLazyCollectionState.scrollToItem(scrollToIndex, firstVisibleItemScrollOffset)
     }
 
-class ReorderableLazyListState internal constructor(
+class ReorderableLazyListState
+internal constructor(
     state: LazyListState,
     scope: CoroutineScope,
-    onMoveState: State<suspend CoroutineScope.(from: LazyListItemInfo, to: LazyListItemInfo) -> Unit>,
+    onMoveState:
+        State<suspend CoroutineScope.(from: LazyListItemInfo, to: LazyListItemInfo) -> Unit>,
     scrollThreshold: Float,
     scrollThresholdPadding: AbsolutePixelPadding,
     scroller: Scroller,
     layoutDirection: LayoutDirection,
     shouldItemMove: (draggingItem: Rect, item: Rect) -> Boolean,
-) : ReorderableLazyCollectionState<LazyListItemInfo>(
-    state.toLazyCollectionState(),
-    scope,
-    onMoveState,
-    scrollThreshold,
-    scrollThresholdPadding,
-    scroller,
-    layoutDirection,
-    shouldItemMove = shouldItemMove,
-)
+) :
+    ReorderableLazyCollectionState<LazyListItemInfo>(
+        state.toLazyCollectionState(),
+        scope,
+        onMoveState,
+        scrollThreshold,
+        scrollThresholdPadding,
+        scroller,
+        layoutDirection,
+        shouldItemMove = shouldItemMove,
+    )
 
 @ExperimentalFoundationApi
 @Composable
@@ -177,33 +197,36 @@ fun LazyItemScope.ReorderableItem(
 ) {
     val orientation = state.orientation
     val dragging by state.isItemDragging(key)
-    val offsetModifier = if (dragging) {
-        Modifier
-            .zIndex(1f)
-            .then(when (orientation) {
-                Orientation.Vertical -> Modifier.graphicsLayer {
-                    translationY = state.draggingItemOffset.y
-                }
+    val offsetModifier =
+        if (dragging) {
+            Modifier.zIndex(1f)
+                .then(
+                    when (orientation) {
+                        Orientation.Vertical ->
+                            Modifier.graphicsLayer { translationY = state.draggingItemOffset.y }
 
-                Orientation.Horizontal -> Modifier.graphicsLayer {
-                    translationX = state.draggingItemOffset.x
-                }
-            })
-    } else if (key == state.previousDraggingItemKey) {
-        Modifier
-            .zIndex(1f)
-            .then(when (orientation) {
-                Orientation.Vertical -> Modifier.graphicsLayer {
-                    translationY = state.previousDraggingItemOffset.value.y
-                }
+                        Orientation.Horizontal ->
+                            Modifier.graphicsLayer { translationX = state.draggingItemOffset.x }
+                    }
+                )
+        } else if (key == state.previousDraggingItemKey) {
+            Modifier.zIndex(1f)
+                .then(
+                    when (orientation) {
+                        Orientation.Vertical ->
+                            Modifier.graphicsLayer {
+                                translationY = state.previousDraggingItemOffset.value.y
+                            }
 
-                Orientation.Horizontal -> Modifier.graphicsLayer {
-                    translationX = state.previousDraggingItemOffset.value.x
-                }
-            })
-    } else {
-        Modifier.animateItem()
-    }
+                        Orientation.Horizontal ->
+                            Modifier.graphicsLayer {
+                                translationX = state.previousDraggingItemOffset.value.x
+                            }
+                    }
+                )
+        } else {
+            Modifier.animateItem()
+        }
 
     ReorderableCollectionItem(
         state = state,

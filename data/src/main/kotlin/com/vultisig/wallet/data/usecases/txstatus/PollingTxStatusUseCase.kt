@@ -1,18 +1,20 @@
 package com.vultisig.wallet.data.usecases.txstatus
 
 import com.vultisig.wallet.data.models.Chain
+import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
-import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
-import kotlin.time.Duration.Companion.seconds
 
 fun interface PollingTxStatusUseCase : (Chain, String) -> Flow<TransactionResult>
 
-internal class PollingTxStatusUseCaseImpl @Inject constructor(
+internal class PollingTxStatusUseCaseImpl
+@Inject
+constructor(
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionStatusRepository: TransactionStatusRepository,
 ) : PollingTxStatusUseCase {
@@ -40,7 +42,6 @@ internal class PollingTxStatusUseCaseImpl @Inject constructor(
                     is TransactionResult.Failed -> return@flow
                     else -> delay(config.pollIntervalSeconds.seconds)
                 }
-
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -58,4 +59,3 @@ internal class PollingTxStatusUseCaseImpl @Inject constructor(
         const val MAX_ERRORS = 5
     }
 }
-

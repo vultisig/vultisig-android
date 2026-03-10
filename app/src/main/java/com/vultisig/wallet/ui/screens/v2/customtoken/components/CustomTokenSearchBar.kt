@@ -43,100 +43,72 @@ internal fun CustomTokenSearchBar(
 ) {
     val context = LocalContext.current
 
-    Row(
-        modifier = Modifier
-            .height(intrinsicSize = IntrinsicSize.Max)
-    ) {
-
+    Row(modifier = Modifier.height(intrinsicSize = IntrinsicSize.Max)) {
         V2Container(
-            modifier = Modifier
-                .weight(1f)
-                .height(40.dp),
+            modifier = Modifier.weight(1f).height(40.dp),
             type = ContainerType.SECONDARY,
             cornerType = CornerType.Circular,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                modifier = Modifier.padding(horizontal = 12.dp),
             ) {
                 AnimatedVisibility(visible = initialDisplay) {
-
                     Row {
                         UiIcon(
                             drawableResId = R.drawable.search_custom_token,
                             size = 16.dp,
                             tint = Theme.v2.colors.text.button.primary,
-                            onClick = onSearchClick
+                            onClick = onSearchClick,
                         )
-                        UiSpacer(
-                            size = 8.dp
-                        )
+                        UiSpacer(size = 8.dp)
                     }
                 }
 
-
                 BasicTextField(
                     state = state,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    textStyle = Theme.brockmann.supplementary.footnote.copy(
-                        color = Theme.v2.colors.text.primary,
-                    ),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    textStyle =
+                        Theme.brockmann.supplementary.footnote.copy(
+                            color = Theme.v2.colors.text.primary
+                        ),
                     lineLimits = TextFieldLineLimits.SingleLine,
-                    onKeyboardAction = {
-                        onSearchClick()
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Search
-                    ),
+                    onKeyboardAction = { onSearchClick() },
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
                     decorator = { textField ->
-                        Box(
-                            contentAlignment = Alignment.CenterStart
-                        ) {
+                        Box(contentAlignment = Alignment.CenterStart) {
                             if (state.text.isEmpty()) {
                                 Text(
-                                    text = context.getString(R.string.custom_token_enter_contract_address),
+                                    text =
+                                        context.getString(
+                                            R.string.custom_token_enter_contract_address
+                                        ),
                                     style = Theme.brockmann.supplementary.footnote,
-                                    color = Theme.v2.colors.text.tertiary
+                                    color = Theme.v2.colors.text.tertiary,
                                 )
                             } else {
                                 textField()
                             }
                         }
-                    }
+                    },
                 )
 
+                UiSpacer(size = 8.dp)
 
-                UiSpacer(
-                    size = 8.dp
-                )
-
-                AnimatedContent( state.text.isEmpty()) {
-
+                AnimatedContent(state.text.isEmpty()) {
                     UiIcon(
-                        drawableResId = if (it)
-                            R.drawable.paste_v2 else
-                            R.drawable.close_2,
-                        size = if (it) 16.dp else
-                            10.dp,
+                        drawableResId = if (it) R.drawable.paste_v2 else R.drawable.close_2,
+                        size = if (it) 16.dp else 10.dp,
                         tint = Theme.v2.colors.text.secondary,
                         onClick = if (it) onPasteClick else onCloseClick,
                     )
                 }
-
             }
         }
 
-
         AnimatedVisibility(initialDisplay) {
-
             Row {
-
-                UiSpacer(
-                    12.dp
-                )
+                UiSpacer(12.dp)
 
                 VsCircleButton(
                     drawableResId = R.drawable.icon_search_menu,
@@ -146,13 +118,10 @@ internal fun CustomTokenSearchBar(
                     size = VsCircleButtonSize.Custom(size = 40.dp),
                     designType = DesignType.Solid,
                     iconSize = 20.dp,
-                    tint = Theme.v2.colors.text.secondary
+                    tint = Theme.v2.colors.text.secondary,
                 )
             }
-
-
         }
-
     }
 }
 
@@ -167,7 +136,6 @@ private fun CustomTokenSearchBarPreview1() {
         onCloseClick = {},
     )
 }
-
 
 @Preview
 @Composable

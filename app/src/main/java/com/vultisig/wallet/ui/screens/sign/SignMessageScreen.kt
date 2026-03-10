@@ -35,29 +35,25 @@ internal fun SignMessageScreen(
 ) {
     val context = LocalContext.current
 
-    val keysignShareViewModel: KeysignShareViewModel =
-        hiltViewModel(context as MainActivity)
+    val keysignShareViewModel: KeysignShareViewModel = hiltViewModel(context as MainActivity)
 
     val isKeysignFinished by viewModel.isKeysignFinished.collectAsState()
 
     val sendNav = rememberNavController()
 
-    LaunchedEffect(Unit) {
-        viewModel.dst.collect {
-            sendNav.route(it.dst.route, it.opts)
-        }
-    }
+    LaunchedEffect(Unit) { viewModel.dst.collect { sendNav.route(it.dst.route, it.opts) } }
 
     val navBackStackEntry by sendNav.currentBackStackEntryAsState()
 
     val route = navBackStackEntry?.destination?.route
 
     val useMainNavigator = route == SendDst.Send.route
-    val progressNav = if (useMainNavigator) {
-        navController
-    } else {
-        sendNav
-    }
+    val progressNav =
+        if (useMainNavigator) {
+            navController
+        } else {
+            sendNav
+        }
 
     val progress: Float
     val title: String
@@ -84,11 +80,7 @@ internal fun SignMessageScreen(
         title = title,
         onBackClick = { viewModel.navigateToHome(useMainNavigator) }.takeIf { !isKeysignFinished },
         rightIcon = qr?.let { R.drawable.qr_share },
-        onRightIconClick = qr?.let {
-            {
-                keysignShareViewModel.shareQRCode(context)
-            }
-        },
+        onRightIconClick = qr?.let { { keysignShareViewModel.shareQRCode(context) } },
         content = {
             NavHost(
                 navController = sendNav,
@@ -98,13 +90,7 @@ internal fun SignMessageScreen(
                 popEnterTransition = slideInFromStartEnterTransition(),
                 popExitTransition = slideOutToEndExitTransition(),
             ) {
-                composable(
-                    route = SendDst.Send.route,
-                ) {
-                    SignMessageFormScreen(
-                        vaultId = vaultId,
-                    )
-                }
+                composable(route = SendDst.Send.route) { SignMessageFormScreen(vaultId = vaultId) }
                 composable(
                     route = SendDst.VerifyTransaction.staticRoute,
                     arguments = SendDst.transactionArgs,
@@ -112,15 +98,12 @@ internal fun SignMessageScreen(
                     VerifySignMessageScreen()
                 }
             }
-        }
+        },
     )
 }
 
 @Preview
 @Composable
 private fun SignMessageScreenPreview() {
-    SignMessageScreen(
-        navController = rememberNavController(),
-        vaultId = "",
-    )
+    SignMessageScreen(navController = rememberNavController(), vaultId = "")
 }

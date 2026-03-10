@@ -1,16 +1,13 @@
 package com.vultisig.wallet.ui.screens.vault_settings
 
 import androidx.activity.compose.BackHandler
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -22,18 +19,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.backup.BackupMethodBottomSheet
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.screens.settings.SettingItem
@@ -79,16 +72,12 @@ private fun VaultSettingsScreen(
     val settingGroups = uiModel.settingGroups
 
     V2Scaffold(
-        title = if (uiModel.isAdvanceSetting)
-            stringResource(R.string.vault_settings_advanced_title)
-        else
-            stringResource(R.string.vault_settings_title),
-        onBackClick =  onBackClick,
+        title =
+            if (uiModel.isAdvanceSetting) stringResource(R.string.vault_settings_advanced_title)
+            else stringResource(R.string.vault_settings_title),
+        onBackClick = onBackClick,
     ) {
-        Column(
-            Modifier
-                .verticalScroll(rememberScrollState())
-        ) {
+        Column(Modifier.verticalScroll(rememberScrollState())) {
             settingGroups.filter(VaultSettingsGroupUiModel::isVisible).forEach { group ->
                 SettingsBox(title = group.title?.asString()) {
                     val enabledSettings = group.items.filter(VaultSettingsItem::enabled)
@@ -97,20 +86,20 @@ private fun VaultSettingsScreen(
                             item = item.value,
                             onClick = { onSettingsClick(item) },
                             isLastItem = index == enabledSettings.lastIndex,
-                            tint = if (item is VaultSettingsItem.Delete)
-                                Theme.v2.colors.alerts.error else null
+                            tint =
+                                if (item is VaultSettingsItem.Delete) Theme.v2.colors.alerts.error
+                                else null,
                         )
                     }
                 }
                 UiSpacer(14.dp)
             }
 
-
             if (uiModel.isBackupVaultBottomSheetVisible) {
-                BackupVaultBottomSheet(
+                BackupMethodBottomSheet(
                     onDismissRequest = onDismissBackupVaultBottomSheet,
-                    onLocalBackupClick = onLocalBackupClick,
-                    onServerBackupClick = onServerBackupClick
+                    onDeviceBackupClick = onLocalBackupClick,
+                    onServerBackupClick = onServerBackupClick,
                 )
             }
 
@@ -120,13 +109,11 @@ private fun VaultSettingsScreen(
                     biometricTextFieldState,
                     onToggleVisibilityClick,
                     onSaveBiometricsClick,
-                    uiModel
+                    uiModel,
                 )
             }
         }
     }
-
-
 }
 
 @Composable
@@ -135,37 +122,19 @@ private fun BiometricFastSignBottomSheet(
     biometricTextFieldState: TextFieldState,
     onToggleVisibilityClick: () -> Unit,
     onSaveBiometricsClick: () -> Unit,
-    uiModel: VaultSettingsState
+    uiModel: VaultSettingsState,
 ) {
-    VsModalBottomSheet(
-        onDismissRequest = onDismissBiometricsBottomSheet,
-    ) {
+    VsModalBottomSheet(onDismissRequest = onDismissBiometricsBottomSheet) {
         BiometricFastSignBottomSheetContent(
             passwordTextFieldState = biometricTextFieldState,
             onToggleVisibilityClick = onToggleVisibilityClick,
             onSaveClick = onSaveBiometricsClick,
-            hint = uiModel.biometricsEnableUiModel.passwordHint?.asString() ?: stringResource(R.string.import_file_screen_hint_password),
+            hint =
+                uiModel.biometricsEnableUiModel.passwordHint?.asString()
+                    ?: stringResource(R.string.import_file_screen_hint_password),
             errorMessage = uiModel.biometricsEnableUiModel.passwordErrorMessage?.asString(),
             isSaveEnabled = uiModel.biometricsEnableUiModel.isSaveEnabled,
             isPasswordVisible = uiModel.biometricsEnableUiModel.isPasswordVisible,
-        )
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun BackupVaultBottomSheet(
-    onDismissRequest: () -> Unit = {},
-    onLocalBackupClick: () -> Unit = {},
-    onServerBackupClick: () -> Unit = {},
-) {
-    VsModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-    ) {
-        BackupVaultBottomSheetContent(
-            onLocalBackupClick = onLocalBackupClick,
-            onServerBackupClick = onServerBackupClick
         )
     }
 }
@@ -182,153 +151,39 @@ private fun BiometricFastSignBottomSheetContent(
     isPasswordVisible: Boolean = true,
 ) {
     Column(
-        Modifier
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+        Modifier.padding(16.dp).verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(R.string.vault_password_biometeric_enable_biometrics_fast_signing),
+            text =
+                stringResource(R.string.vault_password_biometeric_enable_biometrics_fast_signing),
             style = Theme.brockmann.headings.subtitle,
             color = Theme.v2.colors.text.primary,
         )
 
-        FadingHorizontalDivider(
-            modifier = Modifier.padding(
-                vertical = 24.dp
-            )
-        )
+        FadingHorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
 
         VsTextInputField(
             textFieldState = passwordTextFieldState,
-            type = VsTextInputFieldType.Password(
-                isVisible = isPasswordVisible,
-                onVisibilityClick = onToggleVisibilityClick
-            ),
+            type =
+                VsTextInputFieldType.Password(
+                    isVisible = isPasswordVisible,
+                    onVisibilityClick = onToggleVisibilityClick,
+                ),
             hint = hint,
             footNote = errorMessage,
-            innerState = if (errorMessage != null)
-                VsTextInputFieldInnerState.Error
-            else VsTextInputFieldInnerState.Default,
+            innerState =
+                if (errorMessage != null) VsTextInputFieldInnerState.Error
+                else VsTextInputFieldInnerState.Default,
         )
-
 
         UiSpacer(14.dp)
 
         VsButton(
-            state = if (isSaveEnabled)
-                VsButtonState.Enabled
-            else
-                VsButtonState.Disabled,
+            state = if (isSaveEnabled) VsButtonState.Enabled else VsButtonState.Disabled,
             label = stringResource(R.string.add_vault_save),
             onClick = onSaveClick,
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
-    }
-}
-
-@Preview
-@Composable
-private fun BackupVaultBottomSheetContent(
-    onLocalBackupClick: () -> Unit = {},
-    onServerBackupClick: () -> Unit = {},
-) {
-    Column(
-        Modifier
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = stringResource(R.string.backup_choose_method_title),
-            style = Theme.brockmann.headings.subtitle,
-            color = Theme.v2.colors.text.primary,
-        )
-
-        FadingHorizontalDivider(
-            modifier = Modifier
-                .padding(
-                    vertical = 24.dp
-                )
-        )
-
-        BackupOption(
-            title = stringResource(R.string.backup_device_title),
-            description = stringResource(R.string.backup_device_desc),
-            icon = R.drawable.device_backup,
-            onClick = onLocalBackupClick
-        )
-
-        UiSpacer(
-            size = 14.dp
-        )
-        BackupOption(
-            title = stringResource(R.string.backup_server_title),
-            description = stringResource(R.string.backup_server_desc),
-            icon = R.drawable.server_backup,
-            onClick = onServerBackupClick
-        )
-        UiSpacer(14.dp)
-    }
-}
-
-@Composable
-private fun BackupOption(
-    title: String,
-    description: String,
-    @DrawableRes icon: Int,
-    onClick: () -> Unit,
-
-    ) {
-    V2Container(
-        modifier = Modifier.clickOnce(onClick = onClick),
-        type = ContainerType.PRIMARY,
-        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal),
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(
-                    all = 16.dp
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            UiIcon(
-                drawableResId = icon,
-                size = 20.dp,
-                tint = Theme.v2.colors.primary.accent4,
-            )
-
-            UiSpacer(
-                size = 12.dp,
-            )
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-            ) {
-                Text(
-                    text = title,
-                    style = Theme.brockmann.headings.subtitle,
-                    color = Theme.v2.colors.text.primary,
-                )
-
-                UiSpacer(
-                    size = 4.dp
-                )
-
-                Text(
-                    text = description,
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.secondary,
-                )
-            }
-
-            UiIcon(
-                drawableResId = R.drawable.ic_caret_right,
-                size = 20.dp,
-                tint = Theme.v2.colors.text.secondary,
-            )
-        }
     }
 }

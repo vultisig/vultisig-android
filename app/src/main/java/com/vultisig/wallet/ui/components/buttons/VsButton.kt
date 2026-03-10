@@ -21,23 +21,31 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Mini
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Small
+import com.vultisig.wallet.ui.components.buttons.VsButtonState.Default
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Disabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
-import com.vultisig.wallet.ui.components.buttons.VsButtonState.Default
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.*
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 enum class VsButtonVariant {
-    Primary, Secondary, Error, CTA
+    Primary,
+    Secondary,
+    Error,
+    CTA,
+    Tertiary,
 }
 
 enum class VsButtonState {
-    Enabled, Disabled, Default
+    Enabled,
+    Disabled,
+    Default,
 }
 
 enum class VsButtonSize {
-    Medium, Small, Mini
+    Medium,
+    Small,
+    Mini,
 }
 
 @Composable
@@ -46,102 +54,102 @@ fun VsButton(
     variant: VsButtonVariant = Primary,
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
-    forceClickable: Boolean = false, // TODO: Review with designer, we should stick to current pattern
+    forceClickable: Boolean =
+        false, // TODO: Review with designer, we should stick to current pattern
     shape: Shape? = null,
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val backgroundColor by animateColorAsState(
-        when (state) {
-            Enabled -> when (variant) {
-                Primary -> colors.buttons.tertiary
-                Secondary -> colors.backgrounds.tertiary_2
-                Error -> colors.alerts.error
-                CTA -> colors.buttons.ctaPrimary
-            }
+    val backgroundColor by
+        animateColorAsState(
+            when (state) {
+                Enabled ->
+                    when (variant) {
+                        Primary -> colors.buttons.tertiary
+                        Secondary -> colors.backgrounds.tertiary_2
+                        Error -> colors.alerts.error
+                        CTA -> colors.buttons.ctaPrimary
+                        Tertiary -> colors.neutrals.n50
+                    }
 
-            Disabled -> when (variant) {
-                Primary -> colors.buttons.disabled
-                Secondary -> colors.backgrounds.tertiary_2
-                Error -> colors.buttons.disabledError
-                CTA -> colors.buttons.ctaDisabled
-            }
+                Disabled ->
+                    when (variant) {
+                        Primary -> colors.buttons.disabled
+                        Secondary -> colors.buttons.ctaDisabled
+                        Error -> colors.buttons.disabledError
+                        CTA -> colors.buttons.ctaDisabled
+                        Tertiary -> colors.neutrals.n400
+                    }
 
-            Default -> when (variant) {
-                Primary -> colors.buttons.tertiary
-                Secondary -> colors.backgrounds.tertiary
-                Error -> colors.alerts.error
-                CTA -> colors.buttons.ctaPrimary
-            }
-        },
-        label = "VsButton.backgroundColor"
-    )
+                Default ->
+                    when (variant) {
+                        Primary -> colors.buttons.tertiary
+                        Secondary -> colors.backgrounds.tertiary
+                        Error -> colors.alerts.error
+                        CTA -> colors.buttons.ctaPrimary
+                        Tertiary -> colors.neutrals.n50
+                    }
+            },
+            label = "VsButton.backgroundColor",
+        )
 
+    val borderColor by
+        animateColorAsState(
+            when (state) {
+                Enabled ->
+                    when (variant) {
+                        Primary -> colors.buttons.tertiary
+                        Secondary -> colors.backgrounds.tertiary_2
+                        Error -> colors.alerts.error
+                        CTA -> colors.buttons.ctaPrimary
+                        Tertiary -> colors.neutrals.n50
+                    }
 
-    val borderColor by animateColorAsState(
-        when (state) {
-            Enabled -> when (variant) {
-                Primary -> colors.buttons.tertiary
-                Secondary -> colors.backgrounds.tertiary_2
-                Error -> colors.alerts.error
-                CTA -> colors.buttons.ctaPrimary
-            }
+                Disabled ->
+                    when (variant) {
+                        Primary -> colors.buttons.disabled
+                        Secondary -> colors.backgrounds.tertiary_2
+                        Error -> colors.buttons.disabledError
+                        CTA -> colors.buttons.ctaDisabled
+                        Tertiary -> colors.neutrals.n400
+                    }
 
-            Disabled -> when (variant) {
-                Primary -> colors.buttons.disabled
-                Secondary -> colors.backgrounds.tertiary_2
-                Error -> colors.buttons.disabledError
-                CTA -> colors.buttons.ctaDisabled
-            }
-
-            Default -> when (variant) {
-                Primary -> colors.buttons.tertiary
-                Secondary -> colors.backgrounds.tertiary
-                Error -> colors.alerts.error
-                CTA -> colors.buttons.ctaPrimary
-            }
-        },
-        label = "VsButton.borderColor"
-    )
+                Default ->
+                    when (variant) {
+                        Primary -> colors.buttons.tertiary
+                        Secondary -> colors.backgrounds.tertiary
+                        Error -> colors.alerts.error
+                        CTA -> colors.buttons.ctaPrimary
+                        Tertiary -> colors.neutrals.n50
+                    }
+            },
+            label = "VsButton.borderColor",
+        )
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(
-            8.dp,
-            Alignment.CenterHorizontally
-        ),
-        modifier = modifier
-            .background(
-                color = backgroundColor,
-                shape = shape ?: RoundedCornerShape(percent = 100)
-            )
-            .border(
-                width = 1.dp,
-                color = borderColor,
-                shape = shape ?: RoundedCornerShape(percent = 100),
-            )
-            .clickable(
-                enabled = state != Disabled || forceClickable,
-                onClick = onClick
-            )
-            .then(
-                when (size) {
-                    Medium -> Modifier.padding(
-                        vertical = 14.dp,
-                        horizontal = 24.dp
-                    )
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        modifier =
+            modifier
+                .background(
+                    color = backgroundColor,
+                    shape = shape ?: RoundedCornerShape(percent = 100),
+                )
+                .border(
+                    width = 1.dp,
+                    color = borderColor,
+                    shape = shape ?: RoundedCornerShape(percent = 100),
+                )
+                .clickable(enabled = state != Disabled || forceClickable, onClick = onClick)
+                .then(
+                    when (size) {
+                        Medium -> Modifier.padding(vertical = 14.dp, horizontal = 24.dp)
 
-                    Small -> Modifier.padding(
-                        vertical = 12.dp,
-                        horizontal = 24.dp
-                    )
+                        Small -> Modifier.padding(vertical = 12.dp, horizontal = 24.dp)
 
-                    Mini -> Modifier.padding(
-                        vertical = 8.dp,
-                        horizontal = 12.dp
-                    )
-                }
-            )
+                        Mini -> Modifier.padding(vertical = 8.dp, horizontal = 12.dp)
+                    }
+                ),
     ) {
         content()
     }
@@ -169,26 +177,36 @@ fun VsButton(
         forceClickable = forceClickable,
         onClick = onClick,
     ) {
-        val contentColor by animateColorAsState(
-            when (state) {
-                Enabled -> colors.text.button.primary
-                Disabled -> colors.text.button.disabled
-                Default -> colors.text.button.primary
-            },
-            label = "VsButton.contentColor"
-        )
+        val contentColor by
+            animateColorAsState(
+                when {
+                    variant != Tertiary -> {
+                        when (state) {
+                            Enabled -> colors.text.button.primary
+                            Disabled -> colors.text.button.disabled
+                            Default -> colors.text.button.primary
+                        }
+                    }
+                    else -> {
+                        when (state) {
+                            Enabled -> colors.text.inverse
+                            Disabled -> colors.text.button.disabled
+                            Default -> colors.text.inverse
+                        }
+                    }
+                },
+                label = "VsButton.contentColor",
+            )
 
-        val iconSize = when (size) {
-            Medium -> 20.dp
-            Small, Mini -> 16.dp
-        }
+        val iconSize =
+            when (size) {
+                Medium -> 20.dp
+                Small,
+                Mini -> 16.dp
+            }
 
         if (iconLeft != null) {
-            UiIcon(
-                drawableResId = iconLeft,
-                size = iconSize,
-                tint = contentColor,
-            )
+            UiIcon(drawableResId = iconLeft, size = iconSize, tint = contentColor)
         }
 
         if (label != null) {
@@ -200,11 +218,7 @@ fun VsButton(
         }
 
         if (iconRight != null) {
-            UiIcon(
-                drawableResId = iconRight,
-                size = iconSize,
-                tint = contentColor,
-            )
+            UiIcon(drawableResId = iconRight, size = iconSize, tint = contentColor)
         }
     }
 }
@@ -212,9 +226,7 @@ fun VsButton(
 @Preview
 @Composable
 private fun VsButtonPreview() {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         VsButton(
             label = "Primary",
             variant = Primary,
@@ -222,14 +234,14 @@ private fun VsButtonPreview() {
             size = Medium,
             iconLeft = R.drawable.ic_caret_left,
             iconRight = R.drawable.ic_caret_right,
-            onClick = {}
+            onClick = {},
         )
         VsButton(
             label = "Primary Default",
             variant = Primary,
             state = Default,
             size = Medium,
-            onClick = {}
+            onClick = {},
         )
 
         VsButton(
@@ -237,7 +249,7 @@ private fun VsButtonPreview() {
             variant = Secondary,
             state = Default,
             size = Medium,
-            onClick = {}
+            onClick = {},
         )
 
         VsButton(
@@ -245,7 +257,7 @@ private fun VsButtonPreview() {
             variant = Primary,
             state = Disabled,
             size = Medium,
-            onClick = {}
+            onClick = {},
         )
 
         VsButton(
@@ -253,7 +265,7 @@ private fun VsButtonPreview() {
             variant = Secondary,
             state = Enabled,
             size = Medium,
-            onClick = {}
+            onClick = {},
         )
 
         VsButton(
@@ -261,22 +273,17 @@ private fun VsButtonPreview() {
             variant = Secondary,
             state = Disabled,
             size = Medium,
-            onClick = {}
+            onClick = {},
         )
 
-        VsButton(
-            label = "Error",
-            variant = Error,
-            size = Medium,
-            onClick = {}
-        )
+        VsButton(label = "Error", variant = Error, size = Medium, onClick = {})
 
         VsButton(
             label = "Primary Enabled Small",
             variant = Primary,
             state = Enabled,
             size = Small,
-            onClick = {}
+            onClick = {},
         )
 
         VsButton(
@@ -284,9 +291,17 @@ private fun VsButtonPreview() {
             variant = Primary,
             state = Enabled,
             size = Mini,
-            onClick = {}
+            onClick = {},
         )
 
+        VsButton(label = "Tertiary Mini Small", variant = Tertiary, state = Enabled, onClick = {})
 
+        VsButton(label = "Tertiary Mini Small", variant = Tertiary, state = Disabled, onClick = {})
+
+        VsButton(label = "Tertiary Mini Small", variant = Tertiary, state = Default, onClick = {})
+
+        VsButton(label = "CTA Enabled", variant = CTA, state = Enabled, onClick = {})
+
+        VsButton(label = "CTA Disabled", variant = CTA, state = Disabled, onClick = {})
     }
 }

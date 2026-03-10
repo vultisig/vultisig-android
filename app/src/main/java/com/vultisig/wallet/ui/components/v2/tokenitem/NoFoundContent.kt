@@ -20,22 +20,17 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Preview
 @Composable
-internal fun NoFoundContent(
-    message: String = "No chains found",
-) {
+internal fun NoFoundContent(message: String = "No chains found") {
     TopShineContainer {
         Column(
             horizontalAlignment = Alignment.Companion.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.Companion
-                .fillMaxWidth()
-                .padding(vertical = 24.dp),
+            modifier = Modifier.Companion.fillMaxWidth().padding(vertical = 24.dp),
         ) {
             Image(
                 painter = painterResource(R.drawable.iconcrypto),
                 contentDescription = null,
-                modifier = Modifier.Companion
-                    .size(20.dp),
+                modifier = Modifier.Companion.size(20.dp),
             )
             UiSpacer(14.dp)
             Text(

@@ -38,47 +38,34 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 private fun PointerShape(
     modifier: Modifier = Modifier,
-    shapeSize: DpSize = DpSize(
-        width = 40.dp,
-        height = 15.dp
-    ),
+    shapeSize: DpSize = DpSize(width = 40.dp, height = 15.dp),
     shapeColor: Color,
 ) {
-    Canvas(
-        modifier = modifier
-            .width(shapeSize.width)
-            .height(shapeSize.height)
-    ) {
-        val path = Path().apply {
-            val maxWidth = size.width
-            val maxHeight = size.height + 1
-            val offSet = 30f
+    Canvas(modifier = modifier.width(shapeSize.width).height(shapeSize.height)) {
+        val path =
+            Path().apply {
+                val maxWidth = size.width
+                val maxHeight = size.height + 1
+                val offSet = 30f
 
+                moveTo(0f, maxHeight)
+                relativeLineTo(offSet, 0f)
+                lineTo(maxWidth.div(2), 0f)
+                lineTo(maxWidth - offSet, maxHeight)
+                relativeLineTo(offSet, 0f)
+                close()
+            }
 
-            moveTo(0f, maxHeight)
-            relativeLineTo(offSet, 0f)
-            lineTo(
-                maxWidth.div(2), 0f
-            )
-            lineTo(
-                maxWidth - offSet, maxHeight
-            )
-            relativeLineTo(offSet, 0f)
-            close()
-        }
+        val paint =
+            Paint().apply {
+                color = shapeColor
+                style = PaintingStyle.Fill
+                pathEffect = PathEffect.cornerPathEffect(20f)
+            }
 
-        val paint = Paint().apply {
-            color = shapeColor
-            style = PaintingStyle.Fill
-            pathEffect = PathEffect.cornerPathEffect(20f)
-        }
-
-        drawIntoCanvas { canvas ->
-            canvas.drawPath(path, paint)
-        }
+        drawIntoCanvas { canvas -> canvas.drawPath(path, paint) }
     }
 }
-
 
 @Composable
 internal fun HintBox(
@@ -91,15 +78,8 @@ internal fun HintBox(
     pointerOffset: DpOffset = DpOffset.Zero,
     onDismissClick: () -> Unit,
 ) {
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        Popup(
-            offset = offset,
-            onDismissRequest = onDismissClick,
-        ) {
+    AnimatedVisibility(visible = isVisible, enter = fadeIn(), exit = fadeOut()) {
+        Popup(offset = offset, onDismissRequest = null) {
             HintBoxPopupContent(
                 modifier = modifier,
                 title = title,
@@ -123,45 +103,35 @@ private fun HintBoxPopupContent(
 ) {
 
     val shapeColor = Theme.v2.colors.neutrals.n200
-    Column(
-        modifier = modifier
-            .clickable(onClick = onDismissClick),
-    ) {
+    Column(modifier = modifier.clickable(onClick = onDismissClick)) {
         PointerShape(
             shapeColor = shapeColor,
-            modifier = Modifier
-                .align(alignment = pointerAlignment)
-                .offset(
-                    x = pointerOffset.x,
-                    y = pointerOffset.y
-                )
+            modifier =
+                Modifier.align(alignment = pointerAlignment)
+                    .offset(x = pointerOffset.x, y = pointerOffset.y),
         )
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = shapeColor,
-                    shape = RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 4.dp,
-                        bottomStart = 16.dp,
-                        bottomEnd = 16.dp
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        color = shapeColor,
+                        shape =
+                            RoundedCornerShape(
+                                topStart = 16.dp,
+                                topEnd = 4.dp,
+                                bottomStart = 16.dp,
+                                bottomEnd = 16.dp,
+                            ),
                     )
-                )
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp
-                )
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Row {
                 Text(
                     text = title,
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.backgrounds.primary
+                    color = Theme.v2.colors.backgrounds.primary,
                 )
-                UiSpacer(
-                    weight = 1f
-                )
+                UiSpacer(weight = 1f)
                 UiIcon(
                     drawableResId = R.drawable.x,
                     size = 16.dp,
@@ -169,14 +139,12 @@ private fun HintBoxPopupContent(
                 )
             }
 
-            UiSpacer(
-                size = 2.dp
-            )
+            UiSpacer(size = 2.dp)
 
             Text(
                 text = message,
                 color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.supplementary.footnote
+                style = Theme.brockmann.supplementary.footnote,
             )
         }
     }
@@ -185,7 +153,8 @@ private fun HintBoxPopupContent(
 @Preview
 @Composable
 private fun HintBoxPreview() {
-    // In preview mode, the popup displays an unwanted background that's not visible in the actual app.
+    // In preview mode, the popup displays an unwanted background that's not visible in the actual
+    // app.
     HintBox(
         modifier = Modifier.width(250.dp),
         title = "Insufficient funds",

@@ -15,27 +15,28 @@ import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SIL
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.ULTIMATE_DISCOUNT_BPS
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.ui.screens.settings.TierType
-import timber.log.Timber
-import wallet.core.jni.CoinType
 import java.math.BigInteger
 import javax.inject.Inject
+import timber.log.Timber
+import wallet.core.jni.CoinType
 
 /**
- * Use case to calculate the discount in basis points (BPS) based on VULT token balance.
- * Fetches the VULT balance internally from the vault.
- *
+ * Use case to calculate the discount in basis points (BPS) based on VULT token balance. Fetches the
+ * VULT balance internally from the vault.
  */
 interface GetDiscountBpsUseCase {
     suspend operator fun invoke(vaultId: String, swapProvider: SwapProvider): Int
 }
 
-internal class GetDiscountBpsUseCaseImpl @Inject constructor(
+internal class GetDiscountBpsUseCaseImpl
+@Inject
+constructor(
     private val vaultRepository: VaultRepository,
     private val balanceRepository: BalanceRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tiersNFTRepository: TiersNFTRepository,
 ) : GetDiscountBpsUseCase {
-    
+
     override suspend fun invoke(vaultId: String, swapProvider: SwapProvider): Int {
         if (!supportedProviders.contains(swapProvider)) {
             return NO_DISCOUNT_BPS
@@ -52,31 +53,29 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
             discount.getNextDiscount()
         }
     }
-    
+
     suspend fun getVultBalance(vaultId: String): BigInteger? {
         try {
             val vault = vaultRepository.get(vaultId) ?: return null
 
             val vultCoin = vault.coins.find { it.id == Coins.Ethereum.VULT.id } ?: return null
-            
-            val (address, _) = chainAccountAddressRepository.getAddress(
-                Chain.Ethereum,
-                vault
-            )
-            
-            val tokenBalance = balanceRepository.getCachedTokenBalances(
-                listOf(address),
-                listOf(vultCoin),
-            ).find { it.coinId == Coins.Ethereum.VULT.id }?.tokenBalance?.tokenValue?.value
-                ?: BigInteger.ZERO
-            
+
+            val (address, _) = chainAccountAddressRepository.getAddress(Chain.Ethereum, vault)
+
+            val tokenBalance =
+                balanceRepository
+                    .getCachedTokenBalances(listOf(address), listOf(vultCoin))
+                    .find { it.coinId == Coins.Ethereum.VULT.id }
+                    ?.tokenBalance
+                    ?.tokenValue
+                    ?.value ?: BigInteger.ZERO
+
             return tokenBalance
         } catch (e: Exception) {
             Timber.e(e)
             return null
         }
     }
-
 
     fun getDiscountForBalance(vultBalance: BigInteger): Int {
         return when {
@@ -111,29 +110,31 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
 
         const val DIAMOND_DISCOUNT_BPS = 35
         const val ULTIMATE_DISCOUNT_BPS = 50
-        
+
         val BRONZE_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("1500".toBigInteger())
-        val SILVER_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("3000".toBigInteger())
-        val GOLD_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("7500".toBigInteger())
-        val PLATINUM_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("15000".toBigInteger())
+        val SILVER_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("3000".toBigInteger())
+        val GOLD_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("7500".toBigInteger())
+        val PLATINUM_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("15000".toBigInteger())
         val DIAMOND_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("100000".toBigInteger())
         val ULTIMATE_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("1000000".toBigInteger())
 
-        private val supportedProviders = setOf(
-            SwapProvider.THORCHAIN,
-            SwapProvider.MAYA,
-            SwapProvider.ONEINCH,
-            SwapProvider.LIFI,
-        )
+        private val supportedProviders =
+            setOf(
+                SwapProvider.THORCHAIN,
+                SwapProvider.MAYA,
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI,
+            )
     }
 }
 
-internal fun Int.getTierType() = when (this) {
-    BRONZE_DISCOUNT_BPS -> TierType.BRONZE
-    SILVER_DISCOUNT_BPS -> TierType.SILVER
-    GOLD_DISCOUNT_BPS -> TierType.GOLD
-    PLATINUM_DISCOUNT_BPS -> TierType.PLATINUM
-    DIAMOND_DISCOUNT_BPS -> TierType.DIAMOND
-    ULTIMATE_DISCOUNT_BPS -> TierType.ULTIMATE
-    else -> null
-}
+internal fun Int.getTierType() =
+    when (this) {
+        BRONZE_DISCOUNT_BPS -> TierType.BRONZE
+        SILVER_DISCOUNT_BPS -> TierType.SILVER
+        GOLD_DISCOUNT_BPS -> TierType.GOLD
+        PLATINUM_DISCOUNT_BPS -> TierType.PLATINUM
+        DIAMOND_DISCOUNT_BPS -> TierType.DIAMOND
+        ULTIMATE_DISCOUNT_BPS -> TierType.ULTIMATE
+        else -> null
+    }

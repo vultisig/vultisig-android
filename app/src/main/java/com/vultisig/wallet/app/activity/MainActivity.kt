@@ -2,6 +2,8 @@
 
 package com.vultisig.wallet.app.activity
 
+import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -30,31 +32,37 @@ import com.vultisig.wallet.app.activity.components.MainActivityContent
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 import dagger.hilt.android.AndroidEntryPoint
-import timber.log.Timber
 import javax.inject.Inject
+import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private val mainViewModel: MainViewModel by viewModels<MainViewModel>()
 
-    @Inject
-    lateinit var appUpdateManager: AppUpdateManager
+    @Inject lateinit var appUpdateManager: AppUpdateManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Workaround for Android 8.0 (API 26) crash: "Only fullscreen opaque activities can
+        // request orientation". Theme.SplashScreen sets windowIsTranslucent=true on API 26,
+        // which conflicts with screenOrientation in the manifest. Setting it programmatically
+        // here avoids the conflict; API 26 is skipped as it would still crash.
+        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition { false }
         super.onCreate(savedInstanceState)
 
-        val systemBarStyle = SystemBarStyle.auto(
-            colors.backgrounds.primary.toArgb(),
-            colors.backgrounds.primary.toArgb(),
-        ) { true }
+        val systemBarStyle =
+            SystemBarStyle.auto(
+                colors.backgrounds.primary.toArgb(),
+                colors.backgrounds.primary.toArgb(),
+            ) {
+                true
+            }
 
-        enableEdgeToEdge(
-            statusBarStyle = systemBarStyle,
-            navigationBarStyle = systemBarStyle,
-        )
+        enableEdgeToEdge(statusBarStyle = systemBarStyle, navigationBarStyle = systemBarStyle)
 
         setContent {
             OnBoardingComposeTheme {
@@ -66,16 +74,9 @@ class MainActivity : AppCompatActivity() {
                 var showSplash by remember { mutableStateOf(true) }
 
                 if (showSplash) {
-                    AnimatedSplash(
-                        isLoading = isLoading,
-                        onSplashComplete = {
-                            showSplash = false
-                        },
-                    )
+                    AnimatedSplash(isLoading = isLoading, onSplashComplete = { showSplash = false })
                 } else {
-                    var isNavigationReady by remember {
-                        mutableStateOf(false)
-                    }
+                    var isNavigationReady by remember { mutableStateOf(false) }
 
                     if (isNavigationReady) {
                         CheckDeeplink(mainViewModel::openUri)
@@ -87,24 +88,20 @@ class MainActivity : AppCompatActivity() {
                         navController = navController,
                         mainViewModel = mainViewModel,
                         startDestination = screen,
-                        onNavigationReady = {
-                            isNavigationReady = true
-                        },
+                        onNavigationReady = { isNavigationReady = true },
                     )
                 }
             }
         }
-
     }
+
     @Composable
     private fun CheckUpdates() {
         val lifecycle = LocalLifecycleOwner.current.lifecycle
 
         LaunchedEffect(Unit) {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainViewModel.startUpdateEvent.collect {
-                    startImmediateUpdate()
-                }
+                mainViewModel.startUpdateEvent.collect { startImmediateUpdate() }
             }
         }
     }
@@ -118,7 +115,7 @@ class MainActivity : AppCompatActivity() {
                     AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE)
                         .setAllowAssetPackDeletion(true)
                         .build(),
-                    0
+                    0,
                 )
             } catch (e: Exception) {
                 Timber.e(e, "Failed to start update flow")

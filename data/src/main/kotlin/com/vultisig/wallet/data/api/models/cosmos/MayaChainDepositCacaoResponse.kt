@@ -5,6 +5,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class MayaChainDepositCacaoResponse(
-    @SerialName("cacaoDeposit")
-    val cacaoDeposit: String
+    @SerialName("cacaoDeposit") val cacaoDeposit: String
 )

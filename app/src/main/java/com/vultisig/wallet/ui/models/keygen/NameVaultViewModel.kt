@@ -20,13 +20,13 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 internal data class NameVaultUiModel(
     val errorMessage: UiText? = null,
@@ -34,7 +34,9 @@ internal data class NameVaultUiModel(
 )
 
 @HiltViewModel
-internal class NameVaultViewModel @Inject constructor(
+internal class NameVaultViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
@@ -57,68 +59,67 @@ internal class NameVaultViewModel @Inject constructor(
         observeNameFieldChanges()
     }
 
-    private fun observeNameFieldChanges() = viewModelScope.launch {
-        nameFieldState.textAsFlow().collectLatest {
-            if (it.isNotEmpty()) {
-                validate()
-            } else {
-                state.update { currentState ->
-                    currentState.copy(errorMessage = null, isNextButtonEnabled = false)
+    private fun observeNameFieldChanges() =
+        viewModelScope.launch {
+            nameFieldState.textAsFlow().collectLatest {
+                if (it.isNotEmpty()) {
+                    validate()
+                } else {
+                    state.update { currentState ->
+                        currentState.copy(errorMessage = null, isNextButtonEnabled = false)
+                    }
                 }
             }
         }
-    }
 
     private suspend fun generateVaultName() {
-        val proposeName = withContext(Dispatchers.IO) {
-            val baseName = when {
-                args.tssAction == TssAction.KeyImport -> "Import Vault"
-                args.vaultType == VaultType.Fast -> "Fast Vault"
-                else -> "Secure Vault"
-            }
+        val proposeName =
+            withContext(Dispatchers.IO) {
+                val baseName =
+                    when {
+                        args.tssAction == TssAction.KeyImport -> "Import Vault"
+                        args.vaultType == VaultType.Fast -> "Fast Vault"
+                        else -> "Secure Vault"
+                    }
 
-            generateUniqueName(baseName, vaultNamesList)
-        }
+                generateUniqueName(baseName, vaultNamesList)
+            }
 
         nameFieldState.setTextAndPlaceCursorAtEnd(proposeName)
     }
 
-    private fun validate() = viewModelScope.launch {
-        val name = nameFieldState.text.toString().trim()
+    private fun validate() =
+        viewModelScope.launch {
+            val name = nameFieldState.text.toString().trim()
 
-        val errorMessage = when {
-            !isNameValid(name) -> StringResource(R.string.naming_vault_screen_invalid_name)
-            !isNameAvailable(name) -> StringResource(R.string.name_vault_vault_with_this_name_already_exists)
-            else -> null
-        }
+            val errorMessage =
+                when {
+                    !isNameValid(name) -> StringResource(R.string.naming_vault_screen_invalid_name)
+                    !isNameAvailable(name) ->
+                        StringResource(R.string.name_vault_vault_with_this_name_already_exists)
+                    else -> null
+                }
 
-        val isNextButtonEnabled = errorMessage == null
-        state.update {
-            it.copy(
-                errorMessage = errorMessage,
-                isNextButtonEnabled = isNextButtonEnabled,
-            )
+            val isNextButtonEnabled = errorMessage == null
+            state.update {
+                it.copy(errorMessage = errorMessage, isNextButtonEnabled = isNextButtonEnabled)
+            }
         }
-    }
 
     private fun isNameValid(name: String): Boolean {
         return isNameLengthValid(name)
     }
 
-    private fun isNameAvailable(name: String): Boolean =
-        vaultNamesList.none { it == name }
+    private fun isNameAvailable(name: String): Boolean = vaultNamesList.none { it == name }
 
     fun navigateToEmail() {
         val name = nameFieldState.text.toString()
-        if (!(isNameValid(name) && isNameAvailable(name)))
-            return
+        if (!(isNameValid(name) && isNameAvailable(name))) return
 
         viewModelScope.launch {
             when (args.vaultType) {
                 VaultType.Fast -> {
-                    navigator.route(
-                        Route.VaultInfo.Email(name, args.tssAction)
-                    )
+                    navigator.route(Route.VaultInfo.Email(name, args.tssAction))
                 }
 
                 VaultType.Secure -> {
@@ -126,6 +127,7 @@ internal class NameVaultViewModel @Inject constructor(
                         Route.Keygen.PeerDiscovery(
                             action = args.tssAction,
                             vaultName = name,
+                            deviceCount = args.deviceCount,
                         )
                     )
                 }
@@ -138,8 +140,6 @@ internal class NameVaultViewModel @Inject constructor(
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 }

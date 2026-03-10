@@ -34,10 +34,7 @@ internal fun UnMergeFunctionScreen(
     )
 
     FormTextFieldCard(
-        title = stringResource(
-            R.string.deposit_form_shares_title,
-            shares.asString()
-        ),
+        title = stringResource(R.string.deposit_form_shares_title, shares.asString()),
         hint = stringResource(R.string.send_shares_currency_hint),
         keyboardType = KeyboardType.Number,
         textFieldState = amountFieldState,

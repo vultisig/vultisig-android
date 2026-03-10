@@ -8,7 +8,10 @@ plugins {
     alias(libs.plugins.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.protobuf)
+    alias(libs.plugins.ktfmt)
 }
+
+ktfmt { kotlinLangStyle() }
 
 android {
     namespace = "com.vultisig.wallet.data"
@@ -26,46 +29,35 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
     sourceSets.getByName("main") {
-        proto {
-            srcDir("${project.rootProject.rootDir}/commondata/proto")
-        }
+        proto { srcDir("${project.rootProject.rootDir}/commondata/proto") }
     }
+    tasks.withType<Test> { useJUnitPlatform() }
 }
 
-kotlin {
-    jvmToolchain(21)
-}
+kotlin { jvmToolchain(21) }
 
 protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.23.4"
-    }
+    protoc { artifact = "com.google.protobuf:protoc:3.23.4" }
 
     plugins {
         id("kotlinx-protobuf-gen") {
-            artifact = "io.github.dogacel:kotlinx-protobuf-gen:${libs.versions.kotlinxProtobufGen.get()}:jvm8@jar"
+            artifact =
+                "io.github.dogacel:kotlinx-protobuf-gen:${libs.versions.kotlinxProtobufGen.get()}:jvm8@jar"
         }
     }
 
-    generateProtoTasks {
-        all().forEach {
-            it.plugins {
-                id("kotlinx-protobuf-gen") {}
-            }
-        }
-    }
+    generateProtoTasks { all().forEach { it.plugins { id("kotlinx-protobuf-gen") {} } } }
 }
+
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions {
         freeCompilerArgs.addAll(
-            listOf(
-                "-opt-in=kotlinx.serialization.ExperimentalSerializationApi"
-            )
+            listOf("-opt-in=kotlinx.serialization.ExperimentalSerializationApi")
         )
     }
 }
@@ -121,8 +113,11 @@ dependencies {
     // test
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.junit)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))
-    
+
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(kotlin("test"))

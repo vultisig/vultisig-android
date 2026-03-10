@@ -15,27 +15,17 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun PagerCircleIndicator(
-    currentIndex: Int,
-    size: Int,
-    modifier: Modifier = Modifier,
-) {
+internal fun PagerCircleIndicator(currentIndex: Int, size: Int, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
     ) {
         repeat(size) { iteration ->
-            val color = if (currentIndex == iteration)
-                Theme.v2.colors.backgrounds.teal
-            else
-                Theme.v2.colors.border.normal
+            val color =
+                if (currentIndex == iteration) Theme.v2.colors.backgrounds.teal
+                else Theme.v2.colors.border.normal
 
-            Box(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(color)
-                    .size(8.dp)
-            )
+            Box(modifier = Modifier.clip(CircleShape).background(color).size(8.dp))
         }
     }
 }
@@ -43,8 +33,5 @@ internal fun PagerCircleIndicator(
 @Preview
 @Composable
 private fun PagerCircleIndicatorPreview() {
-    PagerCircleIndicator(
-        currentIndex = 2,
-        size = 3
-    )
+    PagerCircleIndicator(currentIndex = 2, size = 3)
 }

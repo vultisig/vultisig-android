@@ -9,9 +9,7 @@ import com.vultisig.wallet.ui.components.onboarding.SummaryScreen
 import com.vultisig.wallet.ui.models.onboarding.OnboardingSummaryViewModel
 
 @Composable
-internal fun OnboardingSummaryScreen(
-    model: OnboardingSummaryViewModel = hiltViewModel(),
-) {
+internal fun OnboardingSummaryScreen(model: OnboardingSummaryViewModel = hiltViewModel()) {
     val checkState by model.checkState.collectAsState()
 
     SummaryScreen(

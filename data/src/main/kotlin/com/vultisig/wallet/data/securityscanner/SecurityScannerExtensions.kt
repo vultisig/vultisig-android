@@ -5,7 +5,7 @@ import timber.log.Timber
 
 internal suspend fun <T> runSecurityScan(
     transaction: SecurityScannerTransaction,
-    block: suspend () -> T
+    block: suspend () -> T,
 ): T {
     Timber.d("SecurityScanner: Scanning ${transaction.chain.name} transaction: $transaction")
     return try {
@@ -20,9 +20,5 @@ internal suspend fun <T> runSecurityScan(
 }
 
 fun List<SecurityScannerSupport>.isChainSupported(chain: Chain): Boolean {
-    return any { support ->
-        support.feature.any { feature ->
-            chain in feature.chains
-        }
-    }
+    return any { support -> support.feature.any { feature -> chain in feature.chains } }
 }

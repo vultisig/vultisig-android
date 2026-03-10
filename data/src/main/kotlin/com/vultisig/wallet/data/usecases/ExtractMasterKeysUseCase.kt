@@ -3,11 +3,11 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.crypto.Ed25519ScalarUtil
-import wallet.core.jni.Curve
-import wallet.core.jni.HDWallet
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
+import wallet.core.jni.Curve
+import wallet.core.jni.HDWallet
 
 data class MasterKeys(
     val ecdsaMasterKeyHex: String,
@@ -18,17 +18,18 @@ data class MasterKeys(
 }
 
 fun interface ExtractMasterKeysUseCase {
-    operator fun invoke(mnemonic: String): MasterKeys
+    operator fun invoke(mnemonic: String): MasterKeys?
 }
 
 /**
- * Extracts root ECDSA/EdDSA master keys and BIP32 chain code from a mnemonic.
- * The chain code is critical: it must be preserved (not overwritten by DKLS output)
- * for correct BIP32 address derivation on chains not imported per-chain.
+ * Extracts root ECDSA/EdDSA master keys and BIP32 chain code from a mnemonic. The chain code is
+ * critical: it must be preserved (not overwritten by DKLS output) for correct BIP32 address
+ * derivation on chains not imported per-chain.
  */
 internal class ExtractMasterKeysUseCaseImpl @Inject constructor() : ExtractMasterKeysUseCase {
 
-    override fun invoke(mnemonic: String): MasterKeys {
+    override fun invoke(mnemonic: String): MasterKeys? {
+        if (mnemonic.isBlank()) return null
         val wallet = HDWallet(mnemonic, "")
 
         val ecdsaMasterKey = wallet.getMasterKey(Curve.SECP256K1).data()

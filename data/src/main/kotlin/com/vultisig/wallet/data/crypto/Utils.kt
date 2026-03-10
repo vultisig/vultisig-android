@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.crypto
 
 import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Cardano
 import wallet.core.jni.proto.Cosmos
 import wallet.core.jni.proto.Ethereum
 import wallet.core.jni.proto.Polkadot
@@ -8,7 +9,6 @@ import wallet.core.jni.proto.Solana
 import wallet.core.jni.proto.Sui
 import wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
 import wallet.core.jni.proto.Tron
-import wallet.core.jni.proto.Cardano
 
 internal fun PreSigningOutput.checkError(): PreSigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
@@ -23,7 +23,6 @@ internal fun Bitcoin.PreSigningOutput.checkError(): Bitcoin.PreSigningOutput {
     }
     return this
 }
-
 
 internal fun Solana.PreSigningOutput.checkError(): Solana.PreSigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
@@ -80,7 +79,8 @@ internal fun Tron.SigningOutput.checkError(): Tron.SigningOutput {
     }
     return this
 }
-internal fun  Solana.DecodingTransactionOutput.checkError():   Solana.DecodingTransactionOutput{
+
+internal fun Solana.DecodingTransactionOutput.checkError(): Solana.DecodingTransactionOutput {
     if (!errorMessage.isNullOrEmpty()) {
         error(" Decoding Transaction Output contains error: $errorMessage")
     }

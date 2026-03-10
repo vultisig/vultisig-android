@@ -37,8 +37,8 @@ import com.vultisig.wallet.data.models.Chain.Osmosis
 import com.vultisig.wallet.data.models.Chain.Polkadot
 import com.vultisig.wallet.data.models.Chain.Polygon
 import com.vultisig.wallet.data.models.Chain.Ripple
-import com.vultisig.wallet.data.models.Chain.Solana
 import com.vultisig.wallet.data.models.Chain.Sei
+import com.vultisig.wallet.data.models.Chain.Solana
 import com.vultisig.wallet.data.models.Chain.Sui
 import com.vultisig.wallet.data.models.Chain.Terra
 import com.vultisig.wallet.data.models.Chain.TerraClassic
@@ -49,13 +49,12 @@ import com.vultisig.wallet.data.models.SignedTransactionResult
 import javax.inject.Inject
 
 fun interface BroadcastTxUseCase {
-    suspend operator fun invoke(
-        chain: Chain,
-        tx: SignedTransactionResult,
-    ): String?
+    suspend operator fun invoke(chain: Chain, tx: SignedTransactionResult): String?
 }
 
-internal class BroadcastTxUseCaseImpl @Inject constructor(
+internal class BroadcastTxUseCaseImpl
+@Inject
+constructor(
     private val thorChainApi: ThorChainApi,
     private val evmApiFactory: EvmApiFactory,
     private val blockChairApi: BlockChairApi,
@@ -70,69 +69,79 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
     private val cardanoApi: CardanoApi,
 ) : BroadcastTxUseCase {
 
-    override suspend fun invoke(
-        chain: Chain,
-        tx: SignedTransactionResult,
-    ) = when (chain) {
-        ThorChain -> {
-            thorChainApi.broadcastTransaction(tx.rawTransaction)
-        }
+    override suspend fun invoke(chain: Chain, tx: SignedTransactionResult) =
+        when (chain) {
+            ThorChain -> {
+                thorChainApi.broadcastTransaction(tx.rawTransaction)
+            }
 
-        Bitcoin, BitcoinCash, Litecoin, Dogecoin, Dash, Chain.Zcash -> {
-            blockChairApi.broadcastTransaction(
-                chain,
-                tx.rawTransaction
-            )
-        }
+            Bitcoin,
+            BitcoinCash,
+            Litecoin,
+            Dogecoin,
+            Dash,
+            Chain.Zcash -> {
+                blockChairApi.broadcastTransaction(chain, tx.rawTransaction)
+            }
 
-        Ethereum, CronosChain, Blast, BscChain, Avalanche, Mantle,
-        Base, Polygon, Optimism, Arbitrum, ZkSync, Sei, Chain.Hyperliquid -> {
-            val evmApi = evmApiFactory.createEvmApi(chain)
-            evmApi.sendTransaction(tx.rawTransaction)
-        }
+            Ethereum,
+            CronosChain,
+            Blast,
+            BscChain,
+            Avalanche,
+            Mantle,
+            Base,
+            Polygon,
+            Optimism,
+            Arbitrum,
+            ZkSync,
+            Sei,
+            Chain.Hyperliquid -> {
+                val evmApi = evmApiFactory.createEvmApi(chain)
+                evmApi.sendTransaction(tx.rawTransaction)
+            }
 
-        Solana -> {
-            solanaApi.broadcastTransaction(tx.rawTransaction)
-        }
+            Solana -> {
+                solanaApi.broadcastTransaction(tx.rawTransaction)
+            }
 
-        GaiaChain, Kujira, Dydx, Osmosis, Terra,
-        TerraClassic, Noble, Akash -> {
-            val cosmosApi = cosmosApiFactory.createCosmosApi(chain)
-            cosmosApi.broadcastTransaction(tx.rawTransaction)
-        }
+            GaiaChain,
+            Kujira,
+            Dydx,
+            Osmosis,
+            Terra,
+            TerraClassic,
+            Noble,
+            Akash -> {
+                val cosmosApi = cosmosApiFactory.createCosmosApi(chain)
+                cosmosApi.broadcastTransaction(tx.rawTransaction)
+            }
 
-        MayaChain -> {
-            mayaChainApi.broadcastTransaction(tx.rawTransaction)
-        }
+            MayaChain -> {
+                mayaChainApi.broadcastTransaction(tx.rawTransaction)
+            }
 
-        Polkadot -> {
-            polkadotApi.broadcastTransaction(tx.rawTransaction)
-                ?: tx.transactionHash
-        }
+            Polkadot -> {
+                polkadotApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
+            }
 
-        Sui -> {
-            suiApi.executeTransactionBlock(
-                tx.rawTransaction,
-                tx.signature ?: ""
-            )
-        }
+            Sui -> {
+                suiApi.executeTransactionBlock(tx.rawTransaction, tx.signature ?: "")
+            }
 
-        Ton -> {
-            tonApi.broadcastTransaction(tx.rawTransaction)
-                ?: tx.transactionHash
-        }
+            Ton -> {
+                tonApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
+            }
 
-        Ripple -> {
-            rippleApi.broadcastTransaction(tx.rawTransaction)
-        }
+            Ripple -> {
+                rippleApi.broadcastTransaction(tx.rawTransaction)
+            }
 
-        Chain.Tron -> {
-            tronApi.broadcastTransaction(tx.rawTransaction)
+            Chain.Tron -> {
+                tronApi.broadcastTransaction(tx.rawTransaction)
+            }
+            Chain.Cardano -> {
+                cardanoApi.broadcastTransaction(chain.name, tx.rawTransaction) ?: tx.transactionHash
+            }
         }
-        Chain.Cardano -> {
-            cardanoApi.broadcastTransaction(chain.name,tx.rawTransaction)?: tx.transactionHash
-        }
-
-    }
-
 }

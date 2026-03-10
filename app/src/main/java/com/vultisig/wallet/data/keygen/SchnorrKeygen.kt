@@ -33,13 +33,13 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import timber.log.Timber
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 class SchnorrKeygen(
     val localPartyId: String,
@@ -54,19 +54,19 @@ class SchnorrKeygen(
     val setupMessage: ByteArray,
     val action: TssAction,
     private val isInitiatingDevice: Boolean,
-
     private val encryption: Encryption,
     private val sessionApi: SessionApi,
 ) {
-    private var messenger: TssMessenger = TssMessenger(
-        serverAddress = mediatorURL,
-        sessionID = sessionID,
-        encryptionHex = encryptionKeyHex,
-        sessionApi = sessionApi,
-        coroutineScope = CoroutineScope(Dispatchers.IO),
-        encryption = encryption,
-        isEncryptionGCM = true
-    )
+    private var messenger: TssMessenger =
+        TssMessenger(
+            serverAddress = mediatorURL,
+            sessionID = sessionID,
+            encryptionHex = encryptionKeyHex,
+            sessionApi = sessionApi,
+            coroutineScope = CoroutineScope(Dispatchers.IO),
+            encryption = encryption,
+            isEncryptionGCM = true,
+        )
 
     val cache = mutableMapOf<String, Any>()
     var keyshare: DKLSKeyshare? = null
@@ -74,14 +74,14 @@ class SchnorrKeygen(
     private fun getSchnorrOutboundMessage(handle: Handle): Pair<schnorr_lib_error, ByteArray> {
         val buf = tss_buffer()
         return try {
-            val result = when (action) {
-                TssAction.KEYGEN, TssAction.Migrate, TssAction.KeyImport -> schnorr_keygen_session_output_message(
-                    handle,
-                    buf
-                )
+            val result =
+                when (action) {
+                    TssAction.KEYGEN,
+                    TssAction.Migrate,
+                    TssAction.KeyImport -> schnorr_keygen_session_output_message(handle, buf)
 
-                TssAction.ReShare -> schnorr_qc_session_output_message(handle, buf)
-            }
+                    TssAction.ReShare -> schnorr_qc_session_output_message(handle, buf)
+                }
             if (result != LIB_OK) {
                 Timber.d("fail to get outbound message: $result")
                 return Pair(result, byteArrayOf())
@@ -96,19 +96,20 @@ class SchnorrKeygen(
     private fun getOutboundMessageReceiver(
         handle: Handle,
         message: go_slice,
-        idx: Long
+        idx: Long,
     ): ByteArray {
         val bufReceiver = tss_buffer()
         return try {
-            val receiverResult = when (action) {
-                TssAction.KEYGEN, TssAction.Migrate, TssAction.KeyImport -> schnorr_keygen_session_message_receiver(
-                    handle, message, idx, bufReceiver
-                )
+            val receiverResult =
+                when (action) {
+                    TssAction.KEYGEN,
+                    TssAction.Migrate,
+                    TssAction.KeyImport ->
+                        schnorr_keygen_session_message_receiver(handle, message, idx, bufReceiver)
 
-                TssAction.ReShare -> schnorr_qc_session_message_receiver(
-                    handle, message, idx, bufReceiver
-                )
-            }
+                    TssAction.ReShare ->
+                        schnorr_qc_session_message_receiver(handle, message, idx, bufReceiver)
+                }
             if (receiverResult != LIB_OK) {
                 Timber.d("fail to get receiver message, error: $receiverResult")
                 return byteArrayOf()
@@ -184,23 +185,26 @@ class SchnorrKeygen(
                 continue
             }
             Timber.d("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
-            val decryptedBody = encryption.decrypt(
-                Base64.decode(msg.body), Numeric.hexStringToByteArray(encryptionKeyHex)
-            ) ?: error("fail to decrypt message body")
+            val decryptedBody =
+                encryption.decrypt(
+                    Base64.decode(msg.body),
+                    Numeric.hexStringToByteArray(encryptionKeyHex),
+                ) ?: error("fail to decrypt message body")
             val decodedMsg = Base64.decode(decryptedBody)
 
             val decryptedBodySlice = decodedMsg.toGoSlice()
 
             val isFinished = intArrayOf(0)
-            val result = when (action) {
-                TssAction.KEYGEN, TssAction.Migrate, TssAction.KeyImport -> schnorr_keygen_session_input_message(
-                    handle, decryptedBodySlice, isFinished
-                )
+            val result =
+                when (action) {
+                    TssAction.KEYGEN,
+                    TssAction.Migrate,
+                    TssAction.KeyImport ->
+                        schnorr_keygen_session_input_message(handle, decryptedBodySlice, isFinished)
 
-                TssAction.ReShare -> schnorr_qc_session_input_message(
-                    handle, decryptedBodySlice, isFinished
-                )
-            }
+                    TssAction.ReShare ->
+                        schnorr_qc_session_input_message(handle, decryptedBodySlice, isFinished)
+                }
             if (result != LIB_OK) {
                 Timber.d("fail to apply message to schnorr, $result")
                 error("fail to apply message to schnorr, $result")
@@ -222,7 +226,7 @@ class SchnorrKeygen(
     @Throws(Exception::class)
     private fun getDklsKeyImportSetupMessage(
         hexPrivateKey: String,
-        hexRootChainCode: String
+        hexRootChainCode: String,
     ): Pair<ByteArray, Handle> {
         val buf = tss_buffer()
         val handler = Handle()
@@ -235,14 +239,15 @@ class SchnorrKeygen(
             val byteArray = DklsHelper.arrayToBytes(keygenCommittee)
             val ids = go_slice()
             BufferUtilJNI.set_bytes_on_go_slice(ids, byteArray)
-            val err = schnorr_key_import_initiator_new(
-                localUISlice,
-                chainCodeSlice,
-                threshold.toShort(),
-                ids,
-                buf,
-                handler
-            )
+            val err =
+                schnorr_key_import_initiator_new(
+                    localUISlice,
+                    chainCodeSlice,
+                    threshold.toShort(),
+                    ids,
+                    buf,
+                    handler,
+                )
             if (err != LIB_OK) {
                 error("fail to setup keygen message, schnorr error: $err")
             }
@@ -281,62 +286,64 @@ class SchnorrKeygen(
                     val localUIArray = Numeric.hexStringToByteArray(localUI)
                     val localUISlice = localUIArray.toGoSlice()
 
-                    val result = schnorr_key_migration_session_from_setup(
-                        decodedSetupMsg,
-                        localPartySlice,
-                        publicKeySlice,
-                        chainCodeSlice,
-                        localUISlice,
-                        handler
-                    )
+                    val result =
+                        schnorr_key_migration_session_from_setup(
+                            decodedSetupMsg,
+                            localPartySlice,
+                            publicKeySlice,
+                            chainCodeSlice,
+                            localUISlice,
+                            handler,
+                        )
 
                     if (result != LIB_OK) {
-                        throw RuntimeException("fail to create migration session from setup message, error: $result")
+                        throw RuntimeException(
+                            "fail to create migration session from setup message, error: $result"
+                        )
                     }
                 }
 
                 TssAction.KeyImport -> {
-                    if (this.localUi.isEmpty()) {
-                        throw RuntimeException("can't import key, local UI is empty")
-                    }
                     // additionalHeader namespaces the setup message on the relay server so
                     // per-chain sessions (e.g. "Solana") don't collide with the root EdDSA one.
                     val eddsaHeader = additionalHeader.ifEmpty { "eddsa_key_import" }
                     if (this.isInitiatingDevice) {
-                        val (keyImportSetupMsg, keyImportHandler) = getDklsKeyImportSetupMessage(
-                            this.localUi,
-                            this.hexChainCode
-                        )
+                        val (keyImportSetupMsg, keyImportHandler) =
+                            getDklsKeyImportSetupMessage(this.localUi, this.hexChainCode)
                         handler = keyImportHandler
                         sessionApi.uploadSetupMessage(
                             serverUrl = mediatorURL,
                             sessionId = sessionID,
-                            message = Base64.encode(
-                                encryption.encrypt(
-                                    Base64.encodeToByteArray(keyImportSetupMsg),
-                                    Numeric.hexStringToByteArray(encryptionKeyHex)
-                                )
-                            ),
+                            message =
+                                Base64.encode(
+                                    encryption.encrypt(
+                                        Base64.encodeToByteArray(keyImportSetupMsg),
+                                        Numeric.hexStringToByteArray(encryptionKeyHex),
+                                    )
+                                ),
                             messageId = eddsaHeader,
                         )
                     } else {
                         val keygenSetupMsg =
-                            sessionApi.getSetupMessage(mediatorURL, sessionID, eddsaHeader)
+                            sessionApi
+                                .getSetupMessage(mediatorURL, sessionID, eddsaHeader)
                                 .let {
                                     encryption.decrypt(
                                         Base64.decode(it),
-                                        Numeric.hexStringToByteArray(encryptionKeyHex)
+                                        Numeric.hexStringToByteArray(encryptionKeyHex),
                                     )!!
-                                }.let {
-                                    Base64.decode(it)
                                 }
-                        val result = schnorr_key_importer_new(
-                            keygenSetupMsg.toGoSlice(),
-                            localPartySlice,
-                            handler
-                        )
+                                .let { Base64.decode(it) }
+                        val result =
+                            schnorr_key_importer_new(
+                                keygenSetupMsg.toGoSlice(),
+                                localPartySlice,
+                                handler,
+                            )
                         if (result != LIB_OK) {
-                            throw RuntimeException("fail to create key import session from setup message, error: $result")
+                            throw RuntimeException(
+                                "fail to create key import session from setup message, error: $result"
+                            )
                         }
                     }
                 }
@@ -354,11 +361,12 @@ class SchnorrKeygen(
                 }
                 val keyshareBytes = getKeyshareBytes(keyshareHandler)
                 val publicKeyEdDSA = getPublicKeyBytes(keyshareHandler)
-                keyshare = DKLSKeyshare(
-                    pubKey = publicKeyEdDSA.toHexString(),
-                    keyshare = Base64.encode(keyshareBytes),
-                    chaincode = ""
-                )
+                keyshare =
+                    DKLSKeyshare(
+                        pubKey = publicKeyEdDSA.toHexString(),
+                        keyshare = Base64.encode(keyshareBytes),
+                        chaincode = "",
+                    )
                 Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
                 // slightly delay to give local party time to process outbound messages
                 delay(500)
@@ -376,7 +384,7 @@ class SchnorrKeygen(
 
     private fun processReshareCommittee(
         oldCommittee: List<String>,
-        newCommittee: List<String>
+        newCommittee: List<String>,
     ): Triple<List<String>, List<Byte>, List<Byte>> {
         val allParties = oldCommittee.toMutableList()
         val oldPartiesIdx = mutableListOf<Byte>()
@@ -420,22 +428,21 @@ class SchnorrKeygen(
         val buf = tss_buffer()
         return try {
             val threshold = DklsHelper.getThreshold(keygenCommittee.size)
-            val (allParties, newPartiesIdx, oldPartiesIdx) = processReshareCommittee(
-                oldCommittee,
-                keygenCommittee
-            )
+            val (allParties, newPartiesIdx, oldPartiesIdx) =
+                processReshareCommittee(oldCommittee, keygenCommittee)
             val byteArray = DklsHelper.arrayToBytes(allParties)
             val ids = byteArray.toGoSlice()
             val newPartiesIdxSlice = newPartiesIdx.toByteArray().toGoSlice()
             val oldPartiesIdxSlice = oldPartiesIdx.toByteArray().toGoSlice()
-            val result = schnorr_qc_setupmsg_new(
-                keyshareHandle,
-                ids,
-                oldPartiesIdxSlice,
-                threshold,
-                newPartiesIdxSlice,
-                buf
-            )
+            val result =
+                schnorr_qc_setupmsg_new(
+                    keyshareHandle,
+                    ids,
+                    oldPartiesIdxSlice,
+                    threshold,
+                    newPartiesIdxSlice,
+                    buf,
+                )
             if (result != LIB_OK) {
                 throw RuntimeException("fail to get qc setup message, $result")
             }
@@ -459,33 +466,37 @@ class SchnorrKeygen(
 
             val reshareSetupMsg: ByteArray
             if (isInitiatingDevice && attempt == 0) {
-                // DKLS/Schnorr reshare needs to upload a different setup message, thus here pass in an additional header as "eddsa" to make sure
+                // DKLS/Schnorr reshare needs to upload a different setup message, thus here pass in
+                // an
+                // additional header as "eddsa" to make sure
                 // DKLS and Schnorr setup messages will be saved differently
                 reshareSetupMsg = getSchnorrReshareSetupMessage(keyshareHandle)
                 sessionApi.uploadSetupMessage(
                     serverUrl = mediatorURL,
                     sessionId = sessionID,
-                    message = Base64.encode(
-                        encryption.encrypt(
-                            Base64.encodeToByteArray(reshareSetupMsg),
-                            Numeric.hexStringToByteArray(encryptionKeyHex)
-                        )
-                    ),
+                    message =
+                        Base64.encode(
+                            encryption.encrypt(
+                                Base64.encodeToByteArray(reshareSetupMsg),
+                                Numeric.hexStringToByteArray(encryptionKeyHex),
+                            )
+                        ),
                     messageId = "eddsa",
                 )
             } else {
                 // download the setup message from relay server
                 // back off for 500ms so the initiate device will upload the setup message correctly
                 delay(500)
-                reshareSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, "eddsa")
-                    .let {
-                        encryption.decrypt(
-                            Base64.decode(it),
-                            Numeric.hexStringToByteArray(encryptionKeyHex)
-                        )!!
-                    }.let {
-                        Base64.decode(it)
-                    }
+                reshareSetupMsg =
+                    sessionApi
+                        .getSetupMessage(mediatorURL, sessionID, "eddsa")
+                        .let {
+                            encryption.decrypt(
+                                Base64.decode(it),
+                                Numeric.hexStringToByteArray(encryptionKeyHex),
+                            )!!
+                        }
+                        .let { Base64.decode(it) }
             }
 
             val decodedSetupMsg = reshareSetupMsg.toGoSlice()
@@ -493,14 +504,17 @@ class SchnorrKeygen(
             val localPartyIDArr = localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toGoSlice()
 
-            val result = schnorr_qc_session_from_setup(
-                decodedSetupMsg,
-                localPartySlice,
-                keyshareHandle,
-                handler
-            )
+            val result =
+                schnorr_qc_session_from_setup(
+                    decodedSetupMsg,
+                    localPartySlice,
+                    keyshareHandle,
+                    handler,
+                )
             if (result != LIB_OK) {
-                throw RuntimeException("fail to create session from reshare setup message, error: $result")
+                throw RuntimeException(
+                    "fail to create session from reshare setup message, error: $result"
+                )
             }
 
             processSchnorrOutboundMessage(handler)
@@ -514,11 +528,12 @@ class SchnorrKeygen(
 
                 val keyshareBytes = getKeyshareBytes(newKeyshareHandler)
                 val publicKeyEdDSA = getPublicKeyBytes(newKeyshareHandler)
-                keyshare = DKLSKeyshare(
-                    pubKey = publicKeyEdDSA.toHexString(),
-                    keyshare = Base64.encode(keyshareBytes),
-                    chaincode = ""
-                )
+                keyshare =
+                    DKLSKeyshare(
+                        pubKey = publicKeyEdDSA.toHexString(),
+                        keyshare = Base64.encode(keyshareBytes),
+                        chaincode = "",
+                    )
                 Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
                 delay(500) // slightly delay to give local party time to process outbound messages
             }
@@ -532,7 +547,6 @@ class SchnorrKeygen(
             }
         }
     }
-
 
     private fun getKeyshareBytes(handle: Handle): ByteArray {
         val buf = tss_buffer()
@@ -565,5 +579,4 @@ class SchnorrKeygen(
         BufferUtilJNI.set_bytes_on_go_slice(slice, this)
         return slice
     }
-
 }

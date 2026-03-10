@@ -1,10 +1,12 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
 import com.vultisig.wallet.data.api.models.signer.MigrateRequest
+import com.vultisig.wallet.data.api.models.signer.RequestServerBackupRequest
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -18,102 +20,94 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 
 internal interface VultiSignerApi {
 
-    suspend fun joinKeygen(
-        request: JoinKeygenRequestJson,
-    )
-    suspend fun joinKeyImport(
-        request: JoinKeyImportRequest,
-    )
-    suspend fun joinKeysign(
-        requestJson: JoinKeysignRequestJson,
-    )
+    suspend fun joinKeygen(request: JoinKeygenRequestJson)
 
-    suspend fun joinReshare(
-        request: JoinReshareRequestJson,
-    )
+    suspend fun createMldsa(request: CreateMldsaVaultRequestJson)
 
-    suspend fun get(
-        publicKeyEcdsa: String,
-        password: String,
-    )
+    suspend fun joinKeyImport(request: JoinKeyImportRequest)
 
-    suspend fun exist(
-        publicKeyEcdsa: String,
-    )
+    suspend fun joinKeysign(requestJson: JoinKeysignRequestJson)
 
-    suspend fun verifyBackupCode(
-        publicKeyEcdsa: String,
-        code: String,
-    )
+    suspend fun joinReshare(request: JoinReshareRequestJson)
 
-    suspend fun migrate(
-        request: MigrateRequest,
-    )
+    suspend fun get(publicKeyEcdsa: String, password: String)
 
+    suspend fun exist(publicKeyEcdsa: String)
+
+    suspend fun verifyBackupCode(publicKeyEcdsa: String, code: String)
+
+    suspend fun migrate(request: MigrateRequest)
+
+    /**
+     * Requests the server to resend the encrypted vault backup to the given [email]. Calls `POST
+     * /vault/resend` with the public key, password, and email in the body.
+     */
+    suspend fun requestServerBackup(publicKeyEcdsa: String, email: String, password: String)
 }
 
-internal class VultiSignerApiImpl @Inject constructor(
-    private val http: HttpClient,
-) : VultiSignerApi {
+internal class VultiSignerApiImpl @Inject constructor(private val http: HttpClient) :
+    VultiSignerApi {
 
-    override suspend fun joinKeygen(
-        request: JoinKeygenRequestJson,
-    ) {
-        http.post("$URL/create") {
-            setBody(request)
-        }.throwIfUnsuccessful()
+    override suspend fun joinKeygen(request: JoinKeygenRequestJson) {
+        http.post("$URL/create") { setBody(request) }.throwIfUnsuccessful()
+    }
+
+    override suspend fun createMldsa(request: CreateMldsaVaultRequestJson) {
+        http.post("$URL/mldsa") { setBody(request) }.throwIfUnsuccessful()
     }
 
     override suspend fun joinKeyImport(request: JoinKeyImportRequest) {
-        http.post("$URL/import") {
-            setBody(request)
-        }.throwIfUnsuccessful()
+        http.post("$URL/import") { setBody(request) }.throwIfUnsuccessful()
     }
 
-    override suspend fun joinKeysign(
-        requestJson: JoinKeysignRequestJson,
-    ) {
-        http.post("$URL/sign") {
-            setBody(requestJson)
-        }.throwIfUnsuccessful()
+    override suspend fun joinKeysign(requestJson: JoinKeysignRequestJson) {
+        http.post("$URL/sign") { setBody(requestJson) }.throwIfUnsuccessful()
     }
 
-    override suspend fun joinReshare(
-        request: JoinReshareRequestJson
-    ) {
-        http.post("$URL/reshare") {
-            setBody(request)
-        }.throwIfUnsuccessful()
+    override suspend fun joinReshare(request: JoinReshareRequestJson) {
+        http.post("$URL/reshare") { setBody(request) }.throwIfUnsuccessful()
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun get(
-        publicKeyEcdsa: String,
-        password: String,
-    ) {
-        http.get("$URL/get/$publicKeyEcdsa") {
-            header("x-password", Base64.encode(password.toByteArray(StandardCharsets.UTF_8)))
-        }.throwIfUnsuccessful()
+    override suspend fun get(publicKeyEcdsa: String, password: String) {
+        http
+            .get("$URL/get/$publicKeyEcdsa") {
+                header("x-password", Base64.encode(password.toByteArray(StandardCharsets.UTF_8)))
+            }
+            .throwIfUnsuccessful()
     }
 
     override suspend fun exist(publicKeyEcdsa: String) {
-        http.get("$URL/exist/$publicKeyEcdsa")
-            .throwIfUnsuccessful()
+        http.get("$URL/exist/$publicKeyEcdsa").throwIfUnsuccessful()
     }
 
     override suspend fun verifyBackupCode(publicKeyEcdsa: String, code: String) {
-        http.get("$URL/verify/$publicKeyEcdsa/$code")
-            .throwIfUnsuccessful()
+        http.get("$URL/verify/$publicKeyEcdsa/$code").throwIfUnsuccessful()
     }
 
     override suspend fun migrate(request: MigrateRequest) {
-        http.post("$URL/migrate") {
-            setBody(request)
-        }.throwIfUnsuccessful()
+        http.post("$URL/migrate") { setBody(request) }.throwIfUnsuccessful()
+    }
+
+    override suspend fun requestServerBackup(
+        publicKeyEcdsa: String,
+        email: String,
+        password: String,
+    ) {
+        http
+            .post("$URL/resend") {
+                setBody(
+                    RequestServerBackupRequest(
+                        publicKeyEcdsa = publicKeyEcdsa,
+                        password = password,
+                        email = email,
+                    )
+                )
+            }
+            .throwIfUnsuccessful()
     }
 
     companion object {
         private const val URL = "https://api.vultisig.com/vault"
     }
-
 }

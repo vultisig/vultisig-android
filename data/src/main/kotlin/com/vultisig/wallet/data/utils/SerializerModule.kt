@@ -6,69 +6,63 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface SerializerModule {
 
     @Binds
     @Singleton
-    fun bindBigDecimalSerializer(
-        impl: BigDecimalSerializerImpl,
-    ): BigDecimalSerializer
+    fun bindBigDecimalSerializer(impl: BigDecimalSerializerImpl): BigDecimalSerializer
 
     @Binds
     @Singleton
-    fun bindBigIntegerSerializer(
-        impl: BigIntegerSerializerImpl,
-    ): BigIntegerSerializer
+    fun bindBigIntegerSerializer(impl: BigIntegerSerializerImpl): BigIntegerSerializer
 
     @Binds
     @Singleton
     fun bindTHORChainSwapQuoteResponseJsonSerializer(
-        impl: ThorChainSwapQuoteResponseJsonSerializerImpl,
+        impl: ThorChainSwapQuoteResponseJsonSerializerImpl
     ): ThorChainSwapQuoteResponseJsonSerializer
 
     @Binds
     @Singleton
     fun bindKeysignResponseSerializer(
-        impl: KeysignResponseSerializerImpl,
+        impl: KeysignResponseSerializerImpl
     ): KeysignResponseSerializer
 
     @Binds
     @Singleton
     fun bindSplTokenResponseJsonSerializer(
-        impl: SplTokenResponseJsonSerializerImpl,
+        impl: SplTokenResponseJsonSerializerImpl
     ): SplTokenResponseJsonSerializer
 
     @Binds
     @Singleton
     fun bindCosmosThorChainResponseSerializer(
-        impl: CosmosThorChainResponseSerializerImpl,
+        impl: CosmosThorChainResponseSerializerImpl
     ): CosmosThorChainResponseSerializer
 
     @Binds
     @Singleton
     fun bindLiFiSwapQuoteResponseSerializer(
-        impl: LiFiSwapQuoteResponseSerializerImpl,
+        impl: LiFiSwapQuoteResponseSerializerImpl
     ): LiFiSwapQuoteResponseSerializer
 
     @Binds
     @Singleton
     fun bindUTXoStatusResponseSerializer(
-        impl: UTXOStatusResponseSerializerImpl,
+        impl: UTXOStatusResponseSerializerImpl
     ): UTXOStatusResponseSerializer
-
 
     @Binds
     @Singleton
     fun bindOneInchSwapQuoteResponseJsonSerializer(
-        impl: OneInchSwapQuoteResponseJsonSerializerImpl,
+        impl: OneInchSwapQuoteResponseJsonSerializerImpl
     ): OneInchSwapQuoteResponseJsonSerializer
 
     @Binds
     @Singleton
     fun bindKyberSwapQuoteResponseJsonSerializer(
-        impl: KyberSwapQuoteResponseJsonSerializerImpl,
+        impl: KyberSwapQuoteResponseJsonSerializerImpl
     ): KyberSwapQuoteResponseJsonSerializer
 }

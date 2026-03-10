@@ -35,7 +35,7 @@ import com.vultisig.wallet.ui.utils.asString
 @Composable
 internal fun BiometricsEnableScreen(
     navController: NavController,
-    viewModel: BiometricsEnableViewModel = hiltViewModel()
+    viewModel: BiometricsEnableViewModel = hiltViewModel(),
 ) {
     val uiModel by viewModel.uiModel.collectAsState()
     BiometricsEnableScreen(
@@ -62,18 +62,12 @@ private fun BiometricsEnableScreen(
             Box(Modifier.imePadding()) {
                 VsButton(
                     label = stringResource(id = R.string.vault_settings_enable_biometrics_save),
-                    state = if (uiModel.isSaveEnabled)
-                        VsButtonState.Enabled
-                    else
-                        VsButtonState.Disabled,
+                    state =
+                        if (uiModel.isSaveEnabled) VsButtonState.Enabled
+                        else VsButtonState.Disabled,
                     onClick = onSaveClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp,
-                        ),
+                    modifier =
+                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                 )
             }
         },
@@ -85,11 +79,7 @@ private fun BiometricsEnableScreen(
             )
         },
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
             SelectionItem(
                 title = stringResource(id = R.string.vault_settings_biometrics_screen_title),
                 isChecked = uiModel.isSwitchEnabled,
@@ -103,7 +93,8 @@ private fun BiometricsEnableScreen(
             )
             UiSpacer(8.dp)
             FormBasicSecureTextField(
-                hint = stringResource(R.string.vault_settings_biometrics_screen_password_placeholder),
+                hint =
+                    stringResource(R.string.vault_settings_biometrics_screen_password_placeholder),
                 error = uiModel.passwordErrorMessage,
                 isObfuscationMode = !uiModel.isPasswordVisible,
                 textFieldState = passwordTextFieldState,
@@ -112,14 +103,16 @@ private fun BiometricsEnableScreen(
                     IconButton(onClick = togglePasswordVisibility) {
                         Icon(
                             modifier = Modifier.size(24.dp),
-                            painter = painterResource(
-                                id = if (uiModel.isPasswordVisible)
-                                    R.drawable.visible else R.drawable.hidden
-                            ),
-                            contentDescription = "toggle password visibility"
+                            painter =
+                                painterResource(
+                                    id =
+                                        if (uiModel.isPasswordVisible) R.drawable.visible
+                                        else R.drawable.hidden
+                                ),
+                            contentDescription = "toggle password visibility",
                         )
                     }
-                }
+                },
             )
             if (uiModel.passwordHint != null) {
                 UiSpacer(size = 8.dp)
@@ -140,6 +133,6 @@ private fun BiometricsEnableScreenPreview() {
     BiometricsEnableScreen(
         uiModel = BiometricsEnableUiModel(),
         navController = rememberNavController(),
-        passwordTextFieldState = TextFieldState()
+        passwordTextFieldState = TextFieldState(),
     )
 }

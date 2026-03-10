@@ -15,20 +15,16 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun UiCheckbox(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
+internal fun UiCheckbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Surface(
-        color = if (checked) {
-            Theme.v2.colors.backgrounds.teal
-        } else {
-            Theme.v2.colors.border.normal
-        },
+        color =
+            if (checked) {
+                Theme.v2.colors.backgrounds.teal
+            } else {
+                Theme.v2.colors.border.normal
+            },
         shape = RoundedCornerShape(2.dp),
-        modifier = Modifier
-            .size(24.dp)
-            .clickable(onClick = { onCheckedChange(!checked) })
+        modifier = Modifier.size(24.dp).clickable(onClick = { onCheckedChange(!checked) }),
     ) {
         if (checked) {
             Icon(
@@ -44,14 +40,8 @@ internal fun UiCheckbox(
 @Composable
 private fun UiCheckboxPreview() {
     Row {
-        UiCheckbox(
-            checked = true,
-            onCheckedChange = {}
-        )
+        UiCheckbox(checked = true, onCheckedChange = {})
 
-        UiCheckbox(
-            checked = false,
-            onCheckedChange = {}
-        )
+        UiCheckbox(checked = false, onCheckedChange = {})
     }
 }

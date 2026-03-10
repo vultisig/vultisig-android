@@ -34,9 +34,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun FastVaultEmailScreen(
-    model: FastVaultEmailViewModel = hiltViewModel(),
-) {
+internal fun FastVaultEmailScreen(model: FastVaultEmailViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     FastVaultEmailScreen(
@@ -44,7 +42,7 @@ internal fun FastVaultEmailScreen(
         textFieldState = model.emailFieldState,
         onNextClick = model::navigateToPassword,
         onClearClick = model::clearInput,
-        onBackClick = model::back
+        onBackClick = model::back,
     )
 }
 
@@ -63,26 +61,21 @@ private fun FastVaultEmailScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.enter_email_screen_next),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 24.dp
-                    )
-                    .testTag("FastVaultEmailScreen.next"),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 24.dp)
+                        .testTag("FastVaultEmailScreen.next"),
                 onClick = onNextClick,
-                state = if (state.innerState == VsTextInputFieldInnerState.Success)
-                    VsButtonState.Enabled else VsButtonState.Disabled
+                state =
+                    if (state.innerState == VsTextInputFieldInnerState.Success)
+                        VsButtonState.Enabled
+                    else VsButtonState.Disabled,
             )
-        }
+        },
     ) {
         Column {
-            val focusRequester = remember {
-                FocusRequester()
-            }
-            LaunchedEffect(Unit) {
-                focusRequester.requestFocus()
-            }
+            val focusRequester = remember { FocusRequester() }
+            LaunchedEffect(Unit) { focusRequester.requestFocus() }
             Text(
                 text = stringResource(R.string.enter_email_screen_title),
                 style = Theme.brockmann.headings.largeTitle,
@@ -92,7 +85,7 @@ private fun FastVaultEmailScreen(
             Text(
                 text = stringResource(R.string.enter_email_screen_desc),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary
+                color = Theme.v2.colors.text.tertiary,
             )
             VsTextInputField(
                 textFieldState = textFieldState,
@@ -103,18 +96,15 @@ private fun FastVaultEmailScreen(
                 footNote = state.errorMessage.asString(),
                 focusRequester = focusRequester,
                 imeAction = ImeAction.Go,
-                onKeyboardAction = {
-                    onNextClick()
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .wrapContentHeight()
-                    .testTag("FastVaultEmailScreen.emailField")
+                onKeyboardAction = { onNextClick() },
+                modifier =
+                    Modifier.fillMaxSize()
+                        .wrapContentHeight()
+                        .testTag("FastVaultEmailScreen.emailField"),
             )
         }
     }
 }
-
 
 @Preview
 @Composable
@@ -124,6 +114,6 @@ private fun FastVaultEmailScreenPreview() {
         textFieldState = rememberTextFieldState(),
         onNextClick = {},
         onClearClick = {},
-        onBackClick = {}
+        onBackClick = {},
     )
 }

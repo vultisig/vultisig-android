@@ -6,8 +6,12 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.serialization)
-
+    alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.ktfmt)
 }
+
+ktfmt { kotlinLangStyle() }
+
 android {
     namespace = "com.vultisig.wallet"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -16,14 +20,12 @@ android {
         applicationId = "com.vultisig.wallet"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 35
-        versionCode = 95
-        versionName = "1.0.95"
+        versionCode = 96
+        versionName = "1.0.96"
 
         testInstrumentationRunner = "com.vultisig.wallet.util.HiltTestRunner"
 
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+        vectorDrawables { useSupportLibrary = true }
     }
 
     buildTypes {
@@ -31,7 +33,7 @@ android {
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -45,9 +47,7 @@ android {
             excludes += "/META-INF/LICENSE*.md"
         }
     }
-    tasks.withType<Test> {
-        useJUnitPlatform()
-    }
+    tasks.withType<Test> { useJUnitPlatform() }
     lint {
         abortOnError = true
         absolutePaths = false
@@ -55,9 +55,7 @@ android {
     }
 }
 
-kotlin {
-    jvmToolchain(21)
-}
+kotlin { jvmToolchain(21) }
 
 dependencies {
     implementation(project(":data"))
@@ -65,6 +63,7 @@ dependencies {
     implementation(files("libs/mobile-tss-lib.aar"))
     implementation(files("libs/dkls-release.aar"))
     implementation(files("libs/goschnorr-release.aar"))
+    implementation(files("libs/dilithium-release.aar"))
 
     // kotlinx
     implementation(libs.kotlinx.coroutines.core)
@@ -90,6 +89,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.window)
     implementation(libs.androidx.appcompat)
+    implementation(libs.firebase.messaging)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     androidTestImplementation(libs.androidx.test.core.ktx)
@@ -140,7 +140,6 @@ dependencies {
     implementation(libs.lottie.compose)
     implementation(libs.rive)
 
-
     // test
     testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
@@ -155,5 +154,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.junit.jupiter)
     androidTestImplementation(libs.wallet.core)
+    androidTestImplementation(libs.ktor.client.mock)
     testImplementation(kotlin("test"))
 }

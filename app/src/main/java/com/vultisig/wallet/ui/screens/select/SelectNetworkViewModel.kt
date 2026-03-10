@@ -26,6 +26,9 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.SelectNetwork.Filters
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigDecimal
+import javax.inject.Inject
+import kotlin.collections.map
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -39,10 +42,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.math.BigDecimal
-import javax.inject.Inject
-import kotlin.collections.map
-
 
 internal data class SelectNetworkUiModel(
     val selectedNetwork: Chain = Chain.ThorChain,
@@ -51,7 +50,9 @@ internal data class SelectNetworkUiModel(
 )
 
 @HiltViewModel
-internal class SelectNetworkViewModel @Inject constructor(
+internal class SelectNetworkViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
@@ -69,12 +70,10 @@ internal class SelectNetworkViewModel @Inject constructor(
 
     val searchFieldState = TextFieldState()
 
-    val state = MutableStateFlow(
-        SelectNetworkUiModel(
-            selectedNetwork = selectedNetwork,
-            showAllChains = showAllChains,
+    val state =
+        MutableStateFlow(
+            SelectNetworkUiModel(selectedNetwork = selectedNetwork, showAllChains = showAllChains)
         )
-    )
 
     init {
         collectSearchResults()
@@ -96,45 +95,48 @@ internal class SelectNetworkViewModel @Inject constructor(
 
     private fun collectSearchResults() {
         combine(
-            getChainFlow(),
-            searchFieldState.textAsFlow().map { it.toString() },
-            loadAddresses(),
-        ) { chains, query, chainBalances ->
-            val networkList = if (enableConsolidateEvm) {
-                chains.consolidateEvm(chainBalances)
-            } else {
-                chains.map { chain ->
-                    chain.toNetworkUiModel(chainBalances[chain] ?: "")
-                }
-            }
-
-            val filteredChains = networkList.asSequence()
-                .filter { (chain) ->
-                    val matchesQuery = chain.raw.contains(query, ignoreCase = true) ||
-                            chain.coinType.symbol.contains(query, ignoreCase = true)
-                    val matchesFilter = when (args.filters) {
-                        Filters.SwapAvailable -> chain.isSwapSupported
-                        Filters.DisableNetworkSelection -> chain.id == selectedNetwork.id
-                        Filters.None -> true
+                getChainFlow(),
+                searchFieldState.textAsFlow().map { it.toString() },
+                loadAddresses(),
+            ) { chains, query, chainBalances ->
+                val networkList =
+                    if (enableConsolidateEvm) {
+                        chains.consolidateEvm(chainBalances)
+                    } else {
+                        chains.map { chain -> chain.toNetworkUiModel(chainBalances[chain] ?: "") }
                     }
-                    matchesQuery && matchesFilter
-                }
-                .sortedWith(compareBy { it.chain.raw })
-                .toList()
 
-            this.state.update {
-                it.copy(networks = filteredChains)
+                val filteredChains =
+                    networkList
+                        .asSequence()
+                        .filter { (chain) ->
+                            val matchesQuery =
+                                chain.raw.contains(query, ignoreCase = true) ||
+                                    chain.coinType.symbol.contains(query, ignoreCase = true)
+                            val matchesFilter =
+                                when (args.filters) {
+                                    Filters.SwapAvailable -> chain.isSwapSupported
+                                    Filters.DisableNetworkSelection ->
+                                        chain.id == selectedNetwork.id
+                                    Filters.None -> true
+                                }
+                            matchesQuery && matchesFilter
+                        }
+                        .sortedWith(compareBy { it.chain.raw })
+                        .toList()
+
+                this.state.update { it.copy(networks = filteredChains) }
             }
-        }.launchIn(viewModelScope)
+            .launchIn(viewModelScope)
     }
 
-    private fun getChainFlow(): Flow<Set<Chain>> = if (showAllChains)
-        flowOf(Chain.entries.toSet())
-    else
-        vaultRepository.getEnabledChains(vaultId)
+    private fun getChainFlow(): Flow<Set<Chain>> =
+        if (showAllChains) flowOf(Chain.entries.toSet())
+        else vaultRepository.getEnabledChains(vaultId)
 
     private fun loadAddresses(): Flow<Map<Chain, String>> {
-        return accountRepository.loadCachedAddresses(vaultId = vaultId)
+        return accountRepository
+            .loadCachedAddresses(vaultId = vaultId)
             .catch {
                 Timber.e(it)
                 emit(emptyList())
@@ -148,11 +150,8 @@ internal class SelectNetworkViewModel @Inject constructor(
             }
     }
 
-
     private fun loadChainsWithoutBalance(addresses: List<Address>): Map<Chain, String> =
-        addresses.associate {
-            it.chain to ""
-        }
+        addresses.associate { it.chain to "" }
 
     private suspend fun loadChainsWithBalance(addresses: List<Address>): Map<Chain, String> =
         coroutineScope {
@@ -165,9 +164,8 @@ internal class SelectNetworkViewModel @Inject constructor(
                         val formattedValue = fiatValueToStringMapper(totalFiatValue)
                         address.chain to formattedValue
                     }
-                }.awaitAll()
-                .associate { (chain, balance) ->
-                    chain to balance
                 }
+                .awaitAll()
+                .associate { (chain, balance) -> chain to balance }
         }
 }

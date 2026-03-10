@@ -4,7 +4,4 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CosmosBalanceResponse(
-    @SerialName("balances")
-    val balances: List<CosmosBalance>?,
-)
+data class CosmosBalanceResponse(@SerialName("balances") val balances: List<CosmosBalance>?)

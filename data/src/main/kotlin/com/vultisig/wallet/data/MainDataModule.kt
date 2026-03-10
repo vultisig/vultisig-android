@@ -14,9 +14,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.CompressorStreamProvider
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -33,8 +33,7 @@ internal interface MainDataModule {
 
         @Provides
         @Singleton
-        fun provideCompressorStreamProvider(): CompressorStreamProvider =
-            CompressorStreamFactory()
+        fun provideCompressorStreamProvider(): CompressorStreamProvider = CompressorStreamFactory()
 
         @Singleton
         @Provides
@@ -46,15 +45,10 @@ internal interface MainDataModule {
                 masterKey,
                 context,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
         }
     }
 
-    @Singleton
-    @Binds
-    fun bindAppDataStore(
-        impl: AppDataStoreImpl,
-    ): AppDataStore
-
+    @Singleton @Binds fun bindAppDataStore(impl: AppDataStoreImpl): AppDataStore
 }

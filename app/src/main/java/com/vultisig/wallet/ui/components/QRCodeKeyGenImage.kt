@@ -39,42 +39,47 @@ internal fun QRCodeKeyGenImage(
     dashesWidth: Float = 8f,
 ) {
     Box(
-        modifier = modifier.drawBehind {
-            val cornerRadiusPx = cornerRadius.toPx()
-            val rectWidth = size.width - dashesWidth
-            val rectHeight = size.height - dashesWidth
-            val halfRectLength = rectWidth + rectHeight -
-                    ( 2 * cornerRadiusPx - PI.toFloat() * cornerRadiusPx / 2) * 2
-            val relativeDashLength = relativePaintedDashLength + relativeEmptyDashLength
-            val dashLengthTicker = halfRectLength / ( relativeDashLength * countDashesInRect / 2 )
-            val emptyDashLength = dashLengthTicker * relativeEmptyDashLength
-            val paintedDashLength = dashLengthTicker * relativePaintedDashLength
-            val phase = PI.toFloat() * cornerRadiusPx / 4  + paintedDashLength / 2
-            drawRoundRect(
-                topLeft = Offset(dashesWidth / 2, dashesWidth / 2),
-                size = Size(rectWidth, rectHeight),
-                color = Color("#33e6bf".toColorInt()), style = Stroke(
-                    width = dashesWidth,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(paintedDashLength, emptyDashLength), phase),
-                ),
-                cornerRadius = CornerRadius(cornerRadiusPx),
-            )
-        }
+        modifier =
+            modifier.drawBehind {
+                val cornerRadiusPx = cornerRadius.toPx()
+                val rectWidth = size.width - dashesWidth
+                val rectHeight = size.height - dashesWidth
+                val halfRectLength =
+                    rectWidth + rectHeight -
+                        (2 * cornerRadiusPx - PI.toFloat() * cornerRadiusPx / 2) * 2
+                val relativeDashLength = relativePaintedDashLength + relativeEmptyDashLength
+                val dashLengthTicker = halfRectLength / (relativeDashLength * countDashesInRect / 2)
+                val emptyDashLength = dashLengthTicker * relativeEmptyDashLength
+                val paintedDashLength = dashLengthTicker * relativePaintedDashLength
+                val phase = PI.toFloat() * cornerRadiusPx / 4 + paintedDashLength / 2
+                drawRoundRect(
+                    topLeft = Offset(dashesWidth / 2, dashesWidth / 2),
+                    size = Size(rectWidth, rectHeight),
+                    color = Color("#33e6bf".toColorInt()),
+                    style =
+                        Stroke(
+                            width = dashesWidth,
+                            pathEffect =
+                                PathEffect.dashPathEffect(
+                                    floatArrayOf(paintedDashLength, emptyDashLength),
+                                    phase,
+                                ),
+                        ),
+                    cornerRadius = CornerRadius(cornerRadiusPx),
+                )
+            }
     ) {
         Surface(
             color = Theme.v2.colors.neutrals.n50,
             shape = RoundedCornerShape(10.dp),
-            modifier = Modifier
-                .padding(innerPadding),
+            modifier = Modifier.padding(innerPadding),
         ) {
             if (bitmapPainter == null) return@Surface
             Image(
                 painter = bitmapPainter,
                 contentDescription = null,
                 contentScale = ContentScale.FillWidth,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.padding(8.dp).fillMaxWidth(),
             )
         }
     }
@@ -84,9 +89,7 @@ internal fun QRCodeKeyGenImage(
 @Composable
 private fun QRCodeKeyGenImagePreview() {
     QRCodeKeyGenImage(
-        bitmapPainter = BitmapPainter(
-            createBitmap(1, 1).asImageBitmap(),
-            filterQuality = FilterQuality.None
-        )
+        bitmapPainter =
+            BitmapPainter(createBitmap(1, 1).asImageBitmap(), filterQuality = FilterQuality.None)
     )
 }

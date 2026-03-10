@@ -88,33 +88,25 @@ private fun SettingsScreen(
         onRightIconClick = onShareVaultQrClick,
     ) {
         Column(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 state.items.forEach { groupItem ->
                     SettingsBox(title = groupItem.title.asString()) {
                         val enabledSettings = groupItem.items.filter(SettingsItem::enabled)
-                        enabledSettings
-                            .forEachIndexed { index, settingItem ->
-                                SettingItem(
-                                    item = settingItem.value,
-                                    isLastItem = index == enabledSettings.lastIndex,
-                                    onClick = {
-                                        onSettingsItemClick(settingItem)
-                                    }
-                                )
-                            }
+                        enabledSettings.forEachIndexed { index, settingItem ->
+                            SettingItem(
+                                item = settingItem.value,
+                                isLastItem = index == enabledSettings.lastIndex,
+                                onClick = { onSettingsItemClick(settingItem) },
+                            )
+                        }
                     }
                 }
             }
 
-            UiSpacer(
-                size = 15.dp
-            )
+            UiSpacer(size = 15.dp)
 
             AppVersionText()
         }
@@ -127,14 +119,10 @@ private fun SettingsScreen(
         }
 
         if (state.showShareBottomSheet) {
-            ShareLinkBottomSheet(
-                onDismissRequest = onDismissShareLink
-            )
+            ShareLinkBottomSheet(onDismissRequest = onDismissShareLink)
         }
-
     }
 }
-
 
 @Composable
 internal fun SettingsBox(
@@ -142,27 +130,24 @@ internal fun SettingsBox(
     title: String? = null,
     content: @Composable () -> Unit,
 ) {
-    Column(
-        modifier.fillMaxWidth()
-    ) {
+    Column(modifier.fillMaxWidth()) {
         title?.let {
             Text(
                 text = it,
                 color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.supplementary.caption
-
+                style = Theme.brockmann.supplementary.caption,
             )
             UiSpacer(size = 12.dp)
         }
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = Theme.v2.colors.backgrounds.secondary,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .clip(RoundedCornerShape(12.dp))
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        color = Theme.v2.colors.backgrounds.secondary,
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .clip(RoundedCornerShape(12.dp))
         ) {
             content()
         }
@@ -178,25 +163,21 @@ internal fun SettingItem(
 ) {
     Column {
         Row(
-            modifier = Modifier
-                .then(
-                    if (item.backgroundColor != null)
-                        Modifier.background(item.backgroundColor)
-                    else Modifier
-                )
-                .fillMaxWidth()
-                .clickOnce(onClick = onClick)
-                .padding(
-                    horizontal = 12.dp,
-                    vertical = 16.dp
-                ),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier.then(
+                        if (item.backgroundColor != null) Modifier.background(item.backgroundColor)
+                        else Modifier
+                    )
+                    .fillMaxWidth()
+                    .clickOnce(onClick = onClick)
+                    .padding(horizontal = 12.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             item.leadingIcon?.let { icon ->
                 UiIcon(
                     drawableResId = icon,
                     size = 20.dp,
-                    tint = tint ?: item.leadingIconTint ?: Theme.v2.colors.primary.accent4
+                    tint = tint ?: item.leadingIconTint ?: Theme.v2.colors.primary.accent4,
                 )
                 UiSpacer(size = 16.dp)
             }
@@ -205,7 +186,7 @@ internal fun SettingItem(
                 Text(
                     text = item.title.asString(),
                     style = Theme.brockmann.supplementary.footnote,
-                    color = tint ?: Theme.v2.colors.text.primary
+                    color = tint ?: Theme.v2.colors.text.primary,
                 )
 
                 item.subTitle?.let {
@@ -215,25 +196,20 @@ internal fun SettingItem(
                         style = Theme.brockmann.supplementary.caption,
                     )
                 }
-
             }
 
             UiSpacer(weight = 1f)
 
             item.trailingSwitch?.let { isChecked ->
-
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    VsSwitch(
-                        checked = isChecked,
-                        onCheckedChange = null
-                    )
+                    VsSwitch(checked = isChecked, onCheckedChange = null)
                     Text(
                         text = if (isChecked) "ON" else "OFF",
                         style = Theme.brockmann.button.medium.medium,
-                        color = tint ?: Theme.v2.colors.text.primary
+                        color = tint ?: Theme.v2.colors.text.primary,
                     )
                 }
 
@@ -244,7 +220,7 @@ internal fun SettingItem(
                 Text(
                     text = value,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = tint ?: Theme.v2.colors.text.primary
+                    color = tint ?: Theme.v2.colors.text.primary,
                 )
                 UiSpacer(size = 12.dp)
             }
@@ -253,7 +229,7 @@ internal fun SettingItem(
                 Image(
                     imageVector = ImageVector.vectorResource(trailingIcon),
                     modifier = Modifier.size(16.dp),
-                    contentDescription = "trailing icon"
+                    contentDescription = "trailing icon",
                 )
             }
         }
@@ -268,15 +244,16 @@ internal fun SettingItem(
 @Composable
 private fun SettingsItemPreview() {
     SettingItem(
-        item = SettingsItemUiModel(
-            title = "title".asUiText(),
-            subTitle = "subTitle".asUiText(),
-            leadingIcon = R.drawable.currency,
-            trailingIcon = R.drawable.ic_small_caret_right,
-            value = "value",
-            backgroundColor = Theme.v2.colors.backgrounds.primary
-        ),
+        item =
+            SettingsItemUiModel(
+                title = "title".asUiText(),
+                subTitle = "subTitle".asUiText(),
+                leadingIcon = R.drawable.currency,
+                trailingIcon = R.drawable.ic_small_caret_right,
+                value = "value",
+                backgroundColor = Theme.v2.colors.backgrounds.primary,
+            ),
         onClick = {},
-        isLastItem = false
+        isLastItem = false,
     )
 }

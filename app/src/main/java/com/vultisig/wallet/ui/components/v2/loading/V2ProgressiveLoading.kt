@@ -33,35 +33,31 @@ internal fun V2ProgressiveLoading(
     iconColor: Color = Theme.v2.colors.alerts.success,
     @DrawableRes icon: Int = R.drawable.ic_check,
 ) {
-    val bounceScale by animateFloatAsState(
-        targetValue = if (progress > 0f) 1f else 0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "bounceScale"
-    )
+    val bounceScale by
+        animateFloatAsState(
+            targetValue = if (progress > 0f) 1f else 0f,
+            animationSpec =
+                spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow,
+                ),
+            label = "bounceScale",
+        )
 
     Box(
-        modifier = modifier
-            .size(size)
-            .scale(bounceScale),
-        contentAlignment = Alignment.Companion.Center
+        modifier = modifier.size(size).scale(bounceScale),
+        contentAlignment = Alignment.Companion.Center,
     ) {
-        Canvas(
-            modifier = Modifier.Companion.fillMaxSize()
-        ) {
+        Canvas(modifier = Modifier.Companion.fillMaxSize()) {
             val center = this.center
             val radius = (size.toPx() - strokeWidth.toPx()) / 2
-
 
             drawCircle(
                 color = backgroundColor,
                 radius = radius,
                 center = center,
-                style = Stroke(width = strokeWidth.toPx())
+                style = Stroke(width = strokeWidth.toPx()),
             )
-
 
             if (progress > 0f) {
                 drawArc(
@@ -69,18 +65,11 @@ internal fun V2ProgressiveLoading(
                     startAngle = -90f,
                     sweepAngle = 360f * progress,
                     useCenter = false,
-                    style = Stroke(
-                        width = strokeWidth.toPx(),
-                        cap = StrokeCap.Companion.Round
-                    )
+                    style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Companion.Round),
                 )
             }
         }
 
-        UiIcon(
-            drawableResId = icon,
-            tint = iconColor,
-            size = size * 0.8f
-        )
+        UiIcon(drawableResId = icon, tint = iconColor, size = size * 0.8f)
     }
 }

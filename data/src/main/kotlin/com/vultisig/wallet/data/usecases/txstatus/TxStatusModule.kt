@@ -18,7 +18,6 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface TxStatusModule {
@@ -32,79 +31,57 @@ internal interface TxStatusModule {
     @EvmTxStatus
     @Binds
     @Singleton
-    fun bindEvmStatusProvider(
-        impl: EvmStatusProvider
-    ): TransactionStatusProvider
+    fun bindEvmStatusProvider(impl: EvmStatusProvider): TransactionStatusProvider
 
     @UtxoTxStatus
     @Binds
     @Singleton
-    fun bindUtxoStatusProvider(
-        impl: UtxoStatusProvider
-    ): TransactionStatusProvider
+    fun bindUtxoStatusProvider(impl: UtxoStatusProvider): TransactionStatusProvider
 
     @CosmosTxStatus
     @Binds
     @Singleton
-    fun bindCosmosStatusProvider(
-        impl: CosmosStatusProvider
-    ): TransactionStatusProvider
+    fun bindCosmosStatusProvider(impl: CosmosStatusProvider): TransactionStatusProvider
 
     @ThorChainTxStatus
     @Binds
     @Singleton
-    fun bindThorChainStatusProvider(
-        impl: ThorMayaChainStatusProvider
-    ): TransactionStatusProvider
+    fun bindThorChainStatusProvider(impl: ThorMayaChainStatusProvider): TransactionStatusProvider
 
     @SolanaTxStatus
     @Binds
     @Singleton
-    fun bindSolanaStatusProvider(
-        impl: SolanaStatusProvider
-    ): TransactionStatusProvider
+    fun bindSolanaStatusProvider(impl: SolanaStatusProvider): TransactionStatusProvider
 
     @SuiTxStatus
     @Binds
     @Singleton
-    fun bindSuiStatusProvider(
-        impl: SuiStatusProvider
-    ): TransactionStatusProvider
+    fun bindSuiStatusProvider(impl: SuiStatusProvider): TransactionStatusProvider
 
     @TonTxStatus
     @Binds
     @Singleton
-    fun bindTonStatusProvider(
-        impl: TonStatusProvider
-    ): TransactionStatusProvider
+    fun bindTonStatusProvider(impl: TonStatusProvider): TransactionStatusProvider
 
     @PolkadotTxStatus
     @Binds
     @Singleton
-    fun bindPolkadotStatusProvider(
-        impl: PolkadotStatusProvider
-    ): TransactionStatusProvider
+    fun bindPolkadotStatusProvider(impl: PolkadotStatusProvider): TransactionStatusProvider
 
     @CardanoTxStatus
     @Binds
     @Singleton
-    fun bindCardanoStatusProvider(
-        impl: CardanoStatusProvider
-    ): TransactionStatusProvider
+    fun bindCardanoStatusProvider(impl: CardanoStatusProvider): TransactionStatusProvider
 
     @RippleTxStatus
     @Binds
     @Singleton
-    fun bindRippleStatusProvider(
-        impl: RippleStatusProvider
-    ): TransactionStatusProvider
+    fun bindRippleStatusProvider(impl: RippleStatusProvider): TransactionStatusProvider
 
     @TronTxStatus
     @Binds
     @Singleton
-    fun bindTronStatusProvider(
-        impl: TronStatusProvider
-    ): TransactionStatusProvider
+    fun bindTronStatusProvider(impl: TronStatusProvider): TransactionStatusProvider
 
     @Binds
     @Singleton
@@ -114,50 +91,27 @@ internal interface TxStatusModule {
 
     @Binds
     @Singleton
-    fun bindPollingTxStatusUseCase(
-        impl: PollingTxStatusUseCaseImpl
-    ): PollingTxStatusUseCase
+    fun bindPollingTxStatusUseCase(impl: PollingTxStatusUseCaseImpl): PollingTxStatusUseCase
 }
 
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class EvmTxStatus
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class EvmTxStatus
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class UtxoTxStatus
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class CosmosTxStatus
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class ThorChainTxStatus
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class SolanaTxStatus
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class SuiTxStatus
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class TonTxStatus
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class UtxoTxStatus
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class PolkadotTxStatus
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class CosmosTxStatus
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class CardanoTxStatus
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class ThorChainTxStatus
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class RippleTxStatus
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class SolanaTxStatus
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class TronTxStatus
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class SuiTxStatus
 
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class TonTxStatus
 
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class PolkadotTxStatus
 
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class CardanoTxStatus
 
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class RippleTxStatus
+
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class TronTxStatus

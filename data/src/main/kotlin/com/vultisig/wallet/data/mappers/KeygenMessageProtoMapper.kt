@@ -10,27 +10,31 @@ interface KeygenMessageFromProtoMapper : MapperFunc<KeygenMessageProto, KeygenMe
 
 internal class KeygenMessageFromProtoMapperImpl @Inject constructor() :
     KeygenMessageFromProtoMapper {
-    override fun invoke(from: KeygenMessageProto) = KeygenMessage(
-        vaultName = from.vaultName,
-        sessionID = from.sessionId,
-        hexChainCode = from.hexChainCode,
-        serviceName = from.serviceName,
-        encryptionKeyHex = from.encryptionKeyHex,
-        useVultisigRelay = from.useVultisigRelay,
-        libType = from.libType.toSigningLibType(),
-    )
+    override fun invoke(from: KeygenMessageProto) =
+        KeygenMessage(
+            vaultName = from.vaultName,
+            sessionID = from.sessionId,
+            hexChainCode = from.hexChainCode,
+            serviceName = from.serviceName,
+            encryptionKeyHex = from.encryptionKeyHex,
+            useVultisigRelay = from.useVultisigRelay,
+            libType = from.libType.toSigningLibType(),
+            chains = from.chains,
+        )
 }
 
 internal interface KeygenMessageToProtoMapper : MapperFunc<KeygenMessage, KeygenMessageProto>
 
 internal class KeygenMessageToProtoMapperImpl @Inject constructor() : KeygenMessageToProtoMapper {
-    override fun invoke(from: KeygenMessage) = KeygenMessageProto(
-        vaultName = from.vaultName,
-        sessionId = from.sessionID,
-        hexChainCode = from.hexChainCode,
-        serviceName = from.serviceName,
-        encryptionKeyHex = from.encryptionKeyHex,
-        useVultisigRelay = from.useVultisigRelay,
-        libType = from.libType.toProto(),
-    )
+    override fun invoke(from: KeygenMessage) =
+        KeygenMessageProto(
+            vaultName = from.vaultName,
+            sessionId = from.sessionID,
+            hexChainCode = from.hexChainCode,
+            serviceName = from.serviceName,
+            encryptionKeyHex = from.encryptionKeyHex,
+            useVultisigRelay = from.useVultisigRelay,
+            libType = from.libType.toProto(),
+            chains = from.chains,
+        )
 }

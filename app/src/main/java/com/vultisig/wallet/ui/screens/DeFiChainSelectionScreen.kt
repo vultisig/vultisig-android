@@ -17,9 +17,7 @@ import com.vultisig.wallet.ui.models.SelectableDefiChainUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun DeFiChainSelectionScreen(
-    viewModel: DeFiChainSelectionViewModel = hiltViewModel(),
-) {
+internal fun DeFiChainSelectionScreen(viewModel: DeFiChainSelectionViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
 
     TokenSelectionList(
@@ -30,18 +28,12 @@ internal fun DeFiChainSelectionScreen(
                 color = Theme.v2.colors.neutrals.n100,
             )
         },
-        items = uiState.defiChains.map {
-            SingleToken(
-                data = it
-            )
-        },
+        items = uiState.defiChains.map { SingleToken(data = it) },
         mapper = { it: SingleToken<SelectableDefiChainUiModel> ->
             TokenSelectionGridUiModel(
-                tokenSelectionUiModel = TokenUiSingle(
-                    name = it.data.defiChain.raw,
-                    logo = it.data.defiChain.logo,
-                ),
-                isChecked = it.data.isSelected
+                tokenSelectionUiModel =
+                    TokenUiSingle(name = it.data.defiChain.raw, logo = it.data.defiChain.logo),
+                isChecked = it.data.isSelected,
             )
         },
         searchTextFieldState = viewModel.searchTextFieldState,
@@ -50,9 +42,7 @@ internal fun DeFiChainSelectionScreen(
         onCheckChange = viewModel::toggleChain,
         onSetSearchText = viewModel::onSearch,
         notFoundContent = {
-            NoFoundContent(
-                message = stringResource(R.string.chain_selection_no_chains_found)
-            )
+            NoFoundContent(message = stringResource(R.string.chain_selection_no_chains_found))
         },
     )
 }

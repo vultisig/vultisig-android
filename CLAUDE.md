@@ -1,5 +1,15 @@
 # Vultisig Android - Claude Code Instructions
 
+## Security Tier
+
+STANDARD
+
+## Critical Boundaries
+
+- TSS/crypto JNI bindings — do not modify without explicit review from maintainers.
+- `commondata/` — Git submodule. Do not edit directly, changes go in the commondata repo.
+- `fastlane/` — Automated deployment configs. Changes affect releases.
+
 ## Project Overview
 
 **Vultisig** is an Android cryptocurrency wallet application built with modern Android development practices. The app provides secure multi-signature wallet functionality with threshold signature scheme (TSS) support.
@@ -129,6 +139,71 @@ For keygen/keysign testing with multiple emulators:
 - Use sealed state classes for error states
 - Provide meaningful error messages to users
 - Log errors with Timber (use appropriate log levels)
+- Use `safeLaunch` instead of `viewModelScope.launch` for coroutines that perform network calls or deserialization
+- Use `bodyOrThrow()` instead of raw `.body<T>()` in API methods for consistent error wrapping
+- See [docs/network-error-handling.md](docs/network-error-handling.md) for the full two-layer error handling architecture
+
+### Localization
+- When adding or modifying string resources in `app/src/main/res/values/strings.xml`, **always** add translations to all supported locale files:
+  - `values-de/strings.xml` (German)
+  - `values-es/strings.xml` (Spanish)
+  - `values-hr/strings.xml` (Croatian)
+  - `values-it/strings.xml` (Italian)
+  - `values-nl/strings.xml` (Dutch)
+  - `values-pt/strings.xml` (Portuguese)
+  - `values-ru/strings.xml` (Russian)
+  - `values-zh-rCN/strings.xml` (Chinese Simplified)
+- Insert new keys in the same relative position across all locale files (next to surrounding keys)
+- Before translating, **check existing strings in that locale file** for established terminology (e.g., grep for similar keys). Use the same terms — do not guess translations from English
+- "Chains" means blockchains, not literal chains. Each locale has its own established term — e.g., Russian uses "Сети" (networks), German uses "Blockchains", Spanish uses "cadenas", Italian uses "catene", etc. Always match what the locale already uses
+
+### Deleting Screens / Views
+When a screen, composable, or UI component is removed from the app, **all resources exclusively used by it must also be deleted**. This includes:
+
+#### String Resources
+- Remove the string key from **every** locale file:
+  - `values/strings.xml` (English — default)
+  - `values-de/strings.xml` (German)
+  - `values-es/strings.xml` (Spanish)
+  - `values-hr/strings.xml` (Croatian)
+  - `values-it/strings.xml` (Italian)
+  - `values-nl/strings.xml` (Dutch)
+  - `values-pt/strings.xml` (Portuguese)
+  - `values-ru/strings.xml` (Russian)
+  - `values-zh-rCN/strings.xml` (Chinese Simplified)
+- Also remove any XML comment blocks (e.g. `<!-- Register Vault Screen -->`) that only annotated the deleted keys
+- Before deleting a string key, **verify it is not referenced elsewhere** in the codebase (grep for the key name across all `.kt` and `.xml` files)
+
+#### Drawable / Image Resources
+- Delete any drawable files (`.xml`, `.webp`, `.png`, `.svg`, etc.) in `app/src/main/res/drawable*/` that are **only** referenced by the deleted screen
+- Before deleting a drawable, **verify it is not used by any other screen or component** (grep for the drawable name across all `.kt` and `.xml` files)
+
+#### Navigation
+- Remove the screen's `Route` data class / object from `Navigation.kt`
+- Remove the corresponding `composable<Route.ScreenName>` block from `NavGraph.kt`
+- Remove the import of the deleted screen composable from `NavGraph.kt`
+
+#### ViewModel & Model Files
+- Delete the screen's `ViewModel` class file
+- Delete any UI model / state data classes that are only used by the deleted screen
+
+#### Settings / Menu Entries
+- If the screen was reachable from a settings or menu list, remove:
+  - The `SettingsItem` (or equivalent) data object from the ViewModel
+  - Its entry in the menu item list
+  - Its `when` branch in the click handler
+
+#### Checklist
+When deleting a screen, go through this checklist:
+1. ✅ Delete the `Screen.kt` composable file
+2. ✅ Delete the `ViewModel.kt` file
+3. ✅ Remove the `Route` entry from `Navigation.kt`
+4. ✅ Remove the `composable<Route.X>` block and import from `NavGraph.kt`
+5. ✅ Remove the menu/settings item, list entry, and click handler (if applicable)
+6. ✅ Delete all exclusively-used drawable resources
+7. ✅ Remove all associated string keys from **all 9** locale `strings.xml` files
+8. ✅ Remove orphaned XML comment blocks in strings files
+9. ✅ Grep the entire codebase to confirm no remaining references to the deleted screen, route, strings, or drawables
 
 ## Git Workflow
 
@@ -233,3 +308,15 @@ For keygen/keysign testing with multiple emulators:
 ---
 
 **Note**: This is an active project with frequent updates. Always pull latest changes from `main` before starting new work.
+
+## Knowledge Base
+
+For deeper context, see [vultisig-knowledge](https://github.com/vultisig/vultisig-knowledge). Read only when needed:
+
+| Situation | Read |
+|-----------|------|
+| First time in this repo | [repos/vultisig-android.md](https://github.com/vultisig/vultisig-knowledge/blob/main/repos/vultisig-android.md) |
+| Touching crypto/TSS code | [architecture/mpc-tss-explained.md](https://github.com/vultisig/vultisig-knowledge/blob/main/architecture/mpc-tss-explained.md) |
+| Signing flow details | [architecture/signing-flow.md](https://github.com/vultisig/vultisig-knowledge/blob/main/architecture/signing-flow.md) |
+| Cross-repo gotchas | [coding/gotchas.md](https://github.com/vultisig/vultisig-knowledge/blob/main/coding/gotchas.md) (see Android section) |
+| Cross-platform changes | [repos/index.md](https://github.com/vultisig/vultisig-knowledge/blob/main/repos/index.md) (dependency graph) |

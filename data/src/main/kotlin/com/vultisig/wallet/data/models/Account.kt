@@ -15,14 +15,9 @@ data class Account(
     val tokenValue: TokenValue?,
     val fiatValue: FiatValue?,
     val price: FiatValue?,
-){
+) {
     companion object {
-        val EMPTY = Account(
-            token = Coin.EMPTY,
-            tokenValue = null,
-            fiatValue = null,
-            price = null,
-        )
+        val EMPTY = Account(token = Coin.EMPTY, tokenValue = null, fiatValue = null, price = null)
     }
 }
 
@@ -36,7 +31,8 @@ fun List<Account>.calculateAccountsTotalFiatValue(): FiatValue? =
 fun List<Address>.calculateAddressesTotalFiatValue(): FiatValue? =
     this.fold(FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)) { acc, account ->
         // if any account dont have fiat value, return null, as in "not loaded yet"
-        val fiatValue = account.accounts.calculateAccountsTotalFiatValue()
-            ?: return@calculateAddressesTotalFiatValue null
+        val fiatValue =
+            account.accounts.calculateAccountsTotalFiatValue()
+                ?: return@calculateAddressesTotalFiatValue null
         FiatValue(acc.value + fiatValue.value, fiatValue.currency)
     }

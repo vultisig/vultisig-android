@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.models
 
-import wallet.core.jni.proto.THORChainSwap.Asset
 import java.math.BigDecimal
 import java.math.BigInteger
+import wallet.core.jni.proto.THORChainSwap.Asset
 
 data class THORChainSwapPayload(
     val fromAddress: String,
@@ -23,12 +23,12 @@ data class THORChainSwapPayload(
 
     val fromAsset: Asset
         get() = swapAsset(fromCoin, true)
+
     val toAsset: Asset
         get() = swapAsset(toCoin, false)
 
     private fun swapAsset(coin: Coin, source: Boolean): Asset {
-        val asset = Asset.newBuilder()
-            .setSymbol(coin.ticker)
+        val asset = Asset.newBuilder().setSymbol(coin.ticker)
         when (coin.chain) {
             Chain.Avalanche -> asset.setChain(wallet.core.jni.proto.THORChainSwap.Chain.AVAX)
             Chain.Bitcoin -> asset.setChain(wallet.core.jni.proto.THORChainSwap.Chain.BTC)
@@ -44,7 +44,9 @@ data class THORChainSwapPayload(
         }
         if (!coin.isNativeToken) {
             asset.setTokenId(
-                if (source) coin.contractAddress else "${coin.ticker}-${
+                if (source) coin.contractAddress
+                else
+                    "${coin.ticker}-${
                     coin.contractAddress.takeLast(
                         6
                     ).uppercase()

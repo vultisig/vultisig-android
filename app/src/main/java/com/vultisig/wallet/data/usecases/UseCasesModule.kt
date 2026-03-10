@@ -26,11 +26,7 @@ internal interface UseCasesModule {
         impl: ConvertTokenAndValueToTokenValueUseCaseImpl
     ): ConvertTokenAndValueToTokenValueUseCase
 
-    @Binds
-    @Singleton
-    fun bindSaveVaultUseCase(
-        impl: SaveVaultUseCaseImpl
-    ): SaveVaultUseCase
+    @Binds @Singleton fun bindSaveVaultUseCase(impl: SaveVaultUseCaseImpl): SaveVaultUseCase
 
     @Binds
     @Singleton
@@ -40,27 +36,15 @@ internal interface UseCasesModule {
 
     @Binds
     @Singleton
-    fun bindCreateVaultBackupUseCase(
-        impl: CreateVaultBackupUseCaseImpl
-    ): CreateVaultBackupUseCase
+    fun bindCreateVaultBackupUseCase(impl: CreateVaultBackupUseCaseImpl): CreateVaultBackupUseCase
+
+    @Binds @Singleton fun bindCompressQrUseCase(impl: CompressQrUseCaseImpl): CompressQrUseCase
 
     @Binds
     @Singleton
-    fun bindCompressQrUseCase(
-        impl: CompressQrUseCaseImpl
-    ): CompressQrUseCase
+    fun bindDecompressQrUseCase(impl: DecompressQrUseCaseImpl): DecompressQrUseCase
 
-    @Binds
-    @Singleton
-    fun bindDecompressQrUseCase(
-        impl: DecompressQrUseCaseImpl
-    ): DecompressQrUseCase
-
-    @Binds
-    @Singleton
-    fun bindEnableTokenUseCase(
-        impl: EnableTokenUseCaseImpl
-    ): EnableTokenUseCase
+    @Binds @Singleton fun bindEnableTokenUseCase(impl: EnableTokenUseCaseImpl): EnableTokenUseCase
 
     @Binds
     @Singleton
@@ -71,14 +55,12 @@ internal interface UseCasesModule {
     @Binds
     @Singleton
     fun bindGasFeeToEstimatedFeeUseCase(
-        impl: GasFeeToEstimatedFeeUseCaseImpl,
+        impl: GasFeeToEstimatedFeeUseCaseImpl
     ): GasFeeToEstimatedFeeUseCase
 
     @Binds
     @Singleton
-    fun bindLaunchKeysignUseCase(
-        impl: LaunchKeysignUseCaseImpl
-    ): LaunchKeysignUseCase
+    fun bindLaunchKeysignUseCase(impl: LaunchKeysignUseCaseImpl): LaunchKeysignUseCase
 
     @Binds
     @Singleton
@@ -92,51 +74,33 @@ internal interface UseCasesModule {
         impl: CreateQrCodeSharingBitmapUseCaseImpl
     ): CreateQrCodeSharingBitmapUseCase
 
-    @Binds
-    @Singleton
-    fun bindGetFlowTypeUseCase(
-        impl: GetFlowTypeUseCaseImpl
-    ): GetFlowTypeUseCase
+    @Binds @Singleton fun bindGetFlowTypeUseCase(impl: GetFlowTypeUseCaseImpl): GetFlowTypeUseCase
 
     @Binds
     @Singleton
-    fun bindRequestQrScanUseCase(
-        impl: RequestQrScanUseCaseImpl
-    ): RequestQrScanUseCase
+    fun bindRequestQrScanUseCase(impl: RequestQrScanUseCaseImpl): RequestQrScanUseCase
 
     @Binds
     @Singleton
-    fun bindResolveProviderUseCase(
-        impl: ResolveProviderUseCaseImpl
-    ): ResolveProviderUseCase
+    fun bindResolveProviderUseCase(impl: ResolveProviderUseCaseImpl): ResolveProviderUseCase
 
     @Binds
     @Singleton
-    fun bindVaultAndBalanceUseCase(
-        impl: VaultAndBalanceUseCaseImpl
-    ): VaultAndBalanceUseCase
+    fun bindVaultAndBalanceUseCase(impl: VaultAndBalanceUseCaseImpl): VaultAndBalanceUseCase
 
     @Binds
     @Singleton
-    fun bindConvertTokenToToken(
-        impl: ConvertTokenToTokenImpl
-    ): ConvertTokenToToken
+    fun bindConvertTokenToToken(impl: ConvertTokenToTokenImpl): ConvertTokenToToken
 
     @Binds
     @Singleton
-    fun bindGetDiscountBpsUseCase(
-        impl: GetDiscountBpsUseCaseImpl
-    ): GetDiscountBpsUseCase
+    fun bindGetDiscountBpsUseCase(impl: GetDiscountBpsUseCaseImpl): GetDiscountBpsUseCase
 
     @Binds
     @Singleton
-    fun bindConvertBpsToFiatUseCase(
-        impl: ConvertBpsToFiatUseCaseImpl
-    ): ConvertBpsToFiatUseCase
+    fun bindConvertBpsToFiatUseCase(impl: ConvertBpsToFiatUseCaseImpl): ConvertBpsToFiatUseCase
 
     @Binds
     @Singleton
-    fun bindGenerateAccountQrUseCase(
-        impl: GenerateAccountQrUseCaseImpl
-    ): GenerateAccountQrUseCase
+    fun bindGenerateAccountQrUseCase(impl: GenerateAccountQrUseCaseImpl): GenerateAccountQrUseCase
 }

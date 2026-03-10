@@ -10,33 +10,35 @@ internal interface ReshareMessageFromProtoMapper : MapperFunc<ReshareMessageProt
 
 internal class ReshareMessageFromProtoMapperImpl @Inject constructor() :
     ReshareMessageFromProtoMapper {
-    override fun invoke(from: ReshareMessageProto) = ReshareMessage(
-        sessionID = from.sessionId,
-        hexChainCode = from.hexChainCode,
-        serviceName = from.serviceName,
-        pubKeyECDSA = from.publicKeyEcdsa,
-        oldParties = from.oldParties,
-        encryptionKeyHex = from.encryptionKeyHex,
-        useVultisigRelay = from.useVultisigRelay,
-        oldResharePrefix = from.oldResharePrefix,
-        vaultName = from.vaultName,
-        libType = from.libType.toSigningLibType(),
-    )
+    override fun invoke(from: ReshareMessageProto) =
+        ReshareMessage(
+            sessionID = from.sessionId,
+            hexChainCode = from.hexChainCode,
+            serviceName = from.serviceName,
+            pubKeyECDSA = from.publicKeyEcdsa,
+            oldParties = from.oldParties,
+            encryptionKeyHex = from.encryptionKeyHex,
+            useVultisigRelay = from.useVultisigRelay,
+            oldResharePrefix = from.oldResharePrefix,
+            vaultName = from.vaultName,
+            libType = from.libType.toSigningLibType(),
+        )
 }
 
 internal interface ReshareMessageToProtoMapper : MapperFunc<ReshareMessage, ReshareMessageProto>
 
 internal class ReshareMessageToProtoMapperImpl @Inject constructor() : ReshareMessageToProtoMapper {
-    override fun invoke(from: ReshareMessage) = ReshareMessageProto(
-        sessionId = from.sessionID,
-        hexChainCode = from.hexChainCode,
-        serviceName = from.serviceName,
-        publicKeyEcdsa = from.pubKeyECDSA,
-        oldParties = from.oldParties,
-        encryptionKeyHex = from.encryptionKeyHex,
-        useVultisigRelay = from.useVultisigRelay,
-        oldResharePrefix = from.oldResharePrefix,
-        vaultName = from.vaultName,
-        libType = from.libType.toProto(),
-    )
+    override fun invoke(from: ReshareMessage) =
+        ReshareMessageProto(
+            sessionId = from.sessionID,
+            hexChainCode = from.hexChainCode,
+            serviceName = from.serviceName,
+            publicKeyEcdsa = from.pubKeyECDSA,
+            oldParties = from.oldParties,
+            encryptionKeyHex = from.encryptionKeyHex,
+            useVultisigRelay = from.useVultisigRelay,
+            oldResharePrefix = from.oldResharePrefix,
+            vaultName = from.vaultName,
+            libType = from.libType.toProto(),
+        )
 }

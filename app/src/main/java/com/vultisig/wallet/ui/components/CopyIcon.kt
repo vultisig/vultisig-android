@@ -30,4 +30,3 @@ internal fun CopyIcon(
         tint = tint ?: Theme.v2.colors.neutrals.n100,
     )
 }
-

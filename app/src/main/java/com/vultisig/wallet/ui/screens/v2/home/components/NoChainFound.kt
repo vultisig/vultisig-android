@@ -26,23 +26,16 @@ internal fun NoChainFound(
     onChooseChains: () -> Unit,
 ) {
     Column(
-        modifier = modifier
-            .padding(
-                horizontal = 40.dp,
-                vertical = 16.dp,
-            ),
+        modifier = modifier.padding(horizontal = 40.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.Companion.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-
         UiIcon(
             drawableResId = R.drawable.crypto,
             size = 26.dp,
             tint = Theme.v2.colors.primary.accent4,
         )
-        UiSpacer(
-            size = 12.dp
-        )
+        UiSpacer(size = 12.dp)
 
         Text(
             text = stringResource(R.string.no_chains_found),
@@ -51,9 +44,7 @@ internal fun NoChainFound(
             textAlign = TextAlign.Center,
         )
 
-        UiSpacer(
-            size = 8.dp
-        )
+        UiSpacer(size = 8.dp)
 
         Text(
             text = stringResource(R.string.no_chain_make_sure_that),
@@ -64,16 +55,14 @@ internal fun NoChainFound(
 
         // Hidden for KeyImport vaults where chains are fixed at import time
         if (isChainSelectionEnabled) {
-            UiSpacer(
-                size = 16.dp
-            )
+            UiSpacer(size = 16.dp)
 
             VsButton(
                 variant = VsButtonVariant.Primary,
                 size = VsButtonSize.Mini,
                 iconLeft = R.drawable.write,
                 label = stringResource(R.string.no_chain_customize_chains),
-                onClick = onChooseChains
+                onClick = onChooseChains,
             )
         }
     }
@@ -82,7 +71,5 @@ internal fun NoChainFound(
 @Preview
 @Composable
 private fun NoChainFoundPreview() {
-    NoChainFound(
-        onChooseChains = {}
-    )
+    NoChainFound(onChooseChains = {})
 }

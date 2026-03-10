@@ -8,23 +8,24 @@ import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.wallet.Swaps
+import java.math.BigInteger
 import tss.KeysignResponse
 import wallet.core.jni.CoinType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ethereum.SigningInput
 import wallet.core.jni.proto.Ethereum.Transaction
-import java.math.BigInteger
 
 class THORChainSwaps(
-    private val vaultHexPublicKey: String,
-    private val vaultHexChainCode: String,
+    private val ecdsaKey: String,
+    private val ecdsaChainCode: String,
+    private val eddsaKey: String,
 ) {
     companion object {
         const val AFFILIATE_FEE_ADDRESS = "va"
         const val AFFILIATE_FEE_RATE_BP = 50 // 50 BP
         const val REFERRED_AFFILIATE_FEE_RATE_BP = 35 // 35 BP when there's a referral
         const val REFERRED_USER_FEE_RATE_BP = 10 // 10 BP for the referrer
-        
+
         // Legacy constants for backward compatibility
         const val AFFILIATE_FEE_RATE = "50"
 
@@ -37,27 +38,28 @@ class THORChainSwaps(
         nonceIncrement: BigInteger,
     ): ByteArray {
         when (swapPayload.fromCoin.chain) {
-             Chain.ThorChain -> {
-                return ThorchainSwapHelper()
-                    .getSwapPreSignedInputData(keysignPayload)
+            Chain.ThorChain -> {
+                return ThorchainSwapHelper().getSwapPreSignedInputData(keysignPayload)
             }
 
-            Chain.Bitcoin, Chain.Litecoin, Chain.Dogecoin, Chain.BitcoinCash -> {
-                val helper =
-                    UtxoHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
+            Chain.Bitcoin,
+            Chain.Litecoin,
+            Chain.Dogecoin,
+            Chain.BitcoinCash -> {
+                val helper = UtxoHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
                 val input = helper.getSwapPreSigningInputData(keysignPayload)
-                return helper.getSigningInputData(
-                    keysignPayload,
-                    input.toBuilder()
-                )
+                return helper.getSigningInputData(keysignPayload, input.toBuilder())
             }
 
-            Chain.Ethereum, Chain.BscChain, Chain.Avalanche,Chain.Base, Chain.Arbitrum -> {
-                val helper =
-                    EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
+            Chain.Ethereum,
+            Chain.BscChain,
+            Chain.Avalanche,
+            Chain.Base,
+            Chain.Arbitrum -> {
+                val helper = EvmHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
                 return helper.getSwapPreSignedInputData(
                     keysignPayload = keysignPayload,
-                    nonceIncrement = nonceIncrement
+                    nonceIncrement = nonceIncrement,
                 )
             }
 
@@ -66,25 +68,25 @@ class THORChainSwaps(
             }
 
             Chain.GaiaChain -> {
-                val helper = CosmosHelper(
-                    coinType = CoinType.COSMOS,
-                    denom = CosmosHelper.ATOM_DENOM,
-                )
-                return helper.getSwapPreSignedInputData(
-                    keysignPayload = keysignPayload
-                )
+                val helper =
+                    CosmosHelper(coinType = CoinType.COSMOS, denom = CosmosHelper.ATOM_DENOM)
+                return helper.getSwapPreSignedInputData(keysignPayload = keysignPayload)
             }
 
             Chain.Tron -> {
-                val helper = TronHelper(
-                    coinType = CoinType.TRON,
-                    vaultHexPublicKey = vaultHexPublicKey,
-                    vaultHexChainCode = vaultHexChainCode
-                )
+                val helper =
+                    TronHelper(
+                        coinType = CoinType.TRON,
+                        vaultHexPublicKey = ecdsaKey,
+                        vaultHexChainCode = ecdsaChainCode,
+                    )
 
-                return helper.getPreSignedInputData(
-                    keysignPayload = keysignPayload,
-                )
+                return helper.getPreSignedInputData(keysignPayload = keysignPayload)
+            }
+
+            Chain.Solana -> {
+                val helper = SolanaHelper(eddsaKey)
+                return helper.getSwapPreSignedInputData(keysignPayload)
             }
 
             else -> {
@@ -115,32 +117,31 @@ class THORChainSwaps(
         approvePayload: ERC20ApprovePayload,
         keysignPayload: KeysignPayload,
     ): ByteArray {
-        val approveInput = SigningInput.newBuilder()
-            .setTransaction(
-                Transaction.newBuilder()
-                    .setErc20Approve(
-                        Transaction.ERC20Approve.newBuilder()
-                            .setSpender(approvePayload.spender)
-                            .setAmount(ByteString.copyFrom(approvePayload.amount.toByteArray()))
-                    )
-            )
-            .setToAddress(keysignPayload.coin.contractAddress)
-            .build()
+        val approveInput =
+            SigningInput.newBuilder()
+                .setTransaction(
+                    Transaction.newBuilder()
+                        .setErc20Approve(
+                            Transaction.ERC20Approve.newBuilder()
+                                .setSpender(approvePayload.spender)
+                                .setAmount(ByteString.copyFrom(approvePayload.amount.toByteArray()))
+                        )
+                )
+                .setToAddress(keysignPayload.coin.contractAddress)
+                .build()
 
-        return EvmHelper(
-            keysignPayload.coin.coinType,
-            vaultHexPublicKey,
-            vaultHexChainCode
-        ).getPreSignedInputData(signingInput = approveInput, keysignPayload = keysignPayload)
+        return EvmHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
+            .getPreSignedInputData(signingInput = approveInput, keysignPayload = keysignPayload)
     }
 
     fun getPreSignedApproveImageHash(
         approvePayload: ERC20ApprovePayload,
         keysignPayload: KeysignPayload,
-    ): List<String> = getPreSigningOutput(
-        coinType = keysignPayload.coin.coinType,
-        inputData = getPreSignedApproveInputData(approvePayload, keysignPayload)
-    )
+    ): List<String> =
+        getPreSigningOutput(
+            coinType = keysignPayload.coin.coinType,
+            inputData = getPreSignedApproveInputData(approvePayload, keysignPayload),
+        )
 
     fun getSignedApproveTransaction(
         approvePayload: ERC20ApprovePayload,
@@ -148,11 +149,8 @@ class THORChainSwaps(
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val inputData = getPreSignedApproveInputData(approvePayload, keysignPayload)
-        return EvmHelper(
-            keysignPayload.coin.coinType,
-            vaultHexPublicKey,
-            vaultHexChainCode
-        ).getSignedTransaction(inputData, signatures)
+        return EvmHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
+            .getSignedTransaction(inputData, signatures)
     }
 
     fun getSignedTransaction(
@@ -164,55 +162,60 @@ class THORChainSwaps(
         val inputData = getPreSignedInputData(swapPayload, keysignPayload, nonceIncrement)
         when (swapPayload.fromCoin.chain) {
             Chain.ThorChain -> {
-                return ThorChainHelper.thor(vaultHexPublicKey, vaultHexChainCode)
-                    .getSignedTransaction(
-                        inputData,
-                        signatures
-                    )
+                return ThorChainHelper.thor(ecdsaKey, ecdsaChainCode)
+                    .getSignedTransaction(inputData, signatures)
             }
 
-            Chain.Bitcoin, Chain.Dogecoin, Chain.BitcoinCash, Chain.Litecoin -> {
-                val helper =
-                    UtxoHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
+            Chain.Bitcoin,
+            Chain.Dogecoin,
+            Chain.BitcoinCash,
+            Chain.Litecoin -> {
+                val helper = UtxoHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
                 return helper.getSignedTransaction(inputData, signatures)
             }
             Chain.Ripple -> {
-                return RippleHelper.getSignedTransaction(keysignPayload,signatures)
+                return RippleHelper.getSignedTransaction(keysignPayload, signatures)
             }
-            Chain.Ethereum, Chain.Avalanche, Chain.BscChain,Chain.Base,Chain.Arbitrum -> {
-                val helper =
-                    EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
+            Chain.Ethereum,
+            Chain.Avalanche,
+            Chain.BscChain,
+            Chain.Base,
+            Chain.Arbitrum -> {
+                val helper = EvmHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
                 return helper.getSignedTransaction(inputData, signatures)
             }
 
             Chain.GaiaChain -> {
-                val helper = CosmosHelper(
-                    coinType = CoinType.COSMOS,
-                    denom = CosmosHelper.ATOM_DENOM,
-                )
+                val helper =
+                    CosmosHelper(coinType = CoinType.COSMOS, denom = CosmosHelper.ATOM_DENOM)
                 return helper.getSignedTransaction(
                     input = inputData,
                     keysignPayload = keysignPayload,
-                    signatures = signatures
+                    signatures = signatures,
                 )
             }
 
             Chain.Tron -> {
-                val helper = TronHelper(
-                    coinType = CoinType.TRON,
-                    vaultHexPublicKey = vaultHexPublicKey,
-                    vaultHexChainCode = vaultHexChainCode
-                )
+                val helper =
+                    TronHelper(
+                        coinType = CoinType.TRON,
+                        vaultHexPublicKey = ecdsaKey,
+                        vaultHexChainCode = ecdsaChainCode,
+                    )
                 return helper.getSignedTransaction(
                     keysignPayload = keysignPayload,
-                    signatures = signatures
+                    signatures = signatures,
                 )
+            }
+
+            Chain.Solana -> {
+                val helper = SolanaHelper(eddsaKey)
+                return helper.getSwapSignedTransaction(inputData, signatures)
             }
 
             else -> {
                 throw Exception("Unsupported chain")
             }
-
         }
     }
 }

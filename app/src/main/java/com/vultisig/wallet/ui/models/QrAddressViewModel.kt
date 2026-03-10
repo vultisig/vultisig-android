@@ -21,15 +21,16 @@ import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-
 
 @HiltViewModel
-internal class QrAddressViewModel @Inject constructor(
+internal class QrAddressViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
     private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
@@ -46,19 +47,15 @@ internal class QrAddressViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             loadQrPainter()
-            vaultRepository.get(requireNotNull(args.vaultId))
-                ?.let {
-                    currentVault.value = it
-                }
+            vaultRepository.get(requireNotNull(args.vaultId))?.let { currentVault.value = it }
         }
     }
 
     private suspend fun loadQrPainter() {
         withContext(Dispatchers.IO) {
             val qrBitmap = generateQrBitmap(address, Color.Black, Color.White, null)
-            val bitmapPainter = BitmapPainter(
-                qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
-            )
+            val bitmapPainter =
+                BitmapPainter(qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None)
             qrBitmapPainter.value = bitmapPainter
         }
     }
@@ -69,22 +66,21 @@ internal class QrAddressViewModel @Inject constructor(
         color: Int,
         title: String,
         logo: Bitmap,
-    ) = viewModelScope.launch {
-        val qrBitmap = withContext(Dispatchers.IO) {
-            makeQrCodeBitmapShareFormat(context, bitmap, color, logo, title, null)
+    ) =
+        viewModelScope.launch {
+            val qrBitmap =
+                withContext(Dispatchers.IO) {
+                    makeQrCodeBitmapShareFormat(context, bitmap, color, logo, title, null)
+                }
+            shareQrBitmap.value?.recycle()
+            shareQrBitmap.value = qrBitmap
         }
-        shareQrBitmap.value?.recycle()
-        shareQrBitmap.value = qrBitmap
-    }
 
     internal fun shareQRCode(activity: Context) {
         val qrBitmap = shareQrBitmap.value ?: return
         activity.share(
             qrBitmap,
-            shareFileName(
-                requireNotNull(currentVault.value),
-                ShareType.TOKENADDRESS
-            )
+            shareFileName(requireNotNull(currentVault.value), ShareType.TOKENADDRESS),
         )
     }
 }

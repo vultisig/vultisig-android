@@ -35,9 +35,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun FastVaultPasswordHintScreen(
-    model: FastVaultPasswordHintViewModel = hiltViewModel(),
-) {
+internal fun FastVaultPasswordHintScreen(model: FastVaultPasswordHintViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     FastVaultPasswordHintScreen(
@@ -45,7 +43,7 @@ internal fun FastVaultPasswordHintScreen(
         textFieldState = model.passwordHintFieldState,
         onNextClick = model::next,
         onSkipClick = model::skip,
-        onBackClick = model::back
+        onBackClick = model::back,
     )
 }
 
@@ -71,16 +69,14 @@ private fun FastVaultPasswordHintScreen(
                     label = stringResource(R.string.fast_vault_password_hint_skip),
                     onClick = onSkipClick,
                     variant = VsButtonVariant.Secondary,
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("FastVaultPasswordHintScreen.skip")
+                    modifier = Modifier.weight(1f).testTag("FastVaultPasswordHintScreen.skip"),
                 )
 
                 VsButton(
                     label = stringResource(R.string.fast_vault_password_hint_next),
-                    state = if (state.isNextAvailable)
-                        VsButtonState.Enabled
-                    else VsButtonState.Disabled,
+                    state =
+                        if (state.isNextAvailable) VsButtonState.Enabled
+                        else VsButtonState.Disabled,
                     onClick = {
                         keyboardController?.hide()
                         onNextClick()
@@ -88,14 +84,10 @@ private fun FastVaultPasswordHintScreen(
                     modifier = Modifier.weight(1f),
                 )
             }
-        }
+        },
     ) {
-        val focusRequester = remember {
-            FocusRequester()
-        }
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-        }
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) { focusRequester.requestFocus() }
         Column {
             Text(
                 text = stringResource(R.string.fast_vault_password_hint_screen_title),
@@ -106,7 +98,7 @@ private fun FastVaultPasswordHintScreen(
             Text(
                 text = stringResource(R.string.fast_vault_password_hint_screen_desc),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary
+                color = Theme.v2.colors.text.tertiary,
             )
             VsTextInputField(
                 textFieldState = textFieldState,
@@ -120,13 +112,11 @@ private fun FastVaultPasswordHintScreen(
                     keyboardController?.hide()
                     onNextClick()
                 },
-                modifier = Modifier
-                    .padding(top = 16.dp)
+                modifier = Modifier.padding(top = 16.dp),
             )
         }
     }
 }
-
 
 @Preview
 @Composable

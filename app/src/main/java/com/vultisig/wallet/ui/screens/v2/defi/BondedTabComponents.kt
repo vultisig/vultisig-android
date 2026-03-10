@@ -41,10 +41,8 @@ internal fun BondedTabContent(
     onClickUnbond: (String) -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         HeaderDeFiWidget(
             title = stringResource(R.string.total_bonded_rune),
@@ -76,16 +74,16 @@ internal fun ActiveNodesWidget(
     isBalanceVisible: Boolean = true,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.normal,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(16.dp)
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .padding(16.dp)
     ) {
         Row {
             Text(
@@ -100,7 +98,7 @@ internal fun ActiveNodesWidget(
                 drawableResId = R.drawable.ic_caret_down,
                 size = 16.dp,
                 tint = Theme.v2.colors.text.secondary,
-                modifier = Modifier.rotate(180f)
+                modifier = Modifier.rotate(180f),
             )
         }
 
@@ -133,17 +131,14 @@ private fun NodeContent(
     isBalanceVisible: Boolean = true,
 ) {
     Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
                 text = stringResource(R.string.node_address_formatted, node.address),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.tertiary,
                 modifier = Modifier.weight(1f, fill = false),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
 
             UiSpacer(8.dp)
@@ -154,23 +149,25 @@ private fun NodeContent(
                 text = statusStyle.second,
                 style = Theme.brockmann.body.s.medium,
                 color = statusStyle.first,
-                modifier = Modifier.wrapContentWidth()
+                modifier = Modifier.wrapContentWidth(),
             )
         }
 
         UiSpacer(16.dp)
 
         Text(
-            text = stringResource(R.string.bonded_amount, if (isBalanceVisible) node.bondedAmount else HIDE_BALANCE_CHARS),
+            text =
+                stringResource(
+                    R.string.bonded_amount,
+                    if (isBalanceVisible) node.bondedAmount else HIDE_BALANCE_CHARS,
+                ),
             style = Theme.brockmann.headings.title3,
             color = Theme.v2.colors.text.primary,
         )
 
         UiSpacer(16.dp)
 
-        ApyInfoItem(
-            apy = node.apy
-        )
+        ApyInfoItem(apy = node.apy)
 
         UiSpacer(16.dp)
 
@@ -180,11 +177,9 @@ private fun NodeContent(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Box(
-                modifier = Modifier.weight(1f)
-            ) {
+            Box(modifier = Modifier.weight(1f)) {
                 InfoItem(
                     icon = R.drawable.calendar_days,
                     label = stringResource(R.string.next_churn),
@@ -192,13 +187,11 @@ private fun NodeContent(
                 )
             }
 
-            Box(
-                modifier = Modifier.weight(1f)
-            ) {
+            Box(modifier = Modifier.weight(1f)) {
                 InfoItem(
                     icon = R.drawable.ic_cup,
                     label = stringResource(R.string.next_award),
-                    value = if (isBalanceVisible) node.nextAward else HIDE_BALANCE_CHARS
+                    value = if (isBalanceVisible) node.nextAward else HIDE_BALANCE_CHARS,
                 )
             }
         }
@@ -207,7 +200,7 @@ private fun NodeContent(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ActionButton(
                 title = stringResource(R.string.unbond),
@@ -218,7 +211,7 @@ private fun NodeContent(
                 onClick = onClickUnbond,
                 modifier = Modifier.weight(1f),
                 enabled = node.status.canUnbond,
-                iconCircleColor = Theme.v2.colors.text.tertiary
+                iconCircleColor = Theme.v2.colors.text.tertiary,
             )
 
             ActionButton(
@@ -229,7 +222,7 @@ private fun NodeContent(
                 onClick = onClickBond,
                 modifier = Modifier.weight(1f),
                 enabled = node.status.canBond,
-                iconCircleColor = Theme.v2.colors.primary.accent4
+                iconCircleColor = Theme.v2.colors.primary.accent4,
             )
         }
 
@@ -251,76 +244,79 @@ private fun getStyleByNodeStatus(nodeStatus: BondNodeState): Pair<Color, String>
     val warningColor = Theme.v2.colors.alerts.warning
 
     return when (nodeStatus) {
-        BondNodeState.WHITELISTED -> Pair(successColor, stringResource(R.string.bond_node_state_whitelisted))
-        BondNodeState.STANDBY -> Pair(successColor, stringResource(R.string.bond_node_state_standby))
+        BondNodeState.WHITELISTED ->
+            Pair(successColor, stringResource(R.string.bond_node_state_whitelisted))
+        BondNodeState.STANDBY ->
+            Pair(successColor, stringResource(R.string.bond_node_state_standby))
         BondNodeState.READY -> Pair(successColor, stringResource(R.string.bond_node_state_ready))
         BondNodeState.ACTIVE -> Pair(successColor, stringResource(R.string.bond_node_state_active))
-        BondNodeState.DISABLED -> Pair(warningColor, stringResource(R.string.bond_node_state_disabled))
-        BondNodeState.UNKNOWN -> Pair(warningColor, stringResource(R.string.bond_node_state_unknown))
+        BondNodeState.DISABLED ->
+            Pair(warningColor, stringResource(R.string.bond_node_state_disabled))
+        BondNodeState.UNKNOWN ->
+            Pair(warningColor, stringResource(R.string.bond_node_state_unknown))
     }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Bonded Tab - With Nodes")
 @Composable
 private fun BondedTabContentPreview() {
-    val mockNodes = listOf(
-        BondedNodeUiModel(
-            address = "thor1abcd...xyz",
-            fullAddress = "thor1abcd...xyz",
-            status = BondNodeState.ACTIVE,
-            apy = "12.5%",
-            bondedAmount = "1000 RUNE",
-            nextAward = "20 RUNE",
-            nextChurn = "Oct 15, 25"
-        ),
-        BondedNodeUiModel(
-            address = "thor1efgh...123",
-            fullAddress = "thor1abcd...xyz",
-            status = BondNodeState.STANDBY,
-            apy = "11.2%",
-            bondedAmount = "500 RUNE",
-            nextAward = "10 RUNE",
-            nextChurn = "Oct 16, 25"
-        ),
-        BondedNodeUiModel(
-            address = "thor1whit...789",
-            fullAddress = "thor1abcd...xyz",
-            status = BondNodeState.WHITELISTED,
-            apy = "0%",
-            bondedAmount = "100 RUNE",
-            nextAward = "0 RUNE",
-            nextChurn = "N/A"
-        ),
-        BondedNodeUiModel(
-            address = "thor1ready...abc",
-            fullAddress = "thor1abcd...xyz",
-            status = BondNodeState.READY,
-            apy = "10.8%",
-            bondedAmount = "750 RUNE",
-            nextAward = "15 RUNE",
-            nextChurn = "Oct 17, 25"
-        ),
-        BondedNodeUiModel(
-            address = "thor1dis...def",
-            fullAddress = "thor1abcd...xyz",
-            status = BondNodeState.DISABLED,
-            apy = "0%",
-            bondedAmount = "250 RUNE",
-            nextAward = "0 RUNE",
-            nextChurn = "N/A"
+    val mockNodes =
+        listOf(
+            BondedNodeUiModel(
+                address = "thor1abcd...xyz",
+                fullAddress = "thor1abcd...xyz",
+                status = BondNodeState.ACTIVE,
+                apy = "12.5%",
+                bondedAmount = "1000 RUNE",
+                nextAward = "20 RUNE",
+                nextChurn = "Oct 15, 25",
+            ),
+            BondedNodeUiModel(
+                address = "thor1efgh...123",
+                fullAddress = "thor1abcd...xyz",
+                status = BondNodeState.STANDBY,
+                apy = "11.2%",
+                bondedAmount = "500 RUNE",
+                nextAward = "10 RUNE",
+                nextChurn = "Oct 16, 25",
+            ),
+            BondedNodeUiModel(
+                address = "thor1whit...789",
+                fullAddress = "thor1abcd...xyz",
+                status = BondNodeState.WHITELISTED,
+                apy = "0%",
+                bondedAmount = "100 RUNE",
+                nextAward = "0 RUNE",
+                nextChurn = "N/A",
+            ),
+            BondedNodeUiModel(
+                address = "thor1ready...abc",
+                fullAddress = "thor1abcd...xyz",
+                status = BondNodeState.READY,
+                apy = "10.8%",
+                bondedAmount = "750 RUNE",
+                nextAward = "15 RUNE",
+                nextChurn = "Oct 17, 25",
+            ),
+            BondedNodeUiModel(
+                address = "thor1dis...def",
+                fullAddress = "thor1abcd...xyz",
+                status = BondNodeState.DISABLED,
+                apy = "0%",
+                bondedAmount = "250 RUNE",
+                nextAward = "0 RUNE",
+                nextChurn = "N/A",
+            ),
         )
-    )
-    
+
     BondedTabContent(
-        state = ThorchainDefiPositionsUiModel(
-            bonded = BondedTabUiModel(
-                totalBondedAmount = "2600 RUNE",
-                nodes = mockNodes
-            )
-        ),
-        bondToNodeOnClick = { },
+        state =
+            ThorchainDefiPositionsUiModel(
+                bonded = BondedTabUiModel(totalBondedAmount = "2600 RUNE", nodes = mockNodes)
+            ),
+        bondToNodeOnClick = {},
         onClickBond = {},
-        onClickUnbond = {}
+        onClickUnbond = {},
     )
 }
 
@@ -328,16 +324,18 @@ private fun BondedTabContentPreview() {
 @Composable
 private fun BondedTabContentLoadingPreview() {
     BondedTabContent(
-        state = ThorchainDefiPositionsUiModel(
-            bonded = BondedTabUiModel(
-                isLoading = true,
-                totalBondedAmount = "0 RUNE",
-                nodes = emptyList()
-            )
-        ),
-        bondToNodeOnClick = { },
+        state =
+            ThorchainDefiPositionsUiModel(
+                bonded =
+                    BondedTabUiModel(
+                        isLoading = true,
+                        totalBondedAmount = "0 RUNE",
+                        nodes = emptyList(),
+                    )
+            ),
+        bondToNodeOnClick = {},
         onClickBond = {},
-        onClickUnbond = {}
+        onClickUnbond = {},
     )
 }
 
@@ -345,16 +343,18 @@ private fun BondedTabContentLoadingPreview() {
 @Composable
 private fun BondedTabContentEmptyPreview() {
     BondedTabContent(
-        state = ThorchainDefiPositionsUiModel(
-            bonded = BondedTabUiModel(
-                isLoading = false,
-                totalBondedAmount = "0 RUNE",
-                nodes = emptyList()
-            )
-        ),
-        bondToNodeOnClick = { },
+        state =
+            ThorchainDefiPositionsUiModel(
+                bonded =
+                    BondedTabUiModel(
+                        isLoading = false,
+                        totalBondedAmount = "0 RUNE",
+                        nodes = emptyList(),
+                    )
+            ),
+        bondToNodeOnClick = {},
         onClickBond = {},
-        onClickUnbond = {}
+        onClickUnbond = {},
     )
 }
 
@@ -362,7 +362,7 @@ private fun BondedTabContentEmptyPreview() {
 @Composable
 private fun HeaderDeFiWidgetPreview() {
     HeaderDeFiWidget(
-        onClickAction = { },
+        onClickAction = {},
         totalAmount = "2600 RUNE",
         iconRes = R.drawable.rune,
         buttonText = "Bond to Node",
@@ -370,45 +370,45 @@ private fun HeaderDeFiWidgetPreview() {
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Active Nodes - Multiple States")
+@Preview(
+    showBackground = true,
+    backgroundColor = 0xFFFFFFFF,
+    name = "Active Nodes - Multiple States",
+)
 @Composable
 private fun ActiveNodesWidgetPreview() {
-    val mockNodes = listOf(
-        BondedNodeUiModel(
-            address = "thor1abcd...xyz",
-            fullAddress = "thor1abcd...xyz",
-            status = BondNodeState.ACTIVE,
-            apy = "12.5%",
-            bondedAmount = "1000 RUNE",
-            nextAward = "20 RUNE",
-            nextChurn = "Oct 15, 25"
-        ),
-        BondedNodeUiModel(
-            address = "thor1efgh...123",
-            fullAddress = "thor1abcd...xyz",
-            status = BondNodeState.DISABLED,
-            apy = "11.2%",
-            bondedAmount = "500 RUNE",
-            nextAward = "10 RUNE",
-            nextChurn = "Oct 16, 25"
-        ),
-        BondedNodeUiModel(
-            address = "thor1stand...456",
-            fullAddress = "thor1abcd...xyz",
-            status = BondNodeState.STANDBY,
-            apy = "10.8%",
-            bondedAmount = "750 RUNE",
-            nextAward = "15 RUNE",
-            nextChurn = "Oct 17, 25"
+    val mockNodes =
+        listOf(
+            BondedNodeUiModel(
+                address = "thor1abcd...xyz",
+                fullAddress = "thor1abcd...xyz",
+                status = BondNodeState.ACTIVE,
+                apy = "12.5%",
+                bondedAmount = "1000 RUNE",
+                nextAward = "20 RUNE",
+                nextChurn = "Oct 15, 25",
+            ),
+            BondedNodeUiModel(
+                address = "thor1efgh...123",
+                fullAddress = "thor1abcd...xyz",
+                status = BondNodeState.DISABLED,
+                apy = "11.2%",
+                bondedAmount = "500 RUNE",
+                nextAward = "10 RUNE",
+                nextChurn = "Oct 16, 25",
+            ),
+            BondedNodeUiModel(
+                address = "thor1stand...456",
+                fullAddress = "thor1abcd...xyz",
+                status = BondNodeState.STANDBY,
+                apy = "10.8%",
+                bondedAmount = "750 RUNE",
+                nextAward = "15 RUNE",
+                nextChurn = "Oct 17, 25",
+            ),
         )
-    )
-    
-    ActiveNodesWidget(
-        nodes = mockNodes,
-        onClickBond = {},
-        onClickUnbond = {},
-    )
-}
 
+    ActiveNodesWidget(nodes = mockNodes, onClickBond = {}, onClickUnbond = {})
+}
 
 private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()

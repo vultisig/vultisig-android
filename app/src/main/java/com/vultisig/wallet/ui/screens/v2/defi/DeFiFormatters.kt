@@ -4,13 +4,13 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
-import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import wallet.core.jni.CoinType
 
 internal fun String.formatAddress(): String {
     return if (this.length > 13) {
@@ -42,8 +42,7 @@ internal fun Double.formatPercentage(): String {
 
 internal fun Double.formatRuneReward(): String {
     val rewardBase = BigDecimal.valueOf(this).setScale(0, RoundingMode.DOWN).toBigInteger()
-    val runeAmount =
-        Chain.ThorChain.coinType.toValue(rewardBase).setScale(4, RoundingMode.DOWN)
+    val runeAmount = Chain.ThorChain.coinType.toValue(rewardBase).setScale(4, RoundingMode.DOWN)
     return "${runeAmount.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
 }
 

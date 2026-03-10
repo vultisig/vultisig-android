@@ -14,20 +14,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import kotlinx.serialization.json.Json
 import kotlin.reflect.KClass
-
+import kotlinx.serialization.json.Json
 
 /**
  * Custom navigation host specifically designed for bottom sheet navigation.
  *
- * This component provides smooth height animations during navigation transitions within bottom sheets.
- * Using the default Jetpack Compose Navigation component causes lag and delayed animations when
- * the bottom sheet content height changes during navigation, as it doesn't properly coordinate
+ * This component provides smooth height animations during navigation transitions within bottom
+ * sheets. Using the default Jetpack Compose Navigation component causes lag and delayed animations
+ * when the bottom sheet content height changes during navigation, as it doesn't properly coordinate
  * with the bottom sheet's height animation system.
  *
- * This custom implementation uses [animateContentSize] to smoothly animate height changes
- * when navigating between different composables, providing a seamless user experience.
+ * This custom implementation uses [animateContentSize] to smoothly animate height changes when
+ * navigating between different composables, providing a seamless user experience.
  *
  * @param modifier Modifier to be applied to the navigation host container
  * @param navController Custom navigation controller for managing bottom sheet navigation state
@@ -39,7 +38,7 @@ internal fun VsBottomSheetNavHost(
     modifier: Modifier = Modifier,
     sheetState: SheetState,
     navController: VsBottomSheetNavController,
-    content: VsBottomSheetNavGraphBuilder.() -> Unit
+    content: VsBottomSheetNavGraphBuilder.() -> Unit,
 ) {
     val builder = remember { VsBottomSheetNavGraphBuilder() }
     builder.content()
@@ -47,22 +46,17 @@ internal fun VsBottomSheetNavHost(
     val currentRouteData = navController.currentRouteData
     val currentRouteClass = currentRouteData::class.qualifiedName ?: ""
 
-    var isExpanded by remember {
-        mutableStateOf(false)
-    }
+    var isExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(sheetState.currentValue) {
         isExpanded = sheetState.currentValue != SheetValue.Hidden
     }
 
     if (builder.hasRoute(currentRouteClass)) {
-        val currentContent = builder.getContent(
-            currentRouteClass,
-            currentRouteData
-        )
+        val currentContent = builder.getContent(currentRouteClass, currentRouteData)
         Box(
             modifier = if (isExpanded) modifier.animateContentSize() else modifier,
-            content = { currentContent() }
+            content = { currentContent() },
         )
     }
 }
@@ -70,12 +64,10 @@ internal fun VsBottomSheetNavHost(
 internal class VsBottomSheetNavGraphBuilder {
     private val routes = mutableMapOf<String, @Composable (Any) -> Unit>()
 
-    private fun <T : Any> composable(
-        routeClass: KClass<T>,
-        content: @Composable (T) -> Unit
-    ) {
-        val className = routeClass.qualifiedName
-            ?: throw IllegalArgumentException("Route class must have a qualified name")
+    private fun <T : Any> composable(routeClass: KClass<T>, content: @Composable (T) -> Unit) {
+        val className =
+            routeClass.qualifiedName
+                ?: throw IllegalArgumentException("Route class must have a qualified name")
         routes[className] = { routeData ->
             @Suppress("UNCHECKED_CAST")
             if (routeClass.isInstance(routeData)) {
@@ -89,6 +81,7 @@ internal class VsBottomSheetNavGraphBuilder {
     ) {
         composable(T::class, content)
     }
+
     fun getContent(routeClass: String, routeData: Any): @Composable () -> Unit = {
         routes.getValue(routeClass)(routeData)
     }
@@ -104,14 +97,13 @@ internal class VsBottomSheetNavController(initialRoute: Any) {
     private var _currentRouteData = mutableStateOf(initialRoute)
 
     val currentRouteData: Any by _currentRouteData
-    val backStack: List<Any> get() = _backStack.map { it.data }
-    val canGoBack: Boolean get() = _backStack.size > 1
+    val backStack: List<Any>
+        get() = _backStack.map { it.data }
 
-    data class RouteEntry(
-        val data: Any,
-        val serializedData: String,
-        val className: String
-    )
+    val canGoBack: Boolean
+        get() = _backStack.size > 1
+
+    data class RouteEntry(val data: Any, val serializedData: String, val className: String)
 
     init {
         if (_backStack.isEmpty()) {
@@ -124,12 +116,13 @@ internal class VsBottomSheetNavController(initialRoute: Any) {
     private fun createRouteEntry(route: Any): RouteEntry {
         return RouteEntry(
             data = route,
-            serializedData = try {
-                json.encodeToString(route)
-            } catch (_: Exception) {
-                route.toString()
-            },
-            className = route::class.qualifiedName ?: route::class.simpleName ?: "Unknown"
+            serializedData =
+                try {
+                    json.encodeToString(route)
+                } catch (_: Exception) {
+                    route.toString()
+                },
+            className = route::class.qualifiedName ?: route::class.simpleName ?: "Unknown",
         )
     }
 
@@ -202,5 +195,6 @@ internal class VsBottomSheetNavController(initialRoute: Any) {
 }
 
 @Composable
-internal fun rememberVsBottomSheetNavController(initialRoute: Any) =
-    remember { VsBottomSheetNavController(initialRoute) }
+internal fun rememberVsBottomSheetNavController(initialRoute: Any) = remember {
+    VsBottomSheetNavController(initialRoute)
+}

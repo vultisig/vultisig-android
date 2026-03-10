@@ -6,9 +6,10 @@ import javax.inject.Inject
 
 internal interface TokenValueToStringWithUnitMapper : MapperFunc<TokenValue, String>
 
-internal class TokenValueToStringWithUnitMapperImpl @Inject constructor(
-    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
-) : TokenValueToStringWithUnitMapper {
+internal class TokenValueToStringWithUnitMapperImpl
+@Inject
+constructor(private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper) :
+    TokenValueToStringWithUnitMapper {
 
     override fun invoke(from: TokenValue): String =
         "${mapTokenValueToDecimalUiString(from)} ${from.unit}"

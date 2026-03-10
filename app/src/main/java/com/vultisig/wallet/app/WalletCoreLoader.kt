@@ -5,5 +5,6 @@ object WalletCoreLoader {
         System.loadLibrary("TrustWalletCore")
         System.loadLibrary("godklsswig")
         System.loadLibrary("goschnorrswig")
+        System.loadLibrary("godilithiumswig")
     }
 }

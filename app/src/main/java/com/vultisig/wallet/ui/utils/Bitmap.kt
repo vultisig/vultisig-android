@@ -33,7 +33,7 @@ internal fun Bitmap.addWhiteBorder(borderSize: Float): Bitmap {
         createBitmap(
             width + (borderSize * 2).toInt(),
             height + (borderSize * 2).toInt(),
-            config ?: Bitmap.Config.ARGB_8888
+            config ?: Bitmap.Config.ARGB_8888,
         )
     val canvas = android.graphics.Canvas(bmpWithBorder)
     canvas.drawColor(Color.WHITE)
@@ -51,14 +51,7 @@ internal fun Modifier.extractBitmap(processBitmap: (bitmap: Bitmap) -> Unit): Mo
             draw(this, this.layoutDirection, pictureCanvas, this.size) {
                 this@onDrawWithContent.drawContent()
             }
-            drawIntoCanvas { canvas ->
-                canvas.nativeCanvas.drawBitmap(
-                    tempBitmap,
-                    0f,
-                    0f,
-                    null
-                )
-            }
+            drawIntoCanvas { canvas -> canvas.nativeCanvas.drawBitmap(tempBitmap, 0f, 0f, null) }
             processBitmap(tempBitmap)
         }
     }

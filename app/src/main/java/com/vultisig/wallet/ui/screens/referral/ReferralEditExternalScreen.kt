@@ -57,8 +57,7 @@ internal fun ReferralEditExternalScreen(
         onPasteClick = {
             val content = clipboardData.value
             model.onPasteIconClick(content)
-        }
-
+        },
     )
 }
 
@@ -76,9 +75,7 @@ private fun ReferralEditExternalScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.referral_save_referred_code),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
                 variant = VsButtonVariant.Primary,
                 state = VsButtonState.Enabled,
                 onClick = onSaveReferral,
@@ -86,11 +83,11 @@ private fun ReferralEditExternalScreen(
         },
         content = {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .imePadding()
-                    .navigationBarsPadding()
-                    .verticalScroll(rememberScrollState()),
+                modifier =
+                    Modifier.fillMaxSize()
+                        .imePadding()
+                        .navigationBarsPadding()
+                        .verticalScroll(rememberScrollState())
             ) {
                 Text(
                     text = stringResource(R.string.referral_use_referred_code),
@@ -113,7 +110,7 @@ private fun ReferralEditExternalScreen(
                     keyboardType = KeyboardType.Text,
                 )
             }
-        }
+        },
     )
 }
 
@@ -128,6 +125,6 @@ private fun ReferralEditExternalScreenPreview() {
         referralCodeTextFieldState = textFieldState,
         onBackClick = {},
         onSaveReferral = {},
-        onPasteClick = {}
+        onPasteClick = {},
     )
 }

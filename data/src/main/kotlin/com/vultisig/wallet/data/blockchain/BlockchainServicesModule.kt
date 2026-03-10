@@ -23,50 +23,37 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface BlockchainServicesModule {
-    @Binds
-    @Singleton
-    fun bindFeeService(
-        impl: EthereumFeeService
-    ): FeeService
+    @Binds @Singleton fun bindFeeService(impl: EthereumFeeService): FeeService
 
     companion object {
         @Provides
         @Singleton
-        fun bindTierRemoteNFTService(
-            factory: EvmApiFactory
-        ): TierRemoteNFTService = TierRemoteNFTServiceImpl(factory)
+        fun bindTierRemoteNFTService(factory: EvmApiFactory): TierRemoteNFTService =
+            TierRemoteNFTServiceImpl(factory)
 
         @Provides
         @Singleton
         fun provideRujiStakingService(
             thorChainApi: ThorChainApi,
-            stakingDetailsRepository: StakingDetailsRepository
-        ): RujiStakingService = RujiStakingService(
-            thorChainApi,
-            stakingDetailsRepository
-        )
+            stakingDetailsRepository: StakingDetailsRepository,
+        ): RujiStakingService = RujiStakingService(thorChainApi, stakingDetailsRepository)
 
         @Provides
         @Singleton
         fun provideTCYStakingService(
             thorChainApi: ThorChainApi,
             tokenPriceRepository: TokenPriceRepository,
-            stakingDetailsRepository: StakingDetailsRepository
-        ): TCYStakingService = TCYStakingService(
-            thorChainApi,
-            tokenPriceRepository,
-            stakingDetailsRepository
-        )
+            stakingDetailsRepository: StakingDetailsRepository,
+        ): TCYStakingService =
+            TCYStakingService(thorChainApi, tokenPriceRepository, stakingDetailsRepository)
 
         @Provides
         @Singleton
         fun provideDefaultStakingPositionService(
             thorChainApi: ThorChainApi,
             stakingDetailsRepository: StakingDetailsRepository,
-        ): DefaultStakingPositionService = DefaultStakingPositionService(
-            thorChainApi,
-            stakingDetailsRepository,
-        )
+        ): DefaultStakingPositionService =
+            DefaultStakingPositionService(thorChainApi, stakingDetailsRepository)
 
         @Provides
         @Singleton
@@ -76,15 +63,16 @@ internal interface BlockchainServicesModule {
             defaultStakingPositionService: DefaultStakingPositionService,
             bondUseCase: ThorchainBondUseCase,
             stakingDetailsRepository: StakingDetailsRepository,
-            activeBondedNodeRepository: ActiveBondedNodeRepository
-        ): ThorchainDeFiBalanceService = ThorchainDeFiBalanceService(
-            rujiStakingService = rujiStakingService,
-            tcyStakingService = tcyStakingService,
-            defaultStakingPositionService = defaultStakingPositionService,
-            bondUseCase = bondUseCase,
-            stakingDetailsRepository = stakingDetailsRepository,
-            activeBondedNodeRepository = activeBondedNodeRepository,
-        )
+            activeBondedNodeRepository: ActiveBondedNodeRepository,
+        ): ThorchainDeFiBalanceService =
+            ThorchainDeFiBalanceService(
+                rujiStakingService = rujiStakingService,
+                tcyStakingService = tcyStakingService,
+                defaultStakingPositionService = defaultStakingPositionService,
+                bondUseCase = bondUseCase,
+                stakingDetailsRepository = stakingDetailsRepository,
+                activeBondedNodeRepository = activeBondedNodeRepository,
+            )
 
         @Provides
         @Singleton
@@ -92,10 +80,11 @@ internal interface BlockchainServicesModule {
             stakingDetailsRepository: StakingDetailsRepository,
             scaCircleAccountRepository: ScaCircleAccountRepository,
             evmApiFactory: EvmApiFactory,
-        ): CircleDeFiBalanceService = CircleDeFiBalanceService(
-            stakingDetailsRepository = stakingDetailsRepository,
-            scaCircleAccountRepository = scaCircleAccountRepository,
-            evmApi = evmApiFactory,
-        )
+        ): CircleDeFiBalanceService =
+            CircleDeFiBalanceService(
+                stakingDetailsRepository = stakingDetailsRepository,
+                scaCircleAccountRepository = scaCircleAccountRepository,
+                evmApi = evmApiFactory,
+            )
     }
 }

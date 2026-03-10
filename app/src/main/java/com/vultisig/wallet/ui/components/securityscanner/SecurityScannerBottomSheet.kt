@@ -56,7 +56,7 @@ internal fun SecurityScannerBottomSheet(
             contentStyle = contentStyle,
             securityScannerProvider = securityScannerModel.provider,
             onDismissRequest = onDismissRequest,
-            onContinueAnyway = onContinueAnyway
+            onContinueAnyway = onContinueAnyway,
         )
     }
 }
@@ -77,7 +77,7 @@ internal fun SettingsSecurityScannerBottomSheet(
             contentStyle = buildSettingsSecurityScannerBottomSheeStyle(),
             securityScannerProvider = null,
             onDismissRequest = onDismissRequest,
-            onContinueAnyway = onContinueAnyway
+            onContinueAnyway = onContinueAnyway,
         )
     }
 }
@@ -90,18 +90,15 @@ fun SecurityScannerBottomSheetContent(
     onContinueAnyway: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-            .navigationBarsPadding(),
+        modifier = Modifier.padding(16.dp).fillMaxWidth().navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Icon(
             imageVector = contentStyle.image,
             contentDescription = "Warning",
             tint = contentStyle.imageColor,
-            modifier = Modifier.size(32.dp)
+            modifier = Modifier.size(32.dp),
         )
 
         Text(
@@ -109,7 +106,7 @@ fun SecurityScannerBottomSheetContent(
             color = contentStyle.imageColor,
             style = Theme.brockmann.headings.title2,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         Text(
@@ -117,13 +114,13 @@ fun SecurityScannerBottomSheetContent(
             color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.body.s.medium,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         if (securityScannerProvider != null) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
             ) {
                 Text(
                     text = stringResource(R.string.security_scanner_powered_by),
@@ -135,7 +132,7 @@ fun SecurityScannerBottomSheetContent(
                 Image(
                     painter = painterResource(id = getSecurityScannerLogo(securityScannerProvider)),
                     contentDescription = "Provider Logo",
-                    modifier = Modifier.height(16.dp)
+                    modifier = Modifier.height(16.dp),
                 )
             }
         }
@@ -146,7 +143,7 @@ fun SecurityScannerBottomSheetContent(
             state = Enabled,
             size = Medium,
             onClick = onDismissRequest,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         VsButton(
@@ -156,7 +153,7 @@ fun SecurityScannerBottomSheetContent(
             size = Medium,
             forceClickable = true,
             onClick = onContinueAnyway,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -165,20 +162,23 @@ fun SecurityScannerBottomSheetContent(
 
 @Composable
 fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerBottomSheetStyle {
-    val title = when (riskLevel) {
-        SecurityRiskLevel.MEDIUM -> stringResource(R.string.security_scanner_medium_risk_title)
-        SecurityRiskLevel.HIGH -> stringResource(R.string.security_scanner_high_risk_title)
-        SecurityRiskLevel.CRITICAL -> stringResource(R.string.security_scanner_critical_risk_title)
-        SecurityRiskLevel.NONE,
-        SecurityRiskLevel.LOW -> stringResource(R.string.security_scanner_low_risk_title)
-    }
+    val title =
+        when (riskLevel) {
+            SecurityRiskLevel.MEDIUM -> stringResource(R.string.security_scanner_medium_risk_title)
+            SecurityRiskLevel.HIGH -> stringResource(R.string.security_scanner_high_risk_title)
+            SecurityRiskLevel.CRITICAL ->
+                stringResource(R.string.security_scanner_critical_risk_title)
+            SecurityRiskLevel.NONE,
+            SecurityRiskLevel.LOW -> stringResource(R.string.security_scanner_low_risk_title)
+        }
 
     val description = description ?: stringResource(R.string.security_scanner_default_description)
-    val (color, icon) = if (riskLevel == SecurityRiskLevel.CRITICAL || riskLevel == SecurityRiskLevel.HIGH) {
-        Pair(Theme.v2.colors.alerts.error, Icons.Outlined.Warning)
-    } else {
-        Pair(Theme.v2.colors.alerts.warning, Icons.Outlined.Info)
-    }
+    val (color, icon) =
+        if (riskLevel == SecurityRiskLevel.CRITICAL || riskLevel == SecurityRiskLevel.HIGH) {
+            Pair(Theme.v2.colors.alerts.error, Icons.Outlined.Warning)
+        } else {
+            Pair(Theme.v2.colors.alerts.warning, Icons.Outlined.Info)
+        }
 
     return SecurityScannerBottomSheetStyle(
         title = title,
@@ -189,12 +189,13 @@ fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerB
 }
 
 @Composable
-private fun buildSettingsSecurityScannerBottomSheeStyle() = SecurityScannerBottomSheetStyle(
-    title = stringResource(R.string.vault_settings_security_screen_title_bottomsheet),
-    description = stringResource(R.string.vault_settings_security_screen_content_bottomsheet),
-    imageColor = Theme.v2.colors.alerts.warning,
-    image = Icons.Outlined.Info,
-)
+private fun buildSettingsSecurityScannerBottomSheeStyle() =
+    SecurityScannerBottomSheetStyle(
+        title = stringResource(R.string.vault_settings_security_screen_title_bottomsheet),
+        description = stringResource(R.string.vault_settings_security_screen_content_bottomsheet),
+        imageColor = Theme.v2.colors.alerts.warning,
+        image = Icons.Outlined.Info,
+    )
 
 data class SecurityScannerBottomSheetStyle(
     val title: String,

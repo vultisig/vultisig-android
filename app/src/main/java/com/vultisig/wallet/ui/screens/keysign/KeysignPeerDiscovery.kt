@@ -37,8 +37,7 @@ import timber.log.Timber
 internal fun KeysignPeerDiscovery(
     viewModel: KeysignFlowViewModel,
     txType: Route.Keysign.Keysign.TxType,
-    sharedViewModel: KeysignShareViewModel =
-        hiltViewModel(LocalActivity.current as MainActivity)
+    sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalActivity.current as MainActivity),
 ) {
     KeepScreenOn()
 
@@ -49,20 +48,14 @@ internal fun KeysignPeerDiscovery(
     val participants = viewModel.participants.collectAsState(initial = emptyList()).value
     val context = LocalContext.current.applicationContext
 
-
     LaunchedEffect(txType) {
-        viewModel.setData(
-            shareViewModel = sharedViewModel,
-            context = context,
-            txType = txType
-        )
+        viewModel.setData(shareViewModel = sharedViewModel, context = context, txType = txType)
     }
 
     val isSwap = uiModel.isSwap
-    val qrShareTitle = if (isSwap)
-        stringResource(R.string.qr_title_join_swap_keysign)
-    else
-        stringResource(R.string.qr_title_join_keysign)
+    val qrShareTitle =
+        if (isSwap) stringResource(R.string.qr_title_join_swap_keysign)
+        else stringResource(R.string.qr_title_join_keysign)
 
     val qrShareBackground = Theme.v2.colors.backgrounds.primary
 
@@ -74,14 +67,14 @@ internal fun KeysignPeerDiscovery(
                 vault.name.forCanvasMinify(),
                 uiModel.amount.forCanvasMinify(),
                 uiModel.toAmount.forCanvasMinify(),
-            ) else
+            )
+        else
             stringResource(
                 R.string.qr_title_join_keysign_description,
                 vault.name.forCanvasMinify(),
                 uiModel.amount.forCanvasMinify(),
                 uiModel.toAddress.forCanvasMinify(),
             )
-
 
     LaunchedEffect(key1 = viewModel.participants) {
         viewModel.participants.collect { newList ->
@@ -91,10 +84,7 @@ internal fun KeysignPeerDiscovery(
             }
         }
     }
-    LaunchedEffect(
-        key1 = viewModel.selection,
-        vault
-    ) {
+    LaunchedEffect(key1 = viewModel.selection, vault) {
         viewModel.selection.asFlow().collect { newList ->
             if (vault.signers.isEmpty()) {
                 Timber.e("Vault signers size is 0")
@@ -113,11 +103,7 @@ internal fun KeysignPeerDiscovery(
         }
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.stopParticipantDiscovery()
-        }
-    }
+    DisposableEffect(Unit) { onDispose { viewModel.stopParticipantDiscovery() } }
 
     LaunchedEffect(uiModel.qrBitmapPainter) {
         sharedViewModel.saveShareQrBitmap(
@@ -125,16 +111,14 @@ internal fun KeysignPeerDiscovery(
             qrShareBackground.toArgb(),
             qrShareTitle,
             qrShareDescription,
-            BitmapFactory.decodeResource(
-                context.resources, R.drawable.ic_share_qr_logo
-            )
+            BitmapFactory.decodeResource(context.resources, R.drawable.ic_share_qr_logo),
         )
     }
 
     KeysignPeerDiscovery(
         localPartyId = vault.localPartyID,
-        isLookingForVultiServer = viewModel.isFastSign &&
-                Utils.getThreshold(vault.signers.size) == 2,
+        isLookingForVultiServer =
+            viewModel.isFastSign && Utils.getThreshold(vault.signers.size) == 2,
         minimumDevices = Utils.getThreshold(vault.signers.size),
         selectionState = selectionState,
         participants = participants,
@@ -169,29 +153,26 @@ private fun KeysignPeerDiscovery(
         ConnectingToServer(false)
     } else {
         PeerDiscoveryScreen(
-            state = PeerDiscoveryUiModel(
-                qr = bitmapPainter,
-                network = networkPromptOption,
-                localPartyId = localPartyId,
-                devices = participants.filter { it != localPartyId },
-                selectedDevices = selectionState.filter { it != localPartyId },
-                minimumDevices = minimumDevices,
-                minimumDevicesDisplayed = minimumDevices,
-                showQrHelpModal = false,
-                showDevicesHint = false,
-                connectingToServer = null,
-                error = null,
-            ),
-
+            state =
+                PeerDiscoveryUiModel(
+                    qr = bitmapPainter,
+                    network = networkPromptOption,
+                    localPartyId = localPartyId,
+                    devices = participants.filter { it != localPartyId },
+                    selectedDevices = selectionState.filter { it != localPartyId },
+                    minimumDevices = minimumDevices,
+                    minimumDevicesDisplayed = minimumDevices,
+                    showQrHelpModal = false,
+                    showDevicesHint = false,
+                    connectingToServer = null,
+                    error = null,
+                ),
             onBackClick = onBackClick,
-
             showHelp = false,
             onHelpClick = {},
             onShareQrClick = onShareQrClick,
-
             onCloseHintClick = {},
             onDismissQrHelpModal = {},
-
             onSwitchModeClick = {
                 onChangeNetwork(
                     when (networkPromptOption) {
@@ -221,10 +202,8 @@ private fun KeysignPeerDiscoveryPreview() {
         localPartyId = "1",
         minimumDevices = 2,
         participants = listOf("1", "2", "3"),
-        bitmapPainter = BitmapPainter(
-            createBitmap(1, 1).asImageBitmap(),
-            filterQuality = FilterQuality.None
-        ),
+        bitmapPainter =
+            BitmapPainter(createBitmap(1, 1).asImageBitmap(), filterQuality = FilterQuality.None),
         networkPromptOption = NetworkOption.Local,
     )
 }

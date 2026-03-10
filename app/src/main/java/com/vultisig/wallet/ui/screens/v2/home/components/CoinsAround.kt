@@ -15,64 +15,29 @@ internal fun BoxScope.CoinsAround() {
     Image(
         painter = painterResource(R.drawable.btc_defi_banner),
         contentDescription = null,
-        modifier = Modifier
-            .align(
-                alignment = Alignment.TopEnd
-            )
-            .offset(
-                x = (16).dp,
-                y = (-22).dp
-            )
+        modifier = Modifier.align(alignment = Alignment.TopEnd).offset(x = (16).dp, y = (-22).dp),
     )
 
     Image(
         painter = painterResource(R.drawable.bnb_defi_banner),
         contentDescription = null,
-        modifier = Modifier
-            .align(
-                alignment = Alignment.TopStart
-            )
-            .offset(
-                x = (12).dp,
-                y = (-9).dp
-            )
+        modifier = Modifier.align(alignment = Alignment.TopStart).offset(x = (12).dp, y = (-9).dp),
     )
 
     Image(
         painter = painterResource(R.drawable.sol_defi_banner),
         contentDescription = null,
-        modifier = Modifier
-            .align(
-                alignment = Alignment.TopStart
-            )
-            .offset(
-                x = (-26).dp,
-                y = (9).dp
-            )
+        modifier = Modifier.align(alignment = Alignment.TopStart).offset(x = (-26).dp, y = (9).dp),
     )
     Image(
         painter = painterResource(R.drawable.eth_defi_banner),
         contentDescription = null,
-        modifier = Modifier
-            .align(
-                alignment = Alignment.BottomStart
-            )
-            .offset(
-                x = (4).dp,
-                y = (14).dp
-            )
+        modifier = Modifier.align(alignment = Alignment.BottomStart).offset(x = (4).dp, y = (14).dp),
     )
 
     Image(
         painter = painterResource(R.drawable.xrp_defi_banner),
         contentDescription = null,
-        modifier = Modifier
-            .align(
-                alignment = Alignment.BottomEnd
-            )
-            .offset(
-                x = (-4).dp,
-                y = (-2).dp
-            )
+        modifier = Modifier.align(alignment = Alignment.BottomEnd).offset(x = (-4).dp, y = (-2).dp),
     )
 }

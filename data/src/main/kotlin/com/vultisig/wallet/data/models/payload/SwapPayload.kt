@@ -13,9 +13,7 @@ sealed class SwapPayload {
     abstract val srcTokenValue: TokenValue
     abstract val dstTokenValue: TokenValue
 
-    data class ThorChain(
-        val data: THORChainSwapPayload
-    ) : SwapPayload() {
+    data class ThorChain(val data: THORChainSwapPayload) : SwapPayload() {
 
         override val srcToken: Coin
             get() = data.fromCoin
@@ -24,24 +22,17 @@ sealed class SwapPayload {
             get() = data.toCoin
 
         override val srcTokenValue: TokenValue
-            get() = TokenValue(
-                value = data.fromAmount,
-                token = srcToken,
-            )
+            get() = TokenValue(value = data.fromAmount, token = srcToken)
 
         override val dstTokenValue: TokenValue
-            get() = TokenValue(
-                value = data.toAmountDecimal
-                    .movePointRight(dstToken.decimal)
-                    .toBigInteger(),
-                token = dstToken,
-            )
-
+            get() =
+                TokenValue(
+                    value = data.toAmountDecimal.movePointRight(dstToken.decimal).toBigInteger(),
+                    token = dstToken,
+                )
     }
 
-    data class MayaChain(
-        val data: THORChainSwapPayload
-    ) : SwapPayload() {
+    data class MayaChain(val data: THORChainSwapPayload) : SwapPayload() {
 
         override val srcToken: Coin
             get() = data.fromCoin
@@ -50,24 +41,17 @@ sealed class SwapPayload {
             get() = data.toCoin
 
         override val srcTokenValue: TokenValue
-            get() = TokenValue(
-                value = data.fromAmount,
-                token = srcToken,
-            )
+            get() = TokenValue(value = data.fromAmount, token = srcToken)
 
         override val dstTokenValue: TokenValue
-            get() = TokenValue(
-                value = data.toAmountDecimal
-                    .movePointRight(dstToken.decimal)
-                    .toBigInteger(),
-                token = dstToken,
-            )
-
+            get() =
+                TokenValue(
+                    value = data.toAmountDecimal.movePointRight(dstToken.decimal).toBigInteger(),
+                    token = dstToken,
+                )
     }
 
-    data class EVM(
-        val data: EVMSwapPayloadJson
-    ) : SwapPayload() {
+    data class EVM(val data: EVMSwapPayloadJson) : SwapPayload() {
 
         override val srcToken: Coin
             get() = data.fromCoin
@@ -76,17 +60,13 @@ sealed class SwapPayload {
             get() = data.toCoin
 
         override val srcTokenValue: TokenValue
-            get() = TokenValue(
-                value = data.fromAmount,
-                token = srcToken,
-            )
+            get() = TokenValue(value = data.fromAmount, token = srcToken)
 
         override val dstTokenValue: TokenValue
-            get() = TokenValue(
-                value = data.toAmountDecimal
-                    .movePointRight(dstToken.decimal)
-                    .toBigInteger(),
-                token = dstToken,
-            )
+            get() =
+                TokenValue(
+                    value = data.toAmountDecimal.movePointRight(dstToken.decimal).toBigInteger(),
+                    token = dstToken,
+                )
     }
 }

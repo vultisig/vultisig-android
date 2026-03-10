@@ -31,23 +31,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.animatePlacementInScope
-import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.theme.Theme
 
-val BOTH_CRYPTO_CONNECTION_TYPES = listOf(
-    CryptoConnectionType.Wallet,
-    CryptoConnectionType.Defi,
-)
+val BOTH_CRYPTO_CONNECTION_TYPES = listOf(CryptoConnectionType.Wallet, CryptoConnectionType.Defi)
 
-val ONLY_WALLET = listOf(
-    CryptoConnectionType.Wallet,
-)
+val ONLY_WALLET = listOf(CryptoConnectionType.Wallet)
 
-val ONLY_DEFI = listOf(
-    CryptoConnectionType.Defi,
-)
+val ONLY_DEFI = listOf(CryptoConnectionType.Defi)
 
 @Composable
 internal fun CryptoConnectionSelect(
@@ -62,77 +55,58 @@ internal fun CryptoConnectionSelect(
         val c1 = Color(0xFF284570)
         val c2 = Theme.v2.colors.backgrounds.secondary
         Box(
-            modifier = Modifier
-                .clip(
-                    CircleShape
-                )
-                .background(
-                    brush = Brush.sweepGradient(
-                        colors = listOf(c2, c1, c1, c1, c2, c2)
+            modifier =
+                Modifier.clip(CircleShape)
+                    .background(
+                        brush = Brush.sweepGradient(colors = listOf(c2, c1, c1, c1, c2, c2))
                     )
-                )
-                .padding(1.dp)
+                    .padding(1.dp)
         ) {
             Box(
-                modifier = modifier
-                    .height(64.dp)
-                    .width(92.dp * availableCryptoTypes.size)
-                    .clip(
-                        CircleShape
-                    )
-                    .background(Color(0xFF0d2446))
-                    .padding(
-                        all = 4.dp,
-                    )
-            ) {
-
-                Box(
-                    modifier = Modifier
-                        .animatePlacementInScope(this@LookaheadScope)
+                modifier =
+                    modifier
+                        .height(64.dp)
+                        .width(92.dp * availableCryptoTypes.size)
                         .clip(CircleShape)
-                        .background(Color(0xFF1e3250))
-                        .shadow(
-                            elevation = 1.dp,
-                            shape = CircleShape,
-                            spotColor = Theme.v2.colors.neutrals.n100.copy(alpha = 0.2f),
-                            clip = true,
-                        )
-                        .fillMaxHeight()
-                        .fillMaxWidth(1f / availableCryptoTypes.size)
-                        .align(
-                            if (isWalletSelected)
-                                Alignment.CenterStart else
-                                Alignment.CenterEnd
-                        ),
+                        .background(Color(0xFF0d2446))
+                        .padding(all = 4.dp)
+            ) {
+                Box(
+                    modifier =
+                        Modifier.animatePlacementInScope(this@LookaheadScope)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1e3250))
+                            .shadow(
+                                elevation = 1.dp,
+                                shape = CircleShape,
+                                spotColor = Theme.v2.colors.neutrals.n100.copy(alpha = 0.2f),
+                                clip = true,
+                            )
+                            .fillMaxHeight()
+                            .fillMaxWidth(1f / availableCryptoTypes.size)
+                            .align(
+                                if (isWalletSelected) Alignment.CenterStart else Alignment.CenterEnd
+                            )
                 )
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-
-                    when(availableCryptoTypes){
+                    when (availableCryptoTypes) {
                         BOTH_CRYPTO_CONNECTION_TYPES -> {
                             WalletEarnOption(
-                                modifier = Modifier
-                                    .weight(1f),
-                                onClick = {
-                                    onTypeClick(CryptoConnectionType.Wallet)
-                                },
+                                modifier = Modifier.weight(1f),
+                                onClick = { onTypeClick(CryptoConnectionType.Wallet) },
                                 text = stringResource(R.string.wallet),
                                 icon = R.drawable.wallet,
-                                enabled = isWalletSelected
+                                enabled = isWalletSelected,
                             )
 
-
                             WalletEarnOption(
-                                modifier = Modifier
-                                    .weight(1f),
-                                onClick = {
-                                    onTypeClick(CryptoConnectionType.Defi)
-                                },
+                                modifier = Modifier.weight(1f),
+                                onClick = { onTypeClick(CryptoConnectionType.Defi) },
                                 text = stringResource(R.string.defi),
                                 icon = R.drawable.coins_add,
                                 enabled = !isWalletSelected,
@@ -141,11 +115,8 @@ internal fun CryptoConnectionSelect(
                         ONLY_DEFI -> {
 
                             WalletEarnOption(
-                                modifier = Modifier
-                                    .weight(1f),
-                                onClick = {
-                                    onTypeClick(CryptoConnectionType.Defi)
-                                },
+                                modifier = Modifier.weight(1f),
+                                onClick = { onTypeClick(CryptoConnectionType.Defi) },
                                 text = stringResource(R.string.defi),
                                 icon = R.drawable.coins_add,
                                 enabled = true,
@@ -153,14 +124,11 @@ internal fun CryptoConnectionSelect(
                         }
                         ONLY_WALLET -> {
                             WalletEarnOption(
-                                modifier = Modifier
-                                    .weight(1f),
-                                onClick = {
-                                    onTypeClick(CryptoConnectionType.Wallet)
-                                },
+                                modifier = Modifier.weight(1f),
+                                onClick = { onTypeClick(CryptoConnectionType.Wallet) },
                                 text = stringResource(R.string.wallet),
                                 icon = R.drawable.wallet,
-                                enabled = true
+                                enabled = true,
                             )
                         }
                     }
@@ -181,28 +149,24 @@ private fun WalletEarnOption(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     Column(
-        modifier = modifier
-            .clickable(
+        modifier =
+            modifier.clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
                 enabled = isClickable,
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
-
-        val contentColor= if (enabled) Theme.v2.colors.text.primary else Theme.v2.colors.text.tertiary
+        val contentColor =
+            if (enabled) Theme.v2.colors.text.primary else Theme.v2.colors.text.tertiary
         val contentColorAnimated by animateColorAsState(contentColor)
-        UiIcon(
-            drawableResId = icon,
-            size = 24.dp,
-            tint = contentColorAnimated,
-        )
+        UiIcon(drawableResId = icon, size = 24.dp, tint = contentColorAnimated)
         Text(
             text = text,
             style = Theme.brockmann.supplementary.caption,
-            color = contentColorAnimated
+            color = contentColorAnimated,
         )
     }
 }
@@ -213,6 +177,6 @@ private fun PreviewWalletEarnSelect() {
     CryptoConnectionSelect(
         activeType = CryptoConnectionType.Defi,
         onTypeClick = {},
-        availableCryptoTypes = BOTH_CRYPTO_CONNECTION_TYPES
+        availableCryptoTypes = BOTH_CRYPTO_CONNECTION_TYPES,
     )
 }

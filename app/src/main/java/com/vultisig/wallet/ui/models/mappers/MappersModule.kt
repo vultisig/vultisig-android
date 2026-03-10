@@ -12,64 +12,55 @@ internal interface MappersModule {
 
     @Binds
     @Singleton
-    fun bindAddressToUiModelMapper(
-        impl: AddressToUiModelMapperImpl,
-    ): AddressToUiModelMapper
+    fun bindAddressToUiModelMapper(impl: AddressToUiModelMapperImpl): AddressToUiModelMapper
 
     @Binds
     @Singleton
-    fun bindFiatValueToStringMapper(
-        impl: FiatValueToStringMapperImpl,
-    ): FiatValueToStringMapper
+    fun bindFiatValueToStringMapper(impl: FiatValueToStringMapperImpl): FiatValueToStringMapper
 
     @Binds
     @Singleton
     fun bindZeroValueCurrencyToStringMapper(
-        impl: ZeroValueCurrencyToStringMapperImpl,
+        impl: ZeroValueCurrencyToStringMapperImpl
     ): ZeroValueCurrencyToStringMapper
 
     @Binds
     @Singleton
     fun bindAccountToTokenBalanceUiModelMapper(
-        impl: AccountToTokenBalanceUiModelMapperImpl,
+        impl: AccountToTokenBalanceUiModelMapperImpl
     ): AccountToTokenBalanceUiModelMapper
 
     @Binds
     @Singleton
     fun bindTokenValueToStringWithUnitMapper(
-        impl: TokenValueToStringWithUnitMapperImpl,
+        impl: TokenValueToStringWithUnitMapperImpl
     ): TokenValueToStringWithUnitMapper
 
     @Binds
     @Singleton
-    fun bindTokenValueAndChainMapper(
-        impl: TokenValueAndChainImp,
-    ): TokenValueAndChainMapper
+    fun bindTokenValueAndChainMapper(impl: TokenValueAndChainImp): TokenValueAndChainMapper
 
     @Binds
     @Singleton
     fun bindTokenValueToDecimalUiStringMapper(
-        impl: TokenValueToDecimalUiStringMapperImpl,
+        impl: TokenValueToDecimalUiStringMapperImpl
     ): TokenValueToDecimalUiStringMapper
 
     @Binds
     @Singleton
     fun bindFiatValueToValueStringMapper(
-        impl: FiatValueToValueStringMapperImpl,
+        impl: FiatValueToValueStringMapperImpl
     ): FiatValueToValueStringMapper
 
     @Binds
     @Singleton
     fun bindTransactionToUiModelMapper(
-        impl: TransactionToUiModelMapperImpl,
+        impl: TransactionToUiModelMapperImpl
     ): TransactionToUiModelMapper
 
     @Binds
     @Singleton
-    fun bindDurationToUiStringMapper(
-        impl: DurationToUiStringMapperImpl
-    ): DurationToUiStringMapper
-
+    fun bindDurationToUiStringMapper(impl: DurationToUiStringMapperImpl): DurationToUiStringMapper
 
     @Binds
     @Singleton
@@ -77,20 +68,15 @@ internal interface MappersModule {
         impl: DepositTransactionUiModelMapperImpl
     ): DepositTransactionToUiModelMapper
 
-
     @Binds
     @Singleton
     fun bindSwapTransactionToUiModelMapper(
         impl: SwapTransactionToUiModelMapperImpl
     ): SwapTransactionToUiModelMapper
 
-
     @Binds
     @Singleton
-    fun bindChainToDefiChainUiMapper(
-        impl: ChainToDefiChainUiMapperImpl
-    ): ChainToDefiChainUiMapper
-
+    fun bindChainToDefiChainUiMapper(impl: ChainToDefiChainUiMapperImpl): ChainToDefiChainUiMapper
 
     @Binds
     @Singleton
@@ -98,18 +84,15 @@ internal interface MappersModule {
         impl: SendTransactionHistoryDataMapperImpl
     ): SendTransactionHistoryDataMapper
 
-
     @Binds
     @Singleton
     fun bindSwapTransactionToHistoryDataMapper(
         impl: SwapTransactionToHistoryDataMapperImpl
     ): SwapTransactionToHistoryDataMapper
 
-
     @Binds
     @Singleton
     fun bindDepositTransactionHistoryDataMapper(
         impl: DepositTransactionHistoryDataMapperImpl
     ): DepositTransactionHistoryDataMapper
-
 }

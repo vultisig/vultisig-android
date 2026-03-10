@@ -16,10 +16,10 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class AddressBookBottomSheetUiModel(
     val addresses: List<AddressEntryUiModel> = emptyList(),
@@ -34,7 +34,9 @@ data class AddressEntryUiModel(
 )
 
 @HiltViewModel
-internal class AddressBookBottomSheetViewModel @Inject constructor(
+internal class AddressBookBottomSheetViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val addressBookRepository: AddressBookRepository,
@@ -49,62 +51,53 @@ internal class AddressBookBottomSheetViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val entries = addressBookRepository
-                .getEntries()
-                .filter {
-                    chainAccountAddressRepository
-                        .isValid(
+            val entries =
+                addressBookRepository
+                    .getEntries()
+                    .filter {
+                        chainAccountAddressRepository.isValid(
                             chain = Chain.fromRaw(args.chainId),
-                            address = it.address
+                            address = it.address,
                         )
-                }
-                .map {
-                    AddressEntryUiModel(
-                        model = it,
-                        title = it.title,
-                        subtitle = it.address,
-                        image = it.chain.logo,
-                    )
-                }
+                    }
+                    .map {
+                        AddressEntryUiModel(
+                            model = it,
+                            title = it.title,
+                            subtitle = it.address,
+                            image = it.chain.logo,
+                        )
+                    }
 
-            state.update {
-                it.copy(
-                    addresses = entries,
-                )
-            }
+            state.update { it.copy(addresses = entries) }
         }
 
         viewModelScope.launch {
-            val vaults = vaultRepository.getAll()
-                .mapNotNull { vault ->
+            val vaults =
+                vaultRepository.getAll().mapNotNull { vault ->
                     vault.coins
                         .find { it.chain.id == args.chainId }
                         ?.address
                         ?.let { existingAddress ->
                             AddressEntryUiModel(
-                                model = AddressBookEntry(
-                                    chain = Chain.fromRaw(args.chainId),
-                                    address = existingAddress,
-                                    title = vault.name,
-                                ),
+                                model =
+                                    AddressBookEntry(
+                                        chain = Chain.fromRaw(args.chainId),
+                                        address = existingAddress,
+                                        title = vault.name,
+                                    ),
                                 title = vault.name,
                                 subtitle = existingAddress,
                             )
                         }
                 }
 
-            state.update {
-                it.copy(
-                    vaults = vaults
-                )
-            }
+            state.update { it.copy(vaults = vaults) }
         }
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.back()
-        }
+        viewModelScope.launch { navigator.back() }
     }
 
     fun selectAddress(entry: AddressEntryUiModel) {
@@ -113,5 +106,4 @@ internal class AddressBookBottomSheetViewModel @Inject constructor(
             navigator.back()
         }
     }
-
 }

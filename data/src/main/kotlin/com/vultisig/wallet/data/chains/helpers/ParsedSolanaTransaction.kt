@@ -4,28 +4,27 @@ import wallet.core.jni.CoinType
 import wallet.core.jni.TransactionDecoder
 import wallet.core.jni.proto.Solana
 
-data class ParsedSolanaTransaction(
-    val instructions: List<ParsedInstruction>
-) {
+data class ParsedSolanaTransaction(val instructions: List<ParsedInstruction>) {
     data class ParsedInstruction(
         val programId: String,
         val programName: String?,
         val instructionType: String?,
         val accountsCount: Int,
-        val dataLength: Int
+        val dataLength: Int,
     )
 }
 
 object SolanaTransactionParser {
 
     // Known Solana programs
-    private val knownPrograms = mapOf(
-        "11111111111111111111111111111111" to "System Program",
-        "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" to "Token Program",
-        "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb" to "Token-2022 Program",
-        "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" to "Associated Token Program",
-        "ComputeBudget111111111111111111111111111111" to "Compute Budget Program"
-    )
+    private val knownPrograms =
+        mapOf(
+            "11111111111111111111111111111111" to "System Program",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" to "Token Program",
+            "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb" to "Token-2022 Program",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" to "Associated Token Program",
+            "ComputeBudget111111111111111111111111111111" to "Compute Budget Program",
+        )
 
     fun parse(base64Transaction: String): ParsedSolanaTransaction {
         val txData = android.util.Base64.decode(base64Transaction, android.util.Base64.DEFAULT)
@@ -56,24 +55,24 @@ object SolanaTransactionParser {
             else -> error("Invalid transaction format")
         }
 
-        val parsedInstructions = instructions.map { instruction ->
-            val programIndex = instruction.programId.toInt()
-            val programId = accountKeys.getOrNull(programIndex) ?: "Unknown"
-            val programName = getKnownProgramName(programId)
-            val instructionType = getInstructionType(programId, instruction.programData.toByteArray())
+        val parsedInstructions =
+            instructions.map { instruction ->
+                val programIndex = instruction.programId.toInt()
+                val programId = accountKeys.getOrNull(programIndex) ?: "Unknown"
+                val programName = getKnownProgramName(programId)
+                val instructionType =
+                    getInstructionType(programId, instruction.programData.toByteArray())
 
-            ParsedSolanaTransaction.ParsedInstruction(
-                programId = programId,
-                programName = programName,
-                instructionType = instructionType,
-                accountsCount = instruction.accountsCount,
-                dataLength = instruction.programData.size()
-            )
-        }
+                ParsedSolanaTransaction.ParsedInstruction(
+                    programId = programId,
+                    programName = programName,
+                    instructionType = instructionType,
+                    accountsCount = instruction.accountsCount,
+                    dataLength = instruction.programData.size(),
+                )
+            }
 
-        return ParsedSolanaTransaction(
-            instructions = parsedInstructions
-        )
+        return ParsedSolanaTransaction(instructions = parsedInstructions)
     }
 
     fun getKnownProgramName(programId: String): String? {

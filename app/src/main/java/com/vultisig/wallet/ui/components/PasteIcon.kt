@@ -8,11 +8,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.utils.VsClipboardService
 
 @Composable
-internal fun PasteIcon(
-    modifier: Modifier = Modifier,
-    size: Dp = 20.dp,
-    onPaste: (String) -> Unit,
-) {
+internal fun PasteIcon(modifier: Modifier = Modifier, size: Dp = 20.dp, onPaste: (String) -> Unit) {
     val clipboardData = VsClipboardService.getClipboardData()
     UiIcon(
         modifier = modifier,
@@ -22,6 +18,6 @@ internal fun PasteIcon(
             val value = clipboardData.value
             if (value.isNullOrEmpty()) return@UiIcon
             onPaste(value)
-        }
+        },
     )
 }

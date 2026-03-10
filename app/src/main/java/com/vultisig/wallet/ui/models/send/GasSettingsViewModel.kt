@@ -13,12 +13,12 @@ import com.vultisig.wallet.data.usecases.ConvertGweiToWeiUseCase
 import com.vultisig.wallet.data.usecases.ConvertWeiToGweiUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigInteger
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.math.BigInteger
-import javax.inject.Inject
 
 internal data class GasSettingsUiModel(
     val chainSpecific: BlockChainSpecific? = null,
@@ -26,11 +26,15 @@ internal data class GasSettingsUiModel(
 )
 
 internal enum class PriorityFee {
-    LOW, NORMAL, FAST,
+    LOW,
+    NORMAL,
+    FAST,
 }
 
 @HiltViewModel
-internal class GasSettingsViewModel @Inject constructor(
+internal class GasSettingsViewModel
+@Inject
+constructor(
     private val evmApiFactory: EvmApiFactory,
     private val blockChairApi: BlockChairApi,
     private val convertWeiToGwei: ConvertWeiToGweiUseCase,
@@ -48,11 +52,7 @@ internal class GasSettingsViewModel @Inject constructor(
     fun loadData(chain: Chain, spec: BlockChainSpecificAndUtxo) {
         val specific = spec.blockChainSpecific
 
-        state.update {
-            it.copy(
-                chainSpecific = specific,
-            )
-        }
+        state.update { it.copy(chainSpecific = specific) }
 
         when (specific) {
             is BlockChainSpecific.Ethereum -> {
@@ -68,11 +68,12 @@ internal class GasSettingsViewModel @Inject constructor(
     }
 
     private fun loadEthData(chain: Chain, spec: BlockChainSpecific.Ethereum) {
-        val gasLimit = if (gasLimitState.text.isEmpty()) {
-            spec.gasLimit
-        } else {
-            gasLimitState.text.toString().toBigInteger()
-        }
+        val gasLimit =
+            if (gasLimitState.text.isEmpty()) {
+                spec.gasLimit
+            } else {
+                gasLimitState.text.toString().toBigInteger()
+            }
 
         gasLimitState.setTextAndPlaceCursorAtEnd(gasLimit.toString())
 
@@ -92,8 +93,7 @@ internal class GasSettingsViewModel @Inject constructor(
 
     private fun loadUTXOData(chain: Chain) {
         viewModelScope.launch {
-            if (byteFeeState.text.toBigInteger() > BigInteger.ZERO)
-                return@launch
+            if (byteFeeState.text.toBigInteger() > BigInteger.ZERO) return@launch
             try {
                 val stats = blockChairApi.getBlockChairStats(chain)
                 val byte = stats.multiply(BigInteger("5")).divide(BigInteger("2"))
@@ -106,23 +106,24 @@ internal class GasSettingsViewModel @Inject constructor(
 
     fun save(): GasSettings {
         return when (state.value.chainSpecific) {
-            is BlockChainSpecific.Ethereum -> GasSettings.Eth(
-                baseFee = baseFeeState.text.toString().toBigInteger(),
-                priorityFee = priorityFeeState.text.toString().toBigInteger(),
-                gasLimit = gasLimitState.text.toString().toBigInteger(),
-            )
+            is BlockChainSpecific.Ethereum ->
+                GasSettings.Eth(
+                    baseFee = baseFeeState.text.toString().toBigInteger(),
+                    priorityFee = priorityFeeState.text.toString().toBigInteger(),
+                    gasLimit = gasLimitState.text.toString().toBigInteger(),
+                )
 
-            is BlockChainSpecific.UTXO -> GasSettings.UTXO(
-                byteFee = byteFeeState.text.toString().toBigInteger(),
-            )
+            is BlockChainSpecific.UTXO ->
+                GasSettings.UTXO(byteFee = byteFeeState.text.toString().toBigInteger())
 
             else -> throw IllegalStateException("Unsupported chain specific")
         }
     }
 
-    private fun CharSequence.toBigInteger() = try {
-        BigInteger(toString())
-    } catch (e: Exception) {
-        BigInteger.ZERO
-    }
+    private fun CharSequence.toBigInteger() =
+        try {
+            BigInteger(toString())
+        } catch (e: Exception) {
+            BigInteger.ZERO
+        }
 }

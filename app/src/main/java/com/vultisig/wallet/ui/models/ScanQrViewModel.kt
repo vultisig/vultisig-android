@@ -13,19 +13,19 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.getAddressFromQrCode
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
-data class ScanQrUiModel(
-    val error: String? = null
-)
+data class ScanQrUiModel(val error: String? = null)
 
 @HiltViewModel
-internal class ScanQrViewModel @Inject constructor(
+internal class ScanQrViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val getFlowTypeUseCase: GetFlowTypeUseCase,
@@ -42,11 +42,12 @@ internal class ScanQrViewModel @Inject constructor(
                 viewModelScope.launch {
                     requestResultRepository.respond(
                         requestId = args.requestId,
-                        result = if (getFlowTypeUseCase(qr) == JOIN_SEND_ON_ADDRESS_FLOW) {
-                            qr.getAddressFromQrCode()
-                        } else {
-                            null
-                        }
+                        result =
+                            if (getFlowTypeUseCase(qr) == JOIN_SEND_ON_ADDRESS_FLOW) {
+                                qr.getAddressFromQrCode()
+                            } else {
+                                null
+                            },
                     )
 
                     back()
@@ -55,10 +56,7 @@ internal class ScanQrViewModel @Inject constructor(
 
             else -> {
                 viewModelScope.launch {
-                    val dst = getDirectionByQrCodeUseCase(
-                        qr,
-                        args.vaultId
-                    )
+                    val dst = getDirectionByQrCodeUseCase(qr, args.vaultId)
                     navigator.route(dst)
                 }
             }
@@ -66,25 +64,14 @@ internal class ScanQrViewModel @Inject constructor(
     }
 
     fun back() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Back)
-        }
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     fun handleError(error: String) {
         viewModelScope.launch {
-            uiState.update {
-                it.copy(
-                    error = error
-                )
-            }
+            uiState.update { it.copy(error = error) }
             delay(2.seconds)
-            uiState.update {
-                it.copy(
-                    error = null
-                )
-            }
+            uiState.update { it.copy(error = null) }
         }
     }
-
 }

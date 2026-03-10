@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TiersNFTRepository
-import com.vultisig.wallet.data.repositories.TiersNFTRepositoryImpl
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.BRONZE_TIER_THRESHOLD
@@ -22,6 +21,8 @@ import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SIL
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.ULTIMATE_TIER_THRESHOLD
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigInteger
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,8 +32,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.math.BigInteger
-import javax.inject.Inject
 
 internal data class DiscountTiersUiModel(
     val activeTier: TierType? = null,
@@ -43,7 +42,9 @@ internal data class DiscountTiersUiModel(
 )
 
 @HiltViewModel
-internal class DiscountTiersViewModel @Inject constructor(
+internal class DiscountTiersViewModel
+@Inject
+constructor(
     private val vaultRepository: VaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
     private val balanceRepository: BalanceRepository,
@@ -65,9 +66,7 @@ internal class DiscountTiersViewModel @Inject constructor(
     private fun loadTierType() {
         viewModelScope.launch {
             try {
-                val vault = withContext(Dispatchers.IO) {
-                    vaultRepository.get(vaultId)
-                }
+                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
 
                 if (vault != null) {
                     // Check if VULT token is enabled
@@ -75,52 +74,49 @@ internal class DiscountTiersViewModel @Inject constructor(
 
                     if (vultCoin != null) {
                         // Get the Ethereum address for this vault
-                        val (address, _) = chainAccountAddressRepository.getAddress(
-                            Chain.Ethereum,
-                            vault
-                        )
+                        val (address, _) =
+                            chainAccountAddressRepository.getAddress(Chain.Ethereum, vault)
 
                         // Get VULT balance from cache first
-                        val vultBalanceCache = balanceRepository.getCachedTokenBalances(
-                            listOf(address),
-                            listOf(vultCoin)
-                        ).find { it.coinId == Coins.Ethereum.VULT.id }
+                        val vultBalanceCache =
+                            balanceRepository
+                                .getCachedTokenBalances(listOf(address), listOf(vultCoin))
+                                .find { it.coinId == Coins.Ethereum.VULT.id }
 
                         val hasNFTCache = tiersNFTRepository.hasTierNFT(vaultId)
 
                         val cachedVultBalance = vultBalanceCache?.tokenBalance?.tokenValue?.value
-                        
+
                         // Update UI with cached value if available
                         if (cachedVultBalance != null) {
                             val cachedTier =
                                 cachedVultBalance.determineTier()?.applyExtraDiscount(hasNFTCache)
-                            _state.value = DiscountTiersUiModel(
-                                activeTier = cachedTier,
-                                isLoading = false
-                            )
+                            _state.value =
+                                DiscountTiersUiModel(activeTier = cachedTier, isLoading = false)
                             if (cachedTier != null) {
                                 expandOrCollapseTierInfo(cachedTier)
                             }
-                            Timber.d("VULT cached balance: $cachedVultBalance, Active tier: $cachedTier")
+                            Timber.d(
+                                "VULT cached balance: $cachedVultBalance, Active tier: $cachedTier"
+                            )
                         }
 
                         // Fetch fresh balance from network
                         try {
-                            val freshTokenValue = balanceRepository.getTokenValue(
-                                address,
-                                vultCoin
-                            ).first() // Collect first emission from the Flow
+                            val freshTokenValue =
+                                balanceRepository
+                                    .getTokenValue(address, vultCoin)
+                                    .first() // Collect first emission from the Flow
 
-                            val hasNFTValue = withContext(Dispatchers.IO) {
-                                remoteNFTService.checkNFTBalance(address)
-                            }
+                            val hasNFTValue =
+                                withContext(Dispatchers.IO) {
+                                    remoteNFTService.checkNFTBalance(address)
+                                }
                             val vultBalance = freshTokenValue.value
                             val tier = vultBalance.determineTier()?.applyExtraDiscount(hasNFTValue)
 
-                            _state.value = DiscountTiersUiModel(
-                                activeTier = tier,
-                                isLoading = false
-                            )
+                            _state.value =
+                                DiscountTiersUiModel(activeTier = tier, isLoading = false)
 
                             if (tier != null) {
                                 expandOrCollapseTierInfo(tier)
@@ -138,10 +134,7 @@ internal class DiscountTiersViewModel @Inject constructor(
                             }
                         }
                     } else {
-                        _state.value = DiscountTiersUiModel(
-                            activeTier = null,
-                            isLoading = false
-                        )
+                        _state.value = DiscountTiersUiModel(activeTier = null, isLoading = false)
                     }
                 } else {
                     _state.value = DiscountTiersUiModel(isLoading = false, activeTier = null)
@@ -168,9 +161,7 @@ internal class DiscountTiersViewModel @Inject constructor(
     fun navigateToSwaps(navController: NavHostController, vaultId: String) {
         viewModelScope.launch {
             try {
-                val vault = withContext(Dispatchers.IO) {
-                    vaultRepository.get(vaultId)
-                }
+                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
                 // First ensure Ethereum chain is enabled, if not make sure native coin is enabled
                 if (vault != null) {
                     val hasEthereum = vault.coins.any { it.chain == Chain.Ethereum }
@@ -199,20 +190,24 @@ internal class DiscountTiersViewModel @Inject constructor(
                     }
                 }
 
-                navController.navigate(Route.Swap(
-                    vaultId = vaultId,
-                    chainId = Chain.Ethereum.id,
-                    srcTokenId = null,
-                    dstTokenId = Coins.Ethereum.VULT.id
-                ))
+                navController.navigate(
+                    Route.Swap(
+                        vaultId = vaultId,
+                        chainId = Chain.Ethereum.id,
+                        srcTokenId = null,
+                        dstTokenId = Coins.Ethereum.VULT.id,
+                    )
+                )
             } catch (e: Exception) {
                 Timber.e(e, "Error preparing swap navigation")
-                navController.navigate(Route.Swap(
-                    vaultId = vaultId,
-                    chainId = Chain.Ethereum.id,
-                    srcTokenId = null,
-                    dstTokenId = null
-                ))
+                navController.navigate(
+                    Route.Swap(
+                        vaultId = vaultId,
+                        chainId = Chain.Ethereum.id,
+                        srcTokenId = null,
+                        dstTokenId = null,
+                    )
+                )
             }
         }
     }
@@ -220,30 +215,21 @@ internal class DiscountTiersViewModel @Inject constructor(
     fun expandOrCollapseTierInfo(tier: TierType) {
         _state.update { current ->
             current.copy(
-                expandedTiers = if (current.expandedTiers.contains(tier)) {
-                    emptySet()  // Collapse
-                } else {
-                    setOf(tier)  // Expand
-                }
+                expandedTiers =
+                    if (current.expandedTiers.contains(tier)) {
+                        emptySet() // Collapse
+                    } else {
+                        setOf(tier) // Expand
+                    }
             )
         }
     }
 
     fun onTierUnlockClick(tier: TierType) {
-        _state.update {
-            it.copy(
-                tierClicked = tier,
-                showBottomSheetDialog = true
-            )
-        }
+        _state.update { it.copy(tierClicked = tier, showBottomSheetDialog = true) }
     }
 
     fun dismissBottomSheet() {
-        _state.update {
-            it.copy(
-                tierClicked = null,
-                showBottomSheetDialog = false
-            )
-        }
+        _state.update { it.copy(tierClicked = null, showBottomSheetDialog = false) }
     }
 }

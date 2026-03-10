@@ -40,15 +40,11 @@ internal fun HomePageTabMenu(
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        var state by remember {
-            mutableIntStateOf(0)
-        }
+        var state by remember { mutableIntStateOf(0) }
 
-        VsTabGroup(
-            index = state,
-        ) {
+        VsTabGroup(index = state) {
             tab {
                 VsTab(
                     label = stringResource(R.string.search_bar_portfolio),
@@ -56,42 +52,38 @@ internal fun HomePageTabMenu(
                         onPortfolioClick()
                         state = 0
                     },
-                    isEnabled = true
+                    isEnabled = true,
                 )
             }
-//                tab {
-//                    HomepageTab(
-//                        onClick = {
-//                            onTNFTsClick()
-//                            state = 1
-//                        },
-//                        label = stringResource(R.string.search_bar_nfts),
-//                        isEnabled = false
-//                    )
-//                }
+            //                tab {
+            //                    HomepageTab(
+            //                        onClick = {
+            //                            onTNFTsClick()
+            //                            state = 1
+            //                        },
+            //                        label = stringResource(R.string.search_bar_nfts),
+            //                        isEnabled = false
+            //                    )
+            //                }
         }
 
         UiSpacer(weight = 1f)
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(
-                space = 8.dp,
-                alignment = Alignment.End
-            ),
+            horizontalArrangement = Arrangement.spacedBy(space = 8.dp, alignment = Alignment.End),
             verticalAlignment = Alignment.CenterVertically,
-
-            ) {
+        ) {
             V2Container(
                 modifier = Modifier.clickOnce(onClick = onSearchClick),
                 cornerType = CornerType.Circular,
                 type = ContainerType.SECONDARY,
-                borderType = ContainerBorderType.Borderless
+                borderType = ContainerBorderType.Borderless,
             ) {
                 UiIcon(
                     drawableResId = R.drawable.ic_search,
                     size = 16.dp,
                     tint = Theme.v2.colors.text.primary,
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.padding(12.dp),
                 )
             }
 
@@ -101,20 +93,19 @@ internal fun HomePageTabMenu(
                     modifier = Modifier.clickOnce(onClick = onEditClick),
                     cornerType = CornerType.Circular,
                     type = ContainerType.SECONDARY,
-                    borderType = ContainerBorderType.Borderless
+                    borderType = ContainerBorderType.Borderless,
                 ) {
                     UiIcon(
                         drawableResId = R.drawable.edit_chain,
                         size = 16.dp,
                         tint = Theme.v2.colors.primary.accent4,
-                        modifier = Modifier.padding(12.dp)
+                        modifier = Modifier.padding(12.dp),
                     )
                 }
             }
         }
     }
 }
-
 
 @Composable
 private fun HomepageTab(
@@ -123,15 +114,8 @@ private fun HomepageTab(
     label: String,
     isEnabled: Boolean,
 ) {
-    Row(
-        modifier = modifier
-    ) {
-
-        VsTab(
-            label = label,
-            onClick = onClick,
-            isEnabled = isEnabled,
-        )
+    Row(modifier = modifier) {
+        VsTab(label = label, onClick = onClick, isEnabled = isEnabled)
 
         if (isEnabled.not()) {
 
@@ -145,17 +129,12 @@ private fun HomepageTab(
                     text = stringResource(R.string.search_bar_soon),
                     color = Theme.v2.colors.alerts.info,
                     style = Theme.brockmann.supplementary.caption,
-                    modifier = Modifier.padding(
-                        horizontal = 6.dp,
-                        vertical = 4.dp
-                    )
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
                 )
             }
         }
-
     }
 }
-
 
 @Preview
 @Composable

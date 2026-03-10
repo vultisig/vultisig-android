@@ -21,14 +21,9 @@ internal fun TopShineContainer(
     content: @Composable () -> Unit,
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(
-            size = 12.dp
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
-        ),
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(size = 12.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
     ) {
         FadingHorizontalDivider()
         content()
@@ -43,7 +38,7 @@ private fun PreviewTopShineContainer() {
             text = "top shine container",
             color = Theme.v2.colors.text.primary,
             style = Theme.brockmann.body.l.medium,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         )
     }
 }

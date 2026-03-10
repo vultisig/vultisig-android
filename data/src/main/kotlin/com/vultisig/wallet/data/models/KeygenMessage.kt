@@ -8,4 +8,5 @@ data class KeygenMessage(
     val encryptionKeyHex: String,
     val useVultisigRelay: Boolean,
     val libType: SigningLibType,
+    val chains: List<String> = emptyList(),
 )

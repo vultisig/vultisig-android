@@ -10,36 +10,21 @@ internal sealed class SendDst(route: String) : Dst(route) {
         const val ARG_TRANSACTION_ID = "transaction_id"
         const val ARG_VAULT_ID = "vault_id"
 
-        val transactionArgs = listOf(
-            navArgument(ARG_TRANSACTION_ID) { type = NavType.StringType },
-        )
+        val transactionArgs = listOf(navArgument(ARG_TRANSACTION_ID) { type = NavType.StringType })
     }
 
-    data object Send : SendDst(
-        route = "send"
-    )
+    data object Send : SendDst(route = "send")
 
-    data class VerifyTransaction(
-        val transactionId: TransactionId,
-        val vaultId: String? = null,
-    ) : SendDst(
-        route = buildRoute(transactionId, vaultId)
-    ) {
+    data class VerifyTransaction(val transactionId: TransactionId, val vaultId: String? = null) :
+        SendDst(route = buildRoute(transactionId, vaultId)) {
         companion object {
 
-            val staticRoute = buildRoute(
-                "{$ARG_TRANSACTION_ID}",
-                "{$ARG_VAULT_ID}"
-            )
+            val staticRoute = buildRoute("{$ARG_TRANSACTION_ID}", "{$ARG_VAULT_ID}")
 
-            private fun buildRoute(
-                transactionId: TransactionId,
-                vaultId: String?,
-            ) = "transaction/${transactionId}/verify?vault=$vaultId"
+            private fun buildRoute(transactionId: TransactionId, vaultId: String?) =
+                "transaction/${transactionId}/verify?vault=$vaultId"
         }
     }
 
-    data object Back : SendDst(
-        route = "back"
-    )
+    data object Back : SendDst(route = "back")
 }

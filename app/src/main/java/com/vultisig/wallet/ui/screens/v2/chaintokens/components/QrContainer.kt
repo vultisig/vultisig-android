@@ -31,83 +31,57 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 
-
 @Composable
-internal fun QrContainer(
-    chainName: String,
-    qrCode: BitmapPainter?,
-) {
+internal fun QrContainer(chainName: String, qrCode: BitmapPainter?) {
     val cornerRadius = 24.dp
     val startGradient = Color(0xFF4879FD)
     val endGradient = Color(0xFF0D39B1)
     Box(
-        modifier = Modifier
-            .width(232.dp)
-            .height(271.dp)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        startGradient,
-                        endGradient
-                    )
-                ),
-                shape = RoundedCornerShape(
-                    size = cornerRadius
+        modifier =
+            Modifier.width(232.dp)
+                .height(271.dp)
+                .background(
+                    brush = Brush.verticalGradient(colors = listOf(startGradient, endGradient)),
+                    shape = RoundedCornerShape(size = cornerRadius),
                 )
-            )
-            .drawBehind {
-                boxShadow(cornerRadius, startGradient, topOffsetDp = 2.dp, bottomOffsetDp = 3.dp)
-            }
-
-            .padding(
-                horizontal = 8.dp,
-                vertical = 6.dp
-            ),
+                .drawBehind {
+                    boxShadow(
+                        cornerRadius,
+                        startGradient,
+                        topOffsetDp = 2.dp,
+                        bottomOffsetDp = 3.dp,
+                    )
+                }
+                .padding(horizontal = 8.dp, vertical = 6.dp),
         content = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .clip(
-                            shape = RoundedCornerShape(
-                                size = cornerRadius
-                            )
-                        )
-                        .background(
-                            color = Theme.v2.colors.backgrounds.secondary,
-                        )
-                ){
-                    if(qrCode != null){
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(shape = RoundedCornerShape(size = cornerRadius))
+                            .background(color = Theme.v2.colors.backgrounds.secondary)
+                ) {
+                    if (qrCode != null) {
                         Image(
                             painter = qrCode,
                             contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
+                            modifier = Modifier.fillMaxSize().padding(16.dp),
                         )
                     }
                 }
 
-                UiSpacer(
-                    size = 8.dp
-                )
+                UiSpacer(size = 8.dp)
 
                 Text(
-                    text = stringResource(
-                        R.string.chain_tokens_qr_receive_label,
-                        chainName
-                    ),
+                    text = stringResource(R.string.chain_tokens_qr_receive_label, chainName),
                     style = Theme.brockmann.body.m.medium,
                     color = Theme.v2.colors.text.primary,
                 )
             }
-        }
+        },
     )
 }
-
 
 private fun DrawScope.boxShadow(
     cornerRadius: Dp,
@@ -121,67 +95,61 @@ private fun DrawScope.boxShadow(
     val topOffset = topOffsetDp.toPx()
     val bottomOffset = bottomOffsetDp.toPx()
 
-    val path1 = Path().apply {
-        addRoundRect(
-            RoundRect(
-                left = start,
-                top = start,
-                right = rectWidth,
-                bottom = rectHeight,
-                radiusX = cornerRadius.toPx(),
-                radiusY = cornerRadius.toPx()
+    val path1 =
+        Path().apply {
+            addRoundRect(
+                RoundRect(
+                    left = start,
+                    top = start,
+                    right = rectWidth,
+                    bottom = rectHeight,
+                    radiusX = cornerRadius.toPx(),
+                    radiusY = cornerRadius.toPx(),
+                )
             )
-        )
-    }
+        }
 
-    val path2 = Path().apply {
-        addRoundRect(
-            RoundRect(
-                left = start,
-                top = start,
-                right = rectWidth,
-                bottom = rectHeight + bottomOffset,
-                radiusX = cornerRadius.toPx(),
-                radiusY = cornerRadius.toPx()
+    val path2 =
+        Path().apply {
+            addRoundRect(
+                RoundRect(
+                    left = start,
+                    top = start,
+                    right = rectWidth,
+                    bottom = rectHeight + bottomOffset,
+                    radiusX = cornerRadius.toPx(),
+                    radiusY = cornerRadius.toPx(),
+                )
             )
-        )
-    }
+        }
 
-    val path3 = Path().apply {
-        addRoundRect(
-            RoundRect(
-                left = start,
-                top = start - topOffset,
-                right = rectWidth,
-                bottom = rectHeight,
-                radiusX = cornerRadius.toPx(),
-                radiusY = cornerRadius.toPx()
+    val path3 =
+        Path().apply {
+            addRoundRect(
+                RoundRect(
+                    left = start,
+                    top = start - topOffset,
+                    right = rectWidth,
+                    bottom = rectHeight,
+                    radiusX = cornerRadius.toPx(),
+                    radiusY = cornerRadius.toPx(),
+                )
             )
-        )
-    }
+        }
 
-    val bottomShadow = Path().apply {
-        op(path2, path1, PathOperation.Difference)
-    }
+    val bottomShadow = Path().apply { op(path2, path1, PathOperation.Difference) }
 
-    val topShadow = Path().apply {
-        op(path3, path1, PathOperation.Difference)
-    }
+    val topShadow = Path().apply { op(path3, path1, PathOperation.Difference) }
 
-    drawPath(
-        path = bottomShadow,
-        color = Color(0xFF0a2b84)
-    )
+    drawPath(path = bottomShadow, color = Color(0xFF0a2b84))
 
     drawPath(
         path = topShadow,
-        brush = Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFF88a8fe),
-                startGradient
+        brush =
+            Brush.verticalGradient(
+                colors = listOf(Color(0xFF88a8fe), startGradient),
+                startY = -topOffset,
+                endY = start,
             ),
-            startY = -topOffset,
-            endY = start
-        )
     )
 }

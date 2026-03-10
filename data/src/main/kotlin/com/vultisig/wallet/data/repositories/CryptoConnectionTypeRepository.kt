@@ -2,18 +2,21 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
 
 interface CryptoConnectionTypeRepository {
     val activeCryptoConnectionFlow: StateFlow<CryptoConnectionType>
+
     fun setActiveCryptoConnection(cryptoConnectionType: CryptoConnectionType)
-    fun isDefi(chain: Chain) : Boolean
+
+    fun isDefi(chain: Chain): Boolean
 }
 
-internal class CryptoConnectionTypeRepositoryImpl @Inject constructor() : CryptoConnectionTypeRepository {
+internal class CryptoConnectionTypeRepositoryImpl @Inject constructor() :
+    CryptoConnectionTypeRepository {
     private val connection = MutableStateFlow(CryptoConnectionType.Wallet)
 
     override val activeCryptoConnectionFlow: StateFlow<CryptoConnectionType> =
@@ -23,10 +26,9 @@ internal class CryptoConnectionTypeRepositoryImpl @Inject constructor() : Crypto
         connection.value = cryptoConnectionType
     }
 
-    override fun isDefi(chain: Chain) = when (chain) {
-         Chain.ThorChain -> true
-        else -> false
-    }
+    override fun isDefi(chain: Chain) =
+        when (chain) {
+            Chain.ThorChain -> true
+            else -> false
+        }
 }
-
-

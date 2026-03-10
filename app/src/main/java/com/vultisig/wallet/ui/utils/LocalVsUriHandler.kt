@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.core.net.toUri
 import com.vultisig.wallet.ui.models.OnRampViewModel.Companion.BANXA_URL
+import timber.log.Timber
 
 @SuppressLint("ComposableNaming")
 @Composable
@@ -24,31 +25,25 @@ internal fun VsUriHandler(): UriHandler {
     }
 }
 
-private class VsUriHandler(
-    private val activity: Activity,
-    private val uriHandler: UriHandler,
-) : UriHandler {
+private class VsUriHandler(private val activity: Activity, private val uriHandler: UriHandler) :
+    UriHandler {
 
-    override fun openUri(
-        uri: String,
-    ) = if (uri.isCctLink)
-        activity.openCct(uri.toUri())
-    else
-        uriHandler.openUri(uri)
-
+    override fun openUri(uri: String) {
+        try {
+            if (uri.isCctLink) activity.openCct(uri.toUri()) else uriHandler.openUri(uri)
+        } catch (e: IllegalArgumentException) {
+            Timber.e(e, "Failed to open URI: $uri")
+        }
+    }
 
     private val String.isCctLink: Boolean
-        get() = listOf(
-            VsAuxiliaryLinks.PRIVACY,
-            VsAuxiliaryLinks.TERMS_OF_SERVICE,
-            VsAuxiliaryLinks.VULT_TOKEN,
-            VsAuxiliaryLinks.VULT_TOKEN_DOCS,
-            VsAuxiliaryLinks.VULT_WEBSITE,
-        ).contains(this) || this.startsWith(BANXA_URL)
-
+        get() =
+            listOf(
+                    VsAuxiliaryLinks.PRIVACY,
+                    VsAuxiliaryLinks.TERMS_OF_SERVICE,
+                    VsAuxiliaryLinks.VULT_TOKEN,
+                    VsAuxiliaryLinks.VULT_TOKEN_DOCS,
+                    VsAuxiliaryLinks.VULT_WEBSITE,
+                )
+                .contains(this) || this.startsWith(BANXA_URL)
 }
-
-
-
-
-

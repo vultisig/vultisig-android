@@ -54,9 +54,7 @@ import com.vultisig.wallet.ui.utils.asString
 import vultisig.keysign.v1.SignSolana
 
 @Composable
-internal fun VerifySendScreen(
-    viewModel: VerifyTransactionViewModel = hiltViewModel(),
-) {
+internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewModel()) {
     val state = viewModel.uiState.collectAsState().value
     val context = LocalContext.current
     val promptTitle = stringResource(R.string.biometry_keysign_login_button)
@@ -69,14 +67,15 @@ internal fun VerifySendScreen(
             onDismiss = viewModel::dismissError,
         )
     }
-    val authorize: () -> Unit = remember(context) {
-        {
-            context.launchBiometricPrompt(
-                promptTitle = promptTitle,
-                onAuthorizationSuccess = viewModel::authFastSign,
-            )
+    val authorize: () -> Unit =
+        remember(context) {
+            {
+                context.launchBiometricPrompt(
+                    promptTitle = promptTitle,
+                    onAuthorizationSuccess = viewModel::authFastSign,
+                )
+            }
         }
-    }
 
     LaunchedEffect(Unit) {
         viewModel.fastSignFlow.collect { shouldShowPrompt ->
@@ -124,15 +123,10 @@ internal fun VerifySendScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 12.dp
-                    )
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
             ) {
-                if (state.showScanningWarning &&
-                    state.txScanStatus is TransactionScanStatus.Scanned
+                if (
+                    state.showScanningWarning && state.txScanStatus is TransactionScanStatus.Scanned
                 ) {
                     SecurityScannerBottomSheet(
                         securityScannerModel = state.txScanStatus.result,
@@ -152,16 +146,17 @@ internal fun VerifySendScreen(
                         onLongClick = onConfirm,
                         onClick = onFastSignClick,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = if (isConsentsEnabled && !state.hasAllConsents) {
-                            VsButtonState.Disabled
-                        } else {
-                            VsButtonState.Enabled
-                        }
+                        enabled =
+                            if (isConsentsEnabled && !state.hasAllConsents) {
+                                VsButtonState.Disabled
+                            } else {
+                                VsButtonState.Enabled
+                            },
                     )
                 } else {
-                    val buttonState = if (isConsentsEnabled && !state.hasAllConsents)
-                        VsButtonState.Disabled
-                    else VsButtonState.Enabled
+                    val buttonState =
+                        if (isConsentsEnabled && !state.hasAllConsents) VsButtonState.Disabled
+                        else VsButtonState.Enabled
                     VsButton(
                         label = confirmTitle,
                         state = buttonState,
@@ -175,24 +170,19 @@ internal fun VerifySendScreen(
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             ) {
-
                 val tx = state.transaction
 
                 SecurityScannerBadget(state.txScanStatus)
 
                 Column(
-                    modifier = Modifier
-                        .background(
-                            color = Theme.v2.colors.backgrounds.secondary,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(
-                            all = 24.dp,
-                        )
+                    modifier =
+                        Modifier.background(
+                                color = Theme.v2.colors.backgrounds.secondary,
+                                shape = RoundedCornerShape(16.dp),
+                            )
+                            .padding(all = 24.dp)
                 ) {
                     Text(
                         text = stringResource(R.string.verify_deposit_sending),
@@ -202,9 +192,7 @@ internal fun VerifySendScreen(
 
                     UiSpacer(24.dp)
 
-                    SwapToken(
-                        valuedToken = tx.token,
-                    )
+                    SwapToken(valuedToken = tx.token)
 
                     UiSpacer(12.dp)
 
@@ -212,14 +200,14 @@ internal fun VerifySendScreen(
 
                     VerifyCardDetails(
                         title = stringResource(R.string.verify_transaction_from_title),
-                        subtitle = tx.srcAddress
+                        subtitle = tx.srcAddress,
                     )
 
                     VerifyCardDivider(0.dp)
 
                     VerifyCardDetails(
                         title = stringResource(R.string.verify_transaction_to_title),
-                        subtitle = tx.dstAddress
+                        subtitle = tx.dstAddress,
                     )
 
                     if (tx.memo != null) {
@@ -227,51 +215,55 @@ internal fun VerifySendScreen(
 
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_memo_title),
-                            subtitle = tx.memo
+                            subtitle = tx.memo,
                         )
                     }
-                    tx.signAmino?.takeIf { it.isNotBlank()}?.let {
-                        VerifyCardDivider(0.dp)
+                    tx.signAmino
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let {
+                            VerifyCardDivider(0.dp)
 
-                        VerifyCardJsonDetails(
-                            title = stringResource(R.string.amino_sign),
-                            subtitle = tx.signAmino
-                        )
-                    }
-
-                    tx.signDirect?.takeIf { it.isNotBlank()}?.let {
-                        VerifyCardDivider(0.dp)
-
-                        VerifyCardJsonDetails(
-                            title = stringResource(R.string.amino_direct),
-                            subtitle = tx.signDirect
-                        )
-                    }
-                    tx.signSolana?.takeIf { it.isNotBlank() }?.let {
-                        VerifyCardDivider(0.dp)
-
-                        SignSolanaDisplayView(
-                            signSolana = SignSolana(
-                                rawTransactions = listOf(it)
+                            VerifyCardJsonDetails(
+                                title = stringResource(R.string.amino_sign),
+                                subtitle = tx.signAmino,
                             )
-                        )
-                    }
+                        }
 
+                    tx.signDirect
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let {
+                            VerifyCardDivider(0.dp)
+
+                            VerifyCardJsonDetails(
+                                title = stringResource(R.string.amino_direct),
+                                subtitle = tx.signDirect,
+                            )
+                        }
+                    tx.signSolana
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let {
+                            VerifyCardDivider(0.dp)
+
+                            SignSolanaDisplayView(
+                                signSolana = SignSolana(rawTransactions = listOf(it))
+                            )
+                        }
 
                     if (state.functionSignature != null) {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardJsonDetails(
                             title = stringResource(R.string.deposit_screen_title),
-                            subtitle = state.functionSignature
+                            subtitle = state.functionSignature,
                         )
                     }
                     if (state.functionInputs != null) {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardJsonDetails(
-                            title = stringResource(R.string.verify_transaction_function_inputs_title),
-                            subtitle = state.functionInputs
+                            title =
+                                stringResource(R.string.verify_transaction_function_inputs_title),
+                            subtitle = state.functionInputs,
                         )
                     }
 
@@ -279,11 +271,7 @@ internal fun VerifySendScreen(
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                vertical = 12.dp,
-                            )
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                     ) {
                         Text(
                             text = stringResource(R.string.verify_deposit_network),
@@ -302,8 +290,7 @@ internal fun VerifySendScreen(
                             Image(
                                 painter = painterResource(chain.logo),
                                 contentDescription = null,
-                                modifier = Modifier
-                                    .size(16.dp),
+                                modifier = Modifier.size(16.dp),
                             )
 
                             Text(
@@ -329,7 +316,7 @@ internal fun VerifySendScreen(
                 }
 
                 if (isConsentsEnabled) {
-                    Column {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         VsCheckField(
                             title = stringResource(R.string.verify_transaction_consent_address),
                             isChecked = state.consentAddress,
@@ -355,17 +342,9 @@ internal fun VerifySendScreen(
 }
 
 @Composable
-internal fun AddressField(
-    title: String,
-    address: String,
-    divider: Boolean = true,
-) {
+internal fun AddressField(title: String, address: String, divider: Boolean = true) {
     Column {
-        Text(
-            text = title,
-            color = Theme.v2.colors.neutrals.n100,
-            style = Theme.montserrat.heading5,
-        )
+        Text(text = title, color = Theme.v2.colors.neutrals.n100, style = Theme.montserrat.heading5)
 
         UiSpacer(size = 16.dp)
 
@@ -384,17 +363,11 @@ internal fun AddressField(
 }
 
 @Composable
-internal fun OtherField(
-    title: String,
-    value: String,
-    divider: Boolean = true,
-) {
+internal fun OtherField(title: String, value: String, divider: Boolean = true) {
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(
-                vertical = 12.dp,
-            )
+            modifier = Modifier.padding(vertical = 12.dp),
         ) {
             Text(
                 text = title,
@@ -423,12 +396,15 @@ internal fun OtherField(
 @Composable
 private fun PreviewVerifySendScreen() {
     VerifySendScreen(
-        state = VerifyTransactionUiModel(
-            transaction = TransactionDetailsUiModel(
-                srcAddress = "0x1234567890",
-                dstAddress = "0x1234567890",
-                memo = "some memo",
-                signAmino = """
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        srcAddress = "0x1234567890",
+                        dstAddress = "0x1234567890",
+                        memo = "some memo",
+                        signAmino =
+                            """
                      {
                         "type": "osmosis/smartaccount/add-authenticator",
                         "value": {
@@ -437,9 +413,10 @@ private fun PreviewVerifySendScreen() {
                             "sender": "osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxf3l5h"
                         }
                      }
-                """.trimIndent()
+                """
+                                .trimIndent(),
+                    )
             ),
-        ),
         isConsentsEnabled = true,
         confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = {},
@@ -449,4 +426,3 @@ private fun PreviewVerifySendScreen() {
         onConfirm = {},
     )
 }
-

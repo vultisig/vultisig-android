@@ -25,7 +25,6 @@ internal interface DepositMemo {
                     append(providerAddress)
                 }
             }
-
         }
 
         data class Thor(
@@ -51,7 +50,6 @@ internal interface DepositMemo {
                     append(operatorFee)
                 }
             }
-
         }
     }
 
@@ -77,7 +75,6 @@ internal interface DepositMemo {
                     append(providerAddress)
                 }
             }
-
         }
 
         data class Thor(
@@ -99,26 +96,20 @@ internal interface DepositMemo {
         }
     }
 
-    data class Leave(
-        val nodeAddress: String,
-    ) : DepositMemo {
+    data class Leave(val nodeAddress: String) : DepositMemo {
 
         override fun toString(): String = buildString {
             append("LEAVE:")
             append(nodeAddress)
         }
-
     }
 
     data object DepositPool : DepositMemo {
 
         override fun toString(): String = "POOL+"
-
     }
 
-    data class WithdrawPool(
-        val basisPoints: Int,
-    ) : DepositMemo {
+    data class WithdrawPool(val basisPoints: Int) : DepositMemo {
 
         override fun toString(): String = buildString {
             append("POOL-:")
@@ -128,7 +119,6 @@ internal interface DepositMemo {
             append(":")
             append(THORChainSwaps.AFFILIATE_FEE_RATE)
         }
-
     }
 
     data object Stake : DepositMemo {
@@ -139,10 +129,7 @@ internal interface DepositMemo {
         override fun toString(): String = "w"
     }
 
-
-    data class Custom(
-        val memo: String,
-    ) : DepositMemo {
+    data class Custom(val memo: String) : DepositMemo {
         override fun toString(): String = memo
     }
 
@@ -150,43 +137,43 @@ internal interface DepositMemo {
         val srcChain: Chain,
         val dstChain: Chain,
         val dstAddress: String,
-
         val memo: String?,
     ) : DepositMemo {
-        override fun toString(): String =
-            buildString {
-                append("${dstChain.raw}:${ibcChannel}:${dstAddress}")
-                if (!memo.isNullOrBlank()) {
-                    append(":$memo")
-                }
+        override fun toString(): String = buildString {
+            append("${dstChain.raw}:${ibcChannel}:${dstAddress}")
+            if (!memo.isNullOrBlank()) {
+                append(":$memo")
             }
-
-        private val ibcChannel: String = when (srcChain) {
-            Chain.Kujira -> when (dstChain) {
-                Chain.GaiaChain -> "channel-0"
-                Chain.Akash -> "channel-64"
-                Chain.Dydx -> "channel-118"
-                Chain.Noble -> "channel-62"
-                Chain.Osmosis -> "channel-3"
-                else -> ""
-            }
-
-            Chain.Osmosis -> when (dstChain) {
-                Chain.GaiaChain -> "channel-0"
-                else -> ""
-            }
-
-            Chain.GaiaChain -> when (dstChain) {
-                Chain.Kujira -> "channel-343"
-                Chain.Osmosis -> "channel-141"
-                Chain.Noble -> "channel-536"
-                Chain.Akash -> "channel-184"
-                else -> ""
-            }
-
-            else -> ""
         }
+
+        private val ibcChannel: String =
+            when (srcChain) {
+                Chain.Kujira ->
+                    when (dstChain) {
+                        Chain.GaiaChain -> "channel-0"
+                        Chain.Akash -> "channel-64"
+                        Chain.Dydx -> "channel-118"
+                        Chain.Noble -> "channel-62"
+                        Chain.Osmosis -> "channel-3"
+                        else -> ""
+                    }
+
+                Chain.Osmosis ->
+                    when (dstChain) {
+                        Chain.GaiaChain -> "channel-0"
+                        else -> ""
+                    }
+
+                Chain.GaiaChain ->
+                    when (dstChain) {
+                        Chain.Kujira -> "channel-343"
+                        Chain.Osmosis -> "channel-141"
+                        Chain.Noble -> "channel-536"
+                        Chain.Akash -> "channel-184"
+                        else -> ""
+                    }
+
+                else -> ""
+            }
     }
-
-
 }

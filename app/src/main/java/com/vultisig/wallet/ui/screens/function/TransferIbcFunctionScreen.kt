@@ -21,28 +21,22 @@ internal fun TransferIbcFunctionScreen(
     selectedChain: Chain,
     chainList: List<Chain>,
     onSelectChain: (Chain) -> Unit,
-
     selectedToken: TokenMergeInfo,
     coinList: List<TokenMergeInfo>,
     onSelectCoin: (TokenMergeInfo) -> Unit,
-
     dstAddress: TextFieldState,
     onDstAddressLostFocus: () -> Unit,
     dstAddressError: UiText?,
     onSetDstAddress: (String) -> Unit,
-
     balance: UiText,
     amountFieldState: TextFieldState,
     onAmountLostFocus: () -> Unit,
     amountError: UiText?,
-
     memoFieldState: TextFieldState,
     onMemoLostFocus: () -> Unit,
     memoError: UiText?,
 ) {
-    FormEntry(
-        title = stringResource(R.string.transfer_ibc_destination_chain),
-    ) {
+    FormEntry(title = stringResource(R.string.transfer_ibc_destination_chain)) {
         FormSelection(
             selected = selectedChain,
             options = chainList,
@@ -51,9 +45,7 @@ internal fun TransferIbcFunctionScreen(
         )
     }
 
-    FormEntry(
-        title = stringResource(R.string.form_token_selection_asset)
-    ) {
+    FormEntry(title = stringResource(R.string.form_token_selection_asset)) {
         FormSelection(
             selected = selectedToken,
             options = coinList,
@@ -75,10 +67,7 @@ internal fun TransferIbcFunctionScreen(
     }
 
     FormTextFieldCard(
-        title = stringResource(
-            R.string.deposit_form_amount_title,
-            balance.asString()
-        ),
+        title = stringResource(R.string.deposit_form_amount_title, balance.asString()),
         hint = stringResource(R.string.send_amount_currency_hint),
         keyboardType = KeyboardType.Number,
         textFieldState = amountFieldState,

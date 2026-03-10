@@ -32,73 +32,53 @@ object FeeServiceProvidersModule {
     @Provides
     @Singleton
     @EthereumFee
-    fun provideEthereumFeeService(
-        evmApiFactory: EvmApiFactory
-    ): FeeService = EthereumFeeService(evmApiFactory)
+    fun provideEthereumFeeService(evmApiFactory: EvmApiFactory): FeeService =
+        EthereumFeeService(evmApiFactory)
 
     @Provides
     @Singleton
     @ZkSyncFee
-    fun provideZkSyncFeeService(
-        evmApiFactory: EvmApiFactory
-    ): FeeService = ZkFeeService(evmApiFactory)
+    fun provideZkSyncFeeService(evmApiFactory: EvmApiFactory): FeeService =
+        ZkFeeService(evmApiFactory)
 
     @Provides
     @Singleton
     @PolkadotFee
-    fun providePolkadotFeeService(
-        polkadotApi: PolkadotApi
-    ): FeeService = PolkadotFeeService(polkadotApi)
+    fun providePolkadotFeeService(polkadotApi: PolkadotApi): FeeService =
+        PolkadotFeeService(polkadotApi)
 
     @Provides
     @Singleton
     @RippleFee
-    fun provideRippleFeeService(
-        rippleApi: RippleApi
-    ): FeeService = RippleFeeService(rippleApi)
+    fun provideRippleFeeService(rippleApi: RippleApi): FeeService = RippleFeeService(rippleApi)
 
     @Provides
     @Singleton
     @SuiFee
-    fun provideSuiFeeService(
-        suiApi: SuiApi
-    ): FeeService = SuiFeeService(suiApi)
+    fun provideSuiFeeService(suiApi: SuiApi): FeeService = SuiFeeService(suiApi)
 
     @Provides
     @Singleton
     @TronFee
-    fun provideTronFeeService(
-        tronApi: TronApi
-    ): FeeService = TronFeeService(tronApi)
+    fun provideTronFeeService(tronApi: TronApi): FeeService = TronFeeService(tronApi)
 
-    @Provides
-    @Singleton
-    @TonFee
-    fun provideTonFeeService(): FeeService = TonFeeService()
+    @Provides @Singleton @TonFee fun provideTonFeeService(): FeeService = TonFeeService()
 
     @Provides
     @Singleton
     @SolanaFee
-    fun provideSolanaFeeService(
-        solanaApi: SolanaApi,
-    ): FeeService = SolanaFeeService(solanaApi)
+    fun provideSolanaFeeService(solanaApi: SolanaApi): FeeService = SolanaFeeService(solanaApi)
 
     @Provides
     @Singleton
     @ThorFee
-    fun provideThorchainService(
-        thorChainApi: ThorChainApi,
-    ): FeeService = ThorchainFeeService(thorChainApi)
+    fun provideThorchainService(thorChainApi: ThorChainApi): FeeService =
+        ThorchainFeeService(thorChainApi)
 
-    @Provides
-    @Singleton
-    @CosmosFee
-    fun provideCosmosService(): FeeService = CosmosFeeService()
+    @Provides @Singleton @CosmosFee fun provideCosmosService(): FeeService = CosmosFeeService()
 
     @Provides
     @Singleton
     @UtxoFee
-    fun provideUtxoService(
-        blockChairApi: BlockChairApi
-    ): FeeService = UtxoFeeService(blockChairApi)
+    fun provideUtxoService(blockChairApi: BlockChairApi): FeeService = UtxoFeeService(blockChairApi)
 }

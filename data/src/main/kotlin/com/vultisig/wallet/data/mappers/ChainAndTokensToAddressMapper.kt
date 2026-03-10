@@ -6,10 +6,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import javax.inject.Inject
 
-data class ChainAndTokens(
-    val chain: Chain,
-    val tokens: List<Coin>,
-)
+data class ChainAndTokens(val chain: Chain, val tokens: List<Coin>)
 
 interface ChainAndTokensToAddressMapper : Mapper<ChainAndTokens, Address?>
 
@@ -23,16 +20,10 @@ internal class ChainAndTokensToAddressMapperImpl @Inject constructor() :
                 Address(
                     chain = from.chain,
                     address = nativeToken.address,
-                    accounts = from.tokens.map {
-                        Account(
-                            token = it,
-                            tokenValue = null,
-                            fiatValue = null,
-                            price = null,
-                        )
-                    }
+                    accounts =
+                        from.tokens.map {
+                            Account(token = it, tokenValue = null, fiatValue = null, price = null)
+                        },
                 )
             }
-
-
 }

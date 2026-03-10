@@ -39,40 +39,40 @@ internal fun VsTabs(
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             tabs.forEach { tab ->
                 Column(
                     horizontalAlignment = CenterHorizontally,
-                    modifier = Modifier
-                        .width(IntrinsicSize.Max)
-                        .clickable { onTabSelected(tab) }
+                    modifier = Modifier.width(IntrinsicSize.Max).clickable { onTabSelected(tab) },
                 ) {
                     Text(
                         text = tab,
-                        color = if (tab == selectedTab) {
-                            Theme.v2.colors.text.primary
-                        } else {
-                            Theme.v2.colors.text.tertiary
-                        },
+                        color =
+                            if (tab == selectedTab) {
+                                Theme.v2.colors.text.primary
+                            } else {
+                                Theme.v2.colors.text.tertiary
+                            },
                         style = Theme.brockmann.body.s.medium,
                     )
 
                     Spacer(Modifier.height(4.dp))
 
                     Box(
-                        modifier = Modifier
-                            .height(2.dp)
-                            .fillMaxWidth()
-                            .background(
-                                color = if (tab == selectedTab) {
-                                    Theme.v2.colors.primary.accent4
-                                } else {
-                                    Color.Transparent
-                                },
-                                shape = RoundedCornerShape(1.dp)
-                            )
+                        modifier =
+                            Modifier.height(2.dp)
+                                .fillMaxWidth()
+                                .background(
+                                    color =
+                                        if (tab == selectedTab) {
+                                            Theme.v2.colors.primary.accent4
+                                        } else {
+                                            Color.Transparent
+                                        },
+                                    shape = RoundedCornerShape(1.dp),
+                                )
                     )
                 }
             }
@@ -89,11 +89,7 @@ internal fun VsTabs(
 private fun PreviewBondedTabsWithContent() {
     var selectedTab by remember { mutableStateOf("Staked") }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         VsTabs(
             tabs = listOf("Bonded", "Staked", "LPs"),
             selectedTab = selectedTab,
@@ -101,18 +97,15 @@ private fun PreviewBondedTabsWithContent() {
             content = {
                 // Example edit button
                 Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(Color(0xFF121A2E), CircleShape)
-                        .clickable { /* Edit action */ },
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier.size(36.dp)
+                            .background(Color(0xFF121A2E), CircleShape)
+                            .clickable { /* Edit action */ },
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        text = "✏",
-                        color = Color(0xFF3D6EFF),
-                    )
+                    Text(text = "✏", color = Color(0xFF3D6EFF))
                 }
-            }
+            },
         )
     }
 }
@@ -122,15 +115,11 @@ private fun PreviewBondedTabsWithContent() {
 private fun PreviewBondedTabs() {
     var selectedTab by remember { mutableStateOf("Bonded") }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
+    Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         VsTabs(
             tabs = listOf("Bonded", "Staked", "LPs"),
             selectedTab = selectedTab,
-            onTabSelected = { selectedTab = it }
+            onTabSelected = { selectedTab = it },
         )
     }
 }

@@ -3,15 +3,14 @@ package com.vultisig.wallet.data.api
 import RippleBroadcastResponseResponseJson
 import RippleBroadcastSuccessResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
-import com.vultisig.wallet.data.api.models.TronTransactionStatusResponse
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import java.math.BigInteger
+import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.SerialName
@@ -20,40 +19,29 @@ import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.put
 import timber.log.Timber
-import java.math.BigInteger
-import javax.inject.Inject
-
 
 interface RippleApi {
     suspend fun broadcastTransaction(tx: String): String?
+
     suspend fun getBalance(coin: Coin): BigInteger
+
     suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson?
+
     suspend fun fetchServerState(): RippleServerStateResponseJson
-    suspend fun getTsStatus(
-        txHash: String,
-    ): RippleBroadcastSuccessResponseJson?
+
+    suspend fun getTsStatus(txHash: String): RippleBroadcastSuccessResponseJson?
 }
 
-internal class RippleApiImp @Inject constructor(
-    private val http: HttpClient,
-) : RippleApi {
+internal class RippleApiImp @Inject constructor(private val http: HttpClient) : RippleApi {
 
     override suspend fun broadcastTransaction(hex: String): String {
         try {
-            val payload = RpcPayload(
-                method = "submit",
-                params = buildJsonArray {
-                    addJsonObject {
-                        put(
-                            "tx_blob",
-                            hex
-                        )
-                    }
-                }
-            )
-            val response = http.post(BASE_XRP_CLUSTER) {
-                setBody(payload)
-            }
+            val payload =
+                RpcPayload(
+                    method = "submit",
+                    params = buildJsonArray { addJsonObject { put("tx_blob", hex) } },
+                )
+            val response = http.post(BASE_XRP_CLUSTER) { setBody(payload) }
 
             val rpcResp = response.body<RippleBroadcastResponseResponseJson>()
 
@@ -61,18 +49,13 @@ internal class RippleApiImp @Inject constructor(
 
             if (rpcResp.result.engineResult != "tesSUCCESS") {
                 if (
-                    resultMessage?.contains(
-                        "The transaction was applied", ignoreCase = true
-                    ) == true ||
-                    resultMessage.equals(
-                        "This sequence number has already passed.",
-                        ignoreCase = true
-                    )
-                    ||
-                    resultMessage.equals(
-                        "The transaction is redundant.",
-                        ignoreCase = true
-                    )
+                    resultMessage?.contains("The transaction was applied", ignoreCase = true) ==
+                        true ||
+                        resultMessage.equals(
+                            "This sequence number has already passed.",
+                            ignoreCase = true,
+                        ) ||
+                        resultMessage.equals("The transaction is redundant.", ignoreCase = true)
                 ) {
                     if (!rpcResp.result.txJson?.hash.isNullOrBlank()) {
                         return rpcResp.result.txJson.hash
@@ -88,40 +71,34 @@ internal class RippleApiImp @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(
-                e.message,
-                "Error in Broadcast XRP Transaction",
-            )
+            Timber.e(e.message, "Error in Broadcast XRP Transaction")
             error(e.message ?: "Error in Broadcast XRP Transaction")
         }
     }
 
-    override suspend fun getTsStatus( txHash: String): RippleBroadcastSuccessResponseJson? {
-        val payload = RpcPayload(
-            method = "tx",
-            params = buildJsonArray {
-                addJsonObject {
-                    put("transaction", txHash)
-                    put("binary", false)
-                    put("api_version", 2)
-                }
-            }
-        )
+    override suspend fun getTsStatus(txHash: String): RippleBroadcastSuccessResponseJson? {
+        val payload =
+            RpcPayload(
+                method = "tx",
+                params =
+                    buildJsonArray {
+                        addJsonObject {
+                            put("transaction", txHash)
+                            put("binary", false)
+                            put("api_version", 2)
+                        }
+                    },
+            )
 
-        val response = http.post(BASE_XRP_CLUSTER) {
-            setBody(payload)
-        }
+        val response = http.post(BASE_XRP_CLUSTER) { setBody(payload) }
 
         return response.bodyOrThrow<RippleBroadcastSuccessResponseJson>()
     }
 
-
     override suspend fun getBalance(coin: Coin): BigInteger = supervisorScope {
         try {
-            val accountInfoDeferred =
-                async { fetchAccountsInfo(coin.address) }
-            val reservedBalanceDeferred =
-                async { fetchServerState() }
+            val accountInfoDeferred = async { fetchAccountsInfo(coin.address) }
+            val reservedBalanceDeferred = async { fetchServerState() }
 
             val accountInfo = accountInfoDeferred.await()
             val reservedBalance = reservedBalanceDeferred.await()
@@ -140,28 +117,19 @@ internal class RippleApiImp @Inject constructor(
 
     override suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson? {
         return try {
-            val payload = RpcPayload(
-                method = "account_info",
-                params = buildJsonArray {
-                    addJsonObject {
-                        put(
-                            "account",
-                            walletAddress
-                        )
-                        put(
-                            "ledger_index",
-                            "current"
-                        )
-                        put(
-                            "queue",
-                            true
-                        )
-                    }
-                }
-            )
-            val response = http.post(BASE_XRP_CLUSTER) {
-                setBody(payload)
-            }
+            val payload =
+                RpcPayload(
+                    method = "account_info",
+                    params =
+                        buildJsonArray {
+                            addJsonObject {
+                                put("account", walletAddress)
+                                put("ledger_index", "current")
+                                put("queue", true)
+                            }
+                        },
+                )
+            val response = http.post(BASE_XRP_CLUSTER) { setBody(payload) }
             response.body<RippleAccountInfoResponseJson>()
         } catch (e: Exception) {
             Timber.e("Error in fetchTokenAccountsByOwner: ${e.message}")
@@ -170,14 +138,11 @@ internal class RippleApiImp @Inject constructor(
     }
 
     override suspend fun fetchServerState(): RippleServerStateResponseJson {
-        val payload = RpcPayload(
-            method = "server_state",
-            params = buildJsonArray { }
-        )
+        val payload = RpcPayload(method = "server_state", params = buildJsonArray {})
 
-        return http.post(BASE_XRP_CLUSTER) {
-            setBody(payload)
-        }.bodyOrThrow<RippleServerStateResponseJson>()
+        return http
+            .post(BASE_XRP_CLUSTER) { setBody(payload) }
+            .bodyOrThrow<RippleServerStateResponseJson>()
     }
 
     private companion object {
@@ -198,63 +163,44 @@ internal fun RippleServerStateResponseJson.getBaseReserve(): BigInteger =
 internal fun RippleServerStateResponseJson.getIncReserve(): BigInteger =
     this.result?.state?.validateLedger?.reserveInc?.toBigInteger() ?: BigInteger.ZERO
 
-
 @Serializable
 data class RippleAccountInfoResponseJson(
-    @SerialName("result")
-    val result: RippleAccountInfoResponseResultJson? = null,
+    @SerialName("result") val result: RippleAccountInfoResponseResultJson? = null
 )
 
 @Serializable
 data class RippleAccountInfoResponseResultJson(
-    @SerialName("account_data")
-    val accountData: RippleAccountInfoResponseAccountDataJson? = null,
-    @SerialName("status")
-    val status: String? = null,
-    @SerialName("validated")
-    val validated: Boolean? = null,
-    @SerialName("ledger_current_index")
-    val ledgerCurrentIndex: Int? = null,
+    @SerialName("account_data") val accountData: RippleAccountInfoResponseAccountDataJson? = null,
+    @SerialName("status") val status: String? = null,
+    @SerialName("validated") val validated: Boolean? = null,
+    @SerialName("ledger_current_index") val ledgerCurrentIndex: Int? = null,
 )
 
 @Serializable
 data class RippleAccountInfoResponseAccountDataJson(
-    @SerialName("Balance")
-    val balance: String? = null, // Total user balance = available + reserved
-    @SerialName("Sequence")
-    val sequence: Int? = null,
-    @SerialName("OwnerCount")
-    val ownerCount: Int = 0,
+    @SerialName("Balance") val balance: String? = null, // Total user balance = available + reserved
+    @SerialName("Sequence") val sequence: Int? = null,
+    @SerialName("OwnerCount") val ownerCount: Int = 0,
 )
 
 @Serializable
 data class RippleServerStateResponseJson(
-    @SerialName("result")
-    val result: RippleServerStateResultJson?
+    @SerialName("result") val result: RippleServerStateResultJson?
 )
 
 @Serializable
-data class RippleServerStateResultJson(
-    @SerialName("state")
-    val state: RippleStateJson
-) {
+data class RippleServerStateResultJson(@SerialName("state") val state: RippleStateJson) {
     @Serializable
     data class RippleStateJson(
-        @SerialName("validated_ledger")
-        val validateLedger: RippleValidateLedger,
-        @SerialName("load_base")
-        val loadBase: Long,
-        @SerialName("load_factor")
-        val loadFactor: Long,
+        @SerialName("validated_ledger") val validateLedger: RippleValidateLedger,
+        @SerialName("load_base") val loadBase: Long,
+        @SerialName("load_factor") val loadFactor: Long,
     ) {
         @Serializable
         data class RippleValidateLedger(
-            @SerialName("reserve_base")
-            val reservedBase: Long,
-            @SerialName("reserve_inc")
-            val reserveInc: Long,
-            @SerialName("base_fee")
-            val baseFee: Long
+            @SerialName("reserve_base") val reservedBase: Long,
+            @SerialName("reserve_inc") val reserveInc: Long,
+            @SerialName("base_fee") val baseFee: Long,
         )
     }
 }

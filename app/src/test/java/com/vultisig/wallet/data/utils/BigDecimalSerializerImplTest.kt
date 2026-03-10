@@ -1,12 +1,12 @@
 package com.vultisig.wallet.data.utils
 
+import java.math.BigDecimal
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.json.*
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.math.BigDecimal
 
 class BigDecimalSerializerImplTest {
 
@@ -15,8 +15,7 @@ class BigDecimalSerializerImplTest {
 
     @Serializable
     data class TestData(
-        @Serializable(with = BigDecimalSerializerImpl::class)
-        val amount: BigDecimal
+        @Serializable(with = BigDecimalSerializerImpl::class) val amount: BigDecimal
     )
 
     @Test
@@ -51,14 +50,23 @@ class BigDecimalSerializerImplTest {
     fun `deserialize simple decimal4`() {
         val jsonString = """{"amount":0.00000000000000000000000000000000000000000000000001}"""
         val result = json.decodeFromString(TestData.serializer(), jsonString)
-        assertEquals(BigDecimal("0.00000000000000000000000000000000000000000000000001"), result.amount)
+        assertEquals(
+            BigDecimal("0.00000000000000000000000000000000000000000000000001"),
+            result.amount,
+        )
     }
 
     @Test
     fun `deserialize simple decimal5`() {
-        val jsonString = """{"amount":1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.12345678901234567890123456789012345678901234567890}"""
+        val jsonString =
+            """{"amount":1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.12345678901234567890123456789012345678901234567890}"""
         val result = json.decodeFromString(TestData.serializer(), jsonString)
-        assertEquals(BigDecimal("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.12345678901234567890123456789012345678901234567890"), result.amount)
+        assertEquals(
+            BigDecimal(
+                "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.12345678901234567890123456789012345678901234567890"
+            ),
+            result.amount,
+        )
     }
 
     @Test
@@ -130,15 +138,8 @@ class BigDecimalSerializerImplTest {
 
     @Test
     fun `round trip maintains equality`() {
-        val testValues = listOf(
-            "0",
-            "1",
-            "-1",
-            "0.1",
-            "999.999",
-            "1234567890.0987654321",
-            "-0.00001"
-        )
+        val testValues =
+            listOf("0", "1", "-1", "0.1", "999.999", "1234567890.0987654321", "-0.00001")
 
         testValues.forEach { value ->
             val original = BigDecimal(value)
@@ -230,7 +231,8 @@ class BigDecimalSerializerImplTest {
 
     @Test
     fun `handles high-value crypto transaction`() {
-        val highValue = BigDecimal("123456.123456789012345678") // Mix of large value + high precision
+        val highValue =
+            BigDecimal("123456.123456789012345678") // Mix of large value + high precision
         val data = TestData(highValue)
         val jsonString = json.encodeToString(TestData.serializer(), data)
         val deserialized = json.decodeFromString(TestData.serializer(), jsonString)
@@ -257,15 +259,16 @@ class BigDecimalSerializerImplTest {
 
     @Test
     fun `round trip crypto amounts maintain exact precision`() {
-        val cryptoValues = listOf(
-            "0.00000001", // 1 satoshi
-            "0.000000000000000001", // 1 wei
-            "21000000.00000000", // BTC max supply
-            "1.123456789012345678", // ETH amount
-            "1000.123456", // USDT amount
-            "0.000000000123456789", // Micro altcoin
-            "999999.999999999999999999" // Large precise amount
-        )
+        val cryptoValues =
+            listOf(
+                "0.00000001", // 1 satoshi
+                "0.000000000000000001", // 1 wei
+                "21000000.00000000", // BTC max supply
+                "1.123456789012345678", // ETH amount
+                "1000.123456", // USDT amount
+                "0.000000000123456789", // Micro altcoin
+                "999999.999999999999999999", // Large precise amount
+            )
 
         cryptoValues.forEach { value ->
             val original = BigDecimal(value)
@@ -318,7 +321,10 @@ class BigDecimalSerializerImplTest {
 
     @Test
     fun `handles atomic unit calculations (100 decimals)`() {
-        val atomic = BigDecimal("0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001")
+        val atomic =
+            BigDecimal(
+                "0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
+            )
         val data = TestData(atomic)
         val jsonString = json.encodeToString(TestData.serializer(), data)
         val deserialized = json.decodeFromString(TestData.serializer(), jsonString)
@@ -338,7 +344,10 @@ class BigDecimalSerializerImplTest {
 
     @Test
     fun `handles googol (10^100)`() {
-        val googol = BigDecimal("10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+        val googol =
+            BigDecimal(
+                "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            )
         val data = TestData(googol)
         val jsonString = json.encodeToString(TestData.serializer(), data)
         val deserialized = json.decodeFromString(TestData.serializer(), jsonString)
@@ -368,7 +377,10 @@ class BigDecimalSerializerImplTest {
     @Test
     fun `handles number with 150 total digits`() {
         // 100 digits before decimal, 50 after
-        val massive = BigDecimal("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.12345678901234567890123456789012345678901234567890")
+        val massive =
+            BigDecimal(
+                "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.12345678901234567890123456789012345678901234567890"
+            )
         val data = TestData(massive)
         val jsonString = json.encodeToString(TestData.serializer(), data)
         val deserialized = json.decodeFromString(TestData.serializer(), jsonString)
@@ -388,7 +400,8 @@ class BigDecimalSerializerImplTest {
     @Test
     fun `handles astronomical distances in Planck lengths`() {
         // Universe size in Planck lengths (massive number)
-        val cosmological = BigDecimal("10000000000000000000000000000000000000000000000000000000000000.123")
+        val cosmological =
+            BigDecimal("10000000000000000000000000000000000000000000000000000000000000.123")
         val data = TestData(cosmological)
         val jsonString = json.encodeToString(TestData.serializer(), data)
         val deserialized = json.decodeFromString(TestData.serializer(), jsonString)
@@ -398,7 +411,8 @@ class BigDecimalSerializerImplTest {
     @Test
     fun `handles extremely large with extreme precision`() {
         // Large value with many decimal places (realistic for scientific calculations)
-        val extremeBoth = BigDecimal("999999999999999999999999999999.999999999999999999999999999999")
+        val extremeBoth =
+            BigDecimal("999999999999999999999999999999.999999999999999999999999999999")
         val data = TestData(extremeBoth)
         val jsonString = json.encodeToString(TestData.serializer(), data)
         val deserialized = json.decodeFromString(TestData.serializer(), jsonString)
@@ -407,7 +421,10 @@ class BigDecimalSerializerImplTest {
 
     @Test
     fun `handles negative googol with precision`() {
-        val negativeGoogol = BigDecimal("-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.123456789")
+        val negativeGoogol =
+            BigDecimal(
+                "-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.123456789"
+            )
         val data = TestData(negativeGoogol)
         val jsonString = json.encodeToString(TestData.serializer(), data)
         val deserialized = json.decodeFromString(TestData.serializer(), jsonString)
@@ -436,15 +453,16 @@ class BigDecimalSerializerImplTest {
 
     @Test
     fun `round trip extreme values maintain exact precision`() {
-        val extremeValues = listOf(
-            "0.00000000000000000000000000000000000000000000000001", // 50 decimals
-            "0.000000000000000000000000000000000662607015", // Planck-like
-            "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", // Googol
-            "999999999999999999999999999999.999999999999999999999999999999", // Large + precise
-            "-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.123456789", // Negative googol
-            "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.12345678901234567890123456789012345678901234567890", // 150 digits
-            "0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001" // 100 decimals
-        )
+        val extremeValues =
+            listOf(
+                "0.00000000000000000000000000000000000000000000000001", // 50 decimals
+                "0.000000000000000000000000000000000662607015", // Planck-like
+                "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", // Googol
+                "999999999999999999999999999999.999999999999999999999999999999", // Large + precise
+                "-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.123456789", // Negative googol
+                "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.12345678901234567890123456789012345678901234567890", // 150 digits
+                "0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001", // 100 decimals
+            )
 
         extremeValues.forEach { value ->
             val original = BigDecimal(value)

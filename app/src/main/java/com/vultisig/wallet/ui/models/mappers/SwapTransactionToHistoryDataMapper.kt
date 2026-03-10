@@ -5,8 +5,6 @@ import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import javax.inject.Inject
 
-
-
 internal interface SwapTransactionToHistoryDataMapper :
     SuspendMapperFunc<SwapTransactionUiModel, SwapTransactionHistoryData>
 
@@ -24,5 +22,4 @@ internal class SwapTransactionToHistoryDataMapperImpl @Inject constructor() :
             toTokenLogo = from.dst.token.logo,
             provider = from.provider,
         )
-
 }

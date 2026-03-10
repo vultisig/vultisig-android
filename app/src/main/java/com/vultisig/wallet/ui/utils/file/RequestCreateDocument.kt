@@ -11,30 +11,22 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 
-/**
- * @param createDocumentRequestFlow should emit file name to launch document creation dialog
- */
+/** @param createDocumentRequestFlow should emit file name to launch document creation dialog */
 @Composable
 internal fun RequestCreateDocument(
     mimeType: String,
     onDocumentCreated: (uri: Uri, mimeType: String) -> Unit,
     createDocumentRequestFlow: Flow<String>,
 ) {
-    val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument(
-            mimeType = mimeType,
-        )
-    ) { result ->
-        result?.let { uri ->
-            onDocumentCreated(uri, mimeType)
+    val filePickerLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument(mimeType = mimeType)
+        ) { result ->
+            result?.let { uri -> onDocumentCreated(uri, mimeType) }
         }
-    }
 
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(
-        createDocumentRequestFlow,
-        lifecycleOwner.lifecycle
-    ) {
+    LaunchedEffect(createDocumentRequestFlow, lifecycleOwner.lifecycle) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             createDocumentRequestFlow.collect { fileName ->
                 try {

@@ -38,9 +38,7 @@ fun ChainTokensTabMenuAndSearchBar(
     onTokensClick: () -> Unit,
 ) {
 
-    var tabIndex by remember {
-        mutableIntStateOf(0)
-    }
+    var tabIndex by remember { mutableIntStateOf(0) }
 
     TabMenuAndSearchBar(
         modifier = modifier,
@@ -49,50 +47,41 @@ fun ChainTokensTabMenuAndSearchBar(
         isInitiallyFocused = true,
         tabMenuContent = {
             Row(
-                modifier = modifier
-                    .fillMaxWidth(),
+                modifier = modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                VsTabGroup(
-                    index = tabIndex
-                ) {
+                VsTabGroup(index = tabIndex) {
                     tab {
                         VsTab(
                             label = stringResource(R.string.tokens),
                             onClick = {
                                 onTokensClick()
                                 tabIndex = 0
-                            }
+                            },
                         )
                     }
                 }
 
-                UiSpacer(
-                    weight = 1f
-                )
+                UiSpacer(weight = 1f)
 
                 V2Container(
                     type = ContainerType.SECONDARY,
                     cornerType = CornerType.Circular,
-                    modifier = Modifier
-                        .clickOnce(onClick = onSearchClick)
+                    modifier = Modifier.clickOnce(onClick = onSearchClick),
                 ) {
                     UiIcon(
                         drawableResId = R.drawable.ic_search,
                         size = 16.dp,
-                        modifier = Modifier.padding(all = 12.dp)
+                        modifier = Modifier.padding(all = 12.dp),
                     )
                 }
 
-                UiSpacer(
-                    size = 8.dp
-                )
+                UiSpacer(size = 8.dp)
 
                 V2Container(
                     type = ContainerType.SECONDARY,
                     cornerType = CornerType.Circular,
-                    modifier = Modifier
-                        .clickOnce(onClick = onEditClick)
+                    modifier = Modifier.clickOnce(onClick = onEditClick),
                 ) {
                     UiIcon(
                         drawableResId = R.drawable.edit_chain,
@@ -103,10 +92,8 @@ fun ChainTokensTabMenuAndSearchBar(
                 }
             }
         },
-        onCancelSearchClick = onCancelSearchClick
+        onCancelSearchClick = onCancelSearchClick,
     )
-
-
 }
 
 @Preview
@@ -118,6 +105,6 @@ private fun PreviewChainTokensTabMenuAndSearchBar() {
         onTokensClick = {},
         onCancelSearchClick = {},
         searchTextFieldState = rememberTextFieldState(),
-        isTabMenu = true
+        isTabMenu = true,
     )
 }

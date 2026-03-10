@@ -12,9 +12,9 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.MultipleClicksDetector
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class CheckForUpdateUiModel(
     val isUpdateAvailable: Boolean = false,
@@ -22,47 +22,41 @@ internal data class CheckForUpdateUiModel(
 )
 
 @HiltViewModel
-internal class CheckForUpdateViewModel @Inject constructor(
+internal class CheckForUpdateViewModel
+@Inject
+constructor(
     private val navigator: Navigator<Destination>,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val multipleClicksDetector = MultipleClicksDetector()
 
-    val state = MutableStateFlow(
-        CheckForUpdateUiModel(
-            currentVersion = context.getString(
-                R.string.keysign_app_version_text,
-                BuildConfig.VERSION_NAME,
-                BuildConfig.VERSION_CODE.toString(),
+    val state =
+        MutableStateFlow(
+            CheckForUpdateUiModel(
+                currentVersion =
+                    context.getString(
+                        R.string.keysign_app_version_text,
+                        BuildConfig.VERSION_NAME,
+                        BuildConfig.VERSION_CODE.toString(),
+                    )
             )
         )
-    )
 
     init {
         checkUpdate()
     }
 
-    private fun checkUpdate() {
+    private fun checkUpdate() {}
 
-    }
-
-
-    fun update() {
-
-    }
+    fun update() {}
 
     fun clickSecret() {
         if (multipleClicksDetector.clickAndCheckIfDetected()) {
-            viewModelScope.launch {
-                navigator.route(Route.Secret)
-            }
+            viewModelScope.launch { navigator.route(Route.Secret) }
         }
     }
 
-
     fun back() {
-        viewModelScope.launch {
-            navigator.back()
-        }
+        viewModelScope.launch { navigator.back() }
     }
 }

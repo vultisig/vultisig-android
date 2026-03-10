@@ -32,13 +32,10 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
-fun OnRampScreen(
-    navController: NavController,
-    viewModel: OnRampViewModel = hiltViewModel(),
-) {
+fun OnRampScreen(navController: NavController, viewModel: OnRampViewModel = hiltViewModel()) {
     val uriHandler = VsUriHandler()
     val banxaUrl by viewModel.banxaUrl.collectAsState()
-    
+
     LaunchedEffect(banxaUrl) {
         banxaUrl?.let { url ->
             viewModel.onUrlOpened()
@@ -46,22 +43,22 @@ fun OnRampScreen(
             navController.popBackStack()
         }
     }
-    
+
     V2Scaffold(
         title = stringResource(R.string.transaction_buy),
         onBackClick = { navController.popBackStack() },
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Theme.v2.colors.backgrounds.primary)
-                .padding(horizontal = 24.dp),
+            modifier =
+                Modifier.fillMaxSize()
+                    .background(Theme.v2.colors.backgrounds.primary)
+                    .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Image(
                 painter = painterResource(id = R.drawable.banxa_logo),
                 contentDescription = "Banxa Logo",
-                modifier = Modifier.size(120.dp)
+                modifier = Modifier.size(120.dp),
             )
 
             UiSpacer(size = 16.dp)
@@ -71,7 +68,7 @@ fun OnRampScreen(
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.headings.title3,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             UiSpacer(size = 16.dp)
@@ -80,7 +77,7 @@ fun OnRampScreen(
                 label = stringResource(R.string.banxa_continue),
                 onClick = { viewModel.openBanxaWebsite() },
                 modifier = Modifier.fillMaxWidth(),
-                state = VsButtonState.Enabled
+                state = VsButtonState.Enabled,
             )
         }
     }
@@ -89,7 +86,5 @@ fun OnRampScreen(
 @Preview(showBackground = true)
 @Composable
 private fun BanxaScreenPreview() {
-    OnRampScreen(
-        navController = rememberNavController()
-    )
+    OnRampScreen(navController = rememberNavController())
 }

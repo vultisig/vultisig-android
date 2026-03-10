@@ -65,14 +65,12 @@ import com.vultisig.wallet.ui.models.keygen.ChooseVaultViewModel
 import com.vultisig.wallet.ui.models.keygen.SelectVaultTypeUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultType
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.VsUriHandler
+import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun ChooseVaultScreen(
-    model: ChooseVaultViewModel = hiltViewModel(),
-) {
+internal fun ChooseVaultScreen(model: ChooseVaultViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
     val uriHandler = VsUriHandler()
     val helpLink = stringResource(R.string.link_docs_create_vault)
@@ -81,9 +79,7 @@ internal fun ChooseVaultScreen(
         onTabClick = model::selectTab,
         onStartClick = model::start,
         onBackClick = model::navigateToBack,
-        onHelpClick = {
-            uriHandler.openUri(helpLink)
-        }
+        onHelpClick = { uriHandler.openUri(helpLink) },
     )
 }
 
@@ -101,109 +97,90 @@ private fun ChooseVaultScreen(
         onBackClick = onBackClick,
         title = stringResource(R.string.select_vault_type_choose_setup),
     ) {
-        Column(
-            horizontalAlignment = CenterHorizontally,
-        ) {
+        Column(horizontalAlignment = CenterHorizontally) {
             val isSecureTypeSelected = state.vaultType is VaultType.Secure
 
-            val fadeAnimation = remember {
-                Animatable(0f)
-            }
-            val scaleAnimation = remember {
-                Animatable(0.5f)
-            }
+            val fadeAnimation = remember { Animatable(0f) }
+            val scaleAnimation = remember { Animatable(0.5f) }
 
             LaunchedEffect(Unit) {
-                launch {
-                    startFadeAnimation(fadeAnimation)
-                }
+                launch { startFadeAnimation(fadeAnimation) }
                 startScaleAnimation(scaleAnimation)
             }
 
-
             RiveAnimation(
                 animation = R.raw.riv_choose_vault,
-                modifier = Modifier
-                    .padding(
-                        vertical = 24.dp,
-                        horizontal = 12.dp
-                    )
-                    .weight(1f),
+                modifier = Modifier.padding(vertical = 24.dp, horizontal = 12.dp).weight(1f),
                 alignment = TOP_CENTER,
-                onInit = { rive: RiveAnimationView ->
-                    state.animate(rive)
-                }
+                onInit = { rive: RiveAnimationView -> state.animate(rive) },
             )
 
             Column(
-                Modifier
-                    .graphicsLayer {
-                        this.transformOrigin = TransformOrigin.Center.copy(pivotFractionY = 1f)
-                        this.alpha = fadeAnimation.value
-                        this.scaleX = scaleAnimation.value
-                        this.scaleY = scaleAnimation.value
-                    }
-
+                Modifier.graphicsLayer {
+                    this.transformOrigin = TransformOrigin.Center.copy(pivotFractionY = 1f)
+                    this.alpha = fadeAnimation.value
+                    this.scaleX = scaleAnimation.value
+                    this.scaleY = scaleAnimation.value
+                }
             ) {
                 LookaheadScope {
                     Box(
-                        modifier = Modifier
-                            .height(intrinsicSize = IntrinsicSize.Min)
-                            .clip(CircleShape)
-                            .background(Theme.v2.colors.backgrounds.tertiary_2)
-                            .padding(6.dp)
+                        modifier =
+                            Modifier.height(intrinsicSize = IntrinsicSize.Min)
+                                .clip(CircleShape)
+                                .background(Theme.v2.colors.backgrounds.tertiary_2)
+                                .padding(6.dp)
                     ) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(),
-                            contentAlignment = if (isSecureTypeSelected)
-                                Alignment.TopEnd else Alignment.TopStart
+                            modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                            contentAlignment =
+                                if (isSecureTypeSelected) Alignment.TopEnd else Alignment.TopStart,
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .animatePlacementInScope(this@LookaheadScope)
-                                    .clip(CircleShape)
-                                    .background(Theme.v2.colors.backgrounds.primary)
-                                    .fillMaxHeight()
-                                    .fillMaxWidth(0.5f)
+                                modifier =
+                                    Modifier.animatePlacementInScope(this@LookaheadScope)
+                                        .clip(CircleShape)
+                                        .background(Theme.v2.colors.backgrounds.primary)
+                                        .fillMaxHeight()
+                                        .fillMaxWidth(0.5f)
                             )
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround
+                            horizontalArrangement = Arrangement.SpaceAround,
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(CircleShape)
-                                    .clickable {
-                                        onTabClick(VaultType.Fast)
-                                    }
-                                    .padding(16.dp)
-                                    .wrapContentWidth(CenterHorizontally)
-                                    .testTag("ChooseVaultScreen.selectFastVault")
+                                modifier =
+                                    Modifier.weight(1f)
+                                        .clip(CircleShape)
+                                        .clickable { onTabClick(VaultType.Fast) }
+                                        .padding(16.dp)
+                                        .wrapContentWidth(CenterHorizontally)
+                                        .testTag("ChooseVaultScreen.selectFastVault")
                             ) {
                                 val brushGradient = Theme.v2.colors.gradients.primary
-                                val iconModifier = if (!isSecureTypeSelected) {
-                                    Modifier
-                                        .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-                                        .drawWithCache {
-                                            onDrawWithContent {
-                                                drawContent()
-                                                drawRect(
-                                                    brushGradient,
-                                                    blendMode = BlendMode.SrcAtop
-                                                )
+                                val iconModifier =
+                                    if (!isSecureTypeSelected) {
+                                        Modifier.graphicsLayer(
+                                                compositingStrategy = CompositingStrategy.Offscreen
+                                            )
+                                            .drawWithCache {
+                                                onDrawWithContent {
+                                                    drawContent()
+                                                    drawRect(
+                                                        brushGradient,
+                                                        blendMode = BlendMode.SrcAtop,
+                                                    )
+                                                }
                                             }
-                                        }
-                                } else {
-                                    Modifier
-                                }
+                                    } else {
+                                        Modifier
+                                    }
                                 Icon(
                                     modifier = iconModifier,
                                     painter = painterResource(R.drawable.thunder),
-                                    contentDescription = stringResource(R.string.select_vault_type_fast),
+                                    contentDescription =
+                                        stringResource(R.string.select_vault_type_fast),
                                     tint = Theme.v2.colors.text.primary,
                                 )
                                 UiSpacer(8.dp)
@@ -217,18 +194,17 @@ private fun ChooseVaultScreen(
                             TextAndIcon(
                                 text = stringResource(R.string.select_vault_type_secure),
                                 icon = painterResource(R.drawable.ic_shield),
-                                tint = if (isSecureTypeSelected)
-                                    Theme.v2.colors.alerts.success
-                                else Theme.v2.colors.text.primary,
-                                contentDescription = stringResource(R.string.select_vault_type_secure),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(CircleShape)
-                                    .clickable {
-                                        onTabClick(VaultType.Secure)
-                                    }
-                                    .padding(16.dp)
-                                    .wrapContentWidth(CenterHorizontally)
+                                tint =
+                                    if (isSecureTypeSelected) Theme.v2.colors.alerts.success
+                                    else Theme.v2.colors.text.primary,
+                                contentDescription =
+                                    stringResource(R.string.select_vault_type_secure),
+                                modifier =
+                                    Modifier.weight(1f)
+                                        .clip(CircleShape)
+                                        .clickable { onTabClick(VaultType.Secure) }
+                                        .padding(16.dp)
+                                        .wrapContentWidth(CenterHorizontally),
                             )
                         }
                     }
@@ -237,75 +213,58 @@ private fun ChooseVaultScreen(
                 UiSpacer(16.dp)
                 val borderColor = Theme.v2.colors.border.normal
                 Column(
-                    Modifier
-                        .fillMaxWidth()
+                    Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(15))
-                        .border(
-                            width = 1.dp,
-                            color = borderColor,
-                            shape = RoundedCornerShape(15)
-                        )
+                        .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(15))
                         .background(Theme.v2.colors.backgrounds.tertiary_2),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Text(
-                        text = buildAnnotatedString {
-                            withStyle(style = SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
-                                append(state.vaultType.title.asString())
-                            }
-                        },
+                        text =
+                            buildAnnotatedString {
+                                withStyle(
+                                    style = SpanStyle(brush = Theme.v2.colors.gradients.primary)
+                                ) {
+                                    append(state.vaultType.title.asString())
+                                }
+                            },
                         color = Theme.v2.colors.alerts.success,
                         style = Theme.brockmann.headings.subtitle,
-                        modifier = Modifier
-                            .background(Theme.v2.colors.backgrounds.tertiary_2)
-                            .fillMaxWidth()
-                            .background(
-                                color = Theme.v2.colors.backgrounds.primary
-                            )
-                            .drawBehind {
-                                drawLine(
-                                    color = borderColor,
-                                    start = Offset(
-                                        0f,
-                                        size.height
-                                    ),
-                                    end = Offset(
-                                        size.width,
-                                        size.height
-                                    ),
-                                    strokeWidth = 5f,
-                                    pathEffect = PathEffect.dashPathEffect(
-                                        floatArrayOf(
-                                            10f,
-                                            10f
-                                        )
+                        modifier =
+                            Modifier.background(Theme.v2.colors.backgrounds.tertiary_2)
+                                .fillMaxWidth()
+                                .background(color = Theme.v2.colors.backgrounds.primary)
+                                .drawBehind {
+                                    drawLine(
+                                        color = borderColor,
+                                        start = Offset(0f, size.height),
+                                        end = Offset(size.width, size.height),
+                                        strokeWidth = 5f,
+                                        pathEffect =
+                                            PathEffect.dashPathEffect(floatArrayOf(10f, 10f)),
                                     )
-                                )
-                            }
-                            .padding(16.dp),
-                        textAlign = TextAlign.Center
+                                }
+                                .padding(16.dp),
+                        textAlign = TextAlign.Center,
                     )
 
                     TextAndIcon(
                         text = state.vaultType.desc1.asString(),
                         icon = painterResource(R.drawable.check),
                         tint = Theme.v2.colors.alerts.success,
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
+                        modifier = Modifier.padding(horizontal = 20.dp),
                     )
                     TextAndIcon(
                         text = state.vaultType.desc2.asString(),
                         icon = painterResource(R.drawable.check),
                         tint = Theme.v2.colors.alerts.success,
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
+                        modifier = Modifier.padding(horizontal = 20.dp),
                     )
                     TextAndIcon(
                         text = state.vaultType.desc3.asString(),
                         icon = painterResource(R.drawable.check),
                         tint = Theme.v2.colors.alerts.success,
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
+                        modifier = Modifier.padding(horizontal = 20.dp),
                     )
 
                     UiSpacer(8.dp)
@@ -316,37 +275,25 @@ private fun ChooseVaultScreen(
             VsButton(
                 onClick = onStartClick,
                 label = stringResource(id = R.string.select_vault_type_next),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("ChooseVaultScreen.continue")
+                modifier = Modifier.fillMaxWidth().testTag("ChooseVaultScreen.continue"),
             )
             UiSpacer(32.dp)
         }
     }
 }
 
-private suspend fun startScaleAnimation(
-    scaleAnimation: Animatable<Float, AnimationVector1D>
-) {
+private suspend fun startScaleAnimation(scaleAnimation: Animatable<Float, AnimationVector1D>) {
     scaleAnimation.animateTo(
         targetValue = 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow,
-        )
+        animationSpec =
+            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
     )
 }
 
-
-private suspend fun startFadeAnimation(
-    fadeAnimation: Animatable<Float, AnimationVector1D>
-) {
+private suspend fun startFadeAnimation(fadeAnimation: Animatable<Float, AnimationVector1D>) {
     fadeAnimation.animateTo(
         targetValue = 1f,
-        animationSpec = tween(
-            durationMillis = 500,
-            easing = FastOutLinearInEasing
-        )
+        animationSpec = tween(durationMillis = 500, easing = FastOutLinearInEasing),
     )
 }
 
@@ -356,16 +303,10 @@ private fun TextAndIcon(
     text: String,
     icon: Painter,
     tint: Color,
-    contentDescription: String? = null
+    contentDescription: String? = null,
 ) {
-    Row(
-        modifier = modifier
-    ) {
-        Icon(
-            painter = icon,
-            contentDescription = contentDescription,
-            tint = tint
-        )
+    Row(modifier = modifier) {
+        Icon(painter = icon, contentDescription = contentDescription, tint = tint)
         UiSpacer(8.dp)
         Text(
             text = text,
@@ -386,4 +327,3 @@ private fun SelectVaultTypeScreenPreview() {
         onHelpClick = {},
     )
 }
-

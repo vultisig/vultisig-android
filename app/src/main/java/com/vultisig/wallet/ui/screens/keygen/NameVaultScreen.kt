@@ -33,9 +33,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun NameVaultScreen(
-    model: NameVaultViewModel = hiltViewModel(),
-) {
+internal fun NameVaultScreen(model: NameVaultViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     NameVaultScreen(
@@ -43,7 +41,7 @@ internal fun NameVaultScreen(
         textFieldState = model.nameFieldState,
         onNextClick = model::navigateToEmail,
         onClearClick = model::clearInput,
-        onBackClick = model::back
+        onBackClick = model::back,
     )
 }
 
@@ -62,22 +60,19 @@ private fun NameVaultScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.fast_vault_name_screen_next),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 24.dp)
-                    .testTag("NameVaultScreen.continue"),
-                state = if (state.isNextButtonEnabled)
-                    VsButtonState.Enabled else VsButtonState.Disabled,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 24.dp)
+                        .testTag("NameVaultScreen.continue"),
+                state =
+                    if (state.isNextButtonEnabled) VsButtonState.Enabled
+                    else VsButtonState.Disabled,
                 onClick = onNextClick,
             )
-        }
+        },
     ) {
-        val focusRequester = remember {
-            FocusRequester()
-        }
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-        }
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) { focusRequester.requestFocus() }
         Column {
             Text(
                 text = stringResource(R.string.fast_vault_name_screen_title),
@@ -88,7 +83,7 @@ private fun NameVaultScreen(
             Text(
                 text = stringResource(R.string.fast_vault_name_screen_desc),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary
+                color = Theme.v2.colors.text.tertiary,
             )
             VsTextInputField(
                 textFieldState = textFieldState,
@@ -97,18 +92,13 @@ private fun NameVaultScreen(
                 focusRequester = focusRequester,
                 footNote = state.errorMessage?.asString(),
                 imeAction = ImeAction.Go,
-                onKeyboardAction = {
-                    onNextClick()
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .wrapContentHeight()
-                    .testTag("NameVaultScreen.nameField")
+                onKeyboardAction = { onNextClick() },
+                modifier =
+                    Modifier.fillMaxSize().wrapContentHeight().testTag("NameVaultScreen.nameField"),
             )
         }
     }
 }
-
 
 @Preview
 @Composable
@@ -118,6 +108,6 @@ private fun FastVaultNameScreenPreview() {
         textFieldState = rememberTextFieldState(),
         onNextClick = {},
         onClearClick = {},
-        onBackClick = {}
+        onBackClick = {},
     )
 }

@@ -24,15 +24,10 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.VaultRenameViewModel
 import com.vultisig.wallet.ui.utils.asString
 
-
 @Composable
-internal fun VaultRenameScreen(
-    viewModel: VaultRenameViewModel = hiltViewModel(),
-) {
+internal fun VaultRenameScreen(viewModel: VaultRenameViewModel = hiltViewModel()) {
 
-    LaunchedEffect(key1 = Unit) {
-        viewModel.loadData()
-    }
+    LaunchedEffect(key1 = Unit) { viewModel.loadData() }
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -42,10 +37,9 @@ internal fun VaultRenameScreen(
         textFieldState = viewModel.renameTextFieldState,
         isLoading = uiState.isLoading,
         errorText = uiState.errorMessage?.asString(),
-        onCloseClick = viewModel::clearText
+        onCloseClick = viewModel::clearText,
     )
 }
-
 
 @Composable
 private fun VaultRenameScreen(
@@ -58,33 +52,28 @@ private fun VaultRenameScreen(
 ) {
     V2Scaffold(
         title = stringResource(id = R.string.rename_vault_screen_rename_vault),
-        onBackClick = onBackClick
+        onBackClick = onBackClick,
     ) {
         Column {
             VsTextInputField(
-                modifier = Modifier.padding(
-                    vertical = 24.dp
-                ),
+                modifier = Modifier.padding(vertical = 24.dp),
                 hint = stringResource(id = R.string.rename_vault_screen_vault_name),
                 textFieldState = textFieldState,
                 footNote = errorText,
                 trailingIcon = R.drawable.close_circle,
                 onTrailingIconClick = onCloseClick,
-                innerState = VsTextInputFieldInnerState.Error.takeIf { errorText != null }
-                    ?: VsTextInputFieldInnerState.Default,
+                innerState =
+                    VsTextInputFieldInnerState.Error.takeIf { errorText != null }
+                        ?: VsTextInputFieldInnerState.Default,
             )
-            UiSpacer(
-                weight = 1f
-            )
+            UiSpacer(weight = 1f)
             VsButton(
                 label = stringResource(id = R.string.add_vault_save),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onSaveClick,
-                state = VsButtonState.Disabled.takeIf { isLoading }
-                    ?: VsButtonState.Enabled,
+                state = VsButtonState.Disabled.takeIf { isLoading } ?: VsButtonState.Enabled,
             )
         }
-
     }
 }
 

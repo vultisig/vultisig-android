@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 
-
 @Composable
 internal fun VsPagerIndicator(
     modifier: Modifier = Modifier,
@@ -26,7 +25,14 @@ internal fun VsPagerIndicator(
     selectedPage: Int,
     pagerIndicatorUiModel: PagerIndicatorUiModel = rememberPagerIndicatorUiModel(),
 ) {
-    val (selectedColor, defaultColor, defaultRadius, selectedLength, space, animationDurationInMillis) = pagerIndicatorUiModel
+    val (
+        selectedColor,
+        defaultColor,
+        defaultRadius,
+        selectedLength,
+        space,
+        animationDurationInMillis) =
+        pagerIndicatorUiModel
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(space),
@@ -56,46 +62,36 @@ private fun PageIndicatorView(
     animationDurationInMillis: Int,
     modifier: Modifier = Modifier,
 ) {
-    fun <T> animationSpec() = tween<T>(
-        durationMillis = animationDurationInMillis,
-    )
+    fun <T> animationSpec() = tween<T>(durationMillis = animationDurationInMillis)
 
-    val color: Color by animateColorAsState(
-        targetValue = if (isSelected) {
-            selectedColor
-        } else {
-            defaultColor
-        },
-        animationSpec = animationSpec()
-    )
+    val color: Color by
+        animateColorAsState(
+            targetValue =
+                if (isSelected) {
+                    selectedColor
+                } else {
+                    defaultColor
+                },
+            animationSpec = animationSpec(),
+        )
 
-    val width: Dp by animateDpAsState(
-        targetValue = if (isSelected) {
-            selectedLength
-        } else {
-            defaultRadius
-        },
-        animationSpec = animationSpec()
-    )
+    val width: Dp by
+        animateDpAsState(
+            targetValue =
+                if (isSelected) {
+                    selectedLength
+                } else {
+                    defaultRadius
+                },
+            animationSpec = animationSpec(),
+        )
 
-    Canvas(
-        modifier = modifier
-            .size(
-                width = width,
-                height = defaultRadius,
-            ),
-    ) {
+    Canvas(modifier = modifier.size(width = width, height = defaultRadius)) {
         drawRoundRect(
             color = color,
             topLeft = Offset.Zero,
-            size = Size(
-                width = width.toPx(),
-                height = defaultRadius.toPx(),
-            ),
-            cornerRadius = CornerRadius(
-                x = defaultRadius.toPx(),
-                y = defaultRadius.toPx(),
-            ),
+            size = Size(width = width.toPx(), height = defaultRadius.toPx()),
+            cornerRadius = CornerRadius(x = defaultRadius.toPx(), y = defaultRadius.toPx()),
         )
     }
 }
@@ -103,8 +99,5 @@ private fun PageIndicatorView(
 @Preview
 @Composable
 private fun PageIndicatorPreview() {
-    VsPagerIndicator(
-        numberOfPages = 5,
-        selectedPage = 1,
-    )
+    VsPagerIndicator(numberOfPages = 5, selectedPage = 1)
 }

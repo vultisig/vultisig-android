@@ -40,6 +40,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,7 +55,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import javax.inject.Inject
 
 @Immutable
 internal data class VaultAccountsUiModel(
@@ -80,13 +80,13 @@ internal data class VaultAccountsUiModel(
         get() = searchTextFieldState.text.isNotEmpty() && accounts.isEmpty()
 
     val getAccounts: List<AccountUiModel>
-        get() = if (cryptoConnectionType == CryptoConnectionType.Wallet) {
-            accounts
-        } else {
-            defiAccounts
-        }
-    }
-
+        get() =
+            if (cryptoConnectionType == CryptoConnectionType.Wallet) {
+                accounts
+            } else {
+                defiAccounts
+            }
+}
 
 @Immutable
 internal data class AccountUiModel(
@@ -102,15 +102,14 @@ internal data class AccountUiModel(
 )
 
 @HiltViewModel
-internal class VaultAccountsViewModel @Inject constructor(
+internal class VaultAccountsViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
-
     private val navigator: Navigator<Destination>,
     private val requestResultRepository: RequestResultRepository,
-
     private val addressToUiModelMapper: AddressToUiModelMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
-
     private val vaultRepository: VaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val accountsRepository: AccountsRepository,
@@ -139,15 +138,11 @@ internal class VaultAccountsViewModel @Inject constructor(
         collectCryptoConnectionType()
         collectLastOpenedVault()
     }
+
     private fun collectCryptoConnectionType() {
-        cryptoConnectionTypeRepository
-            .activeCryptoConnectionFlow
+        cryptoConnectionTypeRepository.activeCryptoConnectionFlow
             .onEach { connectionType ->
-                uiState.update { state ->
-                    state.copy(
-                        cryptoConnectionType = connectionType
-                    )
-                }
+                uiState.update { state -> state.copy(cryptoConnectionType = connectionType) }
             }
             .launchIn(viewModelScope)
     }
@@ -165,10 +160,10 @@ internal class VaultAccountsViewModel @Inject constructor(
             updateLastOpenedVault()
             lastOpenedVaultRepository.lastOpenedVaultId
                 .map { lastOpenedVaultId ->
-                    lastOpenedVaultId?.let {
-                        vaultRepository.get(it)
-                    } ?: vaultRepository.getAll().firstOrNull()
-                }.collect { vault ->
+                    lastOpenedVaultId?.let { vaultRepository.get(it) }
+                        ?: vaultRepository.getAll().firstOrNull()
+                }
+                .collect { vault ->
                     if (vault != null) {
                         loadData(vault.id)
                     }
@@ -193,23 +188,21 @@ internal class VaultAccountsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val vault = vaultRepository.get(vaultId) ?: return@launch
-                
+
                 // Check if vault has Ethereum chain enabled
                 val hasEthereum = vault.coins.any { it.chain == Chain.Ethereum }
                 if (!hasEthereum) {
                     Timber.d("Ethereum chain not enabled, skipping VULT token auto-enable")
                     return@launch
                 }
-                
+
                 // Check if VULT token is already enabled
                 val vultCoin = vault.coins.find { it.id == Coins.Ethereum.VULT.id }
-                
+
                 if (vultCoin == null) {
                     // Enable VULT token in background
                     Timber.d("VULT token not enabled, enabling it now for vault: $vaultId")
-                    withContext(Dispatchers.IO) {
-                        enableTokenUseCase(vaultId, Coins.Ethereum.VULT)
-                    }
+                    withContext(Dispatchers.IO) { enableTokenUseCase(vaultId, Coins.Ethereum.VULT) }
                     Timber.d("VULT token enabled successfully")
                 }
 
@@ -221,27 +214,26 @@ internal class VaultAccountsViewModel @Inject constructor(
                         tiersNFTRepository.saveTierNFT(vaultId, balance)
                     }
                 }
-
             } catch (e: Exception) {
                 Timber.e(e, "Failed to auto-enable VULT token")
             }
         }
     }
 
-
     private fun showGlobalBackupReminder() {
         viewModelScope.launch {
             val showReminder = isGlobalBackupReminderRequired()
-            uiState.update {
-                it.copy(showMonthlyBackupReminder = showReminder)
-            }
+            uiState.update { it.copy(showMonthlyBackupReminder = showReminder) }
         }
     }
 
     private fun showVerifyFastVaultPasswordReminderIfRequired(vaultId: VaultId) {
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: return@launch
-            if (vault.isFastVault() && vaultMetadataRepo.isFastVaultPasswordReminderRequired(vaultId)) {
+            if (
+                vault.isFastVault() &&
+                    vaultMetadataRepo.isFastVaultPasswordReminderRequired(vaultId)
+            ) {
                 navigator.route(Route.FastVaultPasswordReminder(vaultId))
             }
         }
@@ -250,9 +242,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private fun loadBalanceVisibility(vaultId: String) {
         viewModelScope.launch {
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
-            uiState.update {
-                it.copy(isBalanceValueVisible = isBalanceVisible)
-            }
+            uiState.update { it.copy(isBalanceValueVisible = isBalanceVisible) }
         }
     }
 
@@ -264,40 +254,28 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     fun send() {
         val vaultId = vaultId ?: return
-        viewModelScope.launch {
-            navigator.route(Route.Send(vaultId = vaultId))
-        }
+        viewModelScope.launch { navigator.route(Route.Send(vaultId = vaultId)) }
     }
 
     fun swap() {
         val vaultId = vaultId ?: return
-        viewModelScope.launch {
-            navigator.route(Route.Swap(vaultId = vaultId))
-        }
+        viewModelScope.launch { navigator.route(Route.Swap(vaultId = vaultId)) }
     }
 
     fun buy() {
         val vaultId = vaultId ?: return
         viewModelScope.launch {
-            navigator.route(Route.OnRamp(
-                vaultId = vaultId,
-                chainId = Chain.ThorChain.raw,
-            ))
+            navigator.route(Route.OnRamp(vaultId = vaultId, chainId = Chain.ThorChain.raw))
         }
     }
 
-
-    fun receive(){
+    fun receive() {
         val vaultId = vaultId ?: return
-        viewModelScope.launch {
-            navigator.route(Route.Receive(vaultId = vaultId))
-        }
+        viewModelScope.launch { navigator.route(Route.Receive(vaultId = vaultId)) }
     }
 
     fun openCamera() {
-        viewModelScope.launch {
-            navigator.route(Route.ScanQr(vaultId = vaultId))
-        }
+        viewModelScope.launch { navigator.route(Route.ScanQr(vaultId = vaultId)) }
     }
 
     fun openAccount(account: AccountUiModel) {
@@ -309,10 +287,7 @@ internal class VaultAccountsViewModel @Inject constructor(
                 CryptoConnectionType.Wallet -> {
                     navigator.route(
                         Route.ChainDashboard(
-                            route = ChainDashboardRoute.Wallet(
-                                vaultId = vaultId,
-                                chainId = chainId,
-                            )
+                            route = ChainDashboardRoute.Wallet(vaultId = vaultId, chainId = chainId)
                         )
                     )
                 }
@@ -321,17 +296,13 @@ internal class VaultAccountsViewModel @Inject constructor(
                     if (account.chainName.equals(Chain.Ethereum.toDefi.raw, true)) {
                         navigator.route(
                             Route.ChainDashboard(
-                                route = ChainDashboardRoute.PositionCircle(
-                                    vaultId = vaultId,
-                                )
+                                route = ChainDashboardRoute.PositionCircle(vaultId = vaultId)
                             )
                         )
                     } else {
                         navigator.route(
                             Route.ChainDashboard(
-                                route = ChainDashboardRoute.PositionTokens(
-                                    vaultId = vaultId,
-                                )
+                                route = ChainDashboardRoute.PositionTokens(vaultId = vaultId)
                             )
                         )
                     }
@@ -342,107 +313,106 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private fun loadVaultNameAndShowBackup(vaultId: String) {
         loadVaultNameJob?.cancel()
-        loadVaultNameJob = viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId)
-                ?: return@launch
-            uiState.update {
-                it.copy(
-                    vaultName = vault.name,
-                    isFastVault = vault.isFastVault(),
-                    // KeyImport vaults have a fixed set of chains chosen during import,
-                    // so chain selection is disabled on the home screen
-                    isChainSelectionEnabled = vault.libType != SigningLibType.KeyImport,
-                )
+        loadVaultNameJob =
+            viewModelScope.launch {
+                val vault = vaultRepository.get(vaultId) ?: return@launch
+                uiState.update {
+                    it.copy(
+                        vaultName = vault.name,
+                        isFastVault = vault.isFastVault(),
+                        // KeyImport vaults have a fixed set of chains chosen during import,
+                        // so chain selection is disabled on the home screen
+                        isChainSelectionEnabled = vault.libType != SigningLibType.KeyImport,
+                    )
+                }
+                val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()
+                uiState.update { it.copy(showBackupWarning = !isVaultBackedUp) }
+                val showMigration = vault.libType == SigningLibType.GG20
+                uiState.update { it.copy(showMigration = showMigration) }
             }
-            val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()
-            uiState.update { it.copy(showBackupWarning = !isVaultBackedUp) }
-            val showMigration = vault.libType == SigningLibType.GG20
-            uiState.update { it.copy(showMigration = showMigration) }
-        }
     }
 
     private fun loadAccounts(vaultId: String, isRefresh: Boolean = false) {
         loadAccountsJob?.cancel()
-        loadAccountsJob = viewModelScope.launch {
-            combine(
-                accountsRepository
-                    .loadAddresses(vaultId, isRefresh)
-                    .map {
-                        it.sortByAccountsTotalFiatValue()
+        loadAccountsJob =
+            viewModelScope.launch {
+                combine(
+                        accountsRepository
+                            .loadAddresses(vaultId, isRefresh)
+                            .map { it.sortByAccountsTotalFiatValue() }
+                            .catch {
+                                updateRefreshing(false)
+                                Timber.e(it)
+                            },
+                        uiState.value.searchTextFieldState.textAsFlow(),
+                        uiState.map { it.cryptoConnectionType }.distinctUntilChanged(),
+                    ) { accounts, searchQuery, cryptoConnectionType ->
+                        accounts
+                            .filter {
+                                when (cryptoConnectionType) {
+                                    CryptoConnectionType.Wallet -> true
+                                    CryptoConnectionType.Defi ->
+                                        cryptoConnectionTypeRepository.isDefi(it.chain)
+                                }
+                            }
+                            .updateUiStateFromList(searchQuery = searchQuery.toString())
                     }
-                    .catch {
-                        updateRefreshing(false)
-                        Timber.e(it)
-                    },
-                uiState.value.searchTextFieldState.textAsFlow(),
-                uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
-            ) { accounts, searchQuery, cryptoConnectionType ->
-                accounts
-                    .filter {
-                        when (cryptoConnectionType) {
-                            CryptoConnectionType.Wallet -> true
-                            CryptoConnectionType.Defi -> cryptoConnectionTypeRepository.isDefi(it.chain)
-                        }
-                    }
-                    .updateUiStateFromList(
-                        searchQuery = searchQuery.toString(),
-                    )
+                    .launchIn(this)
             }
-                .launchIn(this)
-        }
     }
 
     private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
         loadDeFiBalancesJob?.cancel()
-        loadDeFiBalancesJob = viewModelScope.launch {
-            combine(
-                accountsRepository
-                    .loadDeFiAddresses(vaultId, isRefresh)
-                    .map { addresses ->
-                        addresses.sortByAccountsTotalFiatValue()
+        loadDeFiBalancesJob =
+            viewModelScope.launch {
+                combine(
+                        accountsRepository
+                            .loadDeFiAddresses(vaultId, isRefresh)
+                            .map { addresses -> addresses.sortByAccountsTotalFiatValue() }
+                            .catch { error ->
+                                updateRefreshing(false)
+                                Timber.e(error, "Error loading DeFi balances for vault: $vaultId")
+                            },
+                        uiState.value.searchTextFieldState.textAsFlow(),
+                        defaultDeFiChainsRepository.getDefaultChains(vaultId),
+                    ) { accounts, searchQuery, selectedDeFiChains ->
+                        Timber.d(
+                            "DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts, selected chains: ${selectedDeFiChains.map { it.raw }}"
+                        )
+
+                        val filteredAccounts =
+                            accounts.filter { address ->
+                                val isSelected = selectedDeFiChains.contains(address.chain)
+                                Timber.d("Chain ${address.chain.raw} is selected: $isSelected")
+                                isSelected
+                            }
+
+                        Timber.d("Filtered DeFi accounts: ${filteredAccounts.size} accounts")
+
+                        filteredAccounts.updateUiStateFromList(
+                            searchQuery = searchQuery.toString(),
+                            isDefi = true,
+                        )
                     }
-                    .catch { error ->
-                        updateRefreshing(false)
-                        Timber.e(error, "Error loading DeFi balances for vault: $vaultId")
-                    },
-                uiState.value.searchTextFieldState.textAsFlow(),
-                defaultDeFiChainsRepository.getDefaultChains(vaultId),
-            ) { accounts, searchQuery, selectedDeFiChains ->
-                Timber.d("DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts, selected chains: ${selectedDeFiChains.map { it.raw }}")
-                
-                val filteredAccounts = accounts.filter { address ->
-                    val isSelected = selectedDeFiChains.contains(address.chain)
-                    Timber.d("Chain ${address.chain.raw} is selected: $isSelected")
-                    isSelected
-                }
-                
-                Timber.d("Filtered DeFi accounts: ${filteredAccounts.size} accounts")
-                
-                filteredAccounts.updateUiStateFromList(
-                    searchQuery = searchQuery.toString(),
-                    isDefi = true,
-                )
+                    .launchIn(this)
             }
-                .launchIn(this)
-        }
     }
 
     private fun List<Address>.sortByAccountsTotalFiatValue() =
-        sortedWith(compareBy({
-            it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
-        }, {
-            it.chain.raw
-        }))
+        sortedWith(
+            compareBy(
+                { it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus() },
+                { it.chain.raw },
+            )
+        )
 
     private suspend fun List<Address>.updateUiStateFromList(
         searchQuery: String,
         isDefi: Boolean = false,
     ) {
-        val totalFiatValue = this.calculateAddressesTotalFiatValue()
-            ?.let { fiatValueToStringMapper(it) }
-        val accountsUiModel = this.map {
-            addressToUiModelMapper(it)
-        }
+        val totalFiatValue =
+            this.calculateAddressesTotalFiatValue()?.let { fiatValueToStringMapper(it) }
+        val accountsUiModel = this.map { addressToUiModelMapper(it) }
 
         if (!isDefi) {
             uiState.update {
@@ -468,18 +438,11 @@ internal class VaultAccountsViewModel @Inject constructor(
         if (searchQuery.isBlank()) return this
         val query = searchQuery.trim()
         return filter { account ->
-            listOf(
-                account.chainName,
-                account.nativeTokenTicker
-            ).any { field ->
-                field.contains(
-                    other = query,
-                    ignoreCase = true
-                )
+            listOf(account.chainName, account.nativeTokenTicker).any { field ->
+                field.contains(other = query, ignoreCase = true)
             }
         }
     }
-
 
     private fun updateRefreshing(isRefreshing: Boolean) {
         Timber.d("UpdateRefresh $isRefreshing")
@@ -490,9 +453,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun toggleBalanceVisibility() {
         val isBalanceValueVisible = !uiState.value.isBalanceValueVisible
         viewModelScope.launch {
-            uiState.update {
-                it.copy(isBalanceValueVisible = isBalanceValueVisible)
-            }
+            uiState.update { it.copy(isBalanceValueVisible = isBalanceValueVisible) }
             balanceVisibilityRepository.setVisibility(vaultId!!, isBalanceValueVisible)
         }
     }
@@ -507,25 +468,22 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     fun migrate() {
         val vaultId = vaultId ?: return
-        viewModelScope.launch {
-            navigator.route(Route.Migration.Onboarding(vaultId))
-        }
+        viewModelScope.launch { navigator.route(Route.Migration.Onboarding(vaultId)) }
     }
 
     fun dismissBackupReminder() {
         uiState.update { it.copy(showMonthlyBackupReminder = false) }
     }
 
-    fun doNotRemindBackup() = viewModelScope.launch {
-        setNeverShowGlobalBackupReminder()
-        dismissBackupReminder()
-    }
+    fun doNotRemindBackup() =
+        viewModelScope.launch {
+            setNeverShowGlobalBackupReminder()
+            dismissBackupReminder()
+        }
 
     fun openHistory() {
         vaultId?.let { vaultId ->
-            viewModelScope.launch {
-                navigator.route(Route.TransactionHistory(vaultId = vaultId))
-            }
+            viewModelScope.launch { navigator.route(Route.TransactionHistory(vaultId = vaultId)) }
         }
     }
 
@@ -542,13 +500,9 @@ internal class VaultAccountsViewModel @Inject constructor(
         vaultId?.let { vaultId ->
             viewModelScope.launch {
                 if (uiState.value.cryptoConnectionType == CryptoConnectionType.Defi) {
-                    navigator.route(Route.AddDeFiChainAccount(
-                        vaultId = vaultId,
-                    ))
+                    navigator.route(Route.AddDeFiChainAccount(vaultId = vaultId))
                 } else {
-                    navigator.route(Route.AddChainAccount(
-                        vaultId = vaultId,
-                    ))
+                    navigator.route(Route.AddChainAccount(vaultId = vaultId))
                 }
                 requestResultRepository.request<Unit>(REFRESH_CHAIN_DATA)
 
@@ -557,31 +511,21 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-    fun openVaultList(){
+    fun openVaultList() {
         vaultId?.let {
             viewModelScope.launch {
-                navigator.route(Route.VaultList(
-                    openType = Route.VaultList.OpenType.Home(it)
-                ))
+                navigator.route(Route.VaultList(openType = Route.VaultList.OpenType.Home(it)))
             }
         }
     }
 
-    fun tempRemoveBanner(){
-        uiState.update {
-            it.copy(
-                isBannerVisible = false,
-            )
-        }
+    fun tempRemoveBanner() {
+        uiState.update { it.copy(isBannerVisible = false) }
     }
 
-    fun setCryptoConnectionType(type: CryptoConnectionType){
+    fun setCryptoConnectionType(type: CryptoConnectionType) {
         cryptoConnectionTypeRepository.setActiveCryptoConnection(type)
-        uiState.update {
-            it.copy(
-                cryptoConnectionType = type,
-            )
-        }
+        uiState.update { it.copy(cryptoConnectionType = type) }
 
         val vaultId = vaultId ?: return
 
@@ -590,9 +534,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-
     companion object {
-         internal const val REFRESH_CHAIN_DATA  = "refresh_chain_data"
+        internal const val REFRESH_CHAIN_DATA = "refresh_chain_data"
     }
 }
-

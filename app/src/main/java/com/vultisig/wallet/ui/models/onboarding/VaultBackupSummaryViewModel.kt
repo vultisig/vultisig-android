@@ -4,27 +4,26 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class VaultBackupSummaryUiModel(
-    val isConsentChecked: Boolean = false,
     val vaultType: Route.VaultInfo.VaultType,
     val vaultShares: Int = 0,
-    val isChainSelectionEnabled: Boolean = true,
 )
 
 @HiltViewModel
-internal class VaultBackupSummaryViewModel @Inject constructor(
+internal class VaultBackupSummaryViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
@@ -32,57 +31,28 @@ internal class VaultBackupSummaryViewModel @Inject constructor(
 
     private val args = savedStateHandle.toRoute<Route.VaultBackupSummary>()
 
-    val state = MutableStateFlow(
-        VaultBackupSummaryUiModel(
-            vaultType = args.vaultType
-        )
-    )
+    val state = MutableStateFlow(VaultBackupSummaryUiModel(vaultType = args.vaultType))
 
     init {
         viewModelScope.launch {
             vaultRepository.get(vaultId = args.vaultId)?.let { vault ->
-                state.update {
-                    it.copy(
-                        vaultShares = vault.signers.size,
-                        // KeyImport vaults have a fixed set of chains chosen during import
-                        isChainSelectionEnabled = vault.libType != SigningLibType.KeyImport,
-                    )
-                }
+                state.update { it.copy(vaultShares = vault.signers.size) }
             }
         }
     }
 
-    fun toggleCheck(isChecked: Boolean) {
-        state.update { it.copy(isConsentChecked = isChecked) }
-    }
-
     fun next() {
-        if (state.value.isConsentChecked) {
-            viewModelScope.launch {
-                navigator.route(
-                    route = Route.Home(),
-                    opts = NavigationOptions(
-                        clearBackStack = true,
-                    ),
-                )
-            }
+        viewModelScope.launch {
+            navigator.route(route = Route.Home(), opts = NavigationOptions(clearBackStack = true))
         }
     }
 
     fun chooseChains() {
-        if (state.value.isConsentChecked) {
-            viewModelScope.launch {
-                navigator.route(
-                    route = Route.AddChainAccount(
-                        vaultId = args.vaultId,
-                        routeFromInitVault = true
-                    ),
-                    opts = NavigationOptions(
-                        clearBackStack = true,
-                    ),
-                )
-            }
+        viewModelScope.launch {
+            navigator.route(
+                route = Route.AddChainAccount(vaultId = args.vaultId, routeFromInitVault = true),
+                opts = NavigationOptions(clearBackStack = true),
+            )
         }
     }
-
 }

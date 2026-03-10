@@ -14,10 +14,10 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal data class VaultToBackupUiModel(
     val name: String = "",
@@ -31,9 +31,10 @@ internal data class BackupVaultUiModel(
     val vaultsToBackup: List<VaultToBackupUiModel> = emptyList(),
 )
 
-
 @HiltViewModel
-internal class VaultsToBackupViewModel @Inject constructor(
+internal class VaultsToBackupViewModel
+@Inject
+constructor(
     private val vaultRepository: VaultRepository,
     private val navigator: Navigator<Destination>,
     savedStateHandle: SavedStateHandle,
@@ -45,31 +46,18 @@ internal class VaultsToBackupViewModel @Inject constructor(
         loadData()
     }
 
-    val uiState = MutableStateFlow(
-        BackupVaultUiModel()
-    )
+    val uiState = MutableStateFlow(BackupVaultUiModel())
 
     private fun loadData() {
         viewModelScope.launch {
-            val currentVault = vaultRepository.get(vaultId)?.toUi()
-                ?: error("Vault not found")
-            val allVaults = vaultRepository.getAll().map {
-                it.toUi()
-            }
-            uiState.update {
-                it.copy(
-                    currentVault = currentVault,
-                    vaultsToBackup = allVaults,
-                )
-            }
+            val currentVault = vaultRepository.get(vaultId)?.toUi() ?: error("Vault not found")
+            val allVaults = vaultRepository.getAll().map { it.toUi() }
+            uiState.update { it.copy(currentVault = currentVault, vaultsToBackup = allVaults) }
         }
     }
 
-
     fun back() {
-        viewModelScope.launch {
-            navigator.back()
-        }
+        viewModelScope.launch { navigator.back() }
     }
 
     fun backupCurrentVault() {
@@ -85,18 +73,17 @@ internal class VaultsToBackupViewModel @Inject constructor(
 
     fun backupAllVaults() {
         viewModelScope.launch {
-            navigator.route(Route.BackupPasswordRequest(
-                vaultId = vaultId,
-                backupType = BackupType.AllVaults
-            ))
+            navigator.route(
+                Route.BackupPasswordRequest(vaultId = vaultId, backupType = BackupType.AllVaults)
+            )
         }
     }
 
-    private fun Vault.toUi() = VaultToBackupUiModel(
-        name = name,
-        part = getVaultPart(),
-        size = signers.size,
-        isFast = isFastVault(),
-    )
-
+    private fun Vault.toUi() =
+        VaultToBackupUiModel(
+            name = name,
+            part = getVaultPart(),
+            size = signers.size,
+            isFast = isFastVault(),
+        )
 }

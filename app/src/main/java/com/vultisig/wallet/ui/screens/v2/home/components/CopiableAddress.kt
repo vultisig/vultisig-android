@@ -21,12 +21,9 @@ fun CopiableAddress(
     address: String,
     onAddressCopied: (String) -> Unit = {},
     tint: Color = Theme.v2.colors.text.tertiary,
-    maxLength: Dp = 64.dp
+    maxLength: Dp = 64.dp,
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = address,
             modifier = Modifier.widthIn(max = maxLength),
@@ -36,23 +33,14 @@ fun CopiableAddress(
             color = tint,
         )
 
-        UiSpacer(
-            size = 4.dp
-        )
+        UiSpacer(size = 4.dp)
 
-        CopyIcon(
-            textToCopy = address,
-            size = 12.dp,
-            tint = tint,
-            onCopyCompleted = onAddressCopied
-        )
+        CopyIcon(textToCopy = address, size = 12.dp, tint = tint, onCopyCompleted = onAddressCopied)
     }
 }
 
 @Preview
 @Composable
 private fun PreviewCopiableAddress() {
-    CopiableAddress(
-        address = "0x123456543321123456543322111122343"
-    )
+    CopiableAddress(address = "0x123456543321123456543322111122343")
 }

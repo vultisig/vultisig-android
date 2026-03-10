@@ -12,7 +12,7 @@ import com.vultisig.wallet.ui.theme.Theme
 fun DashedProgressIndicator(
     modifier: Modifier = Modifier,
     progress: Int = 3,
-    totalNumberOfBars: Int = 12
+    totalNumberOfBars: Int = 12,
 ) {
     val activeColor = Theme.v2.colors.alerts.success
     val inactiveColor = Theme.v2.colors.border.light
