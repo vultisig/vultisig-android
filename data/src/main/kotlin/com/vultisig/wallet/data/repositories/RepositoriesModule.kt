@@ -232,10 +232,6 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindKeyImportRepository(impl: KeyImportRepositoryImpl): KeyImportRepository
-
-    @Binds
-    @Singleton
     fun bindTransactionHistoryRepository(
         impl: TransactionHistoryRepositoryImpl
     ): TransactionHistoryRepository
