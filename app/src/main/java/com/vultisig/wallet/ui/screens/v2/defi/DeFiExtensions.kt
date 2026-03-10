@@ -26,7 +26,7 @@ internal fun List<Coin>.toPositionDialogModels(): List<PositionUiModelDialog> = 
 }
 
 val defiSupportedChains: List<Chain>
-    get() = listOf(Chain.ThorChain, Chain.Ethereum)
+    get() = listOf(Chain.ThorChain, Chain.MayaChain, Chain.Ethereum)
 
 internal val thorchainSupportStakingDeFi: List<Coin>
     get() =
@@ -41,6 +41,12 @@ internal val thorchainSupportStakingDeFi: List<Coin>
 internal val thorchainSupportsBonDeFi: List<Coin>
     get() = listOf(Coins.ThorChain.RUNE)
 
+internal val mayachainSupportsBondDeFi: List<Coin>
+    get() = listOf(Coins.MayaChain.CACAO)
+
+internal val mayachainSupportStakingDeFi: List<Coin>
+    get() = listOf(Coins.MayaChain.CACAO)
+
 internal enum class DeFiProviders {
     CIRCLE
 }
@@ -49,11 +55,17 @@ internal fun defaultSelectedPositionsDialog(): List<String> =
     (thorchainSupportsBonDeFi + thorchainSupportStakingDeFi).map { it.ticker }
 
 internal fun List<String>.hasBondPositions(): Boolean = any { ticker ->
-    thorchainSupportsBonDeFi.any { it.ticker == ticker }
+    thorchainSupportsBonDeFi.any { it.ticker == ticker } ||
+        mayachainSupportsBondDeFi.any { it.ticker == ticker }
 }
 
 internal fun List<String>.hasStakingPositions(): Boolean = any { ticker ->
-    thorchainSupportStakingDeFi.any { it.ticker == ticker }
+    thorchainSupportStakingDeFi.any { it.ticker == ticker } ||
+        mayachainSupportStakingDeFi.any { it.ticker == ticker }
+}
+
+internal fun List<String>.hasMayaStakingPositions(): Boolean = any { ticker ->
+    mayachainSupportStakingDeFi.any { it.ticker == ticker }
 }
 
 internal fun emptyBondedTabUiModel() =

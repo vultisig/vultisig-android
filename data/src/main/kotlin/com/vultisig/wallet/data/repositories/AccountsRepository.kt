@@ -460,6 +460,7 @@ constructor(
         return when (this.chain) {
             Chain.ThorChain -> true
             Chain.Ethereum -> true
+            Chain.MayaChain -> true
             else -> false
         }
     }

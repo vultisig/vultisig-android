@@ -270,6 +270,7 @@ internal fun PositionsSelectionDialog(
     selectedPositions: List<String>,
     bondPositions: List<PositionUiModelDialog> = emptyList(),
     stakePositions: List<PositionUiModelDialog> = emptyList(),
+    lpPositions: List<PositionUiModelDialog> = emptyList(),
     searchTextFieldState: TextFieldState,
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onDoneClick: () -> Unit = {},
@@ -277,7 +278,6 @@ internal fun PositionsSelectionDialog(
 ) {
     val searchQuery = searchTextFieldState.text.toString().lowercase()
 
-    // Update selections with remember to avoid recreation
     val updateBondPositions =
         remember(bondPositions, selectedPositions) {
             bondPositions.map { it.copy(isSelected = selectedPositions.contains(it.ticker)) }
@@ -288,52 +288,56 @@ internal fun PositionsSelectionDialog(
             stakePositions.map { it.copy(isSelected = selectedPositions.contains(it.ticker)) }
         }
 
-    // Filter positions based on search query with remember
+    val updateLpPositions =
+        remember(lpPositions, selectedPositions) {
+            lpPositions.map { it.copy(isSelected = selectedPositions.contains(it.ticker)) }
+        }
+
     val filteredBondPositions =
         remember(searchQuery, updateBondPositions) {
-            if (searchQuery.isEmpty()) {
-                updateBondPositions
-            } else {
-                updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
-            }
+            if (searchQuery.isEmpty()) updateBondPositions
+            else updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
         }
 
     val filteredStakePositions =
         remember(searchQuery, updateStakePositions) {
-            if (searchQuery.isEmpty()) {
-                updateStakePositions
-            } else {
-                updateStakePositions.filter { it.ticker.lowercase().contains(searchQuery) }
-            }
+            if (searchQuery.isEmpty()) updateStakePositions
+            else updateStakePositions.filter { it.ticker.lowercase().contains(searchQuery) }
+        }
+
+    val filteredLpPositions =
+        remember(searchQuery, updateLpPositions) {
+            if (searchQuery.isEmpty()) updateLpPositions
+            else updateLpPositions.filter { it.ticker.lowercase().contains(searchQuery) }
         }
 
     val groups = mutableListOf<TokenSelectionGroupUiModel<PositionUiModelDialog>>()
+
+    fun buildItems(positions: List<PositionUiModelDialog>) =
+        positions.map { GridTokenUiModel.SingleToken(data = it) }
+
+    fun buildMapper(gridToken: GridTokenUiModel<PositionUiModelDialog>): TokenSelectionGridUiModel {
+        val model =
+            when (gridToken) {
+                is GridTokenUiModel.PairToken<PositionUiModelDialog> -> error("Not supported")
+                is GridTokenUiModel.SingleToken<PositionUiModelDialog> ->
+                    TokenSelectionUiModel.TokenUiSingle(
+                        name = gridToken.data.ticker,
+                        logo = gridToken.data.logo,
+                    )
+            }
+        return TokenSelectionGridUiModel(
+            isChecked = gridToken.data.isSelected,
+            tokenSelectionUiModel = model,
+        )
+    }
 
     if (filteredBondPositions.isNotEmpty()) {
         groups.add(
             TokenSelectionGroupUiModel(
                 title = "Bond",
-                items =
-                    filteredBondPositions.map { position ->
-                        GridTokenUiModel.SingleToken(data = position)
-                    },
-                mapper = { gridToken ->
-                    val tokenSelectionUiModel =
-                        when (gridToken) {
-                            is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
-                                error("Not supported")
-                            is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
-                                TokenSelectionUiModel.TokenUiSingle(
-                                    name = gridToken.data.ticker,
-                                    logo = gridToken.data.logo,
-                                )
-                            }
-                        }
-                    TokenSelectionGridUiModel(
-                        isChecked = gridToken.data.isSelected,
-                        tokenSelectionUiModel = tokenSelectionUiModel,
-                    )
-                },
+                items = buildItems(filteredBondPositions),
+                mapper = ::buildMapper,
                 plusUiModel = null,
             )
         )
@@ -343,27 +347,19 @@ internal fun PositionsSelectionDialog(
         groups.add(
             TokenSelectionGroupUiModel(
                 title = "Stake",
-                items =
-                    filteredStakePositions.map { position ->
-                        GridTokenUiModel.SingleToken(data = position)
-                    },
-                mapper = { gridToken ->
-                    val tokenSelectionUiModel =
-                        when (gridToken) {
-                            is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
-                                error("Not Supported")
-                            is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
-                                TokenSelectionUiModel.TokenUiSingle(
-                                    name = gridToken.data.ticker,
-                                    logo = gridToken.data.logo,
-                                )
-                            }
-                        }
-                    TokenSelectionGridUiModel(
-                        isChecked = gridToken.data.isSelected,
-                        tokenSelectionUiModel = tokenSelectionUiModel,
-                    )
-                },
+                items = buildItems(filteredStakePositions),
+                mapper = ::buildMapper,
+                plusUiModel = null,
+            )
+        )
+    }
+
+    if (filteredLpPositions.isNotEmpty()) {
+        groups.add(
+            TokenSelectionGroupUiModel(
+                title = "Liquidity Pool",
+                items = buildItems(filteredLpPositions),
+                mapper = ::buildMapper,
                 plusUiModel = null,
             )
         )

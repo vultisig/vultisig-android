@@ -71,6 +71,11 @@ constructor(
                 chainId = Chain.ThorChain.id
             }
 
+            is ChainDashboardRoute.PositionMaya -> {
+                vaultId = args.route.vaultId
+                chainId = Chain.MayaChain.id
+            }
+
             is ChainDashboardRoute.Wallet -> {
                 vaultId = args.route.vaultId
                 chainId = args.route.chainId
@@ -80,7 +85,7 @@ constructor(
 
     private fun initAvailableCryptoTypes() {
         val availableCryptoTypes =
-            if (chainId in listOf(Chain.ThorChain.id, Chain.Ethereum.id))
+            if (chainId in listOf(Chain.ThorChain.id, Chain.Ethereum.id, Chain.MayaChain.id))
                 BOTH_CRYPTO_CONNECTION_TYPES
             else ONLY_WALLET
 
@@ -108,10 +113,12 @@ constructor(
                             )
 
                         CryptoConnectionType.Defi -> {
-                            if (chainId == Chain.ThorChain.id) {
-                                ChainDashboardRoute.PositionTokens(vaultId = vaultId)
-                            } else {
-                                ChainDashboardRoute.PositionCircle(vaultId = vaultId)
+                            when (chainId) {
+                                Chain.ThorChain.id ->
+                                    ChainDashboardRoute.PositionTokens(vaultId = vaultId)
+                                Chain.MayaChain.id ->
+                                    ChainDashboardRoute.PositionMaya(vaultId = vaultId)
+                                else -> ChainDashboardRoute.PositionCircle(vaultId = vaultId)
                             }
                         }
                     }

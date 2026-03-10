@@ -3,7 +3,7 @@
     <!-- Deposit Options -->
     <string name="deposit_option_bond">绑定</string>
     <string name="deposit_option_unbond">解绑</string>
-    <string name="total_bonded_rune">总绑定 Rune</string>
+    <string name="total_bonded_coin">总绑定 %s</string>
     <string name="bonded_amount">已绑定: %s</string>
     <string name="bond_to_node">绑定到节点</string>
     <string name="node_address_formatted">地址: %s</string>
@@ -1410,4 +1410,8 @@
     <string name="server_backup_error_timeout">服务器响应时间过长，请检查您的网络连接并重试。</string>
     <string name="server_backup_error_too_many_requests">备份请求过多。请稍后重试。</string>
     <string name="server_backup_error_bad_request">出错了。请检查您的信息并重试。</string>
+    <string name="cacao_pool">Cacao 池</string>
+    <string name="native_asset">原生</string>
+    <string name="invalid_integer_error">无效的整数数量</string>
+    <string name="empty_lps_field">LPs 字段为空</string>
 </resources>

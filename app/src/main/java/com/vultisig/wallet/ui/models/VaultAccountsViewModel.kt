@@ -292,19 +292,25 @@ constructor(
                     )
                 }
                 CryptoConnectionType.Defi -> {
-                    // Exception for DeFi providers on home screen
-                    if (account.chainName.equals(Chain.Ethereum.toDefi.raw, true)) {
-                        navigator.route(
-                            Route.ChainDashboard(
-                                route = ChainDashboardRoute.PositionCircle(vaultId = vaultId)
+                    when {
+                        account.chainName.equals(Chain.Ethereum.toDefi.raw, true) ->
+                            navigator.route(
+                                Route.ChainDashboard(
+                                    route = ChainDashboardRoute.PositionCircle(vaultId = vaultId)
+                                )
                             )
-                        )
-                    } else {
-                        navigator.route(
-                            Route.ChainDashboard(
-                                route = ChainDashboardRoute.PositionTokens(vaultId = vaultId)
+                        account.chainName.equals(Chain.MayaChain.raw, true) ->
+                            navigator.route(
+                                Route.ChainDashboard(
+                                    route = ChainDashboardRoute.PositionMaya(vaultId = vaultId)
+                                )
                             )
-                        )
+                        else ->
+                            navigator.route(
+                                Route.ChainDashboard(
+                                    route = ChainDashboardRoute.PositionTokens(vaultId = vaultId)
+                                )
+                            )
                     }
                 }
             }

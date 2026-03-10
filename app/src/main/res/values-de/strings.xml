@@ -344,7 +344,7 @@
     <string name="send_form_polka_reaping_warning">Stellen Sie sicher, dass Sie genügend Geld übrig lassen, um die Gebühren zu decken. Wenn ein Kontostand unter 1 DOT (Existential Deposit) fällt, wird das Konto deaktiviert (geerntet) und alle verbleibenden Gelder gehen verloren. Sie können die Adresse jederzeit mit einer neuen Einzahlung reaktivieren, die größer als die Existenzeinzahlung ist. Dadurch werden die verlorenen Gelder jedoch nicht wiederhergestellt.</string>
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
-    <string name="total_bonded_rune">Gesamt gebundene Rune</string>
+    <string name="total_bonded_coin">Gesamt gebundene %s</string>
     <string name="bonded_amount">Gebunden: %s</string>
     <string name="bond_to_node">An Knoten binden</string>
     <string name="node_address_formatted">Adresse: %s</string>
@@ -862,7 +862,7 @@
     <string name="energy">Energie</string>
     <string name="bandwidth_dec">Bandbreitenpunkte werden für jede Transaktion auf TRON benötigt, sowohl für Standard-Token-Sendungen als auch für Smart-Contract-Interaktionen. Jeder TRON-Nutzer erhält täglich 600 kostenlose Bandbreitenpunkte, was für etwa zwei einfache Sendungen ausreicht. Zusätzlich können Sie durch das Staking von TRX weitere Bandbreitenpunkte verdienen und so Ihr tägliches Guthaben erhöhen, um mehr Transaktionen zu ermöglichen. Mit genügend Bandbreitenpunkten können Sie Token senden, TRX staken oder mit Smart Contracts interagieren, ohne TRX an Gasgebühren zahlen zu müssen.</string>
     <string name="energy_dec">Energie wird für komplexere Aktionen benötigt, wie z. B. die Interaktion mit Smart Contracts (z. B. Swaps oder dApp-Transaktionen). Im Gegensatz zu Bandbreite ist Energie nicht kostenlos – Sie müssen TRX staken, um Energie zu erhalten. (Fortgeschrittene Nutzer können Energie auch über Leasing-Mechanismen wie JustLend oder die Energie-Mietmärkte von Tronify erwerben.) Energie kann die Gasgebühren für Smart-Contract-Interaktionen jedoch deutlich reduzieren oder sogar eliminieren und ist daher besonders wertvoll für Nutzer, die häufig TRON-dApps verwenden.</string>
-    
+
     <!-- Bond Form -->
     <string name="bond_node_address">Knotenadresse</string>
     <string name="bond_operator_fees_basis_point">Betreiber-Gebühren (Basispunkte)</string>
@@ -1074,4 +1074,8 @@
     <string name="server_backup_error_timeout">Der Server hat zu lange gebraucht, um zu antworten. Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</string>
     <string name="server_backup_error_too_many_requests">Zu viele Sicherungsanfragen. Bitte versuchen Sie es später erneut.</string>
     <string name="server_backup_error_bad_request">Etwas ist schiefgelaufen. Bitte überprüfen Sie Ihre Angaben und versuchen Sie es erneut.</string>
+    <string name="cacao_pool">Cacao Pool</string>
+    <string name="native_asset">Nativ</string>
+    <string name="invalid_integer_error">Ungültige Ganzzahl</string>
+    <string name="empty_lps_field">Leeres LPs-Feld</string>
 </resources>
