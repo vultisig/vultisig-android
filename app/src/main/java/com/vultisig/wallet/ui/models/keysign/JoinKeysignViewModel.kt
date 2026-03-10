@@ -355,25 +355,9 @@ constructor(
                             }
                         }
                     } else if (payloadCustomPayloadId.isNotEmpty()) {
-                        routerApi.getPayload(_serverAddress, customPayloadId).let { payload ->
-                            if (payload.isNotEmpty()) {
-                                val rawPayload = decompressQr(payload.decodeBase64Bytes())
-                                val fetchedPayload =
-                                    protoBuf.decodeFromByteArray<CustomMessagePayload>(rawPayload)
-                                val vaultPublicKeyEcdsa =
-                                    fetchedPayload.vaultPublicKeyEcdsa.ifEmpty {
-                                        deepLinkHelper.value?.getParameter(VAULT_PARAMETER) ?: ""
-                                    }
-                                if (
-                                    !handleCustomMessage(
-                                        fetchedPayload.copy(
-                                            vaultPublicKeyEcdsa = vaultPublicKeyEcdsa
-                                        )
-                                    )
-                                ) {
-                                    return@launch
-                                }
-                            }
+                        if (!fetchAndHandleCustomMessagePayload(_serverAddress)) {
+                            currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
+                            return@launch
                         }
                     }
                     currentState.value = JoinKeysignState.JoinKeysign
@@ -1047,6 +1031,18 @@ constructor(
         }
     }
 
+    private suspend fun fetchAndHandleCustomMessagePayload(serverAddress: String): Boolean {
+        val payload = routerApi.getPayload(serverAddress, customPayloadId)
+        if (payload.isEmpty()) return false
+        val rawPayload = decompressQr(payload.decodeBase64Bytes())
+        val fetchedPayload = protoBuf.decodeFromByteArray<CustomMessagePayload>(rawPayload)
+        val vaultPublicKeyEcdsa =
+            fetchedPayload.vaultPublicKeyEcdsa.ifEmpty {
+                deepLinkHelper.value?.getParameter(VAULT_PARAMETER) ?: ""
+            }
+        return handleCustomMessage(fetchedPayload.copy(vaultPublicKeyEcdsa = vaultPublicKeyEcdsa))
+    }
+
     private fun onServerAddressDiscovered(address: String) {
         _serverAddress = address
         if (!payloadId.isEmpty() && tempKeysignMessageProto != null) {
@@ -1075,24 +1071,10 @@ constructor(
             }
         } else if (customPayloadId.isNotEmpty() && tempKeysignMessageProto != null) {
             viewModelScope.launch {
-                routerApi.getPayload(_serverAddress, customPayloadId).let { payload ->
-                    if (payload.isNotEmpty()) {
-                        val rawPayload = decompressQr(payload.decodeBase64Bytes())
-                        val fetchedPayload =
-                            protoBuf.decodeFromByteArray<CustomMessagePayload>(rawPayload)
-                        val vaultPublicKeyEcdsa =
-                            fetchedPayload.vaultPublicKeyEcdsa.ifEmpty {
-                                deepLinkHelper.value?.getParameter(VAULT_PARAMETER) ?: ""
-                            }
-                        if (
-                            !handleCustomMessage(
-                                fetchedPayload.copy(vaultPublicKeyEcdsa = vaultPublicKeyEcdsa)
-                            )
-                        ) {
-                            return@launch
-                        }
-                        currentState.value = JoinKeysignState.JoinKeysign
-                    }
+                if (fetchAndHandleCustomMessagePayload(_serverAddress)) {
+                    currentState.value = JoinKeysignState.JoinKeysign
+                } else {
+                    currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
                 }
             }
         } else {
