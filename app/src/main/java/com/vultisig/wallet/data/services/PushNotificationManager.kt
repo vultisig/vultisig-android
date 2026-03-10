@@ -124,8 +124,6 @@ constructor(
                     )
                 )
             }
-        } catch (e: PushNotificationError) {
-            throw e
         } catch (e: Exception) {
             throw PushNotificationError.ApiFailure(e)
         }
