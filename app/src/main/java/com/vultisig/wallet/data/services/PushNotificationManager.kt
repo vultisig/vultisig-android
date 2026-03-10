@@ -131,6 +131,9 @@ constructor(
         vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
     }
 
+    @SuppressLint(
+        "ImplicitSamInstance"
+    ) // False positive: DeviceUnregisterRequest is a data class, not a SAM interface
     suspend fun setAllVaultsOptIn(enabled: Boolean) {
         val allVaults = vaultRepository.getAll().filter { it.isSecureVault() }
 
