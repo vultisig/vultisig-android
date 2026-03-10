@@ -21,6 +21,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
+@SuppressLint(
+    "ImplicitSamInstance"
+) // False positive: DeviceUnregisterRequest is a data class, not a SAM interface
 @Singleton
 class PushNotificationManager
 @Inject
@@ -90,9 +93,6 @@ constructor(
         vaultNotificationSettingsDao.markPrompted(vaultId)
     }
 
-    @SuppressLint(
-        "ImplicitSamInstance"
-    ) // False positive: DeviceUnregisterRequest is a data class, not a SAM interface
     suspend fun setVaultOptIn(vaultId: String, enabled: Boolean) {
         val vault = vaultRepository.get(vaultId) ?: throw PushNotificationError.VaultNotFound()
         if (!vault.isSecureVault()) throw PushNotificationError.VaultNotSupported()
@@ -131,9 +131,6 @@ constructor(
         vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
     }
 
-    @SuppressLint(
-        "ImplicitSamInstance"
-    ) // False positive: DeviceUnregisterRequest is a data class, not a SAM interface
     suspend fun setAllVaultsOptIn(enabled: Boolean) {
         val allVaults = vaultRepository.getAll().filter { it.isSecureVault() }
 
