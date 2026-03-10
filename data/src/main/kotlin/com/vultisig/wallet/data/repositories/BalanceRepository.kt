@@ -368,6 +368,18 @@ constructor(
                         }
                 }
             }
+            MayaChain -> {
+                val mutex = lockFor(address)
+                mutex.withLock {
+                    defiBalanceCache.get(address)
+                        ?: run {
+                            val remote =
+                                circleDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
+                            defiBalanceCache.put(address, remote)
+                            remote
+                        }
+                }
+            }
             else -> error("Not supported")
         }
     }

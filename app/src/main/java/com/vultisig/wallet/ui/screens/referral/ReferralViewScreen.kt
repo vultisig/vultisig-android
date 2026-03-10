@@ -397,7 +397,7 @@ fun BoxScope.SetBackgoundBanner(backgroundImageResId: Int) {
     Image(
         painter = painterResource(backgroundImageResId),
         contentDescription = "Referral Banner",
-        contentScale = ContentScale.Crop,
+        contentScale = ContentScale.FillBounds,
         modifier = Modifier.matchParentSize(),
     )
 }

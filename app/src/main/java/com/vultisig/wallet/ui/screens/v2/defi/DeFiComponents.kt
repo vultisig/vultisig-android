@@ -65,7 +65,7 @@ internal fun BalanceBanner(
     Box(
         modifier =
             Modifier.fillMaxWidth()
-                .height(140.dp)
+                .height(118.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .border(
                     width = 1.dp,
@@ -75,22 +75,14 @@ internal fun BalanceBanner(
     ) {
         SetBackgoundBanner(backgroundImageResId = image)
 
-        Column(modifier = Modifier.padding(start = 16.dp, top = 16.dp)) {
+        Column(modifier = Modifier.padding(start = 16.dp, top = 25.dp)) {
             Text(
                 text = title,
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.l.medium,
             )
 
-            UiSpacer(16.dp)
-
-            Text(
-                text = stringResource(R.string.defi_balance),
-                color = Theme.v2.colors.text.primary,
-                style = Theme.brockmann.supplementary.caption,
-            )
-
-            UiSpacer(12.dp)
+            UiSpacer(6.dp)
 
             if (isLoading) {
                 UiPlaceholderLoader(modifier = Modifier.size(width = 150.dp, height = 32.dp))

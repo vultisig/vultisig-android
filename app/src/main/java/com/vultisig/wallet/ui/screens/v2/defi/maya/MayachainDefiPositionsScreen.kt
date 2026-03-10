@@ -96,7 +96,7 @@ internal fun MayachainDefiPositionsScreenContent(
                 title = Chain.MayaChain.raw,
                 isLoading = state.isTotalAmountLoading,
                 totalValue = state.totalAmountPrice,
-                image = R.drawable.maya,
+                image = R.drawable.maya_defi_banner,
                 isBalanceVisible = state.isBalanceVisible,
             )
 
