@@ -138,7 +138,7 @@ constructor(
                     .catch { Timber.e(it) }
                     .map { coinList ->
                         coinList
-                            .filter { !it.isNativeToken }
+                            .filter { !it.isNativeToken && !it.isLpToken }
                             .map { coin ->
                                 AssetUiModel(
                                     token = coin,
@@ -172,9 +172,9 @@ constructor(
                     account.accounts
                         .asSequence()
                         .filter { it.token.id.contains(query, ignoreCase = true) }
-                        .filter {
-                            filter != Route.SelectNetwork.Filters.SwapAvailable ||
-                                !it.token.isLpToken
+                        .filterNot {
+                            filter == Route.SelectNetwork.Filters.SwapAvailable &&
+                                it.token.isLpToken
                         }
                         .sortedWith(
                             compareByDescending<Account> { it.token.isNativeToken }
@@ -196,9 +196,7 @@ constructor(
                 val additionalAssets =
                     allTokens.filter {
                         it.token.id.contains(query, ignoreCase = true) &&
-                            it.token.id !in filteredTokenIds &&
-                            (filter != Route.SelectNetwork.Filters.SwapAvailable ||
-                                !it.token.isLpToken)
+                            it.token.id !in filteredTokenIds
                     }
 
                 state.update { it.copy(assets = filteredAssets + additionalAssets) }
