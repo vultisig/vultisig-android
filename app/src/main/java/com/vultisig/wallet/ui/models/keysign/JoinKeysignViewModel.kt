@@ -235,6 +235,7 @@ constructor(
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
     private var payloadId: String = ""
+    private var customPayloadId: String = ""
     private var tempKeysignMessageProto: KeysignMessageProto? = null
 
     private val deepLinkHelper = MutableStateFlow<DeepLinkHelper?>(null)
@@ -301,6 +302,7 @@ constructor(
                 _encryptionKeyHex = payloadProto.encryptionKeyHex
 
                 val customMessagePayload = payloadProto.customMessagePayload
+                val payloadCustomPayloadId = payloadProto.customPayloadId ?: ""
                 if (customMessagePayload != null) {
                     val vaultPublicKeyEcdsa =
                         customMessagePayload.vaultPublicKeyEcdsa.ifEmpty {
@@ -311,6 +313,10 @@ constructor(
                     if (!handleCustomMessage(payloadWithVaultKey)) {
                         return@launch
                     }
+                } else if (payloadCustomPayloadId.isNotEmpty()) {
+                    // custom message payload is stored server-side (e.g. signBytes via relay)
+                    tempKeysignMessageProto = payloadProto
+                    customPayloadId = payloadCustomPayloadId
                 } else {
                     // when the payload is in the QRCode
                     if (payloadProto.keysignPayload != null && payloadProto.payloadId.isEmpty()) {
@@ -344,6 +350,27 @@ constructor(
                                     )
 
                                 if (handleKeysignMessage(keysignMsgProto)) {
+                                    return@launch
+                                }
+                            }
+                        }
+                    } else if (payloadCustomPayloadId.isNotEmpty()) {
+                        routerApi.getPayload(_serverAddress, customPayloadId).let { payload ->
+                            if (payload.isNotEmpty()) {
+                                val rawPayload = decompressQr(payload.decodeBase64Bytes())
+                                val fetchedPayload =
+                                    protoBuf.decodeFromByteArray<CustomMessagePayload>(rawPayload)
+                                val vaultPublicKeyEcdsa =
+                                    fetchedPayload.vaultPublicKeyEcdsa.ifEmpty {
+                                        deepLinkHelper.value?.getParameter(VAULT_PARAMETER) ?: ""
+                                    }
+                                if (
+                                    !handleCustomMessage(
+                                        fetchedPayload.copy(
+                                            vaultPublicKeyEcdsa = vaultPublicKeyEcdsa
+                                        )
+                                    )
+                                ) {
                                     return@launch
                                 }
                             }
@@ -1040,6 +1067,28 @@ constructor(
                                 payloadId = payloadId,
                             )
                         if (handleKeysignMessage(keysignMsgProto)) {
+                            return@launch
+                        }
+                        currentState.value = JoinKeysignState.JoinKeysign
+                    }
+                }
+            }
+        } else if (customPayloadId.isNotEmpty() && tempKeysignMessageProto != null) {
+            viewModelScope.launch {
+                routerApi.getPayload(_serverAddress, customPayloadId).let { payload ->
+                    if (payload.isNotEmpty()) {
+                        val rawPayload = decompressQr(payload.decodeBase64Bytes())
+                        val fetchedPayload =
+                            protoBuf.decodeFromByteArray<CustomMessagePayload>(rawPayload)
+                        val vaultPublicKeyEcdsa =
+                            fetchedPayload.vaultPublicKeyEcdsa.ifEmpty {
+                                deepLinkHelper.value?.getParameter(VAULT_PARAMETER) ?: ""
+                            }
+                        if (
+                            !handleCustomMessage(
+                                fetchedPayload.copy(vaultPublicKeyEcdsa = vaultPublicKeyEcdsa)
+                            )
+                        ) {
                             return@launch
                         }
                         currentState.value = JoinKeysignState.JoinKeysign
