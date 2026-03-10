@@ -76,7 +76,6 @@ import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseScreen
 import com.vultisig.wallet.ui.screens.keygen.JoinKeygenScreen
 import com.vultisig.wallet.ui.screens.keygen.KeyImportChainsSetupScreen
-import com.vultisig.wallet.ui.screens.keygen.KeyImportDeviceCountScreen
 import com.vultisig.wallet.ui.screens.keygen.KeyImportFeatureSpotlightScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenScreen
 import com.vultisig.wallet.ui.screens.keygen.NameVaultScreen
@@ -254,8 +253,6 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         composable<Route.KeyImport.ImportSeedphrase> { ImportSeedphraseScreen() }
 
         composable<Route.KeyImport.ChainsSetup> { KeyImportChainsSetupScreen() }
-
-        composable<Route.KeyImport.DeviceCount> { KeyImportDeviceCountScreen() }
 
         composable<VaultInfo.Name> { NameVaultScreen() }
 

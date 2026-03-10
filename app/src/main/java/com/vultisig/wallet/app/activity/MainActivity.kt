@@ -52,8 +52,7 @@ class MainActivity : AppCompatActivity() {
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 val qrCodeData =
-                    intent.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA)
-                        ?: return
+                    intent.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA) ?: return
                 mainViewModel.onPushNotificationReceived(qrCodeData)
             }
         }
@@ -71,8 +70,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // Handle notification tap when app was killed — ViewModel awaits navigation readiness.
-        intent?.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA)
-            ?.let { mainViewModel.onPushNotificationReceived(it) }
+        intent?.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA)?.let {
+            mainViewModel.onPushNotificationReceived(it)
+        }
 
         val systemBarStyle =
             SystemBarStyle.auto(

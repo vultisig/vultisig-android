@@ -974,16 +974,7 @@
     <string name="key_import_chains_get_started">Loslegen</string>
     <string name="key_import_chains_no_results">Keine Blockchains entsprechen Ihrer Suche</string>
 
-    <string name="key_import_device_count_title">Einrichtung wählen</string>
-    <string name="key_import_device_count_fast">Schnell</string>
-    <string name="key_import_device_count_secure">Sicher</string>
     <string name="key_import_device_count_get_started">Loslegen</string>
-    <string name="key_import_device_count_fast_desc_1">1 Gerät + Vultisig-Server</string>
-    <string name="key_import_device_count_fast_desc_2">Schnelle und einfache Einrichtung</string>
-    <string name="key_import_device_count_fast_desc_3">E-Mail-basierte Wiederherstellung</string>
-    <string name="key_import_device_count_secure_desc_1">2 oder mehr Geräte erforderlich</string>
-    <string name="key_import_device_count_secure_desc_2">Maximale Sicherheit</string>
-    <string name="key_import_device_count_secure_desc_3">Ohne Drittanbieter-Server</string>
     <string name="vault_count_recommended">Empfohlen</string>
 
     <string name="welcome_preference_title">Welchen Tresor-Typ bevorzugen Sie?</string>
@@ -996,7 +987,7 @@
     <string name="welcome_fast_and_easy">Schnell &amp; einfach</string>
     <string name="welcome_fast_and_easy_desc">Signieren Sie mit nur 1 Gerät. Unser sicherer Server signiert mit Ihnen für Multisig-Sicherheit. Plugin-kompatibel.</string>
     <string name="welcome_fast_and_easy_highlight">nur 1 Gerät.</string>
-    <string name="welcome_plugin_compatible">Plugin-Marktplatz-kompatibel</string>
+    <string name="welcome_plugin_compatible">Plugin Store kompatibel</string>
     <string name="welcome_tip">Tipp: Sie können einen Browser als Gerät verwenden</string>
     <string name="welcome_only_your_devices">Nur Ihre Geräte</string>
     <string name="welcome_only_your_devices_desc">Nur Ihre Geräte sind autorisierte Unterzeichner. Das Signieren von Transaktionen erfordert 2 Geräte. Vollständige Selbstverwahrung auf Knopfdruck.</string>

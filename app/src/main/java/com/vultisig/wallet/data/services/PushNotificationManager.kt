@@ -14,12 +14,12 @@ import com.vultisig.wallet.data.db.models.VaultNotificationSettingsEntity
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.repositories.VaultRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.tasks.await
-import timber.log.Timber
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 
 @Singleton
 class PushNotificationManager
@@ -137,9 +137,10 @@ constructor(
         val allVaults = vaultRepository.getAll().filter { it.isSecureVault() }
 
         if (enabled) refreshTokenIfNeeded()
-        val token = if (enabled) {
-            getStoredToken() ?: throw PushNotificationError.TokenNotAvailable()
-        } else null
+        val token =
+            if (enabled) {
+                getStoredToken() ?: throw PushNotificationError.TokenNotAvailable()
+            } else null
 
         val succeededVaults = mutableListOf<Vault>()
         try {
@@ -169,7 +170,7 @@ constructor(
                 rollbackApiCalls(succeededVaults, wasEnabling = enabled, token = token)
                 vaultNotificationSettingsDao.setEnabledForAll(
                     succeededVaults.map { it.id },
-                    !enabled
+                    !enabled,
                 )
             }
             throw e as? PushNotificationError ?: PushNotificationError.ApiFailure(e)
@@ -206,7 +207,6 @@ constructor(
         }
     }
 
-
     suspend fun notifyVaultDevices(vault: Vault, qrCodeData: String) {
         val token = getStoredToken()
         if (token == null) {
@@ -240,14 +240,20 @@ constructor(
 
 sealed class PushNotificationError(message: String) : Exception(message) {
     class VaultNotFound : PushNotificationError("Vault not found")
+
     class VaultNotSupported : PushNotificationError("Vault does not support notifications")
+
     class TokenNotAvailable : PushNotificationError("No FCM token available")
+
     class ApiFailure(cause: Throwable) : PushNotificationError("API call failed: ${cause.message}")
 }
 
-fun PushNotificationError.toStringRes(): Int = when (this) {
-    is PushNotificationError.VaultNotFound -> R.string.push_notification_vault_not_found
-    is PushNotificationError.VaultNotSupported -> R.string.push_notification_error_vault_not_supported
-    is PushNotificationError.TokenNotAvailable -> R.string.push_notification_error_token_not_available
-    is PushNotificationError.ApiFailure -> R.string.push_notification_error_api_failure
-}
+fun PushNotificationError.toStringRes(): Int =
+    when (this) {
+        is PushNotificationError.VaultNotFound -> R.string.push_notification_vault_not_found
+        is PushNotificationError.VaultNotSupported ->
+            R.string.push_notification_error_vault_not_supported
+        is PushNotificationError.TokenNotAvailable ->
+            R.string.push_notification_error_token_not_available
+        is PushNotificationError.ApiFailure -> R.string.push_notification_error_api_failure
+    }

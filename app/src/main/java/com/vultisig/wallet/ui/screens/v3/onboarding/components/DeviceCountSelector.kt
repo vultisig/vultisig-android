@@ -52,8 +52,8 @@ internal fun DeviceCountSelector(
         remember(count) {
             when (count) {
                 1 -> -1f
-                2 -> -0.5f
-                3 -> 0f
+                2 -> 0f
+                3 -> 0.5f
                 4 -> 1f
                 else -> error("not possible")
             }

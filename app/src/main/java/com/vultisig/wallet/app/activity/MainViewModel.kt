@@ -16,13 +16,13 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
-import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext

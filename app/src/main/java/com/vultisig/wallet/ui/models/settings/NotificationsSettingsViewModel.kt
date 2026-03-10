@@ -59,11 +59,10 @@ constructor(
 
     init {
         viewModelScope.launch {
-
             combine(pushNotificationManager.observeAllSettings(), vaultRepository.getAllAsFlow()) {
                     settingsList,
                     allVaults ->
-                    val vaults =  allVaults.filter { it.isSecureVault() }
+                    val vaults = allVaults.filter { it.isSecureVault() }
                     val settingsMap = settingsList.associateBy { it.vaultId }
                     val masterEnabled = settingsList.any { it.notificationsEnabled }
 
@@ -89,8 +88,9 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt out all vaults from notifications")
-                val msgRes = (e as? PushNotificationError)?.toStringRes()
-                    ?: R.string.push_notifications_failed
+                val msgRes =
+                    (e as? PushNotificationError)?.toStringRes()
+                        ?: R.string.push_notifications_failed
                 snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
             }
         ) {
@@ -107,8 +107,9 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt out vault $vaultId from notifications")
-                val msgRes = (e as? PushNotificationError)?.toStringRes()
-                    ?: R.string.push_notifications_failed
+                val msgRes =
+                    (e as? PushNotificationError)?.toStringRes()
+                        ?: R.string.push_notifications_failed
                 snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
             }
         ) {
@@ -126,14 +127,16 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt in vault(s) for notifications")
-                val msgRes = (e as? PushNotificationError)?.toStringRes()
-                    ?: R.string.push_notifications_failed
+                val msgRes =
+                    (e as? PushNotificationError)?.toStringRes()
+                        ?: R.string.push_notifications_failed
                 snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
             }
         ) {
             when (val pending = pendingAction.getAndSet(PendingAction.AllVaults)) {
                 PendingAction.AllVaults -> pushNotificationManager.setAllVaultsOptIn(enabled = true)
-                is PendingAction.SingleVault -> pushNotificationManager.setVaultOptIn(pending.vaultId, enabled = true)
+                is PendingAction.SingleVault ->
+                    pushNotificationManager.setVaultOptIn(pending.vaultId, enabled = true)
             }
         }
     }
@@ -141,10 +144,10 @@ constructor(
     fun back() {
         viewModelScope.launch { navigator.back() }
     }
-
 }
 
 private sealed interface PendingAction {
     data object AllVaults : PendingAction
+
     data class SingleVault(val vaultId: String) : PendingAction
 }

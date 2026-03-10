@@ -1,8 +1,12 @@
 package com.vultisig.wallet.ui.models.v3.onboarding
 
+import androidx.compose.runtime.Immutable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.ui.models.v3.onboarding.ChooseDeviceCountViewModel.Companion.Tips
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -15,20 +19,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class ChooseDeviceCountUiState(
+@Immutable
+internal data class ChooseDeviceCountUiState(
     val deviceCount: Int = 1,
     val tips: List<DeviceCountTip> = Tips,
 )
 
-sealed interface ChooseDeviceCountUiEvent {
-    object IncreaseCount : ChooseDeviceCountUiEvent
+internal sealed interface ChooseDeviceCountUiEvent {
+    data object Back : ChooseDeviceCountUiEvent
 
-    object DecreaseCount : ChooseDeviceCountUiEvent
+    data object IncreaseCount : ChooseDeviceCountUiEvent
 
-    object Next : ChooseDeviceCountUiEvent
+    data object DecreaseCount : ChooseDeviceCountUiEvent
+
+    data object Next : ChooseDeviceCountUiEvent
 }
 
-data class DeviceCountTip(
+@Immutable
+internal data class DeviceCountTip(
     val logo: Int,
     val title: UiText,
     val subTitle: UiText,
@@ -38,17 +46,25 @@ data class DeviceCountTip(
 @HiltViewModel
 internal class ChooseDeviceCountViewModel
 @Inject
-constructor(private val navigator: Navigator<Destination>) : ViewModel() {
+constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator<Destination>) :
+    ViewModel() {
+
+    private val args = savedStateHandle.toRoute<Route.ChooseVaultCount>()
 
     private val _uiState = MutableStateFlow(ChooseDeviceCountUiState())
     val uiState = _uiState.asStateFlow()
 
     fun handleEvent(event: ChooseDeviceCountUiEvent) {
         when (event) {
+            ChooseDeviceCountUiEvent.Back -> back()
             ChooseDeviceCountUiEvent.DecreaseCount -> decreaseCount()
             ChooseDeviceCountUiEvent.IncreaseCount -> increaseCount()
             ChooseDeviceCountUiEvent.Next -> next()
         }
+    }
+
+    private fun back() {
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     private fun increaseCount() {
@@ -63,7 +79,21 @@ constructor(private val navigator: Navigator<Destination>) : ViewModel() {
 
     private fun next() {
         viewModelScope.launch {
-            navigator.route(Route.SetupVaultInfo(count = _uiState.value.deviceCount))
+            val count = _uiState.value.deviceCount
+            if (args.tssAction == TssAction.KeyImport) {
+                val vaultType =
+                    if (count == 1) Route.VaultInfo.VaultType.Fast
+                    else Route.VaultInfo.VaultType.Secure
+                navigator.route(
+                    Route.VaultInfo.Name(
+                        vaultType = vaultType,
+                        tssAction = TssAction.KeyImport,
+                        deviceCount = count,
+                    )
+                )
+            } else {
+                navigator.route(Route.SetupVaultInfo(count = count))
+            }
         }
     }
 

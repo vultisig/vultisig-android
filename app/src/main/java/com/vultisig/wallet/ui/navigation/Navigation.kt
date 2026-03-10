@@ -201,8 +201,6 @@ internal sealed class Route {
         @Serializable data object ImportSeedphrase
 
         @Serializable data object ChainsSetup
-
-        @Serializable data object DeviceCount
     }
 
     object VaultInfo {
@@ -215,7 +213,11 @@ internal sealed class Route {
 
         // required by both vault types
         @Serializable
-        data class Name(val vaultType: VaultType, val tssAction: TssAction = TssAction.KEYGEN)
+        data class Name(
+            val vaultType: VaultType,
+            val tssAction: TssAction = TssAction.KEYGEN,
+            val deviceCount: Int? = null,
+        )
 
         // required only by fast vault
         @Serializable
@@ -489,9 +491,9 @@ internal sealed class Route {
 
     @Serializable data class SetupVaultInfo(val count: Int)
 
-    @Serializable data object NotificationSettings
+    @Serializable data class ChooseVaultCount(val tssAction: TssAction = TssAction.KEYGEN)
 
-    @Serializable data object ChooseVaultCount
+    @Serializable data object NotificationSettings
 
     @Serializable
     data class ReviewVaultDevices(
