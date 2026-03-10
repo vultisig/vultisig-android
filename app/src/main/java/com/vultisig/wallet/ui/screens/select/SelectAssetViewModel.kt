@@ -138,7 +138,7 @@ constructor(
                     .catch { Timber.e(it) }
                     .map { coinList ->
                         coinList
-                            .filter { !it.isNativeToken && !it.isLpToken }
+                            .filterNot { it.isNativeToken || it.isLpToken }
                             .map { coin ->
                                 AssetUiModel(
                                     token = coin,
