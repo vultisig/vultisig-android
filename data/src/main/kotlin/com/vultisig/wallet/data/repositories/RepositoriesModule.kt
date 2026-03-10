@@ -235,6 +235,12 @@ internal interface RepositoriesModule {
     fun bindTransactionHistoryRepository(
         impl: TransactionHistoryRepositoryImpl
     ): TransactionHistoryRepository
+
+    @Binds
+    @Singleton
+    fun bindNotificationTokenRepository(
+        impl: NotificationTokenRepositoryImpl
+    ): NotificationTokenRepository
 }
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class PrettyJson
