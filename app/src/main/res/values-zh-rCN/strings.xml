@@ -19,7 +19,6 @@
     <string name="notifications_description">当另一台设备请求加入您的金库或需要您的签名时，接收通知。</string>
     <string name="choose_vaults_for_notifications">选择接收通知的金库</string>
     <string name="notifications_vault_sheet_subtitle">您可以在系统设置中管理通知。</string>
-    <string name="enable_notifications_for_vault">为 %s 启用通知</string>
     <string name="not_now">暂不</string>
     <string name="vault_notifications">金库通知</string>
     <string name="enable_all">全部启用</string>
