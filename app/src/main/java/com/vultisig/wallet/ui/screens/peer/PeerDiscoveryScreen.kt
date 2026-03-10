@@ -151,7 +151,7 @@ internal fun KeygenPeerDiscoveryScreen(model: KeygenPeerDiscoveryViewModel = hil
                 onDeviceClick = model::selectDevice,
                 onNextClick = model::next,
                 onDismissQrHelpModal = model::dismissQrHelpModal,
-                onResentNotification = {},
+                onResendNotification = {},
             )
         }
     }
@@ -166,7 +166,7 @@ internal fun PeerDiscoveryScreen(
     onCloseHintClick: () -> Unit,
     onSwitchModeClick: () -> Unit,
     onDeviceClick: (ParticipantName) -> Unit,
-    onResentNotification: () -> Unit,
+    onResendNotification: () -> Unit,
     onNextClick: () -> Unit,
     onDismissQrHelpModal: () -> Unit,
     showHelp: Boolean = true,
@@ -311,7 +311,7 @@ internal fun PeerDiscoveryScreen(
                     if (state.enableNotification) {
                         ResendNotificationButton(
                             remainingSeconds = state.resendCooldownSeconds,
-                            onClick = onResentNotification,
+                            onClick = onResendNotification,
                         )
                     }
 
@@ -774,7 +774,7 @@ private fun PeerDiscoveryScreenPreview() {
                 network = NetworkOption.Local,
                 enableNotification = true,
             ),
-        onResentNotification = {},
+        onResendNotification = {},
         onBackClick = {},
         onHelpClick = {},
         onShareQrClick = {},

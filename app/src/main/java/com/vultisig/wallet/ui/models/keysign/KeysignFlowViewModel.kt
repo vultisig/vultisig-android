@@ -397,7 +397,7 @@ constructor(
             onError = {
                 snackbarFlow.showMessage(
                     UiText.StringResource(R.string.push_notifications_failed).asString(context),
-                    type = SnackbarType.Warning,
+                    type = SnackbarType.Error,
                 )
             }
         ) {

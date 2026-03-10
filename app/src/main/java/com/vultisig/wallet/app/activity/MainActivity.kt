@@ -48,13 +48,11 @@ class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var appUpdateManager: AppUpdateManager
 
-    private var cachedPushQrPayload: String? = null
-
     private val pushNotificationReceiver =
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 val qrCodeData =
-                    intent.getStringExtra(VultisigFirebaseMessagingService.EXTRA_QR_CODE_DATA)
+                    intent.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA)
                         ?: return
                 mainViewModel.onPushNotificationReceived(qrCodeData)
             }
@@ -72,9 +70,9 @@ class MainActivity : AppCompatActivity() {
         splashScreen.setKeepOnScreenCondition { false }
         super.onCreate(savedInstanceState)
 
-        // Handle notification tap when app was killed — defer until nav controller is ready
-        cachedPushQrPayload =
-            intent?.getStringExtra(VultisigFirebaseMessagingService.EXTRA_QR_CODE_DATA)
+        // Handle notification tap when app was killed — ViewModel awaits navigation readiness.
+        intent?.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA)
+            ?.let { mainViewModel.onPushNotificationReceived(it) }
 
         val systemBarStyle =
             SystemBarStyle.auto(
@@ -110,13 +108,7 @@ class MainActivity : AppCompatActivity() {
                         navController = navController,
                         mainViewModel = mainViewModel,
                         startDestination = screen,
-                        onNavigationReady = {
-                            isNavigationReady = true
-                            cachedPushQrPayload?.let { payload ->
-                                mainViewModel.onPushNotificationReceived(payload)
-                                cachedPushQrPayload = null
-                            }
-                        },
+                        onNavigationReady = { isNavigationReady = true },
                     )
                 }
             }
@@ -137,7 +129,7 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         val qrCodeData =
-            intent.getStringExtra(VultisigFirebaseMessagingService.EXTRA_QR_CODE_DATA) ?: return
+            intent.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA) ?: return
         mainViewModel.onPushNotificationReceived(qrCodeData)
     }
 

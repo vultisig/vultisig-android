@@ -197,7 +197,7 @@ private fun KeysignPeerDiscovery(
                 }
             },
             onNextClick = onStopParticipantDiscovery,
-            onResentNotification = onResentNotification,
+            onResendNotification = onResentNotification,
         )
     }
 }

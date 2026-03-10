@@ -1,5 +1,6 @@
 package com.vultisig.wallet.app.activity
 
+import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -8,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.install.model.UpdateAvailability
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -20,13 +22,15 @@ import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
+import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -42,6 +46,7 @@ import timber.log.Timber
 internal class MainViewModel
 @Inject
 constructor(
+    @param:ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
@@ -50,6 +55,8 @@ constructor(
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     networkUtils: NetworkUtils,
 ) : ViewModel() {
+
+    private val _navigationReady = CompletableDeferred<Unit>()
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
     val isLoading: State<Boolean> = _isLoading
@@ -90,22 +97,29 @@ constructor(
             .launchIn(viewModelScope)
     }
 
+    fun onNavigationReady() {
+        _navigationReady.complete(Unit)
+    }
+
     fun onPushNotificationReceived(qrCodeData: String) {
         viewModelScope.safeLaunch {
+            _navigationReady.await()
             val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
-            val vaultId = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }?.id ?: ""
-            // Delay is intentional: onPushNotificationReceived is invoked from
-            // onNavigationReady, which fires just before MainActivityContent launches
-            // the route-collector coroutine.  The SharedFlow has no replay buffer, so
-            // we wait one frame to let the collector subscribe before emitting.
-            delay(1.seconds)
-            navigator.route(getDirectionByQrCodeUseCase(qrCodeData, vaultId))
+            val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
+            if (vault == null) {
+                snackbarFlow.showMessage(
+                    context.getString(R.string.push_notification_vault_not_found),
+                    SnackbarType.Error,
+                )
+                return@safeLaunch
+            }
+            navigator.route(getDirectionByQrCodeUseCase(qrCodeData, vault.id))
         }
     }
 
     fun openUri(uri: Uri) {
         viewModelScope.launch {
-            delay(1.seconds)
+            _navigationReady.await()
             val deepLinkHelper = DeepLinkHelper(uri)
             if (deepLinkHelper.isSendDeeplink()) {
                 if (vaultRepository.hasVaults()) {

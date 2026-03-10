@@ -4,14 +4,12 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Upsert
+import androidx.room.Transaction
 import com.vultisig.wallet.data.db.models.VaultNotificationSettingsEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface VaultNotificationSettingsDao {
-
-    @Upsert suspend fun upsert(entity: VaultNotificationSettingsEntity)
 
     @Query("SELECT * FROM vault_notification_settings WHERE vaultId = :vaultId")
     suspend fun getByVaultId(vaultId: String): VaultNotificationSettingsEntity?
@@ -37,4 +35,10 @@ interface VaultNotificationSettingsDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertIfNotExists(entity: VaultNotificationSettingsEntity)
+
+    @Transaction
+    suspend fun setEnabledForAll(vaultIds: List<String>, enabled: Boolean) {
+        vaultIds.forEach { insertIfNotExists(VaultNotificationSettingsEntity(vaultId = it)) }
+        vaultIds.forEach { setEnabled(it, enabled) }
+    }
 }

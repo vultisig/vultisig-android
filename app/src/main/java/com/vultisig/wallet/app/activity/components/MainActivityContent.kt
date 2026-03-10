@@ -46,13 +46,16 @@ internal fun MainActivityContent(
         LaunchedEffect(navController) {
             snapshotFlow { navController.currentBackStackEntry }.filterNotNull().first()
 
-            onNavigationReady()
-
+            // Start collectors before signalling readiness so they are subscribed
+            // (Main.immediate dispatches run immediately until first suspension).
             launch {
                 mainViewModel.destination.collect { navController.route(it.dst.route, it.opts) }
             }
 
             launch { mainViewModel.route.collect { navController.route(it) } }
+
+            mainViewModel.onNavigationReady()
+            onNavigationReady()
         }
 
         BiometryAuthScreen()

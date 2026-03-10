@@ -3,13 +3,11 @@ package com.vultisig.wallet.data.api
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
-import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.http.HttpStatusCode
-import javax.inject.Inject
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import javax.inject.Inject
 
 @Serializable
 data class DeviceRegistrationRequest(
@@ -38,8 +36,6 @@ interface NotificationApi {
 
     suspend fun unregisterDevice(request: DeviceUnregisterRequest)
 
-    suspend fun isVaultRegistered(vaultId: String): Boolean
-
     suspend fun notify(request: NotifyRequest)
 }
 
@@ -52,13 +48,6 @@ internal class NotificationApiImpl @Inject constructor(private val http: HttpCli
 
     override suspend fun unregisterDevice(request: DeviceUnregisterRequest) {
         http.delete("$NOTIFICATION_BASE_URL/unregister") { setBody(request) }.throwIfUnsuccessful()
-    }
-
-    override suspend fun isVaultRegistered(vaultId: String): Boolean {
-        val response = http.get("$NOTIFICATION_BASE_URL/vault/$vaultId")
-        if (response.status == HttpStatusCode.NotFound) return false
-        response.throwIfUnsuccessful()
-        return true
     }
 
     override suspend fun notify(request: NotifyRequest) {

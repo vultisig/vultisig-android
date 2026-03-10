@@ -32,7 +32,9 @@ import com.vultisig.wallet.data.repositories.TiersNFTRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
+import com.vultisig.wallet.data.services.PushNotificationError
 import com.vultisig.wallet.data.services.PushNotificationManager
+import com.vultisig.wallet.data.services.toStringRes
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
@@ -49,7 +51,6 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -66,6 +67,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import javax.inject.Inject
 
 @Immutable
 internal data class VaultAccountsUiModel(
@@ -566,7 +568,7 @@ constructor(
                         vaultId = vault.id,
                         vaultName = vault.name,
                         isEnabled = pushNotificationManager.isVaultOptedIn(vault.id),
-                        isFastVault = false,
+                        isFastVault = vault.isFastVault(),
                     )
                 }
             uiState.update {
@@ -622,10 +624,9 @@ constructor(
                             }
                     )
                 }
-                snackbarFlow.showMessage(
-                    context.getString(R.string.push_notifications_failed),
-                    SnackbarType.Error,
-                )
+                val msgRes = (e as? PushNotificationError)?.toStringRes()
+                    ?: R.string.push_notifications_failed
+                snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
             }
         ) {
             pushNotificationManager.setVaultOptIn(vaultId, enabled)
@@ -634,6 +635,25 @@ constructor(
 
     fun onNotificationVaultSheetDismiss() {
         uiState.update { it.copy(showNotificationVaultSheet = false) }
+    }
+
+    fun onEnableAll(enabled: Boolean) {
+        val previousVaults = uiState.value.notificationIntroVaults
+        uiState.update { state ->
+            state.copy(
+                notificationIntroVaults = state.notificationIntroVaults.map { it.copy(isEnabled = enabled) }
+            )
+        }
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                uiState.update { it.copy(notificationIntroVaults = previousVaults) }
+                val msgRes = (e as? PushNotificationError)?.toStringRes()
+                    ?: R.string.push_notifications_failed
+                snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
+            }
+        ) {
+            pushNotificationManager.setAllVaultsOptIn(enabled = enabled)
+        }
     }
 
     companion object {

@@ -16,9 +16,9 @@ import timber.log.Timber
  * [CancellationException] is always re-thrown to preserve coroutine cancellation semantics (e.g.
  * `viewModelScope` cancellation on `ViewModel.onCleared()`).
  *
- * [onError] is intentionally **non-suspend** — it runs synchronously on the coroutine's dispatcher,
- * which is safe for updating `MutableStateFlow` values. If [onError] itself throws, that exception
- * is **not** caught and will propagate normally.
+ * [onError] is a **suspend** function — it runs within the same coroutine context as [block],
+ * allowing to suspend calls such as showing a snackbar or emitting to a flow. If [onError] itself
+ * throws, that exception is **not** caught and will propagate normally.
  *
  * Usage in a ViewModel:
  * ```

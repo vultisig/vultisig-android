@@ -56,7 +56,7 @@ internal fun NotificationsIntroBottomSheetContent(onEnable: () -> Unit, onNotNow
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
-            painter = painterResource(id = R.drawable.nofitication_banner),
+            painter = painterResource(id = R.drawable.notification_banner),
             contentDescription = null,
         )
 
@@ -107,13 +107,14 @@ internal fun NotificationsIntroBottomSheetContent(onEnable: () -> Unit, onNotNow
 internal fun VaultNotificationOptInBottomSheet(
     vaults: List<VaultIntroItem>,
     onEnableVault: (String, Boolean) -> Unit,
+    onEnableAll: (Boolean) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     V2BottomSheet(onDismissRequest = onDismissRequest) {
         VaultNotificationOptInBottomSheetContent(
             vaults = vaults,
             onEnableVault = onEnableVault,
-            onEnableAll = { enabled -> vaults.forEach { onEnableVault(it.vaultId, enabled) } },
+            onEnableAll = onEnableAll,
             onConfirm = onDismissRequest,
         )
     }
@@ -249,7 +250,7 @@ private fun VaultNotificationOptInBottomSheetContentPreview() {
                     ),
                     VaultIntroItem(vaultId = "3", vaultName = "Vault 3", isEnabled = false),
                     VaultIntroItem(
-                        vaultId = "3",
+                        vaultId = "4",
                         vaultName = "Vault 4",
                         isEnabled = false,
                         isFastVault = true,
