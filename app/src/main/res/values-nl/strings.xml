@@ -941,16 +941,7 @@
     <string name="key_import_chains_get_started">Aan de slag</string>
     <string name="key_import_chains_no_results">Geen ketens komen overeen met uw zoekopdracht</string>
 
-    <string name="key_import_device_count_title">Kies instelling</string>
-    <string name="key_import_device_count_fast">Snel</string>
-    <string name="key_import_device_count_secure">Beveiligd</string>
     <string name="key_import_device_count_get_started">Aan de slag</string>
-    <string name="key_import_device_count_fast_desc_1">1 apparaat + Vultisig-server</string>
-    <string name="key_import_device_count_fast_desc_2">Snelle en eenvoudige installatie</string>
-    <string name="key_import_device_count_fast_desc_3">Herstel via e-mail</string>
-    <string name="key_import_device_count_secure_desc_1">2 of meer apparaten vereist</string>
-    <string name="key_import_device_count_secure_desc_2">Maximale beveiliging</string>
-    <string name="key_import_device_count_secure_desc_3">Geen externe server</string>
     <string name="vault_count_recommended">Aanbevolen</string>
 
     <string name="welcome_preference_title">Welk type kluis geeft u de voorkeur?</string>
@@ -963,7 +954,7 @@
     <string name="welcome_fast_and_easy">Snel &amp; eenvoudig</string>
     <string name="welcome_fast_and_easy_desc">Onderteken met slechts 1 apparaat. Onze beveiligde server ondertekent met u voor multisig-beveiliging. Plugin-compatibel.</string>
     <string name="welcome_fast_and_easy_highlight">slechts 1 apparaat.</string>
-    <string name="welcome_plugin_compatible">Compatibel met Plugin Marktplaats</string>
+    <string name="welcome_plugin_compatible">Compatibel met Plugin Store</string>
     <string name="welcome_tip">Tip: U kunt een browser gebruiken als apparaat</string>
     <string name="welcome_only_your_devices">Alleen uw apparaten</string>
     <string name="welcome_only_your_devices_desc">Alleen uw apparaten zijn bevoegde ondertekenaars. Transacties ondertekenen vereist 2 apparaten. Volledige zelfbeheer binnen handbereik.</string>

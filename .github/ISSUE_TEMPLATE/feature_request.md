@@ -1,20 +1,48 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: '[ADD]'
-labels: Feature
+name: Feature Request
+about: Request a new feature for agent or human implementation
+title: "[Add] "
+labels: enhancement
 assignees: ''
-
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+<!-- Fill in the AGENT block: priority = critical|high|medium|low, size = tiny|small|medium -->
+<!-- AGENT
+type: "feature"
+priority: ""
+size: ""
+platform: [android]
+files:
+  read: []
+  write: []
+verify: ["./gradlew assembleDebug"]
+-->
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+# [Add] <what to build> [<screen/area>]
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+## Problem
+<!-- 2-3 sentences. What's missing or suboptimal? -->
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+
+## Solution
+<!-- 1 paragraph. WHAT to do and WHY this approach. -->
+
+
+## Scope
+
+### Must Do
+- [ ] <!-- Specific deliverable 1 -->
+- [ ] <!-- Specific deliverable 2 -->
+- [ ] <!-- Specific deliverable 3 -->
+
+### Must NOT Do
+- Don't change existing behavior
+- Don't add extra dependencies without approval
+
+### Out of Scope
+- <!-- Related but separate work — future issue -->
+
+## Acceptance Criteria
+- [ ] `./gradlew assembleDebug` succeeds
+- [ ] <!-- Specific behavior check 1 -->
+- [ ] <!-- Specific behavior check 2 -->

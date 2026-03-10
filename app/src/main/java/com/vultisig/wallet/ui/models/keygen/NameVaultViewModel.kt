@@ -124,7 +124,11 @@ constructor(
 
                 VaultType.Secure -> {
                     navigator.route(
-                        Route.Keygen.PeerDiscovery(action = args.tssAction, vaultName = name)
+                        Route.Keygen.PeerDiscovery(
+                            action = args.tssAction,
+                            vaultName = name,
+                            deviceCount = args.deviceCount,
+                        )
                     )
                 }
             }

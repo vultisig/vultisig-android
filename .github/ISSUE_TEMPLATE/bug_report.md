@@ -1,33 +1,53 @@
 ---
-name: Bug report
-about: Create a report to help us improve Vultisig
-title: '[BUG]'
+name: Bug Report
+about: Report a bug for agent or human resolution
+title: "[Fix] "
 labels: bug
 assignees: ''
-
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+<!-- Fill in the AGENT block: priority = critical|high|medium|low, size = tiny|small|medium -->
+<!-- AGENT
+type: "bugfix"
+priority: ""
+size: ""
+platform: [android]
+files:
+  read: []
+  write: []
+verify: ["./gradlew assembleDebug"]
+-->
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+# [Fix] <what's broken> [<screen/area>]
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Problem
+<!-- 2-3 sentences. What's broken? Who's affected? -->
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. Google Pixel]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+## Expected Behavior
+<!-- What should happen instead? -->
 
-**Additional context**
-Add any other context about the problem here.
+
+## Steps to Reproduce
+1.
+2.
+3.
+
+## Solution
+<!-- 1 paragraph. WHAT to do and WHY this approach. Leave blank if unsure. -->
+
+
+## Scope
+
+### Must Do
+- [ ] <!-- Specific fix 1 -->
+- [ ] <!-- Specific fix 2 -->
+
+### Must NOT Do
+- Don't change unrelated code
+- Don't refactor surrounding logic
+
+## Acceptance Criteria
+- [ ] `./gradlew assembleDebug` succeeds
+- [ ] <!-- Specific behavior check 1 -->
+- [ ] <!-- Specific behavior check 2 -->

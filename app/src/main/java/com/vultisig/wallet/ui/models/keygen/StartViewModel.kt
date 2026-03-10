@@ -37,7 +37,7 @@ constructor(
     }
 
     fun navigateToCreateVault() {
-        viewModelScope.launch { navigator.route(Route.ChooseVaultCount) }
+        viewModelScope.launch { navigator.route(Route.ChooseVaultCount()) }
     }
 
     fun navigateToScanQrCode() {
