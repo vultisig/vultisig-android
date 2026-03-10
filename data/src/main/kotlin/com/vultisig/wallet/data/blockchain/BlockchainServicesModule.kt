@@ -4,6 +4,8 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
+import com.vultisig.wallet.data.blockchain.maya.MayaCacaoStakingService
+import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
@@ -12,6 +14,7 @@ import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.ScaCircleAccountRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
+import com.vultisig.wallet.data.usecases.MayachainBondUseCase
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import dagger.Binds
 import dagger.Module
@@ -85,6 +88,19 @@ internal interface BlockchainServicesModule {
                 stakingDetailsRepository = stakingDetailsRepository,
                 scaCircleAccountRepository = scaCircleAccountRepository,
                 evmApi = evmApiFactory,
+            )
+
+        @Provides
+        @Singleton
+        fun provideMayaDeFiBalanceService(
+            mayachainBondUseCase: MayachainBondUseCase,
+            mayaCacaoStakingService: MayaCacaoStakingService,
+            activeBondedNodeRepository: ActiveBondedNodeRepository,
+        ): MayaDeFiBalanceService =
+            MayaDeFiBalanceService(
+                mayachainBondUseCase = mayachainBondUseCase,
+                mayaCacaoStakingService = mayaCacaoStakingService,
+                activeBondedNodeRepository = activeBondedNodeRepository,
             )
     }
 }
