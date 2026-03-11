@@ -116,18 +116,22 @@ constructor(
         _navigationReady.complete(Unit)
     }
 
+    private var foregroundPushJob: kotlinx.coroutines.Job? = null
+
     fun onForegroundPushReceived(qrCodeData: String) {
-        viewModelScope.safeLaunch {
-            val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
-            val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
-            val transactionSummary = getKeysignTransactionSummary(qrCodeData) ?: ""
-            _foregroundNotification.value =
-                ForegroundNotificationState(
-                    qrCodeData = qrCodeData,
-                    vaultName = vault?.name ?: "",
-                    transactionSummary = transactionSummary,
-                )
-        }
+        foregroundPushJob?.cancel()
+        foregroundPushJob =
+            viewModelScope.safeLaunch {
+                val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
+                val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
+                val transactionSummary = getKeysignTransactionSummary(qrCodeData) ?: ""
+                _foregroundNotification.value =
+                    ForegroundNotificationState(
+                        qrCodeData = qrCodeData,
+                        vaultName = vault?.name ?: "",
+                        transactionSummary = transactionSummary,
+                    )
+            }
     }
 
     fun onForegroundBannerTapped() {

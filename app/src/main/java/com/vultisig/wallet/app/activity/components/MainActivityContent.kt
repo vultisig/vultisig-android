@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,19 +70,22 @@ internal fun MainActivityContent(
         val foregroundNotification by
             mainViewModel.foregroundNotification.collectAsStateWithLifecycle()
 
-        AnimatedVisibility(
-            visible = foregroundNotification != null,
-            enter = slideInVertically { -it },
-            exit = slideOutVertically { -it },
-            modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(),
-        ) {
-            ForegroundNotificationBanner(
-                vaultName = foregroundNotification?.vaultName ?: "",
-                transactionSummary = foregroundNotification?.transactionSummary ?: "",
-                onTap = mainViewModel::onForegroundBannerTapped,
-                onDismiss = mainViewModel::onForegroundBannerDismissed,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
+        key(foregroundNotification?.qrCodeData) {
+            AnimatedVisibility(
+                visible = foregroundNotification != null,
+                enter = slideInVertically { -it },
+                exit = slideOutVertically { -it },
+                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(),
+            ) {
+                ForegroundNotificationBanner(
+                    qrCodeData = foregroundNotification?.qrCodeData ?: "",
+                    vaultName = foregroundNotification?.vaultName ?: "",
+                    transactionSummary = foregroundNotification?.transactionSummary ?: "",
+                    onTap = mainViewModel::onForegroundBannerTapped,
+                    onDismiss = mainViewModel::onForegroundBannerDismissed,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
         }
 
         BiometryAuthScreen()

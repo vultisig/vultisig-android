@@ -50,15 +50,16 @@ private val bannerGradient
 
 @Composable
 internal fun ForegroundNotificationBanner(
+    qrCodeData: String,
     vaultName: String,
     transactionSummary: String,
     onTap: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val progress = remember { Animatable(1f) }
+    val progress = remember(qrCodeData) { Animatable(1f) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(qrCodeData) {
         progress.animateTo(
             targetValue = 0f,
             animationSpec =
@@ -89,7 +90,7 @@ internal fun ForegroundNotificationBanner(
             )
             Icon(
                 painter = painterResource(R.drawable.x),
-                contentDescription = null,
+                contentDescription = "Dismiss notification",
                 tint = Theme.v2.colors.text.primary,
                 modifier =
                     Modifier.size(32.dp)
@@ -167,6 +168,7 @@ internal fun ForegroundNotificationBanner(
 @Composable
 private fun ForegroundNotificationBannerPreview() {
     ForegroundNotificationBanner(
+        qrCodeData = "preview",
         vaultName = "Vault #2",
         transactionSummary = "Swap 10 ETH → USDC",
         onTap = {},
