@@ -179,15 +179,21 @@ private fun NotificationsSettingsScreenPreview() {
                     listOf(
                         VaultNotificationUiModel(
                             vaultId = "1",
-                            vaultName = "Main Vault",
+                            vaultName = "Secure Vault",
                             isEnabled = true,
                             isFastVault = false,
                         ),
                         VaultNotificationUiModel(
                             vaultId = "2",
-                            vaultName = "Cold Wallet",
+                            vaultName = "Trading Vault",
                             isEnabled = false,
                             isFastVault = true,
+                        ),
+                        VaultNotificationUiModel(
+                            vaultId = "3",
+                            vaultName = "Main Vault",
+                            isEnabled = true,
+                            isFastVault = false,
                         ),
                     ),
             ),
