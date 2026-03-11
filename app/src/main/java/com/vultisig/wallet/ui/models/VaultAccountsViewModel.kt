@@ -330,6 +330,7 @@ constructor(
                         )
                     }
                 }
+                CryptoConnectionType.Agent -> Unit
             }
         }
     }
@@ -376,6 +377,7 @@ constructor(
                                     CryptoConnectionType.Wallet -> true
                                     CryptoConnectionType.Defi ->
                                         cryptoConnectionTypeRepository.isDefi(it.chain)
+                                    CryptoConnectionType.Agent -> true
                                 }
                             }
                             .updateUiStateFromList(searchQuery = searchQuery.toString())
@@ -541,6 +543,11 @@ constructor(
     }
 
     fun setCryptoConnectionType(type: CryptoConnectionType) {
+        if (type == CryptoConnectionType.Agent) {
+            viewModelScope.launch { navigator.route(Route.AgentChat()) }
+            return
+        }
+
         cryptoConnectionTypeRepository.setActiveCryptoConnection(type)
         uiState.update { it.copy(cryptoConnectionType = type) }
 

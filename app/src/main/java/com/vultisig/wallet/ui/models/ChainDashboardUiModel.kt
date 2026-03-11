@@ -114,6 +114,7 @@ constructor(
                                 ChainDashboardRoute.PositionCircle(vaultId = vaultId)
                             }
                         }
+                        CryptoConnectionType.Agent -> return@onEach
                     }
                 uiState.update { state ->
                     state.copy(route = activeRoute, cryptoConnectionType = type)
