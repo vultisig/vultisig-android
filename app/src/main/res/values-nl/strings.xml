@@ -356,6 +356,7 @@
     <string name="keysign_notification_channel_name">Ondertekeningsverzoeken</string>
     <string name="keysign_notification_title">Transactie ondertekenen</string>
     <string name="keysign_notification_body">Er wacht een nieuw ondertekeningsverzoek op u</string>
+    <string name="foreground_notification_banner_title">Deelnemen aan transactie</string>
     <string name="notifications_intro_enable">Inschakelen</string>
     <string name="notifications_are_here">Veilige meldingen zijn hier</string>
     <string name="notifications_description">Ontvang meldingen wanneer een ander apparaat verzoekt lid te worden van uw kluis of wanneer uw handtekening vereist is.</string>

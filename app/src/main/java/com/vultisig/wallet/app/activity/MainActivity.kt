@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
             override fun onReceive(context: Context, intent: Intent) {
                 val qrCodeData =
                     intent.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA) ?: return
-                mainViewModel.onPushNotificationReceived(qrCodeData)
+                mainViewModel.onForegroundPushReceived(qrCodeData)
             }
         }
 

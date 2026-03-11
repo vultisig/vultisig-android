@@ -356,6 +356,7 @@
     <string name="keysign_notification_channel_name">Keysign-Anfragen</string>
     <string name="keysign_notification_title">Transaktion signieren</string>
     <string name="keysign_notification_body">Eine neue Signierungsanfrage wartet auf Sie</string>
+    <string name="foreground_notification_banner_title">Transaktion beitreten</string>
     <string name="notifications_intro_enable">Aktivieren</string>
     <string name="notifications_are_here">Sichere Benachrichtigungen sind da</string>
     <string name="notifications_description">Erhalten Sie Benachrichtigungen, wenn ein anderes Gerät Ihrem Tresor beitreten möchte oder wenn Ihre Unterschrift erforderlich ist.</string>

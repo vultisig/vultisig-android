@@ -355,6 +355,7 @@
     <string name="keysign_notification_channel_name">Запросы на подписание</string>
     <string name="keysign_notification_title">Подписать транзакцию</string>
     <string name="keysign_notification_body">Новый запрос на подписание ожидает вас</string>
+    <string name="foreground_notification_banner_title">Присоединиться к транзакции</string>
     <string name="notifications_intro_enable">Включить</string>
     <string name="notifications_are_here">Безопасные уведомления здесь</string>
     <string name="notifications_description">Получайте уведомления, когда другое устройство запрашивает доступ к вашему хранилищу или когда требуется ваша подпись.</string>

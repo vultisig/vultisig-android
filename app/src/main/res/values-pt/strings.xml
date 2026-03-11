@@ -356,6 +356,7 @@
     <string name="keysign_notification_channel_name">Solicitações de assinatura</string>
     <string name="keysign_notification_title">Assinar transação</string>
     <string name="keysign_notification_body">Há uma nova solicitação de assinatura aguardando você</string>
+    <string name="foreground_notification_banner_title">Participar da transação</string>
     <string name="notifications_intro_enable">Ativar</string>
     <string name="notifications_are_here">Notificações seguras chegaram</string>
     <string name="notifications_description">Receba alertas quando outro dispositivo solicitar entrar no seu cofre ou quando a sua assinatura for necessária.</string>

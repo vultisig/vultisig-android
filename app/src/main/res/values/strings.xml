@@ -13,6 +13,7 @@
     <string name="keysign_notification_channel_name">Keysign Requests</string>
     <string name="keysign_notification_title">Sign transaction</string>
     <string name="keysign_notification_body">A new signing request is waiting for you</string>
+    <string name="foreground_notification_banner_title">Join transaction</string>
     <string name="notifications_intro_enable">Enable</string>
     <string name="notifications_are_here">Secure Notifications are here</string>
     <string name="notifications_description">Receive alerts when another device requests to join your vault or when your signature is required.</string>

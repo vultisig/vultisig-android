@@ -33,7 +33,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -41,6 +44,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
+
+internal data class ForegroundNotificationState(val qrCodeData: String, val vaultName: String = "")
 
 @HiltViewModel
 internal class MainViewModel
@@ -68,6 +73,10 @@ constructor(
 
     private val _startDestination: MutableState<Any> = mutableStateOf(Route.Home())
     val startDestination: State<Any> = _startDestination
+
+    private val _foregroundNotification = MutableStateFlow<ForegroundNotificationState?>(null)
+    val foregroundNotification: StateFlow<ForegroundNotificationState?> =
+        _foregroundNotification.asStateFlow()
 
     val destination: Flow<NavigateAction<Destination>> = navigator.destination
 
@@ -99,6 +108,25 @@ constructor(
 
     fun onNavigationReady() {
         _navigationReady.complete(Unit)
+    }
+
+    fun onForegroundPushReceived(qrCodeData: String) {
+        viewModelScope.safeLaunch {
+            val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
+            val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
+            _foregroundNotification.value =
+                ForegroundNotificationState(qrCodeData = qrCodeData, vaultName = vault?.name ?: "")
+        }
+    }
+
+    fun onForegroundBannerTapped() {
+        val qrCodeData = _foregroundNotification.value?.qrCodeData ?: return
+        _foregroundNotification.value = null
+        onPushNotificationReceived(qrCodeData)
+    }
+
+    fun onForegroundBannerDismissed() {
+        _foregroundNotification.value = null
     }
 
     fun onPushNotificationReceived(qrCodeData: String) {
