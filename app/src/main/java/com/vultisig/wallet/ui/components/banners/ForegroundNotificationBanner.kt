@@ -51,6 +51,7 @@ private val bannerGradient
 @Composable
 internal fun ForegroundNotificationBanner(
     vaultName: String,
+    transactionSummary: String,
     onTap: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
@@ -127,12 +128,21 @@ internal fun ForegroundNotificationBanner(
             UiSpacer(size = 8.dp)
         }
 
-        Text(
-            text = stringResource(R.string.keysign_notification_body),
-            style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.secondary,
-            textAlign = TextAlign.Center,
-        )
+        if (transactionSummary.isNotEmpty()) {
+            Text(
+                text = transactionSummary,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.secondary,
+                textAlign = TextAlign.Center,
+            )
+        } else {
+            Text(
+                text = stringResource(R.string.keysign_notification_body),
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.secondary,
+                textAlign = TextAlign.Center,
+            )
+        }
 
         UiSpacer(size = 16.dp)
 
@@ -156,5 +166,10 @@ internal fun ForegroundNotificationBanner(
 @Preview
 @Composable
 private fun ForegroundNotificationBannerPreview() {
-    ForegroundNotificationBanner(vaultName = "Vault #2", onTap = {}, onDismiss = {})
+    ForegroundNotificationBanner(
+        vaultName = "Vault #2",
+        transactionSummary = "Swap 10 ETH → USDC",
+        onTap = {},
+        onDismiss = {},
+    )
 }

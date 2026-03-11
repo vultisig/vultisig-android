@@ -77,6 +77,7 @@ internal fun MainActivityContent(
         ) {
             ForegroundNotificationBanner(
                 vaultName = foregroundNotification?.vaultName ?: "",
+                transactionSummary = foregroundNotification?.transactionSummary ?: "",
                 onTap = mainViewModel::onForegroundBannerTapped,
                 onDismiss = mainViewModel::onForegroundBannerDismissed,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),

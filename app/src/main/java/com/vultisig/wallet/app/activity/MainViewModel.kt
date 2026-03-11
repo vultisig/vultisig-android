@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
+import com.vultisig.wallet.data.usecases.GetKeysignTransactionSummaryUseCase
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
@@ -45,7 +46,11 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-internal data class ForegroundNotificationState(val qrCodeData: String, val vaultName: String = "")
+internal data class ForegroundNotificationState(
+    val qrCodeData: String,
+    val vaultName: String = "",
+    val transactionSummary: String = "",
+)
 
 @HiltViewModel
 internal class MainViewModel
@@ -58,6 +63,7 @@ constructor(
     private val appUpdateManager: AppUpdateManager,
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
+    private val getKeysignTransactionSummary: GetKeysignTransactionSummaryUseCase,
     networkUtils: NetworkUtils,
 ) : ViewModel() {
 
@@ -114,8 +120,13 @@ constructor(
         viewModelScope.safeLaunch {
             val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
             val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
+            val transactionSummary = getKeysignTransactionSummary(qrCodeData) ?: ""
             _foregroundNotification.value =
-                ForegroundNotificationState(qrCodeData = qrCodeData, vaultName = vault?.name ?: "")
+                ForegroundNotificationState(
+                    qrCodeData = qrCodeData,
+                    vaultName = vault?.name ?: "",
+                    transactionSummary = transactionSummary,
+                )
         }
     }
 
