@@ -35,6 +35,10 @@ interface VaultDao {
     @Query("SELECT * FROM vault")
     suspend fun loadAll(): List<VaultWithKeySharesAndTokens>
 
+    @Transaction
+    @Query("SELECT * FROM vault")
+    fun loadAllAsFlow(): Flow<List<VaultWithKeySharesAndTokens>>
+
     @Query("SELECT coinId FROM disabledCoin WHERE vaultId = :vaultId")
     suspend fun loadDisabledCoinIds(vaultId: VaultId): List<String>
 

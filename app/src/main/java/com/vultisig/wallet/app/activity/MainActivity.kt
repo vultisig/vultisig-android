@@ -2,6 +2,10 @@
 
 package com.vultisig.wallet.app.activity
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
@@ -18,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -29,6 +34,7 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.vultisig.wallet.app.activity.components.AnimatedSplash
 import com.vultisig.wallet.app.activity.components.CheckDeeplink
 import com.vultisig.wallet.app.activity.components.MainActivityContent
+import com.vultisig.wallet.data.services.VultisigFirebaseMessagingService
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 import dagger.hilt.android.AndroidEntryPoint
@@ -42,6 +48,15 @@ class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var appUpdateManager: AppUpdateManager
 
+    private val pushNotificationReceiver =
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val qrCodeData =
+                    intent.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA) ?: return
+                mainViewModel.onPushNotificationReceived(qrCodeData)
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Workaround for Android 8.0 (API 26) crash: "Only fullscreen opaque activities can
         // request orientation". Theme.SplashScreen sets windowIsTranslucent=true on API 26,
@@ -53,6 +68,11 @@ class MainActivity : AppCompatActivity() {
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition { false }
         super.onCreate(savedInstanceState)
+
+        // Handle notification tap when app was killed — ViewModel awaits navigation readiness.
+        intent?.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA)?.let {
+            mainViewModel.onPushNotificationReceived(it)
+        }
 
         val systemBarStyle =
             SystemBarStyle.auto(
@@ -103,6 +123,33 @@ class MainActivity : AppCompatActivity() {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainViewModel.startUpdateEvent.collect { startImmediateUpdate() }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val qrCodeData =
+            intent.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA) ?: return
+        mainViewModel.onPushNotificationReceived(qrCodeData)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val filter = IntentFilter(VultisigFirebaseMessagingService.PUSH_NOTIFICATION_ACTION)
+        ContextCompat.registerReceiver(
+            this,
+            pushNotificationReceiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+    }
+
+    override fun onStop() {
+        super.onStop()
+        try {
+            unregisterReceiver(pushNotificationReceiver)
+        } catch (e: IllegalArgumentException) {
+            Timber.w(e, "Receiver was not registered")
         }
     }
 

@@ -74,6 +74,8 @@ fun Vault.isFastVault(): Boolean {
     return containsServerSigner() && !isServerVault()
 }
 
+fun Vault.isSecureVault() = !isFastVault()
+
 /**
  * Returns (publicKey, chainCode) for ECDSA signing on the given [chain].
  *

@@ -130,6 +130,9 @@ internal fun KeysignPeerDiscovery(
         onShareQrClick = { sharedViewModel.shareQRCode(activity) },
         onStopParticipantDiscovery = viewModel::moveToKeysignState,
         onBackClick = viewModel::back,
+        onResendNotification = viewModel::sendNotification,
+        resendCooldownSeconds = uiModel.resendCooldownSeconds,
+        enableNotification = uiModel.enableNotification,
     )
 }
 
@@ -148,6 +151,9 @@ private fun KeysignPeerDiscovery(
     onStopParticipantDiscovery: () -> Unit = {},
     onShareQrClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
+    onResendNotification: () -> Unit = {},
+    resendCooldownSeconds: Int = 0,
+    enableNotification: Boolean,
 ) {
     if (isLookingForVultiServer) {
         ConnectingToServer(false)
@@ -166,6 +172,8 @@ private fun KeysignPeerDiscovery(
                     showDevicesHint = false,
                     connectingToServer = null,
                     error = null,
+                    enableNotification = enableNotification,
+                    resendCooldownSeconds = resendCooldownSeconds,
                 ),
             onBackClick = onBackClick,
             showHelp = false,
@@ -189,6 +197,7 @@ private fun KeysignPeerDiscovery(
                 }
             },
             onNextClick = onStopParticipantDiscovery,
+            onResendNotification = onResendNotification,
         )
     }
 }
@@ -197,13 +206,14 @@ private fun KeysignPeerDiscovery(
 @Composable
 private fun KeysignPeerDiscoveryPreview() {
     KeysignPeerDiscovery(
-        isLookingForVultiServer = true,
+        isLookingForVultiServer = false,
         selectionState = listOf("1", "2"),
         localPartyId = "1",
         minimumDevices = 2,
         participants = listOf("1", "2", "3"),
         bitmapPainter =
             BitmapPainter(createBitmap(1, 1).asImageBitmap(), filterQuality = FilterQuality.None),
-        networkPromptOption = NetworkOption.Local,
+        networkPromptOption = NetworkOption.Internet,
+        enableNotification = true,
     )
 }

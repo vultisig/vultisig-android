@@ -27,6 +27,7 @@ internal fun V2ProgressiveLoading(
     progress: Float,
     modifier: Modifier = Modifier,
     size: Dp = 24.dp,
+    iconSize: Dp = 20.dp,
     strokeWidth: Dp = 2.dp,
     backgroundColor: Color = Theme.v2.colors.border.normal,
     progressColor: Color = Theme.v2.colors.alerts.success,
@@ -70,6 +71,6 @@ internal fun V2ProgressiveLoading(
             }
         }
 
-        UiIcon(drawableResId = icon, tint = iconColor, size = size * 0.8f)
+        UiIcon(drawableResId = icon, tint = iconColor, size = iconSize)
     }
 }

@@ -592,3 +592,21 @@ internal val MIGRATION_26_27 =
             )
         }
     }
+
+internal val MIGRATION_27_28 =
+    object : Migration(27, 28) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            CREATE TABLE IF NOT EXISTS `vault_notification_settings` (
+                `vaultId` TEXT NOT NULL,
+                `notificationsEnabled` INTEGER NOT NULL DEFAULT 0,
+                `notificationsPrompted` INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY(`vaultId`),
+                FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+            )
+            """
+                    .trimIndent()
+            )
+        }
+    }
