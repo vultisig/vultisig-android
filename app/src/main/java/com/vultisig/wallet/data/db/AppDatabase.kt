@@ -57,7 +57,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
             ChainPublicKeyEntity::class,
             VaultNotificationSettingsEntity::class,
         ],
-    version = 28,
+    version = 29,
     exportSchema = false,
 )
 @TypeConverters(
