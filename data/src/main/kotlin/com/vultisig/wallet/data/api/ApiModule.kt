@@ -69,4 +69,6 @@ internal interface ApiModule {
     @Binds @Singleton fun circleApi(impl: CircleApiImpl): CircleApi
 
     @Binds @Singleton fun bindNotificationApi(impl: NotificationApiImpl): NotificationApi
+
+    @Binds @Singleton fun bindAgentApi(impl: AgentApiImpl): AgentApi
 }

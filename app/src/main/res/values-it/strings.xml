@@ -1103,4 +1103,14 @@
     <string name="server_backup_error_too_many_requests">Troppe richieste di backup. Riprova più tardi.</string>
     <string name="server_backup_error_bad_request">Qualcosa è andato storto. Controlla i tuoi dati e riprova.</string>
     <string name="resend_notification">Reinvia notifica</string>
+
+    <!-- Vulti Agent -->
+    <string name="agent_title">Vulti Agent</string>
+    <string name="agent_welcome_title">Cosa vorresti fare?</string>
+    <string name="agent_welcome_subtitle">Posso aiutare a preparare swap, azioni dei plugin e regole di automazione.</string>
+    <string name="agent_input_placeholder">Inizia a digitare…</string>
+    <string name="agent_send">Invia</string>
+    <string name="agent_session_history">Cronologia sessione</string>
+    <string name="agent_new_chat">Nuova chat</string>
+    <string name="agent_no_conversations">Ancora nessuna conversazione</string>
 </resources>

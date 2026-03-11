@@ -60,6 +60,8 @@ import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
+import com.vultisig.wallet.ui.screens.agent.AgentChatScreen
+import com.vultisig.wallet.ui.screens.agent.AgentConversationsScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
 import com.vultisig.wallet.ui.screens.backup.ServerBackupScreen
 import com.vultisig.wallet.ui.screens.backup.VaultsToBackupScreen
@@ -407,5 +409,9 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         dialog<Route.Receive> { ReceiveBottomSheet() }
 
         dialog<Route.AddressQr> { TokenAddressQrBottomSheet() }
+
+        composable<Route.AgentChat> { AgentChatScreen() }
+
+        composable<Route.AgentConversations> { AgentConversationsScreen() }
     }
 }

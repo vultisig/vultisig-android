@@ -1101,4 +1101,14 @@
     <string name="server_backup_error_too_many_requests">Слишком много запросов на резервное копирование. Попробуйте позже.</string>
     <string name="server_backup_error_bad_request">Что-то пошло не так. Проверьте свои данные и попробуйте снова.</string>
     <string name="resend_notification">Повторно отправить уведомление</string>
+
+    <!-- Vulti Agent -->
+    <string name="agent_title">Vulti Agent</string>
+    <string name="agent_welcome_title">Что вы хотите сделать?</string>
+    <string name="agent_welcome_subtitle">Я могу помочь подготовить обмены, действия плагинов и правила автоматизации.</string>
+    <string name="agent_input_placeholder">Начните вводить…</string>
+    <string name="agent_send">Отправить</string>
+    <string name="agent_session_history">История сессии</string>
+    <string name="agent_new_chat">Новый чат</string>
+    <string name="agent_no_conversations">Пока нет разговоров</string>
 </resources>

@@ -495,6 +495,11 @@ internal sealed class Route {
 
     @Serializable data object NotificationSettings
 
+    // agent
+    @Serializable data class AgentChat(val conversationId: String? = null)
+
+    @Serializable data object AgentConversations
+
     @Serializable
     data class ReviewVaultDevices(
         val vaultId: VaultId,

@@ -1103,4 +1103,14 @@
     <string name="server_backup_error_too_many_requests">Previše zahtjeva za sigurnosnu kopiju. Pokušajte ponovno kasnije.</string>
     <string name="server_backup_error_bad_request">Nešto je pošlo po krivu. Provjerite svoje podatke i pokušajte ponovno.</string>
     <string name="resend_notification">Ponovo pošalji obavijest</string>
+
+    <!-- Vulti Agent -->
+    <string name="agent_title">Vulti Agent</string>
+    <string name="agent_welcome_title">Što biste željeli učiniti?</string>
+    <string name="agent_welcome_subtitle">Mogu pomoći s pripremom zamjena, plugin akcija i pravila automatizacije.</string>
+    <string name="agent_input_placeholder">Počnite tipkati…</string>
+    <string name="agent_send">Pošalji</string>
+    <string name="agent_session_history">Povijest sesije</string>
+    <string name="agent_new_chat">Novi chat</string>
+    <string name="agent_no_conversations">Još nema razgovora</string>
 </resources>

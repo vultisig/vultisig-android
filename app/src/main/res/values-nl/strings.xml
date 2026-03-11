@@ -1097,4 +1097,14 @@
     <string name="server_backup_error_too_many_requests">Te veel back-upverzoeken. Probeer het later opnieuw.</string>
     <string name="server_backup_error_bad_request">Er is iets misgegaan. Controleer uw gegevens en probeer het opnieuw.</string>
     <string name="resend_notification">Melding opnieuw sturen</string>
+
+    <!-- Vulti Agent -->
+    <string name="agent_title">Vulti Agent</string>
+    <string name="agent_welcome_title">Wat wilt u doen?</string>
+    <string name="agent_welcome_subtitle">Ik kan helpen met het voorbereiden van swaps, plugin-acties en automatiseringsregels.</string>
+    <string name="agent_input_placeholder">Begin met typen…</string>
+    <string name="agent_send">Sturen</string>
+    <string name="agent_session_history">Sessiegeschiedenis</string>
+    <string name="agent_new_chat">Nieuwe chat</string>
+    <string name="agent_no_conversations">Nog geen gesprekken</string>
 </resources>
