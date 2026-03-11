@@ -5,13 +5,20 @@ import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import io.ktor.util.decodeBase64Bytes
-import java.math.RoundingMode
 import javax.inject.Inject
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 
-internal interface GetKeysignTransactionSummaryUseCase : suspend (String) -> String?
+internal sealed interface KeysignTransactionSummary {
+    data class Swap(val srcTokenValue: TokenValue, val dstTicker: String) :
+        KeysignTransactionSummary
+
+    data class Send(val tokenValue: TokenValue) : KeysignTransactionSummary
+}
+
+internal interface GetKeysignTransactionSummaryUseCase :
+    suspend (String) -> KeysignTransactionSummary?
 
 internal class GetKeysignTransactionSummaryUseCaseImpl
 @Inject
@@ -22,7 +29,7 @@ constructor(
 ) : GetKeysignTransactionSummaryUseCase {
 
     @OptIn(ExperimentalSerializationApi::class)
-    override suspend fun invoke(qrCodeData: String): String? =
+    override suspend fun invoke(qrCodeData: String): KeysignTransactionSummary? =
         runCatching {
                 val jsonData = DeepLinkHelper(qrCodeData).getJsonData() ?: return null
                 val rawBytes = decompressQr(jsonData.decodeBase64Bytes())
@@ -34,23 +41,16 @@ constructor(
 
                 val swap = payload.swapPayload
                 if (swap != null) {
-                    val amount = formatAmount(swap.srcTokenValue)
-                    "Swap $amount → ${swap.dstToken.ticker}"
+                    KeysignTransactionSummary.Swap(
+                        srcTokenValue = swap.srcTokenValue,
+                        dstTicker = swap.dstToken.ticker,
+                    )
                 } else {
-                    val amount = formatAmount(TokenValue(payload.toAmount, payload.coin))
-                    "Send $amount"
+                    KeysignTransactionSummary.Send(
+                        tokenValue = TokenValue(payload.toAmount, payload.coin)
+                    )
                 }
             }
             .onFailure { Timber.w(it, "Failed to parse keysign transaction summary") }
             .getOrNull()
-
-    private fun formatAmount(tokenValue: TokenValue): String {
-        val formatted =
-            tokenValue.decimal
-                .setScale(8, RoundingMode.DOWN)
-                .stripTrailingZeros()
-                .let { if (it.scale() < 0) it.setScale(0) else it }
-                .toPlainString()
-        return "$formatted ${tokenValue.unit}"
-    }
 }

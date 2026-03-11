@@ -142,6 +142,7 @@ private fun VaultNotificationToggle(
             VaultIcon(
                 isFastVault = vault.isFastVault,
                 size = 20.dp,
+                contentDescription = null,
                 modifier =
                     Modifier.border(
                             width = 1.dp,

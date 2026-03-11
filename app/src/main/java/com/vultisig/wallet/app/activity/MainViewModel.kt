@@ -16,9 +16,11 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.GetKeysignTransactionSummaryUseCase
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
+import com.vultisig.wallet.data.usecases.KeysignTransactionSummary
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -64,6 +66,7 @@ constructor(
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     private val getKeysignTransactionSummary: GetKeysignTransactionSummaryUseCase,
+    private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     networkUtils: NetworkUtils,
 ) : ViewModel() {
 
@@ -124,7 +127,21 @@ constructor(
             viewModelScope.safeLaunch {
                 val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
                 val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
-                val transactionSummary = getKeysignTransactionSummary(qrCodeData) ?: ""
+                val transactionSummary =
+                    when (val summary = getKeysignTransactionSummary(qrCodeData)) {
+                        is KeysignTransactionSummary.Swap ->
+                            context.getString(
+                                R.string.notification_banner_swap_summary,
+                                mapTokenValueToStringWithUnit(summary.srcTokenValue),
+                                summary.dstTicker,
+                            )
+                        is KeysignTransactionSummary.Send ->
+                            context.getString(
+                                R.string.notification_banner_send_summary,
+                                mapTokenValueToStringWithUnit(summary.tokenValue),
+                            )
+                        null -> ""
+                    }
                 _foregroundNotification.value =
                     ForegroundNotificationState(
                         qrCodeData = qrCodeData,
