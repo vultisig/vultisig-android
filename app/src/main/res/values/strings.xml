@@ -16,7 +16,7 @@
     <string name="notifications_intro_enable">Enable</string>
     <string name="notifications_are_here">Secure Notifications are here</string>
     <string name="notifications_description">Receive alerts when another device requests to join your vault or when your signature is required.</string>
-    <string name="choose_vaults_for_notifications">Choose vaults for notifications</string>
+    <string name="choose_vaults_for_notifications">Choose vaults for Notifications</string>
     <string name="notifications_vault_sheet_subtitle">You can manage notifications in system settings.</string>
     <string name="not_now">Not now</string>
     <string name="vault_notifications">Vault notifications</string>
