@@ -30,7 +30,7 @@ jobs:
           path: ~/.gradle/caches
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}-
-      
+
       - name: git submodule update
         run: git submodule update --init --recursive
       
@@ -68,7 +68,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-api-29-minimal
+          key: avd-api-29-v2
 
       # Clean only when cache did not restore
       - name: Clean old AVD on cache miss
