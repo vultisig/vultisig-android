@@ -24,13 +24,6 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/caches
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-${{ runner.os }}-
-
       - name: git submodule update
         run: git submodule update --init --recursive
       
