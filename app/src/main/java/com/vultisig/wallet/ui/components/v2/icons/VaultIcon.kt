@@ -9,7 +9,12 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun VaultIcon(modifier: Modifier = Modifier, isFastVault: Boolean, size: Dp = 16.dp) {
+internal fun VaultIcon(
+    modifier: Modifier = Modifier,
+    isFastVault: Boolean,
+    size: Dp = 16.dp,
+    contentDescription: String? = "vault type logo",
+) {
     UiIcon(
         modifier = modifier,
         drawableResId =
@@ -18,7 +23,7 @@ internal fun VaultIcon(modifier: Modifier = Modifier, isFastVault: Boolean, size
             } else {
                 R.drawable.ic_shield
             },
-        contentDescription = "vault type logo",
+        contentDescription = contentDescription,
         size = size,
         tint =
             if (isFastVault) {

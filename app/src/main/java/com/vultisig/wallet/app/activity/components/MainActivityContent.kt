@@ -1,20 +1,29 @@
 package com.vultisig.wallet.app.activity.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.app.activity.MainViewModel
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
+import com.vultisig.wallet.ui.components.banners.ForegroundNotificationBanner
 import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
@@ -56,6 +65,27 @@ internal fun MainActivityContent(
 
             mainViewModel.onNavigationReady()
             onNavigationReady()
+        }
+
+        val foregroundNotification by
+            mainViewModel.foregroundNotification.collectAsStateWithLifecycle()
+
+        key(foregroundNotification?.qrCodeData) {
+            AnimatedVisibility(
+                visible = foregroundNotification != null,
+                enter = slideInVertically { -it },
+                exit = slideOutVertically { -it },
+                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(),
+            ) {
+                ForegroundNotificationBanner(
+                    qrCodeData = foregroundNotification?.qrCodeData ?: "",
+                    vaultName = foregroundNotification?.vaultName ?: "",
+                    transactionSummary = foregroundNotification?.transactionSummary ?: "",
+                    onTap = mainViewModel::onForegroundBannerTapped,
+                    onDismiss = mainViewModel::onForegroundBannerDismissed,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
         }
 
         BiometryAuthScreen()

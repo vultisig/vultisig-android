@@ -14,10 +14,13 @@ import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
+import com.vultisig.wallet.data.usecases.GetKeysignTransactionSummaryUseCase
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
+import com.vultisig.wallet.data.usecases.KeysignTransactionSummary
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -33,7 +36,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -41,6 +47,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
+
+internal data class ForegroundNotificationState(
+    val qrCodeData: String,
+    val vaultName: String = "",
+    val transactionSummary: String = "",
+)
 
 @HiltViewModel
 internal class MainViewModel
@@ -53,6 +65,8 @@ constructor(
     private val appUpdateManager: AppUpdateManager,
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
+    private val getKeysignTransactionSummary: GetKeysignTransactionSummaryUseCase,
+    private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     networkUtils: NetworkUtils,
 ) : ViewModel() {
 
@@ -68,6 +82,10 @@ constructor(
 
     private val _startDestination: MutableState<Any> = mutableStateOf(Route.Home())
     val startDestination: State<Any> = _startDestination
+
+    private val _foregroundNotification = MutableStateFlow<ForegroundNotificationState?>(null)
+    val foregroundNotification: StateFlow<ForegroundNotificationState?> =
+        _foregroundNotification.asStateFlow()
 
     val destination: Flow<NavigateAction<Destination>> = navigator.destination
 
@@ -99,6 +117,48 @@ constructor(
 
     fun onNavigationReady() {
         _navigationReady.complete(Unit)
+    }
+
+    private var foregroundPushJob: kotlinx.coroutines.Job? = null
+
+    fun onForegroundPushReceived(qrCodeData: String) {
+        foregroundPushJob?.cancel()
+        foregroundPushJob =
+            viewModelScope.safeLaunch {
+                val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
+                val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
+                val transactionSummary =
+                    when (val summary = getKeysignTransactionSummary(qrCodeData)) {
+                        is KeysignTransactionSummary.Swap ->
+                            context.getString(
+                                R.string.notification_banner_swap_summary,
+                                mapTokenValueToStringWithUnit(summary.srcTokenValue),
+                                summary.dstTicker,
+                            )
+                        is KeysignTransactionSummary.Send ->
+                            context.getString(
+                                R.string.notification_banner_send_summary,
+                                mapTokenValueToStringWithUnit(summary.tokenValue),
+                            )
+                        null -> ""
+                    }
+                _foregroundNotification.value =
+                    ForegroundNotificationState(
+                        qrCodeData = qrCodeData,
+                        vaultName = vault?.name ?: "",
+                        transactionSummary = transactionSummary,
+                    )
+            }
+    }
+
+    fun onForegroundBannerTapped() {
+        val qrCodeData = _foregroundNotification.value?.qrCodeData ?: return
+        _foregroundNotification.value = null
+        onPushNotificationReceived(qrCodeData)
+    }
+
+    fun onForegroundBannerDismissed() {
+        _foregroundNotification.value = null
     }
 
     fun onPushNotificationReceived(qrCodeData: String) {
