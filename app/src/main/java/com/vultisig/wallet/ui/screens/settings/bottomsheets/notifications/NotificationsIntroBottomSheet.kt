@@ -1,0 +1,270 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
+package com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VsSwitch
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
+import com.vultisig.wallet.ui.components.v2.icons.VaultIcon
+import com.vultisig.wallet.ui.theme.Theme
+
+internal data class VaultIntroItem(
+    val vaultId: String,
+    val vaultName: String,
+    val isEnabled: Boolean,
+    val isFastVault: Boolean = false,
+)
+
+@Composable
+internal fun NotificationsIntroBottomSheet(
+    onEnable: () -> Unit,
+    onNotNow: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    V2BottomSheet(onDismissRequest = onDismissRequest, displayDragHandler = false) {
+        NotificationsIntroBottomSheetContent(onEnable = onEnable, onNotNow = onNotNow)
+    }
+}
+
+@Composable
+internal fun NotificationsIntroBottomSheetContent(onEnable: () -> Unit, onNotNow: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.notification_banner),
+            contentDescription = null,
+        )
+
+        UiSpacer(size = 34.dp)
+
+        Text(
+            text = stringResource(R.string.notifications_are_here),
+            style = Theme.brockmann.headings.title3,
+            color = Theme.v2.colors.text.primary,
+            textAlign = TextAlign.Center,
+        )
+
+        UiSpacer(size = 12.dp)
+
+        Text(
+            text = stringResource(R.string.notifications_description),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.tertiary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 30.dp),
+        )
+
+        UiSpacer(size = 32.dp)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            VsButton(
+                label = stringResource(R.string.not_now),
+                variant = VsButtonVariant.Secondary,
+                onClick = onNotNow,
+                modifier = Modifier.weight(1f),
+            )
+            VsButton(
+                label = stringResource(R.string.notifications_intro_enable),
+                variant = VsButtonVariant.CTA,
+                onClick = onEnable,
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        UiSpacer(size = 16.dp)
+    }
+}
+
+@Composable
+internal fun VaultNotificationOptInBottomSheet(
+    vaults: List<VaultIntroItem>,
+    onEnableVault: (String, Boolean) -> Unit,
+    onEnableAll: (Boolean) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    V2BottomSheet(
+        onDismissRequest = onDismissRequest,
+        dragHandlerColor = Theme.v2.colors.backgrounds.surface5,
+    ) {
+        VaultNotificationOptInBottomSheetContent(
+            vaults = vaults,
+            onEnableVault = onEnableVault,
+            onEnableAll = onEnableAll,
+            onConfirm = onDismissRequest,
+        )
+    }
+}
+
+@Composable
+internal fun VaultNotificationOptInBottomSheetContent(
+    vaults: List<VaultIntroItem>,
+    onEnableVault: (String, Boolean) -> Unit,
+    onEnableAll: (Boolean) -> Unit,
+    onConfirm: () -> Unit,
+) {
+    val allEnabled = vaults.isNotEmpty() && vaults.all { it.isEnabled }
+
+    Column(
+        modifier =
+            Modifier.background(Theme.v2.colors.backgrounds.secondary)
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 30.dp, bottom = 21.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringResource(R.string.choose_vaults_for_notifications),
+            style = Theme.brockmann.headings.title3,
+            color = Theme.v2.colors.text.primary,
+        )
+
+        UiSpacer(size = 12.dp)
+
+        Text(
+            text = stringResource(R.string.notifications_vault_sheet_subtitle),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.tertiary,
+            modifier = Modifier.padding(horizontal = 39.dp),
+            textAlign = TextAlign.Center,
+        )
+
+        UiSpacer(size = 32.dp)
+        Column(
+            modifier =
+                Modifier.background(
+                    color = Theme.v2.colors.variables.backgroundsSurface12,
+                    shape = RoundedCornerShape(12.dp),
+                )
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.enable_all),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.primary,
+                    modifier = Modifier.weight(1f),
+                )
+                VsSwitch(checked = allEnabled, onCheckedChange = onEnableAll)
+            }
+
+            vaults.forEach { vault ->
+                HorizontalDivider(
+                    color = Theme.v2.colors.variables.bordersLight,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    VaultIcon(
+                        isFastVault = vault.isFastVault,
+                        size = 20.dp,
+                        modifier =
+                            Modifier.border(
+                                    width = 1.dp,
+                                    color = Theme.v2.colors.variables.bordersLight,
+                                    shape = RoundedCornerShape(size = 99.dp),
+                                )
+                                .background(
+                                    color = Theme.v2.colors.variables.backgroundsSurface12,
+                                    shape = RoundedCornerShape(size = 99.dp),
+                                )
+                                .padding(12.dp),
+                    )
+                    Text(
+                        text = vault.vaultName,
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.primary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    VsSwitch(
+                        checked = vault.isEnabled,
+                        onCheckedChange = { enabled -> onEnableVault(vault.vaultId, enabled) },
+                    )
+                }
+            }
+        }
+
+        UiSpacer(size = 24.dp)
+
+        VsButton(
+            label = stringResource(R.string.address_book_edit_mode_done),
+            variant = VsButtonVariant.CTA,
+            onClick = onConfirm,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        UiSpacer(size = 16.dp)
+    }
+}
+
+@Preview
+@Composable
+private fun NotificationsIntroBottomSheetContentPreview() {
+    V2BottomSheet(displayDragHandler = false) {
+        NotificationsIntroBottomSheetContent(onEnable = {}, onNotNow = {})
+    }
+}
+
+@Preview
+@Composable
+private fun VaultNotificationOptInBottomSheetContentPreview() {
+    V2BottomSheet(
+        displayDragHandler = true,
+        dragHandlerColor = Theme.v2.colors.backgrounds.surface5,
+    ) {
+        VaultNotificationOptInBottomSheetContent(
+            vaults =
+                listOf(
+                    VaultIntroItem(vaultId = "1", vaultName = "Vault 1", isEnabled = true),
+                    VaultIntroItem(
+                        vaultId = "2",
+                        vaultName = "Vault 2",
+                        isEnabled = true,
+                        isFastVault = true,
+                    ),
+                    VaultIntroItem(vaultId = "3", vaultName = "Vault 3", isEnabled = false),
+                    VaultIntroItem(
+                        vaultId = "4",
+                        vaultName = "Vault 4",
+                        isEnabled = false,
+                        isFastVault = true,
+                    ),
+                ),
+            onEnableVault = { _, _ -> },
+            onEnableAll = {},
+            onConfirm = {},
+        )
+    }
+}

@@ -34,6 +34,8 @@ interface VaultRepository {
 
     suspend fun getAll(): List<Vault>
 
+    fun getAllAsFlow(): Flow<List<Vault>>
+
     suspend fun hasVaults(): Boolean
 
     suspend fun add(vault: Vault)
@@ -71,6 +73,10 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
         vaultDao.loadDisabledCoinIds(vaultId)
 
     override suspend fun get(vaultId: String): Vault? = vaultDao.loadById(vaultId)?.toVault()
+
+    override fun getAllAsFlow(): Flow<List<Vault>> {
+        return vaultDao.loadAllAsFlow().map { it.map { dbVault -> dbVault.toVault() } }
+    }
 
     override fun getAsFlow(vaultId: String): Flow<Vault?> =
         vaultDao.loadByIdAsFlow(vaultId).map { it?.toVault() }

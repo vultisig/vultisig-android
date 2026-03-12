@@ -27,11 +27,11 @@ internal class VSSnackbarState(
 ) {
     private val _progressState = MutableStateFlow(ProgressState())
     val progressState: StateFlow<ProgressState> = _progressState
-    private val _showProgress = MutableSharedFlow<String>()
+    private val _showProgress = MutableSharedFlow<Pair<String, SnackbarType>>()
 
     init {
         _showProgress
-            .flatMapLatest { message ->
+            .flatMapLatest { (message, type) ->
                 flow {
                     val steps = 60
                     val stepDuration = duration / steps
@@ -42,6 +42,7 @@ internal class VSSnackbarState(
                                 message = message,
                                 isVisible = true,
                                 progress = (step + 1).toFloat() / steps,
+                                type = type,
                             )
                         )
                     }
@@ -52,15 +53,22 @@ internal class VSSnackbarState(
             .launchIn(coroutineScope)
     }
 
-    fun show(message: String) {
-        coroutineScope.launch { _showProgress.emit(message) }
+    fun show(message: String, type: SnackbarType = SnackbarType.Success) {
+        coroutineScope.launch { _showProgress.emit(message to type) }
     }
+}
+
+internal enum class SnackbarType {
+    Success,
+    Warning,
+    Error,
 }
 
 internal data class ProgressState(
     val message: String = "",
     val isVisible: Boolean = false,
     val progress: Float = 0f,
+    val type: SnackbarType = SnackbarType.Success,
 )
 
 @Composable

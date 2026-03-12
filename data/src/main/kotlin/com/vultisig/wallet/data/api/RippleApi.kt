@@ -34,12 +34,12 @@ interface RippleApi {
 
 internal class RippleApiImp @Inject constructor(private val http: HttpClient) : RippleApi {
 
-    override suspend fun broadcastTransaction(hex: String): String {
+    override suspend fun broadcastTransaction(tx: String): String {
         try {
             val payload =
                 RpcPayload(
                     method = "submit",
-                    params = buildJsonArray { addJsonObject { put("tx_blob", hex) } },
+                    params = buildJsonArray { addJsonObject { put("tx_blob", tx) } },
                 )
             val response = http.post(BASE_XRP_CLUSTER) { setBody(payload) }
 

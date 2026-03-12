@@ -19,6 +19,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.RouterApi
@@ -44,6 +45,7 @@ import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
@@ -52,6 +54,8 @@ import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
@@ -67,11 +71,15 @@ import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Deposit
 import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Send
 import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Sign
 import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Swap
+import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -104,6 +112,8 @@ data class KeysignFlowUiState(
     val isSwap: Boolean = false,
     val qrBitmapPainter: BitmapPainter? = null,
     val isLoading: Boolean = false,
+    val enableNotification: Boolean = false,
+    val resendCooldownSeconds: Int = 0,
 )
 
 @HiltViewModel
@@ -139,6 +149,8 @@ constructor(
     private val addressBookRepository: AddressBookRepository,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
+    private val pushNotificationManager: PushNotificationManager,
+    private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -178,6 +190,7 @@ constructor(
         get() = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA
 
     private var discoverParticipantsJob: Job? = null
+    private var resendCooldownJob: Job? = null
 
     val keysignViewModel: KeysignViewModel
         get() =
@@ -284,6 +297,7 @@ constructor(
                     vault = vault,
                     isSwap = shareViewModel.keysignPayload?.swapPayload != null,
                     toAddress = keysignPayload?.toAddress ?: "",
+                    enableNotification = true,
                 )
             }
 
@@ -371,6 +385,42 @@ constructor(
                 data
 
         addressProvider.update(_keysignMessage.value)
+
+        sendNotification()
+    }
+
+    fun sendNotification() {
+        if (uiState.value.resendCooldownSeconds > 0) return
+        viewModelScope.safeLaunch(
+            onError = {
+                snackbarFlow.showMessage(
+                    UiText.StringResource(R.string.push_notifications_failed).asString(context),
+                    type = SnackbarType.Error,
+                )
+            }
+        ) {
+            val vault = _currentVault ?: return@safeLaunch
+            pushNotificationManager.notifyVaultDevices(vault, _keysignMessage.value)
+            snackbarFlow.showMessage(
+                message = context.getString(R.string.push_notifications_sent),
+                type = SnackbarType.Success,
+            )
+            startResendCooldown()
+        }
+    }
+
+    private fun startResendCooldown() {
+        resendCooldownJob?.cancel()
+        resendCooldownJob =
+            viewModelScope.launch {
+                var seconds = 30
+                while (seconds > 0) {
+                    uiState.update { it.copy(resendCooldownSeconds = seconds) }
+                    delay(1.seconds)
+                    seconds--
+                }
+                uiState.update { it.copy(resendCooldownSeconds = 0) }
+            }
     }
 
     private fun startParticipantDiscovery(vault: Vault) {

@@ -57,6 +57,7 @@ data class Backgrounds(
     val disabled: Color = Color(0x800B1A3A),
     val dark: Color = Color(0xFF061C3C),
     val state: BackgroundStates = BackgroundStates(),
+    val surface5: Color = Color(0xFF394E6D),
 )
 
 data class BackgroundStates(
@@ -120,6 +121,7 @@ data class Variables(
     val bordersLight: Color = Color(0xFF11284A),
     val textPrimary: Color = Color(0xFFF0F4FC),
     val buttonsCTAPrimary: Color = Color(0xFF0B4EFF),
+    val backgroundsSurface12: Color = Color(0xFF0D2240),
 )
 
 data class FillsColors(val primary: Color = Color(0x1F787880))

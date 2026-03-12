@@ -3,11 +3,10 @@ package com.vultisig.wallet.data.db.models
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "disabledCoin",
+    tableName = "vault_notification_settings",
     foreignKeys =
         [
             ForeignKey(
@@ -18,11 +17,9 @@ import androidx.room.PrimaryKey
                 onUpdate = ForeignKey.CASCADE,
             )
         ],
-    indices = [Index(value = ["vaultId"])],
 )
-data class DisabledCoinEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo("id") val id: Long = 0,
-    @ColumnInfo("coinId") val coinId: String,
-    @ColumnInfo("chain") val chain: String,
-    @ColumnInfo("vaultId") val vaultId: String,
+data class VaultNotificationSettingsEntity(
+    @PrimaryKey @ColumnInfo("vaultId") val vaultId: String,
+    @ColumnInfo("notificationsEnabled") val notificationsEnabled: Boolean = false,
+    @ColumnInfo("notificationsPrompted") val notificationsPrompted: Boolean = false,
 )

@@ -341,6 +341,32 @@
     <string name="join_keysign_failed_connect_to_server">Не удалось подключиться к серверу</string>
     <string name="network_connection_lost">Сетевое соединение потеряно. Проверьте подключение к интернету</string>
     <string name="send_form_polka_reaping_warning">Убедитесь, что вы оставили достаточно средств для покрытия сборов. Если баланс счета опустится ниже 1 DOT (экзистенциальный депозит), счет будет деактивирован (изъят), а все оставшиеся средства будут потеряны. Вы можете повторно активировать адрес с новым депозитом, превышающим экзистенциальный депозит, в любое время. Однако это не вернет потерянные средства.</string>
+    <!-- Push Notifications -->
+    <string name="notifications">Уведомления</string>
+    <string name="push_notifications">Push-уведомления</string>
+    <string name="push_notifications_failed">Ошибка отправки push-уведомления</string>
+    <string name="push_notification_vault_not_found">Хранилище не найдено</string>
+    <string name="push_notification_error_vault_not_supported">Хранилище не поддерживает уведомления</string>
+    <string name="push_notification_error_token_not_available">Не удалось получить токен уведомления</string>
+    <string name="push_notification_error_api_failure">Не удалось обновить регистрацию уведомлений</string>
+    <string name="push_notifications_sent">Уведомление успешно отправлено</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Получайте уведомления, когда требуется ваша подпись или устройство запрашивает доступ.</string>
+    <string name="enable_push_notifications">Включить push-уведомления</string>
+    <string name="keysign_notification_channel_name">Запросы на подписание</string>
+    <string name="keysign_notification_title">Подписать транзакцию</string>
+    <string name="keysign_notification_body">Новый запрос на подписание ожидает вас</string>
+    <string name="foreground_notification_banner_title">Присоединиться к транзакции</string>
+    <string name="notification_banner_swap_summary">Обмен %1$s → %2$s</string>
+    <string name="notification_banner_send_summary">Отправить %1$s</string>
+    <string name="notifications_intro_enable">Включить</string>
+    <string name="notifications_are_here">Безопасные уведомления здесь</string>
+    <string name="notifications_description">Получайте уведомления, когда другое устройство запрашивает доступ к вашему хранилищу или когда требуется ваша подпись.</string>
+    <string name="choose_vaults_for_notifications">Выбрать хранилища для уведомлений</string>
+    <string name="notifications_vault_sheet_subtitle">Вы можете управлять уведомлениями в настройках системы.</string>
+    <string name="not_now">Не сейчас</string>
+    <string name="vault_notifications">Уведомления хранилища</string>
+    <string name="enable_all">Включить все</string>
+
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_coin">Общая связанная %s</string>
@@ -932,6 +958,12 @@
         <item quantity="many">Мы нашли %d активных цепочек</item>
         <item quantity="other">Мы нашли %d активных цепочек</item>
     </plurals>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Повторно отправить уведомление через %d секунду</item>
+        <item quantity="few">Повторно отправить уведомление через %d секунды</item>
+        <item quantity="many">Повторно отправить уведомление через %d секунд</item>
+        <item quantity="other">Повторно отправить уведомление через %d секунд</item>
+    </plurals>
     <string name="key_import_chains_found_desc">Каждая дополнительная цепочка увеличивает время создания хранилища и вероятность тайм-аута.</string>
     <string name="key_import_chains_continue">Начать</string>
     <string name="key_import_chains_customize">Настроить цепочки</string>
@@ -1071,6 +1103,7 @@
     <string name="server_backup_error_timeout">Сервер слишком долго отвечал. Проверьте подключение к интернету и попробуйте снова.</string>
     <string name="server_backup_error_too_many_requests">Слишком много запросов на резервное копирование. Попробуйте позже.</string>
     <string name="server_backup_error_bad_request">Что-то пошло не так. Проверьте свои данные и попробуйте снова.</string>
+    <string name="resend_notification">Повторно отправить уведомление</string>
     <string name="cacao_pool">Cacao Pool</string>
     <string name="native_asset">Нативный</string>
     <string name="invalid_integer_error">Недопустимое целое число</string>

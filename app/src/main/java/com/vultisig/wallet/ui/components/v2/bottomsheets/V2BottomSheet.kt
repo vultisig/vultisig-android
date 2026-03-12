@@ -41,6 +41,7 @@ fun V2BottomSheet(
     leftAction: (@Composable () -> Unit)? = null,
     rightAction: (@Composable () -> Unit)? = null,
     title: String? = null,
+    dragHandlerColor: Color = Theme.v2.colors.vibrant.primary,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -67,7 +68,10 @@ fun V2BottomSheet(
                         content = content,
                     )
                 }
-                DragHandler(modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter))
+                DragHandler(
+                    modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter),
+                    color = dragHandlerColor,
+                )
             }
         },
     )
@@ -79,6 +83,8 @@ fun V2BottomSheet(
     modifier: Modifier = Modifier,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     onDismissRequest: () -> Unit = {},
+    displayDragHandler: Boolean = true,
+    dragHandlerColor: Color = Theme.v2.colors.vibrant.primary,
     content: @Composable BoxScope.() -> Unit,
 ) {
     ModalBottomSheet(
@@ -98,7 +104,12 @@ fun V2BottomSheet(
                         Modifier.fillMaxWidth().background(Theme.v2.colors.backgrounds.primary),
                     content = content,
                 )
-                DragHandler(modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter))
+                if (displayDragHandler) {
+                    DragHandler(
+                        modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter),
+                        color = dragHandlerColor,
+                    )
+                }
             }
         },
     )
@@ -136,15 +147,8 @@ private fun TopRow(
 }
 
 @Composable
-internal fun DragHandler(modifier: Modifier = Modifier) {
-    Box(
-        modifier =
-            modifier
-                .width(36.dp)
-                .height(5.dp)
-                .clip(CircleShape)
-                .background(Theme.v2.colors.vibrant.primary)
-    )
+internal fun DragHandler(modifier: Modifier = Modifier, color: Color) {
+    Box(modifier = modifier.width(36.dp).height(5.dp).clip(CircleShape).background(color))
 }
 
 @Composable

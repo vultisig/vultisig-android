@@ -493,6 +493,8 @@ internal sealed class Route {
 
     @Serializable data class ChooseVaultCount(val tssAction: TssAction = TssAction.KEYGEN)
 
+    @Serializable data object NotificationSettings
+
     @Serializable
     data class ReviewVaultDevices(
         val vaultId: VaultId,

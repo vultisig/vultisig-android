@@ -1,4 +1,30 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Push Notifications -->
+    <string name="notifications">Notifications</string>
+    <string name="push_notifications">Push notifications</string>
+    <string name="push_notifications_failed">Push notification failed</string>
+    <string name="push_notification_vault_not_found">Vault not found</string>
+    <string name="push_notification_error_vault_not_supported">Vault does not support notifications</string>
+    <string name="push_notification_error_token_not_available">Failed to get notification token</string>
+    <string name="push_notification_error_api_failure">Failed to update notification registration</string>
+    <string name="push_notifications_sent">Notification sent successfully</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Get notified when your signature is required or a device requests access.</string>
+    <string name="enable_push_notifications">Enable push notifications</string>
+    <string name="keysign_notification_channel_name">Keysign Requests</string>
+    <string name="keysign_notification_title">Sign transaction</string>
+    <string name="keysign_notification_body">A new signing request is waiting for you</string>
+    <string name="foreground_notification_banner_title">Join transaction</string>
+    <string name="notification_banner_swap_summary">Swap %1$s → %2$s</string>
+    <string name="notification_banner_send_summary">Send %1$s</string>
+    <string name="notifications_intro_enable">Enable</string>
+    <string name="notifications_are_here">Secure Notifications are here</string>
+    <string name="notifications_description">Receive alerts when another device requests to join your vault or when your signature is required.</string>
+    <string name="choose_vaults_for_notifications">Choose vaults for Notifications</string>
+    <string name="notifications_vault_sheet_subtitle">You can manage notifications in system settings.</string>
+    <string name="not_now">Not now</string>
+    <string name="vault_notifications">Vault notifications</string>
+    <string name="enable_all">Enable all</string>
+
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_coin">Total Bonded %s</string>
@@ -976,6 +1002,10 @@
         <item quantity="one">We found %d active chain</item>
         <item quantity="other">We found %d active chains</item>
     </plurals>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Resend notification in %d second</item>
+        <item quantity="other">Resend notification in %d seconds</item>
+    </plurals>
     <string name="key_import_chains_found_desc">Each extra chain increases the time to generate your vault and possibility of a timeout.</string>
     <string name="key_import_chains_continue">Get started</string>
     <string name="key_import_chains_customize">Customize chains</string>
@@ -1119,6 +1149,7 @@
     <string name="server_backup_error_timeout">The server took too long to respond, please check your internet connection and try again.</string>
     <string name="server_backup_error_too_many_requests">Too many backup requests. Please try again later.</string>
     <string name="server_backup_error_bad_request">Something went wrong. Please check your details and try again.</string>
+    <string name="resend_notification">Resend notification</string>
     <string name="cacao_pool">Cacao Pool</string>
     <string name="native_asset">Native</string>
     <string name="invalid_integer_error">Invalid integer amount</string>
