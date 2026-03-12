@@ -619,8 +619,7 @@ constructor(
     }
 
     fun onNotificationVaultSheetDone() {
-        val vaultsToOptIn =
-            uiState.value.notificationIntroVaults
+        val vaultsToOptIn = uiState.value.notificationIntroVaults
         uiState.update { it.copy(showNotificationVaultSheet = false) }
         viewModelScope.safeLaunch(
             onError = { e ->
