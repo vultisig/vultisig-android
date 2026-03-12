@@ -39,14 +39,16 @@ internal fun BondedTabContent(
     state: ThorchainDefiPositionsUiModel,
     onClickBond: (String) -> Unit,
     onClickUnbond: (String) -> Unit,
+    coinName: String = "RUNE",
+    coinIconRes: Int = R.drawable.rune,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         HeaderDeFiWidget(
-            title = stringResource(R.string.total_bonded_rune),
-            iconRes = R.drawable.rune,
+            title = stringResource(R.string.total_bonded_coin, coinName),
+            iconRes = coinIconRes,
             buttonText = stringResource(R.string.bond_to_node),
             onClickAction = bondToNodeOnClick,
             totalAmount = state.bonded.totalBondedAmount,

@@ -369,7 +369,7 @@
 
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
-    <string name="total_bonded_rune">Общая связанная Rune</string>
+    <string name="total_bonded_coin">Общая связанная %s</string>
     <string name="bonded_amount">Связано: %s</string>
     <string name="bond_to_node">Привязать к узлу</string>
     <string name="node_address_formatted">Адрес: %s</string>
@@ -1104,4 +1104,8 @@
     <string name="server_backup_error_too_many_requests">Слишком много запросов на резервное копирование. Попробуйте позже.</string>
     <string name="server_backup_error_bad_request">Что-то пошло не так. Проверьте свои данные и попробуйте снова.</string>
     <string name="resend_notification">Повторно отправить уведомление</string>
+    <string name="cacao_pool">пул CACAO</string>
+    <string name="native_asset">Нативный</string>
+    <string name="invalid_integer_error">Недопустимое целое число</string>
+    <string name="empty_lps_field">Пустое поле Единицы LP</string>
 </resources>

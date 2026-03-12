@@ -371,7 +371,7 @@
 
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
-    <string name="total_bonded_rune">Ukupno vezanih Rune</string>
+    <string name="total_bonded_coin">Ukupno vezanih %s</string>
     <string name="bonded_amount">Vezano: %s</string>
     <string name="bond_to_node">Veži na čvor</string>
     <string name="node_address_formatted">Adresa: %s</string>
@@ -1106,4 +1106,8 @@
     <string name="server_backup_error_too_many_requests">Previše zahtjeva za sigurnosnu kopiju. Pokušajte ponovno kasnije.</string>
     <string name="server_backup_error_bad_request">Nešto je pošlo po krivu. Provjerite svoje podatke i pokušajte ponovno.</string>
     <string name="resend_notification">Ponovo pošalji obavijest</string>
+    <string name="cacao_pool">CACAO pool</string>
+    <string name="native_asset">Izvorno</string>
+    <string name="invalid_integer_error">Nevažeći cijeli broj</string>
+    <string name="empty_lps_field">Prazno polje LP jedinice</string>
 </resources>

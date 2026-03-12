@@ -27,7 +27,7 @@
 
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
-    <string name="total_bonded_rune">Total Bonded Rune</string>
+    <string name="total_bonded_coin">Total Bonded %s</string>
     <string name="bonded_amount">Bonded: %s</string>
     <string name="bond_to_node">Bond to Node</string>
     <string name="node_address_formatted">Address: %s</string>
@@ -1150,4 +1150,8 @@
     <string name="server_backup_error_too_many_requests">Too many backup requests. Please try again later.</string>
     <string name="server_backup_error_bad_request">Something went wrong. Please check your details and try again.</string>
     <string name="resend_notification">Resend notification</string>
+    <string name="cacao_pool">CACAO Pool</string>
+    <string name="native_asset">Native</string>
+    <string name="invalid_integer_error">Invalid integer amount</string>
+    <string name="empty_lps_field">Empty LP units field</string>
 </resources>
