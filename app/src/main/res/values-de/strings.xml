@@ -356,7 +356,7 @@
     <string name="keysign_notification_channel_name">Keysign-Anfragen</string>
     <string name="keysign_notification_title">Transaktion signieren</string>
     <string name="keysign_notification_body">Eine neue Signierungsanfrage wartet auf Sie</string>
-    <string name="foreground_notification_banner_title">Transaktion signieren</string>
+    <string name="foreground_notification_banner_title">Transaktion beitreten</string>
     <string name="notification_banner_swap_summary">Tauschen %1$s → %2$s</string>
     <string name="notification_banner_send_summary">Senden %1$s</string>
     <string name="notifications_intro_enable">Aktivieren</string>

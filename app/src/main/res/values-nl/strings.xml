@@ -356,7 +356,7 @@
     <string name="keysign_notification_channel_name">Ondertekeningsverzoeken</string>
     <string name="keysign_notification_title">Transactie ondertekenen</string>
     <string name="keysign_notification_body">Er wacht een nieuw ondertekeningsverzoek op u</string>
-    <string name="foreground_notification_banner_title">Transactie ondertekenen</string>
+    <string name="foreground_notification_banner_title">Doe mee aan transactie</string>
     <string name="notification_banner_swap_summary">Wisselen %1$s → %2$s</string>
     <string name="notification_banner_send_summary">Sturen %1$s</string>
     <string name="notifications_intro_enable">Inschakelen</string>
