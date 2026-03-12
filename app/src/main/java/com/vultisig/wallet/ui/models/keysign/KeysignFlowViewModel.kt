@@ -292,14 +292,12 @@ constructor(
                     }
                 }
 
-            val isOptedIn = pushNotificationManager.isVaultOptedIn(vault.id)
-
             uiState.update {
                 it.copy(
                     vault = vault,
                     isSwap = shareViewModel.keysignPayload?.swapPayload != null,
                     toAddress = keysignPayload?.toAddress ?: "",
-                    enableNotification = isOptedIn,
+                    enableNotification = true,
                 )
             }
 
@@ -402,7 +400,6 @@ constructor(
             }
         ) {
             val vault = _currentVault ?: return@safeLaunch
-            if (!pushNotificationManager.isVaultOptedIn(vault.id)) return@safeLaunch
             pushNotificationManager.notifyVaultDevices(vault, _keysignMessage.value)
             snackbarFlow.showMessage(
                 message = context.getString(R.string.push_notifications_sent),
