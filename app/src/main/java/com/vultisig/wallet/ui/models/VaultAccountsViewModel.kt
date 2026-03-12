@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -65,7 +66,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import javax.inject.Inject
 
 @Immutable
 internal data class VaultAccountsUiModel(
@@ -622,7 +622,10 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt in vaults for notifications")
-                snackbarFlow.showMessage(pushNotificationErrorMessage(e, context), SnackbarType.Error)
+                snackbarFlow.showMessage(
+                    pushNotificationErrorMessage(e, context),
+                    SnackbarType.Error,
+                )
             }
         ) {
             pushNotificationManager.setVaultsOptIn(vaultsToOptIn.map { it.vaultId to it.isEnabled })

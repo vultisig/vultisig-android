@@ -89,7 +89,10 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt out all vaults from notifications")
-                snackbarFlow.showMessage(pushNotificationErrorMessage(e, context), SnackbarType.Error)
+                snackbarFlow.showMessage(
+                    pushNotificationErrorMessage(e, context),
+                    SnackbarType.Error,
+                )
             }
         ) {
             if (enabled) {
@@ -105,7 +108,10 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt out vault $vaultId from notifications")
-                snackbarFlow.showMessage(pushNotificationErrorMessage(e, context), SnackbarType.Error)
+                snackbarFlow.showMessage(
+                    pushNotificationErrorMessage(e, context),
+                    SnackbarType.Error,
+                )
             }
         ) {
             if (enabled) {
@@ -122,7 +128,10 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt in vault(s) for notifications")
-                snackbarFlow.showMessage(pushNotificationErrorMessage(e, context), SnackbarType.Error)
+                snackbarFlow.showMessage(
+                    pushNotificationErrorMessage(e, context),
+                    SnackbarType.Error,
+                )
             }
         ) {
             when (val pending = pendingAction.getAndSet(PendingAction.AllVaults)) {
