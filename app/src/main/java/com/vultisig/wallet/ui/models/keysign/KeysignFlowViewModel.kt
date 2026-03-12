@@ -394,7 +394,6 @@ constructor(
         if (uiState.value.resendCooldownSeconds > 0) return
         val currentQrData = _keysignMessage.value
         if (currentQrData == lastNotifiedQrData) return
-        lastNotifiedQrData = currentQrData
         viewModelScope.safeLaunch(
             onError = {
                 snackbarFlow.showMessage(
@@ -404,7 +403,8 @@ constructor(
             }
         ) {
             val vault = _currentVault ?: return@safeLaunch
-            pushNotificationManager.notifyVaultDevices(vault, _keysignMessage.value)
+            pushNotificationManager.notifyVaultDevices(vault, currentQrData)
+            lastNotifiedQrData = currentQrData
             snackbarFlow.showMessage(
                 message = context.getString(R.string.push_notifications_sent),
                 type = SnackbarType.Success,
