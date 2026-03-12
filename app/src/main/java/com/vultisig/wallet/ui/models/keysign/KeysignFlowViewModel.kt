@@ -36,6 +36,7 @@ import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
@@ -298,7 +299,7 @@ constructor(
                     vault = vault,
                     isSwap = shareViewModel.keysignPayload?.swapPayload != null,
                     toAddress = keysignPayload?.toAddress ?: "",
-                    enableNotification = true,
+                    enableNotification = vault.isSecureVault(),
                 )
             }
 
@@ -386,8 +387,7 @@ constructor(
                 data
 
         addressProvider.update(_keysignMessage.value)
-
-        sendNotification()
+        if (vault.isSecureVault()) sendNotification()
     }
 
     fun sendNotification() {

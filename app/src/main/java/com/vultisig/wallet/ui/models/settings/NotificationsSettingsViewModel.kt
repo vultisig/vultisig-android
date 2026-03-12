@@ -3,13 +3,11 @@ package com.vultisig.wallet.ui.models.settings
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.services.PushNotificationError
 import com.vultisig.wallet.data.services.PushNotificationManager
-import com.vultisig.wallet.data.services.toStringRes
+import com.vultisig.wallet.data.services.pushNotificationErrorMessage
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.navigation.Destination
@@ -45,7 +43,7 @@ internal data class NotificationsSettingsUiState(
 internal class NotificationsSettingsViewModel
 @Inject
 constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val pushNotificationManager: PushNotificationManager,
@@ -91,10 +89,10 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt out all vaults from notifications")
-                val msgRes =
-                    (e as? PushNotificationError)?.toStringRes()
-                        ?: R.string.push_notifications_failed
-                snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
+                snackbarFlow.showMessage(
+                    pushNotificationErrorMessage(e, context),
+                    SnackbarType.Error,
+                )
             }
         ) {
             if (enabled) {
@@ -110,10 +108,10 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt out vault $vaultId from notifications")
-                val msgRes =
-                    (e as? PushNotificationError)?.toStringRes()
-                        ?: R.string.push_notifications_failed
-                snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
+                snackbarFlow.showMessage(
+                    pushNotificationErrorMessage(e, context),
+                    SnackbarType.Error,
+                )
             }
         ) {
             if (enabled) {
@@ -130,10 +128,10 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt in vault(s) for notifications")
-                val msgRes =
-                    (e as? PushNotificationError)?.toStringRes()
-                        ?: R.string.push_notifications_failed
-                snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
+                snackbarFlow.showMessage(
+                    pushNotificationErrorMessage(e, context),
+                    SnackbarType.Error,
+                )
             }
         ) {
             when (val pending = pendingAction.getAndSet(PendingAction.AllVaults)) {

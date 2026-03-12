@@ -108,6 +108,7 @@ internal fun VaultNotificationOptInBottomSheet(
     vaults: List<VaultIntroItem>,
     onEnableVault: (String, Boolean) -> Unit,
     onEnableAll: (Boolean) -> Unit,
+    onDone: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     V2BottomSheet(
@@ -118,7 +119,7 @@ internal fun VaultNotificationOptInBottomSheet(
             vaults = vaults,
             onEnableVault = onEnableVault,
             onEnableAll = onEnableAll,
-            onConfirm = onDismissRequest,
+            onConfirm = onDone,
         )
     }
 }
