@@ -383,7 +383,11 @@ internal class KeysignViewModel(
 
             broadcastTransaction()
             checkThorChainTxResult()
-
+            if (customMessagePayload != null) {
+                // For custom message signing, we consider the flow complete after signing without
+                // broadcasting
+                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+            }
             isNavigateToHome = true
 
             pullTssMessagesJob?.cancel()
