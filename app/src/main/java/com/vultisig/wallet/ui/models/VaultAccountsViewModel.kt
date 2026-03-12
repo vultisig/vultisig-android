@@ -612,50 +612,37 @@ constructor(
                     }
             )
         }
-        viewModelScope.safeLaunch(
-            onError = { e ->
-                Timber.w(e, "Failed to opt in vault $vaultId for notifications")
-                uiState.update { state ->
-                    state.copy(
-                        notificationIntroVaults =
-                            state.notificationIntroVaults.map { vault ->
-                                if (vault.vaultId == vaultId) vault.copy(isEnabled = !enabled)
-                                else vault
-                            }
-                    )
-                }
-                val msgRes =
-                    (e as? PushNotificationError)?.toStringRes()
-                        ?: R.string.push_notifications_failed
-                snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
-            }
-        ) {
-            pushNotificationManager.setVaultOptIn(vaultId, enabled)
-        }
     }
 
     fun onNotificationVaultSheetDismiss() {
         uiState.update { it.copy(showNotificationVaultSheet = false) }
     }
 
-    fun onEnableAll(enabled: Boolean) {
-        val previousVaults = uiState.value.notificationIntroVaults
-        uiState.update { state ->
-            state.copy(
-                notificationIntroVaults =
-                    state.notificationIntroVaults.map { it.copy(isEnabled = enabled) }
-            )
-        }
+    fun onNotificationVaultSheetDone() {
+        val vaultsToOptIn =
+            uiState.value.notificationIntroVaults
+        uiState.update { it.copy(showNotificationVaultSheet = false) }
         viewModelScope.safeLaunch(
             onError = { e ->
-                uiState.update { it.copy(notificationIntroVaults = previousVaults) }
+                Timber.w(e, "Failed to opt in vaults for notifications")
                 val msgRes =
                     (e as? PushNotificationError)?.toStringRes()
                         ?: R.string.push_notifications_failed
                 snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
             }
         ) {
-            pushNotificationManager.setAllVaultsOptIn(enabled = enabled)
+            vaultsToOptIn.forEach { item ->
+                pushNotificationManager.setVaultOptIn(item.vaultId, item.isEnabled)
+            }
+        }
+    }
+
+    fun onEnableAll(enabled: Boolean) {
+        uiState.update { state ->
+            state.copy(
+                notificationIntroVaults =
+                    state.notificationIntroVaults.map { it.copy(isEnabled = enabled) }
+            )
         }
     }
 
