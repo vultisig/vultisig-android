@@ -192,6 +192,7 @@ constructor(
 
     private var discoverParticipantsJob: Job? = null
     private var resendCooldownJob: Job? = null
+    private var lastNotifiedQrData: String = ""
 
     val keysignViewModel: KeysignViewModel
         get() =
@@ -391,6 +392,8 @@ constructor(
 
     fun sendNotification() {
         if (uiState.value.resendCooldownSeconds > 0) return
+        val currentQrData = _keysignMessage.value
+        if (currentQrData == lastNotifiedQrData) return
         viewModelScope.safeLaunch(
             onError = {
                 snackbarFlow.showMessage(
@@ -400,7 +403,8 @@ constructor(
             }
         ) {
             val vault = _currentVault ?: return@safeLaunch
-            pushNotificationManager.notifyVaultDevices(vault, _keysignMessage.value)
+            pushNotificationManager.notifyVaultDevices(vault, currentQrData)
+            lastNotifiedQrData = currentQrData
             snackbarFlow.showMessage(
                 message = context.getString(R.string.push_notifications_sent),
                 type = SnackbarType.Success,
@@ -413,13 +417,14 @@ constructor(
         resendCooldownJob?.cancel()
         resendCooldownJob =
             viewModelScope.launch {
-                var seconds = 30
+                var seconds = 60
                 while (seconds > 0) {
                     uiState.update { it.copy(resendCooldownSeconds = seconds) }
                     delay(1.seconds)
                     seconds--
                 }
                 uiState.update { it.copy(resendCooldownSeconds = 0) }
+                lastNotifiedQrData = ""
             }
     }
 
