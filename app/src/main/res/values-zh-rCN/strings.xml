@@ -14,6 +14,9 @@
     <string name="keysign_notification_channel_name">签名请求</string>
     <string name="keysign_notification_title">签署交易</string>
     <string name="keysign_notification_body">有一个新的签名请求等待您处理</string>
+    <string name="foreground_notification_banner_title">加入交易</string>
+    <string name="notification_banner_swap_summary">交换 %1$s → %2$s</string>
+    <string name="notification_banner_send_summary">发送 %1$s</string>
     <string name="notifications_intro_enable">启用</string>
     <string name="notifications_are_here">通知已到来</string>
     <string name="notifications_description">当另一台设备请求加入您的金库或需要您的签名时，接收通知。</string>

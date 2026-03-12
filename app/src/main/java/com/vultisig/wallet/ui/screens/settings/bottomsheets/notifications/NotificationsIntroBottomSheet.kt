@@ -76,7 +76,7 @@ internal fun NotificationsIntroBottomSheetContent(onEnable: () -> Unit, onNotNow
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 20.dp),
+            modifier = Modifier.padding(horizontal = 30.dp),
         )
 
         UiSpacer(size = 32.dp)
@@ -110,7 +110,10 @@ internal fun VaultNotificationOptInBottomSheet(
     onEnableAll: (Boolean) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    V2BottomSheet(onDismissRequest = onDismissRequest) {
+    V2BottomSheet(
+        onDismissRequest = onDismissRequest,
+        dragHandlerColor = Theme.v2.colors.backgrounds.surface5,
+    ) {
         VaultNotificationOptInBottomSheetContent(
             vaults = vaults,
             onEnableVault = onEnableVault,
@@ -133,7 +136,7 @@ internal fun VaultNotificationOptInBottomSheetContent(
         modifier =
             Modifier.background(Theme.v2.colors.backgrounds.secondary)
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 46.dp, bottom = 21.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 30.dp, bottom = 21.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -161,7 +164,7 @@ internal fun VaultNotificationOptInBottomSheetContent(
                 )
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 17.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -237,7 +240,10 @@ private fun NotificationsIntroBottomSheetContentPreview() {
 @Preview
 @Composable
 private fun VaultNotificationOptInBottomSheetContentPreview() {
-    V2BottomSheet(displayDragHandler = true) {
+    V2BottomSheet(
+        displayDragHandler = true,
+        dragHandlerColor = Theme.v2.colors.backgrounds.surface5,
+    ) {
         VaultNotificationOptInBottomSheetContent(
             vaults =
                 listOf(

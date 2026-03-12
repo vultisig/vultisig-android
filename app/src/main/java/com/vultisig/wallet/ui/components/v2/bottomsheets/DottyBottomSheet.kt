@@ -79,7 +79,10 @@ internal fun DottyBottomSheet(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     content = content,
                 )
-                DragHandler(modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter))
+                DragHandler(
+                    modifier = Modifier.padding(top = 8.dp).align(Alignment.TopCenter),
+                    color = Theme.v2.colors.vibrant.primary,
+                )
             }
         },
     )

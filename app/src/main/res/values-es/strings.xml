@@ -356,6 +356,9 @@
     <string name="keysign_notification_channel_name">Solicitudes de firma</string>
     <string name="keysign_notification_title">Firmar transacción</string>
     <string name="keysign_notification_body">Hay una nueva solicitud de firma esperándote</string>
+    <string name="foreground_notification_banner_title">Unirse a la transacción</string>
+    <string name="notification_banner_swap_summary">Intercambiar %1$s → %2$s</string>
+    <string name="notification_banner_send_summary">Enviar %1$s</string>
     <string name="notifications_intro_enable">Activar</string>
     <string name="notifications_are_here">Las notificaciones seguras ya están aquí</string>
     <string name="notifications_description">Recibe alertas cuando otro dispositivo solicite unirse a tu bóveda o cuando se requiera tu firma.</string>

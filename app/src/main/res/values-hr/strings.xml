@@ -357,6 +357,9 @@
     <string name="keysign_notification_channel_name">Zahtjevi za potpisivanje</string>
     <string name="keysign_notification_title">Potpiši transakciju</string>
     <string name="keysign_notification_body">Čeka vas novi zahtjev za potpisivanje</string>
+    <string name="foreground_notification_banner_title">Pridruži se transakciji</string>
+    <string name="notification_banner_swap_summary">Zamijeni %1$s → %2$s</string>
+    <string name="notification_banner_send_summary">Pošalji %1$s</string>
     <string name="notifications_intro_enable">Aktiviraj</string>
     <string name="notifications_are_here">Sigurne obavijesti su ovdje</string>
     <string name="notifications_description">Primajte upozorenja kada drugi uređaj zatraži pristup vašem trezoru ili kada je potreban vaš potpis.</string>

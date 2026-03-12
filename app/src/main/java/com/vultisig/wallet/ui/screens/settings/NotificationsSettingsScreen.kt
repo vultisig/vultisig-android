@@ -4,11 +4,15 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -25,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsSwitch
+import com.vultisig.wallet.ui.components.v2.icons.VaultIcon
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.settings.NotificationsSettingsUiState
 import com.vultisig.wallet.ui.models.settings.NotificationsSettingsViewModel
@@ -72,8 +77,14 @@ private fun NotificationsSettingsScreen(
             MasterNotificationToggle(isChecked = state.masterEnabled, onToggle = onMasterToggle)
 
             if (state.masterEnabled && state.vaults.isNotEmpty()) {
-                UiSpacer(size = 14.dp)
-                SettingsBox(title = stringResource(R.string.vault_notifications)) {
+                UiSpacer(size = 22.dp)
+                Column(
+                    modifier =
+                        Modifier.background(
+                            color = Theme.v2.colors.backgrounds.surface1,
+                            shape = RoundedCornerShape(size = 12.dp),
+                        )
+                ) {
                     state.vaults.forEachIndexed { index, vault ->
                         VaultNotificationToggle(
                             vault = vault,
@@ -111,7 +122,7 @@ private fun MasterNotificationToggle(isChecked: Boolean, onToggle: (Boolean) -> 
                 color = Theme.v2.colors.text.primary,
             )
         }
-        UiSpacer(size = 16.dp)
+        UiSpacer(size = 70.dp)
         VsSwitch(checked = isChecked, onCheckedChange = onToggle)
     }
 }
@@ -122,11 +133,28 @@ private fun VaultNotificationToggle(
     onToggle: (Boolean) -> Unit,
     isLastItem: Boolean,
 ) {
-    Column {
+    Column() {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            VaultIcon(
+                isFastVault = vault.isFastVault,
+                size = 20.dp,
+                contentDescription = null,
+                modifier =
+                    Modifier.border(
+                            width = 1.dp,
+                            color = Theme.v2.colors.variables.bordersLight,
+                            shape = RoundedCornerShape(size = 99.dp),
+                        )
+                        .background(
+                            color = Theme.v2.colors.variables.backgroundsSurface12,
+                            shape = RoundedCornerShape(size = 99.dp),
+                        )
+                        .padding(12.dp),
+            )
             Text(
                 text = vault.vaultName,
                 style = Theme.brockmann.supplementary.footnote,
@@ -152,13 +180,21 @@ private fun NotificationsSettingsScreenPreview() {
                     listOf(
                         VaultNotificationUiModel(
                             vaultId = "1",
-                            vaultName = "Main Vault",
+                            vaultName = "Secure Vault",
                             isEnabled = true,
+                            isFastVault = false,
                         ),
                         VaultNotificationUiModel(
                             vaultId = "2",
-                            vaultName = "Cold Wallet",
+                            vaultName = "Trading Vault",
                             isEnabled = false,
+                            isFastVault = true,
+                        ),
+                        VaultNotificationUiModel(
+                            vaultId = "3",
+                            vaultName = "Main Vault",
+                            isEnabled = true,
+                            isFastVault = false,
                         ),
                     ),
             ),

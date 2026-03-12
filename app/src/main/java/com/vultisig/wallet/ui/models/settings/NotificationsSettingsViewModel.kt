@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.PushNotificationError
@@ -32,6 +33,7 @@ internal data class VaultNotificationUiModel(
     val vaultId: String,
     val vaultName: String,
     val isEnabled: Boolean,
+    val isFastVault: Boolean = false,
 )
 
 internal data class NotificationsSettingsUiState(
@@ -72,6 +74,7 @@ constructor(
                                 vaultId = vault.id,
                                 vaultName = vault.name,
                                 isEnabled = settingsMap[vault.id]?.notificationsEnabled == true,
+                                isFastVault = vault.isFastVault(),
                             )
                         }
 

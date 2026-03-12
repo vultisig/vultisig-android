@@ -610,3 +610,15 @@ internal val MIGRATION_27_28 =
             )
         }
     }
+
+internal val MIGRATION_28_29 =
+    object : Migration(28, 29) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            CREATE INDEX IF NOT EXISTS `index_disabledCoin_vaultId` ON `disabledCoin` (`vaultId`)
+            """
+                    .trimIndent()
+            )
+        }
+    }

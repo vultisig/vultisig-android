@@ -103,4 +103,10 @@ internal interface UseCasesModule {
     @Binds
     @Singleton
     fun bindGenerateAccountQrUseCase(impl: GenerateAccountQrUseCaseImpl): GenerateAccountQrUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetKeysignTransactionSummaryUseCase(
+        impl: GetKeysignTransactionSummaryUseCaseImpl
+    ): GetKeysignTransactionSummaryUseCase
 }

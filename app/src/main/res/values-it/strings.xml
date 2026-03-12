@@ -357,6 +357,9 @@
     <string name="keysign_notification_channel_name">Richieste di firma</string>
     <string name="keysign_notification_title">Firma transazione</string>
     <string name="keysign_notification_body">C\'è una nuova richiesta di firma in attesa</string>
+    <string name="foreground_notification_banner_title">Partecipa alla transazione</string>
+    <string name="notification_banner_swap_summary">Scambia %1$s → %2$s</string>
+    <string name="notification_banner_send_summary">Invia %1$s</string>
     <string name="notifications_intro_enable">Attiva</string>
     <string name="notifications_are_here">Le notifiche sicure sono arrivate</string>
     <string name="notifications_description">Ricevi avvisi quando un altro dispositivo richiede di unirsi alla tua cassaforte o quando è richiesta la tua firma.</string>
