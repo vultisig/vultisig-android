@@ -342,6 +342,32 @@
     <string name="network_connection_lost">Netwerkverbinding verbroken. Controleer uw internetverbinding.</string>
     <string name="send_form_polka_reaping_warning">Zorg ervoor dat u voldoende geld achterlaat om de kosten te dekken. Als een rekeningsaldo onder 1 DOT (Existential Deposit) zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende fondsen verloren. U kunt het adres op elk gewenst moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Dit zal echter niet de verloren fondsen terugkrijgen.</string>
     <string name="edit_address_title">Adres bewerken</string>
+    <!-- Push Notifications -->
+    <string name="notifications">Meldingen</string>
+    <string name="push_notifications">Pushmeldingen</string>
+    <string name="push_notifications_failed">Pushmelding mislukt</string>
+    <string name="push_notification_vault_not_found">Kluis niet gevonden</string>
+    <string name="push_notification_error_vault_not_supported">Kluis ondersteunt geen meldingen</string>
+    <string name="push_notification_error_token_not_available">Kan meldingentoken niet ophalen</string>
+    <string name="push_notification_error_api_failure">Kan meldingenregistratie niet bijwerken</string>
+    <string name="push_notifications_sent">Melding succesvol verzonden</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Ontvang een melding wanneer uw handtekening vereist is of een apparaat toegang aanvraagt.</string>
+    <string name="enable_push_notifications">Pushmeldingen inschakelen</string>
+    <string name="keysign_notification_channel_name">Ondertekeningsverzoeken</string>
+    <string name="keysign_notification_title">Transactie ondertekenen</string>
+    <string name="keysign_notification_body">Er wacht een nieuw ondertekeningsverzoek op u</string>
+    <string name="foreground_notification_banner_title">Doe mee aan transactie</string>
+    <string name="notification_banner_swap_summary">Wisselen %1$s → %2$s</string>
+    <string name="notification_banner_send_summary">Sturen %1$s</string>
+    <string name="notifications_intro_enable">Inschakelen</string>
+    <string name="notifications_are_here">Veilige meldingen zijn hier</string>
+    <string name="notifications_description">Ontvang meldingen wanneer een ander apparaat verzoekt lid te worden van uw kluis of wanneer uw handtekening vereist is.</string>
+    <string name="choose_vaults_for_notifications">Kluizen kiezen voor meldingen</string>
+    <string name="notifications_vault_sheet_subtitle">U kunt meldingen beheren in de systeeminstellingen.</string>
+    <string name="not_now">Niet nu</string>
+    <string name="vault_notifications">Kluismeldingen</string>
+    <string name="enable_all">Alles inschakelen</string>
+
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Totaal Gebonden Rune</string>
@@ -941,6 +967,10 @@
         <item quantity="one">We hebben %d actieve keten gevonden</item>
         <item quantity="other">We hebben %d actieve ketens gevonden</item>
     </plurals>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Melding opnieuw sturen in %d seconde</item>
+        <item quantity="other">Melding opnieuw sturen in %d seconden</item>
+    </plurals>
     <string name="key_import_chains_found_desc">Elke extra keten verlengt de tijd die nodig is om uw kluis te genereren en de kans op een time-out.</string>
     <string name="key_import_chains_continue">Aan de slag</string>
     <string name="key_import_chains_customize">Ketens aanpassen</string>
@@ -1080,4 +1110,5 @@
     <string name="server_backup_error_timeout">De server deed er te lang over om te reageren. Controleer uw internetverbinding en probeer het opnieuw.</string>
     <string name="server_backup_error_too_many_requests">Te veel back-upverzoeken. Probeer het later opnieuw.</string>
     <string name="server_backup_error_bad_request">Er is iets misgegaan. Controleer uw gegevens en probeer het opnieuw.</string>
+    <string name="resend_notification">Melding opnieuw sturen</string>
 </resources>

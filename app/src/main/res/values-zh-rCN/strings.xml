@@ -1,5 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Push Notifications -->
+    <string name="notifications">通知</string>
+    <string name="push_notifications">推送通知</string>
+    <string name="push_notifications_failed">推送通知失败</string>
+    <string name="push_notification_vault_not_found">未找到金库</string>
+    <string name="push_notification_error_vault_not_supported">金库不支持通知</string>
+    <string name="push_notification_error_token_not_available">无法获取通知令牌</string>
+    <string name="push_notification_error_api_failure">无法更新通知注册</string>
+    <string name="push_notifications_sent">通知发送成功</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">当需要您的签名或设备请求访问时，您将收到通知。</string>
+    <string name="enable_push_notifications">启用推送通知</string>
+    <string name="keysign_notification_channel_name">签名请求</string>
+    <string name="keysign_notification_title">签署交易</string>
+    <string name="keysign_notification_body">有一个新的签名请求等待您处理</string>
+    <string name="foreground_notification_banner_title">加入交易</string>
+    <string name="notification_banner_swap_summary">交换 %1$s → %2$s</string>
+    <string name="notification_banner_send_summary">发送 %1$s</string>
+    <string name="notifications_intro_enable">启用</string>
+    <string name="notifications_are_here">通知已到来</string>
+    <string name="notifications_description">当另一台设备请求加入您的金库或需要您的签名时，接收通知。</string>
+    <string name="choose_vaults_for_notifications">选择接收通知的金库</string>
+    <string name="notifications_vault_sheet_subtitle">您可以在系统设置中管理通知。</string>
+    <string name="not_now">暂不</string>
+    <string name="vault_notifications">金库通知</string>
+    <string name="enable_all">全部启用</string>
+
     <!-- Deposit Options -->
     <string name="deposit_option_bond">绑定</string>
     <string name="deposit_option_unbond">解绑</string>
@@ -1282,6 +1308,9 @@
     <plurals name="key_import_chains_found_title">
         <item quantity="other">我们发现了 %d 条活跃链</item>
     </plurals>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="other">%d 秒后重新发送通知</item>
+    </plurals>
     <string name="key_import_chains_found_desc">每增加一条链都会增加生成金库的时间和超时的可能性。</string>
     <string name="key_import_chains_continue">开始</string>
     <string name="key_import_chains_customize">自定义链</string>
@@ -1421,4 +1450,5 @@
     <string name="server_backup_error_timeout">服务器响应时间过长，请检查您的网络连接并重试。</string>
     <string name="server_backup_error_too_many_requests">备份请求过多。请稍后重试。</string>
     <string name="server_backup_error_bad_request">出错了。请检查您的信息并重试。</string>
+    <string name="resend_notification">重新发送通知</string>
 </resources>

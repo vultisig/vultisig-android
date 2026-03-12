@@ -19,6 +19,7 @@ import com.vultisig.wallet.ui.models.settings.SettingsItem.DiscountTiers
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Faq
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Github
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Language
+import com.vultisig.wallet.ui.models.settings.SettingsItem.Notifications
 import com.vultisig.wallet.ui.models.settings.SettingsItem.PrivacyPolicy
 import com.vultisig.wallet.ui.models.settings.SettingsItem.ReferralCode
 import com.vultisig.wallet.ui.models.settings.SettingsItem.ShareTheApp
@@ -209,6 +210,15 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                 trailingIcon = R.drawable.ic_small_caret_right,
             )
         )
+
+    data object Notifications :
+        SettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.notifications),
+                leadingIcon = R.drawable.ic_bell,
+                trailingIcon = R.drawable.ic_small_caret_right,
+            )
+        )
 }
 
 internal data class SettingsItemUiModel(
@@ -252,7 +262,13 @@ constructor(
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.general),
                         items =
-                            listOf(Language("English"), Currency("USD"), AddressBook, ReferralCode),
+                            listOf(
+                                Notifications,
+                                Language("English"),
+                                Currency("USD"),
+                                AddressBook,
+                                ReferralCode,
+                            ),
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.support),
@@ -313,6 +329,10 @@ constructor(
 
             DiscountTiers -> {
                 viewModelScope.launch { navigator.route(Route.DiscountTiers(vaultId)) }
+            }
+
+            Notifications -> {
+                viewModelScope.launch { navigator.route(Route.NotificationSettings) }
             }
 
             VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_WEBSITE))

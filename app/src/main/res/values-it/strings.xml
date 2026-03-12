@@ -343,6 +343,32 @@
     <string name="network_connection_lost">Connessione di rete persa. Controlla la tua connessione Internet</string>
     <string name="send_form_polka_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un account scende sotto 1 DOT (deposito esistenziale), l\'account verrà disattivato (raccolto) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="edit_address_title">Modifica indirizzo</string>
+    <!-- Push Notifications -->
+    <string name="notifications">Notifiche</string>
+    <string name="push_notifications">Notifiche push</string>
+    <string name="push_notifications_failed">Invio notifica push non riuscito</string>
+    <string name="push_notification_vault_not_found">Cassaforte non trovata</string>
+    <string name="push_notification_error_vault_not_supported">La cassaforte non supporta le notifiche</string>
+    <string name="push_notification_error_token_not_available">Impossibile ottenere il token di notifica</string>
+    <string name="push_notification_error_api_failure">Impossibile aggiornare la registrazione delle notifiche</string>
+    <string name="push_notifications_sent">Notifica inviata con successo</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Ricevi una notifica quando è richiesta la tua firma o un dispositivo richiede l\'accesso.</string>
+    <string name="enable_push_notifications">Abilita notifiche push</string>
+    <string name="keysign_notification_channel_name">Richieste di firma</string>
+    <string name="keysign_notification_title">Firma transazione</string>
+    <string name="keysign_notification_body">C\'è una nuova richiesta di firma in attesa</string>
+    <string name="foreground_notification_banner_title">Partecipa alla transazione</string>
+    <string name="notification_banner_swap_summary">Scambia %1$s → %2$s</string>
+    <string name="notification_banner_send_summary">Invia %1$s</string>
+    <string name="notifications_intro_enable">Attiva</string>
+    <string name="notifications_are_here">Le notifiche sicure sono arrivate</string>
+    <string name="notifications_description">Ricevi avvisi quando un altro dispositivo richiede di unirsi alla tua cassaforte o quando è richiesta la tua firma.</string>
+    <string name="choose_vaults_for_notifications">Scegli le cassaforti per le notifiche</string>
+    <string name="notifications_vault_sheet_subtitle">Puoi gestire le notifiche nelle impostazioni di sistema.</string>
+    <string name="not_now">Non ora</string>
+    <string name="vault_notifications">Notifiche cassaforte</string>
+    <string name="enable_all">Abilita tutto</string>
+
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Totale Rune Vincolate</string>
@@ -946,6 +972,11 @@
         <item quantity="one">Abbiamo trovato %d catena attiva</item>
         <item quantity="other">Abbiamo trovato %d catene attive</item>
     </plurals>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Reinvia notifica in %d secondo</item>
+        <item quantity="many">Reinvia notifica in %d secondi</item>
+        <item quantity="other">Reinvia notifica in %d secondi</item>
+    </plurals>
     <string name="key_import_chains_found_desc">Ogni catena aggiuntiva aumenta il tempo per generare il tuo vault e la possibilità di un timeout.</string>
     <string name="key_import_chains_continue">Inizia</string>
     <string name="key_import_chains_customize">Personalizza catene</string>
@@ -1085,4 +1116,5 @@
     <string name="server_backup_error_timeout">Il server ha impiegato troppo tempo per rispondere. Controlla la tua connessione Internet e riprova.</string>
     <string name="server_backup_error_too_many_requests">Troppe richieste di backup. Riprova più tardi.</string>
     <string name="server_backup_error_bad_request">Qualcosa è andato storto. Controlla i tuoi dati e riprova.</string>
+    <string name="resend_notification">Reinvia notifica</string>
 </resources>

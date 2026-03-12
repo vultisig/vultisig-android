@@ -111,6 +111,7 @@ import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreen
 import com.vultisig.wallet.ui.screens.settings.FaqSettingScreen
 import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
+import com.vultisig.wallet.ui.screens.settings.NotificationsSettingsScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
 import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
@@ -380,6 +381,8 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         }
 
         composable<Route.CheckForUpdateSetting> { CheckForUpdateScreen() }
+
+        composable<Route.NotificationSettings> { NotificationsSettingsScreen() }
 
         composable<Route.OnRamp> { OnRampScreen(navController = navController) }
 

@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.dao.TransactionHistoryDao
 import com.vultisig.wallet.data.db.dao.VaultDao
 import com.vultisig.wallet.data.db.dao.VaultMetadataDao
+import com.vultisig.wallet.data.db.dao.VaultNotificationSettingsDao
 import com.vultisig.wallet.data.db.dao.VaultOrderDao
 import com.vultisig.wallet.data.db.models.ActiveBondedNodeEntity
 import com.vultisig.wallet.data.db.models.AddressBookEntryEntity
@@ -34,6 +35,7 @@ import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultMetadataEntity
+import com.vultisig.wallet.data.db.models.VaultNotificationSettingsEntity
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 
 @Database(
@@ -55,9 +57,10 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
             ActiveBondedNodeEntity::class,
             StakingDetailsEntity::class,
             ChainPublicKeyEntity::class,
+            VaultNotificationSettingsEntity::class,
             TransactionHistoryEntity::class,
         ],
-    version = 28,
+    version = 30,
     exportSchema = false,
 )
 @TypeConverters(
@@ -88,6 +91,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun activeBondedNodeDao(): ActiveBondedNodeDao
 
     abstract fun stakingDetailsDao(): StakingDetailsDao
+
+    abstract fun vaultNotificationSettingsDao(): VaultNotificationSettingsDao
 
     abstract fun transactionHistoryDao(): TransactionHistoryDao
 }

@@ -46,6 +46,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "/META-INF/LICENSE*.md"
         }
+        jniLibs { keepDebugSymbols += "**/*.so" }
     }
     tasks.withType<Test> { useJUnitPlatform() }
     lint {
@@ -90,6 +91,7 @@ dependencies {
     implementation(libs.androidx.material3.window)
     implementation(libs.androidx.appcompat)
     implementation(libs.firebase.messaging)
+    implementation(libs.lifecycle.process)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     androidTestImplementation(libs.androidx.test.core.ktx)

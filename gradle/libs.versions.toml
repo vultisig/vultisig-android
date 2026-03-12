@@ -54,6 +54,7 @@ coreKtxVersion = "1.7.0"
 googleGmsGoogleServices = "4.4.4"
 firebaseMessaging = "25.0.1"
 ktfmt = "0.22.0"
+lifecycleProcess = "2.10.0"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -132,6 +133,7 @@ play-update = { module = "com.google.android.play:app-update", version.ref = "up
 play-review = { module = "com.google.android.play:review", version.ref = "review" }
 androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hilt" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
+lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 
 
 [plugins]

@@ -342,6 +342,32 @@
     <string name="join_keysign_failed_connect_to_server">Verbindung zum Server fehlgeschlagen</string>
     <string name="network_connection_lost">Netzwerkverbindung verloren. Bitte überprüfen Sie Ihre Internetverbindung</string>
     <string name="send_form_polka_reaping_warning">Stellen Sie sicher, dass Sie genügend Geld übrig lassen, um die Gebühren zu decken. Wenn ein Kontostand unter 1 DOT (Existential Deposit) fällt, wird das Konto deaktiviert (geerntet) und alle verbleibenden Gelder gehen verloren. Sie können die Adresse jederzeit mit einer neuen Einzahlung reaktivieren, die größer als die Existenzeinzahlung ist. Dadurch werden die verlorenen Gelder jedoch nicht wiederhergestellt.</string>
+    <!-- Push Notifications -->
+    <string name="notifications">Benachrichtigungen</string>
+    <string name="push_notifications">Push-Benachrichtigungen</string>
+    <string name="push_notifications_failed">Push-Benachrichtigung fehlgeschlagen</string>
+    <string name="push_notification_vault_not_found">Tresor nicht gefunden</string>
+    <string name="push_notification_error_vault_not_supported">Tresor unterstützt keine Benachrichtigungen</string>
+    <string name="push_notification_error_token_not_available">Benachrichtigungstoken konnte nicht abgerufen werden</string>
+    <string name="push_notification_error_api_failure">Benachrichtigungsregistrierung konnte nicht aktualisiert werden</string>
+    <string name="push_notifications_sent">Benachrichtigung erfolgreich gesendet</string>
+    <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Erhalten Sie eine Benachrichtigung, wenn Ihre Unterschrift erforderlich ist oder ein Gerät Zugriff anfordert.</string>
+    <string name="enable_push_notifications">Push-Benachrichtigungen aktivieren</string>
+    <string name="keysign_notification_channel_name">Keysign-Anfragen</string>
+    <string name="keysign_notification_title">Transaktion signieren</string>
+    <string name="keysign_notification_body">Eine neue Signierungsanfrage wartet auf Sie</string>
+    <string name="foreground_notification_banner_title">Transaktion beitreten</string>
+    <string name="notification_banner_swap_summary">Tauschen %1$s → %2$s</string>
+    <string name="notification_banner_send_summary">Senden %1$s</string>
+    <string name="notifications_intro_enable">Aktivieren</string>
+    <string name="notifications_are_here">Sichere Benachrichtigungen sind da</string>
+    <string name="notifications_description">Erhalten Sie Benachrichtigungen, wenn ein anderes Gerät Ihrem Tresor beitreten möchte oder wenn Ihre Unterschrift erforderlich ist.</string>
+    <string name="choose_vaults_for_notifications">Tresore für Benachrichtigungen auswählen</string>
+    <string name="notifications_vault_sheet_subtitle">Sie können Benachrichtigungen in den Systemeinstellungen verwalten.</string>
+    <string name="not_now">Nicht jetzt</string>
+    <string name="vault_notifications">Tresor-Benachrichtigungen</string>
+    <string name="enable_all">Alle aktivieren</string>
+
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Gesamt gebundene Rune</string>
@@ -946,6 +972,10 @@
         <item quantity="one">Wir haben %d aktive Blockchain gefunden</item>
         <item quantity="other">Wir haben %d aktive Blockchains gefunden</item>
     </plurals>
+    <plurals name="resend_notification_in_seconds">
+        <item quantity="one">Benachrichtigung in %d Sekunde erneut senden</item>
+        <item quantity="other">Benachrichtigung in %d Sekunden erneut senden</item>
+    </plurals>
     <string name="key_import_chains_found_desc">Jede zusätzliche Blockchain erhöht die Zeit zur Erstellung Ihres Tresors und die Möglichkeit eines Timeouts.</string>
     <string name="key_import_chains_continue">Loslegen</string>
     <string name="key_import_chains_customize">Blockchains anpassen</string>
@@ -1085,4 +1115,5 @@
     <string name="server_backup_error_timeout">Der Server hat zu lange gebraucht, um zu antworten. Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</string>
     <string name="server_backup_error_too_many_requests">Zu viele Sicherungsanfragen. Bitte versuchen Sie es später erneut.</string>
     <string name="server_backup_error_bad_request">Etwas ist schiefgelaufen. Bitte überprüfen Sie Ihre Angaben und versuchen Sie es erneut.</string>
+    <string name="resend_notification">Benachrichtigung erneut senden</string>
 </resources>
