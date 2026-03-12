@@ -191,10 +191,6 @@ constructor(
             Timber.d("No FCM token available, skipping notification")
             return
         }
-        if (!isVaultOptedIn(vault.id)) {
-            Timber.d("Vault ${vault.id} is not opted into notifications, skipping")
-            return
-        }
         notificationApi.notify(
             NotifyRequest(
                 vaultId = notificationVaultId(vault),

@@ -45,7 +45,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigInteger
-import java.util.*
+import java.util.Base64
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -236,6 +236,11 @@ internal class KeysignViewModel(
                 broadcastTransaction()
                 checkThorChainTxResult()
             }
+            if (customMessagePayload != null) {
+                // For custom message signing, we consider the flow complete after signing without
+                // broadcasting
+                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+            }
             isNavigateToHome = true
         } catch (e: Exception) {
             Timber.e(e)
@@ -329,6 +334,11 @@ internal class KeysignViewModel(
                 broadcastTransaction()
                 checkThorChainTxResult()
             }
+            if (customMessagePayload != null) {
+                // For custom message signing, we consider the flow complete after signing without
+                // broadcasting
+                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+            }
             isNavigateToHome = true
         } catch (e: Exception) {
             Timber.e(e)
@@ -373,7 +383,11 @@ internal class KeysignViewModel(
 
             broadcastTransaction()
             checkThorChainTxResult()
-
+            if (customMessagePayload != null) {
+                // For custom message signing, we consider the flow complete after signing without
+                // broadcasting
+                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+            }
             isNavigateToHome = true
 
             pullTssMessagesJob?.cancel()
