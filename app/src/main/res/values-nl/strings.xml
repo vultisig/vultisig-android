@@ -1100,8 +1100,8 @@
     <string name="server_backup_error_too_many_requests">Te veel back-upverzoeken. Probeer het later opnieuw.</string>
     <string name="server_backup_error_bad_request">Er is iets misgegaan. Controleer uw gegevens en probeer het opnieuw.</string>
     <string name="resend_notification">Melding opnieuw sturen</string>
-    <string name="cacao_pool">Cacao Pool</string>
-    <string name="native_asset">Inheems</string>
+    <string name="cacao_pool">CACAO-pool</string>
+    <string name="native_asset">Native</string>
     <string name="invalid_integer_error">Ongeldig geheel getal</string>
-    <string name="empty_lps_field">Leeg LPs-veld</string>
+    <string name="empty_lps_field">Leeg LP-eenheden-veld</string>
 </resources>

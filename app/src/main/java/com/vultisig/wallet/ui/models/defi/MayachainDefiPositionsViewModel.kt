@@ -129,7 +129,7 @@ constructor(
         viewModelScope.launch {
             defiPositionsRepository.getSelectedPositions(vaultId).collect { saved ->
                 val positions =
-                    if (saved.any { it == Coins.MayaChain.CACAO.ticker }) {
+                    if (saved.isNotEmpty()) {
                         saved.toList()
                     } else {
                         MAYA_DEFAULT_SELECTED_POSITIONS
@@ -164,7 +164,10 @@ constructor(
 
             try {
                 val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
-                val cacaoCoin = vault?.coins?.find { it.chain.id == Chain.MayaChain.id }
+                val cacaoCoin =
+                    vault?.coins?.find {
+                        it.ticker == Coins.MayaChain.CACAO.ticker && it.chain == Chain.MayaChain
+                    }
 
                 if (cacaoCoin == null) {
                     Timber.e("Vault does not have CACAO coin")
@@ -254,7 +257,9 @@ constructor(
             try {
                 val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
                 val cacaoCoin =
-                    vault?.coins?.find { it.chain.id == Chain.MayaChain.id }
+                    vault?.coins?.find {
+                        it.ticker == Coins.MayaChain.CACAO.ticker && it.chain == Chain.MayaChain
+                    }
                         ?: run {
                             Timber.e("Vault does not have CACAO coin")
                             state.update {
@@ -402,7 +407,13 @@ constructor(
 
     fun onNavigateToStake(action: DeFiNavActions) {
         viewModelScope.launch {
-            navigator.route(Route.Deposit(vaultId = vaultId, chainId = Chain.MayaChain.id))
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = Chain.MayaChain.id,
+                    depositType = action.type,
+                )
+            )
         }
     }
 

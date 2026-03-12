@@ -1104,8 +1104,8 @@
     <string name="server_backup_error_too_many_requests">Слишком много запросов на резервное копирование. Попробуйте позже.</string>
     <string name="server_backup_error_bad_request">Что-то пошло не так. Проверьте свои данные и попробуйте снова.</string>
     <string name="resend_notification">Повторно отправить уведомление</string>
-    <string name="cacao_pool">Cacao Pool</string>
+    <string name="cacao_pool">пул CACAO</string>
     <string name="native_asset">Нативный</string>
     <string name="invalid_integer_error">Недопустимое целое число</string>
-    <string name="empty_lps_field">Пустое поле LPs</string>
+    <string name="empty_lps_field">Пустое поле Единицы LP</string>
 </resources>

@@ -1104,8 +1104,8 @@
     <string name="server_backup_error_too_many_requests">Demasiados pedidos de backup. Tente novamente mais tarde.</string>
     <string name="server_backup_error_bad_request">Algo correu mal. Verifique os seus dados e tente novamente.</string>
     <string name="resend_notification">Reenviar notificação</string>
-    <string name="cacao_pool">Pool de Cacao</string>
+    <string name="cacao_pool">pool CACAO</string>
     <string name="native_asset">Nativo</string>
     <string name="invalid_integer_error">Quantidade inteira inválida</string>
-    <string name="empty_lps_field">Campo de LPs vazio</string>
+    <string name="empty_lps_field">Campo de Unidades LP vazio</string>
 </resources>

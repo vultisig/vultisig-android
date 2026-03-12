@@ -61,6 +61,10 @@ internal fun parseDepositType(type: String?): DeFiNavActions? {
         "unstake_stcy" -> DeFiNavActions.UNSTAKE_STCY
         "deposit_usdc_circle" -> DeFiNavActions.DEPOSIT_USDC_CIRCLE
         "withdraw_usdc_circle" -> DeFiNavActions.WITHDRAW_USDC_CIRCLE
+        "stakecacao",
+        "stake_cacao" -> DeFiNavActions.STAKE_CACAO
+        "unstakecacao",
+        "unstake_cacao" -> DeFiNavActions.UNSTAKE_CACAO
         else -> {
             try {
                 type?.let { DeFiNavActions.valueOf(it.uppercase()) }

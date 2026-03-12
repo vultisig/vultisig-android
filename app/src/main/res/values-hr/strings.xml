@@ -1106,8 +1106,8 @@
     <string name="server_backup_error_too_many_requests">Previše zahtjeva za sigurnosnu kopiju. Pokušajte ponovno kasnije.</string>
     <string name="server_backup_error_bad_request">Nešto je pošlo po krivu. Provjerite svoje podatke i pokušajte ponovno.</string>
     <string name="resend_notification">Ponovo pošalji obavijest</string>
-    <string name="cacao_pool">Cacao Pool</string>
-    <string name="native_asset">Izvorni</string>
+    <string name="cacao_pool">CACAO pool</string>
+    <string name="native_asset">Izvorno</string>
     <string name="invalid_integer_error">Nevažeći cijeli broj</string>
-    <string name="empty_lps_field">Prazno polje LPs</string>
+    <string name="empty_lps_field">Prazno polje LP jedinice</string>
 </resources>

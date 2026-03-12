@@ -50,7 +50,7 @@ internal fun MayachainDefiPositionsScreen(
 ) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) { model.setData(vaultId = vaultId) }
+    LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
 
     MayachainDefiPositionsScreenContent(
         state = state,
