@@ -8,7 +8,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -32,9 +31,8 @@ import com.vultisig.wallet.data.repositories.TiersNFTRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
-import com.vultisig.wallet.data.services.PushNotificationError
 import com.vultisig.wallet.data.services.PushNotificationManager
-import com.vultisig.wallet.data.services.toStringRes
+import com.vultisig.wallet.data.services.pushNotificationErrorMessage
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
@@ -51,7 +49,6 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -68,6 +65,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import javax.inject.Inject
 
 @Immutable
 internal data class VaultAccountsUiModel(
@@ -121,7 +119,7 @@ internal data class AccountUiModel(
 internal class VaultAccountsViewModel
 @Inject
 constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val requestResultRepository: RequestResultRepository,
@@ -625,15 +623,10 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt in vaults for notifications")
-                val msgRes =
-                    (e as? PushNotificationError)?.toStringRes()
-                        ?: R.string.push_notifications_failed
-                snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
+                snackbarFlow.showMessage(pushNotificationErrorMessage(e, context), SnackbarType.Error)
             }
         ) {
-            vaultsToOptIn.forEach { item ->
-                pushNotificationManager.setVaultOptIn(item.vaultId, item.isEnabled)
-            }
+            pushNotificationManager.setVaultsOptIn(vaultsToOptIn.map { it.vaultId to it.isEnabled })
         }
     }
 
