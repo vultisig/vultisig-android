@@ -402,7 +402,6 @@ constructor(
             }
         ) {
             val vault = _currentVault ?: return@safeLaunch
-            if (!pushNotificationManager.isVaultOptedIn(vault.id)) return@safeLaunch
             pushNotificationManager.notifyVaultDevices(vault, _keysignMessage.value)
             snackbarFlow.showMessage(
                 message = context.getString(R.string.push_notifications_sent),
