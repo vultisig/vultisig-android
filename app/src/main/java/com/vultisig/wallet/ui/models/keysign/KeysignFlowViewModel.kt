@@ -292,14 +292,12 @@ constructor(
                     }
                 }
 
-            val isOptedIn = pushNotificationManager.isVaultOptedIn(vault.id)
-
             uiState.update {
                 it.copy(
                     vault = vault,
                     isSwap = shareViewModel.keysignPayload?.swapPayload != null,
                     toAddress = keysignPayload?.toAddress ?: "",
-                    enableNotification = isOptedIn,
+                    enableNotification = true,
                 )
             }
 
