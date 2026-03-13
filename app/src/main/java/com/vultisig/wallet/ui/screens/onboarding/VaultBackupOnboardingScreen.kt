@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -100,42 +102,43 @@ internal fun VaultBackupOnboardingScreen(
                     )
                     UiSpacer(size = 32.dp)
 
-                    uiState.tips.forEach { (title, description, logo) ->
-                        Row {
-                            UiIcon(
-                                drawableResId = logo,
-                                contentDescription = null,
-                                size = 24.dp,
-                                tint = Theme.v2.colors.alerts.info,
-                            )
-                            UiSpacer(size = 16.dp)
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    text = title.asString(),
-                                    style = Theme.brockmann.headings.subtitle,
-                                    color = Theme.v2.colors.neutrals.n50,
+                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                        uiState.tips.forEach { (title, description, logo) ->
+                            Row {
+                                UiIcon(
+                                    drawableResId = logo,
+                                    contentDescription = null,
+                                    size = 24.dp,
+                                    tint = Theme.v2.colors.alerts.info,
                                 )
-                                UiSpacer(size = 8.dp)
+                                UiSpacer(size = 16.dp)
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        text = title.asString(),
+                                        style = Theme.brockmann.headings.subtitle,
+                                        color = Theme.v2.colors.neutrals.n50,
+                                    )
+                                    UiSpacer(size = 8.dp)
 
-                                Text(
-                                    text = description.asString(),
-                                    style = Theme.brockmann.supplementary.footnote,
-                                    color = Theme.v2.colors.text.tertiary,
-                                )
+                                    Text(
+                                        text = description.asString(),
+                                        style = Theme.brockmann.supplementary.footnote,
+                                        color = Theme.v2.colors.text.tertiary,
+                                    )
+                                }
                             }
+                            UiSpacer(size = 16.dp)
                         }
-                        UiSpacer(size = 16.dp)
                     }
-
-                    UiSpacer(weight = 1f)
-
-                    VsButton(
-                        label = stringResource(R.string.vault_setup_i_understand),
-                        onClick = { onEvent(VaultBackupOnboardingEvent.Next) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
                 }
             }
+        },
+        bottomBar = {
+            VsButton(
+                label = stringResource(R.string.vault_setup_i_understand),
+                onClick = { onEvent(VaultBackupOnboardingEvent.Next) },
+                modifier = Modifier.fillMaxWidth(),
+            )
         },
     )
 }

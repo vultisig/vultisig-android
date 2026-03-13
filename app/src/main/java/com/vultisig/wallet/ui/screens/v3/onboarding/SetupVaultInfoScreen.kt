@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,57 +41,61 @@ private fun SetupVaultInfoScreen(
     uiState: SetupVaultInfoUiState,
     onEvent: (SetupVaultInfoEvent) -> Unit,
 ) {
-    V3Scaffold(onBackClick = { onEvent(SetupVaultInfoEvent.Back) }, applyDefaultPaddings = false) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.padding(horizontal = V3Scaffold.PADDING_HORIZONTAL)) {
-                UiSpacer(size = 20.dp)
-                Text(
-                    text = stringResource(R.string.vault_setup_your_vault_setup),
-                    color = Theme.v2.colors.neutrals.n50,
-                    style = Theme.brockmann.headings.title2,
-                )
-                UiSpacer(size = 20.dp)
-
-                SetupVaultHeader(
-                    logo = uiState.headerLogo,
-                    title = uiState.title.asString(),
-                    subTitle = uiState.subTitle.asString(),
-                )
-            }
-
-            UiSpacer(size = 14.dp)
-
-            SetupVaultRive(animationRes = uiState.rive)
-
-            UiSpacer(size = 33.dp)
-
-            Column(
-                modifier =
-                    Modifier.padding(
-                        horizontal = V3Scaffold.PADDING_HORIZONTAL,
-                        vertical = V3Scaffold.PADDING_VERTICAL,
+    V3Scaffold(
+        onBackClick = { onEvent(SetupVaultInfoEvent.Back) },
+        applyDefaultPaddings = false,
+        content = {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Column(modifier = Modifier.padding(horizontal = V3Scaffold.PADDING_HORIZONTAL)) {
+                    UiSpacer(size = 20.dp)
+                    Text(
+                        text = stringResource(R.string.vault_setup_your_vault_setup),
+                        color = Theme.v2.colors.neutrals.n50,
+                        style = Theme.brockmann.headings.title2,
                     )
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    uiState.tips.forEach { (logo, title, subTitle) ->
-                        SetupVaultGuideItem(
-                            logo = logo,
-                            title = title.asString(),
-                            subTitle = subTitle.asString(),
-                        )
-                    }
+                    UiSpacer(size = 20.dp)
+
+                    SetupVaultHeader(
+                        logo = uiState.headerLogo,
+                        title = uiState.title.asString(),
+                        subTitle = uiState.subTitle.asString(),
+                    )
                 }
 
-                UiSpacer(weight = 1f)
+                UiSpacer(size = 14.dp)
 
-                VsButton(
-                    label = stringResource(R.string.key_import_device_count_get_started),
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { onEvent(SetupVaultInfoEvent.Next) },
-                )
+                SetupVaultRive(animationRes = uiState.rive)
+
+                UiSpacer(size = 33.dp)
+
+                Column(
+                    modifier =
+                        Modifier.padding(
+                                horizontal = V3Scaffold.PADDING_HORIZONTAL,
+                                vertical = V3Scaffold.PADDING_VERTICAL,
+                            )
+                            .verticalScroll(rememberScrollState())
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        uiState.tips.forEach { (logo, title, subTitle) ->
+                            SetupVaultGuideItem(
+                                logo = logo,
+                                title = title.asString(),
+                                subTitle = subTitle.asString(),
+                            )
+                        }
+                    }
+                }
             }
-        }
-    }
+        },
+        bottomBar = {
+            VsButton(
+                label = stringResource(R.string.key_import_device_count_get_started),
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onEvent(SetupVaultInfoEvent.Next) },
+            )
+        },
+    )
 }
 
 @Composable
