@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v3.onboarding
 
-import android.R.attr.minHeight
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
@@ -147,8 +146,7 @@ private fun DeviceCountDescription(
     tips: List<DeviceCountTip>,
     showBadge: Boolean = false,
 ) {
-    val shape =
-        RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 24.dp, bottomEnd = 24.dp)
+    val shape = RoundedCornerShape(24.dp)
 
     Column(
         modifier =
@@ -190,10 +188,10 @@ private fun DeviceCountDescription(
                     targetState = tips[selectedIndex].subTitle.asString(),
                     label = "deviceCountSubTitle",
                 ) { subTitleText ->
-                    val highlight = tips[selectedIndex].subTitleHighlight?.asString()
+                    val hl = tips[selectedIndex].subTitleHighlight?.asString()
                     val annotatedText = buildAnnotatedString {
-                        val start = if (highlight != null) subTitleText.indexOf(highlight) else -1
-                        if (start >= 0) {
+                        val start = if (hl != null) subTitleText.indexOf(hl) else -1
+                        if (start >= 0 && hl != null) {
                             append(subTitleText.substring(0, start))
                             withStyle(
                                 SpanStyle(
@@ -201,9 +199,9 @@ private fun DeviceCountDescription(
                                     fontWeight = FontWeight.Bold,
                                 )
                             ) {
-                                append(highlight)
+                                append(hl)
                             }
-                            append(subTitleText.substring(start + highlight!!.length))
+                            append(subTitleText.substring(start + hl.length))
                         } else {
                             append(subTitleText)
                         }
