@@ -80,10 +80,7 @@ private fun ChooseDeviceCountScreen(
             }
         },
         content = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Image(
                     painter = painterResource(R.drawable.ic_devices),
                     contentDescription = null,
@@ -154,6 +151,7 @@ private fun DeviceCountDescription(
     Column(
         modifier =
             Modifier.fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .clip(shape = DescriptionShape)
                 .background(color = Theme.v2.colors.backgrounds.surface1)
     ) {
