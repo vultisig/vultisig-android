@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.screens.v3.onboarding
 import android.R.attr.minHeight
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,7 +19,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
@@ -64,12 +62,6 @@ private fun ChooseDeviceCountScreen(
     uiState: ChooseDeviceCountUiState,
     onEvent: (ChooseDeviceCountUiEvent) -> Unit,
 ) {
-    val badgeAlpha by
-        animateFloatAsState(
-            targetValue = if (uiState.deviceCount == 1) 1f else 0f,
-            label = "badgeAlpha",
-        )
-
     V3Scaffold(
         applyGradientBackground = true,
         onBackClick = { onEvent(ChooseDeviceCountUiEvent.Back) },
@@ -122,32 +114,11 @@ private fun ChooseDeviceCountScreen(
 
                 UiSpacer(size = 32.dp)
 
-                DeviceCountDescription(selectedIndex = uiState.deviceCount - 1, tips = uiState.tips)
-
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .alpha(badgeAlpha)
-                            .background(
-                                color = Theme.v2.colors.backgrounds.surface1,
-                                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
-                            )
-                            .padding(vertical = 14.dp),
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.appstore_style_icon),
-                        contentDescription = null,
-                        contentScale = ContentScale.None,
-                    )
-                    UiSpacer(8.dp)
-                    Text(
-                        text = stringResource(R.string.welcome_plugin_compatible),
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.primary,
-                    )
-                }
+                DeviceCountDescription(
+                    selectedIndex = uiState.deviceCount - 1,
+                    tips = uiState.tips,
+                    showBadge = uiState.deviceCount == 1,
+                )
             }
         },
     )
@@ -171,66 +142,97 @@ private fun Tip() {
 }
 
 @Composable
-private fun DeviceCountDescription(selectedIndex: Int, tips: List<DeviceCountTip>) {
+private fun DeviceCountDescription(
+    selectedIndex: Int,
+    tips: List<DeviceCountTip>,
+    showBadge: Boolean = false,
+) {
     val shape =
-        RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 20.dp, bottomEnd = 20.dp)
+        RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 24.dp, bottomEnd = 24.dp)
 
-    Row(
+    Column(
         modifier =
             Modifier.fillMaxWidth()
                 .clip(shape = shape)
-                .background(color = Theme.v2.colors.backgrounds.background)
-                .border(width = 1.dp, shape = shape, color = Theme.v2.colors.border.light)
-                .defaultMinSize(minHeight = 129.dp)
-                .padding(horizontal = 20.dp, vertical = 24.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+                .background(color = Theme.v2.colors.backgrounds.surface1)
     ) {
-        HorizontalAnimatedPager(index = selectedIndex) {
-            tips.forEach { (logo, _, _) -> item { V3Icon(logo) } }
-        }
-        UiSpacer(size = 12.dp)
-
-        Column(modifier = Modifier.animateContentSize()) {
-            UiSpacer(size = 8.dp)
-            AnimatedContent(
-                targetState = tips[selectedIndex].title.asString(),
-                label = "deviceCountTitle",
-            ) {
-                Text(
-                    text = it,
-                    color = Theme.v2.colors.neutrals.n50,
-                    style = Theme.brockmann.headings.subtitle,
-                )
+        Row(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clip(shape = shape)
+                    .defaultMinSize(minHeight = 129.dp)
+                    .background(color = Theme.v2.colors.backgrounds.primary)
+                    .border(width = 1.dp, shape = shape, color = Theme.v2.colors.border.light)
+                    .padding(horizontal = 20.dp, vertical = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            HorizontalAnimatedPager(index = selectedIndex) {
+                tips.forEach { (logo, _, _) -> item { V3Icon(logo) } }
             }
+            UiSpacer(size = 12.dp)
 
-            UiSpacer(size = 8.dp)
-
-            AnimatedContent(
-                targetState = tips[selectedIndex].subTitle.asString(),
-                label = "deviceCountSubTitle",
-            ) { subTitleText ->
-                val highlight = tips[selectedIndex].subTitleHighlight?.asString()
-                val annotatedText = buildAnnotatedString {
-                    val start = if (highlight != null) subTitleText.indexOf(highlight) else -1
-                    if (start >= 0) {
-                        append(subTitleText.substring(0, start))
-                        withStyle(
-                            SpanStyle(
-                                color = Theme.v2.colors.neutrals.n50,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        ) {
-                            append(highlight)
-                        }
-                        append(subTitleText.substring(start + highlight!!.length))
-                    } else {
-                        append(subTitleText)
-                    }
+            Column(modifier = Modifier.animateContentSize()) {
+                UiSpacer(size = 8.dp)
+                AnimatedContent(
+                    targetState = tips[selectedIndex].title.asString(),
+                    label = "deviceCountTitle",
+                ) {
+                    Text(
+                        text = it,
+                        color = Theme.v2.colors.neutrals.n50,
+                        style = Theme.brockmann.headings.subtitle,
+                    )
                 }
+
+                UiSpacer(size = 8.dp)
+
+                AnimatedContent(
+                    targetState = tips[selectedIndex].subTitle.asString(),
+                    label = "deviceCountSubTitle",
+                ) { subTitleText ->
+                    val highlight = tips[selectedIndex].subTitleHighlight?.asString()
+                    val annotatedText = buildAnnotatedString {
+                        val start = if (highlight != null) subTitleText.indexOf(highlight) else -1
+                        if (start >= 0) {
+                            append(subTitleText.substring(0, start))
+                            withStyle(
+                                SpanStyle(
+                                    color = Theme.v2.colors.neutrals.n50,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            ) {
+                                append(highlight)
+                            }
+                            append(subTitleText.substring(start + highlight!!.length))
+                        } else {
+                            append(subTitleText)
+                        }
+                    }
+                    Text(
+                        text = annotatedText,
+                        color = Theme.v2.colors.text.tertiary,
+                        style = Theme.brockmann.supplementary.footnote,
+                    )
+                }
+            }
+        }
+
+        if (showBadge) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.appstore_style_icon),
+                    contentDescription = null,
+                    contentScale = ContentScale.None,
+                )
+                UiSpacer(8.dp)
                 Text(
-                    text = annotatedText,
-                    color = Theme.v2.colors.text.tertiary,
-                    style = Theme.brockmann.body.s.medium,
+                    text = stringResource(R.string.welcome_plugin_compatible),
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.primary,
                 )
             }
         }
