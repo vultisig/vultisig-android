@@ -48,6 +48,8 @@ import com.vultisig.wallet.ui.screens.v3.onboarding.components.DeviceCountSelect
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
+private val DescriptionShape = RoundedCornerShape(24.dp)
+
 @Composable
 internal fun ChooseDeviceCountScreen(viewModel: ChooseDeviceCountViewModel = hiltViewModel()) {
 
@@ -146,21 +148,23 @@ private fun DeviceCountDescription(
     tips: List<DeviceCountTip>,
     showBadge: Boolean = false,
 ) {
-    val shape = RoundedCornerShape(24.dp)
-
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(shape = shape)
+                .clip(shape = DescriptionShape)
                 .background(color = Theme.v2.colors.backgrounds.surface1)
     ) {
         Row(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(shape = shape)
+                    .clip(shape = DescriptionShape)
                     .defaultMinSize(minHeight = 129.dp)
                     .background(color = Theme.v2.colors.backgrounds.primary)
-                    .border(width = 1.dp, shape = shape, color = Theme.v2.colors.border.light)
+                    .border(
+                        width = 1.dp,
+                        shape = DescriptionShape,
+                        color = Theme.v2.colors.border.light,
+                    )
                     .padding(horizontal = 20.dp, vertical = 24.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -226,7 +230,7 @@ private fun DeviceCountDescription(
                     contentDescription = null,
                     contentScale = ContentScale.None,
                 )
-                UiSpacer(8.dp)
+                UiSpacer(size = 8.dp)
                 Text(
                     text = stringResource(R.string.welcome_plugin_compatible),
                     style = Theme.brockmann.supplementary.caption,
