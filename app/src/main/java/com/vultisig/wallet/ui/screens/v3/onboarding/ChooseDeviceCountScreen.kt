@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.v3.onboarding
 
+import android.R.attr.minHeight
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -9,6 +10,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -71,84 +73,84 @@ private fun ChooseDeviceCountScreen(
     V3Scaffold(
         applyGradientBackground = true,
         onBackClick = { onEvent(ChooseDeviceCountUiEvent.Back) },
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            UiSpacer(weight = 1f)
-
-            Image(
-                painter = painterResource(R.drawable.ic_devices),
-                contentDescription = null,
-                modifier =
-                    Modifier.drawBehind {
-                        drawCircle(
-                            brush =
-                                Brush.radialGradient(
-                                    colors = listOf(Color(0x504879FD), Color.Transparent)
-                                ),
-                            radius = size.maxDimension * 1.5f,
-                        )
-                    },
-            )
-
-            UiSpacer(size = 24.dp)
-
-            Text(
-                text = stringResource(R.string.welcome_preference_devices_title),
-                style = Theme.brockmann.headings.title2,
-                color = Theme.v2.colors.neutrals.n50,
-                textAlign = TextAlign.Center,
-            )
-
-            UiSpacer(size = 48.dp)
-
-            DeviceCountSelector(
-                count = uiState.deviceCount,
-                onIncrease = { onEvent(ChooseDeviceCountUiEvent.IncreaseCount) },
-                onDecrease = { onEvent(ChooseDeviceCountUiEvent.DecreaseCount) },
-            )
-
-            UiSpacer(size = 32.dp)
-
-            DeviceCountDescription(selectedIndex = uiState.deviceCount - 1, tips = uiState.tips)
-
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .alpha(badgeAlpha)
-                        .background(
-                            color = Theme.v2.colors.backgrounds.surface1,
-                            shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
-                        )
-                        .padding(vertical = 14.dp),
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.appstore_style_icon),
-                    contentDescription = null,
-                    contentScale = ContentScale.None,
-                )
-                UiSpacer(8.dp)
-                Text(
-                    text = stringResource(R.string.welcome_plugin_compatible),
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.primary,
+        bottomBar = {
+            Column {
+                Tip()
+                UiSpacer(size = 16.dp)
+                VsButton(
+                    label = stringResource(R.string.referral_onboarding_get_started),
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { onEvent(ChooseDeviceCountUiEvent.Next) },
                 )
             }
+        },
+        content = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                UiSpacer(weight = 1f)
 
-            UiSpacer(size = 40.dp)
+                Image(
+                    painter = painterResource(R.drawable.ic_devices),
+                    contentDescription = null,
+                    modifier =
+                        Modifier.drawBehind {
+                            drawCircle(
+                                brush =
+                                    Brush.radialGradient(
+                                        colors = listOf(Color(0x504879FD), Color.Transparent)
+                                    ),
+                                radius = size.maxDimension * 1.5f,
+                            )
+                        },
+                )
 
-            Tip()
+                UiSpacer(size = 24.dp)
 
-            UiSpacer(size = 24.dp)
+                Text(
+                    text = stringResource(R.string.welcome_preference_devices_title),
+                    style = Theme.brockmann.headings.title2,
+                    color = Theme.v2.colors.neutrals.n50,
+                    textAlign = TextAlign.Center,
+                )
 
-            VsButton(
-                label = stringResource(R.string.referral_onboarding_get_started),
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { onEvent(ChooseDeviceCountUiEvent.Next) },
-            )
-        }
-    }
+                UiSpacer(size = 48.dp)
+
+                DeviceCountSelector(
+                    count = uiState.deviceCount,
+                    onIncrease = { onEvent(ChooseDeviceCountUiEvent.IncreaseCount) },
+                    onDecrease = { onEvent(ChooseDeviceCountUiEvent.DecreaseCount) },
+                )
+
+                UiSpacer(size = 32.dp)
+
+                DeviceCountDescription(selectedIndex = uiState.deviceCount - 1, tips = uiState.tips)
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .alpha(badgeAlpha)
+                            .background(
+                                color = Theme.v2.colors.backgrounds.surface1,
+                                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
+                            )
+                            .padding(vertical = 14.dp),
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.appstore_style_icon),
+                        contentDescription = null,
+                        contentScale = ContentScale.None,
+                    )
+                    UiSpacer(8.dp)
+                    Text(
+                        text = stringResource(R.string.welcome_plugin_compatible),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                }
+            }
+        },
+    )
 }
 
 @Composable
@@ -179,6 +181,7 @@ private fun DeviceCountDescription(selectedIndex: Int, tips: List<DeviceCountTip
                 .clip(shape = shape)
                 .background(color = Theme.v2.colors.backgrounds.background)
                 .border(width = 1.dp, shape = shape, color = Theme.v2.colors.border.light)
+                .defaultMinSize(minHeight = 129.dp)
                 .padding(horizontal = 20.dp, vertical = 24.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
