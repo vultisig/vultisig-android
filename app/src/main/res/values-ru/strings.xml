@@ -1105,4 +1105,32 @@
     <string name="server_backup_error_too_many_requests">Слишком много запросов на резервное копирование. Попробуйте позже.</string>
     <string name="server_backup_error_bad_request">Что-то пошло не так. Проверьте свои данные и попробуйте снова.</string>
     <string name="resend_notification">Повторно отправить уведомление</string>
+
+    <!-- Vulti Agent -->
+    <string name="agent_title">Vulti Agent</string>
+    <string name="agent_welcome_title">Что вы хотите сделать?</string>
+    <string name="agent_welcome_subtitle">Я могу помочь подготовить обмены, действия плагинов и правила автоматизации.</string>
+    <string name="agent_input_placeholder">Начните вводить…</string>
+    <string name="agent_send">Отправить</string>
+    <string name="agent_session_history">История сессии</string>
+    <string name="agent_new_chat">Новый чат</string>
+    <string name="agent_no_conversations">Пока нет разговоров</string>
+    <string name="agent_delete_chat_session">Удалить сессию чата</string>
+    <string name="agent_give_feedback">Оставить отзыв</string>
+    <string name="agent_analyzing">АНАЛИЗ…</string>
+    <string name="agent_welcome_auth_title">Добро пожаловать в Vulti Agent</string>
+    <string name="agent_welcome_auth_subtitle">Введите пароль хранилища, чтобы активировать агента и начать взаимодействие с вашим хранилищем.</string>
+    <string name="agent_authorize">Авторизовать агента</string>
+    <string name="agent_authorize_title">Авторизовать Vulti Agent</string>
+    <string name="agent_authorize_description">Vulti Agent может анализировать запросы и подготавливать транзакции. Ничего не выполняется без вашего одобрения. Вы можете отозвать доступ в Настройках.</string>
+    <string name="agent_authorize_button">Авторизовать</string>
+    <string name="agent_learn_more">Узнать больше</string>
+    <string name="agent_starter_plugins">Покажи мне плагины и что они умеют</string>
+    <string name="agent_starter_earn_apy">Я хочу зарабатывать APY на BTC</string>
+    <string name="agent_starter_send">Отправить сумму на …</string>
+    <string name="agent_starter_swap">Подготовить обмен из ETH в BTC</string>
+    <string name="agent_enter_vault_password">Введите пароль хранилища</string>
+    <string name="agent_enter_password_title">Введите пароль FastVault</string>
+    <string name="agent_enter_password_subtitle">Ваш пароль необходим для входа в Vulti Agent</string>
+    <string name="agent_requires_fast_vault">Vulti Agent требует FastVault. Пожалуйста, используйте FastVault для продолжения.</string>
 </resources>

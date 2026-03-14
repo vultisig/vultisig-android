@@ -1105,4 +1105,32 @@
     <string name="server_backup_error_too_many_requests">Demasiados pedidos de backup. Tente novamente mais tarde.</string>
     <string name="server_backup_error_bad_request">Algo correu mal. Verifique os seus dados e tente novamente.</string>
     <string name="resend_notification">Reenviar notificação</string>
+
+    <!-- Vulti Agent -->
+    <string name="agent_title">Vulti Agent</string>
+    <string name="agent_welcome_title">O que gostaria de fazer?</string>
+    <string name="agent_welcome_subtitle">Posso ajudar a preparar trocas, ações de plugins e regras de automatização.</string>
+    <string name="agent_input_placeholder">Comece a digitar…</string>
+    <string name="agent_send">Enviar</string>
+    <string name="agent_session_history">Histórico da sessão</string>
+    <string name="agent_new_chat">Novo chat</string>
+    <string name="agent_no_conversations">Ainda não há conversas</string>
+    <string name="agent_delete_chat_session">Excluir sessão de chat</string>
+    <string name="agent_give_feedback">Dar feedback</string>
+    <string name="agent_analyzing">ANALISANDO…</string>
+    <string name="agent_welcome_auth_title">Bem-vindo ao Vulti Agent</string>
+    <string name="agent_welcome_auth_subtitle">Insira a senha do cofre para ativar o agente e começar a interagir com o seu cofre.</string>
+    <string name="agent_authorize">Autorizar agente</string>
+    <string name="agent_authorize_title">Autorizar Vulti Agent</string>
+    <string name="agent_authorize_description">O Vulti Agent pode analisar pedidos e preparar transações. Nada é executado sem a sua aprovação. Pode revogar o acesso nas Configurações.</string>
+    <string name="agent_authorize_button">Autorizar</string>
+    <string name="agent_learn_more">Saber mais</string>
+    <string name="agent_starter_plugins">Mostre-me os plugins e o que podem fazer</string>
+    <string name="agent_starter_earn_apy">Quero ganhar APY em BTC</string>
+    <string name="agent_starter_send">Enviar montante para …</string>
+    <string name="agent_starter_swap">Preparar uma troca de ETH para BTC</string>
+    <string name="agent_enter_vault_password">Insira a senha do cofre</string>
+    <string name="agent_enter_password_title">Introduza a sua senha FastVault</string>
+    <string name="agent_enter_password_subtitle">A sua senha é necessária para entrar no Vulti Agent</string>
+    <string name="agent_requires_fast_vault">Vulti Agent requer um FastVault. Por favor, utilize um FastVault para continuar.</string>
 </resources>

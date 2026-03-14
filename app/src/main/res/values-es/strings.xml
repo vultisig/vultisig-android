@@ -1104,4 +1104,32 @@
     <string name="server_backup_error_too_many_requests">Demasiadas solicitudes de copia de seguridad. Inténtelo de nuevo más tarde.</string>
     <string name="server_backup_error_bad_request">Algo salió mal. Verifique sus datos e inténtelo de nuevo.</string>
     <string name="resend_notification">Reenviar notificación</string>
+
+    <!-- Vulti Agent -->
+    <string name="agent_title">Vulti Agent</string>
+    <string name="agent_welcome_title">¿Qué te gustaría hacer?</string>
+    <string name="agent_welcome_subtitle">Puedo ayudar a preparar intercambios, acciones de plugins y reglas de automatización.</string>
+    <string name="agent_input_placeholder">Empieza a escribir…</string>
+    <string name="agent_send">Enviar</string>
+    <string name="agent_session_history">Historial de sesión</string>
+    <string name="agent_new_chat">Nuevo chat</string>
+    <string name="agent_no_conversations">Aún no hay conversaciones</string>
+    <string name="agent_delete_chat_session">Eliminar sesión de chat</string>
+    <string name="agent_give_feedback">Dar opinión</string>
+    <string name="agent_analyzing">ANALIZANDO…</string>
+    <string name="agent_welcome_auth_title">Bienvenido a Vulti Agent</string>
+    <string name="agent_welcome_auth_subtitle">Ingresa la contraseña de la bóveda para activar el agente y comenzar a interactuar con tu bóveda.</string>
+    <string name="agent_authorize">Autorizar agente</string>
+    <string name="agent_authorize_title">Autorizar Vulti Agent</string>
+    <string name="agent_authorize_description">Vulti Agent puede analizar solicitudes y preparar transacciones. Nada se ejecuta sin tu aprobación. Puedes revocar el acceso en Configuración.</string>
+    <string name="agent_authorize_button">Autorizar</string>
+    <string name="agent_learn_more">Aprende más</string>
+    <string name="agent_starter_plugins">Muéstrame los plugins y lo que pueden hacer</string>
+    <string name="agent_starter_earn_apy">Quiero ganar APY en BTC</string>
+    <string name="agent_starter_send">Enviar cantidad a …</string>
+    <string name="agent_starter_swap">Preparar un intercambio de ETH a BTC</string>
+    <string name="agent_enter_vault_password">Ingresa la contraseña de la bóveda</string>
+    <string name="agent_enter_password_title">Ingresa tu contraseña de FastVault</string>
+    <string name="agent_enter_password_subtitle">Su contraseña es necesaria para iniciar sesión en Vulti Agent</string>
+    <string name="agent_requires_fast_vault">Vulti Agent requiere un FastVault. Por favor, utilice un FastVault para continuar.</string>
 </resources>

@@ -14,6 +14,7 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -44,6 +45,29 @@ internal interface NetworkModule {
                         writeTimeout(15, TimeUnit.SECONDS)
 
                         retryOnConnectionFailure(true)
+                    }
+                }
+            }
+
+        @Provides
+        @Singleton
+        @Named("sse")
+        fun provideSseHttpClient(baseConfig: HttpClientConfigurator): HttpClient =
+            HttpClient(OkHttp) {
+                baseConfig.configure(this)
+
+                if (BuildConfig.DEBUG) {
+                    install(Logging) {
+                        logger = Logger.ANDROID
+                        level = LogLevel.ALL
+                    }
+                }
+
+                engine {
+                    config {
+                        connectTimeout(15, TimeUnit.SECONDS)
+                        readTimeout(5, TimeUnit.MINUTES)
+                        writeTimeout(15, TimeUnit.SECONDS)
                     }
                 }
             }

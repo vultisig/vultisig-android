@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -38,6 +39,9 @@ import com.vultisig.wallet.ui.theme.Theme
 
 val BOTH_CRYPTO_CONNECTION_TYPES = listOf(CryptoConnectionType.Wallet, CryptoConnectionType.Defi)
 
+val ALL_CRYPTO_CONNECTION_TYPES =
+    listOf(CryptoConnectionType.Wallet, CryptoConnectionType.Defi, CryptoConnectionType.Agent)
+
 val ONLY_WALLET = listOf(CryptoConnectionType.Wallet)
 
 val ONLY_DEFI = listOf(CryptoConnectionType.Defi)
@@ -46,10 +50,11 @@ val ONLY_DEFI = listOf(CryptoConnectionType.Defi)
 internal fun CryptoConnectionSelect(
     modifier: Modifier = Modifier,
     activeType: CryptoConnectionType,
-    availableCryptoTypes: List<CryptoConnectionType> = BOTH_CRYPTO_CONNECTION_TYPES,
+    availableCryptoTypes: List<CryptoConnectionType> = ALL_CRYPTO_CONNECTION_TYPES,
     onTypeClick: (CryptoConnectionType) -> Unit,
 ) {
-    val isWalletSelected = activeType == CryptoConnectionType.Wallet
+    val selectedIndex = availableCryptoTypes.indexOf(activeType).coerceAtLeast(0)
+    val count = availableCryptoTypes.size
 
     LookaheadScope {
         val c1 = Color(0xFF284570)
@@ -66,11 +71,21 @@ internal fun CryptoConnectionSelect(
                 modifier =
                     modifier
                         .height(64.dp)
-                        .width(92.dp * availableCryptoTypes.size)
+                        .width(92.dp * count)
                         .clip(CircleShape)
                         .background(Color(0xFF0d2446))
                         .padding(all = 4.dp)
             ) {
+                val alignment =
+                    when {
+                        count <= 1 -> Alignment.CenterStart
+                        else -> {
+                            val bias =
+                                if (count == 1) 0f else (2f * selectedIndex / (count - 1)) - 1f
+                            BiasAlignment(horizontalBias = bias, verticalBias = 0f)
+                        }
+                    }
+
                 Box(
                     modifier =
                         Modifier.animatePlacementInScope(this@LookaheadScope)
@@ -83,10 +98,8 @@ internal fun CryptoConnectionSelect(
                                 clip = true,
                             )
                             .fillMaxHeight()
-                            .fillMaxWidth(1f / availableCryptoTypes.size)
-                            .align(
-                                if (isWalletSelected) Alignment.CenterStart else Alignment.CenterEnd
-                            )
+                            .fillMaxWidth(1f / count)
+                            .align(alignment)
                 )
 
                 Row(
@@ -94,43 +107,24 @@ internal fun CryptoConnectionSelect(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    when (availableCryptoTypes) {
-                        BOTH_CRYPTO_CONNECTION_TYPES -> {
-                            WalletEarnOption(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onTypeClick(CryptoConnectionType.Wallet) },
-                                text = stringResource(R.string.wallet),
-                                icon = R.drawable.wallet,
-                                enabled = isWalletSelected,
-                            )
+                    availableCryptoTypes.forEach { type ->
+                        val (text, icon) =
+                            when (type) {
+                                CryptoConnectionType.Wallet ->
+                                    stringResource(R.string.wallet) to R.drawable.wallet
+                                CryptoConnectionType.Defi ->
+                                    stringResource(R.string.defi) to R.drawable.coins_add
+                                CryptoConnectionType.Agent ->
+                                    stringResource(R.string.agent_title) to R.drawable.ic_agent
+                            }
 
-                            WalletEarnOption(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onTypeClick(CryptoConnectionType.Defi) },
-                                text = stringResource(R.string.defi),
-                                icon = R.drawable.coins_add,
-                                enabled = !isWalletSelected,
-                            )
-                        }
-                        ONLY_DEFI -> {
-
-                            WalletEarnOption(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onTypeClick(CryptoConnectionType.Defi) },
-                                text = stringResource(R.string.defi),
-                                icon = R.drawable.coins_add,
-                                enabled = true,
-                            )
-                        }
-                        ONLY_WALLET -> {
-                            WalletEarnOption(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onTypeClick(CryptoConnectionType.Wallet) },
-                                text = stringResource(R.string.wallet),
-                                icon = R.drawable.wallet,
-                                enabled = true,
-                            )
-                        }
+                        WalletEarnOption(
+                            modifier = Modifier.weight(1f),
+                            onClick = { onTypeClick(type) },
+                            text = text,
+                            icon = icon,
+                            enabled = activeType == type,
+                        )
                     }
                 }
             }
@@ -177,6 +171,6 @@ private fun PreviewWalletEarnSelect() {
     CryptoConnectionSelect(
         activeType = CryptoConnectionType.Defi,
         onTypeClick = {},
-        availableCryptoTypes = BOTH_CRYPTO_CONNECTION_TYPES,
+        availableCryptoTypes = ALL_CRYPTO_CONNECTION_TYPES,
     )
 }
