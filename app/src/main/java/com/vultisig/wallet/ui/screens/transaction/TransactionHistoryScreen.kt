@@ -2,40 +2,57 @@ package com.vultisig.wallet.ui.screens.transaction
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiHorizontalDivider
+import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
@@ -46,16 +63,24 @@ import com.vultisig.wallet.ui.models.TransactionHistoryUiState
 import com.vultisig.wallet.ui.models.TransactionHistoryViewModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
 import com.vultisig.wallet.ui.theme.Theme
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 internal fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
+    val uriHandler = LocalUriHandler.current
     TransactionHistoryScreen(
         state = state,
         onBack = viewModel::back,
         onTabSelected = viewModel::selectTab,
         onRefresh = viewModel::refresh,
-        onItemClick = {},
+        onItemClick = viewModel::openDetail,
+        onDismissDetail = viewModel::dismissDetail,
+        onViewExplorer = { url ->
+            if (url.isNotEmpty()) uriHandler.openUri(url)
+        },
     )
 }
 
@@ -67,7 +92,17 @@ private fun TransactionHistoryScreen(
     onTabSelected: (TransactionHistoryTab) -> Unit,
     onRefresh: () -> Unit,
     onItemClick: (TransactionHistoryItemUiModel) -> Unit,
+    onDismissDetail: () -> Unit = {},
+    onViewExplorer: (String) -> Unit = {},
 ) {
+    if (state.selectedItem != null) {
+        TransactionDetailBottomSheet(
+            item = state.selectedItem,
+            onDismiss = onDismissDetail,
+            onViewExplorer = onViewExplorer,
+        )
+    }
+
     V2Scaffold(
         title = stringResource(R.string.transaction_history_title),
         onBackClick = onBack,
@@ -84,14 +119,14 @@ private fun TransactionHistoryScreen(
                     }
                     tab {
                         VsTab(
-                            label = stringResource(R.string.transaction_history_tab_send),
-                            onClick = { onTabSelected(TransactionHistoryTab.SEND) },
+                            label = stringResource(R.string.transaction_history_tab_swap),
+                            onClick = { onTabSelected(TransactionHistoryTab.SWAP) },
                         )
                     }
                     tab {
                         VsTab(
-                            label = stringResource(R.string.transaction_history_tab_swap),
-                            onClick = { onTabSelected(TransactionHistoryTab.SWAP) },
+                            label = stringResource(R.string.transaction_history_tab_send),
+                            onClick = { onTabSelected(TransactionHistoryTab.SEND) },
                         )
                     }
                 }
@@ -104,7 +139,9 @@ private fun TransactionHistoryScreen(
             ) {
                 if (state.groups.isEmpty() && !state.isLoading) {
                     TransactionHistoryEmptyState(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp)
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 32.dp)
                     )
                 } else {
                     TransactionGroupedList(
@@ -125,34 +162,31 @@ private fun TransactionGroupedList(
     onItemClick: (TransactionHistoryItemUiModel) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(modifier = modifier) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         groups.forEach { group ->
             stickyHeader(key = "header_${group.dateLabel}") {
                 DateStickyHeader(label = group.dateLabel)
             }
-            itemsIndexed(items = group.transactions, key = { _, item -> item.id }) { index, item ->
-                Column {
-                    when (item) {
-                        is TransactionHistoryItemUiModel.Send ->
-                            SendTransactionItem(
-                                item = item,
-                                modifier =
-                                    Modifier.fillMaxWidth()
-                                        .clickable { onItemClick(item) }
-                                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                            )
-                        is TransactionHistoryItemUiModel.Swap ->
-                            SwapTransactionItem(
-                                item = item,
-                                modifier =
-                                    Modifier.fillMaxWidth()
-                                        .clickable { onItemClick(item) }
-                                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                            )
-                    }
-                    if (index != group.transactions.lastIndex) {
-                        UiHorizontalDivider()
-                    }
+            itemsIndexed(items = group.transactions, key = { _, item -> item.id }) { _, item ->
+                when (item) {
+                    is TransactionHistoryItemUiModel.Send ->
+                        SendTransactionCard(
+                            item = item,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onItemClick(item) },
+                        )
+                    is TransactionHistoryItemUiModel.Swap ->
+                        SwapTransactionCard(
+                            item = item,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onItemClick(item) },
+                        )
                 }
             }
         }
@@ -162,287 +196,405 @@ private fun TransactionGroupedList(
 @Composable
 private fun DateStickyHeader(label: String) {
     Box(
-        modifier =
-            Modifier.fillMaxWidth()
-                .background(Theme.v2.colors.backgrounds.primary)
-                .padding(vertical = 6.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Theme.v2.colors.backgrounds.primary)
+            .padding(vertical = 6.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.tertiary,
-            modifier =
-                Modifier.background(
-                        color = Theme.v2.colors.backgrounds.tertiary_2,
-                        shape = RoundedCornerShape(10.dp),
-                    )
-                    .padding(horizontal = 10.dp, vertical = 3.dp),
+            modifier = Modifier
+                .background(
+                    color = Theme.v2.colors.backgrounds.tertiary_2,
+                    shape = RoundedCornerShape(10.dp),
+                )
+                .padding(horizontal = 10.dp, vertical = 3.dp),
         )
     }
 }
 
-// ── List items ────────────────────────────────────────────────────────────────
+// ── Send card ─────────────────────────────────────────────────────────────────
 
 @Composable
-private fun SendTransactionItem(
+private fun SendTransactionCard(
     item: TransactionHistoryItemUiModel.Send,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        TokenCircle(logoUrl = item.tokenLogo, ticker = item.token)
+    val isInProgress = item.status is TransactionStatusUiModel.Broadcasted ||
+            item.status is TransactionStatusUiModel.Pending
 
-        Column(modifier = Modifier.weight(1f)) {
+    V2Container(
+        modifier = modifier,
+        type = ContainerType.SECONDARY,
+        borderType = ContainerBorderType.Bordered(),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // ── Header row ───────────────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "${item.token} · ${item.chain}",
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
+                TypeBadge(
+                    iconRes = R.drawable.send,
+                    label = stringResource(R.string.transaction_history_tab_send),
                 )
-                UiSpacer(size = 8.dp)
-                Text(
-                    text = item.amount,
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                    maxLines = 1,
-                )
+                TransactionStatusWidget(status = item.status)
             }
 
-            UiSpacer(size = 4.dp)
+            UiSpacer(size = 12.dp)
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TransactionStatusBadge(status = item.status)
+            if (isInProgress) {
+                // ── In-progress layout ───────────────────────────────────────
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    TokenCircle(logo =item.tokenLogo, ticker = item.token, size = 32)
+                    TokenAmountText(amount = item.amount, token = item.token)
+                }
+
                 UiSpacer(size = 8.dp)
-                Text(
-                    text = item.toAddress.abbreviateAddress(),
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.tertiary,
-                    maxLines = 1,
-                )
+
+                ToSeparator(modifier = Modifier.fillMaxWidth())
+
+                UiSpacer(size = 8.dp)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.wallet),
+                        contentDescription = null,
+                        tint = Theme.v2.colors.text.tertiary,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Text(
+                        text = item.toAddress,
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.secondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+
+                if (!item.provider.isNullOrEmpty()) {
+                    UiSpacer(size = 8.dp)
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Box(modifier = Modifier.weight(1f))
+                        ViaBadge(provider = item.provider)
+                    }
+                }
+            } else {
+                // ── Completed layout ─────────────────────────────────────────
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    TokenCircle(logo =item.tokenLogo, ticker = item.token, size = 32)
+                    Column(modifier = Modifier.weight(1f)) {
+                        if (!item.fiatValue.isNullOrEmpty()) {
+                            Text(
+                                text = item.fiatValue,
+                                style = Theme.brockmann.body.m.medium,
+                                color = Theme.v2.colors.text.primary,
+                            )
+                        }
+                        TokenAmountText(amount = item.amount, token = item.token)
+                    }
+                    AddressPill(address = item.toAddress.abbreviateAddress())
+                }
             }
         }
-
-        Icon(
-            painter = painterResource(R.drawable.ic_caret_right),
-            contentDescription = null,
-            tint = Theme.v2.colors.text.tertiary,
-            modifier = Modifier.size(16.dp),
-        )
     }
 }
 
+// ── Swap card ─────────────────────────────────────────────────────────────────
+
 @Composable
-private fun SwapTransactionItem(
+private fun SwapTransactionCard(
     item: TransactionHistoryItemUiModel.Swap,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        SwapTokenCircles(
-            fromLogoUrl = item.fromTokenLogo,
-            toLogoUrl = item.toTokenLogo,
-            fromTicker = item.fromToken,
-            toTicker = item.toToken,
-        )
+    val isInProgress = item.status is TransactionStatusUiModel.Broadcasted ||
+            item.status is TransactionStatusUiModel.Pending
 
-        Column(modifier = Modifier.weight(1f)) {
+    V2Container(
+        modifier = modifier,
+        type = ContainerType.SECONDARY,
+        borderType = ContainerBorderType.Bordered(),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // ── Header row ───────────────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "${item.fromToken} → ${item.toToken}",
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
+                TypeBadge(
+                    iconRes = R.drawable.swap_v2,
+                    label = stringResource(R.string.transaction_history_tab_swap),
                 )
-                UiSpacer(size = 8.dp)
-                if (item.fiatValue != null) {
-                    Text(
-                        text = item.fiatValue,
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.primary,
-                        maxLines = 1,
-                    )
+                TransactionStatusWidget(status = item.status)
+            }
+
+            UiSpacer(size = 12.dp)
+
+            // ── From token ───────────────────────────────────────────────────
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TokenCircle(logo =item.fromTokenLogo, ticker = item.fromToken, size = 32)
+                TokenAmountAnnotated(amount = item.fromAmount, token = item.fromToken)
+            }
+
+            UiSpacer(size = 8.dp)
+
+            ToSeparator(modifier = Modifier.fillMaxWidth())
+
+            UiSpacer(size = 8.dp)
+
+            // ── To token ─────────────────────────────────────────────────────
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TokenCircle(logo =item.toTokenLogo, ticker = item.toToken, size = 32)
+                Column {
+                    if (isInProgress) {
+                        Text(
+                            text = stringResource(R.string.transaction_history_min_payout_label),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.v2.colors.text.tertiary,
+                        )
+                    }
+                    TokenAmountAnnotated(amount = item.toAmount, token = item.toToken)
                 }
             }
 
-            UiSpacer(size = 4.dp)
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TransactionStatusBadge(status = item.status)
+            if (item.provider.isNotEmpty()) {
                 UiSpacer(size = 8.dp)
-                Text(
-                    text = "${item.fromAmount} → ${item.toAmount}",
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.tertiary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.weight(1f))
+                    ViaBadge(provider = item.provider)
+                }
             }
         }
+    }
+}
 
+// ── Shared components ─────────────────────────────────────────────────────────
+
+@Composable
+private fun TypeBadge(
+    iconRes: Int,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .border(
+                width = 1.dp,
+                color = Theme.v2.colors.alerts.info.copy(alpha = 0.6f),
+                shape = CircleShape,
+            )
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
         Icon(
-            painter = painterResource(R.drawable.ic_caret_right),
+            painter = painterResource(iconRes),
             contentDescription = null,
-            tint = Theme.v2.colors.text.tertiary,
-            modifier = Modifier.size(16.dp),
+            tint = Theme.v2.colors.alerts.info,
+            modifier = Modifier.size(14.dp),
+        )
+        Text(
+            text = label,
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.alerts.info,
         )
     }
 }
 
 @Composable
-private fun TransactionStatusBadge(
+private fun TransactionStatusWidget(
     status: TransactionStatusUiModel,
     modifier: Modifier = Modifier,
 ) {
-    val (label, tint) =
-        when (status) {
-            TransactionStatusUiModel.Broadcasted ->
-                Pair(
-                    stringResource(R.string.transaction_status_broadcasted_label),
-                    Theme.v2.colors.alerts.info,
-                )
-            is TransactionStatusUiModel.Pending ->
-                Pair(
-                    stringResource(R.string.transaction_status_pending_label, status.elapsedTime),
-                    Theme.v2.colors.alerts.warning,
-                )
-            TransactionStatusUiModel.Confirmed ->
-                Pair(
-                    stringResource(R.string.transaction_status_confirmed_label),
-                    Theme.v2.colors.alerts.success,
-                )
-            is TransactionStatusUiModel.Failed ->
-                Pair(
-                    stringResource(R.string.transaction_status_failed_label),
-                    Theme.v2.colors.alerts.error,
-                )
-        }
+    val isInProgress = status is TransactionStatusUiModel.Broadcasted ||
+            status is TransactionStatusUiModel.Pending
 
+    if (isInProgress) {
+        Text(
+            text = stringResource(R.string.transaction_status_in_progress_label),
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.text.secondary,
+            modifier = modifier
+                .background(
+                    color = Theme.v2.colors.backgrounds.tertiary_2,
+                    shape = RoundedCornerShape(100.dp),
+                )
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+        )
+    } else {
+        val (label, color) = when (status) {
+            TransactionStatusUiModel.Confirmed ->
+                stringResource(R.string.transaction_status_confirmed_label) to
+                        Theme.v2.colors.alerts.success
+            is TransactionStatusUiModel.Failed ->
+                stringResource(R.string.transaction_status_failed_label) to
+                        Theme.v2.colors.alerts.error
+            else -> "" to Theme.v2.colors.text.tertiary
+        }
+        if (label.isNotEmpty()) {
+            Text(
+                text = label,
+                style = Theme.brockmann.supplementary.caption,
+                color = color,
+                modifier = modifier,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ToSeparator(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .border(1.dp, Theme.v2.colors.border.primaryAccent4, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_arrow_down),
+                contentDescription = null,
+                tint = Theme.v2.colors.alerts.info,
+                modifier = Modifier.size(12.dp),
+            )
+        }
+        Text(
+            text = stringResource(R.string.transaction_history_to_label),
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.text.tertiary,
+        )
+        HorizontalDivider(
+            modifier = Modifier.weight(1f),
+            color = Theme.v2.colors.border.light,
+            thickness = 1.dp,
+        )
+    }
+}
+
+@Composable
+private fun ViaBadge(provider: String, modifier: Modifier = Modifier) {
     Text(
-        text = label,
+        text = stringResource(R.string.transaction_history_via_label, provider),
         style = Theme.brockmann.supplementary.caption,
-        color = tint,
-        modifier =
-            modifier
-                .background(color = tint.copy(alpha = 0.12f), shape = RoundedCornerShape(4.dp))
-                .padding(horizontal = 6.dp, vertical = 2.dp),
+        color = Theme.v2.colors.text.secondary,
+        modifier = modifier
+            .background(
+                color = Theme.v2.colors.backgrounds.tertiary_2,
+                shape = RoundedCornerShape(100.dp),
+            )
+            .padding(horizontal = 10.dp, vertical = 4.dp),
     )
 }
 
 @Composable
-private fun TokenCircle(logoUrl: String, ticker: String, modifier: Modifier = Modifier) {
-    Box(
-        modifier =
-            modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(Theme.v2.colors.backgrounds.secondary),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (logoUrl.isNotEmpty()) {
-            AsyncImage(
-                model = logoUrl,
-                contentDescription = ticker,
-                modifier = Modifier.size(40.dp).clip(CircleShape),
+private fun AddressPill(address: String, modifier: Modifier = Modifier) {
+    Text(
+        text = "to $address",
+        style = Theme.brockmann.supplementary.caption,
+        color = Theme.v2.colors.text.secondary,
+        maxLines = 1,
+        modifier = modifier
+            .background(
+                color = Theme.v2.colors.backgrounds.tertiary_2,
+                shape = RoundedCornerShape(100.dp),
             )
-        } else {
-            Text(
-                text = ticker.take(1).uppercase(),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.secondary,
-            )
-        }
-    }
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+    )
 }
 
 @Composable
-private fun SwapTokenCircles(
-    fromLogoUrl: String,
-    toLogoUrl: String,
-    fromTicker: String,
-    toTicker: String,
+private fun TokenAmountText(
+    amount: String,
+    token: String,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.size(width = 54.dp, height = 36.dp)) {
-        Box(
-            modifier =
-                Modifier.size(36.dp)
-                    .clip(CircleShape)
-                    .background(Theme.v2.colors.backgrounds.secondary)
-                    .align(Alignment.CenterStart),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (fromLogoUrl.isNotEmpty()) {
-                AsyncImage(
-                    model = fromLogoUrl,
-                    contentDescription = fromTicker,
-                    modifier = Modifier.size(36.dp).clip(CircleShape),
-                )
-            } else {
-                Text(
-                    text = fromTicker.take(1).uppercase(),
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.secondary,
-                )
+    val numericPart = amount.removeSuffix(token).trim()
+    val hasToken = numericPart != amount
+    Text(
+        text = buildAnnotatedString {
+            withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) {
+                append(if (hasToken) numericPart else amount)
             }
-        }
-        Box(
-            modifier =
-                Modifier.size(36.dp + 3.dp)
-                    .clip(CircleShape)
-                    .background(Theme.v2.colors.backgrounds.primary)
-                    .align(Alignment.CenterEnd)
+            if (hasToken) {
+                append(" ")
+                withStyle(SpanStyle(color = Theme.v2.colors.alerts.success)) {
+                    append(token)
+                }
+            }
+        },
+        style = Theme.brockmann.body.m.medium,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun TokenAmountAnnotated(
+    amount: String,
+    token: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = buildAnnotatedString {
+            withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) {
+                append(amount)
+            }
+            append(" ")
+            withStyle(SpanStyle(color = Theme.v2.colors.alerts.success)) {
+                append(token)
+            }
+        },
+        style = Theme.brockmann.body.m.medium,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun TokenCircle(
+    modifier: Modifier = Modifier,
+    logo: ImageModel,
+    ticker: String,
+    size: Int = 40,
+) {
+    Box(
+        modifier = modifier
+            .size(size.dp)
+            .clip(CircleShape)
+            .background(Theme.v2.colors.backgrounds.surface2),
+        contentAlignment = Alignment.Center,
+    ) {
+        TokenLogo(
+            modifier = Modifier.size(size.dp),
+            errorLogoModifier = Modifier.size(size.dp),
+            logo = logo,
+            title = ticker,
         )
-        Box(
-            modifier =
-                Modifier.size(36.dp)
-                    .clip(CircleShape)
-                    .background(Theme.v2.colors.backgrounds.secondary)
-                    .align(Alignment.CenterEnd)
-                    .offset(x = (-1.5).dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (toLogoUrl.isNotEmpty()) {
-                AsyncImage(
-                    model = toLogoUrl,
-                    contentDescription = toTicker,
-                    modifier = Modifier.size(36.dp).clip(CircleShape),
-                )
-            } else {
-                Text(
-                    text = toTicker.take(1).uppercase(),
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.secondary,
-                )
-            }
-        }
     }
 }
 
@@ -479,6 +631,314 @@ private fun String.abbreviateAddress(): String {
     return "${take(6)}...${takeLast(4)}"
 }
 
+private fun Long.toDetailDateString(): String {
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm")
+    return Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).format(formatter)
+}
+
+// ── Transaction Detail Bottom Sheet ──────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TransactionDetailBottomSheet(
+    item: TransactionHistoryItemUiModel,
+    onDismiss: () -> Unit,
+    onViewExplorer: (String) -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Theme.v2.colors.backgrounds.secondary,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        dragHandle = {
+            Box(
+                modifier = Modifier
+                    .padding(vertical = 12.dp)
+                    .size(width = 36.dp, height = 4.dp)
+                    .background(
+                        color = Theme.v2.colors.border.light,
+                        shape = RoundedCornerShape(100.dp),
+                    )
+            )
+        },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .navigationBarsPadding()
+                .padding(bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            when (item) {
+                is TransactionHistoryItemUiModel.Send -> SendDetailContent(item)
+                is TransactionHistoryItemUiModel.Swap -> SwapDetailContent(item)
+            }
+
+            UiSpacer(size = 24.dp)
+
+            if (item.explorerUrl.isNotEmpty()) {
+                VsButton(
+                    label = stringResource(R.string.transaction_history_view_on_explorer),
+                    variant = VsButtonVariant.Secondary,
+                    size = VsButtonSize.Medium,
+                    onClick = { onViewExplorer(item.explorerUrl) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SendDetailContent(item: TransactionHistoryItemUiModel.Send) {
+    // Type badge
+    UiSpacer(size = 8.dp)
+    TypeBadge(
+        iconRes = R.drawable.send,
+        label = stringResource(R.string.transaction_history_tab_send),
+    )
+    UiSpacer(size = 20.dp)
+
+    // Token hero
+    Box(
+        modifier = Modifier
+            .size(72.dp)
+            .border(
+                width = 1.dp,
+                color = Theme.v2.colors.alerts.info.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(16.dp),
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        TokenCircle(logo =item.tokenLogo, ticker = item.token, size = 48)
+    }
+    UiSpacer(size = 12.dp)
+    TokenAmountText(amount = item.amount, token = item.token)
+
+    UiSpacer(size = 24.dp)
+
+    // Detail rows
+    DetailInfoRows(
+        status = item.status,
+        fromAddress = item.fromAddress.takeIf { it.isNotEmpty() },
+        toAddress = item.toAddress.takeIf { it.isNotEmpty() },
+        timestamp = item.timestamp,
+        feeEstimate = item.feeEstimate,
+        network = item.chain,
+        provider = null,
+    )
+}
+
+@Composable
+private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
+    // Type badge
+    UiSpacer(size = 8.dp)
+    TypeBadge(
+        iconRes = R.drawable.swap_v2,
+        label = stringResource(R.string.transaction_history_tab_swap),
+    )
+    UiSpacer(size = 20.dp)
+
+    // Token pair hero
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SwapTokenCard(
+            logo =item.fromTokenLogo,
+            ticker = item.fromToken,
+            amount = item.fromAmount,
+            fiatValue = item.fiatValue,
+            modifier = Modifier.weight(1f),
+        )
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .border(1.dp, Theme.v2.colors.border.primaryAccent4, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.chevron),
+                contentDescription = null,
+                tint = Theme.v2.colors.alerts.info,
+                modifier = Modifier.size(14.dp),
+            )
+        }
+        SwapTokenCard(
+            logo =item.toTokenLogo,
+            ticker = item.toToken,
+            amount = item.toAmount,
+            fiatValue = item.fiatValue,
+            modifier = Modifier.weight(1f),
+        )
+    }
+
+    UiSpacer(size = 24.dp)
+
+    // Detail rows
+    DetailInfoRows(
+        status = item.status,
+        fromAddress = item.fromAddress,
+        toAddress = item.toAddress,
+        timestamp = item.timestamp,
+        feeEstimate = item.feeEstimate,
+        network = item.chain,
+        provider = item.provider.takeIf { it.isNotEmpty() },
+    )
+}
+
+@Composable
+private fun SwapTokenCard(
+    logo: ImageModel,
+    ticker: String,
+    amount: String,
+    fiatValue: String?,
+    modifier: Modifier = Modifier,
+) {
+    V2Container(
+        modifier = modifier,
+        type = ContainerType.SECONDARY,
+        borderType = ContainerBorderType.Bordered(),
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            TokenCircle(logo = logo, ticker = ticker, size = 40)
+            TokenAmountAnnotated(amount = amount, token = ticker)
+            if (!fiatValue.isNullOrEmpty()) {
+                Text(
+                    text = fiatValue,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailInfoRows(
+    status: TransactionStatusUiModel,
+    fromAddress: String?,
+    toAddress: String?,
+    timestamp: Long,
+    feeEstimate: String?,
+    network: String,
+    provider: String?,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(16.dp))
+    ) {
+        DetailRow(
+            label = stringResource(R.string.transaction_history_detail_status),
+            value = {
+                val (label, color) = when (status) {
+                    TransactionStatusUiModel.Confirmed ->
+                        stringResource(R.string.transaction_status_confirmed_label) to
+                                Theme.v2.colors.alerts.success
+                    is TransactionStatusUiModel.Failed ->
+                        stringResource(R.string.transaction_status_failed_label) to
+                                Theme.v2.colors.alerts.error
+                    TransactionStatusUiModel.Broadcasted ->
+                        stringResource(R.string.transaction_status_in_progress_label) to
+                                Theme.v2.colors.text.secondary
+                    is TransactionStatusUiModel.Pending ->
+                        stringResource(R.string.transaction_status_in_progress_label) to
+                                Theme.v2.colors.text.secondary
+                }
+                Text(
+                    text = label,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = color,
+                )
+            },
+        )
+        if (!fromAddress.isNullOrEmpty()) {
+            HorizontalDivider(color = Theme.v2.colors.border.light, thickness = 1.dp)
+            DetailRow(
+                label = stringResource(R.string.transaction_history_detail_from),
+                value = { DetailValuePill(text = fromAddress.abbreviateAddress()) },
+            )
+        }
+        if (!toAddress.isNullOrEmpty()) {
+            HorizontalDivider(color = Theme.v2.colors.border.light, thickness = 1.dp)
+            DetailRow(
+                label = stringResource(R.string.transaction_history_detail_to),
+                value = { DetailValuePill(text = toAddress.abbreviateAddress()) },
+            )
+        }
+        HorizontalDivider(color = Theme.v2.colors.border.light, thickness = 1.dp)
+        DetailRow(
+            label = stringResource(R.string.transaction_history_detail_date),
+            value = { DetailValuePill(text = timestamp.toDetailDateString()) },
+        )
+        if (!provider.isNullOrEmpty()) {
+            HorizontalDivider(color = Theme.v2.colors.border.light, thickness = 1.dp)
+            DetailRow(
+                label = stringResource(R.string.transaction_history_detail_provider),
+                value = { DetailValuePill(text = provider) },
+            )
+        }
+        if (!feeEstimate.isNullOrEmpty()) {
+            HorizontalDivider(color = Theme.v2.colors.border.light, thickness = 1.dp)
+            DetailRow(
+                label = stringResource(R.string.transaction_history_detail_fee),
+                value = { DetailValuePill(text = feeEstimate) },
+            )
+        }
+        HorizontalDivider(color = Theme.v2.colors.border.light, thickness = 1.dp)
+        DetailRow(
+            label = stringResource(R.string.transaction_history_detail_network),
+            value = { DetailValuePill(text = network) },
+        )
+    }
+}
+
+@Composable
+private fun DetailRow(
+    label: String,
+    value: @Composable () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.v2.colors.text.secondary,
+        )
+        value()
+    }
+}
+
+@Composable
+private fun DetailValuePill(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = Theme.brockmann.supplementary.caption,
+        color = Theme.v2.colors.text.primary,
+        modifier = modifier
+            .background(
+                color = Theme.v2.colors.backgrounds.tertiary_2,
+                shape = RoundedCornerShape(100.dp),
+            )
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+    )
+}
+
+// ── Previews ─────────────────────────────────────────────────────────────────
+
 private val previewSend =
     TransactionHistoryItemUiModel.Send(
         id = "1",
@@ -488,11 +948,31 @@ private val previewSend =
         explorerUrl = "",
         timestamp = System.currentTimeMillis(),
         fromAddress = "0x1234567890abcdef",
-        toAddress = "0xdeadbeefdeadbeef1234",
-        amount = "0.5 ETH",
-        token = "ETH",
+        toAddress = "0xF43jf9840fkfjn38fk0dk9Ac5",
+        amount = "1,000.12",
+        token = "RUNE",
         tokenLogo = "",
-        fiatValue = "$1,200.00",
+        fiatValue = "$1,000.54",
+        provider = null,
+        feeEstimate = "0.2 ETH",
+    )
+
+private val previewSendInProgress =
+    TransactionHistoryItemUiModel.Send(
+        id = "1b",
+        txHash = "0xabc123b",
+        chain = "THORChain",
+        status = TransactionStatusUiModel.Broadcasted,
+        explorerUrl = "",
+        timestamp = System.currentTimeMillis(),
+        fromAddress = "0x1234567890abcdef",
+        toAddress = "0xF43jf9840fkfjn38fk0dk9Ac5",
+        amount = "1,000.12",
+        token = "RUNE",
+        tokenLogo = "",
+        fiatValue = null,
+        provider = "THORChain",
+        feeEstimate = null,
     )
 
 private val previewSwap =
@@ -500,19 +980,22 @@ private val previewSwap =
         id = "2",
         txHash = "0xdef456",
         chain = "Ethereum",
-        status = TransactionStatusUiModel.Pending(elapsedTime = "3m ago"),
+        status = TransactionStatusUiModel.Broadcasted,
         explorerUrl = "",
         timestamp = System.currentTimeMillis() - 3 * 60_000,
-        fromToken = "ETH",
-        fromAmount = "0.5",
-        fromChain = "Ethereum",
+        fromToken = "RUNE",
+        fromAmount = "1,000.12",
+        fromChain = "THORChain",
         fromTokenLogo = "",
-        toToken = "USDC",
-        toAmount = "1,200.00",
+        toToken = "WBTC",
+        toAmount = "0.1251",
         toChain = "Ethereum",
         toTokenLogo = "",
-        provider = "THORChain",
-        fiatValue = "$1,200.00",
+        provider = "Uniswap",
+        fiatValue = null,
+        fromAddress = "0xF43jf9840fkfjn38fk0dk9Ac5",
+        toAddress = "0xF43jf9840fkfjn38fk0dk9Ac5",
+        feeEstimate = "0.2 ETH",
     )
 
 @Preview(showBackground = true, backgroundColor = 0xFF02122B)
@@ -525,104 +1008,28 @@ private fun PreviewOverviewTab() {
                 groups =
                     listOf(
                         TransactionHistoryGroupUiModel(
-                            dateLabel = "Today",
-                            transactions = listOf(previewSend, previewSwap),
+                            dateLabel = "Today Sept 2, 2025",
+                            transactions = listOf(previewSendInProgress, previewSwap),
                         ),
                         TransactionHistoryGroupUiModel(
-                            dateLabel = "Yesterday",
+                            dateLabel = "Yesterday Sept 1, 2025",
                             transactions =
                                 listOf(
+                                    previewSend,
                                     previewSend.copy(
                                         id = "3",
-                                        status =
-                                            TransactionStatusUiModel.Failed(
-                                                reason = "Insufficient funds"
-                                            ),
-                                        amount = "1.2 ETH",
-                                        toAddress = "0xabababababababab9999",
+                                        token = "SOL",
+                                        amount = "200.50",
+                                        fiatValue = "$12,204.56",
+                                        toAddress = "0xdeadbeefdeadbeef1234",
                                     ),
-                                    previewSwap.copy(
+                                    previewSend.copy(
                                         id = "4",
-                                        status = TransactionStatusUiModel.Broadcasted,
-                                        fromToken = "BTC",
-                                        toToken = "ETH",
-                                        fromAmount = "0.01",
-                                        toAmount = "0.32",
-                                    ),
-                                    previewSend.copy(
-                                        id = "5",
-                                        status =
-                                            TransactionStatusUiModel.Failed(
-                                                reason = "Insufficient funds"
-                                            ),
-                                        amount = "1.2 ETH",
-                                        toAddress = "0xabababababababab9999",
-                                    ),
-                                    previewSwap.copy(
-                                        id = "6",
-                                        status = TransactionStatusUiModel.Broadcasted,
-                                        fromToken = "BTC",
-                                        toToken = "ETH",
-                                        fromAmount = "0.01",
-                                        toAmount = "0.32",
-                                    ),
-                                    previewSend.copy(
-                                        id = "7",
-                                        status =
-                                            TransactionStatusUiModel.Failed(
-                                                reason = "Insufficient funds"
-                                            ),
-                                        amount = "1.2 ETH",
-                                        toAddress = "0xabababababababab9999",
-                                    ),
-                                    previewSwap.copy(
-                                        id = "8",
-                                        status = TransactionStatusUiModel.Broadcasted,
-                                        fromToken = "BTC",
-                                        toToken = "ETH",
-                                        fromAmount = "0.01",
-                                        toAmount = "0.32",
-                                    ),
-                                    previewSend.copy(
-                                        id = "9",
-                                        status =
-                                            TransactionStatusUiModel.Failed(
-                                                reason = "Insufficient funds"
-                                            ),
-                                        amount = "1.2 ETH",
-                                        toAddress = "0xabababababababab9999",
-                                    ),
-                                    previewSwap.copy(
-                                        id = "40",
-                                        status = TransactionStatusUiModel.Broadcasted,
-                                        fromToken = "BTC",
-                                        toToken = "ETH",
-                                        fromAmount = "0.01",
-                                        toAmount = "0.32",
-                                    ),
-                                    previewSwap.copy(
-                                        id = "41",
-                                        status = TransactionStatusUiModel.Broadcasted,
-                                        fromToken = "BTC",
-                                        toToken = "ETH",
-                                        fromAmount = "0.01",
-                                        toAmount = "0.32",
-                                    ),
-                                    previewSwap.copy(
-                                        id = "42",
-                                        status = TransactionStatusUiModel.Broadcasted,
-                                        fromToken = "BTC",
-                                        toToken = "ETH",
-                                        fromAmount = "0.01",
-                                        toAmount = "0.32",
-                                    ),
-                                    previewSwap.copy(
-                                        id = "43",
-                                        status = TransactionStatusUiModel.Broadcasted,
-                                        fromToken = "BTC",
-                                        toToken = "ETH",
-                                        fromAmount = "0.01",
-                                        toAmount = "0.32",
+                                        status = TransactionStatusUiModel.Failed(reason = "Rejected"),
+                                        token = "ETH",
+                                        amount = "10.12",
+                                        fiatValue = "$321,000.54",
+                                        toAddress = "0x0000000000000000abcd",
                                     ),
                                 ),
                         ),
@@ -637,29 +1044,16 @@ private fun PreviewOverviewTab() {
 
 @Preview(showBackground = true, backgroundColor = 0xFF02122B)
 @Composable
-private fun PreviewSendTab() {
+private fun PreviewSwapTab() {
     TransactionHistoryScreen(
         state =
             TransactionHistoryUiState(
-                selectedTab = TransactionHistoryTab.SEND,
+                selectedTab = TransactionHistoryTab.SWAP,
                 groups =
                     listOf(
                         TransactionHistoryGroupUiModel(
-                            dateLabel = "Today",
-                            transactions =
-                                listOf(
-                                    previewSend,
-                                    previewSend.copy(
-                                        id = "5",
-                                        status =
-                                            TransactionStatusUiModel.Pending(
-                                                elapsedTime = "12m ago"
-                                            ),
-                                        amount = "100 USDC",
-                                        token = "USDC",
-                                        toAddress = "0x9999999999999999abcd",
-                                    ),
-                                ),
+                            dateLabel = "Today Sept 2, 2025",
+                            transactions = listOf(previewSwap),
                         )
                     ),
             ),
@@ -676,7 +1070,7 @@ private fun PreviewEmptyState() {
     TransactionHistoryScreen(
         state =
             TransactionHistoryUiState(
-                selectedTab = TransactionHistoryTab.SWAP,
+                selectedTab = TransactionHistoryTab.SEND,
                 groups = emptyList(),
                 isLoading = false,
             ),
