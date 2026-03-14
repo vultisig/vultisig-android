@@ -945,8 +945,8 @@
     <string name="transaction_history_empty_desc">Tu historial de transacciones aparecerá aquí</string>
     <string name="transaction_status_broadcasted_label">Transmitida</string>
     <string name="transaction_status_pending_label">Pendiente · %1$s</string>
-    <string name="transaction_status_confirmed_label">Exitoso</string>
-    <string name="transaction_status_failed_label">Error</string>
+    <string name="transaction_status_confirmed_label">Confirmada</string>
+    <string name="transaction_status_failed_label">Fallida</string>
     <string name="transaction_status_in_progress_label">En progreso…</string>
     <string name="transaction_history_to_label">Para</string>
     <string name="transaction_history_via_label">vía %s</string>

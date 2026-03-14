@@ -946,8 +946,8 @@
     <string name="transaction_history_empty_desc">Vaša povijest transakcija prikazat će se ovdje</string>
     <string name="transaction_status_broadcasted_label">Objavljeno</string>
     <string name="transaction_status_pending_label">Na čekanju · %1$s</string>
-    <string name="transaction_status_confirmed_label">Uspješno</string>
-    <string name="transaction_status_failed_label">Greška</string>
+    <string name="transaction_status_confirmed_label">Potvrđeno</string>
+    <string name="transaction_status_failed_label">Neuspješno</string>
     <string name="transaction_status_in_progress_label">U tijeku…</string>
     <string name="transaction_history_to_label">Za</string>
     <string name="transaction_history_via_label">putem %s</string>
@@ -965,7 +965,7 @@
     <string name="transaction_history_detail_date">Datum</string>
     <string name="transaction_history_detail_fee">Naknada</string>
     <string name="transaction_history_detail_network">Mreža</string>
-    <string name="transaction_history_detail_provider">Davatelj</string>
+    <string name="transaction_history_detail_provider">Pružatelj</string>
     <string name="transaction_history_view_on_explorer">Pregled u istraživaču</string>
 
     <!-- Key Import / Seed Phrase Import -->

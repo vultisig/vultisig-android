@@ -213,8 +213,6 @@ private fun DateStickyHeader(label: String) {
     }
 }
 
-// ── Send card ─────────────────────────────────────────────────────────────────
-
 @Composable
 private fun SendTransactionCard(
     item: TransactionHistoryItemUiModel.Send,
@@ -231,7 +229,6 @@ private fun SendTransactionCard(
     ) {
         Box {
             Column(modifier = Modifier.padding(16.dp)) {
-                // ── Header row ───────────────────────────────────────────────────
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -247,7 +244,6 @@ private fun SendTransactionCard(
                 UiSpacer(size = 12.dp)
 
                 if (isInProgress) {
-                    // ── In-progress layout ───────────────────────────────────────
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -287,7 +283,6 @@ private fun SendTransactionCard(
                         UiSpacer(size = 32.dp)
                     }
                 } else {
-                    // ── Completed layout ─────────────────────────────────────────
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -345,7 +340,9 @@ private fun SendAddressPill(address: String, modifier: Modifier = Modifier) {
     Text(
         text =
             buildAnnotatedString {
-                withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append("to ") }
+                withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
+                    append(stringResource(R.string.transaction_history_to_label))
+                }
                 withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(address) }
             },
         style = Theme.brockmann.supplementary.caption,
@@ -379,8 +376,6 @@ private fun SendProviderChip(provider: String, modifier: Modifier = Modifier) {
     )
 }
 
-// ── Swap card ─────────────────────────────────────────────────────────────────
-
 @Composable
 private fun SwapTransactionCard(
     item: TransactionHistoryItemUiModel.Swap,
@@ -396,7 +391,6 @@ private fun SwapTransactionCard(
         borderType = ContainerBorderType.Bordered(),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // ── Header row ───────────────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -411,7 +405,6 @@ private fun SwapTransactionCard(
 
             UiSpacer(size = 12.dp)
 
-            // ── From token ───────────────────────────────────────────────────
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -426,7 +419,6 @@ private fun SwapTransactionCard(
 
             UiSpacer(size = 8.dp)
 
-            // ── To token ─────────────────────────────────────────────────────
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -454,8 +446,6 @@ private fun SwapTransactionCard(
         }
     }
 }
-
-// ── Shared components ─────────────────────────────────────────────────────────
 
 @Composable
 private fun TypeBadge(iconRes: Int, label: String, modifier: Modifier = Modifier) {
@@ -674,8 +664,6 @@ private fun Long.toDetailDateString(): String {
     return Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).format(formatter)
 }
 
-// ── Transaction Detail Bottom Sheet ──────────────────────────────────────────
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TransactionDetailBottomSheet(
@@ -731,7 +719,6 @@ private fun TransactionDetailBottomSheet(
 
 @Composable
 private fun SendDetailContent(item: TransactionHistoryItemUiModel.Send) {
-    // Type badge
     UiSpacer(size = 8.dp)
     TypeBadge(
         iconRes = R.drawable.send,
@@ -739,7 +726,6 @@ private fun SendDetailContent(item: TransactionHistoryItemUiModel.Send) {
     )
     UiSpacer(size = 20.dp)
 
-    // Token hero
     Box(
         modifier =
             Modifier.size(72.dp)
@@ -757,7 +743,6 @@ private fun SendDetailContent(item: TransactionHistoryItemUiModel.Send) {
 
     UiSpacer(size = 24.dp)
 
-    // Detail rows
     DetailInfoRows(
         status = item.status,
         fromAddress = item.fromAddress.takeIf { it.isNotEmpty() },
@@ -771,7 +756,6 @@ private fun SendDetailContent(item: TransactionHistoryItemUiModel.Send) {
 
 @Composable
 private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
-    // Type badge
     UiSpacer(size = 8.dp)
     TypeBadge(
         iconRes = R.drawable.swap_v2,
@@ -779,7 +763,6 @@ private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
     )
     UiSpacer(size = 20.dp)
 
-    // Token pair hero with cutout shape
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -826,7 +809,6 @@ private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
 
     UiSpacer(size = 24.dp)
 
-    // Detail rows
     DetailInfoRows(
         status = item.status,
         fromAddress = item.fromAddress,
@@ -976,8 +958,6 @@ private fun DetailValuePill(text: String, modifier: Modifier = Modifier) {
                 .padding(horizontal = 10.dp, vertical = 4.dp),
     )
 }
-
-// ── Previews ─────────────────────────────────────────────────────────────────
 
 private val previewSend =
     TransactionHistoryItemUiModel.Send(
