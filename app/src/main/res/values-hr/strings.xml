@@ -1116,4 +1116,22 @@
     <string name="agent_session_history">Povijest sesije</string>
     <string name="agent_new_chat">Novi chat</string>
     <string name="agent_no_conversations">Još nema razgovora</string>
+    <string name="agent_delete_chat_session">Obriši chat sesiju</string>
+    <string name="agent_give_feedback">Ostavi povratnu informaciju</string>
+    <string name="agent_analyzing">ANALIZIRANJE…</string>
+    <string name="agent_welcome_auth_title">Dobrodošli u Vulti Agent</string>
+    <string name="agent_welcome_auth_subtitle">Unesite lozinku vaulta kako biste aktivirali agenta i počeli komunicirati sa svojim vaultom.</string>
+    <string name="agent_authorize">Autoriziraj agenta</string>
+    <string name="agent_authorize_title">Autoriziraj Vulti Agent</string>
+    <string name="agent_authorize_description">Vulti Agent može analizirati zahtjeve i pripremiti transakcije. Ništa se ne izvršava bez vašeg odobrenja. Pristup možete opozvati u Postavkama.</string>
+    <string name="agent_authorize_button">Autoriziraj</string>
+    <string name="agent_learn_more">Saznajte više</string>
+    <string name="agent_starter_plugins">Pokaži mi plugine i što mogu</string>
+    <string name="agent_starter_earn_apy">Želim zaraditi APY na BTC</string>
+    <string name="agent_starter_send">Pošalji iznos na …</string>
+    <string name="agent_starter_swap">Pripremi zamjenu iz ETH u BTC</string>
+    <string name="agent_enter_vault_password">Unesite lozinku vaulta</string>
+    <string name="agent_enter_password_title">Unesite svoju FastVault lozinku</string>
+    <string name="agent_enter_password_subtitle">Vaša lozinka je potrebna za prijavu u Vulti Agent</string>
+    <string name="agent_requires_fast_vault">Vulti Agent zahtijeva FastVault. Molimo koristite FastVault za nastavak.</string>
 </resources>

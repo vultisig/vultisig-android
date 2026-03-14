@@ -115,7 +115,7 @@ internal fun CryptoConnectionSelect(
                                 CryptoConnectionType.Defi ->
                                     stringResource(R.string.defi) to R.drawable.coins_add
                                 CryptoConnectionType.Agent ->
-                                    stringResource(R.string.agent_title) to R.drawable.sparkles
+                                    stringResource(R.string.agent_title) to R.drawable.ic_agent
                             }
 
                         WalletEarnOption(

@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,9 +64,9 @@ private fun AgentConversationsContent(
         ) {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_caret_left),
+                    painter = painterResource(R.drawable.ic_alignment_left),
                     contentDescription = null,
-                    tint = Theme.v2.colors.text.primary,
+                    tint = Color.White,
                 )
             }
 
@@ -76,13 +77,12 @@ private fun AgentConversationsContent(
                 modifier = Modifier.weight(1f),
             )
 
-            Box(
+            IconButton(
+                onClick = onNewChatClick,
                 modifier =
                     Modifier.size(36.dp)
                         .clip(CircleShape)
-                        .background(Theme.v2.colors.buttons.ctaPrimary)
-                        .clickable(onClick = onNewChatClick),
-                contentAlignment = Alignment.Center,
+                        .background(Theme.v2.colors.buttons.ctaPrimary),
             ) {
                 Icon(
                     painter = painterResource(R.drawable.plus),

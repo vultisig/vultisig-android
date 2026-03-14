@@ -1450,4 +1450,22 @@
     <string name="agent_session_history">会话历史</string>
     <string name="agent_new_chat">新对话</string>
     <string name="agent_no_conversations">暂无对话</string>
+    <string name="agent_delete_chat_session">删除聊天会话</string>
+    <string name="agent_give_feedback">提供反馈</string>
+    <string name="agent_analyzing">分析中…</string>
+    <string name="agent_welcome_auth_title">欢迎使用 Vulti Agent</string>
+    <string name="agent_welcome_auth_subtitle">输入您的金库密码以激活代理并开始与您的金库交互。</string>
+    <string name="agent_authorize">授权代理</string>
+    <string name="agent_authorize_title">授权 Vulti Agent</string>
+    <string name="agent_authorize_description">Vulti Agent 可以分析请求并准备交易。未经您的批准，不会执行任何操作。您可以在设置中撤销访问权限。</string>
+    <string name="agent_authorize_button">授权</string>
+    <string name="agent_learn_more">了解更多</string>
+    <string name="agent_starter_plugins">向我展示插件及其功能</string>
+    <string name="agent_starter_earn_apy">我想通过 BTC 赚取 APY</string>
+    <string name="agent_starter_send">发送金额至 …</string>
+    <string name="agent_starter_swap">准备从 ETH 到 BTC 的交换</string>
+    <string name="agent_enter_vault_password">输入金库密码</string>
+    <string name="agent_enter_password_title">输入您的 FastVault 密码</string>
+    <string name="agent_enter_password_subtitle">需要您的密码才能登录 Vulti Agent</string>
+    <string name="agent_requires_fast_vault">Vulti Agent 需要 FastVault。请使用 FastVault 继续。</string>
 </resources>

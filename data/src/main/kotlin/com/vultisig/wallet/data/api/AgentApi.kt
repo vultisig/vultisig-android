@@ -11,7 +11,7 @@ import com.vultisig.wallet.data.models.agent.AgentListConversationsResponse
 import com.vultisig.wallet.data.models.agent.AgentSendMessageRequest
 import kotlinx.coroutines.flow.Flow
 
-internal interface AgentApi {
+interface AgentApi {
 
     suspend fun createConversation(
         token: String,

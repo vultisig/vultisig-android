@@ -38,6 +38,7 @@ import com.vultisig.wallet.data.services.toStringRes
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
+import com.vultisig.wallet.data.usecases.agent.AgentAuthService
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
@@ -90,6 +91,7 @@ internal data class VaultAccountsUiModel(
     val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
     val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
     val isChainSelectionEnabled: Boolean = true,
+    val showAgentAuthorizeSheet: Boolean = false,
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.isSwapSupported }
     val noChainFound: Boolean
@@ -142,6 +144,7 @@ constructor(
     private val remoteNFTService: TierRemoteNFTService,
     private val pushNotificationManager: PushNotificationManager,
     private val snackbarFlow: SnackbarFlow,
+    private val agentAuthService: AgentAuthService,
 ) : ViewModel() {
 
     private var requestedVaultId: String? = savedStateHandle.toRoute<Route.Home>().openVaultId
@@ -544,7 +547,16 @@ constructor(
 
     fun setCryptoConnectionType(type: CryptoConnectionType) {
         if (type == CryptoConnectionType.Agent) {
-            viewModelScope.launch { navigator.route(Route.AgentChat()) }
+            viewModelScope.launch {
+                val vault = vaultId?.let { vaultRepository.get(it) }
+                val pubKey = vault?.pubKeyECDSA
+                val hasToken = pubKey != null && agentAuthService.getOrRefreshToken(pubKey) != null
+                if (hasToken) {
+                    navigator.route(Route.AgentChat())
+                } else {
+                    uiState.update { it.copy(showAgentAuthorizeSheet = true) }
+                }
+            }
             return
         }
 
@@ -556,6 +568,15 @@ constructor(
         if (type == CryptoConnectionType.Defi) {
             loadDeFiBalances(vaultId, true)
         }
+    }
+
+    fun onAgentAuthorize() {
+        uiState.update { it.copy(showAgentAuthorizeSheet = false) }
+        viewModelScope.launch { navigator.route(Route.AgentChat()) }
+    }
+
+    fun onAgentAuthorizeDismiss() {
+        uiState.update { it.copy(showAgentAuthorizeSheet = false) }
     }
 
     private fun checkNotificationPrompt(vaultId: String) {

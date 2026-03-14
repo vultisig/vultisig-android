@@ -51,6 +51,7 @@ import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
+import com.vultisig.wallet.ui.screens.agent.AgentAuthorizeBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.NotificationsIntroBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultNotificationOptInBottomSheet
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
@@ -107,6 +108,15 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
             onEnableVault = viewModel::onNotificationVaultToggle,
             onDismissRequest = viewModel::onNotificationVaultSheetDismiss,
             onEnableAll = viewModel::onEnableAll,
+        )
+    }
+
+    if (state.showAgentAuthorizeSheet) {
+        AgentAuthorizeBottomSheet(
+            onAuthorize = viewModel::onAgentAuthorize,
+            onNotNow = viewModel::onAgentAuthorizeDismiss,
+            onLearnMore = { /* TODO: open learn more URL */ },
+            onDismissRequest = viewModel::onAgentAuthorizeDismiss,
         )
     }
 

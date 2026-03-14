@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models.agent
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -193,6 +194,7 @@ enum class AgentToolCallStatus {
     ERROR,
 }
 
+@Immutable
 data class AgentToolCallInfo(
     val actionType: String,
     val title: String,
@@ -206,6 +208,7 @@ enum class AgentTxStatus {
     FAILED,
 }
 
+@Immutable
 data class AgentTxStatusInfo(
     val txHash: String,
     val chain: String,
@@ -213,6 +216,7 @@ data class AgentTxStatusInfo(
     val label: String,
 )
 
+@Immutable
 data class AgentChatMessage(
     val id: String,
     val role: AgentChatRole,
@@ -221,4 +225,5 @@ data class AgentChatMessage(
     val toolCall: AgentToolCallInfo? = null,
     val txStatus: AgentTxStatusInfo? = null,
     val isStreaming: Boolean = false,
+    val isError: Boolean = false,
 )

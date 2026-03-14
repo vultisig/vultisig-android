@@ -71,4 +71,6 @@ internal interface ApiModule {
     @Binds @Singleton fun bindNotificationApi(impl: NotificationApiImpl): NotificationApi
 
     @Binds @Singleton fun bindAgentApi(impl: AgentApiImpl): AgentApi
+
+    @Binds @Singleton fun bindVerifierApi(impl: VerifierApiImpl): VerifierApi
 }

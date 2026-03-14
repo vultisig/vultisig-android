@@ -9,8 +9,9 @@ import com.vultisig.wallet.data.models.agent.AgentGetStartersResponse
 import com.vultisig.wallet.data.models.agent.AgentListConversationsRequest
 import com.vultisig.wallet.data.models.agent.AgentListConversationsResponse
 import com.vultisig.wallet.data.models.agent.AgentSendMessageRequest
+import com.vultisig.wallet.data.utils.NetworkException
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -20,12 +21,18 @@ import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import io.ktor.utils.io.readUTF8Line
 import javax.inject.Inject
+import javax.inject.Named
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.callbackFlow
 
-internal class AgentApiImpl @Inject constructor(private val http: HttpClient) : AgentApi {
+internal class AgentApiImpl
+@Inject
+constructor(private val http: HttpClient, @Named("sse") private val sseHttp: HttpClient) :
+    AgentApi {
 
     override suspend fun createConversation(
         token: String,
@@ -37,7 +44,7 @@ internal class AgentApiImpl @Inject constructor(private val http: HttpClient) : 
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
-            .body()
+            .bodyOrThrow()
 
     override suspend fun listConversations(
         token: String,
@@ -49,7 +56,7 @@ internal class AgentApiImpl @Inject constructor(private val http: HttpClient) : 
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
-            .body()
+            .bodyOrThrow()
 
     override suspend fun getConversation(
         token: String,
@@ -62,11 +69,15 @@ internal class AgentApiImpl @Inject constructor(private val http: HttpClient) : 
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
-            .body()
+            .bodyOrThrow()
 
     override suspend fun deleteConversation(token: String, conversationId: String) {
-        http.delete("$BASE_URL/agent/conversations/$conversationId") {
-            header(HttpHeaders.Authorization, "Bearer $token")
+        val response =
+            http.delete("$BASE_URL/agent/conversations/$conversationId") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+            }
+        if (!response.status.isSuccess()) {
+            throw NetworkException(response.status.value, "DELETE failed: ${response.status}")
         }
     }
 
@@ -74,8 +85,8 @@ internal class AgentApiImpl @Inject constructor(private val http: HttpClient) : 
         token: String,
         conversationId: String,
         request: AgentSendMessageRequest,
-    ): Flow<AgentSSEEvent> = flow {
-        http
+    ): Flow<AgentSSEEvent> = callbackFlow {
+        sseHttp
             .preparePost("$BASE_URL/agent/conversations/$conversationId/messages") {
                 header(HttpHeaders.Authorization, "Bearer $token")
                 header(HttpHeaders.Accept, "text/event-stream")
@@ -83,6 +94,13 @@ internal class AgentApiImpl @Inject constructor(private val http: HttpClient) : 
                 setBody(request)
             }
             .execute { response ->
+                if (!response.status.isSuccess()) {
+                    throw NetworkException(
+                        response.status.value,
+                        "SSE connection failed: ${response.status}",
+                    )
+                }
+
                 val channel = response.bodyAsChannel()
                 var currentEvent = ""
                 var currentData = StringBuilder()
@@ -95,21 +113,30 @@ internal class AgentApiImpl @Inject constructor(private val http: HttpClient) : 
                             currentEvent = line.removePrefix("event:").trim()
                         }
                         line.startsWith("data:") -> {
-                            currentData.append(line.removePrefix("data:").trim())
+                            // SSE spec: strip first space after colon
+                            val payload = line.removePrefix("data:").removePrefix(" ")
+                            if (currentData.isNotEmpty()) {
+                                currentData.append('\n')
+                            }
+                            currentData.append(payload)
                         }
                         line.isBlank() && currentEvent.isNotEmpty() -> {
-                            emit(AgentSSEEvent(event = currentEvent, data = currentData.toString()))
+                            trySend(
+                                AgentSSEEvent(event = currentEvent, data = currentData.toString())
+                            )
                             currentEvent = ""
                             currentData = StringBuilder()
                         }
                     }
                 }
 
-                // Emit any remaining event
                 if (currentEvent.isNotEmpty() && currentData.isNotEmpty()) {
-                    emit(AgentSSEEvent(event = currentEvent, data = currentData.toString()))
+                    trySend(AgentSSEEvent(event = currentEvent, data = currentData.toString()))
                 }
             }
+
+        close()
+        awaitClose()
     }
 
     override suspend fun getStarters(
@@ -122,7 +149,7 @@ internal class AgentApiImpl @Inject constructor(private val http: HttpClient) : 
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
-            .body()
+            .bodyOrThrow()
 
     companion object {
         private const val BASE_URL = "https://agent.vultisig.com"

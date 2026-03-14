@@ -1110,4 +1110,22 @@
     <string name="agent_session_history">Sessiegeschiedenis</string>
     <string name="agent_new_chat">Nieuwe chat</string>
     <string name="agent_no_conversations">Nog geen gesprekken</string>
+    <string name="agent_delete_chat_session">Chatsessie verwijderen</string>
+    <string name="agent_give_feedback">Feedback geven</string>
+    <string name="agent_analyzing">ANALYSEREN…</string>
+    <string name="agent_welcome_auth_title">Welkom bij Vulti Agent</string>
+    <string name="agent_welcome_auth_subtitle">Voer uw vault-wachtwoord in om de agent te activeren en te beginnen met interactie met uw vault.</string>
+    <string name="agent_authorize">Agent autoriseren</string>
+    <string name="agent_authorize_title">Vulti Agent autoriseren</string>
+    <string name="agent_authorize_description">Vulti Agent kan verzoeken analyseren en transacties voorbereiden. Niets wordt uitgevoerd zonder uw goedkeuring. U kunt de toegang intrekken in Instellingen.</string>
+    <string name="agent_authorize_button">Autoriseren</string>
+    <string name="agent_learn_more">Meer informatie</string>
+    <string name="agent_starter_plugins">Toon mij plugins en wat ze kunnen doen</string>
+    <string name="agent_starter_earn_apy">Ik wil APY verdienen op BTC</string>
+    <string name="agent_starter_send">Stuur bedrag naar …</string>
+    <string name="agent_starter_swap">Bereid een wissel voor van ETH naar BTC</string>
+    <string name="agent_enter_vault_password">Voer vault-wachtwoord in</string>
+    <string name="agent_enter_password_title">Voer uw FastVault-wachtwoord in</string>
+    <string name="agent_enter_password_subtitle">Uw wachtwoord is nodig om in te loggen bij Vulti Agent</string>
+    <string name="agent_requires_fast_vault">Vulti Agent vereist een FastVault. Gebruik een FastVault om door te gaan.</string>
 </resources>
