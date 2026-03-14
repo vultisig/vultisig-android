@@ -178,8 +178,8 @@ constructor(
                 agentMessageProcessor.setCachedTitle(conversationId, title)
             }
             _uiState.update { it.copy(messages = messages, conversationTitle = title) }
-        } catch (_: Exception) {
-            // Failed to load history, start fresh
+        } catch (e: Exception) {
+            Timber.w(e, "AgentChat: Failed to load conversation history, starting fresh")
         }
     }
 

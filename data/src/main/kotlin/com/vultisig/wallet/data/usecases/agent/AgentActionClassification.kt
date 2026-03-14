@@ -24,7 +24,6 @@ private val alwaysAutoExecute =
         "build_send_tx",
         "build_custom_tx",
         "mcp_status",
-        "sign_tx",
         "read_evm_contract",
         "scan_tx",
         "thorchain_query",
@@ -76,7 +75,7 @@ fun filterBuildTx(
     val remaining = mutableListOf<AgentBackendAction>()
     for (action in actions) {
         if (action.type in setOf("build_swap_tx", "build_send_tx", "build_custom_tx")) {
-            build = action
+            if (build == null) build = action else remaining.add(action)
         } else {
             remaining.add(action)
         }
@@ -91,7 +90,7 @@ fun filterSignTx(
     val remaining = mutableListOf<AgentBackendAction>()
     for (action in actions) {
         if (action.type == "sign_tx") {
-            sign = action
+            if (sign == null) sign = action else remaining.add(action)
         } else {
             remaining.add(action)
         }

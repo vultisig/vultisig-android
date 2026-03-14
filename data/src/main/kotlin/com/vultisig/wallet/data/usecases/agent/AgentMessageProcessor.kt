@@ -73,7 +73,7 @@ constructor(
     private val _events = MutableSharedFlow<AgentEvent>(extraBufferCapacity = 64)
     val events: SharedFlow<AgentEvent> = _events.asSharedFlow()
 
-    private val _conversationTitles = mutableMapOf<String, String>()
+    private val _conversationTitles = java.util.concurrent.ConcurrentHashMap<String, String>()
 
     fun getCachedTitle(conversationId: String): String? = _conversationTitles[conversationId]
 

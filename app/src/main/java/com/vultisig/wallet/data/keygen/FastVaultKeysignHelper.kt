@@ -93,8 +93,10 @@ constructor(
                 ?: error("Keysign completed but no signature found for message")
 
         // Ethereum personal sign expects v = 27 + recoveryId (0 or 1)
-        val recoveryByte = sig.recoveryID.toInt(16) + 27
-        return "0x${sig.r}${sig.s}${"%02x".format(recoveryByte)}"
+        val recoveryByte =
+            sig.recoveryID.toIntOrNull(16) ?: error("Invalid recoveryID format: ${sig.recoveryID}")
+        val v = recoveryByte + 27
+        return "0x${sig.r}${sig.s}${"%02x".format(v)}"
     }
 
     private suspend fun waitForCommittee(

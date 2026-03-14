@@ -8,6 +8,7 @@ import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -19,6 +20,19 @@ object TestNetworkModule {
     @Provides
     @Singleton
     fun provideHttpClient(
+        baseConfig: HttpClientConfigurator,
+        faultyInterceptor: FaultyInterceptor,
+    ): HttpClient =
+        HttpClient(OkHttp) {
+            baseConfig.configure(this)
+
+            engine { config { addInterceptor(faultyInterceptor) } }
+        }
+
+    @Provides
+    @Singleton
+    @Named("sse")
+    fun provideSseHttpClient(
         baseConfig: HttpClientConfigurator,
         faultyInterceptor: FaultyInterceptor,
     ): HttpClient =

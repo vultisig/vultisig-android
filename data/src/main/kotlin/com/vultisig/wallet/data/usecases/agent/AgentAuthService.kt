@@ -31,7 +31,7 @@ constructor(
     private val json: Json,
 ) {
 
-    private val cachedTokens = mutableMapOf<String, AuthToken>()
+    private val cachedTokens = java.util.concurrent.ConcurrentHashMap<String, AuthToken>()
 
     fun getCachedToken(vaultPubKey: String): AuthToken? {
         var token = cachedTokens[vaultPubKey]
