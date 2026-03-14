@@ -995,6 +995,12 @@
     <string name="transaction_history_to_label">To</string>
     <string name="transaction_history_via_label">via %s</string>
     <string name="transaction_history_min_payout_label">min. payout</string>
+    <string name="transaction_history_date_today">Today %1$s</string>
+    <string name="transaction_history_date_yesterday">Yesterday %1$s</string>
+    <string name="transaction_history_elapsed_just_now">just now</string>
+    <string name="transaction_history_elapsed_days">%1$dd ago</string>
+    <string name="transaction_history_elapsed_hours">%1$dh ago</string>
+    <string name="transaction_history_elapsed_minutes">%1$dm ago</string>
     <string name="transaction_history_detail_status">Status</string>
     <string name="transaction_history_detail_from">From</string>
     <string name="transaction_history_detail_to">To</string>
@@ -1174,4 +1180,5 @@
     <string name="server_backup_error_too_many_requests">Too many backup requests. Please try again later.</string>
     <string name="server_backup_error_bad_request">Something went wrong. Please check your details and try again.</string>
     <string name="resend_notification">Resend notification</string>
+    <string name="transaction_history_via_prefix">via</string>
 </resources>

@@ -951,7 +951,14 @@
     <string name="transaction_status_in_progress_label">Em andamento…</string>
     <string name="transaction_history_to_label">Para</string>
     <string name="transaction_history_via_label">via %s</string>
+    <string name="transaction_history_via_prefix">via</string>
     <string name="transaction_history_min_payout_label">pagamento mín.</string>
+    <string name="transaction_history_date_today">Hoje %1$s</string>
+    <string name="transaction_history_date_yesterday">Ontem %1$s</string>
+    <string name="transaction_history_elapsed_just_now">agora mesmo</string>
+    <string name="transaction_history_elapsed_days">há %1$dd</string>
+    <string name="transaction_history_elapsed_hours">há %1$dh</string>
+    <string name="transaction_history_elapsed_minutes">há %1$dmin</string>
     <string name="transaction_history_detail_status">Status</string>
     <string name="transaction_history_detail_from">De</string>
     <string name="transaction_history_detail_to">Para</string>

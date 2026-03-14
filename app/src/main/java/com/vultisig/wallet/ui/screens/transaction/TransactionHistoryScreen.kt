@@ -366,7 +366,7 @@ private fun SendProviderChip(provider: String, modifier: Modifier = Modifier) {
         text =
             buildAnnotatedString {
                 withStyle(SpanStyle(color = Theme.v2.colors.text.button.disabled)) {
-                    append("via ")
+                    append(stringResource(R.string.transaction_history_via_prefix))
                 }
                 withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(provider) }
             },

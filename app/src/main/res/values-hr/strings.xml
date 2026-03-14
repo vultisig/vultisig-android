@@ -951,7 +951,14 @@
     <string name="transaction_status_in_progress_label">U tijeku…</string>
     <string name="transaction_history_to_label">Za</string>
     <string name="transaction_history_via_label">putem %s</string>
+    <string name="transaction_history_via_prefix">putem</string>
     <string name="transaction_history_min_payout_label">min. isplata</string>
+    <string name="transaction_history_date_today">Danas %1$s</string>
+    <string name="transaction_history_date_yesterday">Jučer %1$s</string>
+    <string name="transaction_history_elapsed_just_now">upravo sada</string>
+    <string name="transaction_history_elapsed_days">prije %1$dd</string>
+    <string name="transaction_history_elapsed_hours">prije %1$dh</string>
+    <string name="transaction_history_elapsed_minutes">prije %1$dmin</string>
     <string name="transaction_history_detail_status">Status</string>
     <string name="transaction_history_detail_from">Od</string>
     <string name="transaction_history_detail_to">Do</string>

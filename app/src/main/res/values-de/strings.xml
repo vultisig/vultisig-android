@@ -952,7 +952,14 @@
     <string name="transaction_status_in_progress_label">In Bearbeitung…</string>
     <string name="transaction_history_to_label">An</string>
     <string name="transaction_history_via_label">über %s</string>
+    <string name="transaction_history_via_prefix">über</string>
     <string name="transaction_history_min_payout_label">Min. Auszahlung</string>
+    <string name="transaction_history_date_today">Heute %1$s</string>
+    <string name="transaction_history_date_yesterday">Gestern %1$s</string>
+    <string name="transaction_history_elapsed_just_now">gerade eben</string>
+    <string name="transaction_history_elapsed_days">vor %1$dT</string>
+    <string name="transaction_history_elapsed_hours">vor %1$dh</string>
+    <string name="transaction_history_elapsed_minutes">vor %1$dmin</string>
     <string name="transaction_history_detail_status">Status</string>
     <string name="transaction_history_detail_from">Von</string>
     <string name="transaction_history_detail_to">An</string>

@@ -1289,7 +1289,14 @@
     <string name="transaction_status_in_progress_label">进行中…</string>
     <string name="transaction_history_to_label">至</string>
     <string name="transaction_history_via_label">通过 %s</string>
+    <string name="transaction_history_via_prefix">通过</string>
     <string name="transaction_history_min_payout_label">最低支付</string>
+    <string name="transaction_history_date_today">今天 %1$s</string>
+    <string name="transaction_history_date_yesterday">昨天 %1$s</string>
+    <string name="transaction_history_elapsed_just_now">刚刚</string>
+    <string name="transaction_history_elapsed_days">%1$d天前</string>
+    <string name="transaction_history_elapsed_hours">%1$d小时前</string>
+    <string name="transaction_history_elapsed_minutes">%1$d分钟前</string>
     <string name="transaction_history_detail_status">状态</string>
     <string name="transaction_history_detail_from">发送方</string>
     <string name="transaction_history_detail_to">接收方</string>

@@ -1,10 +1,12 @@
 package com.vultisig.wallet.ui.models
 
+import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
 import com.vultisig.wallet.data.db.models.TransactionType
@@ -19,6 +21,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -119,6 +122,7 @@ internal class TransactionHistoryViewModel
 @Inject
 constructor(
     savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val context: Context,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val refreshPendingTransactions: RefreshPendingTransactionsUseCase,
     private val navigator: Navigator<Destination>,
@@ -273,8 +277,16 @@ constructor(
             .map { (date, items) ->
                 val label =
                     when (date) {
-                        today -> "Today ${date.format(labelFormatter)}"
-                        yesterday -> "Yesterday ${date.format(labelFormatter)}"
+                        today ->
+                            context.getString(
+                                R.string.transaction_history_date_today,
+                                date.format(labelFormatter),
+                            )
+                        yesterday ->
+                            context.getString(
+                                R.string.transaction_history_date_yesterday,
+                                date.format(labelFormatter),
+                            )
                         else -> date.format(labelFormatter)
                     }
                 TransactionHistoryGroupUiModel(dateLabel = label, transactions = items)
@@ -286,10 +298,10 @@ constructor(
         val hours = minutes / 60
         val days = hours / 24
         return when {
-            days > 0 -> "${days}d ago"
-            hours > 0 -> "${hours}h ago"
-            minutes > 0 -> "${minutes}m ago"
-            else -> "just now"
+            days > 0 -> context.getString(R.string.transaction_history_elapsed_days, days)
+            hours > 0 -> context.getString(R.string.transaction_history_elapsed_hours, hours)
+            minutes > 0 -> context.getString(R.string.transaction_history_elapsed_minutes, minutes)
+            else -> context.getString(R.string.transaction_history_elapsed_just_now)
         }
     }
 }

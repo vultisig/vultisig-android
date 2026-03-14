@@ -290,6 +290,7 @@ constructor(
     @OptIn(ExperimentalEncodingApi::class)
     fun setScanResult(qrBase64: String) {
         viewModelScope.launch {
+            transactionHistoryData = null
             vaultRepository.get(vaultId)?.let {
                 _currentVault = it
                 _localPartyID = it.localPartyID
@@ -540,8 +541,14 @@ constructor(
                 val vaultName = _currentVault.name
 
                 val provider =
-                    resolveProviderUseCase(SwapSelectionContext(srcToken, dstToken, srcTokenValue))
-                        ?.getSwapProviderId()
+                    runCatching {
+                            resolveProviderUseCase(
+                                    SwapSelectionContext(srcToken, dstToken, srcTokenValue)
+                                )
+                                ?.getSwapProviderId()
+                        }
+                        .onFailure { Timber.w(it, "Failed to resolve swap provider in join flow") }
+                        .getOrNull()
                         .orEmpty()
 
                 when (swapPayload) {
