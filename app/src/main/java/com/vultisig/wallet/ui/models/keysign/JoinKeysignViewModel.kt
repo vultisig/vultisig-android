@@ -544,263 +544,255 @@ constructor(
                         ?.getSwapProviderId()
                         .orEmpty()
 
-                    when (swapPayload) {
-                        is SwapPayload.EVM -> {
-                            val oneInchSwapTxJson = swapPayload.data.quote.tx
-                            // if swapFee is not null then it provider is Lifi otherwise 1inch
-                            val value =
-                                if (
-                                    !oneInchSwapTxJson.swapFee.isNullOrEmpty() &&
-                                        oneInchSwapTxJson.swapFee.toBigIntegerOrNull() != null
-                                ) {
-                                    oneInchSwapTxJson.swapFee.toBigInteger()
-                                } else {
-                                    (oneInchSwapTxJson.gasPrice.toBigIntegerOrNull()
-                                        ?: BigInteger.ZERO) *
-                                        (oneInchSwapTxJson.gas.takeIf { it != 0L }
-                                                ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
-                                            .toBigInteger()
-                                }
-                            val hasJupiterSwapProvider =
-                                srcToken.chain == Chain.Solana && dstToken.chain == Chain.Solana
+                when (swapPayload) {
+                    is SwapPayload.EVM -> {
+                        val oneInchSwapTxJson = swapPayload.data.quote.tx
+                        // if swapFee is not null then it provider is Lifi otherwise 1inch
+                        val value =
+                            if (
+                                !oneInchSwapTxJson.swapFee.isNullOrEmpty() &&
+                                    oneInchSwapTxJson.swapFee.toBigIntegerOrNull() != null
+                            ) {
+                                oneInchSwapTxJson.swapFee.toBigInteger()
+                            } else {
+                                (oneInchSwapTxJson.gasPrice.toBigIntegerOrNull()
+                                    ?: BigInteger.ZERO) *
+                                    (oneInchSwapTxJson.gas.takeIf { it != 0L }
+                                            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
+                                        .toBigInteger()
+                            }
+                        val hasJupiterSwapProvider =
+                            srcToken.chain == Chain.Solana && dstToken.chain == Chain.Solana
 
-                            val feeToken = if (hasJupiterSwapProvider) srcToken else nativeToken
-                            val estimatedTokenFees = TokenValue(value = value, token = feeToken)
+                        val feeToken = if (hasJupiterSwapProvider) srcToken else nativeToken
+                        val estimatedTokenFees = TokenValue(value = value, token = feeToken)
 
-                            val estimatedFee =
-                                convertTokenValueToFiat(feeToken, estimatedTokenFees, currency)
+                        val estimatedFee =
+                            convertTokenValueToFiat(feeToken, estimatedTokenFees, currency)
 
-                            val swapTransaction =
-                                SwapTransactionUiModel(
-                                    src =
-                                        ValuedToken(
-                                            value = mapTokenValueToDecimalUiString(srcTokenValue),
-                                            token = srcToken,
-                                            fiatValue =
-                                                fiatValueToStringMapper(
-                                                    convertTokenValueToFiat(
-                                                        srcToken,
-                                                        srcTokenValue,
-                                                        currency,
-                                                    )
-                                                ),
-                                        ),
-                                    dst =
-                                        ValuedToken(
-                                            value = mapTokenValueToDecimalUiString(dstTokenValue),
-                                            token = dstToken,
-                                            fiatValue =
-                                                fiatValueToStringMapper(
-                                                    convertTokenValueToFiat(
-                                                        dstToken,
-                                                        dstTokenValue,
-                                                        currency,
-                                                    )
-                                                ),
-                                        ),
-                                    providerFee =
-                                        ValuedToken(
-                                            token = feeToken,
-                                            value = value.toString(),
-                                            fiatValue = fiatValueToStringMapper(estimatedFee),
-                                        ),
-                                    networkFee =
-                                        ValuedToken(
-                                            token = srcToken,
-                                            value =
-                                                mapTokenValueToDecimalUiString(
-                                                    estimatedNetworkGasFee.tokenValue
-                                                ),
-                                            fiatValue =
-                                                fiatValueToStringMapper(
-                                                    estimatedNetworkGasFee.fiatValue
-                                                ),
-                                        ),
-                                    networkFeeFormatted =
-                                        mapTokenValueToDecimalUiString(
-                                            estimatedNetworkGasFee.tokenValue
-                                        ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
-                                    totalFee =
-                                        fiatValueToStringMapper(
-                                            estimatedFee + networkGasFeeFiatValue
-                                        ),
-                                    provider = provider,
-                                )
+                        val swapTransaction =
+                            SwapTransactionUiModel(
+                                src =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(srcTokenValue),
+                                        token = srcToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    srcToken,
+                                                    srcTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                dst =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(dstTokenValue),
+                                        token = dstToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    dstToken,
+                                                    dstTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                providerFee =
+                                    ValuedToken(
+                                        token = feeToken,
+                                        value = value.toString(),
+                                        fiatValue = fiatValueToStringMapper(estimatedFee),
+                                    ),
+                                networkFee =
+                                    ValuedToken(
+                                        token = srcToken,
+                                        value =
+                                            mapTokenValueToDecimalUiString(
+                                                estimatedNetworkGasFee.tokenValue
+                                            ),
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                estimatedNetworkGasFee.fiatValue
+                                            ),
+                                    ),
+                                networkFeeFormatted =
+                                    mapTokenValueToDecimalUiString(
+                                        estimatedNetworkGasFee.tokenValue
+                                    ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
+                                totalFee =
+                                    fiatValueToStringMapper(estimatedFee + networkGasFeeFiatValue),
+                                provider = provider,
+                            )
 
-                            transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction)
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction)
 
-                            transactionHistoryData = mapSwapTransactionToHistoryData(swapTransaction)
-                            verifyUiModel.value =
-                                VerifyUiModel.Swap(
-                                    VerifySwapUiModel(tx = swapTransaction, vaultName = vaultName)
-                                )
-                        }
-
-                        is SwapPayload.ThorChain -> {
-                            val quote =
-                                swapQuoteRepository.getSwapQuote(
-                                    srcToken = srcToken,
-                                    dstToken = dstToken,
-                                    dstAddress = swapPayload.data.toAddress,
-                                    tokenValue = srcTokenValue,
-                                )
-
-                            val estimatedFee =
-                                convertTokenValueToFiat(dstToken, quote.fees, currency)
-                            val swapTransactionUiModel =
-                                SwapTransactionUiModel(
-                                    src =
-                                        ValuedToken(
-                                            value = mapTokenValueToDecimalUiString(srcTokenValue),
-                                            token = srcToken,
-                                            fiatValue =
-                                                fiatValueToStringMapper(
-                                                    convertTokenValueToFiat(
-                                                        srcToken,
-                                                        srcTokenValue,
-                                                        currency,
-                                                    )
-                                                ),
-                                        ),
-                                    dst =
-                                        ValuedToken(
-                                            value = mapTokenValueToDecimalUiString(dstTokenValue),
-                                            token = dstToken,
-                                            fiatValue =
-                                                fiatValueToStringMapper(
-                                                    convertTokenValueToFiat(
-                                                        dstToken,
-                                                        dstTokenValue,
-                                                        currency,
-                                                    )
-                                                ),
-                                        ),
-                                    networkFee =
-                                        ValuedToken(
-                                            token = srcToken,
-                                            value =
-                                                mapTokenValueToDecimalUiString(
-                                                    estimatedNetworkGasFee.tokenValue
-                                                ),
-                                            fiatValue =
-                                                fiatValueToStringMapper(
-                                                    estimatedNetworkGasFee.fiatValue
-                                                ),
-                                        ),
-                                    providerFee =
-                                        ValuedToken(
-                                            token = dstToken,
-                                            value = quote.fees.value.toString(),
-                                            fiatValue = fiatValueToStringMapper(estimatedFee),
-                                        ),
-                                    networkFeeFormatted =
-                                        mapTokenValueToDecimalUiString(
-                                            estimatedNetworkGasFee.tokenValue
-                                        ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
-                                    totalFee =
-                                        fiatValueToStringMapper(
-                                            estimatedFee + networkGasFeeFiatValue
-                                        ),
-                                    provider = provider,
-                                )
-                            transactionTypeUiModel =
-                                TransactionTypeUiModel.Swap(swapTransactionUiModel)
-                            transactionHistoryData = mapSwapTransactionToHistoryData(swapTransactionUiModel)
-                            verifyUiModel.value =
-                                VerifyUiModel.Swap(
-                                    VerifySwapUiModel(
-                                        tx = swapTransactionUiModel,
-                                        vaultName = vaultName,
-                                    )
-                                )
-                        }
-
-                        is SwapPayload.MayaChain -> {
-                            val srcUsdFiatValue =
-                                convertTokenValueToFiat(srcToken, srcTokenValue, AppCurrency.USD)
-
-                            val isAffiliate =
-                                srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
-
-                            val quote =
-                                swapQuoteRepository.getMayaSwapQuote(
-                                    srcToken = srcToken,
-                                    dstToken = dstToken,
-                                    dstAddress = swapPayload.data.toAddress,
-                                    tokenValue = srcTokenValue,
-                                    isAffiliate = isAffiliate,
-                                )
-
-                            val estimatedFee =
-                                convertTokenValueToFiat(dstToken, quote.fees, currency)
-                            val swapTransactionUiModel =
-                                SwapTransactionUiModel(
-                                    src =
-                                        ValuedToken(
-                                            value = mapTokenValueToDecimalUiString(srcTokenValue),
-                                            token = srcToken,
-                                            fiatValue =
-                                                fiatValueToStringMapper(
-                                                    convertTokenValueToFiat(
-                                                        srcToken,
-                                                        srcTokenValue,
-                                                        currency,
-                                                    )
-                                                ),
-                                        ),
-                                    dst =
-                                        ValuedToken(
-                                            value = mapTokenValueToDecimalUiString(dstTokenValue),
-                                            token = dstToken,
-                                            fiatValue =
-                                                fiatValueToStringMapper(
-                                                    convertTokenValueToFiat(
-                                                        dstToken,
-                                                        dstTokenValue,
-                                                        currency,
-                                                    )
-                                                ),
-                                        ),
-                                    providerFee =
-                                        ValuedToken(
-                                            token = dstToken,
-                                            value = quote.fees.value.toString(),
-                                            fiatValue = fiatValueToStringMapper(estimatedFee),
-                                        ),
-                                    networkFee =
-                                        ValuedToken(
-                                            token = srcToken,
-                                            value =
-                                                mapTokenValueToDecimalUiString(
-                                                    estimatedNetworkGasFee.tokenValue
-                                                ),
-                                            fiatValue =
-                                                fiatValueToStringMapper(
-                                                    estimatedNetworkGasFee.fiatValue
-                                                ),
-                                        ),
-                                    networkFeeFormatted =
-                                        mapTokenValueToDecimalUiString(
-                                            estimatedNetworkGasFee.tokenValue
-                                        ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
-                                    totalFee =
-                                        fiatValueToStringMapper(
-                                            estimatedFee + networkGasFeeFiatValue
-                                        ),
-                                    provider = provider,
-                                )
-                            transactionTypeUiModel =
-                                TransactionTypeUiModel.Swap(swapTransactionUiModel)
-                            transactionHistoryData = mapSwapTransactionToHistoryData(swapTransactionUiModel)
-                            verifyUiModel.value =
-                                VerifyUiModel.Swap(
-                                    VerifySwapUiModel(
-                                        tx = swapTransactionUiModel,
-                                        vaultName = vaultName,
-                                    )
-                                )
-                        }
+                        transactionHistoryData = mapSwapTransactionToHistoryData(swapTransaction)
+                        verifyUiModel.value =
+                            VerifyUiModel.Swap(
+                                VerifySwapUiModel(tx = swapTransaction, vaultName = vaultName)
+                            )
                     }
+
+                    is SwapPayload.ThorChain -> {
+                        val quote =
+                            swapQuoteRepository.getSwapQuote(
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                dstAddress = swapPayload.data.toAddress,
+                                tokenValue = srcTokenValue,
+                            )
+
+                        val estimatedFee = convertTokenValueToFiat(dstToken, quote.fees, currency)
+                        val swapTransactionUiModel =
+                            SwapTransactionUiModel(
+                                src =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(srcTokenValue),
+                                        token = srcToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    srcToken,
+                                                    srcTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                dst =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(dstTokenValue),
+                                        token = dstToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    dstToken,
+                                                    dstTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                networkFee =
+                                    ValuedToken(
+                                        token = srcToken,
+                                        value =
+                                            mapTokenValueToDecimalUiString(
+                                                estimatedNetworkGasFee.tokenValue
+                                            ),
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                estimatedNetworkGasFee.fiatValue
+                                            ),
+                                    ),
+                                providerFee =
+                                    ValuedToken(
+                                        token = dstToken,
+                                        value = quote.fees.value.toString(),
+                                        fiatValue = fiatValueToStringMapper(estimatedFee),
+                                    ),
+                                networkFeeFormatted =
+                                    mapTokenValueToDecimalUiString(
+                                        estimatedNetworkGasFee.tokenValue
+                                    ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
+                                totalFee =
+                                    fiatValueToStringMapper(estimatedFee + networkGasFeeFiatValue),
+                                provider = provider,
+                            )
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
+                        transactionHistoryData =
+                            mapSwapTransactionToHistoryData(swapTransactionUiModel)
+                        verifyUiModel.value =
+                            VerifyUiModel.Swap(
+                                VerifySwapUiModel(
+                                    tx = swapTransactionUiModel,
+                                    vaultName = vaultName,
+                                )
+                            )
+                    }
+
+                    is SwapPayload.MayaChain -> {
+                        val srcUsdFiatValue =
+                            convertTokenValueToFiat(srcToken, srcTokenValue, AppCurrency.USD)
+
+                        val isAffiliate =
+                            srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+
+                        val quote =
+                            swapQuoteRepository.getMayaSwapQuote(
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                dstAddress = swapPayload.data.toAddress,
+                                tokenValue = srcTokenValue,
+                                isAffiliate = isAffiliate,
+                            )
+
+                        val estimatedFee = convertTokenValueToFiat(dstToken, quote.fees, currency)
+                        val swapTransactionUiModel =
+                            SwapTransactionUiModel(
+                                src =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(srcTokenValue),
+                                        token = srcToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    srcToken,
+                                                    srcTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                dst =
+                                    ValuedToken(
+                                        value = mapTokenValueToDecimalUiString(dstTokenValue),
+                                        token = dstToken,
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                convertTokenValueToFiat(
+                                                    dstToken,
+                                                    dstTokenValue,
+                                                    currency,
+                                                )
+                                            ),
+                                    ),
+                                providerFee =
+                                    ValuedToken(
+                                        token = dstToken,
+                                        value = quote.fees.value.toString(),
+                                        fiatValue = fiatValueToStringMapper(estimatedFee),
+                                    ),
+                                networkFee =
+                                    ValuedToken(
+                                        token = srcToken,
+                                        value =
+                                            mapTokenValueToDecimalUiString(
+                                                estimatedNetworkGasFee.tokenValue
+                                            ),
+                                        fiatValue =
+                                            fiatValueToStringMapper(
+                                                estimatedNetworkGasFee.fiatValue
+                                            ),
+                                    ),
+                                networkFeeFormatted =
+                                    mapTokenValueToDecimalUiString(
+                                        estimatedNetworkGasFee.tokenValue
+                                    ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
+                                totalFee =
+                                    fiatValueToStringMapper(estimatedFee + networkGasFeeFiatValue),
+                                provider = provider,
+                            )
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
+                        transactionHistoryData =
+                            mapSwapTransactionToHistoryData(swapTransactionUiModel)
+                        verifyUiModel.value =
+                            VerifyUiModel.Swap(
+                                VerifySwapUiModel(
+                                    tx = swapTransactionUiModel,
+                                    vaultName = vaultName,
+                                )
+                            )
+                    }
+                }
             }
 
             else -> {
