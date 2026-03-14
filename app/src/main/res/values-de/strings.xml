@@ -941,13 +941,25 @@
     <string name="transaction_history_title">Verlauf</string>
     <string name="transaction_history_tab_overview">Übersicht</string>
     <string name="transaction_history_tab_send">Senden</string>
-    <string name="transaction_history_tab_swap">Tauschen</string>
+    <string name="transaction_history_tab_swap">Swaps</string>
     <string name="transaction_history_empty_title">Noch keine Transaktionen</string>
     <string name="transaction_history_empty_desc">Ihr Transaktionsverlauf wird hier angezeigt</string>
     <string name="transaction_status_broadcasted_label">Gesendet</string>
     <string name="transaction_status_pending_label">Ausstehend · %1$s</string>
-    <string name="transaction_status_confirmed_label">Bestätigt</string>
-    <string name="transaction_status_failed_label">Fehlgeschlagen</string>
+    <string name="transaction_status_confirmed_label">Erfolgreich</string>
+    <string name="transaction_status_failed_label">Fehler</string>
+    <string name="transaction_status_in_progress_label">In Bearbeitung…</string>
+    <string name="transaction_history_to_label">An</string>
+    <string name="transaction_history_via_label">über %s</string>
+    <string name="transaction_history_min_payout_label">Min. Auszahlung</string>
+    <string name="transaction_history_detail_status">Status</string>
+    <string name="transaction_history_detail_from">Von</string>
+    <string name="transaction_history_detail_to">An</string>
+    <string name="transaction_history_detail_date">Datum</string>
+    <string name="transaction_history_detail_fee">Gebühr</string>
+    <string name="transaction_history_detail_network">Netzwerk</string>
+    <string name="transaction_history_detail_provider">Anbieter</string>
+    <string name="transaction_history_view_on_explorer">Im Explorer anzeigen</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Seed-Phrase importieren</string>

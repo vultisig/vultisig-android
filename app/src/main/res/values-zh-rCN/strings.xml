@@ -1283,8 +1283,20 @@
     <string name="transaction_history_empty_desc">您的交易历史将显示在此处</string>
     <string name="transaction_status_broadcasted_label">已广播</string>
     <string name="transaction_status_pending_label">待处理 · %1$s</string>
-    <string name="transaction_status_confirmed_label">已确认</string>
-    <string name="transaction_status_failed_label">失败</string>
+    <string name="transaction_status_confirmed_label">成功</string>
+    <string name="transaction_status_failed_label">错误</string>
+    <string name="transaction_status_in_progress_label">进行中…</string>
+    <string name="transaction_history_to_label">至</string>
+    <string name="transaction_history_via_label">通过 %s</string>
+    <string name="transaction_history_min_payout_label">最低支付</string>
+    <string name="transaction_history_detail_status">状态</string>
+    <string name="transaction_history_detail_from">发送方</string>
+    <string name="transaction_history_detail_to">接收方</string>
+    <string name="transaction_history_detail_date">日期</string>
+    <string name="transaction_history_detail_fee">手续费</string>
+    <string name="transaction_history_detail_network">网络</string>
+    <string name="transaction_history_detail_provider">提供商</string>
+    <string name="transaction_history_view_on_explorer">在浏览器中查看</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">导入助记词</string>

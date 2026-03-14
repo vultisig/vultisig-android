@@ -983,13 +983,25 @@
     <string name="transaction_history_title">History</string>
     <string name="transaction_history_tab_overview">Overview</string>
     <string name="transaction_history_tab_send">Send</string>
-    <string name="transaction_history_tab_swap">Swap</string>
+    <string name="transaction_history_tab_swap">Swaps</string>
     <string name="transaction_history_empty_title">No transactions yet</string>
     <string name="transaction_history_empty_desc">Your transaction history will appear here</string>
     <string name="transaction_status_broadcasted_label">Broadcasted</string>
     <string name="transaction_status_pending_label">Pending · %1$s</string>
-    <string name="transaction_status_confirmed_label">Confirmed</string>
-    <string name="transaction_status_failed_label">Failed</string>
+    <string name="transaction_status_confirmed_label">Successful</string>
+    <string name="transaction_status_failed_label">Error</string>
+    <string name="transaction_status_in_progress_label">In progress…</string>
+    <string name="transaction_history_to_label">To</string>
+    <string name="transaction_history_via_label">via %s</string>
+    <string name="transaction_history_min_payout_label">min. payout</string>
+    <string name="transaction_history_detail_status">Status</string>
+    <string name="transaction_history_detail_from">From</string>
+    <string name="transaction_history_detail_to">To</string>
+    <string name="transaction_history_detail_date">Date</string>
+    <string name="transaction_history_detail_fee">Fee</string>
+    <string name="transaction_history_detail_network">Network</string>
+    <string name="transaction_history_detail_provider">Provider</string>
+    <string name="transaction_history_view_on_explorer">View on Explorer</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Import Seed Phrase</string>

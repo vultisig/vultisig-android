@@ -544,7 +544,6 @@ constructor(
                         ?.getSwapProviderId()
                         .orEmpty()
 
-                val swapTransaction =
                     when (swapPayload) {
                         is SwapPayload.EVM -> {
                             val oneInchSwapTxJson = swapPayload.data.quote.tx
@@ -630,6 +629,7 @@ constructor(
 
                             transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction)
 
+                            transactionHistoryData = mapSwapTransactionToHistoryData(swapTransaction)
                             verifyUiModel.value =
                                 VerifyUiModel.Swap(
                                     VerifySwapUiModel(tx = swapTransaction, vaultName = vaultName)
@@ -705,7 +705,7 @@ constructor(
                                 )
                             transactionTypeUiModel =
                                 TransactionTypeUiModel.Swap(swapTransactionUiModel)
-
+                            transactionHistoryData = mapSwapTransactionToHistoryData(swapTransactionUiModel)
                             verifyUiModel.value =
                                 VerifyUiModel.Swap(
                                     VerifySwapUiModel(
@@ -791,6 +791,7 @@ constructor(
                                 )
                             transactionTypeUiModel =
                                 TransactionTypeUiModel.Swap(swapTransactionUiModel)
+                            transactionHistoryData = mapSwapTransactionToHistoryData(swapTransactionUiModel)
                             verifyUiModel.value =
                                 VerifyUiModel.Swap(
                                     VerifySwapUiModel(

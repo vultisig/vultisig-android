@@ -8,9 +8,12 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
 import com.vultisig.wallet.data.db.models.TransactionType
+import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryType
 import com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -35,8 +38,8 @@ import kotlinx.coroutines.launch
 
 enum class TransactionHistoryTab {
     OVERVIEW,
-    SEND,
     SWAP,
+    SEND,
 }
 
 data class TransactionHistoryGroupUiModel(
@@ -73,8 +76,10 @@ sealed interface TransactionHistoryItemUiModel {
         val toAddress: String,
         val amount: String,
         val token: String,
-        val tokenLogo: String,
+        val tokenLogo: ImageModel,
         val fiatValue: String?,
+        val provider: String?,
+        val feeEstimate: String?,
     ) : TransactionHistoryItemUiModel
 
     data class Swap(
@@ -87,13 +92,16 @@ sealed interface TransactionHistoryItemUiModel {
         val fromToken: String,
         val fromAmount: String,
         val fromChain: String,
-        val fromTokenLogo: String,
+        val fromTokenLogo: ImageModel,
         val toToken: String,
         val toAmount: String,
         val toChain: String,
-        val toTokenLogo: String,
+        val toTokenLogo: ImageModel,
         val provider: String,
         val fiatValue: String?,
+        val fromAddress: String?,
+        val toAddress: String?,
+        val feeEstimate: String?,
     ) : TransactionHistoryItemUiModel
 }
 
@@ -103,6 +111,7 @@ data class TransactionHistoryUiState(
     val groups: List<TransactionHistoryGroupUiModel> = emptyList(),
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
+    val selectedItem: TransactionHistoryItemUiModel? = null,
 )
 
 @HiltViewModel
@@ -135,6 +144,14 @@ constructor(
         viewModelScope.launch { navigator.back() }
     }
 
+    fun openDetail(item: TransactionHistoryItemUiModel) {
+        uiState.update { it.copy(selectedItem = item) }
+    }
+
+    fun dismissDetail() {
+        uiState.update { it.copy(selectedItem = null) }
+    }
+
     fun refresh() {
         viewModelScope.launch {
             uiState.update { it.copy(isRefreshing = true) }
@@ -148,7 +165,7 @@ constructor(
     }
 
     private fun refreshOnEnter() {
-        viewModelScope.launch { runCatching { refreshPendingTransactions(vaultId) } }
+        viewModelScope.safeLaunch { refreshPendingTransactions(vaultId) }
     }
 
     private fun startTimeTicker() {
@@ -183,8 +200,8 @@ constructor(
     private fun TransactionHistoryTab.toRepositoryType() =
         when (this) {
             TransactionHistoryTab.OVERVIEW -> TransactionHistoryType.OVERVIEW
-            TransactionHistoryTab.SEND -> TransactionHistoryType.SEND
             TransactionHistoryTab.SWAP -> TransactionHistoryType.SWAPS
+            TransactionHistoryTab.SEND -> TransactionHistoryType.SEND
         }
 
     private fun TransactionHistoryEntity.toUiModel(now: Long): TransactionHistoryItemUiModel {
@@ -211,8 +228,10 @@ constructor(
                     toAddress = toAddress.orEmpty(),
                     amount = amount.orEmpty(),
                     token = token.orEmpty(),
-                    tokenLogo = tokenLogo.orEmpty(),
+                    tokenLogo = getCoinLogo(tokenLogo.orEmpty()),
                     fiatValue = fiatValue,
+                    provider = provider,
+                    feeEstimate = feeEstimate,
                 )
 
             TransactionType.SWAP ->
@@ -226,13 +245,16 @@ constructor(
                     fromToken = fromToken.orEmpty(),
                     fromAmount = fromAmount.orEmpty(),
                     fromChain = fromChain.orEmpty(),
-                    fromTokenLogo = fromTokenLogo.orEmpty(),
+                    fromTokenLogo = getCoinLogo(fromTokenLogo.orEmpty()),
                     toToken = toToken.orEmpty(),
                     toAmount = toAmount.orEmpty(),
                     toChain = toChain.orEmpty(),
-                    toTokenLogo = toTokenLogo.orEmpty(),
+                    toTokenLogo = getCoinLogo(toTokenLogo.orEmpty()),
                     provider = provider.orEmpty(),
                     fiatValue = fiatValue,
+                    fromAddress = fromAddress,
+                    toAddress = toAddress,
+                    feeEstimate = feeEstimate,
                 )
         }
     }

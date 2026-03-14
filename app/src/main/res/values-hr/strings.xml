@@ -940,13 +940,25 @@
     <string name="transaction_history_title">Povijest</string>
     <string name="transaction_history_tab_overview">Pregled</string>
     <string name="transaction_history_tab_send">Slanje</string>
-    <string name="transaction_history_tab_swap">Zamjena</string>
+    <string name="transaction_history_tab_swap">Zamjene</string>
     <string name="transaction_history_empty_title">Još nema transakcija</string>
     <string name="transaction_history_empty_desc">Vaša povijest transakcija prikazat će se ovdje</string>
     <string name="transaction_status_broadcasted_label">Objavljeno</string>
     <string name="transaction_status_pending_label">Na čekanju · %1$s</string>
-    <string name="transaction_status_confirmed_label">Potvrđeno</string>
-    <string name="transaction_status_failed_label">Neuspjelo</string>
+    <string name="transaction_status_confirmed_label">Uspješno</string>
+    <string name="transaction_status_failed_label">Greška</string>
+    <string name="transaction_status_in_progress_label">U tijeku…</string>
+    <string name="transaction_history_to_label">Za</string>
+    <string name="transaction_history_via_label">putem %s</string>
+    <string name="transaction_history_min_payout_label">min. isplata</string>
+    <string name="transaction_history_detail_status">Status</string>
+    <string name="transaction_history_detail_from">Od</string>
+    <string name="transaction_history_detail_to">Do</string>
+    <string name="transaction_history_detail_date">Datum</string>
+    <string name="transaction_history_detail_fee">Naknada</string>
+    <string name="transaction_history_detail_network">Mreža</string>
+    <string name="transaction_history_detail_provider">Pružatelj</string>
+    <string name="transaction_history_view_on_explorer">Pregled u istraživaču</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Uvezi frazu za oporavak</string>

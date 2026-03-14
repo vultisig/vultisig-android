@@ -941,13 +941,25 @@
     <string name="transaction_history_title">Cronologia</string>
     <string name="transaction_history_tab_overview">Panoramica</string>
     <string name="transaction_history_tab_send">Invia</string>
-    <string name="transaction_history_tab_swap">Scambia</string>
+    <string name="transaction_history_tab_swap">Swap</string>
     <string name="transaction_history_empty_title">Nessuna transazione ancora</string>
     <string name="transaction_history_empty_desc">La cronologia delle transazioni apparirà qui</string>
     <string name="transaction_status_broadcasted_label">Trasmessa</string>
     <string name="transaction_status_pending_label">In attesa · %1$s</string>
-    <string name="transaction_status_confirmed_label">Confermata</string>
-    <string name="transaction_status_failed_label">Non riuscita</string>
+    <string name="transaction_status_confirmed_label">Riuscita</string>
+    <string name="transaction_status_failed_label">Errore</string>
+    <string name="transaction_status_in_progress_label">In corso…</string>
+    <string name="transaction_history_to_label">A</string>
+    <string name="transaction_history_via_label">tramite %s</string>
+    <string name="transaction_history_min_payout_label">pagamento min.</string>
+    <string name="transaction_history_detail_status">Stato</string>
+    <string name="transaction_history_detail_from">Da</string>
+    <string name="transaction_history_detail_to">A</string>
+    <string name="transaction_history_detail_date">Data</string>
+    <string name="transaction_history_detail_fee">Commissione</string>
+    <string name="transaction_history_detail_network">Rete</string>
+    <string name="transaction_history_detail_provider">Fornitore</string>
+    <string name="transaction_history_view_on_explorer">Visualizza su Explorer</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Importa frase seed</string>
