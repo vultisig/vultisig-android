@@ -108,6 +108,36 @@ For keygen/keysign testing with multiple emulators:
 - Minimize recomposition by using stable parameters
 - Use `@Composable` naming convention (PascalCase)
 
+### Design & Figma Workflow
+
+**Figma source of truth**: https://www.figma.com/design/puB2fsVpPrBx3Sup7gaa3v/Vultisig-App
+
+All UI work MUST be verified against the Figma design using the Figma MCP server. This is a **blocking requirement** — do not implement or modify UI based on assumptions or guesses.
+
+#### When to use Figma MCP
+- **Any new screen or component** — fetch the design before writing code
+- **Any UI fix or visual change** — compare current implementation against Figma before and after changes
+- **When the user provides a Figma URL** — always use `get_design_context` to fetch the design specs
+- **When the user says something "doesn't match Figma"** — fetch the Figma node, get a screenshot, and compare against the implementation
+- **Layout, spacing, typography, or color questions** — Figma is authoritative, not guesses
+
+#### How to use Figma MCP
+1. **If the Figma MCP server is not connected**, immediately ask the user to connect it before proceeding with UI work
+2. Use `get_design_context` with the `fileKey` and `nodeId` extracted from Figma URLs to get code hints, screenshots, and design tokens
+3. Use `get_screenshot` to visually compare the current app state against the Figma design
+4. Extract exact values from Figma: colors (hex), font sizes (sp), spacing (dp), corner radii, border widths, opacity values
+5. Do NOT hardcode colors or dimensions from memory — always verify against the Figma source
+
+#### Figma URL parsing
+- `figma.com/design/:fileKey/:fileName?node-id=:nodeId` — convert `-` to `:` in nodeId
+- The main Vultisig App file key is `puB2fsVpPrBx3Sup7gaa3v`
+
+#### Design implementation rules
+- Match Figma exactly: colors, spacing, typography, corner radii, shadows, opacity
+- Use the project's existing theme tokens (`Theme.v2.colors.*`, `Theme.brockmann.*`) when they map to Figma values
+- When Figma uses colors not in the theme, define them as private `val` constants at the top of the screen file
+- Always cross-reference Figma component names with existing Compose components in the codebase before creating new ones
+
 ### ViewModels
 - Inject dependencies via Hilt constructor injection
 - Use `@HiltViewModel` annotation
@@ -284,6 +314,7 @@ When deleting a screen, go through this checklist:
 
 - Main branch: `main`
 - CI Status: https://github.com/vultisig/vultisig-android/actions
+- Figma (Mobile App): https://www.figma.com/design/puB2fsVpPrBx3Sup7gaa3v/Vultisig-App
 - Trust Wallet Core docs: https://developer.trustwallet.com/developer/wallet-core
 
 ## Quick Commands
