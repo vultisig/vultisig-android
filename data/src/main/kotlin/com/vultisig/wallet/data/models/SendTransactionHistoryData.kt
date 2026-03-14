@@ -49,7 +49,7 @@ internal fun TransactionHistoryData.toEntity(
         is SendTransactionHistoryData ->
             TransactionHistoryEntity(
                 vaultId = genericData.vaultId,
-                type = TransactionType.SEND,
+                type = genericData.type,
                 status = genericData.status,
                 chain = genericData.chain,
                 timestamp = genericData.timestamp,
@@ -84,7 +84,7 @@ internal fun TransactionHistoryData.toEntity(
         is SwapTransactionHistoryData ->
             TransactionHistoryEntity(
                 vaultId = genericData.vaultId,
-                type = TransactionType.SWAP,
+                type = genericData.type,
                 status = genericData.status,
                 chain = genericData.chain,
                 timestamp = genericData.timestamp,

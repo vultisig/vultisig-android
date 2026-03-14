@@ -936,7 +936,7 @@
     <!-- Transaction History Screen -->
     <string name="transaction_history_title">Geschiedenis</string>
     <string name="transaction_history_tab_overview">Overzicht</string>
-    <string name="transaction_history_tab_send">Versturen</string>
+    <string name="transaction_history_tab_send">Sturen</string>
     <string name="transaction_history_tab_swap">Swaps</string>
     <string name="transaction_history_empty_title">Nog geen transacties</string>
     <string name="transaction_history_empty_desc">Uw transactiegeschiedenis verschijnt hier</string>

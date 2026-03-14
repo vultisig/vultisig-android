@@ -958,7 +958,7 @@
     <string name="transaction_history_detail_date">Datum</string>
     <string name="transaction_history_detail_fee">Naknada</string>
     <string name="transaction_history_detail_network">Mreža</string>
-    <string name="transaction_history_detail_provider">Pružatelj</string>
+    <string name="transaction_history_detail_provider">Davatelj</string>
     <string name="transaction_history_view_on_explorer">Pregled u istraživaču</string>
 
     <!-- Key Import / Seed Phrase Import -->

@@ -69,6 +69,8 @@ import com.vultisig.wallet.ui.theme.Theme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
 
 @Composable
 internal fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel = hiltViewModel()) {
@@ -324,17 +326,14 @@ private fun SendTransactionCard(
 }
 
 @Composable
-private fun SendAmountText(
-    amount: String,
-    token: String,
-    modifier: Modifier = Modifier,
-) {
+private fun SendAmountText(amount: String, token: String, modifier: Modifier = Modifier) {
     Text(
-        text = buildAnnotatedString {
-            withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(amount) }
-            append(" ")
-            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(token) }
-        },
+        text =
+            buildAnnotatedString {
+                withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(amount) }
+                append(" ")
+                withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(token) }
+            },
         style = Theme.brockmann.supplementary.footnote,
         modifier = modifier,
     )
@@ -344,37 +343,39 @@ private fun SendAmountText(
 private fun SendAddressPill(address: String, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(100.dp)
     Text(
-        text = buildAnnotatedString {
-            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append("to ") }
-            withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(address) }
-        },
+        text =
+            buildAnnotatedString {
+                withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append("to ") }
+                withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(address) }
+            },
         style = Theme.brockmann.supplementary.caption,
         maxLines = 1,
-        modifier = modifier
-            .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
-            .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier =
+            modifier
+                .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
     )
 }
 
 @Composable
 private fun SendProviderChip(provider: String, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(
-        topStart = 12.dp,
-        topEnd = 0.dp,
-        bottomEnd = 16.dp,
-        bottomStart = 0.dp,
-    )
+    val shape =
+        RoundedCornerShape(topStart = 12.dp, topEnd = 0.dp, bottomEnd = 16.dp, bottomStart = 0.dp)
     Text(
-        text = buildAnnotatedString {
-            withStyle(SpanStyle(color = Theme.v2.colors.text.button.disabled)) { append("via ") }
-            withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(provider) }
-        },
+        text =
+            buildAnnotatedString {
+                withStyle(SpanStyle(color = Theme.v2.colors.text.button.disabled)) {
+                    append("via ")
+                }
+                withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(provider) }
+            },
         style = Theme.brockmann.supplementary.caption,
-        modifier = modifier
-            .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
-            .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier =
+            modifier
+                .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
     )
 }
 
@@ -668,7 +669,8 @@ private fun String.abbreviateAddress(): String {
 }
 
 private fun Long.toDetailDateString(): String {
-    val formatter = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm")
+    val formatter =
+        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.getDefault())
     return Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).format(formatter)
 }
 
@@ -788,11 +790,12 @@ private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
                 ticker = item.fromToken,
                 amount = item.fromAmount,
                 fiatValue = item.fiatValue,
-                shape = RoundedWithCutoutShape(
-                    cutoutPosition = CutoutPosition.End,
-                    cutoutOffsetX = (-4).dp,
-                    cutoutRadius = 18.dp,
-                ),
+                shape =
+                    RoundedWithCutoutShape(
+                        cutoutPosition = CutoutPosition.End,
+                        cutoutOffsetX = (-4).dp,
+                        cutoutRadius = 18.dp,
+                    ),
                 modifier = Modifier.weight(1f),
             )
             SwapTokenCard(
@@ -800,11 +803,12 @@ private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
                 ticker = item.toToken,
                 amount = item.toAmount,
                 fiatValue = item.fiatValue,
-                shape = RoundedWithCutoutShape(
-                    cutoutPosition = CutoutPosition.Start,
-                    cutoutOffsetX = (-4).dp,
-                    cutoutRadius = 18.dp,
-                ),
+                shape =
+                    RoundedWithCutoutShape(
+                        cutoutPosition = CutoutPosition.Start,
+                        cutoutOffsetX = (-4).dp,
+                        cutoutRadius = 18.dp,
+                    ),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -812,11 +816,11 @@ private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
             painter = painterResource(R.drawable.ic_caret_right),
             contentDescription = null,
             tint = Theme.v2.colors.text.button.disabled,
-            modifier = Modifier
-                .size(24.dp)
-                .background(color = Theme.v2.colors.border.light, shape = CircleShape)
-                .padding(6.dp)
-                .align(Alignment.Center),
+            modifier =
+                Modifier.size(24.dp)
+                    .background(color = Theme.v2.colors.border.light, shape = CircleShape)
+                    .padding(6.dp)
+                    .align(Alignment.Center),
         )
     }
 
@@ -844,10 +848,11 @@ private fun SwapTokenCard(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
-            .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
-            .padding(16.dp),
+        modifier =
+            modifier
+                .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
+                .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {

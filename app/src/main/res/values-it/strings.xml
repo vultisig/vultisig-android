@@ -942,7 +942,7 @@
     <string name="transaction_history_title">Cronologia</string>
     <string name="transaction_history_tab_overview">Panoramica</string>
     <string name="transaction_history_tab_send">Invia</string>
-    <string name="transaction_history_tab_swap">Swap</string>
+    <string name="transaction_history_tab_swap">Scambia</string>
     <string name="transaction_history_empty_title">Nessuna transazione ancora</string>
     <string name="transaction_history_empty_desc">La cronologia delle transazioni apparirà qui</string>
     <string name="transaction_status_broadcasted_label">Trasmessa</string>

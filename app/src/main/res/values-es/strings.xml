@@ -940,7 +940,7 @@
     <string name="transaction_history_title">Historial</string>
     <string name="transaction_history_tab_overview">Resumen</string>
     <string name="transaction_history_tab_send">Enviar</string>
-    <string name="transaction_history_tab_swap">Swaps</string>
+    <string name="transaction_history_tab_swap">Intercambiar</string>
     <string name="transaction_history_empty_title">Aún no hay transacciones</string>
     <string name="transaction_history_empty_desc">Tu historial de transacciones aparecerá aquí</string>
     <string name="transaction_status_broadcasted_label">Transmitida</string>
