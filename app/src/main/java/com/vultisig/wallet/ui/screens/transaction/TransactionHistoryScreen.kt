@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -50,6 +51,8 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.util.CutoutPosition
+import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
@@ -231,89 +234,155 @@ private fun SendTransactionCard(
         type = ContainerType.SECONDARY,
         borderType = ContainerBorderType.Bordered(),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // ── Header row ───────────────────────────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TypeBadge(
-                    iconRes = R.drawable.send,
-                    label = stringResource(R.string.transaction_history_tab_send),
-                )
-                TransactionStatusWidget(status = item.status)
+        Box {
+            Column(modifier = Modifier.padding(16.dp)) {
+                // ── Header row ───────────────────────────────────────────────────
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TypeBadge(
+                        iconRes = R.drawable.send,
+                        label = stringResource(R.string.transaction_history_tab_send),
+                    )
+                    TransactionStatusWidget(status = item.status)
+                }
+
+                UiSpacer(size = 12.dp)
+
+                if (isInProgress) {
+                    // ── In-progress layout ───────────────────────────────────────
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        TokenCircle(logo = item.tokenLogo, ticker = item.token, size = 24)
+                        SendAmountText(amount = item.amount, token = item.token)
+                    }
+
+                    UiSpacer(size = 8.dp)
+
+                    ToSeparator(modifier = Modifier.fillMaxWidth())
+
+                    UiSpacer(size = 8.dp)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.wallet),
+                            contentDescription = null,
+                            tint = Theme.v2.colors.text.tertiary,
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Text(
+                            text = item.toAddress,
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.v2.colors.text.secondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+
+                    if (!item.provider.isNullOrEmpty()) {
+                        UiSpacer(size = 32.dp)
+                    }
+                } else {
+                    // ── Completed layout ─────────────────────────────────────────
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(20.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            TokenCircle(logo = item.tokenLogo, ticker = item.token, size = 24)
+                            Column {
+                                if (!item.fiatValue.isNullOrEmpty()) {
+                                    Text(
+                                        text = item.fiatValue,
+                                        style = Theme.brockmann.supplementary.footnote,
+                                        color = Theme.v2.colors.text.primary,
+                                    )
+                                }
+                                SendAmountText(amount = item.amount, token = item.token)
+                            }
+                        }
+                        SendAddressPill(address = item.toAddress.abbreviateAddress())
+                    }
+                }
             }
 
-            UiSpacer(size = 12.dp)
-
-            if (isInProgress) {
-                // ── In-progress layout ───────────────────────────────────────
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    TokenCircle(logo =item.tokenLogo, ticker = item.token, size = 32)
-                    TokenAmountText(amount = item.amount, token = item.token)
-                }
-
-                UiSpacer(size = 8.dp)
-
-                ToSeparator(modifier = Modifier.fillMaxWidth())
-
-                UiSpacer(size = 8.dp)
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.wallet),
-                        contentDescription = null,
-                        tint = Theme.v2.colors.text.tertiary,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Text(
-                        text = item.toAddress,
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.secondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-
-                if (!item.provider.isNullOrEmpty()) {
-                    UiSpacer(size = 8.dp)
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Box(modifier = Modifier.weight(1f))
-                        ViaBadge(provider = item.provider)
-                    }
-                }
-            } else {
-                // ── Completed layout ─────────────────────────────────────────
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    TokenCircle(logo =item.tokenLogo, ticker = item.token, size = 32)
-                    Column(modifier = Modifier.weight(1f)) {
-                        if (!item.fiatValue.isNullOrEmpty()) {
-                            Text(
-                                text = item.fiatValue,
-                                style = Theme.brockmann.body.m.medium,
-                                color = Theme.v2.colors.text.primary,
-                            )
-                        }
-                        TokenAmountText(amount = item.amount, token = item.token)
-                    }
-                    AddressPill(address = item.toAddress.abbreviateAddress())
-                }
+            if (isInProgress && !item.provider.isNullOrEmpty()) {
+                SendProviderChip(
+                    provider = item.provider,
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                )
             }
         }
     }
+}
+
+@Composable
+private fun SendAmountText(
+    amount: String,
+    token: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = buildAnnotatedString {
+            withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(amount) }
+            append(" ")
+            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(token) }
+        },
+        style = Theme.brockmann.supplementary.footnote,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun SendAddressPill(address: String, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(100.dp)
+    Text(
+        text = buildAnnotatedString {
+            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append("to ") }
+            withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(address) }
+        },
+        style = Theme.brockmann.supplementary.caption,
+        maxLines = 1,
+        modifier = modifier
+            .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
+            .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    )
+}
+
+@Composable
+private fun SendProviderChip(provider: String, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(
+        topStart = 12.dp,
+        topEnd = 0.dp,
+        bottomEnd = 16.dp,
+        bottomStart = 0.dp,
+    )
+    Text(
+        text = buildAnnotatedString {
+            withStyle(SpanStyle(color = Theme.v2.colors.text.button.disabled)) { append("via ") }
+            withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(provider) }
+        },
+        style = Theme.brockmann.supplementary.caption,
+        modifier = modifier
+            .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
+            .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+    )
 }
 
 // ── Swap card ─────────────────────────────────────────────────────────────────
@@ -504,22 +573,6 @@ private fun ViaBadge(provider: String, modifier: Modifier = Modifier) {
         text = stringResource(R.string.transaction_history_via_label, provider),
         style = Theme.brockmann.supplementary.caption,
         color = Theme.v2.colors.text.secondary,
-        modifier = modifier
-            .background(
-                color = Theme.v2.colors.backgrounds.tertiary_2,
-                shape = RoundedCornerShape(100.dp),
-            )
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-    )
-}
-
-@Composable
-private fun AddressPill(address: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "to $address",
-        style = Theme.brockmann.supplementary.caption,
-        color = Theme.v2.colors.text.secondary,
-        maxLines = 1,
         modifier = modifier
             .background(
                 color = Theme.v2.colors.backgrounds.tertiary_2,
@@ -741,38 +794,46 @@ private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
     )
     UiSpacer(size = 20.dp)
 
-    // Token pair hero
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        SwapTokenCard(
-            logo =item.fromTokenLogo,
-            ticker = item.fromToken,
-            amount = item.fromAmount,
-            fiatValue = item.fiatValue,
-            modifier = Modifier.weight(1f),
-        )
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .border(1.dp, Theme.v2.colors.border.primaryAccent4, CircleShape),
-            contentAlignment = Alignment.Center,
+    // Token pair hero with cutout shape
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(
-                painter = painterResource(R.drawable.chevron),
-                contentDescription = null,
-                tint = Theme.v2.colors.alerts.info,
-                modifier = Modifier.size(14.dp),
+            SwapTokenCard(
+                logo = item.fromTokenLogo,
+                ticker = item.fromToken,
+                amount = item.fromAmount,
+                fiatValue = item.fiatValue,
+                shape = RoundedWithCutoutShape(
+                    cutoutPosition = CutoutPosition.End,
+                    cutoutOffsetX = (-4).dp,
+                    cutoutRadius = 18.dp,
+                ),
+                modifier = Modifier.weight(1f),
+            )
+            SwapTokenCard(
+                logo = item.toTokenLogo,
+                ticker = item.toToken,
+                amount = item.toAmount,
+                fiatValue = item.fiatValue,
+                shape = RoundedWithCutoutShape(
+                    cutoutPosition = CutoutPosition.Start,
+                    cutoutOffsetX = (-4).dp,
+                    cutoutRadius = 18.dp,
+                ),
+                modifier = Modifier.weight(1f),
             )
         }
-        SwapTokenCard(
-            logo =item.toTokenLogo,
-            ticker = item.toToken,
-            amount = item.toAmount,
-            fiatValue = item.fiatValue,
-            modifier = Modifier.weight(1f),
+        Icon(
+            painter = painterResource(R.drawable.ic_caret_right),
+            contentDescription = null,
+            tint = Theme.v2.colors.text.button.disabled,
+            modifier = Modifier
+                .size(24.dp)
+                .background(color = Theme.v2.colors.border.light, shape = CircleShape)
+                .padding(6.dp)
+                .align(Alignment.Center),
         )
     }
 
@@ -796,27 +857,25 @@ private fun SwapTokenCard(
     ticker: String,
     amount: String,
     fiatValue: String?,
+    shape: Shape,
     modifier: Modifier = Modifier,
 ) {
-    V2Container(
-        modifier = modifier,
-        type = ContainerType.SECONDARY,
-        borderType = ContainerBorderType.Bordered(),
+    Column(
+        modifier = modifier
+            .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
+            .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            TokenCircle(logo = logo, ticker = ticker, size = 40)
-            TokenAmountAnnotated(amount = amount, token = ticker)
-            if (!fiatValue.isNullOrEmpty()) {
-                Text(
-                    text = fiatValue,
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.tertiary,
-                )
-            }
+        TokenCircle(logo = logo, ticker = ticker, size = 32)
+        TokenAmountAnnotated(amount = amount, token = ticker)
+        if (!fiatValue.isNullOrEmpty()) {
+            Text(
+                text = fiatValue,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+            )
         }
     }
 }
