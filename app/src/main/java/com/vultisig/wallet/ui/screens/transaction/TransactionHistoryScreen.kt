@@ -953,7 +953,7 @@ private fun SendDetailContent(item: TransactionHistoryItemUiModel.Send) {
         iconRes = R.drawable.send_2,
         label = stringResource(R.string.transaction_history_tab_send),
     )
-    UiSpacer(size = 20.dp)
+    UiSpacer(size = 16.dp)
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -991,12 +991,13 @@ private fun SendDetailContent(item: TransactionHistoryItemUiModel.Send) {
 
 @Composable
 private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
-    UiSpacer(size = 8.dp)
+
+    UiSpacer(size = 33.dp)
     TypeBadge(
-        iconRes = R.drawable.swap_v2,
+        iconRes = R.drawable.swap,
         label = stringResource(R.string.transaction_history_tab_swap),
     )
-    UiSpacer(size = 20.dp)
+    UiSpacer(size = 16.dp)
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -1014,6 +1015,7 @@ private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
                         cutoutOffsetX = (-4).dp,
                         cutoutRadius = 18.dp,
                     ),
+                color = Theme.v2.colors.backgrounds.surface2,
                 modifier = Modifier.weight(1f),
             )
             SwapTokenCard(
@@ -1027,6 +1029,7 @@ private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
                         cutoutOffsetX = (-4).dp,
                         cutoutRadius = 18.dp,
                     ),
+                color = Theme.v2.colors.backgrounds.surface2,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -1036,13 +1039,13 @@ private fun SwapDetailContent(item: TransactionHistoryItemUiModel.Swap) {
             tint = Theme.v2.colors.text.button.disabled,
             modifier =
                 Modifier.size(24.dp)
-                    .background(color = Theme.v2.colors.border.light, shape = CircleShape)
+                    .background(color = Theme.v2.colors.variables.bordersLight, shape = CircleShape)
                     .padding(6.dp)
                     .align(Alignment.Center),
         )
     }
 
-    UiSpacer(size = 24.dp)
+    UiSpacer(size = 40.dp)
 
     DetailInfoRows(
         status = item.status,
@@ -1063,11 +1066,12 @@ private fun SwapTokenCard(
     fiatValue: String?,
     shape: Shape,
     modifier: Modifier = Modifier,
+    color: Color = Theme.v2.colors.backgrounds.secondary,
 ) {
     Column(
         modifier =
             modifier
-                .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
+                .background(color = color, shape = shape)
                 .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
                 .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
