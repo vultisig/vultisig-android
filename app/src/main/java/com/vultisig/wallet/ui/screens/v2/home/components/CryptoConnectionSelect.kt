@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.common.FeatureFlags
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.animatePlacementInScope
@@ -40,7 +41,9 @@ import com.vultisig.wallet.ui.theme.Theme
 val BOTH_CRYPTO_CONNECTION_TYPES = listOf(CryptoConnectionType.Wallet, CryptoConnectionType.Defi)
 
 val ALL_CRYPTO_CONNECTION_TYPES =
-    listOf(CryptoConnectionType.Wallet, CryptoConnectionType.Defi, CryptoConnectionType.Agent)
+    if (FeatureFlags.VULTI_AGENT_ENABLED)
+        listOf(CryptoConnectionType.Wallet, CryptoConnectionType.Defi, CryptoConnectionType.Agent)
+    else listOf(CryptoConnectionType.Wallet, CryptoConnectionType.Defi)
 
 val ONLY_WALLET = listOf(CryptoConnectionType.Wallet)
 

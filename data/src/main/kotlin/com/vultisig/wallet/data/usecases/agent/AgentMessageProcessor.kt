@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.agent.AgentSSEEventType
 import com.vultisig.wallet.data.models.agent.AgentSendMessageRequest
 import com.vultisig.wallet.data.models.agent.AgentSendMessageResponse
 import com.vultisig.wallet.data.models.agent.AgentTxReady
+import com.vultisig.wallet.data.utils.NetworkException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -375,12 +376,16 @@ constructor(
                 try {
                     val resp = collectSSEResponse(token, conversationId, request)
                     handleBackendResponse(conversationId, vault, token, resp)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     Timber.w(e, "AgentProcessor: Failed to report last action result")
                 }
             } else {
                 try {
                     agentApi.sendMessageStream(token, conversationId, request).collect {}
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     Timber.w(e, "AgentProcessor: Failed to report action result")
                 }
@@ -394,6 +399,8 @@ constructor(
     ): AgentActionResult =
         try {
             toolExecutor.execute(action, vault)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "AgentTool: Failed to execute ${action.type}")
             AgentActionResult(
@@ -406,7 +413,7 @@ constructor(
 
     private suspend fun handleError(conversationId: String, vaultPubKey: String, error: Exception) {
         val message = error.message ?: error.toString()
-        if (message.contains("401") || message.contains("Unauthorized", ignoreCase = true)) {
+        if (error is NetworkException && error.httpStatusCode == 401) {
             authService.invalidateToken(vaultPubKey)
             _events.emit(AgentEvent.AuthRequired(conversationId, vaultPubKey))
         } else {

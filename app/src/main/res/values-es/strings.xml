@@ -1129,6 +1129,6 @@
     <string name="agent_starter_swap">Preparar un intercambio de ETH a BTC</string>
     <string name="agent_enter_vault_password">Ingresa la contraseña de la bóveda</string>
     <string name="agent_enter_password_title">Ingresa tu contraseña de FastVault</string>
-    <string name="agent_enter_password_subtitle">Su contraseña es necesaria para iniciar sesión en Vulti Agent</string>
-    <string name="agent_requires_fast_vault">Vulti Agent requiere un FastVault. Por favor, utilice un FastVault para continuar.</string>
+    <string name="agent_enter_password_subtitle">Tu contraseña es necesaria para iniciar sesión en Vulti Agent</string>
+    <string name="agent_requires_fast_vault">Vulti Agent requiere un FastVault. Por favor, utiliza un FastVault para continuar.</string>
 </resources>

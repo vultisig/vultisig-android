@@ -93,9 +93,10 @@ constructor(
                 ?: error("Keysign completed but no signature found for message")
 
         // Ethereum personal sign expects v = 27 + recoveryId (0 or 1)
-        val recoveryByte =
+        val recoveryId =
             sig.recoveryID.toIntOrNull(16) ?: error("Invalid recoveryID format: ${sig.recoveryID}")
-        val v = recoveryByte + 27
+        require(recoveryId in 0..1) { "Invalid recoveryID value: $recoveryId" }
+        val v = recoveryId + 27
         return "0x${sig.r}${sig.s}${"%02x".format(v)}"
     }
 

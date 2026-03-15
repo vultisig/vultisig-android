@@ -12,11 +12,13 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.long
+import timber.log.Timber
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
@@ -78,6 +80,8 @@ constructor(
             cachedTokens[vaultPubKey] = newToken
             persistToken(vaultPubKey, newToken)
             newToken
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             null
         }
@@ -193,7 +197,8 @@ constructor(
                     refreshToken = persisted.refreshToken,
                     expiresAt = persisted.expiresAt,
                 )
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to load persisted token for vault: $vaultPubKey")
             null
         }
 
