@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.Vault
 import java.security.SecureRandom
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -35,8 +36,8 @@ constructor(
     private val json: Json,
 ) {
 
-    private val cachedTokens = java.util.concurrent.ConcurrentHashMap<String, AuthToken>()
-    private val refreshLocks = java.util.concurrent.ConcurrentHashMap<String, Mutex>()
+    private val cachedTokens = ConcurrentHashMap<String, AuthToken>()
+    private val refreshLocks = ConcurrentHashMap<String, Mutex>()
 
     fun getCachedToken(vaultPubKey: String): AuthToken? {
         var token = cachedTokens[vaultPubKey]

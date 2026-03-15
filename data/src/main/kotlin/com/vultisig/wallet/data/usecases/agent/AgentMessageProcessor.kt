@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.agent.AgentSendMessageRequest
 import com.vultisig.wallet.data.models.agent.AgentSendMessageResponse
 import com.vultisig.wallet.data.models.agent.AgentTxReady
 import com.vultisig.wallet.data.utils.NetworkException
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -74,7 +75,7 @@ constructor(
     private val _events = MutableSharedFlow<AgentEvent>(extraBufferCapacity = 64)
     val events: SharedFlow<AgentEvent> = _events.asSharedFlow()
 
-    private val _conversationTitles = java.util.concurrent.ConcurrentHashMap<String, String>()
+    private val _conversationTitles = ConcurrentHashMap<String, String>()
 
     fun getCachedTitle(conversationId: String): String? = _conversationTitles[conversationId]
 
