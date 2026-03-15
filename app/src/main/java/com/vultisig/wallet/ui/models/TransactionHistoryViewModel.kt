@@ -129,7 +129,7 @@ internal class TransactionHistoryViewModel
 @Inject
 constructor(
     savedStateHandle: SavedStateHandle,
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val refreshPendingTransactions: RefreshPendingTransactionsUseCase,
     private val navigator: Navigator<Destination>,

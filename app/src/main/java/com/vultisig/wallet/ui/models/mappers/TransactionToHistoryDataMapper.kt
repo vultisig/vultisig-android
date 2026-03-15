@@ -20,5 +20,6 @@ internal class SendTransactionHistoryDataMapperImpl @Inject constructor() :
             tokenLogo = from.token.token.logo,
             feeEstimate = from.networkFeeTokenValue,
             memo = from.memo.orEmpty(),
+            fiatValue = from.token.fiatValue,
         )
 }

@@ -20,5 +20,6 @@ internal class DepositTransactionHistoryDataMapperImpl @Inject constructor() :
             tokenLogo = from.token.token.logo,
             feeEstimate = from.networkFeeTokenValue,
             memo = from.memo,
+            fiatValue = from.token.fiatValue,
         )
 }

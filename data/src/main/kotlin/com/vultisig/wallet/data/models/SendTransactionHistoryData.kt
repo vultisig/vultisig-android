@@ -17,7 +17,6 @@ data class CommonTransactionHistoryData(
     val timestamp: Long,
     val txHash: String,
     val explorerUrl: String,
-    val fiatValue: String?,
 )
 
 data class SendTransactionHistoryData(
@@ -28,6 +27,7 @@ data class SendTransactionHistoryData(
     val tokenLogo: String,
     val feeEstimate: String,
     val memo: String,
+    val fiatValue: String,
 ) : TransactionHistoryData
 
 data class SwapTransactionHistoryData(
@@ -40,6 +40,7 @@ data class SwapTransactionHistoryData(
     val toChain: String,
     val toTokenLogo: String,
     val provider: String,
+    val fiatValue: String,
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(
@@ -55,7 +56,7 @@ internal fun TransactionHistoryData.toEntity(
                 timestamp = genericData.timestamp,
                 txHash = genericData.txHash,
                 explorerUrl = genericData.explorerUrl,
-                fiatValue = genericData.fiatValue,
+                fiatValue = fiatValue,
                 // Send fields
                 fromAddress = fromAddress,
                 toAddress = toAddress,
@@ -90,7 +91,7 @@ internal fun TransactionHistoryData.toEntity(
                 timestamp = genericData.timestamp,
                 txHash = genericData.txHash,
                 explorerUrl = genericData.explorerUrl,
-                fiatValue = genericData.fiatValue,
+                fiatValue = fiatValue,
                 // Send fields null
                 fromAddress = null,
                 toAddress = null,
