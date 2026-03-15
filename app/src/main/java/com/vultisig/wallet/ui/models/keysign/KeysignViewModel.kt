@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
@@ -119,6 +120,7 @@ internal class KeysignViewModel(
     private val addressBookRepository: AddressBookRepository,
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
+    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
@@ -129,6 +131,7 @@ internal class KeysignViewModel(
     val approveTxLink = MutableStateFlow("")
     val swapProgressLink = MutableStateFlow<String?>(null)
     val showSaveToAddressBook = MutableStateFlow(false)
+    val resolvedTransactionUiModel = MutableStateFlow(transactionTypeUiModel)
 
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
@@ -146,13 +149,26 @@ internal class KeysignViewModel(
         val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
         sendTx?.tx?.let { tx ->
             viewModelScope.launch {
+                val chain = tx.token.token.chain
+                val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+                val dstVaultName = allVaults
+                    .firstOrNull { v -> v.coins.any { it.chain == chain && it.address == tx.dstAddress } }
+                    ?.name
+
                 val isSavedBefore =
                     addressBookRepository.entryExists(
                         address = tx.dstAddress,
-                        chainId = tx.token.token.chain.id,
+                        chainId = chain.id,
                     )
 
-                showSaveToAddressBook.value = isSavedBefore.not()
+                showSaveToAddressBook.value = isSavedBefore.not() && dstVaultName == null
+
+                resolvedTransactionUiModel.value = TransactionTypeUiModel.Send(
+                    tx.copy(
+                        srcVaultName = vault.name,
+                        dstVaultName = dstVaultName,
+                    )
+                )
             }
         }
     }

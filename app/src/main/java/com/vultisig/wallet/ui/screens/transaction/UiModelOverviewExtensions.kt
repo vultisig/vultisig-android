@@ -9,11 +9,13 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
             UiTransactionInfo(
                 type = UiTransactionInfoType.Send,
                 token = this.tx.token,
-                from = this.tx.srcAddress,
-                to = this.tx.dstAddress,
+                from = this.tx.formattedSrcAddress,
+                to = this.tx.formattedDstAddress,
                 memo = this.tx.memo ?: "",
                 networkFeeFiatValue = this.tx.networkFeeFiatValue,
                 networkFeeTokenValue = this.tx.networkFeeTokenValue,
+                fromHasVaultName = this.tx.srcVaultName != null,
+                toHasVaultName = this.tx.dstVaultName != null,
             )
         }
         is TransactionTypeUiModel.Deposit -> {

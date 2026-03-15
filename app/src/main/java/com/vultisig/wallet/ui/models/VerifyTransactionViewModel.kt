@@ -52,12 +52,20 @@ internal data class TransactionDetailsUiModel(
     val networkFeeFiatValue: String = "",
     val networkFeeTokenValue: String = "",
     val srcAddress: String = "",
+    val srcVaultName: String? = null,
     val dstAddress: String = "",
+    val dstVaultName: String? = null,
     val memo: String? = null,
     val signAmino: String? = null,
     val signDirect: String? = null,
     val signSolana: String? = null,
-)
+) {
+    val formattedSrcAddress: String
+        get() = srcVaultName?.let { "$it (${srcAddress.take(4)}...${srcAddress.takeLast(4)})" } ?: srcAddress
+
+    val formattedDstAddress: String
+        get() = dstVaultName?.let { "$it (${dstAddress.take(4)}...${dstAddress.takeLast(4)})" } ?: dstAddress
+}
 
 @Immutable
 internal data class VerifyTransactionUiModel(
@@ -292,9 +300,20 @@ constructor(
                     }
             val transactionUiModel = mapTransactionToUiModel(transaction)
 
-            uiState.update { it.copy(transaction = transactionUiModel, isLoadingFees = true) }
+            val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+            val chain = transaction.token.chain
+            val srcVaultName = allVaults.find { it.id == vaultId }?.name
+            val dstVaultName = allVaults
+                .firstOrNull { vault ->
+                    vault.coins.any { it.chain == chain && it.address == transaction.dstAddress }
+                }
+                ?.name
 
-            calculateFees(transactionUiModel)
+            val namedUiModel = transactionUiModel.copy(srcVaultName = srcVaultName, dstVaultName = dstVaultName)
+
+            uiState.update { it.copy(transaction = namedUiModel, isLoadingFees = true) }
+
+            calculateFees(namedUiModel)
             scanTransaction()
         }
     }

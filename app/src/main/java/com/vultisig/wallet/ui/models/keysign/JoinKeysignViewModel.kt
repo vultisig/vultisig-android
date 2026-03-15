@@ -266,6 +266,7 @@ constructor(
                 addressBookRepository = addressBookRepository,
                 transactionStatusServiceManager = transactionStatusServiceManager,
                 txStatusConfigurationProvider = txStatusConfigurationProvider,
+                vaultRepository = vaultRepository,
             )
 
     val verifyUiModel =

@@ -200,14 +200,16 @@ internal fun VerifySendScreen(
 
                     VerifyCardDetails(
                         title = stringResource(R.string.verify_transaction_from_title),
-                        subtitle = tx.srcAddress,
+                        subtitle = tx.formattedSrcAddress,
+                        showAllContent = tx.srcVaultName != null,
                     )
 
                     VerifyCardDivider(0.dp)
 
                     VerifyCardDetails(
                         title = stringResource(R.string.verify_transaction_to_title),
-                        subtitle = tx.dstAddress,
+                        subtitle = tx.formattedDstAddress,
+                        showAllContent = tx.dstVaultName != null,
                     )
 
                     if (tx.memo != null) {

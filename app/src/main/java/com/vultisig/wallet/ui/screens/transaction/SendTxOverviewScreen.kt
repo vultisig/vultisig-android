@@ -90,6 +90,7 @@ internal fun SendTxOverviewScreen(
                 TextDetails(
                     title = stringResource(R.string.tx_overview_screen_tx_from),
                     subtitle = tx.from,
+                    showAllContent = tx.fromHasVaultName,
                 )
 
                 VerifyCardDivider(size = 1.dp)
@@ -99,6 +100,7 @@ internal fun SendTxOverviewScreen(
                         TextDetails(
                             title = stringResource(R.string.tx_overview_screen_tx_to),
                             subtitle = tx.to,
+                            showAllContent = tx.toHasVaultName,
                         )
 
                         UiSpacer(8.dp)
@@ -113,6 +115,7 @@ internal fun SendTxOverviewScreen(
                     TextDetails(
                         title = stringResource(R.string.tx_overview_screen_tx_to),
                         subtitle = tx.to,
+                        showAllContent = tx.toHasVaultName,
                     )
                 }
 
@@ -280,6 +283,8 @@ internal data class UiTransactionInfo(
     val networkFeeTokenValue: String,
     val networkFeeFiatValue: String,
     val signMethod: String = "",
+    val fromHasVaultName: Boolean = false,
+    val toHasVaultName: Boolean = false,
 )
 
 internal enum class UiTransactionInfoType {
