@@ -943,6 +943,9 @@
     <string name="transaction_history_tab_swap">Intercambiar</string>
     <string name="transaction_history_empty_title">Aún no hay transacciones</string>
     <string name="transaction_history_empty_desc">Tu historial de transacciones aparecerá aquí</string>
+    <string name="transaction_history_search_asset_title">Buscar activo</string>
+    <string name="transaction_history_search_asset_not_found">No se encontraron activos</string>
+    <string name="transaction_history_clear_filters">Borrar filtros</string>
     <string name="transaction_status_broadcasted_label">Transmitida</string>
     <string name="transaction_status_pending_label">Pendiente · %1$s</string>
     <string name="transaction_status_confirmed_label">Confirmada</string>
@@ -952,8 +955,8 @@
     <string name="transaction_history_via_label">vía %s</string>
     <string name="transaction_history_via_prefix">vía</string>
     <string name="transaction_history_min_payout_label">pago mín.</string>
-    <string name="transaction_history_date_today">Hoy %1$s</string>
-    <string name="transaction_history_date_yesterday">Ayer %1$s</string>
+    <string name="transaction_history_date_today">Hoy</string>
+    <string name="transaction_history_date_yesterday">Ayer</string>
     <string name="transaction_history_elapsed_just_now">ahora mismo</string>
     <string name="transaction_history_elapsed_days">hace %1$dd</string>
     <string name="transaction_history_elapsed_hours">hace %1$dh</string>

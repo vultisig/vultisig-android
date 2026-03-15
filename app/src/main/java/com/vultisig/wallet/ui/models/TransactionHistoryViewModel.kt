@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models
 
 import android.content.Context
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -20,6 +21,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Instant
@@ -37,8 +39,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// ── UI models ────────────────────────────────────────────────────────────────
-
 enum class TransactionHistoryTab {
     OVERVIEW,
     SWAP,
@@ -46,7 +46,8 @@ enum class TransactionHistoryTab {
 }
 
 data class TransactionHistoryGroupUiModel(
-    val dateLabel: String,
+    val datePrefix: String?,
+    val dateSuffix: String,
     val transactions: List<TransactionHistoryItemUiModel>,
 )
 
@@ -108,6 +109,8 @@ sealed interface TransactionHistoryItemUiModel {
     ) : TransactionHistoryItemUiModel
 }
 
+data class TransactionAssetUiModel(val ticker: String, val chain: String, val logo: ImageModel)
+
 @Immutable
 data class TransactionHistoryUiState(
     val selectedTab: TransactionHistoryTab = TransactionHistoryTab.OVERVIEW,
@@ -115,6 +118,10 @@ data class TransactionHistoryUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val selectedItem: TransactionHistoryItemUiModel? = null,
+    val isAssetSearchSheetVisible: Boolean = false,
+    val assetSearchItems: List<TransactionAssetUiModel> = emptyList(),
+    val selectedAssetTickers: Set<String> = emptySet(),
+    val selectedAssets: List<TransactionAssetUiModel> = emptyList(),
 )
 
 @HiltViewModel
@@ -131,17 +138,74 @@ constructor(
     private val vaultId: String = savedStateHandle.toRoute<Route.TransactionHistory>().vaultId
 
     private val currentTime = MutableStateFlow(System.currentTimeMillis())
+    private val selectedAssetTickers = MutableStateFlow<Set<String>>(emptySet())
+    private val selectedAssetsList = MutableStateFlow<List<TransactionAssetUiModel>>(emptyList())
 
+    val assetSearchTextFieldState = TextFieldState()
     val uiState = MutableStateFlow(TransactionHistoryUiState())
 
     init {
         startTimeTicker()
         observeTransactions()
+        observeAssetSearchItems()
         refreshOnEnter()
     }
 
     fun selectTab(tab: TransactionHistoryTab) {
         uiState.update { it.copy(selectedTab = tab, isLoading = true) }
+    }
+
+    fun openSearch() {
+        uiState.update { it.copy(isAssetSearchSheetVisible = true) }
+    }
+
+    fun toggleAssetSelection(asset: TransactionAssetUiModel) {
+        if (asset.ticker in selectedAssetTickers.value) {
+            selectedAssetTickers.update { it - asset.ticker }
+            selectedAssetsList.update { it.filter { a -> a.ticker != asset.ticker } }
+        } else {
+            selectedAssetTickers.update { it + asset.ticker }
+            selectedAssetsList.update { it + asset }
+        }
+        uiState.update {
+            it.copy(
+                selectedAssetTickers = selectedAssetTickers.value,
+                selectedAssets = selectedAssetsList.value,
+            )
+        }
+    }
+
+    fun removeAssetFilter(ticker: String) {
+        selectedAssetTickers.update { it - ticker }
+        selectedAssetsList.update { it.filter { a -> a.ticker != ticker } }
+        uiState.update {
+            it.copy(
+                selectedAssetTickers = selectedAssetTickers.value,
+                selectedAssets = selectedAssetsList.value,
+            )
+        }
+    }
+
+    fun clearAllFilters() {
+        selectedAssetTickers.value = emptySet()
+        selectedAssetsList.value = emptyList()
+        uiState.update { it.copy(selectedAssetTickers = emptySet(), selectedAssets = emptyList()) }
+    }
+
+    fun confirmAssetSearch() {
+        uiState.update { it.copy(isAssetSearchSheetVisible = false) }
+    }
+
+    fun closeSearch() {
+        selectedAssetTickers.value = emptySet()
+        selectedAssetsList.value = emptyList()
+        uiState.update {
+            it.copy(
+                isAssetSearchSheetVisible = false,
+                selectedAssetTickers = emptySet(),
+                selectedAssets = emptyList(),
+            )
+        }
     }
 
     fun back() {
@@ -195,9 +259,85 @@ constructor(
                 .combine(currentTime) { entities, now ->
                     entities.map { it.toUiModel(now) }.groupByDate(now)
                 }
+                .combine(selectedAssetTickers) { groups, tickers ->
+                    if (tickers.isEmpty()) groups
+                    else
+                        groups.mapNotNull { group ->
+                            val filtered = group.transactions.filter { it.matchesTickers(tickers) }
+                            if (filtered.isEmpty()) null else group.copy(transactions = filtered)
+                        }
+                }
                 .collect { groups ->
                     uiState.update { it.copy(groups = groups, isLoading = false) }
                 }
+        }
+    }
+
+    private fun TransactionHistoryItemUiModel.matchesTickers(tickers: Set<String>): Boolean =
+        when (this) {
+            is TransactionHistoryItemUiModel.Send -> token in tickers
+            is TransactionHistoryItemUiModel.Swap -> fromToken in tickers || toToken in tickers
+        }
+
+    private fun observeAssetSearchItems() {
+        viewModelScope.launch {
+            transactionHistoryRepository
+                .observeTransactions(vaultId = vaultId, type = TransactionHistoryType.OVERVIEW)
+                .map { entities ->
+                    entities
+                        .flatMap { entity ->
+                            buildList {
+                                when (entity.type) {
+                                    TransactionType.SEND -> {
+                                        val ticker = entity.token.orEmpty()
+                                        if (ticker.isNotEmpty()) {
+                                            add(
+                                                TransactionAssetUiModel(
+                                                    ticker = ticker,
+                                                    chain = entity.chain,
+                                                    logo = getCoinLogo(entity.tokenLogo.orEmpty()),
+                                                )
+                                            )
+                                        }
+                                    }
+                                    TransactionType.SWAP -> {
+                                        val fromTicker = entity.fromToken.orEmpty()
+                                        if (fromTicker.isNotEmpty()) {
+                                            add(
+                                                TransactionAssetUiModel(
+                                                    ticker = fromTicker,
+                                                    chain = entity.fromChain.orEmpty(),
+                                                    logo =
+                                                        getCoinLogo(entity.fromTokenLogo.orEmpty()),
+                                                )
+                                            )
+                                        }
+                                        val toTicker = entity.toToken.orEmpty()
+                                        if (toTicker.isNotEmpty()) {
+                                            add(
+                                                TransactionAssetUiModel(
+                                                    ticker = toTicker,
+                                                    chain = entity.toChain.orEmpty(),
+                                                    logo = getCoinLogo(entity.toTokenLogo.orEmpty()),
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .distinctBy { it.ticker }
+                }
+                .combine(assetSearchTextFieldState.textAsFlow()) { items, query ->
+                    val q = query.toString().trim()
+                    if (q.isBlank()) items
+                    else
+                        items.filter {
+                            it.ticker.contains(q, ignoreCase = true) ||
+                                it.chain.contains(q, ignoreCase = true)
+                        }
+                }
+                .collect { items -> uiState.update { it.copy(assetSearchItems = items) } }
         }
     }
 
@@ -275,21 +415,18 @@ constructor(
             .entries
             .sortedByDescending { it.key }
             .map { (date, items) ->
-                val label =
+                val dateSuffix = date.format(labelFormatter)
+                val datePrefix =
                     when (date) {
-                        today ->
-                            context.getString(
-                                R.string.transaction_history_date_today,
-                                date.format(labelFormatter),
-                            )
-                        yesterday ->
-                            context.getString(
-                                R.string.transaction_history_date_yesterday,
-                                date.format(labelFormatter),
-                            )
-                        else -> date.format(labelFormatter)
+                        today -> context.getString(R.string.transaction_history_date_today)
+                        yesterday -> context.getString(R.string.transaction_history_date_yesterday)
+                        else -> null
                     }
-                TransactionHistoryGroupUiModel(dateLabel = label, transactions = items)
+                TransactionHistoryGroupUiModel(
+                    datePrefix = datePrefix,
+                    dateSuffix = dateSuffix,
+                    transactions = items,
+                )
             }
     }
 

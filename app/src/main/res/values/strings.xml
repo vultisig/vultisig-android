@@ -987,6 +987,9 @@
     <string name="transaction_history_tab_swap">Swaps</string>
     <string name="transaction_history_empty_title">No transactions yet</string>
     <string name="transaction_history_empty_desc">Your transaction history will appear here</string>
+    <string name="transaction_history_search_asset_title">Search asset</string>
+    <string name="transaction_history_search_asset_not_found">No assets found</string>
+    <string name="transaction_history_clear_filters">Clear filters</string>
     <string name="transaction_status_broadcasted_label">Broadcasted</string>
     <string name="transaction_status_pending_label">Pending · %1$s</string>
     <string name="transaction_status_confirmed_label">Successful</string>
@@ -995,8 +998,8 @@
     <string name="transaction_history_to_label">To</string>
     <string name="transaction_history_via_label">via %s</string>
     <string name="transaction_history_min_payout_label">min. payout</string>
-    <string name="transaction_history_date_today">Today %1$s</string>
-    <string name="transaction_history_date_yesterday">Yesterday %1$s</string>
+    <string name="transaction_history_date_today">Today</string>
+    <string name="transaction_history_date_yesterday">Yesterday</string>
     <string name="transaction_history_elapsed_just_now">just now</string>
     <string name="transaction_history_elapsed_days">%1$dd ago</string>
     <string name="transaction_history_elapsed_hours">%1$dh ago</string>

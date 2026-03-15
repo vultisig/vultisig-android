@@ -1282,6 +1282,9 @@
     <string name="transaction_history_tab_swap">交换</string>
     <string name="transaction_history_empty_title">暂无交易记录</string>
     <string name="transaction_history_empty_desc">您的交易历史将显示在此处</string>
+    <string name="transaction_history_search_asset_title">搜索资产</string>
+    <string name="transaction_history_search_asset_not_found">未找到资产</string>
+    <string name="transaction_history_clear_filters">清除筛选</string>
     <string name="transaction_status_broadcasted_label">已广播</string>
     <string name="transaction_status_pending_label">待处理 · %1$s</string>
     <string name="transaction_status_confirmed_label">成功</string>
@@ -1291,8 +1294,8 @@
     <string name="transaction_history_via_label">通过 %s</string>
     <string name="transaction_history_via_prefix">通过</string>
     <string name="transaction_history_min_payout_label">最低支付</string>
-    <string name="transaction_history_date_today">今天 %1$s</string>
-    <string name="transaction_history_date_yesterday">昨天 %1$s</string>
+    <string name="transaction_history_date_today">今天</string>
+    <string name="transaction_history_date_yesterday">昨天</string>
     <string name="transaction_history_elapsed_just_now">刚刚</string>
     <string name="transaction_history_elapsed_days">%1$d天前</string>
     <string name="transaction_history_elapsed_hours">%1$d小时前</string>

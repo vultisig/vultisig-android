@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -47,18 +50,27 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.TokenLogo
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
+import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
+import com.vultisig.wallet.ui.models.TransactionAssetUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryGroupUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryTab
@@ -84,6 +96,13 @@ internal fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel = h
         onItemClick = viewModel::openDetail,
         onDismissDetail = viewModel::dismissDetail,
         onViewExplorer = { url -> if (url.isNotEmpty()) uriHandler.openUri(url) },
+        onSearchClick = viewModel::openSearch,
+        assetSearchTextFieldState = viewModel.assetSearchTextFieldState,
+        onAssetCheckChange = viewModel::toggleAssetSelection,
+        onConfirmAssetSearch = viewModel::confirmAssetSearch,
+        onDismissAssetSearch = viewModel::closeSearch,
+        onRemoveAssetFilter = viewModel::removeAssetFilter,
+        onClearAllFilters = viewModel::clearAllFilters,
     )
 }
 
@@ -97,6 +116,13 @@ private fun TransactionHistoryScreen(
     onItemClick: (TransactionHistoryItemUiModel) -> Unit,
     onDismissDetail: () -> Unit = {},
     onViewExplorer: (String) -> Unit = {},
+    onSearchClick: () -> Unit = {},
+    assetSearchTextFieldState: TextFieldState = rememberTextFieldState(),
+    onAssetCheckChange: (TransactionAssetUiModel) -> Unit = {},
+    onConfirmAssetSearch: () -> Unit = {},
+    onDismissAssetSearch: () -> Unit = {},
+    onRemoveAssetFilter: (String) -> Unit = {},
+    onClearAllFilters: () -> Unit = {},
 ) {
     if (state.selectedItem != null) {
         TransactionDetailBottomSheet(
@@ -106,13 +132,28 @@ private fun TransactionHistoryScreen(
         )
     }
 
+    if (state.isAssetSearchSheetVisible) {
+        AssetSearchBottomSheet(
+            items = state.assetSearchItems,
+            selectedTickers = state.selectedAssetTickers,
+            searchTextFieldState = assetSearchTextFieldState,
+            onCheckChange = onAssetCheckChange,
+            onDone = onConfirmAssetSearch,
+            onCancel = onDismissAssetSearch,
+        )
+    }
+
     V2Scaffold(
         title = stringResource(R.string.transaction_history_title),
         onBackClick = onBack,
         applyDefaultPaddings = false,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 VsTabGroup(index = state.selectedTab.ordinal) {
                     tab {
                         VsTab(
@@ -133,6 +174,28 @@ private fun TransactionHistoryScreen(
                         )
                     }
                 }
+                UiSpacer(weight = 1f)
+                V2Container(
+                    modifier = Modifier.clickOnce(onClick = onSearchClick),
+                    cornerType = CornerType.Circular,
+                    type = ContainerType.SECONDARY,
+                    borderType = ContainerBorderType.Borderless,
+                ) {
+                    UiIcon(
+                        drawableResId = R.drawable.ic_search,
+                        size = 16.dp,
+                        tint = Theme.v2.colors.text.primary,
+                        modifier = Modifier.padding(12.dp),
+                    )
+                }
+            }
+
+            if (state.selectedAssets.isNotEmpty()) {
+                SelectedAssetFiltersRow(
+                    assets = state.selectedAssets,
+                    onRemove = onRemoveAssetFilter,
+                    onClearAll = onClearAllFilters,
+                )
             }
 
             PullToRefreshBox(
@@ -169,8 +232,8 @@ private fun TransactionGroupedList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         groups.forEach { group ->
-            stickyHeader(key = "header_${group.dateLabel}") {
-                DateStickyHeader(label = group.dateLabel)
+            stickyHeader(key = "header_${group.dateSuffix}") {
+                DateStickyHeader(prefix = group.datePrefix, suffix = group.dateSuffix)
             }
             itemsIndexed(items = group.transactions, key = { _, item -> item.id }) { _, item ->
                 when (item) {
@@ -191,25 +254,25 @@ private fun TransactionGroupedList(
 }
 
 @Composable
-private fun DateStickyHeader(label: String) {
+private fun DateStickyHeader(prefix: String?, suffix: String) {
+    val primaryColor = Theme.v2.colors.text.primary
+    val tertiaryColor = Theme.v2.colors.text.tertiary
+    val text = buildAnnotatedString {
+        if (prefix != null) {
+            withStyle(SpanStyle(color = primaryColor)) { append(prefix) }
+            withStyle(SpanStyle(color = tertiaryColor)) { append("  $suffix") }
+        } else {
+            withStyle(SpanStyle(color = primaryColor)) { append(suffix) }
+        }
+    }
     Box(
         modifier =
             Modifier.fillMaxWidth()
                 .background(Theme.v2.colors.backgrounds.primary)
-                .padding(vertical = 6.dp),
-        contentAlignment = Alignment.Center,
+                .padding(vertical = 6.dp, horizontal = 16.dp),
+        contentAlignment = Alignment.CenterStart,
     ) {
-        Text(
-            text = label,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.tertiary,
-            modifier =
-                Modifier.background(
-                        color = Theme.v2.colors.backgrounds.tertiary_2,
-                        shape = RoundedCornerShape(10.dp),
-                    )
-                    .padding(horizontal = 10.dp, vertical = 3.dp),
-        )
+        Text(text = text, style = Theme.brockmann.supplementary.caption)
     }
 }
 
@@ -626,6 +689,107 @@ private fun TokenCircle(
 }
 
 @Composable
+private fun SelectedAssetFiltersRow(
+    assets: List<TransactionAssetUiModel>,
+    onRemove: (String) -> Unit,
+    onClearAll: () -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            assets.forEach { asset ->
+                AssetFilterChip(asset = asset, onRemove = { onRemove(asset.ticker) })
+            }
+        }
+        UiSpacer(size = 8.dp)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Text(
+                text = stringResource(R.string.transaction_history_clear_filters),
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.alerts.info,
+                modifier = Modifier.clickOnce(onClick = onClearAll),
+            )
+        }
+    }
+}
+
+@Composable
+private fun AssetFilterChip(asset: TransactionAssetUiModel, onRemove: () -> Unit) {
+    val shape = RoundedCornerShape(100.dp)
+    Row(
+        modifier =
+            Modifier.background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        TokenLogo(
+            modifier = Modifier.size(16.dp),
+            errorLogoModifier = Modifier.size(16.dp),
+            logo = asset.logo,
+            title = asset.ticker,
+        )
+        Text(
+            text =
+                if (asset.chain.isNotEmpty()) "${asset.ticker} (${asset.chain})" else asset.ticker,
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.text.primary,
+        )
+        UiIcon(
+            drawableResId = R.drawable.close_2,
+            size = 10.dp,
+            tint = Theme.v2.colors.text.tertiary,
+            modifier = Modifier.clickOnce(onClick = onRemove),
+        )
+    }
+}
+
+@Composable
+private fun AssetSearchBottomSheet(
+    items: List<TransactionAssetUiModel>,
+    selectedTickers: Set<String>,
+    searchTextFieldState: TextFieldState,
+    onCheckChange: (TransactionAssetUiModel) -> Unit,
+    onDone: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    TokenSelectionList(
+        items = items.map { GridTokenUiModel.SingleToken(data = it) },
+        mapper = {
+            TokenSelectionGridUiModel(
+                tokenSelectionUiModel =
+                    TokenSelectionUiModel.TokenUiSingle(
+                        name =
+                            if (it.data.chain.isNotEmpty()) "${it.data.ticker} (${it.data.chain})"
+                            else it.data.ticker,
+                        logo = it.data.logo,
+                    ),
+                isChecked = it.data.ticker in selectedTickers,
+            )
+        },
+        searchTextFieldState = searchTextFieldState,
+        titleContent = {
+            Text(
+                text = stringResource(R.string.transaction_history_search_asset_title),
+                style = Theme.brockmann.headings.title2,
+                color = Theme.v2.colors.neutrals.n100,
+            )
+        },
+        notFoundContent = {
+            NoFoundContent(
+                message = stringResource(R.string.transaction_history_search_asset_not_found)
+            )
+        },
+        onCheckChange = { _, item -> onCheckChange(item) },
+        onDoneClick = onDone,
+        onCancelClick = onCancel,
+    )
+}
+
+@Composable
 private fun TransactionHistoryEmptyState(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
@@ -1028,11 +1192,13 @@ private fun PreviewOverviewTab() {
                 groups =
                     listOf(
                         TransactionHistoryGroupUiModel(
-                            dateLabel = "Today Sept 2, 2025",
+                            datePrefix = "Today",
+                            dateSuffix = "Sept 2, 2025",
                             transactions = listOf(previewSendInProgress, previewSwap),
                         ),
                         TransactionHistoryGroupUiModel(
-                            dateLabel = "Yesterday Sept 1, 2025",
+                            datePrefix = "Yesterday",
+                            dateSuffix = "Sept 1, 2025",
                             transactions =
                                 listOf(
                                     previewSend,
@@ -1073,9 +1239,47 @@ private fun PreviewSwapTab() {
                 groups =
                     listOf(
                         TransactionHistoryGroupUiModel(
-                            dateLabel = "Today Sept 2, 2025",
+                            datePrefix = "Today",
+                            dateSuffix = "Sept 2, 2025",
                             transactions = listOf(previewSwap),
                         )
+                    ),
+            ),
+        onBack = {},
+        onTabSelected = {},
+        onRefresh = {},
+        onItemClick = {},
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewWithAssetFilters() {
+    TransactionHistoryScreen(
+        state =
+            TransactionHistoryUiState(
+                selectedTab = TransactionHistoryTab.OVERVIEW,
+                selectedAssets =
+                    listOf(
+                        TransactionAssetUiModel(ticker = "ETH", chain = "Ethereum", logo = ""),
+                        TransactionAssetUiModel(ticker = "USDC", chain = "Ethereum", logo = ""),
+                        TransactionAssetUiModel(ticker = "RUNE", chain = "THORChain", logo = ""),
+                        TransactionAssetUiModel(ticker = "WBTC", chain = "Ethereum", logo = ""),
+                        TransactionAssetUiModel(ticker = "SOL", chain = "Solana", logo = ""),
+                    ),
+                selectedAssetTickers = setOf("ETH", "USDC", "RUNE", "WBTC", "SOL"),
+                groups =
+                    listOf(
+                        TransactionHistoryGroupUiModel(
+                            datePrefix = "Today",
+                            dateSuffix = "Sept 2, 2025",
+                            transactions = listOf(previewSend, previewSwap),
+                        ),
+                        TransactionHistoryGroupUiModel(
+                            datePrefix = "Yesterday",
+                            dateSuffix = "Sept 1, 2025",
+                            transactions = listOf(previewSendInProgress),
+                        ),
                     ),
             ),
         onBack = {},
