@@ -60,9 +60,6 @@ import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.buttons.VsButtonSize
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
@@ -89,8 +86,6 @@ import com.vultisig.wallet.ui.theme.Theme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.Locale
 
 @Composable
 internal fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel = hiltViewModel()) {
@@ -477,42 +472,69 @@ private fun SwapTransactionCard(
 
             UiSpacer(size = 12.dp)
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                TokenCircle(logo = item.fromTokenLogo, ticker = item.fromToken, size = 32)
-                TokenAmountAnnotated(amount = item.fromAmount, token = item.fromToken)
-            }
+            if (isInProgress) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    TokenCircle(logo = item.fromTokenLogo, ticker = item.fromToken, size = 32)
+                    TokenAmountAnnotated(amount = item.fromAmount, token = item.fromToken)
+                }
 
-            UiSpacer(size = 8.dp)
+                UiSpacer(size = 8.dp)
 
-            ToSeparator(modifier = Modifier.fillMaxWidth())
+                ToSeparator(modifier = Modifier.fillMaxWidth())
 
-            UiSpacer(size = 8.dp)
+                UiSpacer(size = 8.dp)
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                TokenCircle(logo = item.toTokenLogo, ticker = item.toToken, size = 32)
-                Column {
-                    if (isInProgress) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    TokenCircle(logo = item.toTokenLogo, ticker = item.toToken, size = 32)
+                    Column {
                         Text(
                             text = stringResource(R.string.transaction_history_min_payout_label),
                             style = Theme.brockmann.supplementary.caption,
                             color = Theme.v2.colors.text.tertiary,
                         )
+                        TokenAmountAnnotated(amount = item.toAmount, token = item.toToken)
                     }
-                    TokenAmountAnnotated(amount = item.toAmount, token = item.toToken)
                 }
-            }
 
-            if (item.provider.isNotEmpty()) {
-                UiSpacer(size = 8.dp)
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Box(modifier = Modifier.weight(1f))
-                    ViaBadge(provider = item.provider)
+                if (item.provider.isNotEmpty()) {
+                    UiSpacer(size = 8.dp)
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Box(modifier = Modifier.weight(1f))
+                        ViaBadge(provider = item.provider)
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(20.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        TokenCircle(logo = item.fromTokenLogo, ticker = item.fromToken, size = 24)
+                        Column {
+                            if (!item.fiatValue.isNullOrEmpty()) {
+                                Text(
+                                    text = item.fiatValue,
+                                    style = Theme.brockmann.supplementary.footnote,
+                                    color = Theme.v2.colors.text.primary,
+                                )
+                            }
+                            SendAmountText(amount = item.fromAmount, token = item.fromToken)
+                        }
+                    }
+                    if (item.provider.isNotEmpty()) {
+                        ViaBadge(provider = item.provider)
+                    }
                 }
             }
         }
@@ -835,8 +857,7 @@ private fun String.abbreviateAddress(): String {
 }
 
 private fun Long.toDetailDateString(): String {
-    val formatter =
-        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.getDefault())
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm")
     return Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).format(formatter)
 }
 
@@ -902,13 +923,29 @@ private fun TransactionDetailBottomSheet(
                 UiSpacer(size = 24.dp)
 
                 if (item.explorerUrl.isNotEmpty()) {
-                    VsButton(
-                        label = stringResource(R.string.transaction_history_view_on_explorer),
-                        variant = VsButtonVariant.Secondary,
-                        size = VsButtonSize.Medium,
-                        onClick = { onViewExplorer(item.explorerUrl) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    Row(
+                        horizontalArrangement =
+                            Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier =
+                            Modifier.clickOnce(onClick = { onViewExplorer(item.explorerUrl) })
+                                .border(
+                                    width = 1.dp,
+                                    color = Color(0x08FFFFFF),
+                                    shape = RoundedCornerShape(size = 99.dp),
+                                )
+                                .background(
+                                    color = Theme.v2.colors.variables.bordersLight,
+                                    shape = RoundedCornerShape(size = 99.dp),
+                                )
+                                .padding(start = 32.dp, top = 16.dp, end = 32.dp, bottom = 16.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.transaction_history_view_on_explorer),
+                            style = Theme.brockmann.button.medium.small,
+                            color = Theme.v2.colors.variables.textPrimary,
+                        )
+                    }
                 }
             }
         }
@@ -1173,9 +1210,9 @@ private fun DetailValuePill(text: String, modifier: Modifier = Modifier) {
             modifier
                 .background(
                     color = Theme.v2.colors.backgrounds.tertiary_2,
-                    shape = RoundedCornerShape(100.dp),
+                    shape = RoundedCornerShape(8.dp),
                 )
-                .padding(horizontal = 10.dp, vertical = 4.dp),
+                .padding(horizontal = 8.dp, vertical = 3.dp),
     )
 }
 
@@ -1183,7 +1220,7 @@ private val previewSend =
     TransactionHistoryItemUiModel.Send(
         id = "1",
         txHash = "0xabc123",
-        chain = "Ethereum",
+        chain = "ETH",
         status = TransactionStatusUiModel.Confirmed,
         explorerUrl = "",
         timestamp = System.currentTimeMillis(),
