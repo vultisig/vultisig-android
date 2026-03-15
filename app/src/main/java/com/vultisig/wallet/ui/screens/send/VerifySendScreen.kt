@@ -209,7 +209,7 @@ internal fun VerifySendScreen(
                     VerifyCardDetails(
                         title = stringResource(R.string.verify_transaction_to_title),
                         subtitle = tx.formattedDstAddress,
-                        showAllContent = tx.dstVaultName != null,
+                        showAllContent = tx.dstVaultName != null || tx.dstAddressBookTitle != null,
                     )
 
                     if (tx.memo != null) {

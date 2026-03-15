@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.getPubKeyByChain
+import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -55,6 +56,7 @@ internal data class TransactionDetailsUiModel(
     val srcVaultName: String? = null,
     val dstAddress: String = "",
     val dstVaultName: String? = null,
+    val dstAddressBookTitle: String? = null,
     val memo: String? = null,
     val signAmino: String? = null,
     val signDirect: String? = null,
@@ -64,7 +66,11 @@ internal data class TransactionDetailsUiModel(
         get() = srcVaultName?.let { "$it (${srcAddress.take(4)}...${srcAddress.takeLast(4)})" } ?: srcAddress
 
     val formattedDstAddress: String
-        get() = dstVaultName?.let { "$it (${dstAddress.take(4)}...${dstAddress.takeLast(4)})" } ?: dstAddress
+        get() = when {
+            dstVaultName != null -> "$dstVaultName (${dstAddress.take(4)}...${dstAddress.takeLast(4)})"
+            dstAddressBookTitle != null -> "$dstAddressBookTitle (${dstAddress.take(4)}...${dstAddress.takeLast(4)})"
+            else -> dstAddress
+        }
 }
 
 @Immutable
@@ -108,6 +114,7 @@ constructor(
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
+    private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCase,
     private val tokenRepository: TokenRepository,
@@ -308,8 +315,19 @@ constructor(
                     vault.coins.any { it.chain == chain && it.address == transaction.dstAddress }
                 }
                 ?.name
+            val dstAddressBookTitle = if (dstVaultName == null) {
+                runCatching {
+                    withContext(Dispatchers.IO) {
+                        addressBookRepository.getEntry(chain.id, transaction.dstAddress).title
+                    }
+                }.getOrNull()
+            } else null
 
-            val namedUiModel = transactionUiModel.copy(srcVaultName = srcVaultName, dstVaultName = dstVaultName)
+            val namedUiModel = transactionUiModel.copy(
+                srcVaultName = srcVaultName,
+                dstVaultName = dstVaultName,
+                dstAddressBookTitle = dstAddressBookTitle,
+            )
 
             uiState.update { it.copy(transaction = namedUiModel, isLoadingFees = true) }
 

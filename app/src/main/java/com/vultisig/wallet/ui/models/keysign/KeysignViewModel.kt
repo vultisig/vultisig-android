@@ -163,10 +163,19 @@ internal class KeysignViewModel(
 
                 showSaveToAddressBook.value = isSavedBefore.not() && dstVaultName == null
 
+                val dstAddressBookTitle = if (dstVaultName == null && isSavedBefore) {
+                    runCatching {
+                        withContext(Dispatchers.IO) {
+                            addressBookRepository.getEntry(chain.id, tx.dstAddress).title
+                        }
+                    }.getOrNull()
+                } else null
+
                 resolvedTransactionUiModel.value = TransactionTypeUiModel.Send(
                     tx.copy(
                         srcVaultName = vault.name,
                         dstVaultName = dstVaultName,
+                        dstAddressBookTitle = dstAddressBookTitle,
                     )
                 )
             }

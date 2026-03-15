@@ -15,7 +15,7 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 networkFeeFiatValue = this.tx.networkFeeFiatValue,
                 networkFeeTokenValue = this.tx.networkFeeTokenValue,
                 fromHasVaultName = this.tx.srcVaultName != null,
-                toHasVaultName = this.tx.dstVaultName != null,
+                toHasVaultName = this.tx.dstVaultName != null || this.tx.dstAddressBookTitle != null,
             )
         }
         is TransactionTypeUiModel.Deposit -> {
