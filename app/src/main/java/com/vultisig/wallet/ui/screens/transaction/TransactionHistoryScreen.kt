@@ -666,20 +666,14 @@ private fun ViaBadge(provider: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun TokenAmountText(amount: String, token: String, modifier: Modifier = Modifier) {
-    val numericPart = amount.removeSuffix(token).trim()
-    val hasToken = numericPart != amount
     Text(
         text =
             buildAnnotatedString {
-                withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) {
-                    append(if (hasToken) numericPart else amount)
-                }
-                if (hasToken) {
-                    append(" ")
-                    withStyle(SpanStyle(color = Theme.v2.colors.alerts.success)) { append(token) }
-                }
+                withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(amount) }
+                append(" ")
+                withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(token) }
             },
-        style = Theme.brockmann.body.m.medium,
+        style = Theme.satoshi.price.title2,
         modifier = modifier,
     )
 }
@@ -1109,6 +1103,7 @@ private fun DetailInfoRows(
                     color = Theme.v2.colors.variables.backgroundsSurface1,
                     shape = RoundedCornerShape(size = 12.dp),
                 )
+                .padding(horizontal = 4.dp)
     ) {
         DetailRow(
             label = stringResource(R.string.transaction_history_detail_status),
