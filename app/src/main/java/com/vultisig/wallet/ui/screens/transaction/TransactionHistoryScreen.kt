@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.transaction
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,9 +13,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -36,7 +39,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -242,6 +250,7 @@ private fun TransactionGroupedList(
                             item = item,
                             modifier = Modifier.fillMaxWidth().clickable { onItemClick(item) },
                         )
+
                     is TransactionHistoryItemUiModel.Swap ->
                         SwapTransactionCard(
                             item = item,
@@ -298,7 +307,7 @@ private fun SendTransactionCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TypeBadge(
-                        iconRes = R.drawable.send,
+                        iconRes = R.drawable.send_2,
                         label = stringResource(R.string.transaction_history_tab_send),
                     )
                     TransactionStatusWidget(status = item.status)
@@ -517,18 +526,19 @@ private fun TypeBadge(iconRes: Int, label: String, modifier: Modifier = Modifier
             modifier
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.alerts.info.copy(alpha = 0.6f),
-                    shape = CircleShape,
+                    color = Theme.v2.colors.alerts.info,
+                    shape = RoundedCornerShape(size = 99.dp),
                 )
-                .padding(horizontal = 12.dp, vertical = 6.dp),
+                .background(color = Color(0x1A5CA7FF), shape = RoundedCornerShape(size = 99.dp))
+                .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Icon(
             painter = painterResource(iconRes),
             contentDescription = null,
             tint = Theme.v2.colors.alerts.info,
-            modifier = Modifier.size(14.dp),
+            modifier = Modifier.size(9.dp),
         )
         Text(
             text = label,
@@ -565,9 +575,11 @@ private fun TransactionStatusWidget(
                 TransactionStatusUiModel.Confirmed ->
                     stringResource(R.string.transaction_status_confirmed_label) to
                         Theme.v2.colors.alerts.success
+
                 is TransactionStatusUiModel.Failed ->
                     stringResource(R.string.transaction_status_failed_label) to
                         Theme.v2.colors.alerts.error
+
                 else -> "" to Theme.v2.colors.text.tertiary
             }
         if (label.isNotEmpty()) {
@@ -837,45 +849,67 @@ private fun TransactionDetailBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Theme.v2.colors.backgrounds.secondary,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        containerColor = Color.Transparent,
+        shape = RoundedCornerShape(topStart = 34.dp, topEnd = 34.dp),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        dragHandle = {
-            Box(
-                modifier =
-                    Modifier.padding(vertical = 12.dp)
-                        .size(width = 36.dp, height = 4.dp)
-                        .background(
-                            color = Theme.v2.colors.border.light,
-                            shape = RoundedCornerShape(100.dp),
-                        )
-            )
-        },
+        dragHandle = {},
     ) {
-        Column(
+        Box(
             modifier =
-                Modifier.fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
-                    .navigationBarsPadding()
-                    .padding(bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                Modifier.shadow(
+                        elevation = 75.dp,
+                        spotColor = Color(0x2E000000),
+                        ambientColor = Color(0x2E000000),
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.border.normal,
+                        shape = RoundedCornerShape(topStart = 34.dp, topEnd = 34.dp),
+                    )
+                    .background(Theme.v2.colors.variables.backgroundsSurface1)
         ) {
-            when (item) {
-                is TransactionHistoryItemUiModel.Send -> SendDetailContent(item)
-                is TransactionHistoryItemUiModel.Swap -> SwapDetailContent(item)
-            }
-
-            UiSpacer(size = 24.dp)
-
-            if (item.explorerUrl.isNotEmpty()) {
-                VsButton(
-                    label = stringResource(R.string.transaction_history_view_on_explorer),
-                    variant = VsButtonVariant.Secondary,
-                    size = VsButtonSize.Medium,
-                    onClick = { onViewExplorer(item.explorerUrl) },
-                    modifier = Modifier.fillMaxWidth(),
+            Image(
+                painter = painterResource(R.drawable.magic_pattern),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize(),
+            )
+            Column(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp)
+                        .navigationBarsPadding()
+                        .padding(bottom = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                UiSpacer(size = 8.dp)
+                Box(
+                    modifier =
+                        Modifier.graphicsLayer { blendMode = BlendMode.Plus }
+                            .size(width = 36.dp, height = 4.dp)
+                            .background(
+                                color = Theme.v2.colors.vibrant.primary,
+                                shape = RoundedCornerShape(100.dp),
+                            )
                 )
+
+                when (item) {
+                    is TransactionHistoryItemUiModel.Send -> SendDetailContent(item)
+                    is TransactionHistoryItemUiModel.Swap -> SwapDetailContent(item)
+                }
+
+                UiSpacer(size = 24.dp)
+
+                if (item.explorerUrl.isNotEmpty()) {
+                    VsButton(
+                        label = stringResource(R.string.transaction_history_view_on_explorer),
+                        variant = VsButtonVariant.Secondary,
+                        size = VsButtonSize.Medium,
+                        onClick = { onViewExplorer(item.explorerUrl) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         }
     }
@@ -883,29 +917,35 @@ private fun TransactionDetailBottomSheet(
 
 @Composable
 private fun SendDetailContent(item: TransactionHistoryItemUiModel.Send) {
-    UiSpacer(size = 8.dp)
+    UiSpacer(size = 33.dp)
     TypeBadge(
-        iconRes = R.drawable.send,
+        iconRes = R.drawable.send_2,
         label = stringResource(R.string.transaction_history_tab_send),
     )
     UiSpacer(size = 20.dp)
 
-    Box(
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
-            Modifier.size(72.dp)
-                .border(
+            Modifier.border(
                     width = 1.dp,
-                    color = Theme.v2.colors.alerts.info.copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(16.dp),
-                ),
-        contentAlignment = Alignment.Center,
+                    color = Theme.v2.colors.border.light,
+                    shape = RoundedCornerShape(size = 16.dp),
+                )
+                .fillMaxWidth()
+                .background(
+                    color = Theme.v2.colors.backgrounds.surface2,
+                    shape = RoundedCornerShape(size = 16.dp),
+                )
+                .padding(vertical = 16.dp, horizontal = 20.dp),
     ) {
         TokenCircle(logo = item.tokenLogo, ticker = item.token, size = 48)
+        UiSpacer(size = 12.dp)
+        TokenAmountText(amount = item.amount, token = item.token)
     }
-    UiSpacer(size = 12.dp)
-    TokenAmountText(amount = item.amount, token = item.token)
 
-    UiSpacer(size = 24.dp)
+    UiSpacer(size = 40.dp)
 
     DetailInfoRows(
         status = item.status,
@@ -1037,12 +1077,15 @@ private fun DetailInfoRows(
                         TransactionStatusUiModel.Confirmed ->
                             stringResource(R.string.transaction_status_confirmed_label) to
                                 Theme.v2.colors.alerts.success
+
                         is TransactionStatusUiModel.Failed ->
                             stringResource(R.string.transaction_status_failed_label) to
                                 Theme.v2.colors.alerts.error
+
                         TransactionStatusUiModel.Broadcasted ->
                             stringResource(R.string.transaction_status_in_progress_label) to
                                 Theme.v2.colors.text.secondary
+
                         is TransactionStatusUiModel.Pending ->
                             stringResource(R.string.transaction_status_in_progress_label) to
                                 Theme.v2.colors.text.secondary
@@ -1135,7 +1178,7 @@ private val previewSend =
         toAddress = "0xF43jf9840fkfjn38fk0dk9Ac5",
         amount = "1,000.12",
         token = "RUNE",
-        tokenLogo = "",
+        tokenLogo = R.drawable.ethereum,
         fiatValue = "$1,000.54",
         provider = null,
         feeEstimate = "0.2 ETH",
@@ -1304,4 +1347,16 @@ private fun PreviewEmptyState() {
         onRefresh = {},
         onItemClick = {},
     )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewTransactionDetailBottomSheetSend() {
+    TransactionDetailBottomSheet(item = previewSend, onDismiss = {}, onViewExplorer = {})
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewTransactionDetailBottomSheetSwap() {
+    TransactionDetailBottomSheet(item = previewSwap, onDismiss = {}, onViewExplorer = {})
 }
