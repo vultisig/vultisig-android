@@ -940,6 +940,9 @@
     <string name="transaction_history_tab_swap">Swaps</string>
     <string name="transaction_history_empty_title">Nog geen transacties</string>
     <string name="transaction_history_empty_desc">Uw transactiegeschiedenis verschijnt hier</string>
+    <string name="transaction_history_search_asset_title">Asset zoeken</string>
+    <string name="transaction_history_search_asset_not_found">Geen activa gevonden</string>
+    <string name="transaction_history_clear_filters">Filters wissen</string>
     <string name="transaction_status_broadcasted_label">Uitgezonden</string>
     <string name="transaction_status_pending_label">In behandeling · %1$s</string>
     <string name="transaction_status_confirmed_label">Geslaagd</string>
@@ -949,8 +952,8 @@
     <string name="transaction_history_via_label">via %s</string>
     <string name="transaction_history_via_prefix">via</string>
     <string name="transaction_history_min_payout_label">min. uitbetaling</string>
-    <string name="transaction_history_date_today">Vandaag %1$s</string>
-    <string name="transaction_history_date_yesterday">Gisteren %1$s</string>
+    <string name="transaction_history_date_today">Vandaag</string>
+    <string name="transaction_history_date_yesterday">Gisteren</string>
     <string name="transaction_history_elapsed_just_now">zojuist</string>
     <string name="transaction_history_elapsed_days">%1$dd geleden</string>
     <string name="transaction_history_elapsed_hours">%1$du geleden</string>
