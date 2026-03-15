@@ -350,6 +350,7 @@
     <string name="push_notification_error_vault_not_supported">O cofre não suporta notificações</string>
     <string name="push_notification_error_token_not_available">Falha ao obter token de notificação</string>
     <string name="push_notification_error_api_failure">Falha ao atualizar registo de notificações</string>
+    <string name="push_notification_partial_failure">%1$d de %2$d cofres atualizados, %3$d falharam</string>
     <string name="push_notifications_sent">Notificação enviada com sucesso</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Receba uma notificação quando a sua assinatura for necessária ou um dispositivo solicitar acesso.</string>
     <string name="enable_push_notifications">Ativar notificações push</string>

@@ -108,6 +108,7 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
             onEnableVault = viewModel::onNotificationVaultToggle,
             onDismissRequest = viewModel::onNotificationVaultSheetDismiss,
             onEnableAll = viewModel::onEnableAll,
+            onDone = viewModel::onNotificationVaultSheetDone,
         )
     }
 

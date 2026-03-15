@@ -1171,6 +1171,12 @@ constructor(
                     customMessagePayload != null -> {
                         messagesToSign = SigningHelper.getKeysignMessages(customMessagePayload!!)
                     }
+
+                    else -> {
+                        Timber.e("Both keysign payload and custom message payload are null")
+                        currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
+                        return false
+                    }
                 }
 
                 return true

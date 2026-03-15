@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -108,6 +110,7 @@ internal fun VaultNotificationOptInBottomSheet(
     vaults: List<VaultIntroItem>,
     onEnableVault: (String, Boolean) -> Unit,
     onEnableAll: (Boolean) -> Unit,
+    onDone: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     V2BottomSheet(
@@ -118,7 +121,7 @@ internal fun VaultNotificationOptInBottomSheet(
             vaults = vaults,
             onEnableVault = onEnableVault,
             onEnableAll = onEnableAll,
-            onConfirm = onDismissRequest,
+            onConfirm = onDone,
         )
     }
 }
@@ -139,84 +142,90 @@ internal fun VaultNotificationOptInBottomSheetContent(
                 .padding(start = 16.dp, end = 16.dp, top = 30.dp, bottom = 21.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = stringResource(R.string.choose_vaults_for_notifications),
-            style = Theme.brockmann.headings.title3,
-            color = Theme.v2.colors.text.primary,
-        )
-
-        UiSpacer(size = 12.dp)
-
-        Text(
-            text = stringResource(R.string.notifications_vault_sheet_subtitle),
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.tertiary,
-            modifier = Modifier.padding(horizontal = 39.dp),
-            textAlign = TextAlign.Center,
-        )
-
-        UiSpacer(size = 32.dp)
         Column(
-            modifier =
-                Modifier.background(
-                    color = Theme.v2.colors.variables.backgroundsSurface12,
-                    shape = RoundedCornerShape(12.dp),
-                )
+            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.enable_all),
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                    modifier = Modifier.weight(1f),
-                )
-                VsSwitch(checked = allEnabled, onCheckedChange = onEnableAll)
-            }
+            Text(
+                text = stringResource(R.string.choose_vaults_for_notifications),
+                style = Theme.brockmann.headings.title3,
+                color = Theme.v2.colors.text.primary,
+            )
 
-            vaults.forEach { vault ->
-                HorizontalDivider(
-                    color = Theme.v2.colors.variables.bordersLight,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
+            UiSpacer(size = 12.dp)
+
+            Text(
+                text = stringResource(R.string.notifications_vault_sheet_subtitle),
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.tertiary,
+                modifier = Modifier.padding(horizontal = 39.dp),
+                textAlign = TextAlign.Center,
+            )
+
+            UiSpacer(size = 32.dp)
+            Column(
+                modifier =
+                    Modifier.background(
+                        color = Theme.v2.colors.variables.backgroundsSurface12,
+                        shape = RoundedCornerShape(12.dp),
+                    )
+            ) {
                 Row(
                     modifier =
                         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    VaultIcon(
-                        isFastVault = vault.isFastVault,
-                        size = 20.dp,
-                        modifier =
-                            Modifier.border(
-                                    width = 1.dp,
-                                    color = Theme.v2.colors.variables.bordersLight,
-                                    shape = RoundedCornerShape(size = 99.dp),
-                                )
-                                .background(
-                                    color = Theme.v2.colors.variables.backgroundsSurface12,
-                                    shape = RoundedCornerShape(size = 99.dp),
-                                )
-                                .padding(12.dp),
-                    )
                     Text(
-                        text = vault.vaultName,
+                        text = stringResource(R.string.enable_all),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.v2.colors.text.primary,
                         modifier = Modifier.weight(1f),
                     )
-                    VsSwitch(
-                        checked = vault.isEnabled,
-                        onCheckedChange = { enabled -> onEnableVault(vault.vaultId, enabled) },
+                    VsSwitch(checked = allEnabled, onCheckedChange = onEnableAll)
+                }
+
+                vaults.forEach { vault ->
+                    HorizontalDivider(
+                        color = Theme.v2.colors.variables.bordersLight,
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     )
+                    Row(
+                        modifier =
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        VaultIcon(
+                            isFastVault = vault.isFastVault,
+                            size = 20.dp,
+                            modifier =
+                                Modifier.border(
+                                        width = 1.dp,
+                                        color = Theme.v2.colors.variables.bordersLight,
+                                        shape = RoundedCornerShape(size = 99.dp),
+                                    )
+                                    .background(
+                                        color = Theme.v2.colors.variables.backgroundsSurface12,
+                                        shape = RoundedCornerShape(size = 99.dp),
+                                    )
+                                    .padding(12.dp),
+                        )
+                        Text(
+                            text = vault.vaultName,
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.text.primary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        VsSwitch(
+                            checked = vault.isEnabled,
+                            onCheckedChange = { enabled -> onEnableVault(vault.vaultId, enabled) },
+                        )
+                    }
                 }
             }
-        }
 
-        UiSpacer(size = 24.dp)
+            UiSpacer(size = 24.dp)
+        }
 
         VsButton(
             label = stringResource(R.string.address_book_edit_mode_done),

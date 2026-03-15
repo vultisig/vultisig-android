@@ -8,7 +8,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -32,9 +31,8 @@ import com.vultisig.wallet.data.repositories.TiersNFTRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
-import com.vultisig.wallet.data.services.PushNotificationError
 import com.vultisig.wallet.data.services.PushNotificationManager
-import com.vultisig.wallet.data.services.toStringRes
+import com.vultisig.wallet.data.services.pushNotificationErrorMessage
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
@@ -123,7 +121,7 @@ internal data class AccountUiModel(
 internal class VaultAccountsViewModel
 @Inject
 constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val requestResultRepository: RequestResultRepository,
@@ -640,50 +638,34 @@ constructor(
                     }
             )
         }
-        viewModelScope.safeLaunch(
-            onError = { e ->
-                Timber.w(e, "Failed to opt in vault $vaultId for notifications")
-                uiState.update { state ->
-                    state.copy(
-                        notificationIntroVaults =
-                            state.notificationIntroVaults.map { vault ->
-                                if (vault.vaultId == vaultId) vault.copy(isEnabled = !enabled)
-                                else vault
-                            }
-                    )
-                }
-                val msgRes =
-                    (e as? PushNotificationError)?.toStringRes()
-                        ?: R.string.push_notifications_failed
-                snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
-            }
-        ) {
-            pushNotificationManager.setVaultOptIn(vaultId, enabled)
-        }
     }
 
     fun onNotificationVaultSheetDismiss() {
         uiState.update { it.copy(showNotificationVaultSheet = false) }
     }
 
+    fun onNotificationVaultSheetDone() {
+        val vaultsToOptIn = uiState.value.notificationIntroVaults
+        uiState.update { it.copy(showNotificationVaultSheet = false) }
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.w(e, "Failed to opt in vaults for notifications")
+                snackbarFlow.showMessage(
+                    pushNotificationErrorMessage(e, context),
+                    SnackbarType.Error,
+                )
+            }
+        ) {
+            pushNotificationManager.setVaultsOptIn(vaultsToOptIn.map { it.vaultId to it.isEnabled })
+        }
+    }
+
     fun onEnableAll(enabled: Boolean) {
-        val previousVaults = uiState.value.notificationIntroVaults
         uiState.update { state ->
             state.copy(
                 notificationIntroVaults =
                     state.notificationIntroVaults.map { it.copy(isEnabled = enabled) }
             )
-        }
-        viewModelScope.safeLaunch(
-            onError = { e ->
-                uiState.update { it.copy(notificationIntroVaults = previousVaults) }
-                val msgRes =
-                    (e as? PushNotificationError)?.toStringRes()
-                        ?: R.string.push_notifications_failed
-                snackbarFlow.showMessage(context.getString(msgRes), SnackbarType.Error)
-            }
-        ) {
-            pushNotificationManager.setAllVaultsOptIn(enabled = enabled)
         }
     }
 

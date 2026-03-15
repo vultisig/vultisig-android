@@ -159,7 +159,7 @@ private fun FastVaultVerificationScreen(
                                     color = Theme.v2.colors.backgrounds.secondary,
                                     shape = CircleShape,
                                 )
-                                .padding(horizontal = 20.dp, vertical = 14.dp)
+                                .padding(horizontal = 17.dp, vertical = 12.dp)
                                 .clickable(
                                     enabled = hasClipContent,
                                     onClick = {
@@ -171,7 +171,7 @@ private fun FastVaultVerificationScreen(
                     ) {
                         Text(
                             text = stringResource(R.string.vault_backup_screen_paste),
-                            style = Theme.brockmann.body.s.medium,
+                            style = Theme.brockmann.button.medium.small,
                             color =
                                 if (hasClipContent) Theme.v2.colors.text.button.primary
                                 else Theme.v2.colors.text.button.disabled,
