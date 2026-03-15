@@ -77,4 +77,22 @@ internal interface MappersModule {
     @Binds
     @Singleton
     fun bindChainToDefiChainUiMapper(impl: ChainToDefiChainUiMapperImpl): ChainToDefiChainUiMapper
+
+    @Binds
+    @Singleton
+    fun bindSendTransactionHistoryDataMapper(
+        impl: SendTransactionHistoryDataMapperImpl
+    ): SendTransactionHistoryDataMapper
+
+    @Binds
+    @Singleton
+    fun bindSwapTransactionToHistoryDataMapper(
+        impl: SwapTransactionToHistoryDataMapperImpl
+    ): SwapTransactionToHistoryDataMapper
+
+    @Binds
+    @Singleton
+    fun bindDepositTransactionHistoryDataMapper(
+        impl: DepositTransactionHistoryDataMapperImpl
+    ): DepositTransactionHistoryDataMapper
 }

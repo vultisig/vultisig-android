@@ -933,6 +933,36 @@
     <string name="key_import_spotlight_device_title">Как минимум одно устройство</string>
     <string name="key_import_spotlight_device_desc">Подойдёт любое устройство, на котором работает Vultisig.</string>
     <string name="key_import_spotlight_get_started">Начать</string>
+    <!-- Transaction History Screen -->
+    <string name="transaction_history_title">История</string>
+    <string name="transaction_history_tab_overview">Обзор</string>
+    <string name="transaction_history_tab_send">Отправить</string>
+    <string name="transaction_history_tab_swap">Свопы</string>
+    <string name="transaction_history_empty_title">Транзакций пока нет</string>
+    <string name="transaction_history_empty_desc">История ваших транзакций появится здесь</string>
+    <string name="transaction_status_broadcasted_label">Отправлена</string>
+    <string name="transaction_status_pending_label">В ожидании · %1$s</string>
+    <string name="transaction_status_confirmed_label">Успешно</string>
+    <string name="transaction_status_failed_label">Ошибка</string>
+    <string name="transaction_status_in_progress_label">В процессе…</string>
+    <string name="transaction_history_to_label">На</string>
+    <string name="transaction_history_via_label">через %s</string>
+    <string name="transaction_history_via_prefix">через</string>
+    <string name="transaction_history_min_payout_label">мин. выплата</string>
+    <string name="transaction_history_date_today">Сегодня %1$s</string>
+    <string name="transaction_history_date_yesterday">Вчера %1$s</string>
+    <string name="transaction_history_elapsed_just_now">только что</string>
+    <string name="transaction_history_elapsed_days">%1$d дн. назад</string>
+    <string name="transaction_history_elapsed_hours">%1$d ч. назад</string>
+    <string name="transaction_history_elapsed_minutes">%1$d мин. назад</string>
+    <string name="transaction_history_detail_status">Статус</string>
+    <string name="transaction_history_detail_from">От</string>
+    <string name="transaction_history_detail_to">Кому</string>
+    <string name="transaction_history_detail_date">Дата</string>
+    <string name="transaction_history_detail_fee">Комиссия</string>
+    <string name="transaction_history_detail_network">Сеть</string>
+    <string name="transaction_history_detail_provider">Провайдер</string>
+    <string name="transaction_history_view_on_explorer">Открыть в обозревателе</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Импортировать сид-фразу</string>

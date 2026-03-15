@@ -232,6 +232,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindTransactionHistoryRepository(
+        impl: TransactionHistoryRepositoryImpl
+    ): TransactionHistoryRepository
+
+    @Binds
+    @Singleton
     fun bindNotificationTokenRepository(
         impl: NotificationTokenRepositoryImpl
     ): NotificationTokenRepository
