@@ -1067,7 +1067,11 @@ private fun DetailInfoRows(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(16.dp))
+                .border(1.dp, Theme.v2.colors.border.light, RoundedCornerShape(12.dp))
+                .background(
+                    color = Theme.v2.colors.variables.backgroundsSurface1,
+                    shape = RoundedCornerShape(size = 12.dp),
+                )
     ) {
         DetailRow(
             label = stringResource(R.string.transaction_history_detail_status),
@@ -1090,7 +1094,16 @@ private fun DetailInfoRows(
                             stringResource(R.string.transaction_status_in_progress_label) to
                                 Theme.v2.colors.text.secondary
                     }
-                Text(text = label, style = Theme.brockmann.supplementary.caption, color = color)
+                Row(
+                    modifier =
+                        Modifier.background(
+                                color = Theme.v2.colors.variables.backgroundsSurface12,
+                                shape = RoundedCornerShape(size = 8.dp),
+                            )
+                            .padding(vertical = 3.dp, horizontal = 8.dp)
+                ) {
+                    Text(text = label, style = Theme.brockmann.supplementary.caption, color = color)
+                }
             },
         )
         if (!fromAddress.isNullOrEmpty()) {
