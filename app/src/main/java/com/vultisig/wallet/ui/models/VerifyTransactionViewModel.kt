@@ -315,7 +315,10 @@ constructor(
                     vault.coins.any { it.chain == chain && it.address == transaction.dstAddress }
                 }
                 ?.name
-            val dstAddressBookTitle = if (dstVaultName == null) {
+            val dstInAddressBook = dstVaultName == null && withContext(Dispatchers.IO) {
+                addressBookRepository.entryExists(chain.id, transaction.dstAddress)
+            }
+            val dstAddressBookTitle = if (dstInAddressBook) {
                 runCatching {
                     withContext(Dispatchers.IO) {
                         addressBookRepository.getEntry(chain.id, transaction.dstAddress).title
