@@ -13,6 +13,8 @@ import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -34,6 +36,7 @@ constructor(
 ) {
 
     private val cachedTokens = java.util.concurrent.ConcurrentHashMap<String, AuthToken>()
+    private val refreshLocks = java.util.concurrent.ConcurrentHashMap<String, Mutex>()
 
     fun getCachedToken(vaultPubKey: String): AuthToken? {
         var token = cachedTokens[vaultPubKey]
@@ -57,33 +60,36 @@ constructor(
     }
 
     suspend fun refreshIfNeeded(vaultPubKey: String): AuthToken? {
-        val token = cachedTokens[vaultPubKey] ?: loadPersistedToken(vaultPubKey) ?: return null
+        val lock = refreshLocks.getOrPut(vaultPubKey) { Mutex() }
+        return lock.withLock {
+            val token = cachedTokens[vaultPubKey] ?: loadPersistedToken(vaultPubKey) ?: return null
 
-        val fiveMinutesFromNow = System.currentTimeMillis() + REFRESH_BUFFER_MS
-        if (token.expiresAt > fiveMinutesFromNow) {
-            return token
-        }
+            val fiveMinutesFromNow = System.currentTimeMillis() + REFRESH_BUFFER_MS
+            if (token.expiresAt > fiveMinutesFromNow) {
+                return token
+            }
 
-        if (token.refreshToken.isBlank()) {
-            invalidateToken(vaultPubKey)
-            return null
-        }
+            if (token.refreshToken.isBlank()) {
+                invalidateToken(vaultPubKey)
+                return null
+            }
 
-        return try {
-            val response = verifierApi.refreshToken(token.refreshToken)
-            val newToken =
-                buildAuthToken(
-                    accessToken = response.accessToken,
-                    refreshToken = response.refreshToken,
-                    expiresIn = response.expiresIn,
-                )
-            cachedTokens[vaultPubKey] = newToken
-            persistToken(vaultPubKey, newToken)
-            newToken
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            null
+            try {
+                val response = verifierApi.refreshToken(token.refreshToken)
+                val newToken =
+                    buildAuthToken(
+                        accessToken = response.accessToken,
+                        refreshToken = response.refreshToken,
+                        expiresIn = response.expiresIn,
+                    )
+                cachedTokens[vaultPubKey] = newToken
+                persistToken(vaultPubKey, newToken)
+                newToken
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
         }
     }
 

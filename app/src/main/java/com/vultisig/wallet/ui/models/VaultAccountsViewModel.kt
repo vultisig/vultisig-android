@@ -545,7 +545,12 @@ constructor(
 
     fun setCryptoConnectionType(type: CryptoConnectionType) {
         if (type == CryptoConnectionType.Agent) {
-            viewModelScope.launch {
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    Timber.w(e, "Failed to resolve Agent auth state")
+                    uiState.update { it.copy(showAgentAuthorizeSheet = true) }
+                }
+            ) {
                 val vault = vaultId?.let { vaultRepository.get(it) }
                 val pubKey = vault?.pubKeyECDSA
                 val hasToken = pubKey != null && agentAuthService.getOrRefreshToken(pubKey) != null

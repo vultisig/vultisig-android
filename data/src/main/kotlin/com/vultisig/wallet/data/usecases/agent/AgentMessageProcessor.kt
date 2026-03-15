@@ -125,7 +125,11 @@ constructor(
         vault: Vault,
         result: AgentActionResult,
     ) {
-        val token = authService.getOrRefreshToken(vault.pubKeyECDSA) ?: return
+        val token = authService.getOrRefreshToken(vault.pubKeyECDSA)
+        if (token == null) {
+            _events.emit(AgentEvent.AuthRequired(conversationId, vault.pubKeyECDSA))
+            return
+        }
         val context = contextBuilder.buildLightContext(vault)
 
         val request =
@@ -379,7 +383,8 @@ constructor(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    Timber.w(e, "AgentProcessor: Failed to report last action result")
+                    handleError(conversationId, vault.pubKeyECDSA, e)
+                    return
                 }
             } else {
                 try {
@@ -387,7 +392,8 @@ constructor(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    Timber.w(e, "AgentProcessor: Failed to report action result")
+                    handleError(conversationId, vault.pubKeyECDSA, e)
+                    return
                 }
             }
         }
