@@ -558,7 +558,6 @@ internal class KeysignViewModel(
                             is SendTransactionHistoryData -> TransactionType.SEND
                             is SwapTransactionHistoryData -> TransactionType.SWAP
                         },
-                    fiatValue = null,
                     confirmedAt = null,
                     failureReason = null,
                     lastCheckedAt = now,
