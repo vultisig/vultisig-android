@@ -62,18 +62,7 @@ internal data class TransactionDetailsUiModel(
     val signAmino: String? = null,
     val signDirect: String? = null,
     val signSolana: String? = null,
-) {
-    val formattedSrcAddress: String
-        get() = srcVaultName?.let { "$it ($srcAddress)" } ?: srcAddress
-
-    val formattedDstAddress: String
-        get() = when {
-            dstVaultName != null -> "$dstVaultName ($dstAddress)"
-            dstAddressBookTitle != null -> "$dstAddressBookTitle ($dstAddress)"
-            dstLabel != null -> "$dstLabel ($dstAddress)"
-            else -> dstAddress
-        }
-}
+)
 
 @Immutable
 internal data class VerifyTransactionUiModel(

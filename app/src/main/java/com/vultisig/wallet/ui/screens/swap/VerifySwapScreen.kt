@@ -11,9 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -477,27 +477,23 @@ internal fun VerifyCardDetails(
         )
 
         if (bracketValue != null) {
-            // iOS-style: label takes its natural width (priority), address fills remaining space
-            Row(
+            val shortBracket = if (bracketValue.length > 10)
+                "${bracketValue.take(4)}...${bracketValue.takeLast(4)}"
+            else bracketValue
+            Text(
+                text = buildAnnotatedString {
+                    append(subtitle)
+                    withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
+                        append(" ($shortBracket)")
+                    }
+                },
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.primary,
+                textAlign = TextAlign.End,
                 modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    text = subtitle,
-                    style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.MiddleEllipsis,
-                )
-                Text(
-                    text = "($bracketValue)",
-                    style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.tertiary,
-                    maxLines = 1,
-                    overflow = TextOverflow.MiddleEllipsis,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+                maxLines = 1,
+                overflow = TextOverflow.MiddleEllipsis,
+            )
         } else {
             Text(
                 text = subtitle,

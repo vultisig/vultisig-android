@@ -20,8 +20,6 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.Numeric
 import io.ktor.client.HttpClient
-import wallet.core.jni.AnyAddress
-import wallet.core.jni.CoinType
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -36,6 +34,8 @@ import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.put
 import timber.log.Timber
+import wallet.core.jni.AnyAddress
+import wallet.core.jni.CoinType
 
 interface EvmApi {
     suspend fun getBalance(coin: Coin): BigInteger
