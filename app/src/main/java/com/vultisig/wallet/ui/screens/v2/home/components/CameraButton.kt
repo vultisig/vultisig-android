@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.v2.home.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
@@ -11,8 +12,9 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 internal fun CameraButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
     VsCircleButton(
         onClick = onClick,
-        icon = R.drawable.camera_2,
-        size = VsCircleButtonSize.Medium,
+        drawableResId = R.drawable.camera_2,
+        size = VsCircleButtonSize.Custom(62.dp),
+        iconSize = 24.dp,
         modifier = modifier,
     )
 }
