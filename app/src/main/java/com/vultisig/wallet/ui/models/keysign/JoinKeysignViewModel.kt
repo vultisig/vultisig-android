@@ -958,6 +958,12 @@ constructor(
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
 
                     val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+                    val srcVaultName =
+                        allVaults
+                            .firstOrNull { v ->
+                                v.coins.any { it.chain == chain && it.address == address }
+                            }
+                            ?.name
                     val dstVaultName =
                         allVaults
                             .firstOrNull { v ->
@@ -979,6 +985,7 @@ constructor(
 
                     val namedTransactionUiModel =
                         transactionToUiModel.copy(
+                            srcVaultName = srcVaultName,
                             dstVaultName = dstVaultName,
                             dstAddressBookTitle = dstAddressBookTitle,
                         )

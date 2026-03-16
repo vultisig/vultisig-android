@@ -102,6 +102,7 @@ import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -118,6 +119,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -348,7 +350,9 @@ constructor(
                 .textAsFlow()
                 .debounce(300)
                 .combine(selectedToken.filterNotNull()) { address, token ->
-                    val addressStr = address.toString()
+                    address.toString() to token
+                }
+                .mapLatest { (addressStr, token) ->
                     if (chainAccountAddressRepository.isValid(token.chain, addressStr)) {
                         // Only clear ENS label if the user typed a new raw address,
                         // not when we programmatically set the field to the resolved address.
@@ -361,6 +365,8 @@ constructor(
                         try {
                             val resolved =
                                 addressParserRepository.resolveName(addressStr, token.chain)
+                            // Ignore stale result if user changed input while resolving
+                            if (addressFieldState.text.toString() != addressStr) return@mapLatest
                             if (chainAccountAddressRepository.isValid(token.chain, resolved)) {
                                 dstAddressLabel = addressStr
                                 resolvedDstAddress.value = resolved
@@ -370,6 +376,8 @@ constructor(
                                 resolvedDstAddress.value = null
                                 dstAddressLabel = null
                             }
+                        } catch (e: CancellationException) {
+                            throw e
                         } catch (_: Exception) {
                             resolvedDstAddress.value = null
                             dstAddressLabel = null
@@ -1130,7 +1138,12 @@ constructor(
                             UiText.StringResource(R.string.failed_to_resolve_address)
                         )
                     }
-                val dstLabel = dstAddressLabel
+                val dstLabel =
+                    originalInput.takeIf {
+                        it.isNotBlank() &&
+                            !chainAccountAddressRepository.isValid(chain, originalInput) &&
+                            chainAccountAddressRepository.isValid(chain, dstAddress)
+                    }
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                     throw InvalidTransactionDataException(

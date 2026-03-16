@@ -302,13 +302,13 @@ constructor(
             val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
             val chain = transaction.token.chain
             val srcVaultName = allVaults.find { it.id == vaultId }?.name
+            val normalizedDstAddress = normalizeAddressForLookup(transaction.dstAddress)
             val dstVaultName =
                 allVaults
                     .firstOrNull { vault ->
                         vault.coins.any {
                             it.chain == chain &&
-                                it.address.lowercase(Locale.ROOT) ==
-                                    transaction.dstAddress.lowercase(Locale.ROOT)
+                                normalizeAddressForLookup(it.address) == normalizedDstAddress
                         }
                     }
                     ?.name
@@ -336,6 +336,9 @@ constructor(
             scanTransaction()
         }
     }
+
+    private fun normalizeAddressForLookup(address: String): String =
+        if (address.startsWith("0x", ignoreCase = true)) address.lowercase(Locale.ROOT) else address
 
     private suspend fun scanTransaction() {
         try {

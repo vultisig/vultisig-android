@@ -477,22 +477,27 @@ internal fun VerifyCardDetails(
         )
 
         if (bracketValue != null) {
-            Row(modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.End) {
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     text = subtitle,
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.primary,
-                    textAlign = TextAlign.End,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.padding(end = 4.dp),
                 )
                 Text(
                     text = " ($bracketValue)",
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.tertiary,
+                    textAlign = TextAlign.End,
                     maxLines = 1,
                     overflow = TextOverflow.MiddleEllipsis,
+                    modifier = Modifier.weight(1f),
                 )
             }
         } else {
