@@ -64,13 +64,13 @@ internal data class TransactionDetailsUiModel(
     val signSolana: String? = null,
 ) {
     val formattedSrcAddress: String
-        get() = srcVaultName?.let { "$it (${srcAddress.take(4)}...${srcAddress.takeLast(4)})" } ?: srcAddress
+        get() = srcVaultName?.let { "$it ($srcAddress)" } ?: srcAddress
 
     val formattedDstAddress: String
         get() = when {
-            dstVaultName != null -> "$dstVaultName (${dstAddress.take(4)}...${dstAddress.takeLast(4)})"
-            dstAddressBookTitle != null -> "$dstAddressBookTitle (${dstAddress.take(4)}...${dstAddress.takeLast(4)})"
-            dstLabel != null -> "$dstLabel (${dstAddress.take(4)}...${dstAddress.takeLast(4)})"
+            dstVaultName != null -> "$dstVaultName ($dstAddress)"
+            dstAddressBookTitle != null -> "$dstAddressBookTitle ($dstAddress)"
+            dstLabel != null -> "$dstLabel ($dstAddress)"
             else -> dstAddress
         }
 }

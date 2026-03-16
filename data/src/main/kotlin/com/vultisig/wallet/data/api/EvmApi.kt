@@ -20,6 +20,8 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.Numeric
 import io.ktor.client.HttpClient
+import wallet.core.jni.AnyAddress
+import wallet.core.jni.CoinType
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -378,7 +380,6 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
     }
 
     override suspend fun resolveENS(namehash: String): String {
-
         val resolverAddress =
             fetchEns(
                 mapOf(
@@ -386,12 +387,13 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
                     "data" to "$FETCH_RESOLVER_PREFIX${namehash.stripHexPrefix()}",
                 )
             )
-        return fetchEns(
+        val resolved = fetchEns(
             mapOf(
                 "to" to resolverAddress,
                 "data" to "$FETCH_ADDRESS_PREFIX${namehash.stripHexPrefix()}",
             )
         )
+        return AnyAddress(resolved, CoinType.ETHEREUM).description()
     }
 
     override suspend fun getBaseFee(): BigInteger {

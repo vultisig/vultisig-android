@@ -299,6 +299,8 @@ constructor(
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
+    private val resolvedDstAddress = MutableStateFlow<String?>(null)
+    private var dstAddressLabel: String? = null
 
     private var gasSettings = MutableStateFlow<GasSettings?>(null)
 
@@ -339,15 +341,42 @@ constructor(
         collectMaxAmount()
     }
 
+    @OptIn(FlowPreview::class)
     private fun collectAddress() {
         viewModelScope.launch {
             addressFieldState
                 .textAsFlow()
+                .debounce(300)
                 .combine(selectedToken.filterNotNull()) { address, token ->
-                    val isAddressValid =
-                        chainAccountAddressRepository.isValid(token.chain, address.toString())
-                    if (isAddressValid) {
+                    val addressStr = address.toString()
+                    if (chainAccountAddressRepository.isValid(token.chain, addressStr)) {
+                        // Only clear ENS label if the user typed a new raw address,
+                        // not when we programmatically set the field to the resolved address.
+                        if (addressStr != resolvedDstAddress.value) {
+                            dstAddressLabel = null
+                        }
+                        resolvedDstAddress.value = addressStr
                         expandSection(SendSections.Amount)
+                    } else if (addressStr.isNotEmpty()) {
+                        try {
+                            val resolved =
+                                addressParserRepository.resolveName(addressStr, token.chain)
+                            if (chainAccountAddressRepository.isValid(token.chain, resolved)) {
+                                dstAddressLabel = addressStr
+                                resolvedDstAddress.value = resolved
+                                addressFieldState.setTextAndPlaceCursorAtEnd(resolved)
+                                expandSection(SendSections.Amount)
+                            } else {
+                                resolvedDstAddress.value = null
+                                dstAddressLabel = null
+                            }
+                        } catch (_: Exception) {
+                            resolvedDstAddress.value = null
+                            dstAddressLabel = null
+                        }
+                    } else {
+                        resolvedDstAddress.value = null
+                        dstAddressLabel = null
                     }
                 }
                 .collect()
@@ -1080,14 +1109,6 @@ constructor(
 
                 val chain = selectedAccount.token.chain
 
-                if (
-                    !chainAccountAddressRepository.isValid(chain, addressFieldState.text.toString())
-                ) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_address)
-                    )
-                }
-
                 val gasFee =
                     gasFee.value
                         ?: throw InvalidTransactionDataException(
@@ -1112,7 +1133,7 @@ constructor(
                             UiText.StringResource(R.string.failed_to_resolve_address)
                         )
                     }
-                val dstLabel = if (originalInput != dstAddress) originalInput else null
+                val dstLabel = dstAddressLabel
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                     throw InvalidTransactionDataException(
@@ -2465,7 +2486,7 @@ constructor(
                                             vaultHexPublicKey = vault.getPubKeyByChain(chain),
                                         ),
                                     amount = tokenAmountInt,
-                                    to = dst,
+                                    to = resolvedDstAddress.value ?: dst,
                                     memo = memo,
                                     isMax = false,
                                 )
