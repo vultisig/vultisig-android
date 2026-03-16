@@ -41,7 +41,8 @@ fun TransactionTypeButton(
 ) {
 
     val backgroundColor =
-        if (isSelected) Theme.v2.colors.buttons.tertiary else Theme.v2.colors.backgrounds.tertiary_2
+        if (isSelected) Theme.v2.colors.buttons.ctaPrimary
+        else Theme.v2.colors.backgrounds.tertiary_2
 
     val (logo, title) =
         when (txType) {
