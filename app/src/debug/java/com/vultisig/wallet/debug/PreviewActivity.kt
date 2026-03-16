@@ -17,6 +17,7 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
@@ -30,6 +31,7 @@ class PreviewActivity : ComponentActivity() {
                 when (screen) {
                     "swap_confirm" -> SwapConfirmPreview()
                     "transaction_type_button" -> TransactionTypeButtonPreview()
+                    "camera_button" -> CameraButton(onClick = {})
                     else -> SwapConfirmPreview()
                 }
             }
