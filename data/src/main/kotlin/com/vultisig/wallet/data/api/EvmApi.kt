@@ -393,6 +393,9 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
                 "data" to "$FETCH_ADDRESS_PREFIX${namehash.stripHexPrefix()}",
             )
         )
+        val hex = resolved.removePrefix("0x")
+        require(hex.length == 40) { "ENS resolved to invalid address: $resolved" }
+        require(hex.any { it != '0' }) { "ENS resolved to zero address" }
         return AnyAddress(resolved, CoinType.ETHEREUM).description()
     }
 

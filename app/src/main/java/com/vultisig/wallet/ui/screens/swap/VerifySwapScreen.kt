@@ -477,23 +477,27 @@ internal fun VerifyCardDetails(
         )
 
         if (bracketValue != null) {
-            val shortBracket = if (bracketValue.length > 10)
-                "${bracketValue.take(4)}...${bracketValue.takeLast(4)}"
-            else bracketValue
-            Text(
-                text = buildAnnotatedString {
-                    append(subtitle)
-                    withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
-                        append(" ($shortBracket)")
-                    }
-                },
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.primary,
-                textAlign = TextAlign.End,
+            Row(
                 modifier = Modifier.weight(1f),
-                maxLines = 1,
-                overflow = TextOverflow.MiddleEllipsis,
-            )
+                horizontalArrangement = Arrangement.End,
+            ) {
+                Text(
+                    text = subtitle,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.primary,
+                    textAlign = TextAlign.End,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = " ($bracketValue)",
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis,
+                )
+            }
         } else {
             Text(
                 text = subtitle,

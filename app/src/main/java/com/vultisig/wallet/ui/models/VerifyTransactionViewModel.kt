@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigInteger
+import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -303,7 +304,10 @@ constructor(
             val srcVaultName = allVaults.find { it.id == vaultId }?.name
             val dstVaultName = allVaults
                 .firstOrNull { vault ->
-                    vault.coins.any { it.chain == chain && it.address == transaction.dstAddress }
+                    vault.coins.any {
+                        it.chain == chain &&
+                            it.address.lowercase(Locale.ROOT) == transaction.dstAddress.lowercase(Locale.ROOT)
+                    }
                 }
                 ?.name
             val dstInAddressBook = dstVaultName == null &&
