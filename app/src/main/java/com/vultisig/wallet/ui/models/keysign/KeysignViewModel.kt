@@ -544,30 +544,32 @@ internal class KeysignViewModel(
 
     private suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
         transactionHistoryData?.let {
-            val now = System.currentTimeMillis()
-            val historyData =
-                CommonTransactionHistoryData(
+            runCatching {
+                val now = System.currentTimeMillis()
+                val historyData =
+                    CommonTransactionHistoryData(
+                        vaultId = vault.id,
+                        txHash = txHash,
+                        chain = chain.raw,
+                        timestamp = now,
+                        explorerUrl = txLink.value,
+                        status = BROADCASTED,
+                        type =
+                            when (it) {
+                                is SendTransactionHistoryData -> TransactionType.SEND
+                                is SwapTransactionHistoryData -> TransactionType.SWAP
+                            },
+                        confirmedAt = null,
+                        failureReason = null,
+                        lastCheckedAt = now,
+                    )
+                transactionHistoryRepository.recordTransaction(
                     vaultId = vault.id,
                     txHash = txHash,
-                    chain = chain.raw,
-                    timestamp = now,
-                    explorerUrl = txLink.value,
-                    status = BROADCASTED,
-                    type =
-                        when (it) {
-                            is SendTransactionHistoryData -> TransactionType.SEND
-                            is SwapTransactionHistoryData -> TransactionType.SWAP
-                        },
-                    confirmedAt = null,
-                    failureReason = null,
-                    lastCheckedAt = now,
+                    txData = it,
+                    genericData = historyData,
                 )
-            transactionHistoryRepository.recordTransaction(
-                vaultId = vault.id,
-                txHash = txHash,
-                txData = it,
-                genericData = historyData,
-            )
+            }
         }
     }
 

@@ -116,7 +116,7 @@ private fun TransactionHistoryScreen(
     if (state.isAssetSearchSheetVisible) {
         AssetSearchBottomSheet(
             items = state.assetSearchItems,
-            selectedTickers = state.selectedAssetTickers,
+            selectedIds = state.selectedAssetIds,
             searchTextFieldState = assetSearchTextFieldState,
             onCheckChange = onAssetCheckChange,
             onDone = onConfirmAssetSearch,
@@ -273,7 +273,7 @@ private fun SelectedAssetFiltersRow(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             assets.forEach { asset ->
-                AssetFilterChip(asset = asset, onRemove = { onRemove(asset.ticker) })
+                AssetFilterChip(asset = asset, onRemove = { onRemove(asset.tokenId) })
             }
         }
         UiSpacer(size = 8.dp)
@@ -323,7 +323,7 @@ private fun AssetFilterChip(asset: TransactionAssetUiModel, onRemove: () -> Unit
 @Composable
 private fun AssetSearchBottomSheet(
     items: List<TransactionAssetUiModel>,
-    selectedTickers: Set<String>,
+    selectedIds: Set<String>,
     searchTextFieldState: TextFieldState,
     onCheckChange: (TransactionAssetUiModel) -> Unit,
     onDone: () -> Unit,
@@ -340,7 +340,7 @@ private fun AssetSearchBottomSheet(
                             else it.data.ticker,
                         logo = it.data.logo,
                     ),
-                isChecked = it.data.ticker in selectedTickers,
+                isChecked = it.data.tokenId in selectedIds,
             )
         },
         searchTextFieldState = searchTextFieldState,
@@ -536,7 +536,14 @@ private fun PreviewWithAssetFilters() {
                         TransactionAssetUiModel(ticker = "WBTC", chain = "Ethereum", logo = ""),
                         TransactionAssetUiModel(ticker = "SOL", chain = "Solana", logo = ""),
                     ),
-                selectedAssetTickers = setOf("ETH", "USDC", "RUNE", "WBTC", "SOL"),
+                selectedAssetIds =
+                    setOf(
+                        "Ethereum:ETH",
+                        "Ethereum:USDC",
+                        "THORChain:RUNE",
+                        "Ethereum:WBTC",
+                        "Solana:SOL",
+                    ),
                 groups =
                     listOf(
                         TransactionHistoryGroupUiModel(

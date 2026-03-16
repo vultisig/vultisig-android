@@ -111,7 +111,10 @@ sealed interface TransactionHistoryItemUiModel {
     ) : TransactionHistoryItemUiModel
 }
 
-data class TransactionAssetUiModel(val ticker: String, val chain: String, val logo: ImageModel)
+data class TransactionAssetUiModel(val ticker: String, val chain: String, val logo: ImageModel) {
+    val tokenId: String
+        get() = "$chain:$ticker"
+}
 
 @Immutable
 data class TransactionHistoryUiState(
@@ -122,7 +125,7 @@ data class TransactionHistoryUiState(
     val selectedItem: TransactionHistoryItemUiModel? = null,
     val isAssetSearchSheetVisible: Boolean = false,
     val assetSearchItems: List<TransactionAssetUiModel> = emptyList(),
-    val selectedAssetTickers: Set<String> = emptySet(),
+    val selectedAssetIds: Set<String> = emptySet(),
     val selectedAssets: List<TransactionAssetUiModel> = emptyList(),
 )
 
@@ -139,7 +142,7 @@ constructor(
     private val vaultId: String = savedStateHandle.toRoute<Route.TransactionHistory>().vaultId
 
     private val currentTime = MutableStateFlow(System.currentTimeMillis())
-    private val selectedAssetTickers = MutableStateFlow<Set<String>>(emptySet())
+    private val selectedAssetIds = MutableStateFlow<Set<String>>(emptySet())
     private val selectedAssetsList = MutableStateFlow<List<TransactionAssetUiModel>>(emptyList())
 
     val assetSearchTextFieldState = TextFieldState()
@@ -163,36 +166,36 @@ constructor(
     }
 
     fun toggleAssetSelection(asset: TransactionAssetUiModel) {
-        if (asset.ticker in selectedAssetTickers.value) {
-            selectedAssetTickers.update { it - asset.ticker }
-            selectedAssetsList.update { it.filter { a -> a.ticker != asset.ticker } }
+        if (asset.tokenId in selectedAssetIds.value) {
+            selectedAssetIds.update { it - asset.tokenId }
+            selectedAssetsList.update { it.filter { a -> a.tokenId != asset.tokenId } }
         } else {
-            selectedAssetTickers.update { it + asset.ticker }
+            selectedAssetIds.update { it + asset.tokenId }
             selectedAssetsList.update { it + asset }
         }
         _uiState.update {
             it.copy(
-                selectedAssetTickers = selectedAssetTickers.value,
+                selectedAssetIds = selectedAssetIds.value,
                 selectedAssets = selectedAssetsList.value,
             )
         }
     }
 
-    fun removeAssetFilter(ticker: String) {
-        selectedAssetTickers.update { it - ticker }
-        selectedAssetsList.update { it.filter { a -> a.ticker != ticker } }
+    fun removeAssetFilter(assetId: String) {
+        selectedAssetIds.update { it - assetId }
+        selectedAssetsList.update { it.filter { a -> a.tokenId != assetId } }
         _uiState.update {
             it.copy(
-                selectedAssetTickers = selectedAssetTickers.value,
+                selectedAssetIds = selectedAssetIds.value,
                 selectedAssets = selectedAssetsList.value,
             )
         }
     }
 
     fun clearAllFilters() {
-        selectedAssetTickers.value = emptySet()
+        selectedAssetIds.value = emptySet()
         selectedAssetsList.value = emptyList()
-        _uiState.update { it.copy(selectedAssetTickers = emptySet(), selectedAssets = emptyList()) }
+        _uiState.update { it.copy(selectedAssetIds = emptySet(), selectedAssets = emptyList()) }
     }
 
     fun confirmAssetSearch() {
@@ -200,12 +203,12 @@ constructor(
     }
 
     fun closeSearch() {
-        selectedAssetTickers.value = emptySet()
+        selectedAssetIds.value = emptySet()
         selectedAssetsList.value = emptyList()
         _uiState.update {
             it.copy(
                 isAssetSearchSheetVisible = false,
-                selectedAssetTickers = emptySet(),
+                selectedAssetIds = emptySet(),
                 selectedAssets = emptyList(),
             )
         }
@@ -262,11 +265,11 @@ constructor(
                 .combine(currentTime) { entities, now ->
                     entities.map { it.toUiModel(now) }.groupByDate(now)
                 }
-                .combine(selectedAssetTickers) { groups, tickers ->
-                    if (tickers.isEmpty()) groups
+                .combine(selectedAssetIds) { groups, ids ->
+                    if (ids.isEmpty()) groups
                     else
                         groups.mapNotNull { group ->
-                            val filtered = group.transactions.filter { it.matchesTickers(tickers) }
+                            val filtered = group.transactions.filter { it.matchesAssetIds(ids) }
                             if (filtered.isEmpty()) null else group.copy(transactions = filtered)
                         }
                 }
@@ -276,10 +279,11 @@ constructor(
         }
     }
 
-    private fun TransactionHistoryItemUiModel.matchesTickers(tickers: Set<String>): Boolean =
+    private fun TransactionHistoryItemUiModel.matchesAssetIds(assetIds: Set<String>): Boolean =
         when (this) {
-            is TransactionHistoryItemUiModel.Send -> token in tickers
-            is TransactionHistoryItemUiModel.Swap -> fromToken in tickers || toToken in tickers
+            is TransactionHistoryItemUiModel.Send -> "$chain:$token" in assetIds
+            is TransactionHistoryItemUiModel.Swap ->
+                "$fromChain:$fromToken" in assetIds || "$toChain:$toToken" in assetIds
         }
 
     private fun observeAssetSearchItems() {
@@ -319,7 +323,7 @@ constructor(
                                 }
                             }
                         }
-                        .distinctBy { it.ticker }
+                        .distinctBy { it.tokenId }
                 }
                 .combine(assetSearchTextFieldState.textAsFlow()) { items, query ->
                     val q = query.toString().trim()
