@@ -302,27 +302,33 @@ constructor(
             val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
             val chain = transaction.token.chain
             val srcVaultName = allVaults.find { it.id == vaultId }?.name
-            val dstVaultName = allVaults
-                .firstOrNull { vault ->
-                    vault.coins.any {
-                        it.chain == chain &&
-                            it.address.lowercase(Locale.ROOT) == transaction.dstAddress.lowercase(Locale.ROOT)
+            val dstVaultName =
+                allVaults
+                    .firstOrNull { vault ->
+                        vault.coins.any {
+                            it.chain == chain &&
+                                it.address.lowercase(Locale.ROOT) ==
+                                    transaction.dstAddress.lowercase(Locale.ROOT)
+                        }
                     }
-                }
-                ?.name
-            val dstInAddressBook = dstVaultName == null &&
-                addressBookRepository.entryExists(chain.id, transaction.dstAddress)
-            val dstAddressBookTitle = if (dstInAddressBook) {
-                runCatching {
-                    addressBookRepository.getEntry(chain.id, transaction.dstAddress).title
-                }.getOrNull()
-            } else null
+                    ?.name
+            val dstInAddressBook =
+                dstVaultName == null &&
+                    addressBookRepository.entryExists(chain.id, transaction.dstAddress)
+            val dstAddressBookTitle =
+                if (dstInAddressBook) {
+                    runCatching {
+                            addressBookRepository.getEntry(chain.id, transaction.dstAddress).title
+                        }
+                        .getOrNull()
+                } else null
 
-            val namedUiModel = transactionUiModel.copy(
-                srcVaultName = srcVaultName,
-                dstVaultName = dstVaultName,
-                dstAddressBookTitle = dstAddressBookTitle,
-            )
+            val namedUiModel =
+                transactionUiModel.copy(
+                    srcVaultName = srcVaultName,
+                    dstVaultName = dstVaultName,
+                    dstAddressBookTitle = dstAddressBookTitle,
+                )
 
             uiState.update { it.copy(transaction = namedUiModel, isLoadingFees = true) }
 

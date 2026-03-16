@@ -958,21 +958,30 @@ constructor(
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
 
                     val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
-                    val dstVaultName = allVaults
-                        .firstOrNull { v -> v.coins.any { it.chain == chain && it.address == payload.toAddress } }
-                        ?.name
-                    val isSavedInAddressBook = dstVaultName == null &&
-                        addressBookRepository.entryExists(chain.id, payload.toAddress)
-                    val dstAddressBookTitle = if (isSavedInAddressBook) {
-                        runCatching {
-                            addressBookRepository.getEntry(chain.id, payload.toAddress).title
-                        }.getOrNull()
-                    } else null
+                    val dstVaultName =
+                        allVaults
+                            .firstOrNull { v ->
+                                v.coins.any { it.chain == chain && it.address == payload.toAddress }
+                            }
+                            ?.name
+                    val isSavedInAddressBook =
+                        dstVaultName == null &&
+                            addressBookRepository.entryExists(chain.id, payload.toAddress)
+                    val dstAddressBookTitle =
+                        if (isSavedInAddressBook) {
+                            runCatching {
+                                    addressBookRepository
+                                        .getEntry(chain.id, payload.toAddress)
+                                        .title
+                                }
+                                .getOrNull()
+                        } else null
 
-                    val namedTransactionUiModel = transactionToUiModel.copy(
-                        dstVaultName = dstVaultName,
-                        dstAddressBookTitle = dstAddressBookTitle,
-                    )
+                    val namedTransactionUiModel =
+                        transactionToUiModel.copy(
+                            dstVaultName = dstVaultName,
+                            dstAddressBookTitle = dstAddressBookTitle,
+                        )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     verifyUiModel.value =
                         VerifyUiModel.Send(

@@ -135,7 +135,8 @@ internal fun JoinKeysignView(navController: NavHostController) {
                     progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
                     onComplete = { navController.navigate(Route.Home()) },
                     onBack = keysignViewModel::navigateToHome,
-                    transactionTypeUiModel = keysignViewModel.resolvedTransactionUiModel.collectAsState().value,
+                    transactionTypeUiModel =
+                        keysignViewModel.resolvedTransactionUiModel.collectAsState().value,
                     onAddToAddressBook = keysignViewModel::navigateToAddressBook,
                     showSaveToAddressBook =
                         keysignViewModel.showSaveToAddressBook.collectAsState().value,

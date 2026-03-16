@@ -26,7 +26,6 @@ import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
-import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
@@ -36,6 +35,7 @@ import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
@@ -152,31 +152,34 @@ internal class KeysignViewModel(
             viewModelScope.safeLaunch {
                 val chain = tx.token.token.chain
                 val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
-                val dstVaultName = allVaults
-                    .firstOrNull { v -> v.coins.any { it.chain == chain && it.address == tx.dstAddress } }
-                    ?.name
+                val dstVaultName =
+                    allVaults
+                        .firstOrNull { v ->
+                            v.coins.any { it.chain == chain && it.address == tx.dstAddress }
+                        }
+                        ?.name
 
                 val isSavedBefore =
-                    addressBookRepository.entryExists(
-                        address = tx.dstAddress,
-                        chainId = chain.id,
-                    )
+                    addressBookRepository.entryExists(address = tx.dstAddress, chainId = chain.id)
 
                 showSaveToAddressBook.value = isSavedBefore.not() && dstVaultName == null
 
-                val dstAddressBookTitle = if (dstVaultName == null && isSavedBefore) {
-                    runCatching {
-                        addressBookRepository.getEntry(chain.id, tx.dstAddress).title
-                    }.getOrNull()
-                } else null
+                val dstAddressBookTitle =
+                    if (dstVaultName == null && isSavedBefore) {
+                        runCatching {
+                                addressBookRepository.getEntry(chain.id, tx.dstAddress).title
+                            }
+                            .getOrNull()
+                    } else null
 
-                resolvedTransactionUiModel.value = TransactionTypeUiModel.Send(
-                    tx.copy(
-                        srcVaultName = vault.name,
-                        dstVaultName = dstVaultName,
-                        dstAddressBookTitle = dstAddressBookTitle,
+                resolvedTransactionUiModel.value =
+                    TransactionTypeUiModel.Send(
+                        tx.copy(
+                            srcVaultName = vault.name,
+                            dstVaultName = dstVaultName,
+                            dstAddressBookTitle = dstAddressBookTitle,
+                        )
                     )
-                )
             }
         }
     }

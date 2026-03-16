@@ -1123,10 +1123,7 @@ constructor(
                 val originalInput = addressFieldState.text.toString()
                 val dstAddress =
                     try {
-                        addressParserRepository.resolveName(
-                            originalInput,
-                            chain,
-                        )
+                        addressParserRepository.resolveName(originalInput, chain)
                     } catch (e: Exception) {
                         Timber.e(e)
                         throw InvalidTransactionDataException(
