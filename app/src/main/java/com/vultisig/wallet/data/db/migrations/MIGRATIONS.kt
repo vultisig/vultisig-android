@@ -624,7 +624,7 @@ internal val MIGRATION_28_29 =
     }
 
 internal val MIGRATION_29_30 =
-    object : Migration(26, 27) {
+    object : Migration(29, 30) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
                 """

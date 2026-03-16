@@ -33,6 +33,8 @@ import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -142,7 +144,9 @@ constructor(
     private val selectedAssetsList = MutableStateFlow<List<TransactionAssetUiModel>>(emptyList())
 
     val assetSearchTextFieldState = TextFieldState()
-    val uiState = MutableStateFlow(TransactionHistoryUiState())
+
+    private val _uiState = MutableStateFlow(TransactionHistoryUiState())
+    val uiState: StateFlow<TransactionHistoryUiState> = _uiState.asStateFlow()
 
     init {
         startTimeTicker()
@@ -152,11 +156,11 @@ constructor(
     }
 
     fun selectTab(tab: TransactionHistoryTab) {
-        uiState.update { it.copy(selectedTab = tab, isLoading = true) }
+        _uiState.update { it.copy(selectedTab = tab, isLoading = true) }
     }
 
     fun openSearch() {
-        uiState.update { it.copy(isAssetSearchSheetVisible = true) }
+        _uiState.update { it.copy(isAssetSearchSheetVisible = true) }
     }
 
     fun toggleAssetSelection(asset: TransactionAssetUiModel) {
@@ -167,7 +171,7 @@ constructor(
             selectedAssetTickers.update { it + asset.ticker }
             selectedAssetsList.update { it + asset }
         }
-        uiState.update {
+        _uiState.update {
             it.copy(
                 selectedAssetTickers = selectedAssetTickers.value,
                 selectedAssets = selectedAssetsList.value,
@@ -178,7 +182,7 @@ constructor(
     fun removeAssetFilter(ticker: String) {
         selectedAssetTickers.update { it - ticker }
         selectedAssetsList.update { it.filter { a -> a.ticker != ticker } }
-        uiState.update {
+        _uiState.update {
             it.copy(
                 selectedAssetTickers = selectedAssetTickers.value,
                 selectedAssets = selectedAssetsList.value,
@@ -189,17 +193,17 @@ constructor(
     fun clearAllFilters() {
         selectedAssetTickers.value = emptySet()
         selectedAssetsList.value = emptyList()
-        uiState.update { it.copy(selectedAssetTickers = emptySet(), selectedAssets = emptyList()) }
+        _uiState.update { it.copy(selectedAssetTickers = emptySet(), selectedAssets = emptyList()) }
     }
 
     fun confirmAssetSearch() {
-        uiState.update { it.copy(isAssetSearchSheetVisible = false) }
+        _uiState.update { it.copy(isAssetSearchSheetVisible = false) }
     }
 
     fun closeSearch() {
         selectedAssetTickers.value = emptySet()
         selectedAssetsList.value = emptyList()
-        uiState.update {
+        _uiState.update {
             it.copy(
                 isAssetSearchSheetVisible = false,
                 selectedAssetTickers = emptySet(),
@@ -213,21 +217,21 @@ constructor(
     }
 
     fun openDetail(item: TransactionHistoryItemUiModel) {
-        uiState.update { it.copy(selectedItem = item) }
+        _uiState.update { it.copy(selectedItem = item) }
     }
 
     fun dismissDetail() {
-        uiState.update { it.copy(selectedItem = null) }
+        _uiState.update { it.copy(selectedItem = null) }
     }
 
     fun refresh() {
         viewModelScope.launch {
-            uiState.update { it.copy(isRefreshing = true) }
+            _uiState.update { it.copy(isRefreshing = true) }
             try {
                 refreshPendingTransactions(vaultId)
                 delay(100.milliseconds) // prevent refresh ui freezing
             } finally {
-                uiState.update { it.copy(isRefreshing = false) }
+                _uiState.update { it.copy(isRefreshing = false) }
             }
         }
     }
@@ -268,7 +272,7 @@ constructor(
                         }
                 }
                 .collect { groups ->
-                    uiState.update { it.copy(groups = groups, isLoading = false) }
+                    _uiState.update { it.copy(groups = groups, isLoading = false) }
                 }
         }
     }
@@ -337,7 +341,7 @@ constructor(
                                 it.chain.contains(q, ignoreCase = true)
                         }
                 }
-                .collect { items -> uiState.update { it.copy(assetSearchItems = items) } }
+                .collect { items -> _uiState.update { it.copy(assetSearchItems = items) } }
         }
     }
 
