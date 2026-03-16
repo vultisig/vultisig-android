@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.services
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessaging
@@ -124,25 +125,32 @@ constructor(
                     )
                 )
             }
+            vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
         } catch (e: Exception) {
             throw PushNotificationError.ApiFailure(e)
         }
-
-        vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
     }
 
-    suspend fun setAllVaultsOptIn(enabled: Boolean) {
-        val allVaults = vaultRepository.getAll().filter { it.isSecureVault() }
+    suspend fun setVaultsOptIn(vaultOptIns: List<Pair<String, Boolean>>) {
+        val anyEnabling = vaultOptIns.any { (_, enabled) -> enabled }
+        if (anyEnabling) {
+            refreshTokenIfNeeded()
+            if (getStoredToken() == null) throw PushNotificationError.TokenNotAvailable()
+        }
+        val token = getStoredToken()
 
-        if (enabled) refreshTokenIfNeeded()
-        val token =
-            if (enabled) {
-                getStoredToken() ?: throw PushNotificationError.TokenNotAvailable()
-            } else null
-
-        val succeededVaults = mutableListOf<Vault>()
-        try {
-            allVaults.forEach { vault ->
+        var successCount = 0
+        var failureCount = 0
+        vaultOptIns.forEach { (vaultId, enabled) ->
+            val vault =
+                vaultRepository.get(vaultId)?.takeIf { it.isSecureVault() }
+                    ?: run {
+                        Timber.w("Vault $vaultId not found or not supported, skipping")
+                        failureCount++
+                        return@forEach
+                    }
+            ensureSettingsExist(vault.id)
+            try {
                 val notificationVaultId = notificationVaultId(vault)
                 if (enabled) {
                     notificationApi.registerDevice(
@@ -160,49 +168,21 @@ constructor(
                         )
                     )
                 }
-                succeededVaults.add(vault)
+                vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
+                successCount++
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to update notification opt-in for vault ${vault.id}")
+                failureCount++
             }
-            vaultNotificationSettingsDao.setEnabledForAll(allVaults.map { it.id }, enabled)
-        } catch (e: Exception) {
-            if (succeededVaults.isNotEmpty()) {
-                rollbackApiCalls(succeededVaults, wasEnabling = enabled, token = token)
-                vaultNotificationSettingsDao.setEnabledForAll(
-                    succeededVaults.map { it.id },
-                    !enabled,
-                )
-            }
-            throw e as? PushNotificationError ?: PushNotificationError.ApiFailure(e)
+        }
+        if (failureCount > 0) {
+            throw PushNotificationError.PartialFailure(successCount, failureCount)
         }
     }
 
-    private suspend fun rollbackApiCalls(
-        vaults: List<Vault>,
-        wasEnabling: Boolean,
-        token: String?,
-    ) {
-        vaults.forEach { vault ->
-            try {
-                val notificationVaultId = notificationVaultId(vault)
-                if (wasEnabling) {
-                    notificationApi.unregisterDevice(
-                        DeviceUnregisterRequest(
-                            vaultId = notificationVaultId,
-                            partyName = vault.localPartyID,
-                        )
-                    )
-                } else if (token != null) {
-                    notificationApi.registerDevice(
-                        DeviceRegistrationRequest(
-                            vaultId = notificationVaultId,
-                            partyName = vault.localPartyID,
-                            token = token,
-                        )
-                    )
-                }
-            } catch (e: Exception) {
-                Timber.w(e, "Failed to rollback API call for vault ${vault.id}")
-            }
-        }
+    suspend fun setAllVaultsOptIn(enabled: Boolean) {
+        val allVaults = vaultRepository.getAll().filter { it.isSecureVault() }
+        setVaultsOptIn(allVaults.map { it.id to enabled })
     }
 
     suspend fun notifyVaultDevices(vault: Vault, qrCodeData: String) {
@@ -240,9 +220,12 @@ sealed class PushNotificationError(message: String) : Exception(message) {
     class TokenNotAvailable : PushNotificationError("No FCM token available")
 
     class ApiFailure(cause: Throwable) : PushNotificationError("API call failed: ${cause.message}")
+
+    class PartialFailure(val successCount: Int, val failureCount: Int) :
+        PushNotificationError("Updated $successCount vaults, $failureCount failed")
 }
 
-fun PushNotificationError.toStringRes(): Int =
+private fun PushNotificationError.toStringRes(): Int =
     when (this) {
         is PushNotificationError.VaultNotFound -> R.string.push_notification_vault_not_found
         is PushNotificationError.VaultNotSupported ->
@@ -250,4 +233,19 @@ fun PushNotificationError.toStringRes(): Int =
         is PushNotificationError.TokenNotAvailable ->
             R.string.push_notification_error_token_not_available
         is PushNotificationError.ApiFailure -> R.string.push_notification_error_api_failure
+        is PushNotificationError.PartialFailure -> R.string.push_notification_partial_failure
     }
+
+fun pushNotificationErrorMessage(e: Throwable, context: Context): String {
+    val err = e as? PushNotificationError
+    return if (err is PushNotificationError.PartialFailure) {
+        context.getString(
+            R.string.push_notification_partial_failure,
+            err.successCount,
+            err.successCount + err.failureCount,
+            err.failureCount,
+        )
+    } else {
+        context.getString(err?.toStringRes() ?: R.string.push_notifications_failed)
+    }
+}

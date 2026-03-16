@@ -8,6 +8,7 @@
     <string name="push_notification_error_vault_not_supported">金库不支持通知</string>
     <string name="push_notification_error_token_not_available">无法获取通知令牌</string>
     <string name="push_notification_error_api_failure">无法更新通知注册</string>
+    <string name="push_notification_partial_failure">已更新 %2$d 个金库中的 %1$d 个，%3$d 个失败</string>
     <string name="push_notifications_sent">通知发送成功</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">当需要您的签名或设备请求访问时，您将收到通知。</string>
     <string name="enable_push_notifications">启用推送通知</string>

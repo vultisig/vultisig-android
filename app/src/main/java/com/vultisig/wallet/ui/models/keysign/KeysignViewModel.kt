@@ -172,10 +172,10 @@ internal class KeysignViewModel(
     }
 
     private suspend fun startKeysignDkls() {
-        if (keysignPayload == null && customMessagePayload == null) {
-            error("Keysign payload is null")
-        }
         try {
+            if (keysignPayload == null && customMessagePayload == null) {
+                error("Keysign payload is null")
+            }
             when (keyType) {
                 TssKeyType.ECDSA -> {
                     currentState.value = KeysignState.KeysignECDSA
@@ -254,10 +254,10 @@ internal class KeysignViewModel(
      * signing (chainPath = "").
      */
     private suspend fun startKeysignKeyImport() {
-        if (keysignPayload == null && customMessagePayload == null) {
-            error("Keysign payload is null")
-        }
         try {
+            if (keysignPayload == null && customMessagePayload == null) {
+                error("Keysign payload is null")
+            }
             val chain = keysignPayload?.coin?.chain
 
             when (keyType) {

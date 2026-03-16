@@ -108,6 +108,77 @@ For keygen/keysign testing with multiple emulators:
 - Minimize recomposition by using stable parameters
 - Use `@Composable` naming convention (PascalCase)
 
+### Design & Figma Workflow
+
+**Figma source of truth**: https://www.figma.com/design/puB2fsVpPrBx3Sup7gaa3v/Vultisig-App
+
+All UI work MUST be verified against the Figma design using the Figma MCP server. This is a **blocking requirement** — do not implement or modify UI based on assumptions or guesses.
+
+#### When to use Figma MCP
+- **Any new screen or component** — fetch the design before writing code
+- **Any UI fix or visual change** — compare current implementation against Figma before and after changes
+- **When the user provides a Figma URL** — always use `get_design_context` to fetch the design specs
+- **When the user says something "doesn't match Figma"** — fetch the Figma node, get a screenshot, and compare against the implementation
+- **Layout, spacing, typography, or color questions** — Figma is authoritative, not guesses
+
+#### How to use Figma MCP
+1. **If the Figma MCP server is not connected**, immediately ask the user to connect it before proceeding with UI work
+2. Use `get_design_context` with the `fileKey` and `nodeId` extracted from Figma URLs to get code hints, screenshots, and design tokens
+3. Use `get_screenshot` to visually compare the current app state against the Figma design
+4. Extract exact values from Figma: colors (hex), font sizes (sp), spacing (dp), corner radii, border widths, opacity values
+5. Do NOT hardcode colors or dimensions from memory — always verify against the Figma source
+
+#### Figma URL parsing
+- `figma.com/design/:fileKey/:fileName?node-id=:nodeId` — convert `-` to `:` in nodeId
+- The main Vultisig App file key is `puB2fsVpPrBx3Sup7gaa3v`
+
+#### Design implementation rules
+- Match Figma exactly: colors, spacing, typography, corner radii, shadows, opacity
+- Use the project's existing theme tokens (`Theme.v2.colors.*`, `Theme.brockmann.*`) when they map to Figma values
+- When Figma uses colors not in the theme, define them as private `val` constants at the top of the screen file
+- Always cross-reference Figma component names with existing Compose components in the codebase before creating new ones
+
+#### Autopilot: Automatic Skill Routing for UI Work
+
+When the user asks to work on UI, the following skills MUST be used automatically — do NOT ask the user which skill to use, just invoke it:
+
+| User says... | Auto-trigger |
+|---|---|
+| "fix #3524" / "implement #3524" / "work on issue 3524" (any `ui-mismatch` or `missing-feature` labeled issue) | → `/implement-figma 3524` |
+| "fix this UI bug" / "fix the swap button color" / any UI fix request | → `/implement-figma` (find the matching issue first, or use the Figma URL) |
+| "audit the screens" / "check Figma" / "find mismatches" | → `/audit-figma all` |
+| "audit SwapScreen" / "check this screen against Figma" | → `/audit-figma SwapScreen` |
+| "create a PR" / "open PR" (when on a branch with UI changes) | → `/create-figma-pr` |
+| Provides a Figma URL and asks to implement it | → `/implement-figma <url>` |
+
+**How to detect `ui-mismatch` issues**: When the user references an issue number, check its labels:
+```bash
+gh issue view NUMBER --repo vultisig/vultisig-android --json labels --jq '.labels[].name'
+```
+If it has `ui-mismatch` or `missing-feature` label → use `/implement-figma`.
+
+**Before/After Screenshots are MANDATORY** for all UI changes:
+1. Before starting any UI change, capture the current state via PreviewActivity + ADB
+2. After implementing, rebuild and capture the new state
+3. The PR skill (`/create-figma-pr`) will BLOCK if no before/after evidence exists
+
+**Screenshot rules**:
+- Before/after screenshots MUST be **real Android renders** — NEVER use Figma screenshots as before/after
+- Figma is only a design reference (the target to match), not a screenshot substitute
+- Primary method: **PreviewActivity + ADB screencap** — a debug-only activity (`app/src/debug/.../PreviewActivity.kt`) renders composables with mock data on the emulator, then `adb shell screencap` captures the result
+- Add new screen previews to PreviewActivity as needed (screen's inner composable must be `internal` visibility)
+- Fallback: direct ADB navigation to the screen in the running app
+- Last resort: text-based comparison table with exact values (add `needs-visual-review` label)
+
+#### Batch Implementation Mode
+
+When the user says "implement all ui-mismatch issues" or "fix all tickets":
+1. List all open `ui-mismatch` issues: `gh issue list --repo vultisig/vultisig-android --label ui-mismatch --json number,title`
+2. Group issues by screen file (multiple issues often affect the same file)
+3. Launch parallel agents — one per screen file group — each using the `/implement-figma` workflow
+4. Each agent creates its own branch: `fix/ui-mismatch-SCREEN_NAME`
+5. After all agents complete, create individual PRs with `/create-figma-pr`
+
 ### ViewModels
 - Inject dependencies via Hilt constructor injection
 - Use `@HiltViewModel` annotation
@@ -284,6 +355,7 @@ When deleting a screen, go through this checklist:
 
 - Main branch: `main`
 - CI Status: https://github.com/vultisig/vultisig-android/actions
+- Figma (Mobile App): https://www.figma.com/design/puB2fsVpPrBx3Sup7gaa3v/Vultisig-App
 - Trust Wallet Core docs: https://developer.trustwallet.com/developer/wallet-core
 
 ## Quick Commands

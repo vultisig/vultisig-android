@@ -74,7 +74,7 @@ internal fun LpWidget(
             Image(
                 painter = painterResource(id = state.icon),
                 contentDescription = null,
-                modifier = Modifier.size(46.dp),
+                modifier = Modifier.size(48.dp),
             )
 
             UiSpacer(12.dp)

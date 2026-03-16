@@ -94,7 +94,7 @@ internal fun StakingWidget(
             Image(
                 painter = painterResource(id = getHeaderIcon(state.stakedAmountDisplay)),
                 contentDescription = null,
-                modifier = Modifier.size(46.dp),
+                modifier = Modifier.size(48.dp),
             )
 
             UiSpacer(12.dp)
@@ -254,7 +254,7 @@ internal fun StakingHeader(title: String, amount: String, icon: Int) {
         Image(
             painter = painterResource(id = icon),
             contentDescription = null,
-            modifier = Modifier.size(46.dp),
+            modifier = Modifier.size(48.dp),
         )
 
         UiSpacer(12.dp)
