@@ -36,9 +36,9 @@ internal fun HomePagePagerContainer(
                 size = VsCircleButtonSize.Custom(size = 40.dp),
                 type =
                     VsCircleButtonType.Custom(
-                        color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.2f)
+                        color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.05f)
                     ),
-                modifier = Modifier.align(alignment = Alignment.TopEnd).padding(all = 8.dp),
+                modifier = Modifier.align(alignment = Alignment.TopEnd).padding(all = 7.dp),
             )
         }
     }
