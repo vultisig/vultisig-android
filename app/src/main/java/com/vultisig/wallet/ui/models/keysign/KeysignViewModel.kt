@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
@@ -148,7 +149,7 @@ internal class KeysignViewModel(
     init {
         val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
         sendTx?.tx?.let { tx ->
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 val chain = tx.token.token.chain
                 val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
                 val dstVaultName = allVaults
@@ -165,9 +166,7 @@ internal class KeysignViewModel(
 
                 val dstAddressBookTitle = if (dstVaultName == null && isSavedBefore) {
                     runCatching {
-                        withContext(Dispatchers.IO) {
-                            addressBookRepository.getEntry(chain.id, tx.dstAddress).title
-                        }
+                        addressBookRepository.getEntry(chain.id, tx.dstAddress).title
                     }.getOrNull()
                 } else null
 
