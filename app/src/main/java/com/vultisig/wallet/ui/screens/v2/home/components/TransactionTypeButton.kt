@@ -73,7 +73,7 @@ fun TransactionTypeButton(
             UiIcon(drawableResId = logo, size = 24.dp, tint = Theme.v2.colors.text.primary)
         }
 
-        UiSpacer(4.dp)
+        UiSpacer(8.dp)
 
         Text(
             text = stringResource(title),
