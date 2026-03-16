@@ -57,6 +57,7 @@ internal data class TransactionDetailsUiModel(
     val dstAddress: String = "",
     val dstVaultName: String? = null,
     val dstAddressBookTitle: String? = null,
+    val dstLabel: String? = null,
     val memo: String? = null,
     val signAmino: String? = null,
     val signDirect: String? = null,
@@ -69,6 +70,7 @@ internal data class TransactionDetailsUiModel(
         get() = when {
             dstVaultName != null -> "$dstVaultName (${dstAddress.take(4)}...${dstAddress.takeLast(4)})"
             dstAddressBookTitle != null -> "$dstAddressBookTitle (${dstAddress.take(4)}...${dstAddress.takeLast(4)})"
+            dstLabel != null -> "$dstLabel (${dstAddress.take(4)}...${dstAddress.takeLast(4)})"
             else -> dstAddress
         }
 }

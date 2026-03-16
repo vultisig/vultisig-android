@@ -1099,10 +1099,11 @@ constructor(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
+                val originalInput = addressFieldState.text.toString()
                 val dstAddress =
                     try {
                         addressParserRepository.resolveName(
-                            addressFieldState.text.toString(),
+                            originalInput,
                             chain,
                         )
                     } catch (e: Exception) {
@@ -1111,6 +1112,7 @@ constructor(
                             UiText.StringResource(R.string.failed_to_resolve_address)
                         )
                     }
+                val dstLabel = if (originalInput != dstAddress) originalInput else null
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                     throw InvalidTransactionDataException(
@@ -1297,6 +1299,7 @@ constructor(
                         token = selectedToken,
                         srcAddress = srcAddress,
                         dstAddress = dstAddress,
+                        dstLabel = dstLabel,
                         tokenValue =
                             TokenValue(
                                 value = tokenAmountInt,
