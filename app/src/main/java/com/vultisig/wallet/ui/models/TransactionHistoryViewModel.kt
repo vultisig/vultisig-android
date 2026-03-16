@@ -10,8 +10,9 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
-import com.vultisig.wallet.data.db.models.TransactionType
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.SendTransactionHistoryData
+import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryType
@@ -291,41 +292,31 @@ constructor(
                     entities
                         .flatMap { entity ->
                             buildList {
-                                when (entity.type) {
-                                    TransactionType.SEND -> {
-                                        val ticker = entity.token.orEmpty()
-                                        if (ticker.isNotEmpty()) {
-                                            add(
-                                                TransactionAssetUiModel(
-                                                    ticker = ticker,
-                                                    chain = entity.chain,
-                                                    logo = getCoinLogo(entity.tokenLogo.orEmpty()),
-                                                )
+                                when (val p = entity.payload) {
+                                    is SendTransactionHistoryData ->
+                                        add(
+                                            TransactionAssetUiModel(
+                                                ticker = p.token,
+                                                chain = entity.chain,
+                                                logo = getCoinLogo(p.tokenLogo),
                                             )
-                                        }
-                                    }
-                                    TransactionType.SWAP -> {
-                                        val fromTicker = entity.fromToken.orEmpty()
-                                        if (fromTicker.isNotEmpty()) {
-                                            add(
-                                                TransactionAssetUiModel(
-                                                    ticker = fromTicker,
-                                                    chain = entity.fromChain.orEmpty(),
-                                                    logo =
-                                                        getCoinLogo(entity.fromTokenLogo.orEmpty()),
-                                                )
+                                        )
+
+                                    is SwapTransactionHistoryData -> {
+                                        add(
+                                            TransactionAssetUiModel(
+                                                ticker = p.fromToken,
+                                                chain = p.fromChain,
+                                                logo = getCoinLogo(p.fromTokenLogo),
                                             )
-                                        }
-                                        val toTicker = entity.toToken.orEmpty()
-                                        if (toTicker.isNotEmpty()) {
-                                            add(
-                                                TransactionAssetUiModel(
-                                                    ticker = toTicker,
-                                                    chain = entity.toChain.orEmpty(),
-                                                    logo = getCoinLogo(entity.toTokenLogo.orEmpty()),
-                                                )
+                                        )
+                                        add(
+                                            TransactionAssetUiModel(
+                                                ticker = p.toToken,
+                                                chain = p.toChain,
+                                                logo = getCoinLogo(p.toTokenLogo),
                                             )
-                                        }
+                                        )
                                     }
                                 }
                             }
@@ -363,8 +354,8 @@ constructor(
                 TransactionStatus.FAILED -> TransactionStatusUiModel.Failed(failureReason)
             }
 
-        return when (type) {
-            TransactionType.SEND ->
+        return when (val p = payload) {
+            is SendTransactionHistoryData ->
                 TransactionHistoryItemUiModel.Send(
                     id = id,
                     txHash = txHash,
@@ -372,17 +363,17 @@ constructor(
                     status = statusUiModel,
                     explorerUrl = explorerUrl,
                     timestamp = timestamp,
-                    fromAddress = fromAddress.orEmpty(),
-                    toAddress = toAddress.orEmpty(),
-                    amount = amount.orEmpty(),
-                    token = token.orEmpty(),
-                    tokenLogo = getCoinLogo(tokenLogo.orEmpty()),
-                    fiatValue = fiatValue,
-                    provider = provider,
-                    feeEstimate = feeEstimate,
+                    fromAddress = p.fromAddress,
+                    toAddress = p.toAddress,
+                    amount = p.amount,
+                    token = p.token,
+                    tokenLogo = getCoinLogo(p.tokenLogo),
+                    fiatValue = p.fiatValue,
+                    provider = null,
+                    feeEstimate = p.feeEstimate,
                 )
 
-            TransactionType.SWAP ->
+            is SwapTransactionHistoryData ->
                 TransactionHistoryItemUiModel.Swap(
                     id = id,
                     txHash = txHash,
@@ -390,19 +381,19 @@ constructor(
                     status = statusUiModel,
                     explorerUrl = explorerUrl,
                     timestamp = timestamp,
-                    fromToken = fromToken.orEmpty(),
-                    fromAmount = fromAmount.orEmpty(),
-                    fromChain = fromChain.orEmpty(),
-                    fromTokenLogo = getCoinLogo(fromTokenLogo.orEmpty()),
-                    toToken = toToken.orEmpty(),
-                    toAmount = toAmount.orEmpty(),
-                    toChain = toChain.orEmpty(),
-                    toTokenLogo = getCoinLogo(toTokenLogo.orEmpty()),
-                    provider = provider.orEmpty(),
-                    fiatValue = fiatValue,
-                    fromAddress = fromAddress,
-                    toAddress = toAddress,
-                    feeEstimate = feeEstimate,
+                    fromToken = p.fromToken,
+                    fromAmount = p.fromAmount,
+                    fromChain = p.fromChain,
+                    fromTokenLogo = getCoinLogo(p.fromTokenLogo),
+                    toToken = p.toToken,
+                    toAmount = p.toAmount,
+                    toChain = p.toChain,
+                    toTokenLogo = getCoinLogo(p.toTokenLogo),
+                    provider = p.provider,
+                    fiatValue = p.fiatValue,
+                    fromAddress = null,
+                    toAddress = null,
+                    feeEstimate = null,
                 )
         }
     }

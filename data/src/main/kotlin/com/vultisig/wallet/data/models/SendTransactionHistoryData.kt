@@ -3,8 +3,10 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
 import com.vultisig.wallet.data.db.models.TransactionType
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-sealed interface TransactionHistoryData
+@Serializable sealed interface TransactionHistoryData
 
 data class CommonTransactionHistoryData(
     val confirmedAt: Long?,
@@ -19,6 +21,8 @@ data class CommonTransactionHistoryData(
     val explorerUrl: String,
 )
 
+@Serializable
+@SerialName("send")
 data class SendTransactionHistoryData(
     val fromAddress: String,
     val toAddress: String,
@@ -30,6 +34,8 @@ data class SendTransactionHistoryData(
     val fiatValue: String,
 ) : TransactionHistoryData
 
+@Serializable
+@SerialName("swap")
 data class SwapTransactionHistoryData(
     val fromToken: String,
     val fromAmount: String,
@@ -46,74 +52,16 @@ data class SwapTransactionHistoryData(
 internal fun TransactionHistoryData.toEntity(
     genericData: CommonTransactionHistoryData
 ): TransactionHistoryEntity =
-    when (this) {
-        is SendTransactionHistoryData ->
-            TransactionHistoryEntity(
-                vaultId = genericData.vaultId,
-                type = genericData.type,
-                status = genericData.status,
-                chain = genericData.chain,
-                timestamp = genericData.timestamp,
-                txHash = genericData.txHash,
-                explorerUrl = genericData.explorerUrl,
-                fiatValue = fiatValue,
-                // Send fields
-                fromAddress = fromAddress,
-                toAddress = toAddress,
-                amount = amount,
-                token = token,
-                tokenLogo = tokenLogo,
-                feeEstimate = feeEstimate,
-                memo = memo,
-                // Swap fields null
-                fromToken = null,
-                fromAmount = null,
-                fromChain = null,
-                fromTokenLogo = null,
-                toToken = null,
-                toAmount = null,
-                toChain = null,
-                toTokenLogo = null,
-                provider = null,
-                route = null,
-                // Status metadata
-                confirmedAt = genericData.confirmedAt,
-                failureReason = genericData.failureReason,
-                lastCheckedAt = genericData.lastCheckedAt,
-            )
-
-        is SwapTransactionHistoryData ->
-            TransactionHistoryEntity(
-                vaultId = genericData.vaultId,
-                type = genericData.type,
-                status = genericData.status,
-                chain = genericData.chain,
-                timestamp = genericData.timestamp,
-                txHash = genericData.txHash,
-                explorerUrl = genericData.explorerUrl,
-                fiatValue = fiatValue,
-                // Send fields null
-                fromAddress = null,
-                toAddress = null,
-                amount = null,
-                token = null,
-                tokenLogo = null,
-                feeEstimate = null,
-                memo = null,
-                // Swap fields
-                fromToken = fromToken,
-                fromAmount = fromAmount,
-                fromChain = fromChain,
-                fromTokenLogo = fromTokenLogo,
-                toToken = toToken,
-                toAmount = toAmount,
-                toChain = toChain,
-                toTokenLogo = toTokenLogo,
-                provider = provider,
-                route = null,
-                // Status metadata
-                confirmedAt = genericData.confirmedAt,
-                failureReason = genericData.failureReason,
-                lastCheckedAt = genericData.lastCheckedAt,
-            )
-    }
+    TransactionHistoryEntity(
+        vaultId = genericData.vaultId,
+        type = genericData.type,
+        status = genericData.status,
+        chain = genericData.chain,
+        timestamp = genericData.timestamp,
+        txHash = genericData.txHash,
+        explorerUrl = genericData.explorerUrl,
+        confirmedAt = genericData.confirmedAt,
+        failureReason = genericData.failureReason,
+        lastCheckedAt = genericData.lastCheckedAt,
+        payload = this,
+    )

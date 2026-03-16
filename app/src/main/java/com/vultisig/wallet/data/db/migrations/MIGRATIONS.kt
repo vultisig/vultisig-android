@@ -680,3 +680,51 @@ internal val MIGRATION_29_30 =
             )
         }
     }
+
+// Replaces the wide table (17 nullable type-specific columns) with a single JSON `payload`
+// column via TransactionHistoryDataConverter. Adding future transaction types (deposit, stake,
+// etc.) now requires only a new @Serializable subclass — no schema change.
+// transaction_history was introduced in 29→30 and holds only display data (no vault keys or
+// funds), so DROP + RECREATE is safe.
+internal val MIGRATION_30_31 =
+    object : Migration(30, 31) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS transaction_history")
+
+            db.execSQL(
+                """
+            CREATE TABLE IF NOT EXISTS transaction_history (
+                id TEXT PRIMARY KEY NOT NULL,
+                vaultId TEXT NOT NULL,
+                type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                chain TEXT NOT NULL,
+                timestamp INTEGER NOT NULL,
+                txHash TEXT NOT NULL,
+                explorerUrl TEXT NOT NULL,
+                payload TEXT NOT NULL,
+                confirmedAt INTEGER,
+                failureReason TEXT,
+                lastCheckedAt INTEGER,
+                FOREIGN KEY(vaultId) REFERENCES vault(id) ON DELETE CASCADE
+            )
+        """
+                    .trimIndent()
+            )
+
+            db.execSQL(
+                "CREATE INDEX index_transaction_history_vaultId ON transaction_history(vaultId)"
+            )
+            db.execSQL(
+                "CREATE UNIQUE INDEX index_transaction_history_txHash ON transaction_history(txHash)"
+            )
+            db.execSQL(
+                "CREATE INDEX index_transaction_history_status ON transaction_history(status)"
+            )
+            db.execSQL("CREATE INDEX index_transaction_history_type ON transaction_history(type)")
+            db.execSQL("CREATE INDEX index_transaction_history_chain ON transaction_history(chain)")
+            db.execSQL(
+                "CREATE INDEX index_transaction_history_timestamp ON transaction_history(timestamp)"
+            )
+        }
+    }

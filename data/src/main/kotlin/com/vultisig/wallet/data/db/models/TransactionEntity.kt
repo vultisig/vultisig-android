@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import java.util.UUID
 
@@ -60,28 +61,10 @@ data class TransactionHistoryEntity(
     @ColumnInfo("timestamp") val timestamp: Long,
     @ColumnInfo("txHash") val txHash: String,
     @ColumnInfo("explorerUrl") val explorerUrl: String,
-    @ColumnInfo("fiatValue") val fiatValue: String?,
 
-    // Send-specific fields
-    @ColumnInfo("fromAddress") val fromAddress: String?,
-    @ColumnInfo("toAddress") val toAddress: String?,
-    @ColumnInfo("amount") val amount: String?,
-    @ColumnInfo("token") val token: String?,
-    @ColumnInfo("tokenLogo") val tokenLogo: String?,
-    @ColumnInfo("feeEstimate") val feeEstimate: String?,
-    @ColumnInfo("memo") val memo: String?,
-
-    // Swap-specific fields
-    @ColumnInfo("fromToken") val fromToken: String?,
-    @ColumnInfo("fromAmount") val fromAmount: String?,
-    @ColumnInfo("fromChain") val fromChain: String?,
-    @ColumnInfo("fromTokenLogo") val fromTokenLogo: String?,
-    @ColumnInfo("toToken") val toToken: String?,
-    @ColumnInfo("toAmount") val toAmount: String?,
-    @ColumnInfo("toChain") val toChain: String?,
-    @ColumnInfo("toTokenLogo") val toTokenLogo: String?,
-    @ColumnInfo("provider") val provider: String?,
-    @ColumnInfo("route") val route: String?,
+    // Type-specific fields stored as JSON; decoded by TransactionHistoryDataConverter.
+    // Adding a new transaction type only requires a new @Serializable subclass — no schema change.
+    @ColumnInfo("payload") val payload: TransactionHistoryData,
 
     // Status metadata
     @ColumnInfo("confirmedAt") val confirmedAt: Long?,
