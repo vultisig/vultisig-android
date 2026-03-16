@@ -13,7 +13,6 @@ enum class TransactionType {
     SWAP,
 }
 
-// TransactionStatus.kt
 enum class TransactionStatus {
     BROADCASTED,
     PENDING,

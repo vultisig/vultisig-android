@@ -280,7 +280,7 @@ private fun SwapTokenCard(
         if (!fiatValue.isNullOrEmpty()) {
             Text(
                 text = fiatValue,
-                style = Theme.brockmann.supplementary.caption,
+                style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.tertiary,
             )
         }
@@ -461,11 +461,11 @@ private val previewSwap =
         fromToken = "RUNE",
         fromAmount = "1,000.12",
         fromChain = "THORChain",
-        fromTokenLogo = "",
+        fromTokenLogo = R.drawable.rune,
         toToken = "WBTC",
         toAmount = "0.1251",
         toChain = "Ethereum",
-        toTokenLogo = "",
+        toTokenLogo = R.drawable.wbtc,
         provider = "Thorchain",
         fiatValue = null,
         fromAddress = "0xF43jf9840fkfjn38fk0dk9Ac5",

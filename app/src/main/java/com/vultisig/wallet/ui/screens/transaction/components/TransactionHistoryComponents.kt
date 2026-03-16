@@ -167,9 +167,9 @@ internal fun TokenAmountAnnotated(amount: String, token: String, modifier: Modif
             buildAnnotatedString {
                 withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(amount) }
                 append(" ")
-                withStyle(SpanStyle(color = Theme.v2.colors.alerts.success)) { append(token) }
+                withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(token) }
             },
-        style = Theme.brockmann.body.m.medium,
+        style = Theme.brockmann.body.s.medium,
         modifier = modifier,
     )
 }
