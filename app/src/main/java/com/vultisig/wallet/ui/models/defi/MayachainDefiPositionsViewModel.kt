@@ -243,7 +243,7 @@ constructor(
             val loadingPosition =
                 StakePositionUiModel(
                     coin = Coins.MayaChain.CACAO,
-                    stakeAssetHeader = "Staked CACAO",
+                    stakeAssetHeader = "Cacao Pool",
                     stakedAmountDisplay = "0 CACAO",
                     apy = null,
                     isLoading = true,
@@ -283,13 +283,15 @@ constructor(
                     }
                     .collect { details ->
                         val stakeAmount = CoinType.THORCHAIN.toValue(details.stakeAmount)
+                        val stakedFiat = calculateStakingFiatPrice(stakeAmount)
                         val position =
                             StakePositionUiModel(
                                 coin = Coins.MayaChain.CACAO,
-                                stakeAssetHeader = "Staked CACAO",
+                                stakeAssetHeader = "Cacao Pool",
                                 stakeAmount = stakeAmount,
                                 stakedAmountDisplay =
                                     "${stakeAmount.setScale(4, RoundingMode.DOWN).toPlainString()} CACAO",
+                                stakedFiatDisplay = stakedFiat,
                                 apy = details.apr?.formatPercentage(),
                                 isLoading = false,
                                 canStake = true,
@@ -331,6 +333,19 @@ constructor(
                 Timber.e(e, "Failed to calculate Maya total fiat value")
                 state.update { it.copy(isTotalAmountLoading = false) }
             }
+        }
+    }
+
+    private suspend fun calculateStakingFiatPrice(amount: BigDecimal): String {
+        return try {
+            val currency = appCurrencyRepository.currency.first()
+            val fiatValue = createFiatValue(amount, Coins.MayaChain.CACAO, currency)
+            val currencyFormat =
+                withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+            currencyFormat.format(fiatValue.value)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to calculate Maya staking fiat price")
+            ""
         }
     }
 
@@ -419,60 +434,39 @@ constructor(
 
     fun onClickBond(nodeAddress: String) {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
-            val cacaoCoin = vault.coins.find { it.ticker == "CACAO" && it.chain == Chain.MayaChain }
-            if (cacaoCoin != null) {
-                navigator.route(
-                    Route.Send(
-                        vaultId = vaultId,
-                        type = DeFiNavActions.BOND.type,
-                        chainId = Chain.MayaChain.id,
-                        tokenId = cacaoCoin.id,
-                        address = nodeAddress,
-                    )
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = Chain.MayaChain.id,
+                    depositType = DeFiNavActions.BOND.type,
+                    bondAddress = nodeAddress,
                 )
-            } else {
-                Timber.e("CACAO coin not found in vault")
-            }
+            )
         }
     }
 
     fun onClickUnBond(nodeAddress: String) {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
-            val cacaoCoin = vault.coins.find { it.ticker == "CACAO" && it.chain == Chain.MayaChain }
-            if (cacaoCoin != null) {
-                navigator.route(
-                    Route.Send(
-                        vaultId = vaultId,
-                        type = DeFiNavActions.UNBOND.type,
-                        chainId = Chain.MayaChain.id,
-                        tokenId = cacaoCoin.id,
-                        address = nodeAddress,
-                    )
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = Chain.MayaChain.id,
+                    depositType = DeFiNavActions.UNBOND.type,
+                    bondAddress = nodeAddress,
                 )
-            } else {
-                Timber.e("CACAO coin not found in vault")
-            }
+            )
         }
     }
 
     fun bondToNode() {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
-            val cacaoCoin = vault.coins.find { it.ticker == "CACAO" && it.chain == Chain.MayaChain }
-            if (cacaoCoin != null) {
-                navigator.route(
-                    Route.Send(
-                        vaultId = vaultId,
-                        type = DeFiNavActions.BOND.type,
-                        chainId = Chain.MayaChain.id,
-                        tokenId = cacaoCoin.id,
-                    )
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = Chain.MayaChain.id,
+                    depositType = DeFiNavActions.BOND.type,
                 )
-            } else {
-                Timber.e("CACAO coin not found in vault")
-            }
+            )
         }
     }
 
@@ -492,7 +486,7 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
 
 private fun formatCacaoReward(reward: Double): String {
     val rewardBase =
-        java.math.BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
+        BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
     val cacaoAmount = CoinType.THORCHAIN.toValue(rewardBase).setScale(4, RoundingMode.DOWN)
     return "${cacaoAmount.toPlainString()} ${CoinType.THORCHAIN.symbol}"
 }

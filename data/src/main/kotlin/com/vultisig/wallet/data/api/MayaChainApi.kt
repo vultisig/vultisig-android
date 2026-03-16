@@ -101,6 +101,7 @@ data class MayaMidgardNetworkData(
 data class MayaNodePool(
     @SerialName("asset") val asset: String,
     @SerialName("status") val status: String,
+    @SerialName("bondable") val bondable: Boolean = false,
 )
 
 @Serializable

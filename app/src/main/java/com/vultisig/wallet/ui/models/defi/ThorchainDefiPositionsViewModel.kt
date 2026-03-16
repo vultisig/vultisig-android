@@ -109,6 +109,7 @@ internal data class StakePositionUiModel(
     val stakeAssetHeader: String,
     val stakeAmount: BigDecimal = BigDecimal.ZERO,
     val stakedAmountDisplay: String,
+    val stakedFiatDisplay: String = "",
     val apy: String?,
     val isLoading: Boolean = false,
     val supportsMint: Boolean = false,

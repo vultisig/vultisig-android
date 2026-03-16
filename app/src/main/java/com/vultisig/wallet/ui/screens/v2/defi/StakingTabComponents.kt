@@ -117,6 +117,16 @@ internal fun StakingWidget(
                         style = Theme.brockmann.headings.title1,
                         color = Theme.v2.colors.text.primary,
                     )
+
+                    if (state.stakedFiatDisplay.isNotEmpty()) {
+                        Text(
+                            text =
+                                if (isBalanceVisible) state.stakedFiatDisplay
+                                else HIDE_BALANCE_CHARS,
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.text.tertiary,
+                        )
+                    }
                 }
             }
         }

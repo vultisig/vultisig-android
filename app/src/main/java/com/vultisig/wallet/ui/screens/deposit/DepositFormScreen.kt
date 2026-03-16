@@ -104,6 +104,7 @@ internal fun DepositFormScreen(
         onOpenSelectToken = model::selectToken,
         onLoadRujiBalances = model::onLoadRujiMergeBalances,
         onSelectSecureAsset = model::onSelectSecureAsset,
+        onSelectBondAsset = model::selectBondAsset,
     )
 }
 
@@ -151,6 +152,7 @@ internal fun DepositFormScreen(
     onOpenSelectToken: () -> Unit = {},
     onLoadRujiBalances: () -> Unit = {},
     onSelectSecureAsset: (TokenWithdrawSecureAsset) -> Unit = {},
+    onSelectBondAsset: (String) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -397,14 +399,23 @@ internal fun DepositFormScreen(
                         }
 
                         if (depositChain == Chain.MayaChain) {
-                            FormTextFieldCard(
-                                title = stringResource(R.string.deposit_form_screen_assets),
-                                hint = stringResource(R.string.deposit_form_enter_asset_hint),
-                                keyboardType = KeyboardType.Text,
-                                textFieldState = assetsFieldState,
-                                onLostFocus = onAssetsLostFocus,
-                                error = state.assetsError,
-                            )
+                            if (state.bondableAssets.isNotEmpty()) {
+                                FormSelection(
+                                    selected = state.selectedBondAsset,
+                                    options = state.bondableAssets,
+                                    onSelectOption = onSelectBondAsset,
+                                    mapTypeToString = { it },
+                                )
+                            } else {
+                                FormTextFieldCard(
+                                    title = stringResource(R.string.deposit_form_screen_assets),
+                                    hint = stringResource(R.string.deposit_form_enter_asset_hint),
+                                    keyboardType = KeyboardType.Text,
+                                    textFieldState = assetsFieldState,
+                                    onLostFocus = onAssetsLostFocus,
+                                    error = state.assetsError,
+                                )
+                            }
 
                             FormTextFieldCard(
                                 title = stringResource(R.string.deposit_form_screen_lpunits),

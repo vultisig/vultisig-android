@@ -149,6 +149,8 @@ internal data class DepositFormUiModel(
     val availableSecuredAssets: List<TokenWithdrawSecureAsset> = emptyList(),
     val selectedSecuredAsset: TokenWithdrawSecureAsset =
         availableSecuredAssets.firstOrNull() ?: TokenWithdrawSecureAsset.EMPTY,
+    val bondableAssets: List<String> = emptyList(),
+    val selectedBondAsset: String = "",
 )
 
 @HiltViewModel
@@ -382,10 +384,44 @@ constructor(
                         else -> DepositOption.Bond
                     }
                 selectDepositOption(depositOption)
+
+                if (chain == Chain.MayaChain &&
+                    depositOption in listOf(DepositOption.Bond, DepositOption.Unbond)) {
+                    loadMayaBondableAssets()
+                }
             } else {
                 Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
             }
         }
+    }
+
+    private fun loadMayaBondableAssets() {
+        viewModelScope.launch {
+            try {
+                val assets = withContext(Dispatchers.IO) {
+                    mayaChainApi.getMayaNodePools()
+                        .filter { it.bondable }
+                        .map { it.asset }
+                }
+                val firstAsset = assets.firstOrNull() ?: ""
+                state.update {
+                    it.copy(
+                        bondableAssets = assets,
+                        selectedBondAsset = firstAsset,
+                    )
+                }
+                if (firstAsset.isNotEmpty()) {
+                    assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to load Maya bondable assets")
+            }
+        }
+    }
+
+    fun selectBondAsset(asset: String) {
+        state.update { it.copy(selectedBondAsset = asset) }
+        assetsFieldState.setTextAndPlaceCursorAtEnd(asset)
     }
 
     private suspend fun updateTokenAmount(
@@ -492,10 +528,15 @@ constructor(
 
                 DepositOption.Bond,
                 DepositOption.Unbond,
-                DepositOption.Leave ->
+                DepositOption.Leave -> {
                     state.update {
                         it.copy(selectedToken = Coins.ThorChain.RUNE, unstakableAmount = null)
                     }
+                    if (chain == Chain.MayaChain &&
+                        option in listOf(DepositOption.Bond, DepositOption.Unbond)) {
+                        loadMayaBondableAssets()
+                    }
+                }
 
                 DepositOption.RemoveCacaoPool -> {
                     handleRemoveCacaoOption()
