@@ -14,7 +14,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Qualifier
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.CompressorStreamProvider
 
@@ -30,6 +33,8 @@ internal interface MainDataModule {
             PreferenceDataStoreFactory.create(
                 produceFile = { context.preferencesDataStoreFile("app_pref") }
             )
+
+        @Provides @IoDispatcher fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
         @Provides
         @Singleton
@@ -52,3 +57,5 @@ internal interface MainDataModule {
 
     @Singleton @Binds fun bindAppDataStore(impl: AppDataStoreImpl): AppDataStore
 }
+
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class IoDispatcher

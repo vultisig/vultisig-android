@@ -195,7 +195,7 @@ constructor(
     val isLoading = MutableStateFlow(false)
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
-    private var transactionHistoryData: TransactionHistoryData? = null
+    private var transactionHistoryData = MutableStateFlow<TransactionHistoryData?>(null)
 
     private val tssKeysignType: TssKeyType
         get() = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA
@@ -230,7 +230,7 @@ constructor(
                 addressBookRepository = addressBookRepository,
                 transactionStatusServiceManager = transactionStatusServiceManager,
                 txStatusConfigurationProvider = txStatusConfigurationProvider,
-                transactionHistoryData = transactionHistoryData,
+                transactionHistoryData = transactionHistoryData.value,
                 transactionHistoryRepository = transactionHistoryRepository,
             )
 
@@ -493,8 +493,9 @@ constructor(
                                 )
                             transactionTypeUiModel =
                                 TransactionTypeUiModel.Swap(swapTransactionUiModel)
-                            transactionHistoryData =
+                            transactionHistoryData.update {
                                 swapTransactionToHistoryDataMapper(swapTransactionUiModel)
+                            }
                         }
 
                         isDeposit -> {
@@ -504,8 +505,9 @@ constructor(
                                 )
                             transactionTypeUiModel =
                                 TransactionTypeUiModel.Deposit(depositTransactionUiModel)
-                            transactionHistoryData =
+                            transactionHistoryData.update {
                                 depositTransactionHistoryDataMapper(depositTransactionUiModel)
+                            }
                         }
 
                         else -> {
@@ -513,8 +515,9 @@ constructor(
                                 mapTransactionToUiModel(
                                     transactionRepository.getTransaction(transactionId)
                                 )
-                            transactionHistoryData =
+                            transactionHistoryData.update {
                                 transactionHistoryDataMapper(transactionDetailsUiModel)
+                            }
                             transactionTypeUiModel =
                                 TransactionTypeUiModel.Send(transactionDetailsUiModel)
                         }

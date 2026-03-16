@@ -1,16 +1,16 @@
 package com.vultisig.wallet.ui.models.mappers
 
-import com.vultisig.wallet.data.mappers.SuspendMapperFunc
+import com.vultisig.wallet.data.mappers.MapperFunc
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import javax.inject.Inject
 
 internal interface SwapTransactionToHistoryDataMapper :
-    SuspendMapperFunc<SwapTransactionUiModel, SwapTransactionHistoryData>
+    MapperFunc<SwapTransactionUiModel, SwapTransactionHistoryData>
 
 internal class SwapTransactionToHistoryDataMapperImpl @Inject constructor() :
     SwapTransactionToHistoryDataMapper {
-    override suspend fun invoke(from: SwapTransactionUiModel) =
+    override fun invoke(from: SwapTransactionUiModel) =
         SwapTransactionHistoryData(
             fromToken = from.src.token.ticker,
             fromAmount = from.src.value,

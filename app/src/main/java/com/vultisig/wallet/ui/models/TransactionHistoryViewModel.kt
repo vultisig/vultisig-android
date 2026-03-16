@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
@@ -22,9 +21,9 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -49,19 +48,19 @@ enum class TransactionHistoryTab {
 }
 
 data class TransactionHistoryGroupUiModel(
-    val datePrefix: String?,
-    val dateSuffix: String,
+    val datePrefix: UiText,
+    val dateSuffix: UiText,
     val transactions: List<TransactionHistoryItemUiModel>,
 )
 
 sealed interface TransactionStatusUiModel {
     data object Broadcasted : TransactionStatusUiModel
 
-    data class Pending(val elapsedTime: String) : TransactionStatusUiModel
+    data class Pending(val elapsedTime: UiText) : TransactionStatusUiModel
 
     data object Confirmed : TransactionStatusUiModel
 
-    data class Failed(val reason: String?) : TransactionStatusUiModel
+    data class Failed(val reason: UiText?) : TransactionStatusUiModel
 }
 
 sealed interface TransactionHistoryItemUiModel {
@@ -132,7 +131,6 @@ internal class TransactionHistoryViewModel
 @Inject
 constructor(
     savedStateHandle: SavedStateHandle,
-    @param:ApplicationContext private val context: Context,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val refreshPendingTransactions: RefreshPendingTransactionsUseCase,
     private val navigator: Navigator<Destination>,
@@ -351,7 +349,10 @@ constructor(
                     TransactionStatusUiModel.Pending(elapsedTime = formatElapsed(now - timestamp))
 
                 TransactionStatus.CONFIRMED -> TransactionStatusUiModel.Confirmed
-                TransactionStatus.FAILED -> TransactionStatusUiModel.Failed(failureReason)
+                TransactionStatus.FAILED ->
+                    TransactionStatusUiModel.Failed(UiText.DynamicString(failureReason.orEmpty()))
+                TransactionStatus.NotFound ->
+                    TransactionStatusUiModel.Failed(UiText.DynamicString(failureReason.orEmpty()))
             }
 
         return when (val p = payload) {
@@ -410,30 +411,34 @@ constructor(
             .entries
             .sortedByDescending { it.key }
             .map { (date, items) ->
-                val dateSuffix = date.format(labelFormatter)
+                val dateSuffix = UiText.DynamicString(date.format(labelFormatter))
                 val datePrefix =
                     when (date) {
-                        today -> context.getString(R.string.transaction_history_date_today)
-                        yesterday -> context.getString(R.string.transaction_history_date_yesterday)
+                        today -> UiText.StringResource(R.string.transaction_history_date_today)
+                        yesterday ->
+                            UiText.StringResource(R.string.transaction_history_date_yesterday)
                         else -> null
                     }
                 TransactionHistoryGroupUiModel(
-                    datePrefix = datePrefix,
+                    datePrefix = datePrefix ?: UiText.Empty,
                     dateSuffix = dateSuffix,
                     transactions = items,
                 )
             }
     }
 
-    private fun formatElapsed(elapsedMs: Long): String {
+    private fun formatElapsed(elapsedMs: Long): UiText {
         val minutes = elapsedMs / 60_000
         val hours = minutes / 60
         val days = hours / 24
         return when {
-            days > 0 -> context.getString(R.string.transaction_history_elapsed_days, days)
-            hours > 0 -> context.getString(R.string.transaction_history_elapsed_hours, hours)
-            minutes > 0 -> context.getString(R.string.transaction_history_elapsed_minutes, minutes)
-            else -> context.getString(R.string.transaction_history_elapsed_just_now)
+            days > 0 ->
+                UiText.FormattedText(R.string.transaction_history_elapsed_days, listOf(days))
+            hours > 0 ->
+                UiText.FormattedText(R.string.transaction_history_elapsed_hours, listOf(hours))
+            minutes > 0 ->
+                UiText.FormattedText(R.string.transaction_history_elapsed_minutes, listOf(minutes))
+            else -> UiText.StringResource(R.string.transaction_history_elapsed_just_now)
         }
     }
 }

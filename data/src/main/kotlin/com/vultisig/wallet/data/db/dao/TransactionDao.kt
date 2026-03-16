@@ -7,7 +7,6 @@ import androidx.room.Query
 import androidx.room.Update
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
-import com.vultisig.wallet.data.db.models.TransactionType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -24,8 +23,8 @@ interface TransactionHistoryDao {
     // Overview tab - all transactions for a vault
     @Query(
         """
-        SELECT * FROM transaction_history 
-        WHERE vaultId = :vaultId 
+        SELECT * FROM transaction_history
+        WHERE vaultId = :vaultId
         ORDER BY timestamp DESC
     """
     )
@@ -34,7 +33,7 @@ interface TransactionHistoryDao {
     // Send tab
     @Query(
         """
-        SELECT * FROM transaction_history 
+        SELECT * FROM transaction_history
         WHERE vaultId = :vaultId AND type = 'SEND'
         ORDER BY timestamp DESC
     """
@@ -44,7 +43,7 @@ interface TransactionHistoryDao {
     // Swap tab
     @Query(
         """
-        SELECT * FROM transaction_history 
+        SELECT * FROM transaction_history
         WHERE vaultId = :vaultId AND type = 'SWAP'
         ORDER BY timestamp DESC
     """
@@ -54,8 +53,8 @@ interface TransactionHistoryDao {
     // Get pending transactions for refresh
     @Query(
         """
-        SELECT * FROM transaction_history 
-        WHERE vaultId = :vaultId 
+        SELECT * FROM transaction_history
+        WHERE vaultId = :vaultId
         AND status IN ('BROADCASTED', 'PENDING')
         ORDER BY timestamp DESC
     """
@@ -65,49 +64,18 @@ interface TransactionHistoryDao {
     // Get all pending across all vaults (for app resume)
     @Query(
         """
-        SELECT * FROM transaction_history 
+        SELECT * FROM transaction_history
         WHERE status IN ('BROADCASTED', 'PENDING')
         ORDER BY timestamp DESC
     """
     )
     suspend fun getAllPendingTransactions(): List<TransactionHistoryEntity>
 
-    // Filter by chain
-    @Query(
-        """
-        SELECT * FROM transaction_history 
-        WHERE vaultId = :vaultId 
-        AND (:chain IS NULL OR chain = :chain)
-        AND (:type IS NULL OR type = :type)
-        ORDER BY timestamp DESC
-    """
-    )
-    fun observeFiltered(
-        vaultId: String,
-        chain: String?,
-        type: TransactionType?,
-    ): Flow<List<TransactionHistoryEntity>>
-
-    // Date range filter
-    @Query(
-        """
-        SELECT * FROM transaction_history 
-        WHERE vaultId = :vaultId 
-        AND timestamp BETWEEN :startTime AND :endTime
-        ORDER BY timestamp DESC
-    """
-    )
-    fun observeByDateRange(
-        vaultId: String,
-        startTime: Long,
-        endTime: Long,
-    ): Flow<List<TransactionHistoryEntity>>
-
     // Update status only
     @Query(
         """
-        UPDATE transaction_history 
-        SET status = :status, lastCheckedAt = :lastCheckedAt 
+        UPDATE transaction_history
+        SET status = :status, lastCheckedAt = :lastCheckedAt
         WHERE txHash = :txHash
     """
     )
@@ -132,7 +100,4 @@ interface TransactionHistoryDao {
     """
     )
     suspend fun updateToFailed(txHash: String, failureReason: String, lastCheckedAt: Long)
-
-    @Query("DELETE FROM transaction_history WHERE vaultId = :vaultId")
-    suspend fun deleteByVault(vaultId: String)
 }

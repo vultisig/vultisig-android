@@ -19,13 +19,14 @@ enum class TransactionStatus {
     PENDING,
     CONFIRMED,
     FAILED,
+    NotFound,
 }
 
 fun TransactionResult.toDbModel() =
     when (this) {
         TransactionResult.Confirmed -> TransactionStatus.CONFIRMED
         is TransactionResult.Failed -> TransactionStatus.FAILED
-        TransactionResult.NotFound -> TransactionStatus.FAILED
+        TransactionResult.NotFound -> TransactionStatus.NotFound
         TransactionResult.Pending -> TransactionStatus.PENDING
     }
 

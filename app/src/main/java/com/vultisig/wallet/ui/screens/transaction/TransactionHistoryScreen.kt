@@ -62,6 +62,8 @@ import com.vultisig.wallet.ui.models.TransactionHistoryUiState
 import com.vultisig.wallet.ui.models.TransactionHistoryViewModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel = hiltViewModel()) {
@@ -212,7 +214,10 @@ private fun TransactionGroupedList(
     ) {
         groups.forEach { group ->
             stickyHeader(key = "header_${group.dateSuffix}") {
-                DateStickyHeader(prefix = group.datePrefix, suffix = group.dateSuffix)
+                DateStickyHeader(
+                    prefix = group.datePrefix.asString(),
+                    suffix = group.dateSuffix.asString(),
+                )
             }
             itemsIndexed(items = group.transactions, key = { _, item -> item.id }) { _, item ->
                 when (item) {
@@ -454,13 +459,13 @@ private fun PreviewOverviewTab() {
                 groups =
                     listOf(
                         TransactionHistoryGroupUiModel(
-                            datePrefix = "Today",
-                            dateSuffix = "Sept 2, 2025",
+                            datePrefix = UiText.DynamicString("Today"),
+                            dateSuffix = UiText.DynamicString("Sept 2, 2025"),
                             transactions = listOf(previewSendInProgress, previewSwap),
                         ),
                         TransactionHistoryGroupUiModel(
-                            datePrefix = "Yesterday",
-                            dateSuffix = "Sept 1, 2025",
+                            datePrefix = UiText.DynamicString("Yesterday"),
+                            dateSuffix = UiText.DynamicString("Sept 1, 2025"),
                             transactions =
                                 listOf(
                                     previewSend,
@@ -474,7 +479,9 @@ private fun PreviewOverviewTab() {
                                     previewSend.copy(
                                         id = "4",
                                         status =
-                                            TransactionStatusUiModel.Failed(reason = "Rejected"),
+                                            TransactionStatusUiModel.Failed(
+                                                reason = UiText.DynamicString("Rejected")
+                                            ),
                                         token = "ETH",
                                         amount = "10.12",
                                         fiatValue = "$321,000.54",
@@ -501,8 +508,8 @@ private fun PreviewSwapTab() {
                 groups =
                     listOf(
                         TransactionHistoryGroupUiModel(
-                            datePrefix = "Today",
-                            dateSuffix = "Sept 2, 2025",
+                            datePrefix = UiText.DynamicString("Today"),
+                            dateSuffix = UiText.DynamicString("Sept 2, 2025"),
                             transactions = listOf(previewSwap),
                         )
                     ),
@@ -533,13 +540,13 @@ private fun PreviewWithAssetFilters() {
                 groups =
                     listOf(
                         TransactionHistoryGroupUiModel(
-                            datePrefix = "Today",
-                            dateSuffix = "Sept 2, 2025",
+                            datePrefix = UiText.DynamicString("Today"),
+                            dateSuffix = UiText.DynamicString("Sept 2, 2025"),
                             transactions = listOf(previewSend, previewSwap),
                         ),
                         TransactionHistoryGroupUiModel(
-                            datePrefix = "Yesterday",
-                            dateSuffix = "Sept 1, 2025",
+                            datePrefix = UiText.DynamicString("Yesterday"),
+                            dateSuffix = UiText.DynamicString("Sept 1, 2025"),
                             transactions = listOf(previewSendInProgress),
                         ),
                     ),

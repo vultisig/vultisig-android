@@ -1,10 +1,11 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
@@ -19,10 +20,11 @@ class RefreshPendingTransactionsUseCaseImpl
 constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val transactionStatusRepository: TransactionStatusRepository,
+    @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) : RefreshPendingTransactionsUseCase {
 
     override suspend fun invoke(vaultId: String) {
-        withContext(Dispatchers.IO) {
+        withContext(dispatcher) {
             val pendingTransactions = transactionHistoryRepository.getPendingTransactions(vaultId)
 
             pendingTransactions

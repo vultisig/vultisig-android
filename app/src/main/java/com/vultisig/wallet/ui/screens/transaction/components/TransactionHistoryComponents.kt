@@ -189,6 +189,6 @@ internal fun SendAmountText(amount: String, token: String, modifier: Modifier = 
 }
 
 internal fun String.abbreviateAddress(): String {
-    if (length <= 12) return this
+    if (length <= 10) return this
     return "${take(6)}...${takeLast(4)}"
 }
