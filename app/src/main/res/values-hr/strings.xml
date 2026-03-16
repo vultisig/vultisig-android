@@ -937,6 +937,39 @@
     <string name="key_import_spotlight_device_title">Barem jedan uređaj</string>
     <string name="key_import_spotlight_device_desc">Bilo koji uređaj koji može pokrenuti Vultisig će raditi.</string>
     <string name="key_import_spotlight_get_started">Započni</string>
+    <!-- Transaction History Screen -->
+    <string name="transaction_history_title">Povijest</string>
+    <string name="transaction_history_tab_overview">Pregled</string>
+    <string name="transaction_history_tab_send">Slanje</string>
+    <string name="transaction_history_tab_swap">Zamjene</string>
+    <string name="transaction_history_empty_title">Još nema transakcija</string>
+    <string name="transaction_history_empty_desc">Vaša povijest transakcija prikazat će se ovdje</string>
+    <string name="transaction_history_search_asset_title">Pretraži imovinu</string>
+    <string name="transaction_history_search_asset_not_found">Nije pronađena nijedna imovina</string>
+    <string name="transaction_history_clear_filters">Ukloni filtere</string>
+    <string name="transaction_status_broadcasted_label">Objavljeno</string>
+    <string name="transaction_status_pending_label">Na čekanju · %1$s</string>
+    <string name="transaction_status_confirmed_label">Potvrđeno</string>
+    <string name="transaction_status_failed_label">Neuspješno</string>
+    <string name="transaction_status_in_progress_label">U tijeku…</string>
+    <string name="transaction_history_to_label">Za</string>
+    <string name="transaction_history_via_label">putem %s</string>
+    <string name="transaction_history_via_prefix">putem</string>
+    <string name="transaction_history_min_payout_label">min. isplata</string>
+    <string name="transaction_history_date_today">Danas</string>
+    <string name="transaction_history_date_yesterday">Jučer</string>
+    <string name="transaction_history_elapsed_just_now">upravo sada</string>
+    <string name="transaction_history_elapsed_days">prije %1$dd</string>
+    <string name="transaction_history_elapsed_hours">prije %1$dh</string>
+    <string name="transaction_history_elapsed_minutes">prije %1$dmin</string>
+    <string name="transaction_history_detail_status">Status</string>
+    <string name="transaction_history_detail_from">Od</string>
+    <string name="transaction_history_detail_to">Do</string>
+    <string name="transaction_history_detail_date">Datum</string>
+    <string name="transaction_history_detail_fee">Naknada</string>
+    <string name="transaction_history_detail_network">Mreža</string>
+    <string name="transaction_history_detail_provider">Pružatelj</string>
+    <string name="transaction_history_view_on_explorer">Pregled u istraživaču</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Uvezi frazu za oporavak</string>
