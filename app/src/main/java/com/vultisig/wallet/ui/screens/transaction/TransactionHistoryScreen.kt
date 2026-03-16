@@ -243,7 +243,7 @@ private fun DateStickyHeader(prefix: String?, suffix: String) {
     val primaryColor = Theme.v2.colors.text.primary
     val tertiaryColor = Theme.v2.colors.text.tertiary
     val text = buildAnnotatedString {
-        if (prefix != null) {
+        if (!prefix.isNullOrBlank()) {
             withStyle(SpanStyle(color = primaryColor)) { append(prefix) }
             withStyle(SpanStyle(color = tertiaryColor)) { append("  $suffix") }
         } else {

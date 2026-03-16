@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -39,7 +38,10 @@ internal fun TypeBadge(iconRes: Int, label: String, modifier: Modifier = Modifie
                     color = Theme.v2.colors.alerts.info,
                     shape = RoundedCornerShape(size = 99.dp),
                 )
-                .background(color = Color(0x1A5CA7FF), shape = RoundedCornerShape(size = 99.dp))
+                .background(
+                    color = Theme.v2.colors.alerts.info.copy(alpha = 0.10f),
+                    shape = RoundedCornerShape(size = 99.dp),
+                )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),

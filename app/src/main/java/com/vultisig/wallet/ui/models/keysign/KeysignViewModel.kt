@@ -586,7 +586,15 @@ internal class KeysignViewModel(
                     .filter { it } // Wait until service is ready
                     .first()
                 transactionStatusServiceManager.getStatusFlow()?.collect { statusResult ->
-                    transactionHistoryRepository.updateTransactionStatus(txHash, statusResult)
+                    runCatching {
+                            transactionHistoryRepository.updateTransactionStatus(
+                                txHash,
+                                statusResult,
+                            )
+                        }
+                        .onFailure {
+                            Timber.w(it, "Failed to update tx history status for %s", txHash)
+                        }
                     currentState.value =
                         KeysignState.KeysignFinished(
                             transactionStatus = statusResult.toTransactionStatus()
