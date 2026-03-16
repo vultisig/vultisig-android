@@ -138,6 +138,47 @@ All UI work MUST be verified against the Figma design using the Figma MCP server
 - When Figma uses colors not in the theme, define them as private `val` constants at the top of the screen file
 - Always cross-reference Figma component names with existing Compose components in the codebase before creating new ones
 
+#### Autopilot: Automatic Skill Routing for UI Work
+
+When the user asks to work on UI, the following skills MUST be used automatically — do NOT ask the user which skill to use, just invoke it:
+
+| User says... | Auto-trigger |
+|---|---|
+| "fix #3524" / "implement #3524" / "work on issue 3524" (any `ui-mismatch` or `missing-feature` labeled issue) | → `/implement-figma 3524` |
+| "fix this UI bug" / "fix the swap button color" / any UI fix request | → `/implement-figma` (find the matching issue first, or use the Figma URL) |
+| "audit the screens" / "check Figma" / "find mismatches" | → `/audit-figma all` |
+| "audit SwapScreen" / "check this screen against Figma" | → `/audit-figma SwapScreen` |
+| "create a PR" / "open PR" (when on a branch with UI changes) | → `/create-figma-pr` |
+| Provides a Figma URL and asks to implement it | → `/implement-figma <url>` |
+
+**How to detect `ui-mismatch` issues**: When the user references an issue number, check its labels:
+```bash
+gh issue view NUMBER --repo vultisig/vultisig-android --json labels --jq '.labels[].name'
+```
+If it has `ui-mismatch` or `missing-feature` label → use `/implement-figma`.
+
+**Before/After Screenshots are MANDATORY** for all UI changes:
+1. Before starting any UI change, capture the current state via PreviewActivity + ADB
+2. After implementing, rebuild and capture the new state
+3. The PR skill (`/create-figma-pr`) will BLOCK if no before/after evidence exists
+
+**Screenshot rules**:
+- Before/after screenshots MUST be **real Android renders** — NEVER use Figma screenshots as before/after
+- Figma is only a design reference (the target to match), not a screenshot substitute
+- Primary method: **PreviewActivity + ADB screencap** — a debug-only activity (`app/src/debug/.../PreviewActivity.kt`) renders composables with mock data on the emulator, then `adb shell screencap` captures the result
+- Add new screen previews to PreviewActivity as needed (screen's inner composable must be `internal` visibility)
+- Fallback: direct ADB navigation to the screen in the running app
+- Last resort: text-based comparison table with exact values (add `needs-visual-review` label)
+
+#### Batch Implementation Mode
+
+When the user says "implement all ui-mismatch issues" or "fix all tickets":
+1. List all open `ui-mismatch` issues: `gh issue list --repo vultisig/vultisig-android --label ui-mismatch --json number,title`
+2. Group issues by screen file (multiple issues often affect the same file)
+3. Launch parallel agents — one per screen file group — each using the `/implement-figma` workflow
+4. Each agent creates its own branch: `fix/ui-mismatch-SCREEN_NAME`
+5. After all agents complete, create individual PRs with `/create-figma-pr`
+
 ### ViewModels
 - Inject dependencies via Hilt constructor injection
 - Use `@HiltViewModel` annotation
