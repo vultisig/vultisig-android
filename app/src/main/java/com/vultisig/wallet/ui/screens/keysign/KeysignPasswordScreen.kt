@@ -124,7 +124,7 @@ fun KeysignPasswordSheetContent(
 
         UiIcon(
             drawableResId = R.drawable.focus_lock,
-            size = 24.dp,
+            size = 32.dp,
             modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
             tint = Theme.v2.colors.primary.accent4,
         )

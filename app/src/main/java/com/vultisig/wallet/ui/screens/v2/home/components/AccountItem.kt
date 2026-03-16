@@ -67,7 +67,7 @@ internal fun AccountItem(
 
             CopiableAddress(
                 address = account.address,
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = 2.dp),
                 onAddressCopied = onCopy,
             )
         }

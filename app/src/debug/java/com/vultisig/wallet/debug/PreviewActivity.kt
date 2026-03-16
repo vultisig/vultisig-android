@@ -3,7 +3,12 @@ package com.vultisig.wallet.debug
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
@@ -12,6 +17,8 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
+import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 
 class PreviewActivity : ComponentActivity() {
@@ -22,10 +29,21 @@ class PreviewActivity : ComponentActivity() {
             OnBoardingComposeTheme {
                 when (screen) {
                     "swap_confirm" -> SwapConfirmPreview()
+                    "transaction_type_button" -> TransactionTypeButtonPreview()
                     else -> SwapConfirmPreview()
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TransactionTypeButtonPreview() {
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(24.dp)) {
+        TransactionTypeButton(txType = TransactionType.SWAP, isSelected = true)
+        TransactionTypeButton(txType = TransactionType.SEND, isSelected = false)
+        TransactionTypeButton(txType = TransactionType.RECEIVE, isSelected = false)
+        TransactionTypeButton(txType = TransactionType.BUY, isSelected = false)
     }
 }
 

@@ -70,10 +70,10 @@ fun TransactionTypeButton(
                     .background(backgroundColor),
             contentAlignment = Alignment.Center,
         ) {
-            UiIcon(drawableResId = logo, size = 24.dp, tint = Theme.v2.colors.text.primary)
+            UiIcon(drawableResId = logo, size = 20.dp, tint = Theme.v2.colors.text.primary)
         }
 
-        UiSpacer(4.dp)
+        UiSpacer(8.dp)
 
         Text(
             text = stringResource(title),

@@ -365,7 +365,7 @@ private fun ReferralRewardsBanner(rewards: String, isLoading: Boolean) {
         Column(modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp)) {
             UiIcon(
                 drawableResId = R.drawable.ic_cup,
-                size = 24.dp,
+                size = 20.dp,
                 tint = Theme.v2.colors.primary.accent4,
             )
 
