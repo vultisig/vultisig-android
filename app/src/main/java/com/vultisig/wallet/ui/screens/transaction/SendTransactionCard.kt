@@ -152,6 +152,7 @@ private fun SendAddressPill(address: String, modifier: Modifier = Modifier) {
             buildAnnotatedString {
                 withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
                     append(stringResource(R.string.transaction_history_to_label))
+                    append(" ")
                 }
                 withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(address) }
             },
