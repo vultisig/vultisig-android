@@ -383,10 +383,6 @@ constructor(
                 DeFiNavActions.UNBOND -> DepositOption.Unbond
                 DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
                 DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
-                null -> {
-                    Timber.w("Unknown deposit type action: $action, using default flow")
-                    return
-                }
                 else -> DepositOption.Bond
             }
         selectDepositOption(depositOption)

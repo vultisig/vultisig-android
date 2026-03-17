@@ -44,6 +44,7 @@ import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -136,6 +137,9 @@ constructor(
     private val _totalBondedRaw = MutableStateFlow(BigInteger.ZERO)
     private val _totalStakingRaw = MutableStateFlow(BigInteger.ZERO)
 
+    private var observTotalRowJob: Job? = null
+    private var savedPositionsJob: Job? = null
+
     private val currentModel: MayachainDefiPositionsUiModel
         get() =
             (_state.value as? MayachainDefiUiState.Success)?.data ?: MayachainDefiPositionsUiModel()
@@ -152,17 +156,18 @@ constructor(
         this.vaultId = vaultId
         _state.value = MayachainDefiUiState.Success(MayachainDefiPositionsUiModel())
         loadBalanceVisibility()
-        loadSavedPositions()
+        savedPositionsJob?.cancel()
+        savedPositionsJob = loadSavedPositions()
         loadLpPositionsForDialog()
-        observeTotalRaw()
+        observTotalRowJob?.cancel()
+        observTotalRowJob = observeTotalRaw()
     }
 
-    private fun observeTotalRaw() {
+    private fun observeTotalRaw(): Job =
         viewModelScope.launch {
             combine(_totalBondedRaw, _totalStakingRaw) { bonded, staking -> bonded + staking }
                 .collect { totalRaw -> updateTotalFiatValue(totalRaw) }
         }
-    }
 
     private fun loadBalanceVisibility() {
         viewModelScope.safeLaunch {
@@ -172,7 +177,7 @@ constructor(
         }
     }
 
-    private fun loadSavedPositions() {
+    private fun loadSavedPositions(): Job =
         viewModelScope.launch {
             defiPositionsRepository.getSelectedPositions(vaultId).collect { saved ->
                 val hasMayaPositions =
@@ -192,7 +197,6 @@ constructor(
                 launch { loadStakingPosition() }
             }
         }
-    }
 
     private fun loadLpPositionsForDialog() {
         viewModelScope.launch {
