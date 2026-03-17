@@ -58,19 +58,15 @@ internal fun defaultSelectedPositionsDialog(): List<String> =
     (thorchainSupportsBonDeFi + thorchainSupportStakingDeFi).map { it.ticker }
 
 internal fun List<String>.hasBondPositions(): Boolean = any { key ->
-    thorchainSupportsBonDeFi.any { it.ticker == key } ||
-        mayachainSupportsBondDeFi.any { it.ticker == key } ||
-        key == MAYA_BOND_CACAO_KEY
+    thorchainSupportsBonDeFi.any { it.ticker == key } || key == MAYA_BOND_CACAO_KEY
 }
 
 internal fun List<String>.hasStakingPositions(): Boolean = any { key ->
-    thorchainSupportStakingDeFi.any { it.ticker == key } ||
-        mayachainSupportStakingDeFi.any { it.ticker == key } ||
-        key == MAYA_STAKE_CACAO_KEY
+    thorchainSupportStakingDeFi.any { it.ticker == key } || key == MAYA_STAKE_CACAO_KEY
 }
 
 internal fun List<String>.hasMayaStakingPositions(): Boolean = any { key ->
-    mayachainSupportStakingDeFi.any { it.ticker == key } || key == MAYA_STAKE_CACAO_KEY
+    key == MAYA_STAKE_CACAO_KEY
 }
 
 internal fun List<String>.hasLpPositions(lpPositionsDialog: List<PositionUiModelDialog>): Boolean =

@@ -203,6 +203,7 @@ constructor(
                 updateModel { it.copy(lpPositionsDialog = lpPositions) }
                 reloadLpTab()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load Maya LP positions for dialog")
             }
         }
@@ -274,8 +275,8 @@ constructor(
                         _totalBondedRaw.value = totalBondedRaw
                     }
             } catch (t: Throwable) {
-                Timber.e(t)
                 if (t is CancellationException) throw t
+                Timber.e(t)
                 _totalBondedRaw.value = BigInteger.ZERO
                 updateModel {
                     it.copy(
@@ -361,6 +362,7 @@ constructor(
                         }
                     }
             } catch (t: Throwable) {
+                if (t is CancellationException) throw t
                 Timber.e(t, "Failed to load CACAO staking position")
                 _totalStakingRaw.value = BigInteger.ZERO
                 updateModel {
@@ -390,6 +392,7 @@ constructor(
                     )
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e, "Failed to calculate Maya total fiat value")
                 updateModel { it.copy(isTotalAmountLoading = false) }
             }
@@ -404,6 +407,7 @@ constructor(
                 withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
             currencyFormat.format(fiatValue.value)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e, "Failed to calculate Maya staking fiat price")
             ""
         }
@@ -418,6 +422,7 @@ constructor(
                 withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
             currencyFormat.format(fiatValue.value)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e, "Failed to calculate Maya bonded fiat price")
             ""
         }
@@ -441,6 +446,7 @@ constructor(
                 currency = currency.ticker,
             )
         } catch (t: Throwable) {
+            if (t is CancellationException) throw t
             Timber.e(t)
             FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)
         }
