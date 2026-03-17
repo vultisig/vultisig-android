@@ -13,10 +13,14 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
+import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
+import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
@@ -35,6 +39,7 @@ class PreviewActivity : ComponentActivity() {
                     "transaction_type_button" -> TransactionTypeButtonPreview()
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
+                    "send_tx_done" -> SendTxDonePreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -100,5 +105,31 @@ private fun SwapConfirmPreview() {
         onFastSignClick = {},
         onConfirm = {},
         onBackClick = {},
+    )
+}
+
+@Composable
+private fun SendTxDonePreview() {
+    val ethCoin = Coins.Ethereum.ETH
+
+    SendTxOverviewScreen(
+        showToolbar = true,
+        showSaveToAddressBook = true,
+        transactionHash = "0x1a2b3c...d4e5f6",
+        transactionLink = "https://etherscan.io/tx/0x1a2b3c",
+        transactionStatus = TransactionStatus.Broadcasted,
+        onComplete = {},
+        onBack = {},
+        onAddToAddressBook = {},
+        tx =
+            UiTransactionInfo(
+                type = UiTransactionInfoType.Send,
+                token = ValuedToken(token = ethCoin, value = "1.5", fiatValue = "$3,847.50"),
+                from = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+                to = "0x9876543210FeDcBa9876543210FeDcBa98765432",
+                memo = "",
+                networkFeeTokenValue = "0.0024 ETH",
+                networkFeeFiatValue = "$6.15",
+            ),
     )
 }
