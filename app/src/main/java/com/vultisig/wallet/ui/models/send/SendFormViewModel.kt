@@ -1141,7 +1141,8 @@ constructor(
                             UiText.StringResource(R.string.failed_to_resolve_address)
                         )
                     }
-                // Use the label from collectAddress() if available (ENS/thorname was already resolved
+                // Use the label from collectAddress() if available (ENS/thorname was already
+                // resolved
                 // and the field was rewritten to the resolved address). Fall back to rawInput for
                 // cases where the user typed an ENS name and taps send before debounce completes.
                 val labelCandidate = dstAddressLabel ?: rawInput
