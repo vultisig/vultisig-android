@@ -108,7 +108,7 @@ data class MayaNodePool(
 )
 
 @Serializable
-data class MayaMidgardHealth(@SerialName("lastMayaNode") val lastMayaNode: MayaHeightInfo) {
+data class MayaMidgardHealth(@SerialName("lastThorNode") val lastMayaNode: MayaHeightInfo) {
     @Serializable data class MayaHeightInfo(val height: Long, val timestamp: Long)
 }
 
