@@ -2968,6 +2968,13 @@ constructor(
 
         val chain = selectedAccount.token.chain
 
+        val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
         val gasFee = awaitGasFee()
 
         if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
