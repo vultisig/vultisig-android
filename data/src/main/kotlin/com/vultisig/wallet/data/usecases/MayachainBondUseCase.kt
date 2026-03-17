@@ -83,6 +83,7 @@ constructor(
             try {
                 val networkInfoDeferred = async { getNetworkInfo() }
                 val allNodes = mayachainBondRepository.getAllNodes()
+                val networkInfo = networkInfoDeferred.await()
 
                 for (node in allNodes) {
                     val myProvider =
@@ -92,6 +93,7 @@ constructor(
                         calculateBondMetrics(
                             nodeAddress = node.nodeAddress,
                             myBondAddress = address,
+                            networkApy = networkInfo.apy,
                         )
 
                     val bondNode =
@@ -108,7 +110,7 @@ constructor(
                             amount = myBondMetrics.myBond,
                             apy = myBondMetrics.apy,
                             nextReward = myBondMetrics.myAward,
-                            nextChurn = networkInfoDeferred.await().nextChurnDate,
+                            nextChurn = networkInfo.nextChurnDate,
                         )
                     activeNodes.add(activeNode)
                 }
@@ -149,6 +151,7 @@ constructor(
     private suspend fun calculateBondMetrics(
         nodeAddress: String,
         myBondAddress: String,
+        networkApy: Double,
     ): MayaBondMetrics {
         val nodeData = mayachainBondRepository.getNodeDetails(nodeAddress)
         val bondProviders = nodeData.bondProviders.providers
@@ -182,14 +185,10 @@ constructor(
                 (BigDecimal.ONE - nodeOperatorFee)
         val myAward = myBondOwnershipPercentage * currentAward
 
-        // Use network-wide APY as fallback since Maya doesn't have churn history endpoint
-        val network = mayachainBondRepository.getMidgardNetworkData()
-        val apy = runCatching { network.bondingAPY.toDouble() }.getOrDefault(0.0)
-
         return MayaBondMetrics(
             myBond = myBond,
             myAward = myAward.toDouble(),
-            apy = apy,
+            apy = networkApy,
             nodeStatus = nodeData.status,
         )
     }

@@ -85,7 +85,7 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
             mayaChainApi.getMayaNodePools().filter { it.status == "Available" }
         } catch (e: Exception) {
             Timber.e(e, "Error fetching Maya node pools")
-            emptyList()
+            throw e
         }
     }
 

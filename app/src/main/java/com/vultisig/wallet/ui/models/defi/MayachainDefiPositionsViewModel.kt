@@ -182,7 +182,7 @@ constructor(
                         state.update { it.copy(bonded = it.bonded.copy(isLoading = false)) }
                     }
                     .collect { activeNodes ->
-                        val cacaoSymbol = CoinType.THORCHAIN.symbol
+                        val cacaoSymbol = Coins.MayaChain.CACAO.ticker
 
                         val nodeUiModels =
                             activeNodes.map { node ->
@@ -415,8 +415,8 @@ constructor(
             state.update {
                 it.copy(showPositionSelectionDialog = false, selectedPositions = selectedPositions)
             }
-            launch { loadBondedNodes() }
-            launch { loadStakingPosition() }
+            // loadBondedNodes() and loadStakingPosition() are triggered by the
+            // getSelectedPositions() flow re-emitting in loadSavedPositions().
         }
     }
 
