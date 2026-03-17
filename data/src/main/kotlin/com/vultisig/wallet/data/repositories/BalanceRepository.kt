@@ -371,13 +371,14 @@ constructor(
                 }
             }
             MayaChain -> {
-                val mutex = lockFor(address)
+                val cacheKey = "${Chain.MayaChain.id}:$vaultId:$address"
+                val mutex = lockFor(cacheKey)
                 mutex.withLock {
-                    defiBalanceCache.get(address)
+                    defiBalanceCache.get(cacheKey)
                         ?: run {
                             val remote =
                                 mayaDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
-                            defiBalanceCache.put(address, remote)
+                            defiBalanceCache.put(cacheKey, remote)
                             remote
                         }
                 }
