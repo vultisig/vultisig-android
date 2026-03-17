@@ -74,7 +74,8 @@ interface MayaChainApi {
 data class MayaNodeInfo(
     @SerialName("node_address") val nodeAddress: String,
     @SerialName("status") val status: String,
-    @SerialName("current_award") val currentAward: String,
+    @SerialName("bond") val bond: String = "0",
+    @SerialName("current_award") val currentAward: String = "0",
     @SerialName("bond_providers") val bondProviders: MayaBondProviders,
 )
 
@@ -87,8 +88,9 @@ data class MayaBondProviders(
 @Serializable
 data class MayaBondProvider(
     @SerialName("bond_address") val bondAddress: String,
-    @SerialName("bond") val bond: String = "0",
     @SerialName("bonded") val bonded: Boolean = false,
+    @SerialName("reward") val reward: String = "0",
+    @SerialName("pools") val pools: Map<String, String> = emptyMap(),
 )
 
 @Serializable

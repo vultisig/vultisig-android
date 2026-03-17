@@ -159,7 +159,8 @@ constructor(
         var myBond = BigInteger.ZERO
         var totalBond = BigInteger.ZERO
         for (provider in bondProviders) {
-            val providerBond = provider.bond.toBigIntegerOrNull() ?: BigInteger.ZERO
+            val providerBond =
+                provider.pools.values.sumOf { it.toBigIntegerOrNull() ?: BigInteger.ZERO }
             if (provider.bondAddress == myBondAddress) {
                 myBond = providerBond
             }
