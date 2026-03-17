@@ -36,7 +36,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
@@ -135,18 +134,11 @@ internal fun VerifySendScreen(
                     )
                 }
                 if (state.hasFastSign) {
-                    Text(
-                        text = stringResource(R.string.verify_deposit_hold_paired),
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.tertiary,
-                        textAlign = TextAlign.Center,
-                    )
-                    VsHoldableButton(
+                    VsButton(
                         label = stringResource(R.string.verify_swap_sign_button),
-                        onLongClick = onConfirm,
                         onClick = onFastSignClick,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled =
+                        state =
                             if (isConsentsEnabled && !state.hasAllConsents) {
                                 VsButtonState.Disabled
                             } else {

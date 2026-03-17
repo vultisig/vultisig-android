@@ -38,7 +38,6 @@ import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
@@ -274,15 +273,8 @@ internal fun VerifyDepositScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
             ) {
                 if (state.hasFastSign) {
-                    Text(
-                        text = stringResource(R.string.verify_deposit_hold_paired),
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.tertiary,
-                        textAlign = TextAlign.Center,
-                    )
-                    VsHoldableButton(
+                    VsButton(
                         label = stringResource(R.string.verify_deposit_sign_transaction),
-                        onLongClick = onConfirm,
                         onClick = onFastSignClick,
                         modifier = Modifier.fillMaxWidth(),
                     )
