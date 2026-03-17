@@ -2182,11 +2182,11 @@ constructor(
         // Return cached value immediately if the background debounce already resolved
         gasFee.value?.let { return it }
 
-        // Wait up to 5s for the background calculateGasFees() debounce to emit.
+        // Wait for the background calculateGasFees() debounce to emit.
         // If it doesn't resolve (e.g. RPC error swallowed by the flow), throw
         // the localized gas fee error so the user can retry.
         try {
-            return withTimeout(5_000L) {
+            return withTimeout(GAS_FEE_TIMEOUT_MS) {
                 gasFee.filterNotNull().first()
             }
         } catch (_: TimeoutCancellationException) {
@@ -3268,6 +3268,7 @@ constructor(
     }
 
     companion object {
+        private const val GAS_FEE_TIMEOUT_MS = 5_000L
         private const val REQUEST_ADDRESS_ID = "request_address_id"
         private const val REQUEST_PROVIDER_ADDRESS_ID = "request_provider_address_id"
     }
