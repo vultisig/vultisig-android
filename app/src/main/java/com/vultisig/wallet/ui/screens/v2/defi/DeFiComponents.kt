@@ -349,7 +349,7 @@ internal fun PositionsSelectionDialog(
     if (filteredLpPositions.isNotEmpty()) {
         groups.add(
             TokenSelectionGroupUiModel(
-                title = "Liquidity Pool",
+                title = stringResource(R.string.liquidity_pool),
                 items = buildItems(filteredLpPositions),
                 mapper = ::buildMapper,
                 plusUiModel = null,

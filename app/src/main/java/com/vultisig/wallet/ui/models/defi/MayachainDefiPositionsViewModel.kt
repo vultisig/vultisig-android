@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.MayachainBondUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
@@ -118,7 +119,7 @@ constructor(
     }
 
     private fun loadBalanceVisibility() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             val isVisible =
                 withContext(Dispatchers.IO) { balanceVisibilityRepository.getVisibility(vaultId) }
             state.update { it.copy(isBalanceVisible = isVisible) }
