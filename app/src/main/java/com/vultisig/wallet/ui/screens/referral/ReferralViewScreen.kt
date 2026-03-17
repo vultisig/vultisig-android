@@ -422,7 +422,7 @@ fun VaultItem(name: String, onVaultClicked: () -> Unit) {
         SubcomposeAsyncImage(
             model = R.drawable.referral_vault_avatar,
             contentDescription = null,
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(28.dp),
         )
 
         UiSpacer(12.dp)
