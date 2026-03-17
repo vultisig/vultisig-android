@@ -362,6 +362,9 @@ constructor(
                         resolvedDstAddress.value = addressStr
                         expandSection(SendSections.Amount)
                     } else if (addressStr.isNotEmpty()) {
+                        // Clear stale resolved address while async resolution is in-flight
+                        resolvedDstAddress.value = null
+                        dstAddressLabel = null
                         try {
                             val resolved =
                                 addressParserRepository.resolveName(addressStr, token.chain)
@@ -1128,20 +1131,24 @@ constructor(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
-                val originalInput = addressFieldState.text.toString()
+                val rawInput = addressFieldState.text.toString()
                 val dstAddress =
                     try {
-                        addressParserRepository.resolveName(originalInput, chain)
+                        addressParserRepository.resolveName(rawInput, chain)
                     } catch (e: Exception) {
                         Timber.e(e)
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.failed_to_resolve_address)
                         )
                     }
+                // Use the label from collectAddress() if available (ENS/thorname was already resolved
+                // and the field was rewritten to the resolved address). Fall back to rawInput for
+                // cases where the user typed an ENS name and taps send before debounce completes.
+                val labelCandidate = dstAddressLabel ?: rawInput
                 val dstLabel =
-                    originalInput.takeIf {
+                    labelCandidate.takeIf {
                         it.isNotBlank() &&
-                            !chainAccountAddressRepository.isValid(chain, originalInput) &&
+                            !chainAccountAddressRepository.isValid(chain, it) &&
                             chainAccountAddressRepository.isValid(chain, dstAddress)
                     }
 
