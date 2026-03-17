@@ -225,5 +225,7 @@ fun Vault.getPubKeyByChain(chain: Chain): String {
         Chain.Ton -> pubKeyEDDSA
         Chain.Ripple -> pubKeyEDDSA
         Chain.Tron -> pubKeyECDSA
+
+        Chain.Qbtc -> pubKeyMLDSA
     }
 }
