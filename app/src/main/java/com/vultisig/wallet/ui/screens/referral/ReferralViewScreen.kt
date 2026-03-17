@@ -307,12 +307,12 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
         modifier =
             Modifier.fillMaxWidth()
                 .height(100.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .clickable { onClick() }
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(12.dp),
                 )
     ) {
         Image(
@@ -353,11 +353,11 @@ private fun ReferralRewardsBanner(rewards: String, isLoading: Boolean) {
         modifier =
             Modifier.fillMaxWidth()
                 .height(110.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(12.dp),
                 )
     ) {
         SetBackgoundBanner(backgroundImageResId = R.drawable.referral_data_banner)
@@ -365,7 +365,7 @@ private fun ReferralRewardsBanner(rewards: String, isLoading: Boolean) {
         Column(modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp)) {
             UiIcon(
                 drawableResId = R.drawable.ic_cup,
-                size = 24.dp,
+                size = 20.dp,
                 tint = Theme.v2.colors.primary.accent4,
             )
 
@@ -422,7 +422,7 @@ fun VaultItem(name: String, onVaultClicked: () -> Unit) {
         SubcomposeAsyncImage(
             model = R.drawable.referral_vault_avatar,
             contentDescription = null,
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(28.dp),
         )
 
         UiSpacer(12.dp)

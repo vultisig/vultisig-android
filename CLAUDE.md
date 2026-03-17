@@ -138,6 +138,63 @@ All UI work MUST be verified against the Figma design using the Figma MCP server
 - When Figma uses colors not in the theme, define them as private `val` constants at the top of the screen file
 - Always cross-reference Figma component names with existing Compose components in the codebase before creating new ones
 
+#### Autopilot: Automatic Skill Routing for UI Work
+
+When the user asks to work on UI, the following skills MUST be used automatically — do NOT ask the user which skill to use, just invoke it:
+
+| User says... | Auto-trigger |
+|---|---|
+| "fix #3524" / "implement #3524" / "work on issue 3524" (any `ui-mismatch` or `missing-feature` labeled issue) | → `/implement-figma 3524` |
+| "fix this UI bug" / "fix the swap button color" / any UI fix request | → `/implement-figma` (find the matching issue first, or use the Figma URL) |
+| "audit the screens" / "check Figma" / "find mismatches" | → `/audit-figma all` |
+| "audit SwapScreen" / "check this screen against Figma" | → `/audit-figma SwapScreen` |
+| "create a PR" / "open PR" (when on a branch with UI changes) | → `/create-figma-pr` |
+| Provides a Figma URL and asks to implement it | → `/implement-figma <url>` |
+
+**How to detect `ui-mismatch` issues**: When the user references an issue number, check its labels:
+```bash
+gh issue view NUMBER --repo vultisig/vultisig-android --json labels --jq '.labels[].name'
+```
+If it has `ui-mismatch` or `missing-feature` label → use `/implement-figma`.
+
+**Before/After Screenshots are MANDATORY** for all UI changes:
+1. Before starting any UI change, capture the current state via PreviewActivity + ADB
+2. After implementing, rebuild and capture the new state
+3. The PR skill (`/create-figma-pr`) will BLOCK if no before/after evidence exists
+4. There is NO exception — text-based comparison tables are NOT acceptable as a substitute for screenshots
+
+**Screenshot rules**:
+- Before/after screenshots MUST be **real Android renders** — NEVER use Figma screenshots as before/after
+- Figma is only a design reference (the target to match), not a screenshot substitute
+- Screenshots MUST show **full screen pages** as the end user would see them — NEVER show isolated components on an empty background. Always render the component inside its real parent screen with mock data so the screenshot looks like the actual app
+- When a screen requires complex state to reach (e.g., completing a transaction, finishing keysign), **use mocked data** in PreviewActivity to simulate that state — do NOT skip the screenshot
+- Primary method: **PreviewActivity + ADB screencap** — a debug-only activity (`app/src/debug/.../PreviewActivity.kt`) renders composables with mock data on the emulator, then `adb shell screencap` captures the result
+- Add new screen previews to PreviewActivity as needed. Use the screen's inner composable (the one that accepts state/UiModel as parameters, not the one with ViewModel injection). Construct the UiModel/state directly with mock data
+- Fallback: direct ADB navigation to the screen in the running app
+
+**Screenshot hosting — NEVER commit images to the branch**:
+- Upload screenshots to an external image host (e.g., imgur API: `curl -s -X POST "https://api.imgur.com/3/image" -H "Authorization: Client-ID 546c25a59c58ad7" -F "image=@file.png"`)
+- Embed the returned URL in the PR description as markdown images so they render inline
+- NEVER add screenshot files to the git branch — only use external links in the PR body
+
+**PR description format for screenshots**:
+```markdown
+## Before / After
+
+| Before | After |
+|--------|-------|
+| ![before](https://i.imgur.com/XXXXX.png) | ![after](https://i.imgur.com/YYYYY.png) |
+```
+
+#### Batch Implementation Mode
+
+When the user says "implement all ui-mismatch issues" or "fix all tickets":
+1. List all open `ui-mismatch` issues: `gh issue list --repo vultisig/vultisig-android --label ui-mismatch --json number,title`
+2. Group issues by screen file (multiple issues often affect the same file)
+3. Launch parallel agents — one per screen file group — each using the `/implement-figma` workflow
+4. Each agent creates its own branch: `fix/ui-mismatch-SCREEN_NAME`
+5. After all agents complete, create individual PRs with `/create-figma-pr`
+
 ### ViewModels
 - Inject dependencies via Hilt constructor injection
 - Use `@HiltViewModel` annotation

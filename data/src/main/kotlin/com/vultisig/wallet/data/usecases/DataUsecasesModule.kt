@@ -195,4 +195,10 @@ internal interface DataUsecasesModule {
     @Binds
     @Singleton
     fun bindDeriveChainKeyUseCase(impl: DeriveChainKeyUseCaseImpl): DeriveChainKeyUseCase
+
+    @Binds
+    @Singleton
+    fun bindRefreshPendingTransactionsUseCase(
+        impl: RefreshPendingTransactionsUseCaseImpl
+    ): RefreshPendingTransactionsUseCase
 }

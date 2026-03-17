@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.referral.ReferralCodeBottomSheet
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.models.settings.SettingsGroupUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsItem
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsUiEvent
@@ -238,6 +239,54 @@ internal fun SettingItem(
             FadingHorizontalDivider()
         }
     }
+}
+
+@Preview
+@Composable
+internal fun SettingsScreenPreview() {
+    SettingsScreen(
+        state =
+            SettingsUiModel(
+                items =
+                    listOf(
+                        SettingsGroupUiModel(
+                            title = "General".asUiText(),
+                            items =
+                                listOf(
+                                    SettingsItem.VaultSetting,
+                                    SettingsItem.Language("English"),
+                                    SettingsItem.Currency("USD"),
+                                    SettingsItem.AddressBook,
+                                ),
+                        ),
+                        SettingsGroupUiModel(
+                            title = "Community".asUiText(),
+                            items =
+                                listOf(
+                                    SettingsItem.ReferralCode,
+                                    SettingsItem.ShareTheApp,
+                                    SettingsItem.Twitter,
+                                    SettingsItem.Discord,
+                                ),
+                        ),
+                        SettingsGroupUiModel(
+                            title = "About".asUiText(),
+                            items =
+                                listOf(
+                                    SettingsItem.Faq,
+                                    SettingsItem.TermsOfService,
+                                    SettingsItem.PrivacyPolicy,
+                                ),
+                        ),
+                    )
+            ),
+        onSettingsItemClick = {},
+        onBackClick = {},
+        onContinueReferral = {},
+        onDismissReferral = {},
+        onShareVaultQrClick = {},
+        onDismissShareLink = {},
+    )
 }
 
 @Preview

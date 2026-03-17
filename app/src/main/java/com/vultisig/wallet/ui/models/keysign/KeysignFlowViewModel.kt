@@ -33,6 +33,7 @@ import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mappers.PayloadToProtoMapper
 import com.vultisig.wallet.data.mediator.MediatorService
+import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
@@ -44,6 +45,7 @@ import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
@@ -60,7 +62,10 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
+import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
+import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.peer.NetworkOption
@@ -154,6 +159,10 @@ constructor(
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val pushNotificationManager: PushNotificationManager,
     private val snackbarFlow: SnackbarFlow,
+    private val transactionHistoryDataMapper: SendTransactionHistoryDataMapper,
+    private val depositTransactionHistoryDataMapper: DepositTransactionHistoryDataMapper,
+    private val swapTransactionToHistoryDataMapper: SwapTransactionToHistoryDataMapper,
+    private val transactionHistoryRepository: TransactionHistoryRepository,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -188,6 +197,7 @@ constructor(
     val isLoading = MutableStateFlow(false)
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
+    private var transactionHistoryData = MutableStateFlow<TransactionHistoryData?>(null)
 
     private val tssKeysignType: TssKeyType
         get() = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA
@@ -223,6 +233,8 @@ constructor(
                 transactionStatusServiceManager = transactionStatusServiceManager,
                 txStatusConfigurationProvider = txStatusConfigurationProvider,
                 vaultRepository = vaultRepository,
+                transactionHistoryData = transactionHistoryData.value,
+                transactionHistoryRepository = transactionHistoryRepository,
             )
 
     val uiState = MutableStateFlow(KeysignFlowUiState())
@@ -312,7 +324,7 @@ constructor(
             updateTransactionUiModel(keysignPayload, customMessagePayload, txType)
         } catch (e: Exception) {
             Timber.e(e)
-            moveToState(KeysignFlowState.Error(e.message.toString()))
+            moveToState(Error(e.message.toString()))
         }
     }
 
@@ -476,29 +488,43 @@ constructor(
                             else -> txType == Route.Keysign.Keysign.TxType.Deposit
                         }
 
-                    transactionTypeUiModel =
-                        when {
-                            isSwap ->
-                                TransactionTypeUiModel.Swap(
-                                    mapSwapTransactionToUiModel(
-                                        swapTransactionRepository.getTransaction(transactionId)
-                                    )
+                    when {
+                        isSwap -> {
+                            val swapTransactionUiModel =
+                                mapSwapTransactionToUiModel(
+                                    swapTransactionRepository.getTransaction(transactionId)
                                 )
-
-                            isDeposit ->
-                                TransactionTypeUiModel.Deposit(
-                                    mapDepositTransactionUiModel(
-                                        depositTransactionRepository.getTransaction(transactionId)
-                                    )
-                                )
-
-                            else ->
-                                TransactionTypeUiModel.Send(
-                                    mapTransactionToUiModel(
-                                        transactionRepository.getTransaction(transactionId)
-                                    )
-                                )
+                            transactionTypeUiModel =
+                                TransactionTypeUiModel.Swap(swapTransactionUiModel)
+                            transactionHistoryData.update {
+                                swapTransactionToHistoryDataMapper(swapTransactionUiModel)
+                            }
                         }
+
+                        isDeposit -> {
+                            val depositTransactionUiModel =
+                                mapDepositTransactionUiModel(
+                                    depositTransactionRepository.getTransaction(transactionId)
+                                )
+                            transactionTypeUiModel =
+                                TransactionTypeUiModel.Deposit(depositTransactionUiModel)
+                            transactionHistoryData.update {
+                                depositTransactionHistoryDataMapper(depositTransactionUiModel)
+                            }
+                        }
+
+                        else -> {
+                            val transactionDetailsUiModel =
+                                mapTransactionToUiModel(
+                                    transactionRepository.getTransaction(transactionId)
+                                )
+                            transactionHistoryData.update {
+                                transactionHistoryDataMapper(transactionDetailsUiModel)
+                            }
+                            transactionTypeUiModel =
+                                TransactionTypeUiModel.Send(transactionDetailsUiModel)
+                        }
+                    }
                 }
             }
         } else {
@@ -601,7 +627,7 @@ constructor(
             currentState.update { nextState }
         } catch (e: Exception) {
             isLoading.value = false
-            moveToState(KeysignFlowState.Error(e.message.toString()))
+            moveToState(Error(e.message.toString()))
         }
     }
 

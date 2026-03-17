@@ -119,6 +119,7 @@ import com.vultisig.wallet.ui.screens.swap.swapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
+import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryScreen
 import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBottomSheet
@@ -157,6 +158,8 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         }
 
         composable<Route.Home> { VaultAccountsScreen() }
+
+        composable<Route.TransactionHistory> { TransactionHistoryScreen() }
 
         composable<ImportVault> { ImportFileScreen() }
 

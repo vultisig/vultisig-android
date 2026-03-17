@@ -933,6 +933,39 @@
     <string name="key_import_spotlight_device_title">Minstens één apparaat</string>
     <string name="key_import_spotlight_device_desc">Elk apparaat dat Vultisig kan draaien werkt.</string>
     <string name="key_import_spotlight_get_started">Aan de slag</string>
+    <!-- Transaction History Screen -->
+    <string name="transaction_history_title">Geschiedenis</string>
+    <string name="transaction_history_tab_overview">Overzicht</string>
+    <string name="transaction_history_tab_send">Sturen</string>
+    <string name="transaction_history_tab_swap">Swaps</string>
+    <string name="transaction_history_empty_title">Nog geen transacties</string>
+    <string name="transaction_history_empty_desc">Uw transactiegeschiedenis verschijnt hier</string>
+    <string name="transaction_history_search_asset_title">Asset zoeken</string>
+    <string name="transaction_history_search_asset_not_found">Geen activa gevonden</string>
+    <string name="transaction_history_clear_filters">Filters wissen</string>
+    <string name="transaction_status_broadcasted_label">Uitgezonden</string>
+    <string name="transaction_status_pending_label">In behandeling · %1$s</string>
+    <string name="transaction_status_confirmed_label">Geslaagd</string>
+    <string name="transaction_status_failed_label">Fout</string>
+    <string name="transaction_status_in_progress_label">Bezig…</string>
+    <string name="transaction_history_to_label">Aan</string>
+    <string name="transaction_history_via_label">via %s</string>
+    <string name="transaction_history_via_prefix">via</string>
+    <string name="transaction_history_min_payout_label">min. uitbetaling</string>
+    <string name="transaction_history_date_today">Vandaag</string>
+    <string name="transaction_history_date_yesterday">Gisteren</string>
+    <string name="transaction_history_elapsed_just_now">zojuist</string>
+    <string name="transaction_history_elapsed_days">%1$dd geleden</string>
+    <string name="transaction_history_elapsed_hours">%1$du geleden</string>
+    <string name="transaction_history_elapsed_minutes">%1$dmin geleden</string>
+    <string name="transaction_history_detail_status">Status</string>
+    <string name="transaction_history_detail_from">Van</string>
+    <string name="transaction_history_detail_to">Naar</string>
+    <string name="transaction_history_detail_date">Datum</string>
+    <string name="transaction_history_detail_fee">Kosten</string>
+    <string name="transaction_history_detail_network">Netwerk</string>
+    <string name="transaction_history_detail_provider">Provider</string>
+    <string name="transaction_history_view_on_explorer">Bekijk op Explorer</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Herstelzin importeren</string>

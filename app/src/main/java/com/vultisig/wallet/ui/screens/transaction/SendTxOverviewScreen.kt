@@ -67,7 +67,7 @@ internal fun SendTxOverviewScreen(
             VsButton(
                 label = stringResource(R.string.transaction_done_title),
                 variant = VsButtonVariant.Primary,
-                size = VsButtonSize.Small,
+                size = VsButtonSize.Medium,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
                 onClick = onComplete,
             )

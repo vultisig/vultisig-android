@@ -936,6 +936,39 @@
     <string name="key_import_spotlight_device_title">Al menos un dispositivo</string>
     <string name="key_import_spotlight_device_desc">Cualquier dispositivo que pueda ejecutar Vultisig funcionará.</string>
     <string name="key_import_spotlight_get_started">Comenzar</string>
+    <!-- Transaction History Screen -->
+    <string name="transaction_history_title">Historial</string>
+    <string name="transaction_history_tab_overview">Resumen</string>
+    <string name="transaction_history_tab_send">Enviar</string>
+    <string name="transaction_history_tab_swap">Intercambiar</string>
+    <string name="transaction_history_empty_title">Aún no hay transacciones</string>
+    <string name="transaction_history_empty_desc">Tu historial de transacciones aparecerá aquí</string>
+    <string name="transaction_history_search_asset_title">Buscar activo</string>
+    <string name="transaction_history_search_asset_not_found">No se encontraron activos</string>
+    <string name="transaction_history_clear_filters">Borrar filtros</string>
+    <string name="transaction_status_broadcasted_label">Transmitida</string>
+    <string name="transaction_status_pending_label">Pendiente · %1$s</string>
+    <string name="transaction_status_confirmed_label">Confirmada</string>
+    <string name="transaction_status_failed_label">Fallida</string>
+    <string name="transaction_status_in_progress_label">En progreso…</string>
+    <string name="transaction_history_to_label">Para</string>
+    <string name="transaction_history_via_label">vía %s</string>
+    <string name="transaction_history_via_prefix">vía</string>
+    <string name="transaction_history_min_payout_label">pago mín.</string>
+    <string name="transaction_history_date_today">Hoy</string>
+    <string name="transaction_history_date_yesterday">Ayer</string>
+    <string name="transaction_history_elapsed_just_now">ahora mismo</string>
+    <string name="transaction_history_elapsed_days">hace %1$dd</string>
+    <string name="transaction_history_elapsed_hours">hace %1$dh</string>
+    <string name="transaction_history_elapsed_minutes">hace %1$dmin</string>
+    <string name="transaction_history_detail_status">Estado</string>
+    <string name="transaction_history_detail_from">Desde</string>
+    <string name="transaction_history_detail_to">Hasta</string>
+    <string name="transaction_history_detail_date">Fecha</string>
+    <string name="transaction_history_detail_fee">Tarifa</string>
+    <string name="transaction_history_detail_network">Red</string>
+    <string name="transaction_history_detail_provider">Proveedor</string>
+    <string name="transaction_history_view_on_explorer">Ver en el explorador</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Importar frase semilla</string>

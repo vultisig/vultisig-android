@@ -12,10 +12,16 @@ import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
+import com.vultisig.wallet.data.db.models.TransactionStatus.BROADCASTED
+import com.vultisig.wallet.data.db.models.TransactionType
 import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.CommonTransactionHistoryData
+import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.SwapTransactionHistoryData
+import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
@@ -25,6 +31,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
@@ -122,6 +129,8 @@ internal class KeysignViewModel(
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
     private val vaultRepository: VaultRepository,
+    private val transactionHistoryData: TransactionHistoryData?,
+    private val transactionHistoryRepository: TransactionHistoryRepository,
 ) : ViewModel() {
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
@@ -547,7 +556,7 @@ internal class KeysignViewModel(
             txLink.value = explorerLinkRepository.getTransactionLink(chain, txHash)
             swapProgressLink.value =
                 explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
-
+            saveTransactionHistory(txHash, chain)
             if (txStatusConfigurationProvider.supportTxStatus(chain)) {
                 startForegroundPolling(txHash, chain)
             } else {
@@ -557,6 +566,37 @@ internal class KeysignViewModel(
         if (approveTxHash.value.isNotEmpty()) {
             approveTxLink.value =
                 explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
+        }
+    }
+
+    private suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
+        transactionHistoryData?.let {
+            runCatching {
+                val now = System.currentTimeMillis()
+                val historyData =
+                    CommonTransactionHistoryData(
+                        vaultId = vault.id,
+                        txHash = txHash,
+                        chain = chain.raw,
+                        timestamp = now,
+                        explorerUrl = txLink.value,
+                        status = BROADCASTED,
+                        type =
+                            when (it) {
+                                is SendTransactionHistoryData -> TransactionType.SEND
+                                is SwapTransactionHistoryData -> TransactionType.SWAP
+                            },
+                        confirmedAt = null,
+                        failureReason = null,
+                        lastCheckedAt = now,
+                    )
+                transactionHistoryRepository.recordTransaction(
+                    vaultId = vault.id,
+                    txHash = txHash,
+                    txData = it,
+                    genericData = historyData,
+                )
+            }
         }
     }
 
@@ -573,6 +613,15 @@ internal class KeysignViewModel(
                     .filter { it } // Wait until service is ready
                     .first()
                 transactionStatusServiceManager.getStatusFlow()?.collect { statusResult ->
+                    runCatching {
+                            transactionHistoryRepository.updateTransactionStatus(
+                                txHash,
+                                statusResult,
+                            )
+                        }
+                        .onFailure {
+                            Timber.w(it, "Failed to update tx history status for %s", txHash)
+                        }
                     currentState.value =
                         KeysignState.KeysignFinished(
                             transactionStatus = statusResult.toTransactionStatus()
