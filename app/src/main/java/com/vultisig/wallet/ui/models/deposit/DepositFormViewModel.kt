@@ -379,7 +379,10 @@ constructor(
 
         val depositOption =
             when (parseDepositType(action)) {
+                DeFiNavActions.BOND -> DepositOption.Bond
                 DeFiNavActions.UNBOND -> DepositOption.Unbond
+                DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
+                DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
                 null -> {
                     Timber.w("Unknown deposit type action: $action, using default flow")
                     return
@@ -393,7 +396,10 @@ constructor(
         viewModelScope.safeLaunch {
             val assets =
                 withContext(Dispatchers.IO) {
-                    mayaChainApi.getMayaNodePools().filter { it.bondable }.map { it.asset }
+                    mayaChainApi
+                        .getMayaNodePools()
+                        .filter { it.status == "Available" && it.bondable }
+                        .map { it.asset }
                 }
             val firstAsset = assets.firstOrNull() ?: ""
             state.update { it.copy(bondableAssets = assets, selectedBondAsset = firstAsset) }

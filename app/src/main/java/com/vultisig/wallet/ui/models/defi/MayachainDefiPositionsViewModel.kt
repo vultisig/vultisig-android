@@ -285,6 +285,7 @@ constructor(
         viewModelScope.launch {
             val selectedPositions = currentModel.selectedPositions
             if (!selectedPositions.hasMayaStakingPositions()) {
+                _totalStakingRaw.value = BigInteger.ZERO
                 updateModel { it.copy(staking = StakingTabUiModel(positions = emptyList())) }
                 return@launch
             }
@@ -311,6 +312,7 @@ constructor(
                     }
                         ?: run {
                             Timber.e("Vault does not have CACAO coin")
+                            _totalStakingRaw.value = BigInteger.ZERO
                             updateModel {
                                 it.copy(staking = StakingTabUiModel(positions = emptyList()))
                             }
@@ -321,6 +323,7 @@ constructor(
                     .getStakingDetails(cacaoCoin.address)
                     .catch { t ->
                         Timber.e(t, "Failed to load CACAO staking details")
+                        _totalStakingRaw.value = BigInteger.ZERO
                         updateModel {
                             it.copy(
                                 staking =
@@ -353,6 +356,7 @@ constructor(
                     }
             } catch (t: Throwable) {
                 Timber.e(t, "Failed to load CACAO staking position")
+                _totalStakingRaw.value = BigInteger.ZERO
                 updateModel {
                     it.copy(
                         staking =
