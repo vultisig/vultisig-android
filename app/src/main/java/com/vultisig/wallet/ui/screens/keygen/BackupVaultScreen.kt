@@ -57,7 +57,7 @@ internal fun BackupVaultScreen(model: BackupVaultViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClick: () -> Unit) {
+internal fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClick: () -> Unit) {
     var isNextEnabled by remember { mutableStateOf(false) }
     V3Scaffold(
         onBackClick = {},
@@ -87,7 +87,7 @@ private fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClick
                     textAlign = TextAlign.Center,
                 )
 
-                UiSpacer(size = 32.dp)
+                UiSpacer(size = 16.dp)
 
                 Text(
                     text =
