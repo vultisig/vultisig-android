@@ -1150,5 +1150,5 @@
     <string name="compounded_tcy_header">Reinvestiert TCY</string>
     <string name="native_asset">Nativ</string>
     <string name="invalid_integer_error">Ungültige Ganzzahl</string>
-    <string name="empty_lps_field">Leeres LP-Geräte-Feld</string>
+    <string name="empty_lps_field">Leeres LP-Einheiten-Feld</string>
 </resources>

@@ -512,8 +512,11 @@ constructor(
 
                 DepositOption.Bond,
                 DepositOption.Unbond -> {
+                    val defaultBondToken =
+                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
+                        else Coins.ThorChain.RUNE
                     state.update {
-                        it.copy(selectedToken = Coins.ThorChain.RUNE, unstakableAmount = null)
+                        it.copy(selectedToken = defaultBondToken, unstakableAmount = null)
                     }
                     if (chain == Chain.MayaChain) {
                         loadMayaBondableAssets()

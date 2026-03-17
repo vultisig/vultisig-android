@@ -94,7 +94,7 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
             mayaChainApi.getMayaNodePools().filter { it.bondable }.map { it.asset }
         } catch (e: Exception) {
             Timber.e(e, "Error fetching bondable Maya assets")
-            emptyList()
+            throw e
         }
     }
 

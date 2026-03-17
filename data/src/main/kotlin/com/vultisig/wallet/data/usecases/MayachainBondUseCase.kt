@@ -52,10 +52,7 @@ constructor(
                         "MayachainBondUseCase: Emitting ${freshNodes.size} fresh bonded nodes for vault $vaultId"
                     )
 
-                    activeBondedNodeRepository.deleteBondedNodes(vaultId)
-                    if (freshNodes.isNotEmpty()) {
-                        activeBondedNodeRepository.saveBondedNodes(vaultId, freshNodes)
-                    }
+                    activeBondedNodeRepository.replaceBondedNodes(vaultId, freshNodes)
 
                     emit(freshNodes)
                 } catch (e: Exception) {
@@ -90,6 +87,7 @@ constructor(
                             myBondAddress = address,
                             networkApy = networkInfo.apy,
                         )
+                    if (myBondMetrics.myBond <= BigInteger.ZERO) continue
 
                     val bondNode =
                         BondedNodePosition.BondedNode(
