@@ -307,12 +307,12 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
         modifier =
             Modifier.fillMaxWidth()
                 .height(100.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .clickable { onClick() }
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(12.dp),
                 )
     ) {
         Image(
@@ -353,11 +353,11 @@ private fun ReferralRewardsBanner(rewards: String, isLoading: Boolean) {
         modifier =
             Modifier.fillMaxWidth()
                 .height(110.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(12.dp),
                 )
     ) {
         SetBackgoundBanner(backgroundImageResId = R.drawable.referral_data_banner)
