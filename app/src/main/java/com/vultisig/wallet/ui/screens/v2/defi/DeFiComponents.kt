@@ -420,12 +420,12 @@ internal fun DeFiWarningBanner(text: String, onClickClose: (() -> Unit)? = null)
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(Theme.v2.colors.backgrounds.secondary)
                     .border(
                         width = 1.dp,
-                        color = Theme.v2.colors.border.normal,
-                        shape = RoundedCornerShape(16.dp),
+                        color = Theme.v2.colors.border.light,
+                        shape = RoundedCornerShape(12.dp),
                     )
                     .padding(
                         start = 16.dp,

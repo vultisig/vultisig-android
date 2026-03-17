@@ -734,7 +734,7 @@ internal fun ConnectingToServer(isSuccess: Boolean) {
             textAlign = TextAlign.Center,
         )
 
-        UiSpacer(16.dp)
+        UiSpacer(12.dp)
 
         Text(
             text = stringResource(R.string.keygen_connecting_with_server_take_a_second),
