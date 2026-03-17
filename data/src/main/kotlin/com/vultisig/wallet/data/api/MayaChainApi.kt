@@ -87,7 +87,8 @@ data class MayaBondProviders(
 @Serializable
 data class MayaBondProvider(
     @SerialName("bond_address") val bondAddress: String,
-    @SerialName("bonded") val bond: String,
+    @SerialName("bond") val bond: String = "0",
+    @SerialName("bonded") val bonded: Boolean = false,
 )
 
 @Serializable
