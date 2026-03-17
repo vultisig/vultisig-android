@@ -60,7 +60,8 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
     Sui("Sui", SUI, "SUI"),
     Ton("Ton", TON, "TON"),
     Ripple("Ripple", RIPPLE, "XRP"),
-    Tron("Tron", TRC20, "TRX");
+    Tron("Tron", TRC20, "TRX"),
+    Qbtc("QBTC", COSMOS, "qbtc");
 
     val id: ChainId
         get() = raw
@@ -70,7 +71,7 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
             Chain.entries.first { it.raw.equals(other = raw, ignoreCase = true) }
 
         val keyImportSupportedChains: List<Chain>
-            get() = entries.filter { it != Cardano }
+            get() = entries.filter { it != Cardano && it != Qbtc }
     }
 }
 
@@ -122,6 +123,7 @@ val Chain.coinType: CoinType
             Chain.Mantle -> CoinType.MANTLE
             Chain.Sei -> CoinType.SEI
             Chain.Hyperliquid -> CoinType.ETHEREUM
+            Chain.Qbtc -> CoinType.COSMOS
         }
 
 val Chain.supportsLegacyGas: Boolean
@@ -139,6 +141,7 @@ val Chain.TssKeysignType: TssKeyType
             Chain.Sui,
             Chain.Ton,
             Chain.Cardano -> TssKeyType.EDDSA
+            Chain.Qbtc -> TssKeyType.MLDSA
             else -> TssKeyType.ECDSA
         }
 
@@ -355,6 +358,7 @@ fun Chain.swapAssetName(): String {
         Chain.Mantle -> "MNT"
         Chain.Sei -> "SEI"
         Chain.Hyperliquid -> "HYPE"
+        Chain.Qbtc -> "QBTC"
     }
 }
 
@@ -396,6 +400,7 @@ fun Chain.ticker(): String {
         Chain.Mantle -> "MNT"
         Chain.Sei -> "SEI"
         Chain.Hyperliquid -> "HYPE"
+        Chain.Qbtc -> "QBTC"
     }
 }
 
