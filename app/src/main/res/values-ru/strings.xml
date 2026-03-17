@@ -444,6 +444,8 @@
     <string name="defi_tab_staked">стейкинге</string>
     <string name="defi_tab_bonded">Забондено</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">Бонд</string>
+    <string name="defi_stake">Стейк</string>
     <string name="liquidity_pool">Пул ликвидности</string>
     <string name="deposit_form_operator_slippage_title">Проскальзывание</string>
     <string name="slippage_required_error">Проскальзывание обязательно</string>

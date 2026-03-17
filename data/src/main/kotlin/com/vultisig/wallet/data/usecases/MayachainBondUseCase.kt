@@ -52,10 +52,8 @@ constructor(
                         "MayachainBondUseCase: Emitting ${freshNodes.size} fresh bonded nodes for vault $vaultId"
                     )
 
-                    if (freshNodes.isEmpty()) {
-                        activeBondedNodeRepository.deleteBondedNodes(vaultId)
-                    } else {
-                        activeBondedNodeRepository.deleteBondedNodes(vaultId)
+                    activeBondedNodeRepository.deleteBondedNodes(vaultId)
+                    if (freshNodes.isNotEmpty()) {
                         activeBondedNodeRepository.saveBondedNodes(vaultId, freshNodes)
                     }
 
@@ -126,24 +124,22 @@ constructor(
         return MayaNetworkBondInfo(apy = apy, nextChurnDate = nextChurnDate)
     }
 
-    private suspend fun estimateNextChurnETA(network: MayaMidgardNetworkData): Date? =
-        supervisorScope {
-            val health = mayachainBondRepository.getMidgardHealthData()
+    private suspend fun estimateNextChurnETA(network: MayaMidgardNetworkData): Date? {
+        val health = mayachainBondRepository.getMidgardHealthData()
 
-            val nextChurnHeight =
-                network.nextChurnHeight.toIntOrNull() ?: return@supervisorScope null
-            val currentHeight = health.lastMayaNode.height
-            val currentTimestamp = health.lastMayaNode.timestamp.toDouble()
+        val nextChurnHeight = network.nextChurnHeight.toIntOrNull() ?: return null
+        val currentHeight = health.lastMayaNode.height
+        val currentTimestamp = health.lastMayaNode.timestamp.toDouble()
 
-            if (nextChurnHeight <= currentHeight) return@supervisorScope null
+        if (nextChurnHeight <= currentHeight) return null
 
-            // Maya has approximately 5 seconds per block
-            val avgBlockTime = 5.0
-            val remainingBlocks = nextChurnHeight - currentHeight
-            val etaSeconds = remainingBlocks * avgBlockTime
+        // Maya has approximately 5 seconds per block
+        val avgBlockTime = 5.0
+        val remainingBlocks = nextChurnHeight - currentHeight
+        val etaSeconds = remainingBlocks * avgBlockTime
 
-            Date((currentTimestamp * 1000).toLong() + (etaSeconds * 1000).toLong())
-        }
+        return Date((currentTimestamp * 1000).toLong() + (etaSeconds * 1000).toLong())
+    }
 
     private suspend fun calculateBondMetrics(
         nodeAddress: String,

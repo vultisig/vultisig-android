@@ -447,6 +447,8 @@
     <string name="defi_tab_staked">Gestaked</string>
     <string name="defi_tab_bonded">Gebondet</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">Bond</string>
+    <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquiditätspool</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Slippage ist erforderlich</string>

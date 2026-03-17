@@ -69,6 +69,8 @@
     <string name="defi_tab_staked">Staked</string>
     <string name="defi_tab_bonded">Bonded</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">Bond</string>
+    <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquidity Pool</string>
     <string name="circle_defi_description">Deposit your USDC into a Circle account and earn yield. Securely within your Vultisig vault.</string>
     <string name="circle_defi_control_info">Funds remain fully under your vault\'s control. Circle accounts are self-custodial and yield is generated through secure off-chain treasuries.</string>

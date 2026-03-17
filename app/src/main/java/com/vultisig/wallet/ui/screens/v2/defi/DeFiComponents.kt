@@ -327,7 +327,7 @@ internal fun PositionsSelectionDialog(
     if (filteredBondPositions.isNotEmpty()) {
         groups.add(
             TokenSelectionGroupUiModel(
-                title = "Bond",
+                title = stringResource(R.string.defi_bond),
                 items = buildItems(filteredBondPositions),
                 mapper = ::buildMapper,
                 plusUiModel = null,
@@ -338,7 +338,7 @@ internal fun PositionsSelectionDialog(
     if (filteredStakePositions.isNotEmpty()) {
         groups.add(
             TokenSelectionGroupUiModel(
-                title = "Stake",
+                title = stringResource(R.string.defi_stake),
                 items = buildItems(filteredStakePositions),
                 mapper = ::buildMapper,
                 plusUiModel = null,

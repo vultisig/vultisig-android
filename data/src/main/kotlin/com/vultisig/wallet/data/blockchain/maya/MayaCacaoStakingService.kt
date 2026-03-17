@@ -31,10 +31,13 @@ constructor(
                     val details = supervisorScope {
                         val providerDeferred = async { mayaChainApi.getCacaoProvider(address) }
                         val networkDeferred = async { mayaChainApi.getMidgardNetworkData() }
-                        val canUnstake = validateMayaTransactionHeightUseCase(address)
+                        val canUnstakeDeferred = async {
+                            validateMayaTransactionHeightUseCase(address)
+                        }
 
                         val provider = providerDeferred.await()
                         val network = networkDeferred.await()
+                        val canUnstake = canUnstakeDeferred.await()
 
                         val stakeAmount = provider.value.toBigIntegerOrNull() ?: BigInteger.ZERO
                         val apr = network.liquidityAPY.toDoubleOrNull()?.takeIf { it > 0.0 }

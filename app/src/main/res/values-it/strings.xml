@@ -448,6 +448,8 @@
     <string name="defi_tab_staked">Staking</string>
     <string name="defi_tab_bonded">Vincolato</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">Bond</string>
+    <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Pool di liquidità</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Lo slippage è obbligatorio</string>

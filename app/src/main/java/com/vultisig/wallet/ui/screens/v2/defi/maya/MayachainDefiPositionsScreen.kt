@@ -68,6 +68,8 @@ internal fun MayachainDefiPositionsScreen(
     )
 }
 
+private val MAYA_DEFI_TABS = listOf(DeFiTab.BONDED, DeFiTab.STAKED, DeFiTab.LP)
+
 @Composable
 internal fun MayachainDefiPositionsScreenContent(
     state: MayachainDefiPositionsUiModel = MayachainDefiPositionsUiModel(),
@@ -84,7 +86,7 @@ internal fun MayachainDefiPositionsScreenContent(
     onClickUnstake: (DeFiNavActions) -> Unit = {},
 ) {
     val searchTextFieldState = remember { TextFieldState() }
-    val tabs = listOf(DeFiTab.BONDED, DeFiTab.STAKED, DeFiTab.LP)
+    val tabs = MAYA_DEFI_TABS
 
     V2Scaffold(onBackClick = onBackClick) {
         Column(
