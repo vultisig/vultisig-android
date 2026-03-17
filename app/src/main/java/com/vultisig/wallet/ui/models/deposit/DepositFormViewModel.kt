@@ -385,8 +385,10 @@ constructor(
                     }
                 selectDepositOption(depositOption)
 
-                if (chain == Chain.MayaChain &&
-                    depositOption in listOf(DepositOption.Bond, DepositOption.Unbond)) {
+                if (
+                    chain == Chain.MayaChain &&
+                        depositOption in listOf(DepositOption.Bond, DepositOption.Unbond)
+                ) {
                     loadMayaBondableAssets()
                 }
             } else {
@@ -398,18 +400,12 @@ constructor(
     private fun loadMayaBondableAssets() {
         viewModelScope.launch {
             try {
-                val assets = withContext(Dispatchers.IO) {
-                    mayaChainApi.getMayaNodePools()
-                        .filter { it.bondable }
-                        .map { it.asset }
-                }
+                val assets =
+                    withContext(Dispatchers.IO) {
+                        mayaChainApi.getMayaNodePools().filter { it.bondable }.map { it.asset }
+                    }
                 val firstAsset = assets.firstOrNull() ?: ""
-                state.update {
-                    it.copy(
-                        bondableAssets = assets,
-                        selectedBondAsset = firstAsset,
-                    )
-                }
+                state.update { it.copy(bondableAssets = assets, selectedBondAsset = firstAsset) }
                 if (firstAsset.isNotEmpty()) {
                     assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
                 }
@@ -532,8 +528,10 @@ constructor(
                     state.update {
                         it.copy(selectedToken = Coins.ThorChain.RUNE, unstakableAmount = null)
                     }
-                    if (chain == Chain.MayaChain &&
-                        option in listOf(DepositOption.Bond, DepositOption.Unbond)) {
+                    if (
+                        chain == Chain.MayaChain &&
+                            option in listOf(DepositOption.Bond, DepositOption.Unbond)
+                    ) {
                         loadMayaBondableAssets()
                     }
                 }

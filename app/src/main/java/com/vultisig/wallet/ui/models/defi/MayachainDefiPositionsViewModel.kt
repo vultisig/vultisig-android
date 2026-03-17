@@ -485,8 +485,7 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
 }
 
 private fun formatCacaoReward(reward: Double): String {
-    val rewardBase =
-        BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
+    val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
     val cacaoAmount = CoinType.THORCHAIN.toValue(rewardBase).setScale(4, RoundingMode.DOWN)
     return "${cacaoAmount.toPlainString()} ${CoinType.THORCHAIN.symbol}"
 }

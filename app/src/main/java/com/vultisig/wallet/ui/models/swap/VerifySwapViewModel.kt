@@ -48,6 +48,7 @@ internal data class SwapTransactionUiModel(
     val networkFeeFormatted: String = "",
     val providerFeeFormatted: String = "",
     val hasConsentAllowance: Boolean = false,
+    val provider: String = "",
 )
 
 internal data class ValuedToken(

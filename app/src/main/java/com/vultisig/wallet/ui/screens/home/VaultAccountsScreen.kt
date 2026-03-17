@@ -121,6 +121,7 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
         openCamera = viewModel::openCamera,
         onAccountClick = viewModel::openAccount,
         onToggleBalanceVisibility = viewModel::toggleBalanceVisibility,
+        onOpenHistoryClick = viewModel::openHistory,
         onOpenSettingsClick = viewModel::openSettings,
         onToggleVaultListClick = viewModel::openVaultList,
         onChooseChains = viewModel::openAddChainAccount,
@@ -144,6 +145,7 @@ internal fun VaultAccountsScreen(
     onAccountClick: (AccountUiModel) -> Unit = {},
     onToggleBalanceVisibility: () -> Unit = {},
     onMigrateClick: () -> Unit = {},
+    onOpenHistoryClick: () -> Unit = {},
     onOpenSettingsClick: () -> Unit = {},
     onChooseChains: () -> Unit = {},
     onDismissBanner: () -> Unit = {},
@@ -207,6 +209,7 @@ internal fun VaultAccountsScreen(
         topBarExpandedContent = {
             ExpandedTopbarContainer {
                 TopRow(
+                    onOpenHistoryClick = onOpenHistoryClick,
                     onOpenSettingsClick = onOpenSettingsClick,
                     onToggleVaultListClick = onToggleVaultListClick,
                     vaultName = state.vaultName,
