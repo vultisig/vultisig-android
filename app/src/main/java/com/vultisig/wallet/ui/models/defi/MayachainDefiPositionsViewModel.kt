@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.defi
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -42,6 +43,8 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -74,6 +77,16 @@ private val MAYA_STAKE_POSITIONS_DIALOG: List<PositionUiModelDialog>
 
 private val MAYA_DEFAULT_SELECTED_POSITIONS = listOf(Coins.MayaChain.CACAO.ticker)
 
+@Immutable
+internal sealed interface MayachainDefiUiState {
+    data object Loading : MayachainDefiUiState
+
+    data class Success(val data: MayachainDefiPositionsUiModel) : MayachainDefiUiState
+
+    data class Error(val message: String) : MayachainDefiUiState
+}
+
+@Immutable
 internal data class MayachainDefiPositionsUiModel(
     val totalAmountPrice: String = DEFAULT_ZERO_BALANCE,
     val bonded: BondedTabUiModel = BondedTabUiModel(totalBondedAmount = "0 CACAO"),
@@ -110,15 +123,29 @@ constructor(
 
     private lateinit var vaultId: String
 
-    val state = MutableStateFlow(MayachainDefiPositionsUiModel())
+    private val _state = MutableStateFlow<MayachainDefiUiState>(MayachainDefiUiState.Loading)
+    val state: StateFlow<MayachainDefiUiState> = _state.asStateFlow()
 
     private val bondedNodesRefreshTrigger = MutableStateFlow(0)
 
     private val _totalBondedRaw = MutableStateFlow(BigInteger.ZERO)
     private val _totalStakingRaw = MutableStateFlow(BigInteger.ZERO)
 
+    private val currentModel: MayachainDefiPositionsUiModel
+        get() =
+            (_state.value as? MayachainDefiUiState.Success)?.data ?: MayachainDefiPositionsUiModel()
+
+    private fun updateModel(
+        transform: (MayachainDefiPositionsUiModel) -> MayachainDefiPositionsUiModel
+    ) {
+        _state.update { s ->
+            if (s is MayachainDefiUiState.Success) s.copy(data = transform(s.data)) else s
+        }
+    }
+
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
+        _state.value = MayachainDefiUiState.Success(MayachainDefiPositionsUiModel())
         loadBalanceVisibility()
         loadSavedPositions()
         loadLpPositionsForDialog()
@@ -136,7 +163,7 @@ constructor(
         viewModelScope.safeLaunch {
             val isVisible =
                 withContext(Dispatchers.IO) { balanceVisibilityRepository.getVisibility(vaultId) }
-            state.update { it.copy(isBalanceVisible = isVisible) }
+            updateModel { it.copy(isBalanceVisible = isVisible) }
         }
     }
 
@@ -149,7 +176,7 @@ constructor(
                     } else {
                         MAYA_DEFAULT_SELECTED_POSITIONS
                     }
-                state.update {
+                updateModel {
                     it.copy(selectedPositions = positions, tempSelectedPositions = positions)
                 }
 
@@ -165,7 +192,7 @@ constructor(
                 val pools =
                     withContext(Dispatchers.IO) { mayachainBondRepository.getMayaNodePools() }
                 val lpPositions = pools.map { pool -> pool.toPositionDialogModel() }
-                state.update { it.copy(lpPositionsDialog = lpPositions) }
+                updateModel { it.copy(lpPositionsDialog = lpPositions) }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to load Maya LP positions for dialog")
             }
@@ -175,7 +202,7 @@ constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadBondedNodes() {
         viewModelScope.launch {
-            state.update { it.copy(bonded = it.bonded.copy(isLoading = true)) }
+            updateModel { it.copy(bonded = it.bonded.copy(isLoading = true)) }
 
             try {
                 val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
@@ -186,7 +213,7 @@ constructor(
 
                 if (cacaoCoin == null) {
                     Timber.e("Vault does not have CACAO coin")
-                    state.update { it.copy(bonded = it.bonded.copy(isLoading = false)) }
+                    updateModel { it.copy(bonded = it.bonded.copy(isLoading = false)) }
                     return@launch
                 }
 
@@ -194,7 +221,7 @@ constructor(
                     .flatMapLatest { bondUseCase.getActiveNodes(vaultId, cacaoCoin.address) }
                     .catch { t ->
                         Timber.e(t)
-                        state.update { it.copy(bonded = it.bonded.copy(isLoading = false)) }
+                        updateModel { it.copy(bonded = it.bonded.copy(isLoading = false)) }
                     }
                     .collect { activeNodes ->
                         val cacaoSymbol = Coins.MayaChain.CACAO.ticker
@@ -220,7 +247,7 @@ constructor(
 
                         val bondedPrice = calculateBondedFiatPrice(totalBondedRaw)
 
-                        state.update {
+                        updateModel {
                             it.copy(
                                 isTotalAmountLoading = false,
                                 bonded =
@@ -238,7 +265,7 @@ constructor(
             } catch (t: Throwable) {
                 Timber.e(t)
                 if (t is CancellationException) throw t
-                state.update {
+                updateModel {
                     it.copy(
                         isTotalAmountLoading = false,
                         bonded = it.bonded.copy(isLoading = false),
@@ -250,9 +277,9 @@ constructor(
 
     private fun loadStakingPosition() {
         viewModelScope.launch {
-            val selectedPositions = state.value.selectedPositions
+            val selectedPositions = currentModel.selectedPositions
             if (!selectedPositions.hasMayaStakingPositions()) {
-                state.update { it.copy(staking = StakingTabUiModel(positions = emptyList())) }
+                updateModel { it.copy(staking = StakingTabUiModel(positions = emptyList())) }
                 return@launch
             }
 
@@ -266,7 +293,7 @@ constructor(
                     canStake = false,
                     canUnstake = false,
                 )
-            state.update {
+            updateModel {
                 it.copy(staking = StakingTabUiModel(positions = listOf(loadingPosition)))
             }
 
@@ -278,7 +305,7 @@ constructor(
                     }
                         ?: run {
                             Timber.e("Vault does not have CACAO coin")
-                            state.update {
+                            updateModel {
                                 it.copy(staking = StakingTabUiModel(positions = emptyList()))
                             }
                             return@launch
@@ -288,7 +315,7 @@ constructor(
                     .getStakingDetails(cacaoCoin.address)
                     .catch { t ->
                         Timber.e(t, "Failed to load CACAO staking details")
-                        state.update {
+                        updateModel {
                             it.copy(
                                 staking =
                                     StakingTabUiModel(
@@ -314,13 +341,13 @@ constructor(
                                 canStake = true,
                                 canUnstake = details.canUnstake,
                             )
-                        state.update {
+                        updateModel {
                             it.copy(staking = StakingTabUiModel(positions = listOf(position)))
                         }
                     }
             } catch (t: Throwable) {
                 Timber.e(t, "Failed to load CACAO staking position")
-                state.update {
+                updateModel {
                     it.copy(
                         staking =
                             StakingTabUiModel(
@@ -340,7 +367,7 @@ constructor(
                 val fiatValue = createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
                 val currencyFormat =
                     withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
-                state.update {
+                updateModel {
                     it.copy(
                         totalAmountPrice = currencyFormat.format(fiatValue.value),
                         isTotalAmountLoading = false,
@@ -348,7 +375,7 @@ constructor(
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to calculate Maya total fiat value")
-                state.update { it.copy(isTotalAmountLoading = false) }
+                updateModel { it.copy(isTotalAmountLoading = false) }
             }
         }
     }
@@ -404,11 +431,11 @@ constructor(
     }
 
     fun onTabSelected(tab: DeFiTab) {
-        state.update { it.copy(selectedTab = tab.displayNameRes) }
+        updateModel { it.copy(selectedTab = tab.displayNameRes) }
     }
 
     fun setPositionSelectionDialogVisibility(visible: Boolean) {
-        state.update {
+        updateModel {
             it.copy(
                 showPositionSelectionDialog = visible,
                 tempSelectedPositions = it.selectedPositions,
@@ -417,7 +444,7 @@ constructor(
     }
 
     fun onPositionSelectionChange(ticker: String, selected: Boolean) {
-        state.update { current ->
+        updateModel { current ->
             val updated =
                 if (selected) current.tempSelectedPositions + ticker
                 else current.tempSelectedPositions - ticker
@@ -427,9 +454,9 @@ constructor(
 
     fun onPositionSelectionDone() {
         viewModelScope.launch {
-            val selectedPositions = state.value.tempSelectedPositions
+            val selectedPositions = currentModel.tempSelectedPositions
             defiPositionsRepository.saveSelectedPositions(vaultId, selectedPositions)
-            state.update {
+            updateModel {
                 it.copy(showPositionSelectionDialog = false, selectedPositions = selectedPositions)
             }
             // loadBondedNodes() and loadStakingPosition() are triggered by the

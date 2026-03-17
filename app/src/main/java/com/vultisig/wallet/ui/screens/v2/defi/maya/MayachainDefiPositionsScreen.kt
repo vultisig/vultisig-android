@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsViewModel
+import com.vultisig.wallet.ui.models.defi.MayachainDefiUiState
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
@@ -48,24 +49,30 @@ internal fun MayachainDefiPositionsScreen(
     vaultId: VaultId,
     model: MayachainDefiPositionsViewModel = hiltViewModel(),
 ) {
-    val state by model.state.collectAsState()
+    val uiState by model.state.collectAsState()
 
     LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
 
-    MayachainDefiPositionsScreenContent(
-        state = state,
-        onBackClick = model::onBackClick,
-        onClickBondToNode = model::bondToNode,
-        onClickBond = { model.onClickBond(it) },
-        onClickUnbond = { model.onClickUnBond(it) },
-        onTabSelected = model::onTabSelected,
-        onEditPositionClick = { model.setPositionSelectionDialogVisibility(true) },
-        onCancelEditPositionClick = { model.setPositionSelectionDialogVisibility(false) },
-        onDonePositionClick = model::onPositionSelectionDone,
-        onPositionSelectionChange = model::onPositionSelectionChange,
-        onClickStake = { model.onNavigateToStake(it) },
-        onClickUnstake = { model.onNavigateToStake(it) },
-    )
+    when (val s = uiState) {
+        is MayachainDefiUiState.Loading,
+        is MayachainDefiUiState.Error -> Unit
+
+        is MayachainDefiUiState.Success ->
+            MayachainDefiPositionsScreenContent(
+                state = s.data,
+                onBackClick = model::onBackClick,
+                onClickBondToNode = model::bondToNode,
+                onClickBond = { model.onClickBond(it) },
+                onClickUnbond = { model.onClickUnBond(it) },
+                onTabSelected = model::onTabSelected,
+                onEditPositionClick = { model.setPositionSelectionDialogVisibility(true) },
+                onCancelEditPositionClick = { model.setPositionSelectionDialogVisibility(false) },
+                onDonePositionClick = model::onPositionSelectionDone,
+                onPositionSelectionChange = model::onPositionSelectionChange,
+                onClickStake = { model.onNavigateToStake(it) },
+                onClickUnstake = { model.onNavigateToStake(it) },
+            )
+    }
 }
 
 private val MAYA_DEFI_TABS = listOf(DeFiTab.BONDED, DeFiTab.STAKED, DeFiTab.LP)
