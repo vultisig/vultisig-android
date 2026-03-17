@@ -65,7 +65,7 @@ internal fun BalanceBanner(
     Box(
         modifier =
             Modifier.fillMaxWidth()
-                .height(140.dp)
+                .height(118.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .border(
                     width = 1.dp,
