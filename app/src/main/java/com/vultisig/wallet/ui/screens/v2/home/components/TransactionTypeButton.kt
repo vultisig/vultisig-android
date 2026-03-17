@@ -78,7 +78,7 @@ fun TransactionTypeButton(
 
         Text(
             text = stringResource(title),
-            color = Theme.v2.colors.text.primary,
+            color = Theme.v2.colors.text.secondary,
             style = Theme.brockmann.supplementary.caption,
         )
     }
