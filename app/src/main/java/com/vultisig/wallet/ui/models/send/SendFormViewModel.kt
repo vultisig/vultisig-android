@@ -124,6 +124,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
@@ -1089,6 +1090,14 @@ constructor(
                     )
                 }
 
+                val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+
+                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_amount)
+                    )
+                }
+
                 val gasFee = awaitGasFee()
 
                 if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
@@ -1112,14 +1121,6 @@ constructor(
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_address)
-                    )
-                }
-
-                val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
-
-                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_amount)
                     )
                 }
 
@@ -2181,11 +2182,17 @@ constructor(
         // Return cached value immediately if the background debounce already resolved
         gasFee.value?.let { return it }
 
-        // Otherwise wait for the background calculateGasFees() debounce flow to emit.
-        // This covers the race where the user taps Continue before the 350ms debounce
-        // + RPC call completes. The loading spinner is already visible during this wait.
-        return withTimeout(5_000L) {
-            gasFee.filterNotNull().first()
+        // Wait up to 5s for the background calculateGasFees() debounce to emit.
+        // If it doesn't resolve (e.g. RPC error swallowed by the flow), throw
+        // the localized gas fee error so the user can retry.
+        try {
+            return withTimeout(5_000L) {
+                gasFee.filterNotNull().first()
+            }
+        } catch (_: TimeoutCancellationException) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_gas_fee)
+            )
         }
     }
 
