@@ -43,6 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
@@ -113,11 +114,22 @@ constructor(
 
     private val bondedNodesRefreshTrigger = MutableStateFlow(0)
 
+    private val _totalBondedRaw = MutableStateFlow(BigInteger.ZERO)
+    private val _totalStakingRaw = MutableStateFlow(BigInteger.ZERO)
+
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
         loadBalanceVisibility()
         loadSavedPositions()
         loadLpPositionsForDialog()
+        observeTotalRaw()
+    }
+
+    private fun observeTotalRaw() {
+        viewModelScope.launch {
+            combine(_totalBondedRaw, _totalStakingRaw) { bonded, staking -> bonded + staking }
+                .collect { totalRaw -> updateTotalFiatValue(totalRaw) }
+        }
     }
 
     private fun loadBalanceVisibility() {
@@ -221,7 +233,7 @@ constructor(
                             )
                         }
 
-                        updateTotalFiatValue(totalBondedRaw)
+                        _totalBondedRaw.value = totalBondedRaw
                     }
             } catch (t: Throwable) {
                 Timber.e(t)
@@ -286,6 +298,7 @@ constructor(
                         }
                     }
                     .collect { details ->
+                        _totalStakingRaw.value = details.stakeAmount
                         val stakeAmount = CoinType.THORCHAIN.toValue(details.stakeAmount)
                         val stakedFiat = calculateStakingFiatPrice(stakeAmount)
                         val position =

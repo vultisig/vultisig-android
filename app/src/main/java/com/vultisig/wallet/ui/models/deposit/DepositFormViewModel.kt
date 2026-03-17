@@ -387,13 +387,6 @@ constructor(
                 else -> DepositOption.Bond
             }
         selectDepositOption(depositOption)
-
-        if (
-            chain == Chain.MayaChain &&
-                depositOption in listOf(DepositOption.Bond, DepositOption.Unbond)
-        ) {
-            loadMayaBondableAssets()
-        }
     }
 
     private fun loadMayaBondableAssets() {
