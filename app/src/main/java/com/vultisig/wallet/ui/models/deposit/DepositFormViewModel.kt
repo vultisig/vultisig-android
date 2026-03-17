@@ -59,6 +59,7 @@ import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.getChain
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
@@ -398,19 +399,15 @@ constructor(
     }
 
     private fun loadMayaBondableAssets() {
-        viewModelScope.launch {
-            try {
-                val assets =
-                    withContext(Dispatchers.IO) {
-                        mayaChainApi.getMayaNodePools().filter { it.bondable }.map { it.asset }
-                    }
-                val firstAsset = assets.firstOrNull() ?: ""
-                state.update { it.copy(bondableAssets = assets, selectedBondAsset = firstAsset) }
-                if (firstAsset.isNotEmpty()) {
-                    assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
+        viewModelScope.safeLaunch {
+            val assets =
+                withContext(Dispatchers.IO) {
+                    mayaChainApi.getMayaNodePools().filter { it.bondable }.map { it.asset }
                 }
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to load Maya bondable assets")
+            val firstAsset = assets.firstOrNull() ?: ""
+            state.update { it.copy(bondableAssets = assets, selectedBondAsset = firstAsset) }
+            if (firstAsset.isNotEmpty()) {
+                assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
             }
         }
     }
@@ -523,17 +520,20 @@ constructor(
                 }
 
                 DepositOption.Bond,
-                DepositOption.Unbond,
-                DepositOption.Leave -> {
+                DepositOption.Unbond -> {
                     state.update {
                         it.copy(selectedToken = Coins.ThorChain.RUNE, unstakableAmount = null)
                     }
-                    if (
-                        chain == Chain.MayaChain &&
-                            option in listOf(DepositOption.Bond, DepositOption.Unbond)
-                    ) {
+                    if (chain == Chain.MayaChain) {
                         loadMayaBondableAssets()
                     }
+                }
+
+                DepositOption.Leave -> {
+                    val leaveToken =
+                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
+                        else Coins.ThorChain.RUNE
+                    state.update { it.copy(selectedToken = leaveToken, unstakableAmount = null) }
                 }
 
                 DepositOption.RemoveCacaoPool -> {
