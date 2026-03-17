@@ -272,17 +272,17 @@ internal fun PositionsSelectionDialog(
 
     val updateBondPositions =
         remember(bondPositions, selectedPositions) {
-            bondPositions.map { it.copy(isSelected = selectedPositions.contains(it.ticker)) }
+            bondPositions.map { it.copy(isSelected = selectedPositions.contains(it.positionKey)) }
         }
 
     val updateStakePositions =
         remember(stakePositions, selectedPositions) {
-            stakePositions.map { it.copy(isSelected = selectedPositions.contains(it.ticker)) }
+            stakePositions.map { it.copy(isSelected = selectedPositions.contains(it.positionKey)) }
         }
 
     val updateLpPositions =
         remember(lpPositions, selectedPositions) {
-            lpPositions.map { it.copy(isSelected = selectedPositions.contains(it.ticker)) }
+            lpPositions.map { it.copy(isSelected = selectedPositions.contains(it.positionKey)) }
         }
 
     val filteredBondPositions =
@@ -382,7 +382,7 @@ internal fun PositionsSelectionDialog(
             when (uiModel) {
                 is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
                     val position = uiModel.data
-                    onPositionSelectionChange(position.ticker, isSelected)
+                    onPositionSelectionChange(position.positionKey, isSelected)
                 }
 
                 else -> error("Not supported double coin")

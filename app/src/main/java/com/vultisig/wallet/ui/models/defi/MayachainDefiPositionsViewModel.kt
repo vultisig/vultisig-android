@@ -25,6 +25,8 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.MAYA_BOND_CACAO_KEY
+import com.vultisig.wallet.ui.screens.v2.defi.MAYA_STAKE_CACAO_KEY
 import com.vultisig.wallet.ui.screens.v2.defi.formatAddress
 import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
 import com.vultisig.wallet.ui.screens.v2.defi.formatDate
@@ -62,6 +64,7 @@ private val MAYA_BOND_POSITIONS_DIALOG: List<PositionUiModelDialog>
                 logo = getCoinLogo(Coins.MayaChain.CACAO.logo),
                 ticker = Coins.MayaChain.CACAO.ticker,
                 isSelected = true,
+                positionKey = MAYA_BOND_CACAO_KEY,
             )
         )
 
@@ -72,10 +75,11 @@ private val MAYA_STAKE_POSITIONS_DIALOG: List<PositionUiModelDialog>
                 logo = getCoinLogo(Coins.MayaChain.CACAO.logo),
                 ticker = Coins.MayaChain.CACAO.ticker,
                 isSelected = true,
+                positionKey = MAYA_STAKE_CACAO_KEY,
             )
         )
 
-private val MAYA_DEFAULT_SELECTED_POSITIONS = listOf(Coins.MayaChain.CACAO.ticker)
+private val MAYA_DEFAULT_SELECTED_POSITIONS = listOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY)
 
 @Immutable
 internal sealed interface MayachainDefiUiState {
@@ -170,8 +174,10 @@ constructor(
     private fun loadSavedPositions() {
         viewModelScope.launch {
             defiPositionsRepository.getSelectedPositions(vaultId).collect { saved ->
+                val hasMayaPositions =
+                    saved.contains(MAYA_BOND_CACAO_KEY) || saved.contains(MAYA_STAKE_CACAO_KEY)
                 val positions =
-                    if (saved.isNotEmpty()) {
+                    if (hasMayaPositions) {
                         saved.toList()
                     } else {
                         MAYA_DEFAULT_SELECTED_POSITIONS
@@ -522,8 +528,8 @@ constructor(
 private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
     val assetTicker = asset.substringAfter(".")
     return PositionUiModelDialog(
-        logo = "https://static.vultisig.com/tokens/maya/${assetTicker.lowercase()}.png",
-        ticker = "CACAO/$assetTicker",
+        logo = getCoinLogo(assetTicker.lowercase()),
+        ticker = "$assetTicker/CACAO",
         isSelected = false,
     )
 }

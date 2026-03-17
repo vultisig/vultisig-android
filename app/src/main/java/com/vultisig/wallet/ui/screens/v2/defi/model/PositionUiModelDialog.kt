@@ -6,4 +6,5 @@ internal data class PositionUiModelDialog(
     val logo: ImageModel,
     val ticker: String,
     val isSelected: Boolean = true,
+    val positionKey: String = ticker,
 )
