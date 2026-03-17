@@ -36,10 +36,12 @@ import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.LpTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
+import com.vultisig.wallet.ui.screens.v2.defi.hasLpPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasMayaStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
@@ -190,7 +192,11 @@ internal fun MayachainDefiPositionsScreenContent(
                 }
 
                 DeFiTab.LP.displayNameRes -> {
-                    NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                    if (!state.selectedPositions.hasLpPositions(state.lpPositionsDialog)) {
+                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                    } else {
+                        LpTabContent(state = state.lp, onClickAdd = {}, onClickRemove = {})
+                    }
                 }
             }
 

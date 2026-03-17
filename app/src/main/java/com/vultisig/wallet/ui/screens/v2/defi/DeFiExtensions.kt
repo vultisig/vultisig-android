@@ -73,6 +73,11 @@ internal fun List<String>.hasMayaStakingPositions(): Boolean = any { key ->
     mayachainSupportStakingDeFi.any { it.ticker == key } || key == MAYA_STAKE_CACAO_KEY
 }
 
+internal fun List<String>.hasLpPositions(lpPositionsDialog: List<PositionUiModelDialog>): Boolean =
+    any { key ->
+        lpPositionsDialog.any { it.positionKey == key }
+    }
+
 internal fun emptyBondedTabUiModel() =
     BondedTabUiModel(
         isLoading = false,

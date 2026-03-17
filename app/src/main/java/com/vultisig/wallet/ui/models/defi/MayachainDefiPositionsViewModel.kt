@@ -95,6 +95,7 @@ internal data class MayachainDefiPositionsUiModel(
     val totalAmountPrice: String = DEFAULT_ZERO_BALANCE,
     val bonded: BondedTabUiModel = BondedTabUiModel(totalBondedAmount = "0 CACAO"),
     val staking: StakingTabUiModel = StakingTabUiModel(),
+    val lp: LpTabUiModel = LpTabUiModel(),
     val isTotalAmountLoading: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val selectedTab: Int = DeFiTab.BONDED.displayNameRes,
@@ -185,6 +186,7 @@ constructor(
                 updateModel {
                     it.copy(selectedPositions = positions, tempSelectedPositions = positions)
                 }
+                reloadLpTab()
 
                 launch { loadBondedNodes() }
                 launch { loadStakingPosition() }
@@ -199,6 +201,7 @@ constructor(
                     withContext(Dispatchers.IO) { mayachainBondRepository.getMayaNodePools() }
                 val lpPositions = pools.map { pool -> pool.toPositionDialogModel() }
                 updateModel { it.copy(lpPositionsDialog = lpPositions) }
+                reloadLpTab()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to load Maya LP positions for dialog")
             }
@@ -441,6 +444,24 @@ constructor(
             Timber.e(t)
             FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)
         }
+    }
+
+    private fun reloadLpTab() {
+        val model = currentModel
+        val selectedKeys = model.selectedPositions.toSet()
+        val selectedPools = model.lpPositionsDialog.filter { it.positionKey in selectedKeys }
+        val lpPositions =
+            selectedPools.map { pool ->
+                val assetTicker = pool.ticker.substringBefore("/")
+                LpPositionUiModel(
+                    titleLp = pool.ticker,
+                    totalPriceLp = MayachainDefiPositionsUiModel.DEFAULT_ZERO_BALANCE,
+                    icon = (pool.logo as? Int) ?: R.drawable.cacao,
+                    apr = null,
+                    position = "0 $assetTicker / 0 CACAO",
+                )
+            }
+        updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = lpPositions)) }
     }
 
     fun onTabSelected(tab: DeFiTab) {
