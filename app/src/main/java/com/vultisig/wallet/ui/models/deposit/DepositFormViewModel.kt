@@ -374,27 +374,25 @@ constructor(
     }
 
     private fun setMetadataInfo() {
-        if (!depositTypeAction.isNullOrEmpty()) {
-            val action = parseDepositType(depositTypeAction)
+        val action = depositTypeAction?.takeIf { it.isNotEmpty() } ?: return
+        depositTypeAction = null
 
-            if (action != null) {
-                val depositOption =
-                    when (action) {
-                        DeFiNavActions.UNBOND -> DepositOption.Unbond
-
-                        else -> DepositOption.Bond
-                    }
-                selectDepositOption(depositOption)
-
-                if (
-                    chain == Chain.MayaChain &&
-                        depositOption in listOf(DepositOption.Bond, DepositOption.Unbond)
-                ) {
-                    loadMayaBondableAssets()
+        val depositOption =
+            when (parseDepositType(action)) {
+                DeFiNavActions.UNBOND -> DepositOption.Unbond
+                null -> {
+                    Timber.w("Unknown deposit type action: $action, using default flow")
+                    return
                 }
-            } else {
-                Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
+                else -> DepositOption.Bond
             }
+        selectDepositOption(depositOption)
+
+        if (
+            chain == Chain.MayaChain &&
+                depositOption in listOf(DepositOption.Bond, DepositOption.Unbond)
+        ) {
+            loadMayaBondableAssets()
         }
     }
 

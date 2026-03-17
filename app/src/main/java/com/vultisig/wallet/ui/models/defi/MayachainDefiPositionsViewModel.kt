@@ -19,7 +19,6 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.MayachainBondUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
-import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -492,5 +491,5 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
 private fun formatCacaoReward(reward: Double): String {
     val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
     val cacaoAmount = CoinType.THORCHAIN.toValue(rewardBase).setScale(4, RoundingMode.DOWN)
-    return "${cacaoAmount.toPlainString()} ${CoinType.THORCHAIN.symbol}"
+    return "${cacaoAmount.toPlainString()} ${Coins.MayaChain.CACAO.ticker}"
 }

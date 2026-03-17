@@ -189,6 +189,7 @@ constructor(
             when (coin.chain) {
                 ThorChain -> thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Ethereum -> circleDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+                MayaChain -> mayaDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 else -> error("Not Supported ${coin.chain}")
             }
 
