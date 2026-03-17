@@ -161,14 +161,30 @@ If it has `ui-mismatch` or `missing-feature` label → use `/implement-figma`.
 1. Before starting any UI change, capture the current state via PreviewActivity + ADB
 2. After implementing, rebuild and capture the new state
 3. The PR skill (`/create-figma-pr`) will BLOCK if no before/after evidence exists
+4. There is NO exception — text-based comparison tables are NOT acceptable as a substitute for screenshots
 
 **Screenshot rules**:
 - Before/after screenshots MUST be **real Android renders** — NEVER use Figma screenshots as before/after
 - Figma is only a design reference (the target to match), not a screenshot substitute
+- Screenshots MUST show **full screen pages** as the end user would see them — NEVER show isolated components on an empty background. Always render the component inside its real parent screen with mock data so the screenshot looks like the actual app
+- When a screen requires complex state to reach (e.g., completing a transaction, finishing keysign), **use mocked data** in PreviewActivity to simulate that state — do NOT skip the screenshot
 - Primary method: **PreviewActivity + ADB screencap** — a debug-only activity (`app/src/debug/.../PreviewActivity.kt`) renders composables with mock data on the emulator, then `adb shell screencap` captures the result
-- Add new screen previews to PreviewActivity as needed (screen's inner composable must be `internal` visibility)
+- Add new screen previews to PreviewActivity as needed. Use the screen's inner composable (the one that accepts state/UiModel as parameters, not the one with ViewModel injection). Construct the UiModel/state directly with mock data
 - Fallback: direct ADB navigation to the screen in the running app
-- Last resort: text-based comparison table with exact values (add `needs-visual-review` label)
+
+**Screenshot hosting — NEVER commit images to the branch**:
+- Upload screenshots to an external image host (e.g., imgur API: `curl -s -X POST "https://api.imgur.com/3/image" -H "Authorization: Client-ID 546c25a59c58ad7" -F "image=@file.png"`)
+- Embed the returned URL in the PR description as markdown images so they render inline
+- NEVER add screenshot files to the git branch — only use external links in the PR body
+
+**PR description format for screenshots**:
+```markdown
+## Before / After
+
+| Before | After |
+|--------|-------|
+| ![before](https://i.imgur.com/XXXXX.png) | ![after](https://i.imgur.com/YYYYY.png) |
+```
 
 #### Batch Implementation Mode
 

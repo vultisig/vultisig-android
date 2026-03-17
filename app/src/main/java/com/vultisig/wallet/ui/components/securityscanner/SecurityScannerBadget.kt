@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.ui.models.TransactionScanStatus
@@ -51,7 +50,6 @@ internal fun SecurityScannerBadget(status: TransactionScanStatus) {
 
                 Text(
                     text = stringResource(R.string.security_scanner_transaction_scanning),
-                    fontSize = 14.sp,
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.secondary,
                 )
@@ -89,7 +87,6 @@ private fun ScanStatusContentWithLogo(
 
     Text(
         text = message,
-        fontSize = 14.sp,
         style = Theme.brockmann.supplementary.footnote,
         color = Theme.v2.colors.text.secondary,
     )
