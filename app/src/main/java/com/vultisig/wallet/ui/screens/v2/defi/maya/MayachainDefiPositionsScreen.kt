@@ -119,14 +119,13 @@ internal fun MayachainDefiPositionsScreenContent(
                 V2Container(
                     type = ContainerType.SECONDARY,
                     cornerType = CornerType.Circular,
-                    modifier = Modifier.clickOnce(onClick = {}),
+                    modifier = Modifier.clickOnce(onClick = onEditPositionClick),
                 ) {
                     UiIcon(
                         drawableResId = R.drawable.edit_chain,
                         size = 16.dp,
                         modifier = Modifier.padding(all = 12.dp),
                         tint = Theme.v2.colors.primary.accent4,
-                        onClick = onEditPositionClick,
                     )
                 }
             }

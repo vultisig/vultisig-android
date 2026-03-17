@@ -86,9 +86,6 @@ constructor(
                 val networkInfo = networkInfoDeferred.await()
 
                 for (node in allNodes) {
-                    val myProvider =
-                        node.bondProviders.providers.find { it.bondAddress == address } ?: continue
-
                     val myBondMetrics =
                         calculateBondMetrics(
                             nodeAddress = node.nodeAddress,
