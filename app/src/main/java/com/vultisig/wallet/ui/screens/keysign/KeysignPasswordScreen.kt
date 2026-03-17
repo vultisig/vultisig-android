@@ -129,7 +129,7 @@ fun KeysignPasswordSheetContent(
             tint = Theme.v2.colors.primary.accent4,
         )
 
-        UiSpacer(size = 20.dp)
+        UiSpacer(size = 10.dp)
 
         if (title != null) {
             Text(
@@ -138,7 +138,7 @@ fun KeysignPasswordSheetContent(
                 style = Theme.brockmann.headings.title3,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
-            UiSpacer(20.dp)
+            UiSpacer(12.dp)
         }
 
         FadingHorizontalDivider()
@@ -223,7 +223,7 @@ fun KeysignPasswordSheetContent(
                 }
             }
 
-            UiSpacer(size = 12.dp)
+            UiSpacer(size = 10.dp)
         }
 
         VsButton(
