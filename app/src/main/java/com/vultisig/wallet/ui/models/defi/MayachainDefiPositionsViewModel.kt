@@ -219,6 +219,7 @@ constructor(
 
                 if (cacaoCoin == null) {
                     Timber.e("Vault does not have CACAO coin")
+                    _totalBondedRaw.value = BigInteger.ZERO
                     updateModel { it.copy(bonded = it.bonded.copy(isLoading = false)) }
                     return@launch
                 }
@@ -227,6 +228,7 @@ constructor(
                     .flatMapLatest { bondUseCase.getActiveNodes(vaultId, cacaoCoin.address) }
                     .catch { t ->
                         Timber.e(t)
+                        _totalBondedRaw.value = BigInteger.ZERO
                         updateModel { it.copy(bonded = it.bonded.copy(isLoading = false)) }
                     }
                     .collect { activeNodes ->
@@ -271,6 +273,7 @@ constructor(
             } catch (t: Throwable) {
                 Timber.e(t)
                 if (t is CancellationException) throw t
+                _totalBondedRaw.value = BigInteger.ZERO
                 updateModel {
                     it.copy(
                         isTotalAmountLoading = false,
