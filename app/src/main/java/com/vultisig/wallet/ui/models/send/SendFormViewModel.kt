@@ -302,7 +302,7 @@ constructor(
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
     private val resolvedDstAddress = MutableStateFlow<String?>(null)
-    private var dstAddressLabel: String? = null
+    private val dstAddressLabel = MutableStateFlow<String?>(null)
 
     private var gasSettings = MutableStateFlow<GasSettings?>(null)
 
@@ -357,37 +357,37 @@ constructor(
                         // Only clear ENS label if the user typed a new raw address,
                         // not when we programmatically set the field to the resolved address.
                         if (addressStr != resolvedDstAddress.value) {
-                            dstAddressLabel = null
+                            dstAddressLabel.value = null
                         }
                         resolvedDstAddress.value = addressStr
                         expandSection(SendSections.Amount)
                     } else if (addressStr.isNotEmpty()) {
                         // Clear stale resolved address while async resolution is in-flight
                         resolvedDstAddress.value = null
-                        dstAddressLabel = null
+                        dstAddressLabel.value = null
                         try {
                             val resolved =
                                 addressParserRepository.resolveName(addressStr, token.chain)
                             // Ignore stale result if user changed input while resolving
                             if (addressFieldState.text.toString() != addressStr) return@mapLatest
                             if (chainAccountAddressRepository.isValid(token.chain, resolved)) {
-                                dstAddressLabel = addressStr
+                                dstAddressLabel.value = addressStr
                                 resolvedDstAddress.value = resolved
                                 addressFieldState.setTextAndPlaceCursorAtEnd(resolved)
                                 expandSection(SendSections.Amount)
                             } else {
                                 resolvedDstAddress.value = null
-                                dstAddressLabel = null
+                                dstAddressLabel.value = null
                             }
                         } catch (e: CancellationException) {
                             throw e
                         } catch (_: Exception) {
                             resolvedDstAddress.value = null
-                            dstAddressLabel = null
+                            dstAddressLabel.value = null
                         }
                     } else {
                         resolvedDstAddress.value = null
-                        dstAddressLabel = null
+                        dstAddressLabel.value = null
                     }
                 }
                 .collect()
@@ -1145,7 +1145,7 @@ constructor(
                 // resolved
                 // and the field was rewritten to the resolved address). Fall back to rawInput for
                 // cases where the user typed an ENS name and taps send before debounce completes.
-                val labelCandidate = dstAddressLabel ?: rawInput
+                val labelCandidate = dstAddressLabel.value ?: rawInput
                 val dstLabel =
                     labelCandidate.takeIf {
                         it.isNotBlank() &&

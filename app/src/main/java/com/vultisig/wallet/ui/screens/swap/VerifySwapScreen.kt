@@ -491,7 +491,7 @@ internal fun VerifyCardDetails(
                     modifier = Modifier.padding(end = 4.dp),
                 )
                 Text(
-                    text = " ($bracketValue)",
+                    text = "($bracketValue)",
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.tertiary,
                     textAlign = TextAlign.End,

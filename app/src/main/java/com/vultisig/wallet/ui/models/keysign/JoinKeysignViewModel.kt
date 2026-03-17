@@ -92,6 +92,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
@@ -991,16 +992,26 @@ constructor(
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
 
                     val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+                    val normalizedSrcAddress = normalizeAddressForLookup(address)
                     val srcVaultName =
                         allVaults
                             .firstOrNull { v ->
-                                v.coins.any { it.chain == chain && it.address == address }
+                                v.coins.any {
+                                    it.chain == chain &&
+                                        normalizeAddressForLookup(it.address) ==
+                                            normalizedSrcAddress
+                                }
                             }
                             ?.name
+                    val normalizedDstAddress = normalizeAddressForLookup(payload.toAddress)
                     val dstVaultName =
                         allVaults
                             .firstOrNull { v ->
-                                v.coins.any { it.chain == chain && it.address == payload.toAddress }
+                                v.coins.any {
+                                    it.chain == chain &&
+                                        normalizeAddressForLookup(it.address) ==
+                                            normalizedDstAddress
+                                }
                             }
                             ?.name
                     val isSavedInAddressBook =

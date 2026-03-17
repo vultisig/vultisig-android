@@ -53,6 +53,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import java.math.BigInteger
 import java.util.Base64
 import kotlin.time.Duration.Companion.seconds
@@ -161,10 +162,14 @@ internal class KeysignViewModel(
             viewModelScope.safeLaunch {
                 val chain = tx.token.token.chain
                 val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+                val normalizedDstAddress = normalizeAddressForLookup(tx.dstAddress)
                 val dstVaultName =
                     allVaults
                         .firstOrNull { v ->
-                            v.coins.any { it.chain == chain && it.address == tx.dstAddress }
+                            v.coins.any {
+                                it.chain == chain &&
+                                    normalizeAddressForLookup(it.address) == normalizedDstAddress
+                            }
                         }
                         ?.name
 

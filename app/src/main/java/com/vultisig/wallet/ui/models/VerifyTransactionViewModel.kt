@@ -35,9 +35,9 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
+import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigInteger
-import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -336,9 +336,6 @@ constructor(
             scanTransaction()
         }
     }
-
-    private fun normalizeAddressForLookup(address: String): String =
-        if (address.startsWith("0x", ignoreCase = true)) address.lowercase(Locale.ROOT) else address
 
     private suspend fun scanTransaction() {
         try {
