@@ -124,6 +124,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.proto.Bitcoin
@@ -1088,11 +1089,7 @@ constructor(
                     )
                 }
 
-                val gasFee =
-                    gasFee.value
-                        ?: throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_no_gas_fee)
-                        )
+                val gasFee = awaitGasFee()
 
                 if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
                     throw InvalidTransactionDataException(
@@ -2180,6 +2177,18 @@ constructor(
         uiState.update { it.copy(errorText = text) }
     }
 
+    private suspend fun awaitGasFee(): TokenValue {
+        // Return cached value immediately if the background debounce already resolved
+        gasFee.value?.let { return it }
+
+        // Otherwise wait for the background calculateGasFees() debounce flow to emit.
+        // This covers the race where the user taps Continue before the 350ms debounce
+        // + RPC call completes. The loading spinner is already visible during this wait.
+        return withTimeout(5_000L) {
+            gasFee.filterNotNull().first()
+        }
+    }
+
     private fun loadAccounts(vaultId: VaultId) {
         loadAccountsJob?.cancel()
         loadAccountsJob =
@@ -2952,11 +2961,7 @@ constructor(
 
         val chain = selectedAccount.token.chain
 
-        val gasFee =
-            gasFee.value
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_gas_fee)
-                )
+        val gasFee = awaitGasFee()
 
         if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
             throw InvalidTransactionDataException(
