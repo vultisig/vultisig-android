@@ -1142,6 +1142,11 @@
     <string name="server_backup_error_bad_request">Qualcosa è andato storto. Controlla i tuoi dati e riprova.</string>
     <string name="resend_notification">Reinvia notifica</string>
     <string name="cacao_pool">pool CACAO</string>
+    <string name="staked_ruji_header">Staking RUJI</string>
+    <string name="staked_tcy_header">Staking TCY</string>
+    <string name="staked_ytcy_header">Staking yTCY</string>
+    <string name="staked_yrune_header">Staking yRUNE</string>
+    <string name="compounded_tcy_header">Composto TCY</string>
     <string name="native_asset">Nativo</string>
     <string name="invalid_integer_error">Importo intero non valido</string>
     <string name="empty_lps_field">Campo Unità LP vuoto</string>

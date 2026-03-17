@@ -39,6 +39,8 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.getStakeDeFiNavAction
 import com.vultisig.wallet.ui.screens.v2.defi.model.getUnstakeDeFiNavAction
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
 
 @Composable
@@ -101,7 +103,7 @@ internal fun StakingWidget(
 
             Column {
                 Text(
-                    text = state.stakeAssetHeader,
+                    text = state.stakeAssetHeader.asString(),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary,
                 )
@@ -330,7 +332,7 @@ private fun StakingWidgetFullActionsPreview() {
             state =
                 StakePositionUiModel(
                     coin = Coins.ThorChain.RUJI,
-                    stakeAssetHeader = "Staked RUJI",
+                    stakeAssetHeader = UiText.StringResource(R.string.staked_ruji_header),
                     stakedAmountDisplay = "1000 RUJI",
                     apy = "18.5%",
                     canWithdraw = true,
@@ -356,7 +358,7 @@ private fun StakingWidgetLoadingPreview() {
             state =
                 StakePositionUiModel(
                     coin = Coins.ThorChain.RUJI,
-                    stakeAssetHeader = "Staked RUJI",
+                    stakeAssetHeader = UiText.StringResource(R.string.staked_ruji_header),
                     stakedAmountDisplay = "0 RUJI",
                     apy = "0%",
                     canWithdraw = false,

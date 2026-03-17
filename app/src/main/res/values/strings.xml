@@ -1186,6 +1186,11 @@
     <string name="server_backup_error_bad_request">Something went wrong. Please check your details and try again.</string>
     <string name="resend_notification">Resend notification</string>
     <string name="cacao_pool">CACAO Pool</string>
+    <string name="staked_ruji_header">Staked RUJI</string>
+    <string name="staked_tcy_header">Staked TCY</string>
+    <string name="staked_ytcy_header">Staked yTCY</string>
+    <string name="staked_yrune_header">Staked yRUNE</string>
+    <string name="compounded_tcy_header">Compounded TCY</string>
     <string name="native_asset">Native</string>
     <string name="invalid_integer_error">Invalid integer amount</string>
     <string name="empty_lps_field">Empty LP units field</string>

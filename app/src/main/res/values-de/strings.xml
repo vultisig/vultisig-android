@@ -1141,6 +1141,11 @@
     <string name="server_backup_error_bad_request">Etwas ist schiefgelaufen. Bitte überprüfen Sie Ihre Angaben und versuchen Sie es erneut.</string>
     <string name="resend_notification">Benachrichtigung erneut senden</string>
     <string name="cacao_pool">CACAO-Pool</string>
+    <string name="staked_ruji_header">Gestaked RUJI</string>
+    <string name="staked_tcy_header">Gestaked TCY</string>
+    <string name="staked_ytcy_header">Gestaked yTCY</string>
+    <string name="staked_yrune_header">Gestaked yRUNE</string>
+    <string name="compounded_tcy_header">Reinvestiert TCY</string>
     <string name="native_asset">Nativ</string>
     <string name="invalid_integer_error">Ungültige Ganzzahl</string>
     <string name="empty_lps_field">Leeres LP-Geräte-Feld</string>

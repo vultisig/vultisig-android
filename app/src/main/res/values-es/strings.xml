@@ -1138,6 +1138,11 @@
     <string name="server_backup_error_too_many_requests">Demasiadas solicitudes de copia de seguridad. Inténtelo de nuevo más tarde.</string>
     <string name="server_backup_error_bad_request">Algo salió mal. Verifique sus datos e inténtelo de nuevo.</string>
     <string name="cacao_pool">Pool de CACAO</string>
+    <string name="staked_ruji_header">Staking RUJI</string>
+    <string name="staked_tcy_header">Staking TCY</string>
+    <string name="staked_ytcy_header">Staking yTCY</string>
+    <string name="staked_yrune_header">Staking yRUNE</string>
+    <string name="compounded_tcy_header">Compuesto TCY</string>
     <string name="native_asset">Nativo</string>
     <string name="invalid_integer_error">Cantidad entera inválida</string>
     <string name="empty_lps_field">Campo de Unidades LP vacío</string>

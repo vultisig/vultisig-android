@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.defi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MayaNodePool
 import com.vultisig.wallet.data.blockchain.maya.MayaCacaoStakingService
 import com.vultisig.wallet.data.models.Chain
@@ -32,11 +33,13 @@ import com.vultisig.wallet.ui.screens.v2.defi.hasMayaStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.fromApiStatus
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
+import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -223,6 +226,7 @@ constructor(
                     }
             } catch (t: Throwable) {
                 Timber.e(t)
+                if (t is CancellationException) throw t
                 state.update {
                     it.copy(
                         isTotalAmountLoading = false,
@@ -244,7 +248,7 @@ constructor(
             val loadingPosition =
                 StakePositionUiModel(
                     coin = Coins.MayaChain.CACAO,
-                    stakeAssetHeader = "Cacao Pool",
+                    stakeAssetHeader = UiText.StringResource(R.string.cacao_pool),
                     stakedAmountDisplay = "0 CACAO",
                     apy = null,
                     isLoading = true,
@@ -288,7 +292,7 @@ constructor(
                         val position =
                             StakePositionUiModel(
                                 coin = Coins.MayaChain.CACAO,
-                                stakeAssetHeader = "Cacao Pool",
+                                stakeAssetHeader = UiText.StringResource(R.string.cacao_pool),
                                 stakeAmount = stakeAmount,
                                 stakedAmountDisplay =
                                     "${stakeAmount.setScale(4, RoundingMode.DOWN).toPlainString()} CACAO",
