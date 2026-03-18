@@ -840,7 +840,7 @@
     <string name="scan_qr_code_modal_scan_the">Scan het</string>
     <string name="scan_qr_code_modal_qr_code">QR-code</string>
     <string name="create_new_vault_screen_or">OF</string>
-    <string name="tx_overview_screen_title">Overzicht</string>
+    <string name="tx_overview_screen_title">Klaar</string>
     <string name="fast_vault_password_screen_warning">Wachtwoord kan niet worden gereset of hersteld</string>
     <string name="referral_top_bar_list">Verwijzing</string>
     <string name="onboarding_desc_page_1_part_3">Je nieuwe</string>
@@ -1018,7 +1018,7 @@
     <string name="welcome_fast_and_easy">Snel &amp; eenvoudig</string>
     <string name="welcome_fast_and_easy_desc">Onderteken met slechts 1 apparaat. Onze beveiligde server ondertekent met u voor multisig-beveiliging. Plugin-compatibel.</string>
     <string name="welcome_fast_and_easy_highlight">slechts 1 apparaat.</string>
-    <string name="welcome_plugin_compatible">Compatibel met Plugin Store</string>
+    <string name="welcome_plugin_compatible">Compatibel met Plugin Marketplace</string>
     <string name="welcome_tip">Tip: U kunt een browser gebruiken als apparaat</string>
     <string name="welcome_only_your_devices">Alleen uw apparaten</string>
     <string name="welcome_only_your_devices_desc">Alleen uw apparaten zijn bevoegde ondertekenaars. Transacties ondertekenen vereist 2 apparaten. Volledige zelfbeheer binnen handbereik.</string>

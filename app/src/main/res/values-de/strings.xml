@@ -844,7 +844,7 @@
     <string name="scan_qr_code_modal_scan_the">Scannen Sie den</string>
     <string name="scan_qr_code_modal_qr_code">QR-Code</string>
     <string name="create_new_vault_screen_or">ODER</string>
-    <string name="tx_overview_screen_title">Übersicht</string>
+    <string name="tx_overview_screen_title">Fertig</string>
     <string name="fast_vault_password_screen_warning">Passwort kann nicht zurückgesetzt oder wiederhergestellt werden</string>
     <string name="referral_top_bar_list">Empfehlung</string>
     <string name="onboarding_desc_page_1_part_3">Ihr neuer Tresor</string>
@@ -1023,7 +1023,7 @@
     <string name="welcome_fast_and_easy">Schnell &amp; einfach</string>
     <string name="welcome_fast_and_easy_desc">Signieren Sie mit nur 1 Gerät. Unser sicherer Server signiert mit Ihnen für Multisig-Sicherheit. Plugin-kompatibel.</string>
     <string name="welcome_fast_and_easy_highlight">nur 1 Gerät.</string>
-    <string name="welcome_plugin_compatible">Plugin Store kompatibel</string>
+    <string name="welcome_plugin_compatible">Plugin Marketplace kompatibel</string>
     <string name="welcome_tip">Tipp: Sie können einen Browser als Gerät verwenden</string>
     <string name="welcome_only_your_devices">Nur Ihre Geräte</string>
     <string name="welcome_only_your_devices_desc">Nur Ihre Geräte sind autorisierte Unterzeichner. Das Signieren von Transaktionen erfordert 2 Geräte. Vollständige Selbstverwahrung auf Knopfdruck.</string>
