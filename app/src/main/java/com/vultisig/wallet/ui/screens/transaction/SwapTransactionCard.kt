@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -75,11 +77,11 @@ internal fun SwapTransactionCard(
                         SwapAmountText(amount = item.fromAmount, token = item.fromToken)
                     }
 
-                    UiSpacer(size = 8.dp)
+                    TokenRowConnector()
 
                     ToSeparator(modifier = Modifier.fillMaxWidth())
 
-                    UiSpacer(size = 8.dp)
+                    TokenRowConnector()
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -131,6 +133,19 @@ internal fun SwapTransactionCard(
                 ViaBadge(provider = item.provider, modifier = Modifier.align(Alignment.BottomEnd))
             }
         }
+    }
+}
+
+@Composable
+private fun TokenRowConnector() {
+    Box(modifier = Modifier.fillMaxWidth().height(12.dp)) {
+        Box(
+            modifier =
+                Modifier.padding(start = 11.5.dp)
+                    .width(1.dp)
+                    .height(12.dp)
+                    .background(color = Theme.v2.colors.border.normal)
+        )
     }
 }
 
