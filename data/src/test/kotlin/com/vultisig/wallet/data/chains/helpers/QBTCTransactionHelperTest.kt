@@ -83,8 +83,6 @@ class QBTCTransactionHelperTest {
             wasmExecuteContractPayload = null,
         )
 
-    // region MsgSend pre-image hash
-
     @Test
     fun `getPreSignedImageHash returns single SHA-256 hash`() {
         val hashes = helper.getPreSignedImageHash(payload())
@@ -154,10 +152,6 @@ class QBTCTransactionHelperTest {
         )
     }
 
-    // endregion
-
-    // region IBC Transfer
-
     @Test
     fun `IBC transfer produces valid hash`() {
         val p =
@@ -200,10 +194,6 @@ class QBTCTransactionHelperTest {
             )
         assertNotEquals(sendHash, ibcHash)
     }
-
-    // endregion
-
-    // region Governance Vote
 
     @Test
     fun `vote produces valid hash`() {
@@ -264,10 +254,6 @@ class QBTCTransactionHelperTest {
 
         assertNotEquals(voteHash(1), voteHash(2))
     }
-
-    // endregion
-
-    // region Edge cases
 
     @Test
     fun `zero amount produces valid hash`() {
@@ -338,10 +324,6 @@ class QBTCTransactionHelperTest {
         assertTrue(helper.getPreSignedImageHash(payload())[0].matches(Regex("[0-9a-f]+")))
     }
 
-    // endregion
-
-    // region Transaction type routing
-
     @Test
     fun `unspecified transaction type equals default`() {
         assertEquals(
@@ -389,6 +371,4 @@ class QBTCTransactionHelperTest {
 
         assertEquals(3, setOf(sendHash, ibcHash, voteHash).size)
     }
-
-    // endregion
 }
