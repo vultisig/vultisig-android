@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.db.models.TransactionStatus.BROADCASTED
 import com.vultisig.wallet.data.db.models.TransactionType
 import com.vultisig.wallet.data.keygen.DKLSKeysign
+import com.vultisig.wallet.data.keygen.MldsaKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CommonTransactionHistoryData
@@ -233,6 +234,31 @@ internal class KeysignViewModel(
                     schnorr.keysignWithRetry()
 
                     this.signatures += schnorr.signatures
+
+                    if (signatures.isEmpty()) {
+                        error("Failed to sign transaction, signatures empty")
+                    }
+                }
+
+                TssKeyType.MLDSA -> {
+                    currentState.value = KeysignState.KeysignECDSA
+
+                    val mldsa =
+                        MldsaKeysign(
+                            keysignCommittee = keysignCommittee,
+                            mediatorURL = serverUrl,
+                            sessionID = sessionId,
+                            messageToSign = messagesToSign,
+                            vault = vault,
+                            encryptionKeyHex = encryptionKeyHex,
+                            isInitiateDevice = isInitiatingDevice,
+                            sessionApi = sessionApi,
+                            encryption = encryption,
+                        )
+
+                    mldsa.keysignWithRetry()
+
+                    this.signatures += mldsa.signatures
 
                     if (signatures.isEmpty()) {
                         error("Failed to sign transaction, signatures empty")
