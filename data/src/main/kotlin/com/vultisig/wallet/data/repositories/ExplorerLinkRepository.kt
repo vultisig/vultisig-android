@@ -114,5 +114,6 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Mantle -> "https://mantlescan.xyz/"
                 Chain.Sei -> "https://seiscan.io/"
                 Chain.Hyperliquid -> "https://liquidscan.io/"
+                Chain.Qbtc -> "https://explorer.qbtc.network/"
             }
 }
