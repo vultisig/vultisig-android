@@ -640,7 +640,7 @@
     <string name="security_scanner_transaction_scanning">Scanning…</string>
     <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
 
-    <string name="tx_overview_screen_title">Overview</string>
+    <string name="tx_overview_screen_title">Done</string>
     <string name="tx_transaction_successful_screen_title">Transaction successful</string>
     <string name="tx_overview_screen_tx_hash">Transaction Hash</string>
     <string name="tx_overview_screen_tx_from">From</string>
@@ -771,7 +771,7 @@
     <string name="add_address_title_label">Label</string>
     <string name="address_book_title_edit">Edit Address Book</string>
     <string name="backup_password_request_title">Do you want to encrypt your backup with a password?</string>
-    <string name="backup_password_request_caution_encrypt_desc">If you choose to add a password, this  will be used to encrypt the backup file.</string>
+    <string name="backup_password_request_caution_encrypt_desc">If you choose to add a password, it will be used to encrypt the backup file.</string>
     <string name="backup_password_request_highlight_encrypt">encrypt</string>
     <string name="backup_password_request_caution_cannot_reset_desc">Remember: If you forget your vault password, it cannot be reset or recovered.</string>
     <string name="backup_password_request_highlight_cannot">cannot</string>
@@ -1066,9 +1066,9 @@
     <string name="welcome_preference_shared_desc">Co-sign with multiple people you trust (e.g. family vaults, your accountant, a combination…)</string>
     <string name="welcome_preference_devices_title">How many devices\n do you have?</string>
     <string name="welcome_fast_and_easy">Fast &amp; easy</string>
-    <string name="welcome_fast_and_easy_desc">Sign with only 1 device. Our secure server signs with you for multisig security.  Plugin compatible.</string>
+    <string name="welcome_fast_and_easy_desc">Sign with only 1 device. Our secure server signs with you for multisig security. Plugin compatible.</string>
     <string name="welcome_fast_and_easy_highlight">only 1 device.</string>
-    <string name="welcome_plugin_compatible">Plugin Store compatible</string>
+    <string name="welcome_plugin_compatible">Plugin Marketplace compatible</string>
     <string name="welcome_tip">Tip: You can use a browser as a device</string>
     <string name="welcome_only_your_devices">Only your devices</string>
     <string name="welcome_only_your_devices_desc">Only your devices are authorized signers. Signing transactions takes 2 devices. Full self-custody at your fingertips.</string>

@@ -844,7 +844,7 @@
     <string name="scan_qr_code_modal_scan_the">Skenirajte</string>
     <string name="scan_qr_code_modal_qr_code">QR kod</string>
     <string name="create_new_vault_screen_or">ILI</string>
-    <string name="tx_overview_screen_title">Pregled</string>
+    <string name="tx_overview_screen_title">Gotovo</string>
     <string name="fast_vault_password_screen_warning">Lozinka se ne može resetirati ili oporaviti</string>
     <string name="referral_top_bar_list">Preporuka</string>
     <string name="onboarding_desc_page_1_part_3">vaš novi</string>
@@ -1024,7 +1024,7 @@
     <string name="welcome_fast_and_easy">Brzo &amp; jednostavno</string>
     <string name="welcome_fast_and_easy_desc">Potpisujte s samo 1 uređajem. Naš sigurni poslužitelj potpisuje s vama za multisig sigurnost. Kompatibilno s dodacima.</string>
     <string name="welcome_fast_and_easy_highlight">samo 1 uređajem.</string>
-    <string name="welcome_plugin_compatible">Kompatibilno s Plugin Store</string>
+    <string name="welcome_plugin_compatible">Kompatibilno s Plugin Marketplace</string>
     <string name="welcome_tip">Savjet: Možete koristiti preglednik kao uređaj</string>
     <string name="welcome_only_your_devices">Samo vaši uređaji</string>
     <string name="welcome_only_your_devices_desc">Samo vaši uređaji su ovlašteni potpisnici. Potpisivanje transakcija zahtijeva 2 uređaja. Potpuna samopohrana na dohvat ruke.</string>

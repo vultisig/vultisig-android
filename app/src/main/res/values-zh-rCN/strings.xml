@@ -1179,7 +1179,7 @@
     <string name="scan_qr_code_modal_scan_the">扫描</string>
     <string name="scan_qr_code_modal_qr_code">二维码</string>
     <string name="create_new_vault_screen_or">或</string>
-    <string name="tx_overview_screen_title">概述</string>
+    <string name="tx_overview_screen_title">完成</string>
     <string name="fast_vault_password_screen_warning">密码无法重置或恢复</string>
     <string name="referral_top_bar_list">推荐</string>
     <string name="onboarding_desc_page_1_part_3">您的新</string>
@@ -1358,7 +1358,7 @@
     <string name="welcome_fast_and_easy">快速 &amp; 简便</string>
     <string name="welcome_fast_and_easy_desc">仅用1台设备签署。我们的安全服务器与您共同签署以实现多签安全。兼容插件。</string>
     <string name="welcome_fast_and_easy_highlight">仅用1台设备签署。</string>
-    <string name="welcome_plugin_compatible">兼容 Plugin Store</string>
+    <string name="welcome_plugin_compatible">兼容 Plugin Marketplace</string>
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>
     <string name="welcome_only_your_devices">仅您的设备</string>
     <string name="welcome_only_your_devices_desc">只有您的设备是授权签署方。签署交易需要2台设备。完全自我托管触手可及。</string>
