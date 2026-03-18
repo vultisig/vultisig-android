@@ -132,7 +132,7 @@ private fun Tip() {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        UiIcon(drawableResId = R.drawable.tip, size = 16.dp, tint = Theme.v2.colors.alerts.info)
+        UiIcon(drawableResId = R.drawable.tip, size = 12.dp, tint = Theme.v2.colors.alerts.info)
         UiSpacer(size = 8.dp)
         Text(
             text = stringResource(R.string.welcome_tip),
