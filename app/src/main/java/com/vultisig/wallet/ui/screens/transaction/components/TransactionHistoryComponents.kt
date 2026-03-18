@@ -72,14 +72,14 @@ internal fun TransactionStatusWidget(
         Text(
             text = stringResource(R.string.transaction_status_in_progress_label),
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.secondary,
+            color = Theme.v2.colors.text.tertiary,
             modifier =
                 modifier
                     .background(
-                        color = Theme.v2.colors.backgrounds.tertiary_2,
+                        color = Theme.v2.colors.backgrounds.primary,
                         shape = RoundedCornerShape(100.dp),
                     )
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
         )
     } else {
         val (label, color) =

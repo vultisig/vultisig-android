@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -21,12 +22,15 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
+import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Broadcasted
+import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Confirmed
 import com.vultisig.wallet.ui.screens.transaction.components.SendAmountText
 import com.vultisig.wallet.ui.screens.transaction.components.ToSeparator
 import com.vultisig.wallet.ui.screens.transaction.components.TokenAmountAnnotated
 import com.vultisig.wallet.ui.screens.transaction.components.TokenCircle
 import com.vultisig.wallet.ui.screens.transaction.components.TransactionStatusWidget
 import com.vultisig.wallet.ui.screens.transaction.components.TypeBadge
+import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -50,15 +54,14 @@ internal fun SwapTransactionCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TypeBadge(
-                    iconRes = R.drawable.swap_v2,
-                    label = stringResource(R.string.transaction_history_tab_swap),
+                    iconRes = R.drawable.swap,
+                    label = stringResource(R.string.transaction_type_button_swap),
                 )
                 TransactionStatusWidget(status = item.status)
             }
 
-            UiSpacer(size = 12.dp)
-
             if (isInProgress) {
+                UiSpacer(size = 20.dp)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -96,6 +99,7 @@ internal fun SwapTransactionCard(
                     }
                 }
             } else {
+                UiSpacer(size = 12.dp)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -124,6 +128,51 @@ internal fun SwapTransactionCard(
                 }
             }
         }
+    }
+}
+
+private val previewSwapItem =
+    TransactionHistoryItemUiModel.Swap(
+        id = "1",
+        txHash = "0xabc123",
+        chain = "Ethereum",
+        status = Confirmed,
+        explorerUrl = "",
+        timestamp = System.currentTimeMillis(),
+        fromToken = "ETH",
+        fromAmount = "1,000.12",
+        fromChain = "Ethereum",
+        fromTokenLogo = R.drawable.rune,
+        toToken = "WBTC",
+        toAmount = "0.1251",
+        toChain = "Bitcoin",
+        toTokenLogo = R.drawable.bitcoin,
+        provider = "THORChain",
+        fiatValue = "$3,847.50",
+        fromAddress = null,
+        toAddress = null,
+        feeEstimate = null,
+    )
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewSwapCardInProgress() {
+    OnBoardingComposeTheme {
+        SwapTransactionCard(
+            item = previewSwapItem.copy(status = Broadcasted),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewSwapCardCompleted() {
+    OnBoardingComposeTheme {
+        SwapTransactionCard(
+            item = previewSwapItem.copy(status = Confirmed),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        )
     }
 }
 
