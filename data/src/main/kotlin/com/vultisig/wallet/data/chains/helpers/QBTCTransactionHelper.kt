@@ -15,6 +15,7 @@ import tss.KeysignResponse
 class QBTCTransactionHelper {
 
     companion object {
+        // This is the actual on-chain ID; the network launched with this name
         private const val CHAIN_ID = "qbtc-testnet"
         private const val DENOM = "qbtc"
         private const val GAS_LIMIT = 300000L
