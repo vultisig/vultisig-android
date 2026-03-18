@@ -83,7 +83,8 @@ internal fun VsCodeInputField(
                 },
             onKeyboardAction = onKeyboardAction,
             modifier =
-                Modifier.alpha(0.01f)
+                Modifier.size(1.dp)
+                    .alpha(0.01f)
                     .onFocusChanged { focusedState.value = it.isFocused }
                     .focusRequester(focusRequester)
                     .testTag(CODE_INPUT_FIELD_TAG),

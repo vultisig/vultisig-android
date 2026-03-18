@@ -238,16 +238,17 @@ internal fun FastVaultVerificationScreen(
 
                                 Text(
                                     text = stringResource(R.string.backup_use_a_different_email),
-                                    color = Theme.v2.colors.text.button.primary,
-                                    style = Theme.brockmann.supplementary.footnote,
+                                    color = Theme.v2.colors.variables.textButtonSecondaryLightDark,
+                                    style = Theme.brockmann.supplementary.caption,
                                     modifier =
                                         Modifier.clip(shape = RoundedCornerShape(12.dp))
-                                            .background(
-                                                color = Theme.v2.colors.backgrounds.tertiary_2
-                                            )
                                             .border(
                                                 width = 1.dp,
-                                                color = Theme.v2.colors.border.extraLight,
+                                                color = Theme.v2.colors.variables.bordersExtraLight,
+                                                shape = RoundedCornerShape(12.dp),
+                                            )
+                                            .background(
+                                                color = Theme.v2.colors.buttons.secondary,
                                                 shape = RoundedCornerShape(12.dp),
                                             )
                                             .padding(horizontal = 12.dp, vertical = 8.dp)
