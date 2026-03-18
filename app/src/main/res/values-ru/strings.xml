@@ -344,7 +344,6 @@
     <!-- Push Notifications -->
     <string name="notifications">Уведомления</string>
     <string name="push_notifications">Push-уведомления</string>
-    <string name="vault_notifications">Уведомления хранилища</string>
     <string name="push_notifications_failed">Ошибка отправки push-уведомления</string>
     <string name="push_notification_vault_not_found">Хранилище не найдено</string>
     <string name="push_notification_error_vault_not_supported">Хранилище не поддерживает уведомления</string>

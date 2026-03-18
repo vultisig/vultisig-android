@@ -345,7 +345,6 @@
     <!-- Push Notifications -->
     <string name="notifications">Notificaciones</string>
     <string name="push_notifications">Notificaciones push</string>
-    <string name="vault_notifications">Notificaciones de Bóveda</string>
     <string name="push_notifications_failed">Error al enviar la notificación push</string>
     <string name="push_notification_vault_not_found">Bóveda no encontrada</string>
     <string name="push_notification_error_vault_not_supported">La bóveda no admite notificaciones</string>

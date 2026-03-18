@@ -3,7 +3,6 @@
     <!-- Push Notifications -->
     <string name="notifications">通知</string>
     <string name="push_notifications">推送通知</string>
-    <string name="vault_notifications">金库通知</string>
     <string name="push_notifications_failed">推送通知失败</string>
     <string name="push_notification_vault_not_found">未找到金库</string>
     <string name="push_notification_error_vault_not_supported">金库不支持通知</string>
