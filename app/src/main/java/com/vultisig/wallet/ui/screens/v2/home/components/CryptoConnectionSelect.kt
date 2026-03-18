@@ -1,5 +1,8 @@
 package com.vultisig.wallet.ui.screens.v2.home.components
 
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.os.Build
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -23,9 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,36 +57,38 @@ internal fun CryptoConnectionSelect(
     val isWalletSelected = activeType == CryptoConnectionType.Wallet
 
     LookaheadScope {
-        val c1 = Color(0xFF284570)
-        val c2 = Theme.v2.colors.backgrounds.secondary
-        Box(
-            modifier =
-                Modifier.clip(CircleShape)
-                    .background(
-                        brush = Brush.sweepGradient(colors = listOf(c2, c1, c1, c1, c2, c2))
-                    )
-                    .padding(1.dp)
-        ) {
+        Box(modifier = Modifier.clip(CircleShape).background(Color(0xFF061B3A)).padding(1.dp)) {
             Box(
                 modifier =
                     modifier
                         .height(64.dp)
                         .width(92.dp * availableCryptoTypes.size)
                         .clip(CircleShape)
-                        .background(Color(0xFF0d2446))
+                        .background(Color(0x99132E56))
+                        .then(
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                Modifier.graphicsLayer {
+                                    renderEffect =
+                                        RenderEffect.createBlurEffect(8f, 8f, Shader.TileMode.CLAMP)
+                                            .asComposeRenderEffect()
+                                }
+                            } else Modifier
+                        )
                         .padding(all = 4.dp)
             ) {
                 Box(
                     modifier =
                         Modifier.animatePlacementInScope(this@LookaheadScope)
                             .clip(CircleShape)
-                            .background(Color(0xFF1e3250))
-                            .shadow(
-                                elevation = 1.dp,
-                                shape = CircleShape,
-                                spotColor = Theme.v2.colors.neutrals.n100.copy(alpha = 0.2f),
-                                clip = true,
-                            )
+                            .background(Color.White.copy(alpha = 0.06f))
+                            .drawWithContent {
+                                drawContent()
+                                drawRoundRect(
+                                    color = Color.White.copy(alpha = 0.1f),
+                                    cornerRadius = CornerRadius(size.height / 2),
+                                    style = Stroke(width = 4.dp.toPx()),
+                                )
+                            }
                             .fillMaxHeight()
                             .fillMaxWidth(1f / availableCryptoTypes.size)
                             .align(
