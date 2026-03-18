@@ -345,6 +345,7 @@
     <!-- Push Notifications -->
     <string name="notifications">Notificações</string>
     <string name="push_notifications">Notificações push</string>
+    <string name="vault_notifications">Notificações do Cofre</string>
     <string name="push_notifications_failed">Falha ao enviar notificação push</string>
     <string name="push_notification_vault_not_found">Cofre não encontrado</string>
     <string name="push_notification_error_vault_not_supported">O cofre não suporta notificações</string>

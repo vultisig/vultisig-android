@@ -2,6 +2,7 @@
     <!-- Push Notifications -->
     <string name="notifications">Notifications</string>
     <string name="push_notifications">Push notifications</string>
+    <string name="vault_notifications">Vault Notifications</string>
     <string name="push_notifications_failed">Push notification failed</string>
     <string name="push_notification_vault_not_found">Vault not found</string>
     <string name="push_notification_error_vault_not_supported">Vault does not support notifications</string>

@@ -346,6 +346,7 @@
     <!-- Push Notifications -->
     <string name="notifications">Notifiche</string>
     <string name="push_notifications">Notifiche push</string>
+    <string name="vault_notifications">Notifiche della Cassaforte</string>
     <string name="push_notifications_failed">Invio notifica push non riuscito</string>
     <string name="push_notification_vault_not_found">Cassaforte non trovata</string>
     <string name="push_notification_error_vault_not_supported">La cassaforte non supporta le notifiche</string>

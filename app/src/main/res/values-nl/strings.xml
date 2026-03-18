@@ -345,6 +345,7 @@
     <!-- Push Notifications -->
     <string name="notifications">Meldingen</string>
     <string name="push_notifications">Pushmeldingen</string>
+    <string name="vault_notifications">Kluismeldingen</string>
     <string name="push_notifications_failed">Pushmelding mislukt</string>
     <string name="push_notification_vault_not_found">Kluis niet gevonden</string>
     <string name="push_notification_error_vault_not_supported">Kluis ondersteunt geen meldingen</string>

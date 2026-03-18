@@ -346,6 +346,7 @@
     <!-- Push Notifications -->
     <string name="notifications">Obavijesti</string>
     <string name="push_notifications">Push obavijesti</string>
+    <string name="vault_notifications">Obavijesti trezora</string>
     <string name="push_notifications_failed">Slanje push obavijesti nije uspjelo</string>
     <string name="push_notification_vault_not_found">Trezor nije pronađen</string>
     <string name="push_notification_error_vault_not_supported">Trezor ne podržava obavijesti</string>

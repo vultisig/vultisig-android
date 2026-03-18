@@ -345,6 +345,7 @@
     <!-- Push Notifications -->
     <string name="notifications">Benachrichtigungen</string>
     <string name="push_notifications">Push-Benachrichtigungen</string>
+    <string name="vault_notifications">Tresor-Benachrichtigungen</string>
     <string name="push_notifications_failed">Push-Benachrichtigung fehlgeschlagen</string>
     <string name="push_notification_vault_not_found">Tresor nicht gefunden</string>
     <string name="push_notification_error_vault_not_supported">Tresor unterstützt keine Benachrichtigungen</string>
