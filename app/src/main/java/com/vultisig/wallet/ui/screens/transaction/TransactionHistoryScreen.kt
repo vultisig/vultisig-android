@@ -28,11 +28,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -182,11 +187,12 @@ private fun TransactionHistoryScreen(
             PullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = onRefresh,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(top = 27.dp),
             ) {
                 if (state.groups.isEmpty() && !state.isLoading) {
+
                     TransactionHistoryEmptyState(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp)
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
                     )
                 } else {
                     TransactionGroupedList(
@@ -363,30 +369,63 @@ private fun AssetSearchBottomSheet(
 }
 
 @Composable
-private fun TransactionHistoryEmptyState(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+internal fun TransactionHistoryEmptyState(modifier: Modifier = Modifier) {
+    val borderBrush =
+        Brush.horizontalGradient(
+            colorStops =
+                arrayOf(
+                    0.0f to Theme.v2.colors.backgrounds.surface1,
+                    0.495f to Theme.v2.colors.backgrounds.gradientMid,
+                    1.0f to Theme.v2.colors.backgrounds.surface1,
+                )
+        )
+    Box(
+        modifier =
+            modifier.drawWithContent {
+                drawContent()
+                drawRoundRect(
+                    brush = borderBrush,
+                    cornerRadius = CornerRadius(12.dp.toPx()),
+                    style = Stroke(width = 1.dp.toPx()),
+                )
+            },
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_arrow_bottom_top),
-            contentDescription = null,
-            tint = Theme.v2.colors.text.tertiary,
-            modifier = Modifier.size(48.dp),
-        )
-        UiSpacer(size = 12.dp)
-        Text(
-            text = stringResource(R.string.transaction_history_empty_title),
-            style = Theme.brockmann.body.m.medium,
-            color = Theme.v2.colors.text.secondary,
-        )
-        UiSpacer(size = 4.dp)
-        Text(
-            text = stringResource(R.string.transaction_history_empty_desc),
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.tertiary,
-        )
+        Column(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        color = Theme.v2.colors.backgrounds.surface1,
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .padding(horizontal = 40.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_calendar_clock),
+                contentDescription = null,
+                tint = Theme.v2.colors.alerts.info,
+                modifier = Modifier.size(24.dp),
+            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.transaction_history_empty_title),
+                    style = Theme.brockmann.headings.title3,
+                    color = Theme.v2.colors.text.primary,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = stringResource(R.string.transaction_history_empty_desc),
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
     }
 }
 

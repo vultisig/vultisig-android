@@ -58,6 +58,7 @@ data class Backgrounds(
     val dark: Color = Color(0xFF061C3C),
     val state: BackgroundStates = BackgroundStates(),
     val surface5: Color = Color(0xFF394E6D),
+    val gradientMid: Color = Color(0xFF284570),
 )
 
 data class BackgroundStates(
