@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
@@ -184,8 +183,7 @@ internal fun TextDetails(title: String, subtitle: String, showAllContent: Boolea
             color = Theme.v2.colors.text.primary,
             overflow = if (showAllContent) TextOverflow.Visible else TextOverflow.MiddleEllipsis,
             textAlign = TextAlign.End,
-            modifier =
-                if (showAllContent) Modifier.fillMaxWidth() else Modifier.widthIn(max = 100.dp),
+            modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier,
             maxLines = if (showAllContent) 5 else 1,
         )
     }

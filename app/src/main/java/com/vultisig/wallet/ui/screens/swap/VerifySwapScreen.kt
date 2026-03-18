@@ -480,8 +480,7 @@ internal fun VerifyCardDetails(
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.End,
-            modifier =
-                if (showAllContent) Modifier.fillMaxWidth() else Modifier.widthIn(max = 100.dp),
+            modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier,
             maxLines = if (showAllContent) 5 else 1,
             overflow = TextOverflow.MiddleEllipsis,
         )
