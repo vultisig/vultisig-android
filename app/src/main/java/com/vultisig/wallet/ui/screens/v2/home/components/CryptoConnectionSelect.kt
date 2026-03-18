@@ -165,7 +165,7 @@ private fun WalletEarnOption(
         UiIcon(drawableResId = icon, size = 24.dp, tint = contentColorAnimated)
         Text(
             text = text,
-            style = Theme.brockmann.supplementary.caption,
+            style = Theme.brockmann.supplementary.captionSmall,
             color = contentColorAnimated,
         )
     }
