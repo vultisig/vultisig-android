@@ -986,7 +986,7 @@
     <string name="transaction_history_tab_send">Send</string>
     <string name="transaction_history_tab_swap">Swaps</string>
     <string name="transaction_history_empty_title">No transactions yet</string>
-    <string name="transaction_history_empty_desc">Your transaction history will appear here</string>
+    <string name="transaction_history_empty_desc">You haven\'t made any swaps, sends, or approvals from this vault.</string>
     <string name="transaction_history_search_asset_title">Search asset</string>
     <string name="transaction_history_search_asset_not_found">No assets found</string>
     <string name="transaction_history_clear_filters">Clear filters</string>

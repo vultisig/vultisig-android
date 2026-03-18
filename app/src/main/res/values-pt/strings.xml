@@ -943,7 +943,7 @@
     <string name="transaction_history_tab_send">Enviar</string>
     <string name="transaction_history_tab_swap">Swaps</string>
     <string name="transaction_history_empty_title">Nenhuma transação ainda</string>
-    <string name="transaction_history_empty_desc">O seu histórico de transações aparecerá aqui</string>
+    <string name="transaction_history_empty_desc">Você ainda não realizou nenhuma troca, envio ou aprovação deste cofre.</string>
     <string name="transaction_history_search_asset_title">Pesquisar ativo</string>
     <string name="transaction_history_search_asset_not_found">Nenhum ativo encontrado</string>
     <string name="transaction_history_clear_filters">Limpar filtros</string>

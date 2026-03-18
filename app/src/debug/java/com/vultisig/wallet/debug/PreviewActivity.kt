@@ -19,6 +19,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
+import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
@@ -40,6 +41,7 @@ class PreviewActivity : ComponentActivity() {
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
                     "send_tx_done" -> SendTxDonePreview()
+                    "transaction_history_empty" -> TransactionHistoryEmptyState()
                     else -> SwapConfirmPreview()
                 }
             }

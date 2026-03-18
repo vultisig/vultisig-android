@@ -1281,7 +1281,7 @@
     <string name="transaction_history_tab_send">发送</string>
     <string name="transaction_history_tab_swap">交换</string>
     <string name="transaction_history_empty_title">暂无交易记录</string>
-    <string name="transaction_history_empty_desc">您的交易历史将显示在此处</string>
+    <string name="transaction_history_empty_desc">您尚未从此金库进行任何兑换、发送或审批。</string>
     <string name="transaction_history_search_asset_title">搜索资产</string>
     <string name="transaction_history_search_asset_not_found">未找到资产</string>
     <string name="transaction_history_clear_filters">清除筛选</string>
