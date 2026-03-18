@@ -89,7 +89,7 @@
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Reshare vault with a new committee</string>
     <string name="vault_settings_delete_title">Delete</string>
-    <string name="vault_settings_delete_subtitle">Delete your vault share permanently</string>
+    <string name="vault_settings_delete_subtitle">Delete your vault permanently.</string>
     <string name="vault_settings_security_title">On-chain Security</string>
     <string name="vault_settings_security_subtitle">Manage your on-chain security</string>
     <string name="vault_settings_discounts">$VULT Discount Tiers</string>
@@ -599,7 +599,7 @@
     <string name="select_asset_no_result">No result found.</string>
     <string name="select_chain_chain_title">Chain</string>
     <string name="select_chain_balance_title">Balance</string>
-    <string name="select_chain_title">Select Chain</string>
+    <string name="select_chain_title">Select chain</string>
     <string name="verify_swap_youre_swapping_title">You\'re swapping</string>
     <string name="keysign_app_version_text">Version %1$s (%2$s)</string>
     <string name="backup_password_request_no_password_action">Backup without password</string>
@@ -801,7 +801,7 @@
     <string name="vault_settings_backup_vault">Backup Vault Share</string>
     <string name="vault_settings_back_up_your">Back up your Vault Share to device or server.</string>
     <string name="vault_settings_migrate_gg20">Migrate GG20 vault DKLS</string>
-    <string name="vault_settings_reshare_change">Reshare, change TSS, or sign messages.</string>
+    <string name="vault_settings_reshare_change">Reshare, manage security or sign messages.</string>
 
     <string name="transaction_buy">Buy</string>
     <string name="search_bar_portfolio">Portfolio</string>
@@ -1016,7 +1016,7 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="home_screen_import_seed_phrase">Import Seed Phrase</string>
-    <string name="import_seedphrase_title">Enter Your Seed Phrase</string>
+    <string name="import_seedphrase_title">Enter your seed phrase</string>
     <string name="import_seedphrase_subtitle">Enter your 12 or 24 word recovery phrase</string>
     <string name="import_seedphrase_label">Seed Phrase</string>
     <string name="import_seedphrase_hint">Enter your recovery phrase…</string>
