@@ -943,7 +943,7 @@
     <string name="transaction_history_tab_send">Slanje</string>
     <string name="transaction_history_tab_swap">Zamjene</string>
     <string name="transaction_history_empty_title">Još nema transakcija</string>
-    <string name="transaction_history_empty_desc">Vaša povijest transakcija prikazat će se ovdje</string>
+    <string name="transaction_history_empty_desc">Još niste napravili nijedne zamjene, slanje ni odobrenje iz ovog sefa.</string>
     <string name="transaction_history_search_asset_title">Pretraži imovinu</string>
     <string name="transaction_history_search_asset_not_found">Nije pronađena nijedna imovina</string>
     <string name="transaction_history_clear_filters">Ukloni filtere</string>
