@@ -1134,4 +1134,7 @@
     <string name="server_backup_error_too_many_requests">Te veel back-upverzoeken. Probeer het later opnieuw.</string>
     <string name="server_backup_error_bad_request">Er is iets misgegaan. Controleer uw gegevens en probeer het opnieuw.</string>
     <string name="resend_notification">Melding opnieuw sturen</string>
+    <string name="apy_approx">APY (ca.)</string>
+    <string name="apy_approx_hint_title">Beloningen</string>
+    <string name="apy_approx_hint_message">Beloningen worden automatisch bijgeschreven op uw saldo.</string>
 </resources>

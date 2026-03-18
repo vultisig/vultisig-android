@@ -1140,4 +1140,7 @@
     <string name="server_backup_error_too_many_requests">Troppe richieste di backup. Riprova più tardi.</string>
     <string name="server_backup_error_bad_request">Qualcosa è andato storto. Controlla i tuoi dati e riprova.</string>
     <string name="resend_notification">Reinvia notifica</string>
+    <string name="apy_approx">APY (circa)</string>
+    <string name="apy_approx_hint_title">Premi</string>
+    <string name="apy_approx_hint_message">I premi vengono accreditati automaticamente al tuo saldo.</string>
 </resources>
