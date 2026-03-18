@@ -817,7 +817,7 @@
     <string name="tx_overview_screen_tx_memo">dopis</string>
     <string name="verify_sign_message_message_field_title">Poruka</string>
     <string name="verify_sign_message_method_field_title">Metoda</string>
-    <string name="fast_vault_password_screen_title">Lozinka za Vultiserver</string>
+    <string name="fast_vault_password_screen_title">Odaberite lozinku</string>
     <string name="fast_vault_password_screen_hint">To se događa jer se lozinka koristi za lokalno šifriranje datoteke sigurnosne kopije, slično kao što se šifrira tvrdi disk. U sljedećem koraku imate mogućnost dodati podsjetnik.</string>
     <string name="fast_vault_password_screen_hint_title">Više informacija</string>
     <string name="peer_discovery_local_mode_hint">U lokalnom ste načinu rada</string>

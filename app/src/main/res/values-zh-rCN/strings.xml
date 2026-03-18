@@ -1152,7 +1152,7 @@
     <string name="tx_overview_screen_tx_memo">备注</string>
     <string name="verify_sign_message_message_field_title">消息</string>
     <string name="verify_sign_message_method_field_title">方法</string>
-    <string name="fast_vault_password_screen_title">Vultiserver 密码</string>
+    <string name="fast_vault_password_screen_title">选择密码</string>
     <string name="fast_vault_password_screen_hint">这是因为密码用于对备份文件进行本地加密，类似于硬盘的加密方式。下一步，您可以选择添加密码提示。</string>
     <string name="fast_vault_password_screen_hint_title">更多信息</string>
     <string name="peer_discovery_local_mode_hint">您处于本地模式</string>
