@@ -631,7 +631,11 @@ constructor(
         val vaultId = vault.id
 
         val password = args.password
-        if (!args.email.isNullOrBlank() && !password.isNullOrBlank()) {
+        if (
+            !args.email.isNullOrBlank() &&
+                !password.isNullOrBlank() &&
+                action != TssAction.SingleKeygen
+        ) {
             temporaryVaultRepository.add(
                 TempVaultDto(
                     vault = vault,
@@ -644,9 +648,17 @@ constructor(
             if (context.canAuthenticateBiometric()) {
                 vaultPasswordRepository.savePassword(vaultId, password)
             }
+        } else if (action == TssAction.SingleKeygen) {
+            // For SingleKeygen, load the full existing vault and merge only the MLDSA
+            // changes to avoid wiping coins, signers, chainPublicKeys via full upsert
+            val existingVault =
+                vaultRepository.get(vaultId)
+                    ?: error("No vault with id $vaultId exists for SingleKeygen save")
+            existingVault.pubKeyMLDSA = vault.pubKeyMLDSA
+            existingVault.keyshares = vault.keyshares
+            saveVault(existingVault, true)
         } else {
-            val shouldOverrideVault =
-                isReshareMode || action == TssAction.Migrate || action == TssAction.SingleKeygen
+            val shouldOverrideVault = isReshareMode || action == TssAction.Migrate
 
             saveVault(vault, shouldOverrideVault)
 
@@ -735,17 +747,7 @@ constructor(
                             )
                         }
 
-                    TssAction.SingleKeygen ->
-                        Route.Onboarding.VaultBackup(
-                            vaultId = vaultId,
-                            pubKeyEcdsa = vault.pubKeyECDSA,
-                            email = args.email,
-                            vaultType = vaultType,
-                            action = action,
-                            vaultName = args.vaultName,
-                            password = args.password,
-                            deviceCount = args.deviceCount,
-                        )
+                    TssAction.SingleKeygen -> Route.Home(openVaultId = vaultId)
                 },
             opts =
                 NavigationOptions(popUpToRoute = Route.Keygen.Generating::class, inclusive = true),
