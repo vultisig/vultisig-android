@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,7 +76,7 @@ internal fun FastVaultVerificationScreen(model: FastVaultVerificationViewModel =
 }
 
 @Composable
-private fun FastVaultVerificationScreen(
+internal fun FastVaultVerificationScreen(
     state: VaultBackupState,
     codeFieldState: TextFieldState,
     onBackClick: () -> Unit,
@@ -154,12 +154,17 @@ private fun FastVaultVerificationScreen(
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier =
-                            Modifier.fillMaxHeight()
+                            Modifier.clip(CircleShape)
                                 .background(
                                     color = Theme.v2.colors.backgrounds.secondary,
                                     shape = CircleShape,
                                 )
-                                .padding(horizontal = 17.dp, vertical = 12.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = Theme.v2.colors.border.extraLight,
+                                    shape = CircleShape,
+                                )
+                                .padding(horizontal = 20.dp, vertical = 16.dp)
                                 .clickable(
                                     enabled = hasClipContent,
                                     onClick = {
@@ -233,14 +238,17 @@ private fun FastVaultVerificationScreen(
 
                                 Text(
                                     text = stringResource(R.string.backup_use_a_different_email),
-                                    color = Theme.v2.colors.text.secondary,
-                                    style = Theme.brockmann.body.s.medium,
+                                    color = Theme.v2.colors.text.button.primary,
+                                    style = Theme.brockmann.supplementary.footnote,
                                     modifier =
-                                        Modifier.clip(shape = CircleShape)
-                                            .background(color = Theme.v2.colors.buttons.ctaDisabled)
+                                        Modifier.clip(shape = RoundedCornerShape(12.dp))
+                                            .background(
+                                                color = Theme.v2.colors.backgrounds.tertiary_2
+                                            )
                                             .border(
                                                 width = 1.dp,
                                                 color = Theme.v2.colors.border.extraLight,
+                                                shape = RoundedCornerShape(12.dp),
                                             )
                                             .padding(horizontal = 12.dp, vertical = 8.dp)
                                             .clickOnce(

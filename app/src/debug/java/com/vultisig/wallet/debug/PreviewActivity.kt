@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -13,10 +14,13 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.keygen.VaultBackupState
+import com.vultisig.wallet.ui.models.keygen.VerifyPinState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
@@ -42,6 +46,7 @@ class PreviewActivity : ComponentActivity() {
                     "banner" -> BannerPreview()
                     "send_tx_done" -> SendTxDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
+                    "fast_vault_verification" -> FastVaultVerificationPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -107,6 +112,22 @@ private fun SwapConfirmPreview() {
         onFastSignClick = {},
         onConfirm = {},
         onBackClick = {},
+    )
+}
+
+@Composable
+private fun FastVaultVerificationPreview() {
+    FastVaultVerificationScreen(
+        state =
+            VaultBackupState(
+                verifyPinState = VerifyPinState.Idle,
+                sentEmailTo = "user@example.com",
+            ),
+        codeFieldState = TextFieldState(),
+        onBackClick = {},
+        onCodeChanged = {},
+        onPasteClick = {},
+        onChangeEmailClick = {},
     )
 }
 
