@@ -2888,9 +2888,9 @@ object Coins {
                 ticker = "QBTC",
                 logo = "qbtc",
                 address = "",
-                decimal = 6,
+                decimal = 8,
                 hexPublicKey = "",
-                priceProviderID = "qbtc",
+                priceProviderID = "",
                 contractAddress = "",
                 isNativeToken = true,
             )

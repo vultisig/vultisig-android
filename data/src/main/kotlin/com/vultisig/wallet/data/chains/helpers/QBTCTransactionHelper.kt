@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import tss.KeysignResponse
+import vultisig.keysign.v1.TransactionType
 
 class QBTCTransactionHelper {
 
@@ -18,10 +19,15 @@ class QBTCTransactionHelper {
         // This is the actual on-chain ID; the network launched with this name
         private const val CHAIN_ID = "qbtc-testnet"
         private const val DENOM = "qbtc"
-        private const val GAS_LIMIT = 300000L
+        private const val GAS_LIMIT = 200_000L
         private const val PUB_KEY_TYPE_URL = "/cosmos.crypto.mldsa.PubKey"
         private const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"
         private const val MSG_IBC_TRANSFER_TYPE_URL = "/ibc.applications.transfer.v1.MsgTransfer"
+        private const val MSG_VOTE_TYPE_URL = "/cosmos.gov.v1beta1.MsgVote"
+        private const val MSG_DELEGATE_TYPE_URL = "/cosmos.staking.v1beta1.MsgDelegate"
+        private const val MSG_UNDELEGATE_TYPE_URL = "/cosmos.staking.v1beta1.MsgUndelegate"
+        private const val MSG_WITHDRAW_REWARD_TYPE_URL =
+            "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward"
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
@@ -56,56 +62,180 @@ class QBTCTransactionHelper {
         val authInfoBytes = buildAuthInfo(keysignPayload)
 
         val result = ByteArray(0).toMutableList()
-        // field 1: body_bytes (bytes)
         result.addAll(protoBytes(1, bodyBytes))
-        // field 2: auth_info_bytes (bytes)
         result.addAll(protoBytes(2, authInfoBytes))
-        // field 3: chain_id (string)
         result.addAll(protoString(3, CHAIN_ID))
-        // field 4: account_number (uint64)
         result.addAll(protoVarint(4, cosmosSpecific.accountNumber.toLong()))
         return result.toByteArray()
     }
 
     private fun buildTxBody(keysignPayload: KeysignPayload): ByteArray {
-        val message = buildMessage(keysignPayload)
-        val result = ByteArray(0).toMutableList()
-        // field 1: messages (repeated Any)
-        result.addAll(protoBytes(1, message))
-        // field 2: memo (string)
-        keysignPayload.memo?.let {
-            if (it.isNotEmpty()) {
-                result.addAll(protoString(2, it))
-            }
-        }
-        return result.toByteArray()
-    }
-
-    private fun buildMessage(keysignPayload: KeysignPayload): ByteArray {
         val cosmosSpecific =
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
                 ?: error("Invalid blockChainSpecific")
 
-        val msgBytes = buildMsgSend(keysignPayload)
-        val typeUrl = MSG_SEND_TYPE_URL
+        val (anyMsg, memo) = buildMessageAny(keysignPayload, cosmosSpecific)
 
         val result = ByteArray(0).toMutableList()
-        // field 1: type_url
-        result.addAll(protoString(1, typeUrl))
-        // field 2: value
-        result.addAll(protoBytes(2, msgBytes))
+        result.addAll(protoBytes(1, anyMsg))
+        if (!memo.isNullOrEmpty()) {
+            result.addAll(protoString(2, memo))
+        }
         return result.toByteArray()
     }
 
+    private fun buildMessageAny(
+        keysignPayload: KeysignPayload,
+        cosmosSpecific: BlockChainSpecific.Cosmos,
+    ): Pair<ByteArray, String?> {
+        return when (cosmosSpecific.transactionType) {
+            TransactionType.TRANSACTION_TYPE_IBC_TRANSFER -> {
+                val memoParts = keysignPayload.memo?.split(":")
+                val strippedMemo =
+                    if (memoParts != null && memoParts.size == 4) memoParts[3] else null
+                val anyMsg = buildIBCTransferAny(keysignPayload, cosmosSpecific)
+                anyMsg to strippedMemo
+            }
+
+            TransactionType.TRANSACTION_TYPE_VOTE -> {
+                val anyMsg = buildVoteAny(keysignPayload)
+                anyMsg to null
+            }
+
+            else -> {
+                val anyMsg = buildMsgSendAny(keysignPayload)
+                anyMsg to keysignPayload.memo
+            }
+        }
+    }
+
+    // MsgSend
+
+    private fun buildMsgSendAny(keysignPayload: KeysignPayload): ByteArray {
+        val msgBytes = buildMsgSend(keysignPayload)
+        return wrapAny(MSG_SEND_TYPE_URL, msgBytes)
+    }
+
     private fun buildMsgSend(keysignPayload: KeysignPayload): ByteArray {
+        val coinDenom =
+            if (keysignPayload.coin.isNativeToken) DENOM else keysignPayload.coin.contractAddress
+
         val result = ByteArray(0).toMutableList()
-        // field 1: from_address
         result.addAll(protoString(1, keysignPayload.coin.address))
-        // field 2: to_address
         result.addAll(protoString(2, keysignPayload.toAddress))
-        // field 3: amount (repeated Coin)
-        val coinBytes = buildCoin(DENOM, keysignPayload.toAmount.toString())
-        result.addAll(protoBytes(3, coinBytes))
+        result.addAll(protoBytes(3, buildCoin(coinDenom, keysignPayload.toAmount.toString())))
+        return result.toByteArray()
+    }
+
+    // IBC Transfer
+
+    private fun buildIBCTransferAny(
+        keysignPayload: KeysignPayload,
+        cosmosSpecific: BlockChainSpecific.Cosmos,
+    ): ByteArray {
+        val msgBytes = buildMsgTransfer(keysignPayload, cosmosSpecific)
+        return wrapAny(MSG_IBC_TRANSFER_TYPE_URL, msgBytes)
+    }
+
+    private fun buildMsgTransfer(
+        keysignPayload: KeysignPayload,
+        cosmosSpecific: BlockChainSpecific.Cosmos,
+    ): ByteArray {
+        val memoParts =
+            keysignPayload.memo?.split(":")
+                ?: error("IBC transfer requires memo with source channel")
+        val sourceChannel = memoParts.getOrElse(1) { "" }
+
+        val timeouts = cosmosSpecific.ibcDenomTraces?.latestBlock?.split("_") ?: emptyList()
+        val timeout = timeouts.lastOrNull()?.toLongOrNull() ?: 0L
+
+        val tokenDenom =
+            if (keysignPayload.coin.isNativeToken) DENOM else keysignPayload.coin.contractAddress
+
+        val token = buildCoin(tokenDenom, keysignPayload.toAmount.toString())
+
+        val result = ByteArray(0).toMutableList()
+        result.addAll(protoString(1, "transfer"))
+        result.addAll(protoString(2, sourceChannel))
+        result.addAll(protoBytes(3, token))
+        result.addAll(protoString(4, keysignPayload.coin.address))
+        result.addAll(protoString(5, keysignPayload.toAddress))
+        // field 6: timeout_height omitted (use timeout_timestamp)
+        if (timeout > 0) {
+            result.addAll(protoVarint(7, timeout))
+        }
+        return result.toByteArray()
+    }
+
+    // Governance Vote
+
+    private fun buildVoteAny(keysignPayload: KeysignPayload): ByteArray {
+        val msgBytes = buildMsgVote(keysignPayload)
+        return wrapAny(MSG_VOTE_TYPE_URL, msgBytes)
+    }
+
+    private fun buildMsgVote(keysignPayload: KeysignPayload): ByteArray {
+        val voteStr =
+            keysignPayload.memo?.removePrefix("QBTC_VOTE:")?.removePrefix("DYDX_VOTE:")
+                ?: error("Vote requires memo")
+        val parts = voteStr.split(":")
+        require(parts.size == 2) { "Invalid vote memo format, expected OPTION:PROPOSAL_ID" }
+
+        val option = voteOptionValue(parts[0])
+        val proposalId = parts[1].toLongOrNull() ?: error("Invalid proposal ID")
+
+        val result = ByteArray(0).toMutableList()
+        result.addAll(protoVarint(1, proposalId))
+        result.addAll(protoString(2, keysignPayload.coin.address))
+        result.addAll(protoVarint(3, option))
+        return result.toByteArray()
+    }
+
+    private fun voteOptionValue(description: String): Long =
+        when (description.uppercase()) {
+            "YES" -> 1L
+            "ABSTAIN" -> 2L
+            "NO" -> 3L
+            "NO_WITH_VETO",
+            "NOWITHVETO" -> 4L
+            else -> 0L
+        }
+
+    // Staking
+
+    fun buildDelegateAny(delegator: String, validator: String, amount: String): ByteArray {
+        val msg = buildStakingMsg(delegator, validator, amount)
+        return wrapAny(MSG_DELEGATE_TYPE_URL, msg)
+    }
+
+    fun buildUndelegateAny(delegator: String, validator: String, amount: String): ByteArray {
+        val msg = buildStakingMsg(delegator, validator, amount)
+        return wrapAny(MSG_UNDELEGATE_TYPE_URL, msg)
+    }
+
+    private fun buildStakingMsg(delegator: String, validator: String, amount: String): ByteArray {
+        val result = ByteArray(0).toMutableList()
+        result.addAll(protoString(1, delegator))
+        result.addAll(protoString(2, validator))
+        result.addAll(protoBytes(3, buildCoin(DENOM, amount)))
+        return result.toByteArray()
+    }
+
+    // Distribution
+
+    fun buildWithdrawRewardAny(delegator: String, validator: String): ByteArray {
+        val result = ByteArray(0).toMutableList()
+        result.addAll(protoString(1, delegator))
+        result.addAll(protoString(2, validator))
+        return wrapAny(MSG_WITHDRAW_REWARD_TYPE_URL, result.toByteArray())
+    }
+
+    // Common builders
+
+    private fun wrapAny(typeUrl: String, value: ByteArray): ByteArray {
+        val result = ByteArray(0).toMutableList()
+        result.addAll(protoString(1, typeUrl))
+        result.addAll(protoBytes(2, value))
         return result.toByteArray()
     }
 
@@ -122,39 +252,27 @@ class QBTCTransactionHelper {
                 ?: error("Invalid blockChainSpecific")
         val pubKeyBytes = keysignPayload.coin.hexPublicKey.hexToByteArray()
 
-        // Build signer_info
         val signerInfo = buildSignerInfo(pubKeyBytes, cosmosSpecific.sequence.toLong())
-
-        // Build fee
         val feeBytes = buildFee(cosmosSpecific.gas.toLong())
 
         val result = ByteArray(0).toMutableList()
-        // field 1: signer_infos
         result.addAll(protoBytes(1, signerInfo))
-        // field 2: fee
         result.addAll(protoBytes(2, feeBytes))
         return result.toByteArray()
     }
 
     private fun buildSignerInfo(pubKeyBytes: ByteArray, sequence: Long): ByteArray {
-        // PublicKey Any
         val pubKeyAny = buildPubKeyAny(pubKeyBytes)
-
-        // ModeInfo (SIGN_MODE_DIRECT = 1)
         val modeInfo = buildModeInfo()
 
         val result = ByteArray(0).toMutableList()
-        // field 1: public_key (Any)
         result.addAll(protoBytes(1, pubKeyAny))
-        // field 2: mode_info
         result.addAll(protoBytes(2, modeInfo))
-        // field 3: sequence
         result.addAll(protoVarint(3, sequence))
         return result.toByteArray()
     }
 
     private fun buildPubKeyAny(pubKeyBytes: ByteArray): ByteArray {
-        // Inner value: key field
         val innerValue = ByteArray(0).toMutableList()
         innerValue.addAll(protoBytes(1, pubKeyBytes))
 
@@ -165,9 +283,8 @@ class QBTCTransactionHelper {
     }
 
     private fun buildModeInfo(): ByteArray {
-        // Single mode with SIGN_MODE_DIRECT (1)
         val single = ByteArray(0).toMutableList()
-        single.addAll(protoVarint(1, 1))
+        single.addAll(protoVarint(1, 1)) // SIGN_MODE_DIRECT
         val result = ByteArray(0).toMutableList()
         result.addAll(protoBytes(1, single.toByteArray()))
         return result.toByteArray()
@@ -176,9 +293,7 @@ class QBTCTransactionHelper {
     private fun buildFee(gasAmount: Long): ByteArray {
         val coinBytes = buildCoin(DENOM, gasAmount.toString())
         val result = ByteArray(0).toMutableList()
-        // field 1: amount
         result.addAll(protoBytes(1, coinBytes))
-        // field 2: gas_limit
         result.addAll(protoVarint(2, GAS_LIMIT))
         return result.toByteArray()
     }
@@ -208,9 +323,11 @@ class QBTCTransactionHelper {
     private fun sha256(data: ByteArray): ByteArray =
         MessageDigest.getInstance("SHA-256").digest(data)
 
+    // Protobuf wire format encoding
+
     private fun protoVarint(fieldNumber: Int, value: Long): List<Byte> {
         val result = mutableListOf<Byte>()
-        val tag = (fieldNumber shl 3) or 0 // wire type 0 = varint
+        val tag = (fieldNumber shl 3) or 0
         result.addAll(encodeVarint(tag.toLong()))
         result.addAll(encodeVarint(value))
         return result
@@ -218,7 +335,7 @@ class QBTCTransactionHelper {
 
     private fun protoBytes(fieldNumber: Int, data: ByteArray): List<Byte> {
         val result = mutableListOf<Byte>()
-        val tag = (fieldNumber shl 3) or 2 // wire type 2 = length-delimited
+        val tag = (fieldNumber shl 3) or 2
         result.addAll(encodeVarint(tag.toLong()))
         result.addAll(encodeVarint(data.size.toLong()))
         result.addAll(data.toList())
