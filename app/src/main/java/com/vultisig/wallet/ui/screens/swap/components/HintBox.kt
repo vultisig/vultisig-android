@@ -73,9 +73,7 @@ private fun PointerShapeDown(
     shapeSize: DpSize = DpSize(width = 40.dp, height = 15.dp),
     shapeColor: Color,
 ) {
-    Canvas(modifier = modifier
-        .width(shapeSize.width)
-        .height(shapeSize.height)) {
+    Canvas(modifier = modifier.width(shapeSize.width).height(shapeSize.height)) {
         val path =
             Path().apply {
                 val maxWidth = size.width
@@ -141,19 +139,17 @@ private fun HintBoxPopupContent(
 
     val shapeColor = Theme.v2.colors.neutrals.n200
     Column(modifier = modifier.clickable(onClick = onDismissClick)) {
-        if(isPointerOnTop) {
+        if (isPointerOnTop) {
             PointerShapeUp(
                 shapeColor = shapeColor,
                 modifier =
-                    Modifier
-                        .align(alignment = pointerAlignment)
+                    Modifier.align(alignment = pointerAlignment)
                         .offset(x = pointerOffset.x, y = pointerOffset.y),
             )
         }
         Column(
             modifier =
-                Modifier
-                    .fillMaxWidth()
+                Modifier.fillMaxWidth()
                     .background(
                         color = shapeColor,
                         shape =
@@ -192,10 +188,10 @@ private fun HintBoxPopupContent(
         if (isPointerOnTop.not()) {
             PointerShapeDown(
                 shapeColor = shapeColor,
-                modifier =          Modifier
-                    .align(alignment = pointerAlignment)
-                    .offset(x = pointerOffset.x, y = pointerOffset.y),
-                )
+                modifier =
+                    Modifier.align(alignment = pointerAlignment)
+                        .offset(x = pointerOffset.x, y = pointerOffset.y),
+            )
         }
     }
 }
@@ -214,7 +210,6 @@ private fun HintBoxTopPointerPreview() {
         isVisible = true,
     )
 }
-
 
 @Preview
 @Composable

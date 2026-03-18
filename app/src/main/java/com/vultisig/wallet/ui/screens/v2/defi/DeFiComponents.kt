@@ -77,8 +77,7 @@ internal fun BalanceBanner(
 ) {
     Box(
         modifier =
-            Modifier
-                .fillMaxWidth()
+            Modifier.fillMaxWidth()
                 .height(140.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .border(
@@ -124,9 +123,7 @@ private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 @Preview(showBackground = true, name = "Balance Banner - With Value")
 @Composable
 private fun BalanceBannerPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         BalanceBanner(
             title = Chain.ThorChain.raw,
             isLoading = false,
@@ -140,9 +137,7 @@ private fun BalanceBannerPreview() {
 @Preview(showBackground = true, name = "Balance Banner - Hidden")
 @Composable
 private fun BalanceBannerHiddenPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         BalanceBanner(
             title = Chain.ThorChain.raw,
             isLoading = false,
@@ -156,9 +151,7 @@ private fun BalanceBannerHiddenPreview() {
 @Preview(showBackground = true, name = "Balance Banner - Loading")
 @Composable
 private fun BalanceBannerLoadingPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         BalanceBanner(
             title = Chain.ThorChain.raw,
             isLoading = true,
@@ -170,7 +163,14 @@ private fun BalanceBannerLoadingPreview() {
 }
 
 @Composable
-fun InfoItem(modifier: Modifier = Modifier, icon: Int, label: String, value: String?, onMoreInfoClick: (()-> Unit)? = null, onMoreInfoIconModifier: Modifier = Modifier) {
+fun InfoItem(
+    modifier: Modifier = Modifier,
+    icon: Int,
+    label: String,
+    value: String?,
+    onMoreInfoClick: (() -> Unit)? = null,
+    onMoreInfoIconModifier: Modifier = Modifier,
+) {
     Column(modifier = modifier, horizontalAlignment = Alignment.Start) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             UiIcon(
@@ -189,9 +189,7 @@ fun InfoItem(modifier: Modifier = Modifier, icon: Int, label: String, value: Str
             )
 
             if (onMoreInfoClick != null) {
-                UiSpacer(
-                    size = 4.dp
-                )
+                UiSpacer(size = 4.dp)
 
                 UiIcon(
                     drawableResId = R.drawable.circleinfo,
@@ -259,8 +257,7 @@ fun ActionButton(
         if (icon != null) {
             Box(
                 modifier =
-                    Modifier
-                        .size(32.dp)
+                    Modifier.size(32.dp)
                         .background(
                             if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
                             RoundedCornerShape(50),
@@ -451,8 +448,7 @@ internal fun NoPositionsContainer(onManagePositionsClick: () -> Unit = {}) {
                 style = Theme.brockmann.button.medium.medium,
                 color = Theme.v2.colors.text.primary,
                 modifier =
-                    Modifier
-                        .clip(shape = CircleShape)
+                    Modifier.clip(shape = CircleShape)
                         .clickOnce(onClick = onManagePositionsClick)
                         .background(color = Theme.v2.colors.border.primaryAccent4)
                         .padding(vertical = 8.dp, horizontal = 16.dp),
@@ -466,8 +462,7 @@ internal fun DeFiWarningBanner(text: String, onClickClose: (() -> Unit)? = null)
     Box(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier =
-                Modifier
-                    .fillMaxWidth()
+                Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(Theme.v2.colors.backgrounds.secondary)
                     .border(
@@ -492,8 +487,7 @@ internal fun DeFiWarningBanner(text: String, onClickClose: (() -> Unit)? = null)
         if (onClickClose != null) {
             Box(
                 modifier =
-                    Modifier
-                        .align(Alignment.TopEnd)
+                    Modifier.align(Alignment.TopEnd)
                         .padding(8.dp)
                         .size(22.dp)
                         .clip(CircleShape)
@@ -524,8 +518,7 @@ internal fun HeaderDeFiWidget(
 ) {
     Column(
         modifier =
-            Modifier
-                .fillMaxWidth()
+            Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .background(Theme.v2.colors.backgrounds.secondary)
                 .border(
@@ -602,10 +595,8 @@ private fun ApyApprox(
     onMoreInfoIconModifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         InfoItem(
             icon = R.drawable.ic_icon_percentage,
@@ -626,10 +617,7 @@ private fun ApyApprox(
 }
 
 @Composable
-private fun ApyApproxWithHint(
-    modifier: Modifier = Modifier,
-    apy: String = "1%",
-) {
+private fun ApyApproxWithHint(modifier: Modifier = Modifier, apy: String = "1%") {
     var showHint by remember { mutableStateOf(false) }
     var iconPosition by remember { mutableStateOf(Offset.Zero) }
     var boxCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -640,22 +628,25 @@ private fun ApyApproxWithHint(
         ApyApprox(
             apy = apy,
             onMoreInfoClick = { showHint = !showHint },
-            onMoreInfoIconModifier = Modifier.onGloballyPositioned { coordinates ->
-                iconPosition = boxCoords?.localPositionOf(coordinates, Offset.Zero) ?: Offset.Zero
-            },
+            onMoreInfoIconModifier =
+                Modifier.onGloballyPositioned { coordinates ->
+                    iconPosition =
+                        boxCoords?.localPositionOf(coordinates, Offset.Zero) ?: Offset.Zero
+                },
         )
 
         HintBox(
-            modifier = Modifier
-                .width(200.dp)
-                .onGloballyPositioned { hintBoxSize = it.size },
+            modifier = Modifier.width(200.dp).onGloballyPositioned { hintBoxSize = it.size },
             isVisible = showHint,
             title = stringResource(R.string.apy_approx_hint_title),
             message = stringResource(R.string.apy_approx_hint_message),
-            offset = IntOffset(
-                x = iconPosition.x.toInt() - hintBoxSize.width.div(2) + iconSize.roundToPx().div(2),
-                y = (iconPosition.y - hintBoxSize.height).toInt(),
-            ),
+            offset =
+                IntOffset(
+                    x =
+                        iconPosition.x.toInt() - hintBoxSize.width.div(2) +
+                            iconSize.roundToPx().div(2),
+                    y = (iconPosition.y - hintBoxSize.height).toInt(),
+                ),
             onDismissClick = { showHint = false },
             isPointerTriangleOnTop = false,
         )
@@ -677,8 +668,7 @@ internal fun HeaderDeFiWidget(
 ) {
     Column(
         modifier =
-            Modifier
-                .fillMaxWidth()
+            Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .background(Theme.v2.colors.backgrounds.secondary)
                 .border(
@@ -773,9 +763,7 @@ internal fun HeaderDeFiWidget(
 )
 @Composable
 private fun DeFiWarningBannerShortPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         DeFiWarningBanner(
             text = "This feature is currently in beta. Please use with caution.",
             onClickClose = {},
@@ -790,9 +778,7 @@ private fun DeFiWarningBannerShortPreview() {
 )
 @Composable
 private fun DeFiWarningBannerLongPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         DeFiWarningBanner(
             text =
                 "Important: Your funds are at risk. This DeFi protocol has not been audited and may contain smart contract vulnerabilities. Only invest what you can afford to lose. Always do your own research before participating in any DeFi protocol.",
@@ -815,9 +801,7 @@ private fun PositionsSelectionDialogPreview() {
 @Preview(showBackground = true, name = "Info Item - With Value")
 @Composable
 private fun InfoItemWithValuePreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         InfoItem(icon = R.drawable.coins_tier, label = "APY", value = "12.5%")
     }
 }
@@ -825,9 +809,7 @@ private fun InfoItemWithValuePreview() {
 @Preview(showBackground = true, name = "Info Item - Without Value")
 @Composable
 private fun InfoItemWithoutValuePreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         InfoItem(icon = R.drawable.calendar_days, label = "Next Churn", value = null)
     }
 }
@@ -835,9 +817,7 @@ private fun InfoItemWithoutValuePreview() {
 @Preview(showBackground = true, name = "Info Items - Row")
 @Composable
 private fun InfoItemsRowPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             InfoItem(icon = R.drawable.coins_tier, label = "APY", value = "12.5%")
             InfoItem(icon = R.drawable.coins_tier, label = "Bonded", value = "1000 RUNE")
@@ -849,9 +829,7 @@ private fun InfoItemsRowPreview() {
 @Preview(showBackground = true, name = "Action Button - Bond (Enabled)")
 @Composable
 private fun ActionButtonBondEnabledPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         ActionButton(
             title = "Bond",
             icon = R.drawable.circle_plus,
@@ -867,9 +845,7 @@ private fun ActionButtonBondEnabledPreview() {
 @Preview(showBackground = true, name = "Action Button - Bond (Disabled)")
 @Composable
 private fun ActionButtonBondDisabledPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         ActionButton(
             title = "Bond",
             icon = R.drawable.circle_plus,
@@ -885,9 +861,7 @@ private fun ActionButtonBondDisabledPreview() {
 @Preview(showBackground = true, name = "Action Button - Unbond")
 @Composable
 private fun ActionButtonUnbondPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         ActionButton(
             title = "Unbond",
             icon = R.drawable.circle_minus,
@@ -903,9 +877,7 @@ private fun ActionButtonUnbondPreview() {
 @Preview(showBackground = true, name = "Action Buttons - Row")
 @Composable
 private fun ActionButtonsRowPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -933,13 +905,10 @@ private fun ActionButtonsRowPreview() {
     }
 }
 
-
 @Preview(showBackground = true, name = "Header DeFi Widget - Two Actions")
 @Composable
 private fun HeaderDeFiWidgetTwoActionsPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         HeaderDeFiWidget(
             title = "USDC Deposit",
             iconRes = R.drawable.usdc,
@@ -952,17 +921,13 @@ private fun HeaderDeFiWidgetTwoActionsPreview() {
     }
 }
 
-
 @Preview(showBackground = true, name = "Complete Node Card Mock")
 @Composable
 private fun CompleteNodeCardMockPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         Column(
             modifier =
-                Modifier
-                    .fillMaxWidth()
+                Modifier.fillMaxWidth()
                     .background(Theme.v2.colors.backgrounds.secondary, RoundedCornerShape(12.dp))
                     .padding(16.dp)
         ) {
@@ -1018,9 +983,7 @@ private fun CompleteNodeCardMockPreview() {
 @Preview(showBackground = true, name = "APY Info Item")
 @Composable
 private fun ApyInfoItemPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         ApyInfoItem(apy = "12.5%")
     }
 }
@@ -1028,9 +991,7 @@ private fun ApyInfoItemPreview() {
 @Preview(showBackground = true, name = "APY Info Item - High APY")
 @Composable
 private fun ApyInfoItemHighPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         ApyInfoItem(apy = "125.8%")
     }
 }
@@ -1038,9 +999,7 @@ private fun ApyInfoItemHighPreview() {
 @Preview(showBackground = true, name = "APY Info Item - Low APY")
 @Composable
 private fun ApyInfoItemLowPreview() {
-    Box(modifier = Modifier
-        .background(Theme.v2.colors.backgrounds.primary)
-        .padding(16.dp)) {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
         ApyInfoItem(apy = "0.5%")
     }
 }
