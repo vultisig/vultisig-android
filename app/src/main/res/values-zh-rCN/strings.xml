@@ -85,7 +85,7 @@
     <string name="vault_settings_reshare_title">重新分享</string>
     <string name="vault_settings_reshare_subtitle">与新委员会重新分享金库</string>
     <string name="vault_settings_delete_title">删除</string>
-    <string name="vault_settings_delete_subtitle">永久删除您的金库份额</string>
+    <string name="vault_settings_delete_subtitle">永久删除您的金库。</string>
     <string name="vault_settings_security_title">链上安全</string>
     <string name="vault_settings_security_subtitle">管理您的链上安全</string>
     <string name="vault_settings_discounts">$VULT 折扣等级</string>
@@ -959,7 +959,7 @@
     <string name="vault_settings_backup_vault">备份金库份额</string>
     <string name="vault_settings_back_up_your">将您的金库份额备份到设备或服务器。</string>
     <string name="vault_settings_migrate_gg20">将 GG20 金库迁移到 DKLS</string>
-    <string name="vault_settings_reshare_change">重新分享、更改 TSS 或签署消息。</string>
+    <string name="vault_settings_reshare_change">重新分享、管理安全性或签署消息。</string>
 
     <!-- Transaction -->
     <string name="transaction_buy">购买</string>

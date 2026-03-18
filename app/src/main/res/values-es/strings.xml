@@ -17,7 +17,7 @@
     <string name="select_asset_no_result">No se encontraron resultados.</string>
     <string name="select_chain_chain_title">Cadena</string>
     <string name="select_chain_balance_title">Saldo</string>
-    <string name="vault_settings_delete_subtitle">Eliminar tu recurso compartido de bóveda de forma permanente</string>
+    <string name="vault_settings_delete_subtitle">Eliminar tu bóveda de forma permanente.</string>
     <string name="vault_settings_security_screen_title_bottomsheet">Seguridad en cadena desactivada</string>
     <string name="vault_settings_security_screen_content_bottomsheet">Desactivar la seguridad en cadena significa que Blockaid no puede verificar las transacciones. Estará menos protegido.</string>
     <string name="vault_settings_security_title">Seguridad en cadena</string>
@@ -592,7 +592,7 @@
     <string name="vault_settings_backup_vault">Copia de seguridad del recurso compartido de bóveda</string>
     <string name="vault_settings_back_up_your">Realice una copia de seguridad del recurso compartido de bóveda en un dispositivo o servidor</string>
     <string name="vault_settings_migrate_gg20">Migrar bóveda GG20 a DKLS</string>
-    <string name="vault_settings_reshare_change">Recompartir, cambiar TSS o firmar mensajes</string>
+    <string name="vault_settings_reshare_change">Recompartir, gestionar seguridad o firmar mensajes.</string>
     <string name="vault_backup_summary_start_using_vault">Comienza a usar tu bóveda</string>
     <string name="vault_backup_summary_choose_chains">Elegir cadenas</string>
     <string name="transaction_done_form_approve">Aprobar</string>

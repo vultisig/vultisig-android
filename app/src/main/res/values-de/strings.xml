@@ -187,7 +187,7 @@
     <string name="keysign_screen_error_please_try_again">Fehler! Bitte versuchen Sie es erneut. %1$s</string>
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_keysign_discovery_service">Service entdecken</string>
-    <string name="vault_settings_delete_subtitle">Löschen Sie Ihre Tresorfreigabe dauerhaft</string>
+    <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft.</string>
     <string name="default_chain_screen_title">Standardketten</string>
     <string name="danger_icon">Gefahrensymbol</string>
     <string name="currency_unit_setting_screen_title">Währung\n</string>
@@ -592,7 +592,7 @@
     <string name="vault_settings_backup_vault">Vault‑Freigabe sichern</string>
     <string name="vault_settings_back_up_your">Sichern Sie Ihre Vault‑Freigabe auf einem Gerät oder auf dem Server.</string>
     <string name="vault_settings_migrate_gg20">GG20‑Vault auf DKLS migrieren</string>
-    <string name="vault_settings_reshare_change">Erneut teilen, TSS ändern oder Nachrichten signieren.</string>
+    <string name="vault_settings_reshare_change">Erneut teilen, Sicherheit verwalten oder Nachrichten signieren.</string>
     <string name="vault_backup_summary_start_using_vault">Jetzt Ihren Tresor nutzen.</string>
     <string name="vault_backup_summary_choose_chains">Wählen Sie Ketten</string>
     <string name="transaction_done_form_approve">Genehmigen</string>
