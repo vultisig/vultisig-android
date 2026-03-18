@@ -1184,4 +1184,7 @@
     <string name="server_backup_error_too_many_requests">Too many backup requests. Please try again later.</string>
     <string name="server_backup_error_bad_request">Something went wrong. Please check your details and try again.</string>
     <string name="resend_notification">Resend notification</string>
+    <string name="apy_approx">APY (approx.)</string>
+    <string name="apy_approx_hint_title">Rewards</string>
+    <string name="apy_approx_hint_message">Rewards are automatically credited to your balance.</string>
 </resources>
