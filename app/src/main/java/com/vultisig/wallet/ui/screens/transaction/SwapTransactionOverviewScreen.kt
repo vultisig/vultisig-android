@@ -179,7 +179,7 @@ internal fun TextDetails(title: String, subtitle: String, showAllContent: Boolea
     Details(title = title, modifier = Modifier.padding(vertical = 12.dp)) {
         Text(
             text = subtitle,
-            style = Theme.brockmann.body.s.medium,
+            style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.primary,
             overflow = if (showAllContent) TextOverflow.Visible else TextOverflow.MiddleEllipsis,
             textAlign = TextAlign.End,
