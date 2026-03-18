@@ -7,7 +7,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -97,14 +96,12 @@ internal fun VsCodeInputField(
         val density = LocalDensity.current
 
         val minSizePx = 46.dp.toPx().roundToInt()
-        val paddingPx = 24.dp.toPx().roundToInt()
 
         val onSizeChanged: (IntSize) -> Unit =
             remember(density) {
                 { size ->
                     val maxDimension = maxOf(size.width, size.height)
-                    val totalSize = maxDimension + paddingPx
-                    val newSize = maxOf(totalSize, minSizePx)
+                    val newSize = maxOf(maxDimension, minSizePx)
                     boxSize.intValue = maxOf(newSize, boxSize.intValue)
                 }
             }
@@ -183,7 +180,7 @@ internal fun VsCodeInputField(
                         text = displayChar.toString(),
                         color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.body.m.medium,
-                        modifier = Modifier.padding(all = 12.dp).onSizeChanged(onSizeChanged),
+                        modifier = Modifier.onSizeChanged(onSizeChanged),
                     )
                 }
             }
