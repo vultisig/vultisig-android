@@ -7,11 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -133,7 +130,7 @@ private fun FastVaultVerificationScreen(
                 UiSpacer(32.dp)
 
                 Row(
-                    modifier = Modifier.height(IntrinsicSize.Min).fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement =
                         Arrangement.spacedBy(6.dp, alignment = Alignment.CenterHorizontally),
                     verticalAlignment = CenterVertically,
@@ -154,12 +151,10 @@ private fun FastVaultVerificationScreen(
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier =
-                            Modifier.fillMaxHeight()
-                                .background(
+                            Modifier.background(
                                     color = Theme.v2.colors.backgrounds.secondary,
                                     shape = CircleShape,
                                 )
-                                .padding(horizontal = 17.dp, vertical = 12.dp)
                                 .clickable(
                                     enabled = hasClipContent,
                                     onClick = {
@@ -167,7 +162,8 @@ private fun FastVaultVerificationScreen(
                                             onPasteClick(textToPaste.toString())
                                         }
                                     },
-                                ),
+                                )
+                                .padding(horizontal = 17.dp, vertical = 12.dp),
                     ) {
                         Text(
                             text = stringResource(R.string.vault_backup_screen_paste),
