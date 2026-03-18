@@ -2881,6 +2881,23 @@ object Coins {
         val all = listOf(ADA)
     }
 
+    object Qbtc {
+        val QBTC =
+            Coin(
+                chain = Chain.Qbtc,
+                ticker = "QBTC",
+                logo = "qbtc",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "qbtc",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+
+        val all = listOf(QBTC)
+    }
+
     val coins: Map<Chain, List<Coin>> =
         mapOf(
             Chain.Akash to Akash.all,
@@ -2919,6 +2936,7 @@ object Coins {
             Chain.Zcash to Zcash.all,
             Chain.Cardano to Cardano.all,
             Chain.Sei to Sei.all,
+            Chain.Qbtc to Qbtc.all,
         )
 
     val all: List<Coin> = coins.values.flatten()
