@@ -37,6 +37,9 @@ class CosmosFeeService : FeeService {
             Chain.Dydx -> {
                 GasFees(limit = gasLimit.toBigInteger(), amount = 2500000000000000L.toBigInteger())
             }
+            Chain.Qbtc -> {
+                GasFees(limit = 300000L.toBigInteger(), amount = 7500.toBigInteger())
+            }
             else -> error("Chain Not Supported: ${chain.name}")
         }
     }
