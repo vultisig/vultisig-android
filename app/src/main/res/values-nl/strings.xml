@@ -188,7 +188,7 @@
     <string name="swap_form_gas_title">Netwerkkosten</string>
     <string name="swap_form_total_fees_title">Totale kosten</string>
     <string name="share_qr_utils_choose_an_app">Kies een app</string>
-    <string name="verify_swap_agree_receive_amount">Ik ga akkoord met het bedrag dat ik na de wissel zal ontvangen</string>
+    <string name="verify_swap_agree_receive_amount">Ik ga akkoord met het minimumbedrag dat ik zal ontvangen</string>
     <string name="verify_swap_consent_amount">Het wisselbedrag is correct</string>
     <string name="chain_token_screen_address_copied">%1$s gekopieerd naar klembord</string>
     <string name="tx_done_address_copied">%1$s gekopieerd naar klembord</string>
@@ -643,7 +643,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">Goedkeuring Tx Hash</string>
     <string name="swap_transaction_overview_track">Spoor</string>
     <string name="token_selection_screen_select_tokens">Selecteer tokens</string>
-    <string name="send_form_est_network_fee">Geschatte netwerkkosten</string>
+    <string name="send_form_est_network_fee">Netwerkkosten</string>
     <string name="send_form_minimum_send_amount_is_requires_this">Het minimale verzendbedrag is %1$s %2$s. %3$s vereist dit om spam te voorkomen.</string>
     <string name="minimum_send_amount_is_ada">Het minimale verzendbedrag is %1$s ADA. Cardano vereist dit om spam te voorkomen.</string>
     <string name="insufficient_balance_try_send">Onvoldoende saldo. Probeer \'Send Max\' om in plaats daarvan %1$s ADA te verzenden.</string>

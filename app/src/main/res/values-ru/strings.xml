@@ -188,7 +188,7 @@
     <string name="swap_form_gas_title">Сетевой сбор</string>
     <string name="swap_form_total_fees_title">Общая сумма сборов</string>
     <string name="share_qr_utils_choose_an_app">Выберите приложение</string>
-    <string name="verify_swap_agree_receive_amount">Я согласен с суммой, которую получу после обмена</string>
+    <string name="verify_swap_agree_receive_amount">Я согласен с минимальной суммой, которую получу</string>
     <string name="verify_swap_consent_amount">Сумма обмена корректна</string>
     <string name="chain_token_screen_address_copied">%1$s скопировано в буфер обмена</string>
     <string name="tx_done_address_copied">%1$s скопировано в буфер обмена</string>
@@ -642,7 +642,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">Хеш транзакции подтверждения</string>
     <string name="swap_transaction_overview_track">Отслеживание</string>
     <string name="token_selection_screen_select_tokens">Выбор токенов</string>
-    <string name="send_form_est_network_fee">Расчётная комиссия сети</string>
+    <string name="send_form_est_network_fee">Сетевой сбор</string>
     <string name="send_form_minimum_send_amount_is_requires_this">Минимальная сумма отправки — %1$s %2$s. %3$s требует этого для предотвращения спама.</string>
     <string name="minimum_send_amount_is_ada">Минимальная сумма отправки — %1$s ADA. Cardano требует этого для предотвращения спама.</string>
     <string name="insufficient_balance_try_send">Недостаточно средств. Попробуйте «Отправить максимум», чтобы отправить %1$s ADA.</string>
