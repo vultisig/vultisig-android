@@ -2,7 +2,7 @@
 [![Android CI](https://github.com/vultisig/vultisig-android/actions/workflows/android.yml/badge.svg)](https://github.com/vultisig/vultisig-android/actions/workflows/android.yml)
 vultisig android app
 
-## Setup GITHUB personal token
+## Setup GitHub personal token
 This project use [Trust Wallet WalletCore](https://github.com/trustwallet/wallet-core), the WalletCore library is host on github , in order for gradle to access it , you need to have a github personal token and then set the following two ENV variables
 You can also add it to your `~/.bashrc` or `~/.zshrc` file, more detail refer to [this guid] (https://developer.trustwallet.com/developer/wallet-core/integration-guide/android-guide)
 ```bash
@@ -11,6 +11,25 @@ export TRUSTWALLET_PAT=your_github_token
 ```
 
 [How to get a personal github token?] (https://github.com/settings/tokens)
+
+### Migrating from GITHUB_TOKEN/GITHUB_USER
+
+If you previously had `GITHUB_TOKEN` and `GITHUB_USER` set, rename them in your `~/.zshrc` or `~/.bashrc`:
+```bash
+# Before
+export GITHUB_USER=your_github_user
+export GITHUB_TOKEN=your_github_token
+
+# After
+export TRUSTWALLET_USER=your_github_user
+export TRUSTWALLET_PAT=your_github_token
+```
+
+Then re-auth `gh` CLI (since it was previously using `GITHUB_TOKEN` for auth):
+```bash
+gh auth login --web --git-protocol https
+gh auth refresh -h github.com -s workflow
+```
 
 
 ## Git hooks setup
