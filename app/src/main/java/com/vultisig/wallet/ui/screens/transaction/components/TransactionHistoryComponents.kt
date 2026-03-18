@@ -145,14 +145,7 @@ internal fun TokenCircle(
     ticker: String,
     size: Int = 40,
 ) {
-    Box(
-        modifier =
-            modifier
-                .size(size.dp)
-                .clip(CircleShape)
-                .background(Theme.v2.colors.backgrounds.surface2),
-        contentAlignment = Alignment.Center,
-    ) {
+    Box(modifier = modifier.size(size.dp).clip(CircleShape), contentAlignment = Alignment.Center) {
         TokenLogo(
             modifier = Modifier.size(size.dp),
             errorLogoModifier = Modifier.size(size.dp),
