@@ -6,8 +6,8 @@ vultisig android app
 This project use [Trust Wallet WalletCore](https://github.com/trustwallet/wallet-core), the WalletCore library is host on github , in order for gradle to access it , you need to have a github personal token and then set the following two ENV variables
 You can also add it to your `~/.bashrc` or `~/.zshrc` file, more detail refer to [this guid] (https://developer.trustwallet.com/developer/wallet-core/integration-guide/android-guide)
 ```bash
-export GITHUB_USER=your_github_user
-export GITHUB_TOKEN=your_github_token 
+export TRUSTWALLET_USER=your_github_user
+export TRUSTWALLET_PAT=your_github_token
 ```
 
 [How to get a personal github token?] (https://github.com/settings/tokens)
