@@ -293,26 +293,30 @@ constructor(
         if (action == TssAction.KEYGEN) {
             updateStep(KeygenState.KeygenMLDSA)
 
-            val mldsaKeygen =
-                MldsaKeygen(
-                    localPartyId = vault.localPartyID,
-                    keygenCommittee = keygenCommittee,
-                    mediatorURL = serverUrl,
-                    sessionID = sessionId,
-                    encryptionKeyHex = encryptionKeyHex,
-                    isInitiateDevice = isInitiatingDevice,
-                    encryption = encryption,
-                    sessionApi = sessionApi,
-                )
+            try {
+                val mldsaKeygen =
+                    MldsaKeygen(
+                        localPartyId = vault.localPartyID,
+                        keygenCommittee = keygenCommittee,
+                        mediatorURL = serverUrl,
+                        sessionID = sessionId,
+                        encryptionKeyHex = encryptionKeyHex,
+                        isInitiateDevice = isInitiatingDevice,
+                        encryption = encryption,
+                        sessionApi = sessionApi,
+                    )
 
-            mldsaKeygen.mldsaKeygenWithRetry(0)
+                mldsaKeygen.mldsaKeygenWithRetry(0)
 
-            val mldsaKeyshare = mldsaKeygen.keyshare
-            if (mldsaKeyshare != null) {
-                vault.pubKeyMLDSA = mldsaKeyshare.pubKey
-                allKeyshares.add(
-                    KeyShare(pubKey = mldsaKeyshare.pubKey, keyShare = mldsaKeyshare.keyshare)
-                )
+                val mldsaKeyshare = mldsaKeygen.keyshare
+                if (mldsaKeyshare != null) {
+                    vault.pubKeyMLDSA = mldsaKeyshare.pubKey
+                    allKeyshares.add(
+                        KeyShare(pubKey = mldsaKeyshare.pubKey, keyShare = mldsaKeyshare.keyshare)
+                    )
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "MLDSA keygen failed, vault will be created without QBTC support")
             }
         }
 
