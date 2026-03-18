@@ -188,7 +188,7 @@
     <string name="verify_transaction_from_title">From</string>
     <string name="verify_transaction_to_title">To</string>
     <string name="verify_transaction_amount_title">Amount</string>
-    <string name="verify_transaction_network_fee">Network fee</string>
+    <string name="verify_transaction_network_fee">Network Fee</string>
     <string name="verify_transaction_value">Value</string>
     <string name="verify_transaction_join_keysign">Join Keysign</string>
     <string name="verify_transaction_consent_address">I’m sending to the right address</string>
@@ -247,16 +247,16 @@
     <string name="faq_settings_a6">Vultisig supports major cryptocurrencies and tokens, with over 30 chains and their tokens, currently available.</string>
     <string name="biometry_auth_login_button">Login with biometry</string>
     <string name="swap_form_from_title">From</string>
-    <string name="swap_form_estimated_fees_title">Swap fees</string>
+    <string name="swap_form_estimated_fees_title">Swap Fee</string>
     <string name="swap_form_dst_token_title">To</string>
     <string name="transaction_type_button_swap">Swap</string>
-    <string name="swap_form_gas_title">Network fee</string>
-    <string name="swap_form_total_fees_title">Total fees</string>
+    <string name="swap_form_gas_title">Network Fee</string>
+    <string name="swap_form_total_fees_title">Total Fee</string>
     <string name="swap_form_vault">Vault</string>
     <string name="swap_form_min_pay">min. payout</string>
     <string name="swap_form_on_chain">on</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
-    <string name="verify_swap_agree_receive_amount">I agree with the amount I will receive after the swap</string>
+    <string name="verify_swap_agree_receive_amount">I agree with the min. amount I\'ll receive</string>
     <string name="verify_swap_consent_amount">The swap amount is correct</string>
     <string name="chain_token_screen_address_copied">%1$s copied to clipboard</string>
     <string name="tx_done_address_copied">%1$s copied to clipboard</string>
@@ -410,7 +410,7 @@
     <string name="transaction_complete_screen_title">Transaction complete</string>
     <string name="qr_address_screen_description">%1$s address:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Wrong vault selected</string>
-    <string name="verify_swap_screen_total_fees">Max. Total Fees</string>
+    <string name="verify_swap_screen_total_fees">Max. Total Fee</string>
     <string name="scan_qr_code_error_text">Unrelated QR code is scanned</string>
     <string name="scan_qr_code_error_button">Back</string>
     <string name="form_token_selection_balance">Balance: %s</string>
@@ -494,10 +494,10 @@
     <string name="onboarding_fast_backup_desc_page_2_part_1">Part 1 of the vault shares will be</string>
     <string name="onboarding_fast_backup_desc_page_2_part_2">held by the server.</string>
     <string name="onboarding_fast_backup_desc_page_3_part_1">It is sent to you for complete self-custody!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">Check your e-mail to verify</string>
+    <string name="onboarding_fast_backup_desc_page_3_part_2">Check your email to verify</string>
 
     <string name="onboarding_fast_backup_migration_desc_page_1_part_1">We’ve sent you your new server share!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Check your e-mail to verify</string>
+    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Check your email to verify</string>
 
 
     <string name="select_vault_type_secure_title">Ultimate security</string>
@@ -554,16 +554,16 @@
     <string name="peer_discovery_recommended_devices_hint">Scan QR with other device. 3-device setup recommended, 2 is sufficient.</string>
     <string name="fast_vault_name_screen_title">Name your vault</string>
     <string name="fast_vault_name_screen_desc">You can always rename your vault later in the settings</string>
-    <string name="enter_email_screen_title">Enter your e-mail</string>
+    <string name="enter_email_screen_title">Enter your email</string>
     <string name="enter_email_screen_hint">Email</string>
     <string name="enter_email_screen_desc">This email is only used to send the server backup</string>
-    <string name="fast_vault_password_screen_title">Vultiserver Password</string>
+    <string name="fast_vault_password_screen_title">Choose a password</string>
     <string name="fast_vault_password_screen_hint">This occurs because the password is used to locally encrypt the backup file, similar to how a hard drive is encrypted. In the following step, you have the option to add a hint.</string>
     <string name="fast_vault_password_screen_hint_title">More Info</string>
     <string name="fast_vault_password_screen_warning">Password cannot be reset or recovered</string>
     <string name="fast_vault_password_screen_error">Passwords do not match</string>
     <string name="fast_vault_password_screen_next">Next</string>
-    <string name="fast_vault_password_hint_screen_title">Add a optional hint</string>
+    <string name="fast_vault_password_hint_screen_title">Add an optional hint</string>
     <string name="fast_vault_password_hint_screen_desc">This will be shown in case you forget your password</string>
     <string name="fast_vault_password_hint_skip">Skip</string>
     <string name="fast_vault_password_hint_next">Next</string>
@@ -590,7 +590,7 @@
     <string name="vault_backup_screen_donot_recieve_email">Didn’t receive an email?</string>
     <string name="vault_backup_screen_restart_keygen">Restart keygen</string>
     <string name="vault_backup_summary_start_using_vault">Start using your Vault</string>
-    <string name="vault_backup_summary_choose_chains">Choose Chains</string>
+    <string name="vault_backup_summary_choose_chains">Choose chains</string>
     <string name="transaction_done_form_approve">Approve</string>
     <string name="vault_settings_migration_title">Migrate</string>
     <string name="swap_swap_button">Swap</string>
@@ -621,7 +621,7 @@
     <string name="deposit_form_custom_memo_optional_title">Custom Memo (optional)</string>
     <string name="transfer_ibc_function_memo_title">Memo</string>
     <string name="merge_account_doesnt_exist">Selected token is not found for this address</string>
-    <string name="keygen_email_error">Incorrect e-mail, please check</string>
+    <string name="keygen_email_error">Incorrect email, please check</string>
     <string name="scan_qr_screen_title">Scan QR Code</string>
     <string name="verify_transaction_function_inputs_title">Function Inputs</string>
     <string name="verify_your_server_share_password">Verify your Server Share Password</string>
@@ -881,7 +881,7 @@
     <string name="send_form_balance_available">Balance available:</string>
     <string name="send_form_add_memo">Add MEMO</string>
     <string name="send_form_enter_memo">Enter Memo</string>
-    <string name="send_form_est_network_fee">Est. network fee</string>
+    <string name="send_form_est_network_fee">Network Fee</string>
     <string name="send_form_minimum_send_amount_is_requires_this">Minimum send amount is %1$s %2$s. %3$s requires this to prevent spam.</string>
     <string name="minimum_send_amount_is_ada">Minimum send amount is %1$s ADA. Cardano requires this to prevent spam.</string>
     <string name="insufficient_balance_try_send">Insufficient balance.  Try \'Send Max\' to send %1$s ADA instead.</string>
@@ -1027,7 +1027,7 @@
     <string name="import_seedphrase_duplicate_description">Please import a different seed phrase</string>
     <string name="import_seedphrase_import_button">Import</string>
     <string name="import_seedphrase_checking">Checking…</string>
-    <string name="key_import_chains_title">Select Chains</string>
+    <string name="key_import_chains_title">Select chains</string>
     <string name="key_import_chains_scanning">Scanning for chains…</string>
     <string name="key_import_chains_scanning_desc">We\'re checking which blockchains have active addresses for your seed phrase.\u0020</string>
     <string name="key_import_chains_scanning_desc_highlight">This process can take up to 2 minutes.</string>
@@ -1045,7 +1045,7 @@
     <string name="key_import_chains_customize">Customize chains</string>
     <string name="key_import_chains_no_active_title">No Active Chains Found</string>
     <string name="key_import_chains_no_active_desc">We couldn\'t find any balances. Please select the chains you want to import manually.</string>
-    <string name="key_import_chains_select_title">Select Chains (%1$d)</string>
+    <string name="key_import_chains_select_title">Select chains (%1$d)</string>
     <string name="key_import_chains_all">All</string>
     <string name="key_import_chains_none">None</string>
     <string name="key_import_chains_get_started">Get Started</string>
@@ -1171,7 +1171,7 @@
     <string name="server_backup_title">Server Backup</string>
     <string name="server_backup_email_label">Email</string>
     <string name="server_backup_email_description">Enter the email to receive the vault share.</string>
-    <string name="server_backup_email_error">Incorrect e-mail, please check</string>
+    <string name="server_backup_email_error">Incorrect email, please check</string>
     <string name="server_backup_password_label">Password</string>
     <string name="server_backup_password_description">Enter the password you set when creating this Vault.</string>
     <string name="server_backup_name_label">Name</string>
