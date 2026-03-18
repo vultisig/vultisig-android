@@ -12,7 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
@@ -27,6 +29,8 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.referral.AddReferralBottomSheet
+import com.vultisig.wallet.ui.components.referral.AddReferralHeaderButton
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.FastVaultEmailState
 import com.vultisig.wallet.ui.models.keygen.FastVaultEmailViewModel
@@ -36,20 +40,36 @@ import com.vultisig.wallet.ui.utils.asString
 @Composable
 internal fun FastVaultEmailScreen(model: FastVaultEmailViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
+    var showReferralSheet by remember { mutableStateOf(false) }
+    val referralCode by model.referralCode.collectAsState()
 
     FastVaultEmailScreen(
         state = state,
         textFieldState = model.emailFieldState,
+        hasReferral = referralCode.isNotEmpty(),
+        onReferralClick = { showReferralSheet = true },
         onNextClick = model::navigateToPassword,
         onClearClick = model::clearInput,
         onBackClick = model::back,
     )
+
+    if (showReferralSheet) {
+        AddReferralBottomSheet(
+            onApply = { code ->
+                model.setReferralCode(code)
+                showReferralSheet = false
+            },
+            onDismissRequest = { showReferralSheet = false },
+        )
+    }
 }
 
 @Composable
 private fun FastVaultEmailScreen(
     state: FastVaultEmailState,
     textFieldState: TextFieldState,
+    hasReferral: Boolean = false,
+    onReferralClick: () -> Unit = {},
     onNextClick: () -> Unit,
     onClearClick: () -> Unit,
     onBackClick: () -> Unit,
@@ -58,6 +78,12 @@ private fun FastVaultEmailScreen(
     V2Scaffold(
         title = null,
         onBackClick = onBackClick,
+        actions = {
+            AddReferralHeaderButton(
+                hasReferral = hasReferral,
+                onClick = onReferralClick,
+            )
+        },
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.enter_email_screen_next),

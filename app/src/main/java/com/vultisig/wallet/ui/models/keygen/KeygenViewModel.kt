@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.ChainImportSetting
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -113,6 +114,7 @@ constructor(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
+    private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Keygen.Generating>()
@@ -608,6 +610,8 @@ constructor(
 
             vaultDataStoreRepository.setBackupStatus(vaultId = vaultId, false)
         }
+
+        referralCodeSettingsRepository.consumePendingReferral(vaultId)
 
         lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
 

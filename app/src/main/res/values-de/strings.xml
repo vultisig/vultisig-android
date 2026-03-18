@@ -1139,4 +1139,16 @@
     <string name="server_backup_error_too_many_requests">Zu viele Sicherungsanfragen. Bitte versuchen Sie es später erneut.</string>
     <string name="server_backup_error_bad_request">Etwas ist schiefgelaufen. Bitte überprüfen Sie Ihre Angaben und versuchen Sie es erneut.</string>
     <string name="resend_notification">Benachrichtigung erneut senden</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Add Referral</string>
+    <string name="referral_added">Referral added</string>
+    <string name="add_referral_sheet_title">Referral code</string>
+    <string name="add_referral_sheet_description">Enter your referral code here. Enjoy 10% off every transaction.</string>
+    <string name="add_referral_sheet_placeholder">Enter 4-digit code</string>
+    <string name="add_referral_sheet_apply">Apply Referral</string>
+    <string name="add_referral_error_length">Referral code must be no more than 4 characters</string>
+    <string name="add_referral_error_chars">Referral code must contain only alphanumeric characters</string>
+    <string name="add_referral_error_not_found">Referral code not found</string>
+    <string name="add_referral_error_network">Failed to check referral code. Please try again.</string>
 </resources>

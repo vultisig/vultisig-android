@@ -24,6 +24,12 @@ interface ReferralCodeSettingsRepositoryContract {
 
     fun setCurrentVaultId(vaultId: String)
 
+    fun getPendingReferral(): String?
+
+    fun setPendingReferral(referralCode: String?)
+
+    fun consumePendingReferral(vaultId: String)
+
     suspend fun setAsShown()
 
     suspend fun isShown(): Boolean
@@ -75,6 +81,20 @@ constructor(
         encryptedSharedPreferences.edit { putString(CURRENT_VAULT_CODE_KEY, vaultId) }
     }
 
+    override fun getPendingReferral(): String? {
+        return encryptedSharedPreferences.getString(PENDING_REFERRAL_CODE_KEY, null)
+    }
+
+    override fun setPendingReferral(referralCode: String?) {
+        encryptedSharedPreferences.edit { putString(PENDING_REFERRAL_CODE_KEY, referralCode) }
+    }
+
+    override fun consumePendingReferral(vaultId: String) {
+        val pending = getPendingReferral() ?: return
+        saveExternalReferral(vaultId, pending)
+        setPendingReferral(null)
+    }
+
     override suspend fun setAsShown() {
         appDataStore.editData { preferences -> preferences[SHOW_REFERRAL_HOW_IT_WORKS] = true }
     }
@@ -87,6 +107,7 @@ constructor(
         const val VAULT_REFERRAL_CODE_KEY = "referral_code_"
         const val EXTERNAL_REFERRAL_CODE_KEY = "external_referral_code_"
         const val CURRENT_VAULT_CODE_KEY = "current_vault_key"
+        const val PENDING_REFERRAL_CODE_KEY = "pending_referral_code"
 
         private val SHOW_REFERRAL_HOW_IT_WORKS = booleanPreferencesKey("SHOW_REFERRAL_HOW_IT_WORKS")
     }

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateUniqueName
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
@@ -42,12 +43,14 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val isNameLengthValid: IsVaultNameValid,
     private val generateUniqueName: GenerateUniqueName,
+    private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VaultInfo.Name>()
 
     val nameFieldState = TextFieldState()
     val state = MutableStateFlow(NameVaultUiModel())
+    val referralCode = MutableStateFlow(referralCodeSettingsRepository.getPendingReferral() ?: "")
     private var vaultNamesList = emptyList<String>()
 
     init {
@@ -139,7 +142,14 @@ constructor(
         nameFieldState.clearText()
     }
 
+    fun setReferralCode(code: String) {
+        referralCode.value = code
+        referralCodeSettingsRepository.setPendingReferral(code)
+    }
+
     fun back() {
+        // Clear pending referral when backing out of the first vault setup screen
+        referralCodeSettingsRepository.setPendingReferral(null)
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 }
