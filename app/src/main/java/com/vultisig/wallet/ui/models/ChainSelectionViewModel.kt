@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TssKeyType
+import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.hasPreGeneratedKey
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -142,6 +144,10 @@ constructor(
                 ) { tokens, enabledChains, query ->
                     tokens
                         .filter { token -> !isKeyImport || vault.hasPreGeneratedKey(token.chain) }
+                        .filter { token ->
+                            token.chain.TssKeysignType != TssKeyType.MLDSA ||
+                                vault.pubKeyMLDSA.isNotBlank()
+                        }
                         .filter {
                             query.isBlank() ||
                                 it.ticker.contains(query, ignoreCase = true) ||
