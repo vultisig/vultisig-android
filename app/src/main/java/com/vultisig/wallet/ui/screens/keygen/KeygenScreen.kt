@@ -82,7 +82,8 @@ internal fun KeygenScreen(model: KeygenViewModel = hiltViewModel()) {
         when (state.action) {
             TssAction.KEYGEN,
             TssAction.ReShare,
-            TssAction.KeyImport -> {
+            TssAction.KeyImport,
+            TssAction.SingleKeygen -> {
                 KeygenScreen(state = state, onTryAgainClick = model::tryAgain)
             }
 

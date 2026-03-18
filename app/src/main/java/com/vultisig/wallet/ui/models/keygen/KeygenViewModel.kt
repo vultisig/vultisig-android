@@ -175,10 +175,18 @@ constructor(
             state.update { it.copy(error = null) }
 
             try {
-                when (libType) {
-                    SigningLibType.DKLS -> startKeygenDkls()
-                    SigningLibType.GG20 -> startKeygenGG20()
-                    SigningLibType.KeyImport -> startKeyImportKeygen()
+                if (isInitiatingDevice) {
+                    startKeygen()
+                }
+
+                if (action == TssAction.SingleKeygen) {
+                    startSingleKeygen()
+                } else {
+                    when (libType) {
+                        SigningLibType.DKLS -> startKeygenDkls()
+                        SigningLibType.GG20 -> startKeygenGG20()
+                        SigningLibType.KeyImport -> startKeyImportKeygen()
+                    }
                 }
 
                 updateStep(KeygenState.Success)
@@ -245,6 +253,7 @@ constructor(
             TssAction.Migrate -> dklsKeygen.dklsKeygenWithRetry(0)
             TssAction.ReShare -> dklsKeygen.reshareWithRetry(0)
             TssAction.KeyImport -> error("KeyImport is handled by startKeyImportKeygen()")
+            TssAction.SingleKeygen -> error("SingleKeygen is handled by startSingleKeygen()")
         }
 
         updateStep(KeygenState.KeygenEdDSA)
@@ -272,6 +281,7 @@ constructor(
             TssAction.Migrate -> schnorr.schnorrKeygenWithRetry(0)
             TssAction.ReShare -> schnorr.schnorrReshareWithRetry(0)
             TssAction.KeyImport -> error("KeyImport is handled by startKeyImportKeygen()")
+            TssAction.SingleKeygen -> error("SingleKeygen is handled by startSingleKeygen()")
         }
 
         val keyshareEcdsa = dklsKeygen.keyshare!!
@@ -281,47 +291,44 @@ constructor(
         vault.pubKeyEDDSA = keyshareEddsa.pubKey
         vault.hexChainCode = keyshareEcdsa.chaincode
 
-        val allKeyshares =
-            mutableListOf(
+        vault.keyshares =
+            listOf(
                 KeyShare(pubKey = keyshareEcdsa.pubKey, keyShare = keyshareEcdsa.keyshare),
                 KeyShare(pubKey = keyshareEddsa.pubKey, keyShare = keyshareEddsa.keyshare),
             )
 
-        if (action == TssAction.KEYGEN) {
-            updateStep(KeygenState.KeygenMLDSA)
-
-            try {
-                val mldsaKeygen =
-                    MldsaKeygen(
-                        localPartyId = vault.localPartyID,
-                        keygenCommittee = keygenCommittee,
-                        mediatorURL = serverUrl,
-                        sessionID = sessionId,
-                        encryptionKeyHex = encryptionKeyHex,
-                        isInitiateDevice = isInitiatingDevice,
-                        encryption = encryption,
-                        sessionApi = sessionApi,
-                    )
-
-                mldsaKeygen.mldsaKeygenWithRetry(0)
-
-                val mldsaKeyshare = mldsaKeygen.keyshare
-                if (mldsaKeyshare != null) {
-                    vault.pubKeyMLDSA = mldsaKeyshare.pubKey
-                    allKeyshares.add(
-                        KeyShare(pubKey = mldsaKeyshare.pubKey, keyShare = mldsaKeyshare.keyshare)
-                    )
-                }
-            } catch (e: Exception) {
-                Timber.w(e, "MLDSA keygen failed, vault will be created without QBTC support")
-            }
-        }
-
-        vault.keyshares = allKeyshares
-
         if (action == TssAction.Migrate) {
             vault.libType = SigningLibType.DKLS
         }
+
+        sessionApi.markLocalPartyComplete(serverUrl, sessionId, listOf(vault.localPartyID))
+
+        waitCompleteParties()
+    }
+
+    private suspend fun startSingleKeygen() {
+        updateStep(KeygenState.KeygenMLDSA)
+
+        val mldsaKeygen =
+            MldsaKeygen(
+                localPartyId = vault.localPartyID,
+                keygenCommittee = keygenCommittee,
+                mediatorURL = serverUrl,
+                sessionID = sessionId,
+                encryptionKeyHex = encryptionKeyHex,
+                isInitiateDevice = isInitiatingDevice,
+                encryption = encryption,
+                sessionApi = sessionApi,
+            )
+
+        mldsaKeygen.mldsaKeygenWithRetry(0)
+
+        val mldsaKeyshare = mldsaKeygen.keyshare ?: error("Failed to generate MLDSA keyshare")
+
+        vault.pubKeyMLDSA = mldsaKeyshare.pubKey
+        vault.keyshares =
+            vault.keyshares +
+                KeyShare(pubKey = mldsaKeyshare.pubKey, keyShare = mldsaKeyshare.keyshare)
 
         sessionApi.markLocalPartyComplete(serverUrl, sessionId, listOf(vault.localPartyID))
 
@@ -557,6 +564,8 @@ constructor(
                     }
 
                     TssAction.KeyImport -> error("KeyImport will not support for GG20")
+                    TssAction.SingleKeygen ->
+                        error("SingleKeygen is handled by startSingleKeygen()")
                 }
 
                 // here is the keygen process is done
@@ -637,7 +646,8 @@ constructor(
                 vaultPasswordRepository.savePassword(vaultId, password)
             }
         } else {
-            val shouldOverrideVault = isReshareMode || action == TssAction.Migrate
+            val shouldOverrideVault =
+                isReshareMode || action == TssAction.Migrate || action == TssAction.SingleKeygen
 
             saveVault(vault, shouldOverrideVault)
 
@@ -725,6 +735,18 @@ constructor(
                                 passwordType = BackupPasswordType.UserSelectionPassword,
                             )
                         }
+
+                    TssAction.SingleKeygen ->
+                        Route.Onboarding.VaultBackup(
+                            vaultId = vaultId,
+                            pubKeyEcdsa = vault.pubKeyECDSA,
+                            email = args.email,
+                            vaultType = vaultType,
+                            action = action,
+                            vaultName = args.vaultName,
+                            password = args.password,
+                            deviceCount = args.deviceCount,
+                        )
                 },
             opts =
                 NavigationOptions(popUpToRoute = Route.Keygen.Generating::class, inclusive = true),

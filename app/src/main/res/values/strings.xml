@@ -80,6 +80,8 @@
     <string name="vault_settings_rename_subtitle">Edit your vault name</string>
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Reshare vault with a new committee</string>
+    <string name="vault_settings_dilithium_keygen_title">Enable QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generate key to enable QBTC chain</string>
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_delete_subtitle">Delete your vault permanently.</string>
     <string name="vault_settings_security_title">On-chain Security</string>

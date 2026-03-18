@@ -10,6 +10,8 @@
     <string name="vault_settings_rename_subtitle">Editar o nome do seu cofre</string>
     <string name="vault_settings_reshare_title">Recompartilhar</string>
     <string name="vault_settings_reshare_subtitle">Recompartilhar cofre com um novo comitê</string>
+    <string name="vault_settings_dilithium_keygen_title">Ativar QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Gerar chave para ativar a blockchain QBTC</string>
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_security_title">Segurança On-chain</string>
     <string name="vault_settings_security_subtitle">Gerencie sua segurança on-chain</string>

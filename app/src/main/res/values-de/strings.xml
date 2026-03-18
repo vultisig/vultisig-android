@@ -8,6 +8,8 @@
     <string name="vault_settings_rename_subtitle">Den Namen Ihres Tresors bearbeiten</string>
     <string name="vault_settings_reshare_title">Erneut teilen</string>
     <string name="vault_settings_reshare_subtitle">Tresor mit einem neuen Komitee erneut teilen</string>
+    <string name="vault_settings_dilithium_keygen_title">QBTC aktivieren</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Schlüssel generieren, um die QBTC-Blockchain zu aktivieren</string>
     <string name="vault_settings_delete_title">Löschen</string>
     <string name="select_asset_title">Asset auswählen</string>
     <string name="select_asset_no_result">Kein Ergebnis gefunden.</string>

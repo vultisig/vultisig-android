@@ -7,6 +7,8 @@
     <string name="vault_settings_rename_subtitle">Uredite ime vašeg sefa</string>
     <string name="vault_settings_reshare_title">Ponovno podijeli</string>
     <string name="vault_settings_reshare_subtitle">Ponovno podijelite sef s novim odborom</string>
+    <string name="vault_settings_dilithium_keygen_title">Omogući QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generiraj ključ za omogućavanje QBTC mreže</string>
     <string name="vault_settings_delete_title">Izbriši</string>
     <string name="vault_settings_security_title">On-chain sigurnost</string>
     <string name="vault_settings_security_subtitle">Upravljajte svojom on-chain sigurnošću</string>
