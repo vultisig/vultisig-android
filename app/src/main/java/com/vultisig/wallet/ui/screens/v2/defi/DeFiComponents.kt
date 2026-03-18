@@ -501,7 +501,7 @@ internal fun HeaderDeFiWidget(
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.size(48.dp),
             )
 
             UiSpacer(12.dp)
@@ -581,7 +581,7 @@ internal fun HeaderDeFiWidget(
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.size(48.dp),
             )
 
             UiSpacer(12.dp)
