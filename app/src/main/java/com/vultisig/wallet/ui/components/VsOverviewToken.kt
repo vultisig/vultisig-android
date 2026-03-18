@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -61,42 +63,7 @@ internal fun VsOverviewToken(
 
         UiSpacer(12.dp)
 
-        Box {
-            TokenLogo(
-                logo = getCoinLogo(token.logo),
-                title = token.ticker,
-                modifier =
-                    Modifier.size(36.dp)
-                        .border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.border.light,
-                            shape = CircleShape,
-                        )
-                        .align(Alignment.Center),
-                errorLogoModifier =
-                    Modifier.size(36.dp).clip(CircleShape).background(Theme.v2.colors.neutrals.n200),
-            )
-
-            chainLogo
-                .takeIf { it != getCoinLogo(token.logo) }
-                ?.let {
-                    Image(
-                        painter = painterResource(id = it),
-                        contentDescription = null,
-                        modifier =
-                            Modifier.offset(x = 5.dp, y = 5.dp)
-                                .size(20.dp)
-                                .clip(CircleShape)
-                                .background(Theme.v2.colors.neutrals.n100, CircleShape)
-                                .border(
-                                    width = 2.dp,
-                                    color = Theme.v2.colors.backgrounds.primary,
-                                    shape = CircleShape,
-                                )
-                                .align(BottomEnd),
-                    )
-                }
-        }
+        TokenAndChainLogo(token, chainLogo)
 
         UiSpacer(12.dp)
 
@@ -119,6 +86,60 @@ internal fun VsOverviewToken(
             style = Theme.brockmann.supplementary.captionSmall,
             color = Theme.v2.colors.text.tertiary,
         )
+    }
+}
+
+@Composable
+internal fun TokenAndChainLogo(
+    token: Coin,
+    chainLogo: Int,
+    tokenLogoSize: Dp = 36.dp,
+    chainLogoSize:Dp = 20.dp,
+    tokenBorderColor: Color = Theme.v2.colors.border.light,
+    chainBorderColor: Color = Theme.v2.colors.backgrounds.primary,
+    tokenBackgroundErrorColor: Color = Theme.v2.colors.neutrals.n200,
+    chainBackgroundErrorColor: Color = Theme.v2.colors.neutrals.n100,
+) {
+    Box {
+        TokenLogo(
+            logo = getCoinLogo(token.logo),
+            title = token.ticker,
+            modifier =
+                Modifier
+                    .size(tokenLogoSize)
+                    .border(
+                        width = 1.dp,
+                        color = tokenBorderColor,
+                        shape = CircleShape,
+                    )
+                    .align(Alignment.Center),
+            errorLogoModifier =
+                Modifier
+                    .size(tokenLogoSize)
+                    .clip(CircleShape)
+                    .background(tokenBackgroundErrorColor),
+        )
+
+        chainLogo
+            .takeIf { it != getCoinLogo(token.logo) }
+            ?.let {
+                Image(
+                    painter = painterResource(id = it),
+                    contentDescription = null,
+                    modifier =
+                        Modifier
+                            .offset(x = 5.dp, y = 5.dp)
+                            .size(chainLogoSize)
+                            .clip(CircleShape)
+                            .background(chainBackgroundErrorColor, CircleShape)
+                            .border(
+                                width = 2.dp,
+                                color = chainBorderColor,
+                                shape = CircleShape,
+                            )
+                            .align(BottomEnd),
+                )
+            }
     }
 }
 
