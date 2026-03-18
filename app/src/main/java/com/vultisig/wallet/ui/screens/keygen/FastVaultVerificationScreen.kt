@@ -7,15 +7,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -28,7 +25,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -133,7 +129,7 @@ internal fun FastVaultVerificationScreen(
                 UiSpacer(32.dp)
 
                 Row(
-                    modifier = Modifier.height(IntrinsicSize.Min).fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement =
                         Arrangement.spacedBy(6.dp, alignment = Alignment.CenterHorizontally),
                     verticalAlignment = CenterVertically,
@@ -154,17 +150,16 @@ internal fun FastVaultVerificationScreen(
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier =
-                            Modifier.clip(CircleShape)
-                                .background(
+                            Modifier.background(
                                     color = Theme.v2.colors.backgrounds.secondary,
-                                    shape = CircleShape,
+                                    shape = RoundedCornerShape(size = 99.dp),
                                 )
                                 .border(
                                     width = 1.dp,
                                     color = Theme.v2.colors.border.extraLight,
-                                    shape = CircleShape,
+                                    shape = RoundedCornerShape(size = 99.dp),
                                 )
-                                .padding(horizontal = 20.dp, vertical = 16.dp)
+                                .padding(horizontal = 10.dp, vertical = 16.dp)
                                 .clickable(
                                     enabled = hasClipContent,
                                     onClick = {
@@ -241,8 +236,7 @@ internal fun FastVaultVerificationScreen(
                                     color = Theme.v2.colors.variables.textButtonSecondaryLightDark,
                                     style = Theme.brockmann.supplementary.caption,
                                     modifier =
-                                        Modifier.clip(shape = RoundedCornerShape(12.dp))
-                                            .border(
+                                        Modifier.border(
                                                 width = 1.dp,
                                                 color = Theme.v2.colors.variables.bordersExtraLight,
                                                 shape = RoundedCornerShape(12.dp),
