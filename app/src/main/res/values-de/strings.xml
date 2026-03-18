@@ -944,7 +944,7 @@
     <string name="transaction_history_tab_send">Senden</string>
     <string name="transaction_history_tab_swap">Swaps</string>
     <string name="transaction_history_empty_title">Noch keine Transaktionen</string>
-    <string name="transaction_history_empty_desc">Sie haben noch keine Swaps, Überweisungen oder Genehmigungen aus diesem Tresor vorgenommen.</string>
+    <string name="transaction_history_empty_desc">Sie haben noch keine Swaps, Senden oder Genehmigungen aus diesem Tresor vorgenommen.</string>
     <string name="transaction_history_search_asset_title">Asset suchen</string>
     <string name="transaction_history_search_asset_not_found">Kein Asset gefunden</string>
     <string name="transaction_history_clear_filters">Filter löschen</string>

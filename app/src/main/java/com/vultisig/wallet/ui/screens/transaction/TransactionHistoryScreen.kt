@@ -187,12 +187,11 @@ private fun TransactionHistoryScreen(
             PullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = onRefresh,
-                modifier = Modifier.fillMaxSize().padding(top = 27.dp),
+                modifier = Modifier.fillMaxSize(),
             ) {
                 if (state.groups.isEmpty() && !state.isLoading) {
-
                     TransactionHistoryEmptyState(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                        modifier = Modifier.fillMaxWidth().padding(top = 27.dp, horizontal = 16.dp)
                     )
                 } else {
                     TransactionGroupedList(
