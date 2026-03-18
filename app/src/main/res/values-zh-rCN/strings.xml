@@ -84,6 +84,8 @@
     <string name="vault_settings_rename_subtitle">编辑您的金库名称</string>
     <string name="vault_settings_reshare_title">重新分享</string>
     <string name="vault_settings_reshare_subtitle">与新委员会重新分享金库</string>
+    <string name="vault_settings_dilithium_keygen_title">启用 QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">生成密钥以启用 QBTC 链</string>
     <string name="vault_settings_delete_title">删除</string>
     <string name="vault_settings_delete_subtitle">永久删除您的金库。</string>
     <string name="vault_settings_security_title">链上安全</string>

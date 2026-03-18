@@ -23,6 +23,8 @@
     <string name="vault_settings_security_screen_title_switch">Управление безопасностью в сети</string>
     <string name="vault_settings_security_screen_title_content">Вы можете отключить защиту в режиме реального времени, предоставляемую Blockaid.</string>
     <string name="vault_settings_reshare_subtitle">Повторное совместное использование хранилища с новым комитетом</string>
+    <string name="vault_settings_dilithium_keygen_title">Включить QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Сгенерировать ключ для включения сети QBTC</string>
     <string name="vault_settings_delete_title">Удалить</string>
     <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда.</string>
     <string name="vault_settings_security_title">Безопасность в сети</string>

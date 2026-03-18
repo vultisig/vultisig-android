@@ -7,6 +7,8 @@
     <string name="vault_settings_rename_subtitle">Modifica il nome della tua cassaforte</string>
     <string name="vault_settings_reshare_title">Ricondividi</string>
     <string name="vault_settings_reshare_subtitle">Ricondividi la cassaforte con un nuovo comitato</string>
+    <string name="vault_settings_dilithium_keygen_title">Abilita QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Genera chiave per abilitare la catena QBTC</string>
     <string name="vault_settings_delete_title">Elimina</string>
     <string name="vault_settings_security_title">Sicurezza On-chain</string>
     <string name="vault_settings_security_subtitle">Gestisci la tua sicurezza on-chain</string>

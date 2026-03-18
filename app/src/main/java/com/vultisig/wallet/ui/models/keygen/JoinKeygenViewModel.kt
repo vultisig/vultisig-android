@@ -22,6 +22,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
+import com.vultisig.wallet.data.models.proto.v1.SingleKeygenMessageProto
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.DuplicateVaultName
@@ -191,6 +192,42 @@ constructor(
                                 oldCommittee = message.oldParties,
                                 oldResharePrefix = message.oldResharePrefix,
                                 vaultId = existingVault?.id,
+                            )
+                        }
+
+                        TssAction.SingleKeygen -> {
+                            val message =
+                                protoBuf.decodeFromByteArray<SingleKeygenMessageProto>(bytes)
+
+                            val existingVault =
+                                existingVaults.find { it.pubKeyECDSA == message.publicKeyEcdsa }
+                                    ?: error(
+                                        UnknownError(
+                                            "No vault found matching the initiator's ECDSA public key"
+                                        )
+                                    )
+
+                            val serverUrl =
+                                if (message.useVultisigRelay) {
+                                    Endpoints.VULTISIG_RELAY_URL
+                                } else {
+                                    discoverMediator(message.serviceName)
+                                }
+
+                            Session(
+                                sessionId = message.sessionId,
+                                action = TssAction.SingleKeygen,
+                                hexChainCode = existingVault.hexChainCode,
+                                serviceName = message.serviceName,
+                                useVultisigRelay = message.useVultisigRelay,
+                                encryptionKeyHex = message.encryptionKeyHex,
+                                vaultName = existingVault.name,
+                                libType = existingVault.libType,
+                                localPartyId = existingVault.localPartyID,
+                                serverUrl = serverUrl,
+                                oldCommittee = emptyList(),
+                                oldResharePrefix = "",
+                                vaultId = existingVault.id,
                             )
                         }
 

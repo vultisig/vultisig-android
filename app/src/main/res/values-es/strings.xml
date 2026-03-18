@@ -11,6 +11,8 @@
     <string name="vault_settings_rename_subtitle">Editar el nombre de tu bóveda</string>
     <string name="vault_settings_reshare_title">Recompartir</string>
     <string name="vault_settings_reshare_subtitle">Recompartir bóveda con un nuevo comité</string>
+    <string name="vault_settings_dilithium_keygen_title">Habilitar QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generar clave para habilitar la cadena QBTC</string>
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="swap_form_on_chain">en</string>
     <string name="select_asset_title">Seleccionar activo</string>
