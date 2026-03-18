@@ -590,7 +590,7 @@
     <string name="vault_backup_screen_donot_recieve_email">Didn’t receive an email?</string>
     <string name="vault_backup_screen_restart_keygen">Restart keygen</string>
     <string name="vault_backup_summary_start_using_vault">Start using your Vault</string>
-    <string name="vault_backup_summary_choose_chains">Choose chains</string>
+    <string name="vault_backup_summary_choose_chains">Choose Chains</string>
     <string name="transaction_done_form_approve">Approve</string>
     <string name="vault_settings_migration_title">Migrate</string>
     <string name="swap_swap_button">Swap</string>
@@ -1027,7 +1027,7 @@
     <string name="import_seedphrase_duplicate_description">Please import a different seed phrase</string>
     <string name="import_seedphrase_import_button">Import</string>
     <string name="import_seedphrase_checking">Checking…</string>
-    <string name="key_import_chains_title">Select chains</string>
+    <string name="key_import_chains_title">Select Chains</string>
     <string name="key_import_chains_scanning">Scanning for chains…</string>
     <string name="key_import_chains_scanning_desc">We\'re checking which blockchains have active addresses for your seed phrase.\u0020</string>
     <string name="key_import_chains_scanning_desc_highlight">This process can take up to 2 minutes.</string>
@@ -1045,7 +1045,7 @@
     <string name="key_import_chains_customize">Customize chains</string>
     <string name="key_import_chains_no_active_title">No Active Chains Found</string>
     <string name="key_import_chains_no_active_desc">We couldn\'t find any balances. Please select the chains you want to import manually.</string>
-    <string name="key_import_chains_select_title">Select chains (%1$d)</string>
+    <string name="key_import_chains_select_title">Select Chains (%1$d)</string>
     <string name="key_import_chains_all">All</string>
     <string name="key_import_chains_none">None</string>
     <string name="key_import_chains_get_started">Get Started</string>
