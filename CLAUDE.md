@@ -69,8 +69,8 @@ vultisig-android/
    - The project uses Trust Wallet Core hosted on GitHub Packages
    - Set environment variables (add to `~/.zshrc` or `~/.bashrc`):
      ```bash
-     export GITHUB_USER=your_github_username
-     export GITHUB_TOKEN=your_github_personal_access_token
+     export TRUSTWALLET_USER=your_github_username
+     export TRUSTWALLET_PAT=your_github_personal_access_token
      ```
    - Get token from: https://github.com/settings/tokens
 
