@@ -138,6 +138,10 @@ object SigningHelper {
                         utxo.getPreSignedImageHash(payload)
                     }
 
+                    Chain.Qbtc -> {
+                        QBTCTransactionHelper().getPreSignedImageHash(payload)
+                    }
+
                     Chain.GaiaChain,
                     Chain.Kujira,
                     Chain.Dydx,
@@ -267,6 +271,10 @@ object SigningHelper {
             Chain.ThorChain -> {
                 val thorHelper = ThorChainHelper.thor(ecdsaKey, ecdsaChainCode)
                 return thorHelper.getSignedTransaction(keysignPayload, signatures)
+            }
+
+            Chain.Qbtc -> {
+                return QBTCTransactionHelper().getSignedTransaction(keysignPayload, signatures)
             }
 
             Chain.GaiaChain,
