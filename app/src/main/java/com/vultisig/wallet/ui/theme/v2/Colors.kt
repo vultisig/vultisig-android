@@ -91,7 +91,7 @@ data class TextButton(
 
 data class Border(
     val normal: Color = Color(0xFF1B3F73),
-    val light: Color = Color(0xFF12284A),
+    val light: Color = Color(0xFF11284A),
     val extraLight: Color = Color(0xFF02122B),
     val primaryAccent4: Color = Color(0xFF4879FD),
     val disabled: Color = Color(0x992155DF),
