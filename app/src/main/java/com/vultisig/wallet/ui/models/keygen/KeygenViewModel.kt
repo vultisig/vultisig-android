@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.keygen.DKLSKeygen
+import com.vultisig.wallet.data.keygen.MldsaKeygen
 import com.vultisig.wallet.data.keygen.SchnorrKeygen
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Chain
@@ -72,6 +73,8 @@ internal sealed interface KeygenState {
     data object KeygenECDSA : KeygenState
 
     data object KeygenEdDSA : KeygenState
+
+    data object KeygenMLDSA : KeygenState
 
     data object KeygenChains : KeygenState
 
@@ -280,11 +283,40 @@ constructor(
         vault.pubKeyECDSA = keyshareEcdsa.pubKey
         vault.pubKeyEDDSA = keyshareEddsa.pubKey
         vault.hexChainCode = keyshareEcdsa.chaincode
-        vault.keyshares =
-            listOf(
+
+        val allKeyshares =
+            mutableListOf(
                 KeyShare(pubKey = keyshareEcdsa.pubKey, keyShare = keyshareEcdsa.keyshare),
                 KeyShare(pubKey = keyshareEddsa.pubKey, keyShare = keyshareEddsa.keyshare),
             )
+
+        if (action == TssAction.KEYGEN) {
+            updateStep(KeygenState.KeygenMLDSA)
+
+            val mldsaKeygen =
+                MldsaKeygen(
+                    localPartyId = vault.localPartyID,
+                    keygenCommittee = keygenCommittee,
+                    mediatorURL = serverUrl,
+                    sessionID = sessionId,
+                    encryptionKeyHex = encryptionKeyHex,
+                    isInitiateDevice = isInitiatingDevice,
+                    encryption = encryption,
+                    sessionApi = sessionApi,
+                )
+
+            mldsaKeygen.mldsaKeygenWithRetry(0)
+
+            val mldsaKeyshare = mldsaKeygen.keyshare
+            if (mldsaKeyshare != null) {
+                vault.pubKeyMLDSA = mldsaKeyshare.pubKey
+                allKeyshares.add(
+                    KeyShare(pubKey = mldsaKeyshare.pubKey, keyShare = mldsaKeyshare.keyshare)
+                )
+            }
+        }
+
+        vault.keyshares = allKeyshares
 
         if (action == TssAction.Migrate) {
             vault.libType = SigningLibType.DKLS
@@ -757,8 +789,9 @@ constructor(
                             if (libType == SigningLibType.KeyImport) 0.25f else 0.33f
 
                         is KeygenState.KeygenEdDSA ->
-                            if (libType == SigningLibType.KeyImport) 0.50f else 0.66f
+                            if (libType == SigningLibType.KeyImport) 0.50f else 0.50f
 
+                        is KeygenState.KeygenMLDSA -> 0.75f
                         is KeygenState.KeygenChains -> 0.75f
                         is KeygenState.ReshareECDSA -> 0.33f
                         is KeygenState.ReshareEdDSA -> 0.66f
@@ -788,6 +821,12 @@ constructor(
                                         UiText.StringResource(
                                             R.string.keygen_step_generating_eddsa
                                         ),
+                                        true,
+                                    )
+
+                                is KeygenState.KeygenMLDSA ->
+                                    KeygenStepUiModel(
+                                        UiText.DynamicString("Generating MLDSA key"),
                                         true,
                                     )
 
