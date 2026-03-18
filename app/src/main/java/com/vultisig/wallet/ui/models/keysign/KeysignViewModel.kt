@@ -362,6 +362,10 @@ internal class KeysignViewModel(
                         error("Failed to sign transaction, signatures empty")
                     }
                 }
+
+                TssKeyType.MLDSA -> {
+                    error("MLDSA key import signing is not supported")
+                }
             }
 
             Timber.d("All messages signed, broadcasting transaction")
@@ -486,6 +490,10 @@ internal class KeysignViewModel(
                         keysignReq.pubKey = vault.pubKeyEDDSA
                         currentState.value = KeysignState.KeysignEdDSA
                         service.keysignEdDSA(keysignReq)
+                    }
+
+                    TssKeyType.MLDSA -> {
+                        error("MLDSA is not supported in legacy TSS signing")
                     }
                 }
             if (keysignResp.r.isNullOrEmpty() || keysignResp.s.isNullOrEmpty()) {
