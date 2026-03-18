@@ -942,7 +942,7 @@
     <string name="transaction_history_tab_send">Enviar</string>
     <string name="transaction_history_tab_swap">Intercambiar</string>
     <string name="transaction_history_empty_title">Aún no hay transacciones</string>
-    <string name="transaction_history_empty_desc">Tu historial de transacciones aparecerá aquí</string>
+    <string name="transaction_history_empty_desc">Aún no has realizado ningún swap, envío ni aprobación desde esta bóveda.</string>
     <string name="transaction_history_search_asset_title">Buscar activo</string>
     <string name="transaction_history_search_asset_not_found">No se encontraron activos</string>
     <string name="transaction_history_clear_filters">Borrar filtros</string>

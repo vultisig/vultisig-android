@@ -939,7 +939,7 @@
     <string name="transaction_history_tab_send">Sturen</string>
     <string name="transaction_history_tab_swap">Swaps</string>
     <string name="transaction_history_empty_title">Nog geen transacties</string>
-    <string name="transaction_history_empty_desc">Uw transactiegeschiedenis verschijnt hier</string>
+    <string name="transaction_history_empty_desc">U heeft nog geen swaps, verzendingen of goedkeuringen vanuit deze kluis uitgevoerd.</string>
     <string name="transaction_history_search_asset_title">Asset zoeken</string>
     <string name="transaction_history_search_asset_not_found">Geen activa gevonden</string>
     <string name="transaction_history_clear_filters">Filters wissen</string>

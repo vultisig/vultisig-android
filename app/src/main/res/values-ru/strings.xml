@@ -939,7 +939,7 @@
     <string name="transaction_history_tab_send">Отправить</string>
     <string name="transaction_history_tab_swap">Свопы</string>
     <string name="transaction_history_empty_title">Транзакций пока нет</string>
-    <string name="transaction_history_empty_desc">История ваших транзакций появится здесь</string>
+    <string name="transaction_history_empty_desc">Вы ещё не совершали свопов, отправок или подтверждений из этого хранилища.</string>
     <string name="transaction_history_search_asset_title">Поиск актива</string>
     <string name="transaction_history_search_asset_not_found">Активы не найдены</string>
     <string name="transaction_history_clear_filters">Сбросить фильтры</string>
