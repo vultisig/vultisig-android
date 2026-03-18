@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -87,10 +86,12 @@ internal fun Banner(
                     width = 1.dp,
                     color =
                         when (variant) {
-                            BannerVariant.Warning -> Color(0x40FFC25C)
+                            BannerVariant.Warning ->
+                                Theme.v2.colors.alerts.warning.copy(alpha = 0.25f)
                             BannerVariant.Info -> Theme.v2.colors.border.light
-                            BannerVariant.Error -> Color(0x40FF5C5C)
-                            BannerVariant.Success -> Color(0x4013C89D)
+                            BannerVariant.Error -> Theme.v2.colors.alerts.error.copy(alpha = 0.25f)
+                            BannerVariant.Success ->
+                                Theme.v2.colors.alerts.success.copy(alpha = 0.25f)
                         },
                     shape = shape,
                 )
