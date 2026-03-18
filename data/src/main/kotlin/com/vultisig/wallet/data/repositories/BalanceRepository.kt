@@ -441,7 +441,8 @@ constructor(
                             Osmosis,
                             Terra,
                             Noble,
-                            Akash -> {
+                            Akash,
+                            Chain.Qbtc -> {
                                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
 
                                 val balance =

@@ -112,7 +112,8 @@ constructor(
             Terra,
             TerraClassic,
             Noble,
-            Akash -> {
+            Akash,
+            Chain.Qbtc -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(chain)
                 cosmosApi.broadcastTransaction(tx.rawTransaction)
             }
