@@ -8,8 +8,6 @@ import wallet.core.jni.CoinType
 
 class QbtcChainConfigTest {
 
-    // region Chain properties
-
     @Test
     fun `QBTC chain uses Cosmos standard`() {
         assertEquals(TokenStandard.COSMOS, Chain.Qbtc.standard)
@@ -35,10 +33,6 @@ class QbtcChainConfigTest {
         assertEquals("qbtc", Chain.Qbtc.feeUnit)
     }
 
-    // endregion
-
-    // region Swap and features
-
     @Test
     fun `QBTC is not swap supported`() {
         assertFalse(Chain.Qbtc.isSwapSupported)
@@ -48,10 +42,6 @@ class QbtcChainConfigTest {
     fun `QBTC is not deposit supported`() {
         assertFalse(Chain.Qbtc.isDepositSupported)
     }
-
-    // endregion
-
-    // region TssKeyType
 
     @Test
     fun `MLDSA is distinct from ECDSA and EDDSA`() {
@@ -64,10 +54,6 @@ class QbtcChainConfigTest {
         val mldsaChains = Chain.entries.filter { it.TssKeysignType == TssKeyType.MLDSA }
         assertEquals(listOf(Chain.Qbtc), mldsaChains)
     }
-
-    // endregion
-
-    // region Vault key mapping
 
     @Test
     fun `vault getPubKeyByChain returns MLDSA key for QBTC`() {
@@ -108,21 +94,17 @@ class QbtcChainConfigTest {
         assertEquals("eddsa_key", vault.getPubKeyByChain(Chain.Solana))
     }
 
-    // endregion
-
-    // region Vault type compatibility
-
     @Test
-    fun `QBTC works with regular vault`() {
+    fun `QBTC works with secure vault (co-sign)`() {
         val vault =
             Vault(
-                id = "regular-vault",
-                name = "Regular",
+                id = "secure-vault",
+                name = "Secure",
                 pubKeyMLDSA = "mldsa_key",
                 signers = listOf("device1", "device2", "device3"),
                 localPartyID = "device1",
             )
-        assertFalse(vault.isFastVault(), "Regular vault should not be fast vault")
+        assertFalse(vault.isFastVault(), "Secure vault (co-sign) should not be fast vault")
         assertEquals("mldsa_key", vault.getPubKeyByChain(Chain.Qbtc))
     }
 
@@ -140,10 +122,6 @@ class QbtcChainConfigTest {
         assertEquals("mldsa_key", vault.getPubKeyByChain(Chain.Qbtc))
     }
 
-    // endregion
-
-    // region Key import exclusion
-
     @Test
     fun `QBTC is excluded from key import supported chains`() {
         assertFalse(
@@ -151,10 +129,6 @@ class QbtcChainConfigTest {
             "QBTC should not be in key import chains",
         )
     }
-
-    // endregion
-
-    // region Coin definition
 
     @Test
     fun `QBTC coin has correct decimals`() {
@@ -183,8 +157,6 @@ class QbtcChainConfigTest {
     fun `QBTC coin has empty price provider`() {
         assertEquals("", Coins.Qbtc.QBTC.priceProviderID)
     }
-
-    // endregion
 
     companion object {
         // Must match Vault.kt LOCAL_PARTY_ID_PREFIX
