@@ -188,7 +188,7 @@
     <string name="swap_form_gas_title">Netwerkkosten</string>
     <string name="swap_form_total_fees_title">Totale kosten</string>
     <string name="share_qr_utils_choose_an_app">Kies een app</string>
-    <string name="verify_swap_agree_receive_amount">Ik ga akkoord met het bedrag dat ik na de wissel zal ontvangen</string>
+    <string name="verify_swap_agree_receive_amount">Ik ga akkoord met het minimumbedrag dat ik zal ontvangen</string>
     <string name="verify_swap_consent_amount">Het wisselbedrag is correct</string>
     <string name="chain_token_screen_address_copied">%1$s gekopieerd naar klembord</string>
     <string name="tx_done_address_copied">%1$s gekopieerd naar klembord</string>
@@ -427,7 +427,7 @@
     <string name="keygen_step_generating_chain_keys">Ketensleutels genereren</string>
     <string name="reshare_step_generating_ecdsa">ECDSA-sleutel genereren</string>
     <string name="merge_account_doesnt_exist">Geselecteerde token niet gevonden voor dit adres</string>
-    <string name="keygen_email_error">Onjuist e-mailadres, controleer dit</string>
+    <string name="keygen_email_error">Onjuist emailadres, controleer dit</string>
     <string name="deposit_option_stake_ruji">RUJI staken</string>
     <string name="deposit_option_unstake_ruji">RUJI unstaken</string>
     <string name="deposit_option_collect_ruji">Verzamel RUJI-stakingbeloningen</string>
@@ -643,7 +643,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">Goedkeuring Tx Hash</string>
     <string name="swap_transaction_overview_track">Spoor</string>
     <string name="token_selection_screen_select_tokens">Selecteer tokens</string>
-    <string name="send_form_est_network_fee">Geschatte netwerkkosten</string>
+    <string name="send_form_est_network_fee">Netwerkkosten</string>
     <string name="send_form_minimum_send_amount_is_requires_this">Het minimale verzendbedrag is %1$s %2$s. %3$s vereist dit om spam te voorkomen.</string>
     <string name="minimum_send_amount_is_ada">Het minimale verzendbedrag is %1$s ADA. Cardano vereist dit om spam te voorkomen.</string>
     <string name="insufficient_balance_try_send">Onvoldoende saldo. Probeer \'Send Max\' om in plaats daarvan %1$s ADA te verzenden.</string>
@@ -744,11 +744,11 @@
     <string name="send_form_ripple_reaping_warning">Zorg ervoor dat je voldoende saldo achterlaat om de kosten te dekken. Als het saldo onder de 1 XRP (Existentiële Storting) komt, wordt het account gedeactiveerd (opgenomen) en gaat het resterende saldo verloren. Je kunt het adres op elk moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Hiermee krijg je het verloren geld echter niet terug.</string>
     <string name="error_invalid_chain">Ketting is ongeldig</string>
     <string name="vault_backup_verifying_pin">Code verifiëren, even geduld a.u.b.</string>
-    <string name="vault_backup_screen_change_email">Wijzig e-mailadres en start de keygen opnieuw</string>
+    <string name="vault_backup_screen_change_email">Wijzig emailadres en start de keygen opnieuw</string>
     <string name="onboarding_fast_backup_desc_page_3_part_1">Het wordt naar je verzonden zodat je het zelf kunt beheren!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">Controleer je e-mailadres om te verifiëren</string>
+    <string name="onboarding_fast_backup_desc_page_3_part_2">Controleer je emailadres om te verifiëren</string>
     <string name="onboarding_fast_backup_migration_desc_page_1_part_1">We hebben uw nieuwe servershare naar u verzonden!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Controleer je e-mailadres om te verifiëren</string>
+    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Controleer je emailadres om te verifiëren</string>
     <string name="select_vault_type_next">Volgende</string>
     <string name="select_vault_type_choose_setup">Kies \'Instellen\'</string>
     <string name="home_screen_scan_qr_code">QR scannen</string>
@@ -769,7 +769,7 @@
     <string name="peer_discovery_waiting_for_devices_action">Wachten op apparaten...</string>
     <string name="peer_discovery_devices_n_of_n">Apparaten (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Verzonden naar %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email">Geen e-mail ontvangen?</string>
+    <string name="vault_backup_screen_donot_recieve_email">Geen email ontvangen?</string>
     <string name="onboarding_desc_page_5_part_2">Afzonderlijk in een</string>
     <string name="onboarding_desc_page_5_part_3">Andere locatie</string>
     <string name="scan_qr_code_modal_annotation">Download Vultisig op je andere apparaat(en) en selecteer \'QR-code scannen\'</string>
@@ -779,7 +779,7 @@
     <string name="referral_invite_onboarding_1">Nodig vrienden uit.</string>
     <string name="referral_invite_onboarding_2">Verdien beloningen.</string>
     <string name="fast_vault_name_screen_desc">Je kunt je kluis later altijd hernoemen in de instellingen</string>
-    <string name="enter_email_screen_title">Voer uw e-mailadres in</string>
+    <string name="enter_email_screen_title">Voer uw emailadres in</string>
     <string name="enter_email_screen_hint">E-mail</string>
     <string name="swap_screen_invalid_specific_and_utxo">Specifieke berekening mislukt</string>
     <string name="verify_sign_message_message_field_signature">Handtekening</string>
@@ -793,8 +793,8 @@
     <string name="select_vault_type_secure">Beveiligen</string>
     <string name="select_vault_type_fast">Snel</string>
     <string name="vault_backup_screen_paste">Plakken</string>
-    <string name="enter_backup_screen_title">Voer de 4-cijferige code in die we u per e-mail hebben gestuurd</string>
-    <string name="enter_backup_screen_desc">Deze code bevestigt dat u uw kluisshare 1 per e-mail hebt ontvangen</string>
+    <string name="enter_backup_screen_title">Voer de 4-cijferige code in die we u per email hebben gestuurd</string>
+    <string name="enter_backup_screen_desc">Deze code bevestigt dat u uw kluisshare 1 per email hebt ontvangen</string>
     <string name="vault_backup_error_pin">Fout bij het verifiëren van de code, probeer het opnieuw</string>
     <string name="tx_overview_screen_tx_hash">Transactiehash</string>
     <string name="tx_overview_screen_tx_from">Van</string>
@@ -813,7 +813,7 @@
     <string name="tx_overview_screen_tx_memo">Notitie</string>
     <string name="verify_sign_message_message_field_title">Bericht</string>
     <string name="verify_sign_message_method_field_title">Methode</string>
-    <string name="fast_vault_password_screen_title">Vultiserver-wachtwoord</string>
+    <string name="fast_vault_password_screen_title">Kies een wachtwoord</string>
     <string name="fast_vault_password_screen_hint">Dit gebeurt omdat het wachtwoord wordt gebruikt om het back-upbestand lokaal te versleutelen, vergelijkbaar met hoe een harde schijf wordt versleuteld. In de volgende stap kunt u een hint toevoegen.</string>
     <string name="fast_vault_password_screen_hint_title">Meer informatie</string>
     <string name="peer_discovery_local_mode_hint">Je bevindt je in de lokale modus.</string>
@@ -862,7 +862,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Schakel over naar de lokale modus</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Schakel terug naar de internetmodus</string>
     <string name="onboarding_desc_page_6_part_1">Deze shares werken samen om</string>
-    <string name="enter_email_screen_desc">Dit e-mailadres wordt alleen gebruikt om de serverback-up te verzenden</string>
+    <string name="enter_email_screen_desc">Dit emailadres wordt alleen gebruikt om de serverback-up te verzenden</string>
     <string name="keygen_connecting_with_server_take_a_second">Dit zou slechts een seconde moeten duren</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">Deze kluis delen</string>
     <string name="function_switch_thorchain_address">THORChain-adres</string>
@@ -1038,12 +1038,12 @@
     <string name="vault_setup_1_device_signing">Ondertekening met 1 apparaat</string>
     <string name="vault_setup_1_device_signing_desc">Handig ondertekenen met één apparaat onderweg. Ideaal voor dagelijkse transacties of handel in kleinere bedragen.</string>
     <string name="vault_setup_fast_and_secure_setup">Snelle en veilige instelling</string>
-    <string name="vault_setup_fast_and_secure_setup_desc">Geen lange instelling. Alleen uw e-mail en wachtwoord, plus twee back-ups.</string>
+    <string name="vault_setup_fast_and_secure_setup_desc">Geen lange instelling. Alleen uw email en wachtwoord, plus twee back-ups.</string>
     <string name="vault_setup_multisig_with_one_device">Multisig met één apparaat</string>
     <string name="vault_setup_multisig_with_one_device_desc">Een co-ondertekenaar kan nooit transacties initiëren; helpt alleen bij het ondertekenen ervan.</string>
     <string name="vault_setup_no_inspiration">Geen inspiratie? U kunt de naam later altijd wijzigen in de instellingen.</string>
     <string name="naming_saving_vault">Kluis opslaan</string>
-    <string name="email_enter_your_email">Voer uw e-mailadres in</string>
+    <string name="email_enter_your_email">Voer uw emailadres in</string>
     <string name="email_only_used_once">Dit wordt slechts eenmaal gebruikt om uw back-upbestand te verzenden. Vultisig slaat geen gegevens op.</string>
     <string name="password_choose_a_password">Kies een wachtwoord</string>
     <string name="password_extra_layer">Als u een extra beveiligingslaag wilt, kies dan een wachtwoord. Het wachtwoord kan niet worden hersteld.</string>
@@ -1057,9 +1057,9 @@
     <string name="backup_device_backup_and_password_are_key">De back-up van het apparaat en het wachtwoord zijn de sleutel. De server co-ondertekent alleen en back-up kan worden aangevraagd.</string>
     <string name="backup_store_backups_separately">Sla back-ups apart op</string>
     <string name="backup_keep_each_backup_in_different_place">Bewaar elke back-up op een andere plek. Als er één gecompromitteerd is, blijven uw fondsen veilig.</string>
-    <string name="backup_4_digit_code_received_via_email">4-cijferige code ontvangen via e-mail</string>
+    <string name="backup_4_digit_code_received_via_email">4-cijferige code ontvangen via email</string>
     <string name="backup_this_will_activate_the_co_signer">Dit activeert de co-ondertekenaar</string>
-    <string name="backup_use_a_different_email">Gebruik een ander e-mailadres</string>
+    <string name="backup_use_a_different_email">Gebruik een ander emailadres</string>
     <string name="backup_send_to_email">Verzenden naar %1$s</string>
     <string name="backup_incorrect_code_try_again">Onjuiste code. Probeer opnieuw.</string>
     <string name="backup_save_backup_to_the_cloud">Back-up opslaan in de cloud</string>
@@ -1120,14 +1120,14 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Serverback-up</string>
     <string name="server_backup_email_label">E-mail</string>
-    <string name="server_backup_email_description">Voer het e-mailadres in om de kluisshare te ontvangen.</string>
-    <string name="server_backup_email_error">Onjuist e-mailadres, controleer dit</string>
+    <string name="server_backup_email_description">Voer het emailadres in om de kluisshare te ontvangen.</string>
+    <string name="server_backup_email_error">Onjuist emailadres, controleer dit</string>
     <string name="server_backup_password_label">Wachtwoord</string>
     <string name="server_backup_password_description">Voer het wachtwoord in dat u hebt ingesteld bij het aanmaken van deze kluis.</string>
     <string name="server_backup_name_label">Naam</string>
     <string name="server_backup_get_started">Back-up</string>
     <string name="server_backup_success_title">Back-upshare verzonden!</string>
-    <string name="server_backup_success_description">We hebben zojuist uw back-upshare naar uw e-mail gestuurd. Als u deze niet ziet, controleer dan uw spammap.</string>
+    <string name="server_backup_success_description">We hebben zojuist uw back-upshare naar uw email gestuurd. Als u deze niet ziet, controleer dan uw spammap.</string>
     <string name="server_backup_success_check_email">E-mail controleren</string>
     <string name="server_backup_success_close">Sluiten</string>
     <string name="server_backup_error_timeout">De server deed er te lang over om te reageren. Controleer uw internetverbinding en probeer het opnieuw.</string>

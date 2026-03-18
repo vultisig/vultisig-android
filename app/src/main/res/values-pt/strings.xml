@@ -181,7 +181,7 @@
     <string name="insufficient_utxos_error">UTXOs disponíveis insuficientes para cobrir o valor selecionado. Por favor, adicione mais fundos ou reduza o valor que está enviando</string>
     <string name="send_error_insufficient_balance">Compartilhe o aplicativo</string>
     <string name="send_error_insufficient_native_balance_with_fees">Saldo de %1$s insuficiente</string>
-    <string name="verify_swap_agree_receive_amount">Concordo com o valor que receberei após a troca</string>
+    <string name="verify_swap_agree_receive_amount">Concordo com o valor mínimo que receberei</string>
     <string name="vault_settings_success_backup_file">arquivo salvo em Downloads/%1$s</string>
     <string name="swap_form_estimated_fees_title">Taxa de swap</string>
     <string name="keysign_screen_error_please_try_again">Erro! Por favor, tente novamente. %1$s</string>
@@ -644,7 +644,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">Hash de Transação de Aprovação</string>
     <string name="swap_transaction_overview_track">Rastrear</string>
     <string name="token_selection_screen_select_tokens">Selecionar Tokens</string>
-    <string name="send_form_est_network_fee">Estimativa da taxa de rede</string>
+    <string name="send_form_est_network_fee">Taxa de rede</string>
     <string name="send_form_minimum_send_amount_is_requires_this">O valor mínimo para envio é de %1$s %2$s. %3$s exige isso para evitar spam.</string>
     <string name="minimum_send_amount_is_ada">O valor mínimo para envio é de %1$s ADA. Cardano exige isso para evitar spam.</string>
     <string name="insufficient_balance_try_send">Saldo insuficiente. Experimente \"Enviar Máximo\" para enviar %1$s ADA.</string>
@@ -745,11 +745,11 @@
     <string name="send_form_ripple_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta descer abaixo de 1 XRP (Depósito Existente), a conta será desativada (esgotada) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
     <string name="error_invalid_chain">A cadeia é inválida.</string>
     <string name="vault_backup_verifying_pin">Verificando código, aguarde</string>
-    <string name="vault_backup_screen_change_email">Altere o e-mail e reinicie o gerador de chaves.</string>
+    <string name="vault_backup_screen_change_email">Altere o email e reinicie o gerador de chaves.</string>
     <string name="onboarding_fast_backup_desc_page_3_part_1">É enviado para si para total autogestão!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">Verifique o seu e-mail para confirmar.</string>
+    <string name="onboarding_fast_backup_desc_page_3_part_2">Verifique o seu email para confirmar.</string>
     <string name="onboarding_fast_backup_migration_desc_page_1_part_1">Enviamos a sua nova partilha de servidor!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Verifique o seu e-mail para confirmar</string>
+    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Verifique o seu email para confirmar</string>
     <string name="select_vault_type_next">Próximo</string>
     <string name="select_vault_type_choose_setup">Selecione Configurar</string>
     <string name="home_screen_scan_qr_code">Leia o QR Code</string>
@@ -770,7 +770,7 @@
     <string name="peer_discovery_waiting_for_devices_action">Aguarda dispositivos...</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivos (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Enviado para %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email">Não recebeu um e-mail?</string>
+    <string name="vault_backup_screen_donot_recieve_email">Não recebeu um email?</string>
     <string name="onboarding_desc_page_5_part_2">separadamente num</string>
     <string name="onboarding_desc_page_5_part_3">Local diferente</string>
     <string name="scan_qr_code_modal_annotation">Transfira o Vultisig para os seus outros dispositivos e selecione \'Escanear código QR\'</string>
@@ -780,7 +780,7 @@
     <string name="referral_invite_onboarding_1">Convide amigos.</string>
     <string name="referral_invite_onboarding_2">Ganhe recompensas.</string>
     <string name="fast_vault_name_screen_desc">Pode sempre renomear o seu cofre posteriormente nas configurações</string>
-    <string name="enter_email_screen_title">Introduza o seu e-mail</string>
+    <string name="enter_email_screen_title">Introduza o seu email</string>
     <string name="enter_email_screen_hint">E-mail</string>
     <string name="swap_screen_invalid_specific_and_utxo">Falha no cálculo específico</string>
     <string name="verify_sign_message_message_field_signature">Assinatura</string>
@@ -794,8 +794,8 @@
     <string name="select_vault_type_secure">Proteja</string>
     <string name="select_vault_type_fast">Rápida</string>
     <string name="vault_backup_screen_paste">Cole</string>
-    <string name="enter_backup_screen_title">Introduza o código de 4 dígitos que enviamos por e-mail</string>
-    <string name="enter_backup_screen_desc">Este código confirmará que recebeu a sua ação de partilha do cofre 1 por e-mail</string>
+    <string name="enter_backup_screen_title">Introduza o código de 4 dígitos que enviamos por email</string>
+    <string name="enter_backup_screen_desc">Este código confirmará que recebeu a sua ação de partilha do cofre 1 por email</string>
     <string name="vault_backup_error_pin">Erro ao verificar o código. Tente novamente.</string>
     <string name="tx_overview_screen_tx_hash">Hash da transação</string>
     <string name="tx_overview_screen_tx_from">De</string>
@@ -814,7 +814,7 @@
     <string name="tx_overview_screen_tx_memo">Memorando</string>
     <string name="verify_sign_message_message_field_title">Mensagem</string>
     <string name="verify_sign_message_method_field_title">Método</string>
-    <string name="fast_vault_password_screen_title">Palavra-passe do Vultiserver</string>
+    <string name="fast_vault_password_screen_title">Escolha uma palavra-passe</string>
     <string name="fast_vault_password_screen_hint">Isto porque a palavra-passe é utilizada para encriptar localmente o ficheiro de cópia de segurança, de forma semelhante à encriptação de um disco rígido. No passo seguinte, tem a opção de adicionar uma dica.</string>
     <string name="fast_vault_password_screen_hint_title">Mais informações</string>
     <string name="peer_discovery_local_mode_hint">Está no modo local</string>
@@ -862,7 +862,7 @@
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Pretende criar um cofre privado?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Mude para o modo local</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Volte ao modo internet</string>
-    <string name="enter_email_screen_desc">Este e-mail é apenas utilizado para enviar o backup do servidor</string>
+    <string name="enter_email_screen_desc">Este email é apenas utilizado para enviar o backup do servidor</string>
     <string name="onboarding_desc_page_6_part_1">Estas ações colaboram para</string>
     <string name="keygen_connecting_with_server_take_a_second">Isto deve demorar apenas um segundo.</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">Este compartilhamento do cofre</string>
@@ -1042,12 +1042,12 @@
     <string name="vault_setup_1_device_signing">Assinatura com 1 dispositivo</string>
     <string name="vault_setup_1_device_signing_desc">Assinatura cómoda com um dispositivo em qualquer lugar. Ideal para transações diárias ou negociação de valores menores.</string>
     <string name="vault_setup_fast_and_secure_setup">Configuração rápida e segura</string>
-    <string name="vault_setup_fast_and_secure_setup_desc">Sem configuração longa. Apenas o seu e-mail e palavra-passe, mais duas cópias de segurança.</string>
+    <string name="vault_setup_fast_and_secure_setup_desc">Sem configuração longa. Apenas o seu email e palavra-passe, mais duas cópias de segurança.</string>
     <string name="vault_setup_multisig_with_one_device">Multisig com um dispositivo</string>
     <string name="vault_setup_multisig_with_one_device_desc">Um co-signatário nunca pode iniciar transações; apenas ajuda a assiná-las.</string>
     <string name="vault_setup_no_inspiration">Sem inspiração? Pode sempre alterar o nome mais tarde nas definições.</string>
     <string name="naming_saving_vault">A guardar cofre</string>
-    <string name="email_enter_your_email">Introduza o seu e-mail</string>
+    <string name="email_enter_your_email">Introduza o seu email</string>
     <string name="email_only_used_once">Isto será usado apenas uma vez para enviar o seu ficheiro de cópia de segurança. O Vultisig não armazena quaisquer dados.</string>
     <string name="password_choose_a_password">Escolha uma palavra-passe</string>
     <string name="password_extra_layer">Se quiser uma camada extra de segurança, escolha uma palavra-passe. A palavra-passe não pode ser recuperada.</string>
@@ -1061,9 +1061,9 @@
     <string name="backup_device_backup_and_password_are_key">A cópia de segurança do dispositivo e a palavra-passe são a chave. O servidor apenas co-assina e a cópia de segurança pode ser solicitada.</string>
     <string name="backup_store_backups_separately">Guarde as cópias de segurança separadamente</string>
     <string name="backup_keep_each_backup_in_different_place">Guarde cada cópia de segurança num lugar diferente. Se uma for comprometida, os seus fundos ficam seguros.</string>
-    <string name="backup_4_digit_code_received_via_email">Código de 4 dígitos recebido por e-mail</string>
+    <string name="backup_4_digit_code_received_via_email">Código de 4 dígitos recebido por email</string>
     <string name="backup_this_will_activate_the_co_signer">Isto ativará o co-signatário</string>
-    <string name="backup_use_a_different_email">Usar um e-mail diferente</string>
+    <string name="backup_use_a_different_email">Usar um email diferente</string>
     <string name="backup_send_to_email">Enviar para %1$s</string>
     <string name="backup_incorrect_code_try_again">Código incorreto. Tente novamente.</string>
     <string name="backup_save_backup_to_the_cloud">Guardar cópia de segurança na nuvem</string>
@@ -1124,15 +1124,15 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Backup do servidor</string>
     <string name="server_backup_email_label">E-mail</string>
-    <string name="server_backup_email_description">Introduza o e-mail para receber a partilha do cofre.</string>
+    <string name="server_backup_email_description">Introduza o email para receber a partilha do cofre.</string>
     <string name="server_backup_email_error">E-mail incorreto, por favor verifique</string>
     <string name="server_backup_password_label">Palavra-passe</string>
     <string name="server_backup_password_description">Introduza a palavra-passe que definiu ao criar este cofre.</string>
     <string name="server_backup_name_label">Nome</string>
     <string name="server_backup_get_started">Backup</string>
     <string name="server_backup_success_title">Partilha de backup enviada!</string>
-    <string name="server_backup_success_description">Acabamos de enviar a sua partilha de backup para o seu e-mail. Se não a vir, verifique a sua pasta de spam.</string>
-    <string name="server_backup_success_check_email">Verificar e-mail</string>
+    <string name="server_backup_success_description">Acabamos de enviar a sua partilha de backup para o seu email. Se não a vir, verifique a sua pasta de spam.</string>
+    <string name="server_backup_success_check_email">Verificar email</string>
     <string name="server_backup_success_close">Fechar</string>
     <string name="server_backup_error_timeout">O servidor demorou demasiado a responder. Verifique a sua ligação à Internet e tente novamente.</string>
     <string name="server_backup_error_too_many_requests">Demasiados pedidos de backup. Tente novamente mais tarde.</string>

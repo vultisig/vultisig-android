@@ -181,7 +181,7 @@
     <string name="swap_form_gas_title">Tarifa de red</string>
     <string name="swap_form_total_fees_title">Tarifas totales</string>
     <string name="share_qr_utils_choose_an_app">Elige una aplicación</string>
-    <string name="verify_swap_agree_receive_amount">Estoy de acuerdo con la cantidad que recibiré después del intercambio.</string>
+    <string name="verify_swap_agree_receive_amount">Estoy de acuerdo con la cantidad mínima que recibiré</string>
     <string name="verify_swap_consent_amount">El monto del intercambio es correcto</string>
     <string name="tx_done_address_copied">%1$s copiada al portapapeles</string>
     <string name="verify_swap_sign_button">Firmar transacción</string>
@@ -645,7 +645,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">Hash de transacción de aprobación</string>
     <string name="swap_transaction_overview_track">Seguimiento</string>
     <string name="token_selection_screen_select_tokens">Seleccionar tokens</string>
-    <string name="send_form_est_network_fee">Tarifa de red estimada</string>
+    <string name="send_form_est_network_fee">Tarifa de red</string>
     <string name="send_form_minimum_send_amount_is_requires_this">El importe mínimo de envío es de %1$s %2$s. %3$s lo requiere para evitar el spam.</string>
     <string name="minimum_send_amount_is_ada">El importe mínimo de envío es de %1$s ADA. Cardano lo requiere para evitar el spam.</string>
     <string name="insufficient_balance_try_send">Saldo insuficiente. Prueba \"Enviar Máximo\" para enviar %1$s ADA.</string>
@@ -815,7 +815,7 @@
     <string name="tx_overview_screen_tx_memo">Memorándum</string>
     <string name="verify_sign_message_message_field_title">Mensaje</string>
     <string name="verify_sign_message_method_field_title">Método</string>
-    <string name="fast_vault_password_screen_title">Contraseña de Vultisig</string>
+    <string name="fast_vault_password_screen_title">Elige una contraseña</string>
     <string name="fast_vault_password_screen_hint">Esto ocurre porque la contraseña se usa para cifrar localmente el archivo de copia de seguridad, de forma similar a como se cifra un disco duro. En el siguiente paso, tiene la opción de añadir una pista.</string>
     <string name="fast_vault_password_screen_hint_title">Más información</string>
     <string name="peer_discovery_local_mode_hint">Estás en modo local</string>
