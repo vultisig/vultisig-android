@@ -89,12 +89,7 @@ internal fun EnterVaultInfoScreen(
 
     V3Scaffold(
         onBackClick = { onEvent(EnterVaultInfoEvent.Back) },
-        actions = {
-            AddReferralHeaderButton(
-                hasReferral = hasReferral,
-                onClick = onReferralClick,
-            )
-        },
+        actions = { AddReferralHeaderButton(hasReferral = hasReferral, onClick = onReferralClick) },
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),

@@ -91,8 +91,11 @@ constructor(
 
     override fun consumePendingReferral(vaultId: String) {
         val pending = getPendingReferral() ?: return
-        saveExternalReferral(vaultId, pending)
-        setPendingReferral(null)
+        val externalKey = EXTERNAL_REFERRAL_CODE_KEY + vaultId
+        encryptedSharedPreferences.edit(commit = true) {
+            putString(externalKey, pending)
+            remove(PENDING_REFERRAL_CODE_KEY)
+        }
     }
 
     override suspend fun setAsShown() {

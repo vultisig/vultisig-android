@@ -1140,14 +1140,14 @@
     <string name="resend_notification">Повторно отправить уведомление</string>
 
     <!-- Add Referral during vault setup -->
-    <string name="add_referral">Add Referral</string>
-    <string name="referral_added">Referral added</string>
-    <string name="add_referral_sheet_title">Referral code</string>
-    <string name="add_referral_sheet_description">Enter your referral code here. Enjoy 10% off every transaction.</string>
-    <string name="add_referral_sheet_placeholder">Enter 4-digit code</string>
-    <string name="add_referral_sheet_apply">Apply Referral</string>
-    <string name="add_referral_error_length">Referral code must be no more than 4 characters</string>
-    <string name="add_referral_error_chars">Referral code must contain only alphanumeric characters</string>
-    <string name="add_referral_error_not_found">Referral code not found</string>
-    <string name="add_referral_error_network">Failed to check referral code. Please try again.</string>
+    <string name="add_referral">Добавить реферала</string>
+    <string name="referral_added">Реферал добавлен</string>
+    <string name="add_referral_sheet_title">Реферальный код</string>
+    <string name="add_referral_sheet_description">Введите ваш реферальный код здесь. Получите скидку 10% на каждую транзакцию.</string>
+    <string name="add_referral_sheet_placeholder">Введите до 4 символов</string>
+    <string name="add_referral_sheet_apply">Применить реферала</string>
+    <string name="add_referral_error_length">Реферальный код должен содержать не более 4 символов</string>
+    <string name="add_referral_error_chars">Реферальный код должен содержать только буквы и цифры</string>
+    <string name="add_referral_error_not_found">Реферальный код не найден</string>
+    <string name="add_referral_error_network">Не удалось проверить реферальный код. Попробуйте ещё раз.</string>
 </resources>

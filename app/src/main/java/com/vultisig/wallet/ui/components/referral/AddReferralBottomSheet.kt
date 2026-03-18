@@ -60,11 +60,11 @@ private fun AddReferralBottomSheetContent(
     onClearClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .padding(horizontal = 24.dp)
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(top = 24.dp, bottom = 32.dp),
+        modifier =
+            Modifier.padding(horizontal = 24.dp)
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(top = 24.dp, bottom = 32.dp)
     ) {
         Text(
             text = stringResource(R.string.add_referral_sheet_title),
@@ -96,8 +96,9 @@ private fun AddReferralBottomSheetContent(
 
         VsButton(
             label = stringResource(R.string.add_referral_sheet_apply),
-            state = if (state.isLoading || textFieldState.text.isEmpty())
-                VsButtonState.Disabled else VsButtonState.Enabled,
+            state =
+                if (state.isLoading || textFieldState.text.isEmpty()) VsButtonState.Disabled
+                else VsButtonState.Enabled,
             modifier = Modifier.fillMaxWidth(),
             onClick = onApplyClick,
         )

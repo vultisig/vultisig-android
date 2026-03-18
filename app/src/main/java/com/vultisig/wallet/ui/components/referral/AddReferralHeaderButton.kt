@@ -28,16 +28,17 @@ internal fun AddReferralHeaderButton(
 ) {
     val shape = RoundedCornerShape(12.dp)
     Row(
-        modifier = modifier
-            .clip(shape)
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.text.tertiary.copy(alpha = 0.3f),
-                shape = shape,
-            )
-            .background(Theme.v2.colors.backgrounds.secondary)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier =
+            modifier
+                .clip(shape)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.text.tertiary.copy(alpha = 0.3f),
+                    shape = shape,
+                )
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {

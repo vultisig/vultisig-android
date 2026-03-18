@@ -77,12 +77,7 @@ private fun NameVaultScreen(
     V2Scaffold(
         title = null,
         onBackClick = onBackClick,
-        actions = {
-            AddReferralHeaderButton(
-                hasReferral = hasReferral,
-                onClick = onReferralClick,
-            )
-        },
+        actions = { AddReferralHeaderButton(hasReferral = hasReferral, onClick = onReferralClick) },
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.fast_vault_name_screen_next),

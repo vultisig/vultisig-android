@@ -1142,14 +1142,14 @@
     <string name="resend_notification">Reinvia notifica</string>
 
     <!-- Add Referral during vault setup -->
-    <string name="add_referral">Add Referral</string>
-    <string name="referral_added">Referral added</string>
-    <string name="add_referral_sheet_title">Referral code</string>
-    <string name="add_referral_sheet_description">Enter your referral code here. Enjoy 10% off every transaction.</string>
-    <string name="add_referral_sheet_placeholder">Enter 4-digit code</string>
-    <string name="add_referral_sheet_apply">Apply Referral</string>
-    <string name="add_referral_error_length">Referral code must be no more than 4 characters</string>
-    <string name="add_referral_error_chars">Referral code must contain only alphanumeric characters</string>
-    <string name="add_referral_error_not_found">Referral code not found</string>
-    <string name="add_referral_error_network">Failed to check referral code. Please try again.</string>
+    <string name="add_referral">Aggiungi referral</string>
+    <string name="referral_added">Referral aggiunto</string>
+    <string name="add_referral_sheet_title">Codice referral</string>
+    <string name="add_referral_sheet_description">Inserisci qui il tuo codice referral. Goditi il 10% di sconto su ogni transazione.</string>
+    <string name="add_referral_sheet_placeholder">Inserisci fino a 4 caratteri</string>
+    <string name="add_referral_sheet_apply">Applica referral</string>
+    <string name="add_referral_error_length">Il codice referral può contenere fino a 4 caratteri</string>
+    <string name="add_referral_error_chars">Il codice referral deve contenere solo caratteri alfanumerici</string>
+    <string name="add_referral_error_not_found">Codice di invito non trovato</string>
+    <string name="add_referral_error_network">Errore durante la verifica del codice referral. Riprova.</string>
 </resources>

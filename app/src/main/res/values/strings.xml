@@ -686,7 +686,7 @@
     <string name="referral_added">Referral added</string>
     <string name="add_referral_sheet_title">Referral code</string>
     <string name="add_referral_sheet_description">Enter your referral code here. Enjoy 10% off every transaction.</string>
-    <string name="add_referral_sheet_placeholder">Enter 4-digit code</string>
+    <string name="add_referral_sheet_placeholder">Enter up to 4 characters</string>
     <string name="add_referral_sheet_apply">Apply Referral</string>
     <string name="add_referral_error_length">Referral code must be no more than 4 characters</string>
     <string name="add_referral_error_chars">Referral code must contain only alphanumeric characters</string>

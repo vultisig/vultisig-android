@@ -1476,14 +1476,14 @@
     <string name="resend_notification">重新发送通知</string>
 
     <!-- Add Referral during vault setup -->
-    <string name="add_referral">Add Referral</string>
-    <string name="referral_added">Referral added</string>
-    <string name="add_referral_sheet_title">Referral code</string>
-    <string name="add_referral_sheet_description">Enter your referral code here. Enjoy 10% off every transaction.</string>
-    <string name="add_referral_sheet_placeholder">Enter 4-digit code</string>
-    <string name="add_referral_sheet_apply">Apply Referral</string>
-    <string name="add_referral_error_length">Referral code must be no more than 4 characters</string>
-    <string name="add_referral_error_chars">Referral code must contain only alphanumeric characters</string>
-    <string name="add_referral_error_not_found">Referral code not found</string>
-    <string name="add_referral_error_network">Failed to check referral code. Please try again.</string>
+    <string name="add_referral">添加推荐</string>
+    <string name="referral_added">推荐已添加</string>
+    <string name="add_referral_sheet_title">推荐码</string>
+    <string name="add_referral_sheet_description">在此输入您的推荐码。每笔交易享受10%折扣。</string>
+    <string name="add_referral_sheet_placeholder">输入最多4个字符</string>
+    <string name="add_referral_sheet_apply">应用推荐</string>
+    <string name="add_referral_error_length">推荐码最多4个字符</string>
+    <string name="add_referral_error_chars">推荐码只能包含字母和数字</string>
+    <string name="add_referral_error_not_found">推荐码未找到</string>
+    <string name="add_referral_error_network">检查推荐码失败，请重试。</string>
 </resources>

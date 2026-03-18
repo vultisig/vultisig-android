@@ -78,12 +78,7 @@ private fun FastVaultEmailScreen(
     V2Scaffold(
         title = null,
         onBackClick = onBackClick,
-        actions = {
-            AddReferralHeaderButton(
-                hasReferral = hasReferral,
-                onClick = onReferralClick,
-            )
-        },
+        actions = { AddReferralHeaderButton(hasReferral = hasReferral, onClick = onReferralClick) },
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.enter_email_screen_next),

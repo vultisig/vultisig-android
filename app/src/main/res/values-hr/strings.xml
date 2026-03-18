@@ -1142,14 +1142,14 @@
     <string name="resend_notification">Ponovo pošalji obavijest</string>
 
     <!-- Add Referral during vault setup -->
-    <string name="add_referral">Add Referral</string>
-    <string name="referral_added">Referral added</string>
-    <string name="add_referral_sheet_title">Referral code</string>
-    <string name="add_referral_sheet_description">Enter your referral code here. Enjoy 10% off every transaction.</string>
-    <string name="add_referral_sheet_placeholder">Enter 4-digit code</string>
-    <string name="add_referral_sheet_apply">Apply Referral</string>
-    <string name="add_referral_error_length">Referral code must be no more than 4 characters</string>
-    <string name="add_referral_error_chars">Referral code must contain only alphanumeric characters</string>
-    <string name="add_referral_error_not_found">Referral code not found</string>
-    <string name="add_referral_error_network">Failed to check referral code. Please try again.</string>
+    <string name="add_referral">Dodaj preporuku</string>
+    <string name="referral_added">Preporuka dodana</string>
+    <string name="add_referral_sheet_title">Kod preporuke</string>
+    <string name="add_referral_sheet_description">Unesite svoj kod preporuke ovdje. Uživajte 10% popusta na svaku transakciju.</string>
+    <string name="add_referral_sheet_placeholder">Unesite do 4 znaka</string>
+    <string name="add_referral_sheet_apply">Primijeni preporuku</string>
+    <string name="add_referral_error_length">Referalni kod može sadržavati do 4 znaka</string>
+    <string name="add_referral_error_chars">Referalni kod smije sadržavati samo alfanumeričke znakove</string>
+    <string name="add_referral_error_not_found">Referalni kod nije pronađen</string>
+    <string name="add_referral_error_network">Provjera referalnog koda nije uspjela. Pokušajte ponovo.</string>
 </resources>

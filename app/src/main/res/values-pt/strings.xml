@@ -1140,14 +1140,14 @@
     <string name="resend_notification">Reenviar notificação</string>
 
     <!-- Add Referral during vault setup -->
-    <string name="add_referral">Add Referral</string>
-    <string name="referral_added">Referral added</string>
-    <string name="add_referral_sheet_title">Referral code</string>
-    <string name="add_referral_sheet_description">Enter your referral code here. Enjoy 10% off every transaction.</string>
-    <string name="add_referral_sheet_placeholder">Enter 4-digit code</string>
-    <string name="add_referral_sheet_apply">Apply Referral</string>
-    <string name="add_referral_error_length">Referral code must be no more than 4 characters</string>
-    <string name="add_referral_error_chars">Referral code must contain only alphanumeric characters</string>
-    <string name="add_referral_error_not_found">Referral code not found</string>
-    <string name="add_referral_error_network">Failed to check referral code. Please try again.</string>
+    <string name="add_referral">Adicionar indicação</string>
+    <string name="referral_added">Indicação adicionada</string>
+    <string name="add_referral_sheet_title">Código de indicação</string>
+    <string name="add_referral_sheet_description">Insira seu código de indicação aqui. Aproveite 10% de desconto em cada transação.</string>
+    <string name="add_referral_sheet_placeholder">Insira até 4 caracteres</string>
+    <string name="add_referral_sheet_apply">Aplicar indicação</string>
+    <string name="add_referral_error_length">O código de indicação pode conter até 4 caracteres</string>
+    <string name="add_referral_error_chars">O código de indicação deve conter apenas caracteres alfanuméricos</string>
+    <string name="add_referral_error_not_found">Código de indicação não encontrado</string>
+    <string name="add_referral_error_network">Falha ao verificar o código de indicação. Tente novamente.</string>
 </resources>

@@ -106,12 +106,7 @@ internal fun FastVaultPasswordScreen(
     V2Scaffold(
         title = null,
         onBackClick = onBackClick,
-        actions = {
-            AddReferralHeaderButton(
-                hasReferral = hasReferral,
-                onClick = onReferralClick,
-            )
-        },
+        actions = { AddReferralHeaderButton(hasReferral = hasReferral, onClick = onReferralClick) },
         content = {
             Column {
                 Text(

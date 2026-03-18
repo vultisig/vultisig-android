@@ -32,18 +32,13 @@ constructor(
 ) : ViewModel() {
 
     val state = MutableStateFlow(AddReferralUiModel())
-    val textFieldState = TextFieldState(
-        referralCodeSettingsRepository.getPendingReferral() ?: ""
-    )
+    val textFieldState = TextFieldState(referralCodeSettingsRepository.getPendingReferral() ?: "")
 
     init {
         viewModelScope.launch {
             textFieldState.textAsFlow().collect {
                 state.update {
-                    it.copy(
-                        errorMessage = null,
-                        innerState = VsTextInputFieldInnerState.Default,
-                    )
+                    it.copy(errorMessage = null, innerState = VsTextInputFieldInnerState.Default)
                 }
             }
         }
@@ -76,19 +71,19 @@ constructor(
 
         viewModelScope.launch {
             try {
-                val exists = withContext(Dispatchers.IO) {
-                    thorChainApi.existsReferralCode(code)
-                }
+                val exists = withContext(Dispatchers.IO) { thorChainApi.existsReferralCode(code) }
 
                 if (exists) {
                     val uppercasedCode = code.uppercase()
                     referralCodeSettingsRepository.setPendingReferral(uppercasedCode)
+                    state.update { it.copy(isLoading = false) }
                     onSuccess(uppercasedCode)
                 } else {
                     state.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = UiText.StringResource(R.string.add_referral_error_not_found),
+                            errorMessage =
+                                UiText.StringResource(R.string.add_referral_error_not_found),
                             innerState = VsTextInputFieldInnerState.Error,
                         )
                     }
