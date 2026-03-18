@@ -188,7 +188,7 @@
     <string name="keysign_screen_error_please_try_again">Errore! Riprova. %1$s</string>
     <string name="join_keysign_discovering_session_id">Individuazione dell\’ID sessione</string>
     <string name="join_keysign_discovery_service">Scoprire il servizio</string>
-    <string name="vault_settings_delete_subtitle">Elimina definitivamente la condivisione del tuo vault</string>
+    <string name="vault_settings_delete_subtitle">Elimina definitivamente il tuo vault.</string>
     <string name="default_chain_screen_title">Catene predefinite</string>
     <string name="danger_icon">Icona di pericolo</string>
     <string name="currency_unit_setting_screen_title">Valuta</string>
@@ -591,7 +591,7 @@
     <string name="vault_settings_backup_vault">Esegui il backup della condivisione del vault</string>
     <string name="vault_settings_back_up_your">Esegui il backup della condivisione del vault su dispositivo o server.</string>
     <string name="vault_settings_migrate_gg20">Esegui la migrazione del vault DKLS GG20</string>
-    <string name="vault_settings_reshare_change">Ricondividi, modifica TSS o firma messaggi.</string>
+    <string name="vault_settings_reshare_change">Ricondividi, gestisci la sicurezza o firma messaggi.</string>
     <string name="vault_backup_summary_start_using_vault">Inizia a usare la tua cassaforte</string>
     <string name="vault_backup_summary_choose_chains">Scegli le catene</string>
     <string name="transaction_done_form_approve">Approva</string>

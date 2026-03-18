@@ -188,7 +188,7 @@
     <string name="keysign_screen_error_please_try_again">Greška! Molim te pokušaj ponovno. %1$s</string>
     <string name="join_keysign_discovering_session_id">Otkrivanje ID-a sesije</string>
     <string name="join_keysign_discovery_service">Usluga otkrivanja</string>
-    <string name="vault_settings_delete_subtitle">Trajno izbrišite svoj udio u trezoru</string>
+    <string name="vault_settings_delete_subtitle">Trajno izbrišite svoj trezor.</string>
     <string name="default_chain_screen_title">Zadani lanci</string>
     <string name="danger_icon">Ikona opasnosti</string>
     <string name="currency_unit_setting_screen_title">Valuta\n</string>
@@ -592,7 +592,7 @@
     <string name="vault_settings_backup_vault">Sigurnosna kopija dijeljenog trezora</string>
     <string name="vault_settings_back_up_your">Sigurnosna kopija dijeljenog trezora na uređaj ili poslužitelj.</string>
     <string name="vault_settings_migrate_gg20">Migracija DKLS-a trezora GG20</string>
-    <string name="vault_settings_reshare_change">Ponovno dijeljenje, promjena TSS-a ili potpisivanje poruka.</string>
+    <string name="vault_settings_reshare_change">Ponovno dijeljenje, upravljanje sigurnošću ili potpisivanje poruka.</string>
     <string name="vault_backup_summary_start_using_vault">Počnite koristiti svoj trezor</string>
     <string name="vault_backup_summary_choose_chains">Odaberite lance</string>
     <string name="transaction_done_form_approve">Odobri</string>
