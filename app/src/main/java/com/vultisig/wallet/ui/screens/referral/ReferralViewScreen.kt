@@ -487,13 +487,13 @@ internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
                 .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        UiSpacer(32.dp)
+        UiSpacer(24.dp)
 
         Image(
             painter = painterResource(id = R.drawable.referral_question),
             contentDescription = "Empty Logo",
             contentScale = ContentScale.Crop,
-            modifier = Modifier.size(42.dp),
+            modifier = Modifier.size(38.dp),
         )
 
         UiSpacer(16.dp)
@@ -505,7 +505,7 @@ internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
             textAlign = TextAlign.Center,
         )
 
-        UiSpacer(16.dp)
+        UiSpacer(8.dp)
 
         Text(
             style = Theme.brockmann.supplementary.caption,
@@ -514,7 +514,7 @@ internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
             textAlign = TextAlign.Center,
         )
 
-        UiSpacer(16.dp)
+        UiSpacer(20.dp)
 
         VsButton(
             label = stringResource(R.string.referral_create_referral),
