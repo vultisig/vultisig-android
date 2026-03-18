@@ -191,7 +191,8 @@ private fun TransactionHistoryScreen(
             ) {
                 if (state.groups.isEmpty() && !state.isLoading) {
                     TransactionHistoryEmptyState(
-                        modifier = Modifier.fillMaxWidth().padding(top = 27.dp, horizontal = 16.dp)
+                        modifier =
+                            Modifier.fillMaxWidth().padding(top = 27.dp, start = 16.dp, end = 16.dp)
                     )
                 } else {
                     TransactionGroupedList(
