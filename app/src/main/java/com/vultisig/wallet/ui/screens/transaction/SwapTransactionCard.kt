@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
@@ -130,7 +132,11 @@ internal fun SwapTransactionCard(
             }
 
             if (item.provider.isNotEmpty()) {
-                ViaBadge(provider = item.provider, modifier = Modifier.align(Alignment.BottomEnd))
+                ViaBadge(
+                    provider = item.provider,
+                    providerLogo = item.providerLogo,
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                )
             }
         }
     }
@@ -164,25 +170,33 @@ private fun SwapAmountText(amount: String, token: String, modifier: Modifier = M
 }
 
 @Composable
-private fun ViaBadge(provider: String, modifier: Modifier = Modifier) {
+private fun ViaBadge(provider: String, providerLogo: ImageModel?, modifier: Modifier = Modifier) {
     val shape =
         RoundedCornerShape(topStart = 12.dp, topEnd = 0.dp, bottomEnd = 0.dp, bottomStart = 0.dp)
-    Text(
-        text =
-            buildAnnotatedString {
-                withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
-                    append(stringResource(R.string.transaction_history_via_prefix))
-                    append(" ")
-                }
-                withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(provider) }
-            },
-        style = Theme.brockmann.supplementary.caption,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier =
             modifier
                 .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
                 .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
                 .padding(start = 8.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-    )
+    ) {
+        if (providerLogo != null) {
+            TokenCircle(logo = providerLogo, ticker = provider, size = 16)
+        }
+        Text(
+            text =
+                buildAnnotatedString {
+                    withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
+                        append(stringResource(R.string.transaction_history_via_prefix))
+                        append(" ")
+                    }
+                    withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(provider) }
+                },
+            style = Theme.brockmann.supplementary.caption,
+        )
+    }
 }
 
 private val previewSwapItem =
@@ -202,6 +216,7 @@ private val previewSwapItem =
         toChain = "Bitcoin",
         toTokenLogo = R.drawable.bitcoin,
         provider = "THORChain",
+        providerLogo = R.drawable.rune,
         fiatValue = "$3,847.50",
         fromAddress = null,
         toAddress = null,

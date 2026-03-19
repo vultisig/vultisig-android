@@ -482,6 +482,7 @@ private val previewSwap =
         toChain = "Ethereum",
         toTokenLogo = "",
         provider = "Thorchain",
+        providerLogo = null,
         fiatValue = null,
         fromAddress = "0xF43jf9840fkfjn38fk0dk9Ac5",
         toAddress = "0xF43jf9840fkfjn38fk0dk9Ac5",
