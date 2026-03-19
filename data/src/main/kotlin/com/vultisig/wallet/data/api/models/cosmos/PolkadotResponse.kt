@@ -46,8 +46,7 @@ data class PolkadotQueryInfoResponseJson(val result: QueryInfoPayload?) {
     @Serializable data class QueryInfoPayload(@SerialName("partialFee") val partialFee: String?)
 }
 
-@Serializable
-data class PolkadotGetStorageJson(@SerialName("result") val result: String?)
+@Serializable data class PolkadotGetStorageJson(@SerialName("result") val result: String?)
 
 @Serializable
 data class PolkadotExtrinsicResponseJson(

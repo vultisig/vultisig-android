@@ -49,26 +49,29 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
         try {
             val pubKey = AnyAddress(address, CoinType.POLKADOT).data()
             val blake2b128 = Hash.blake2b(pubKey, 16)
-            val storageKey = "0x" +
-                SYSTEM_ACCOUNT_PREFIX +
-                blake2b128.joinToString("") { "%02x".format(it) } +
-                pubKey.joinToString("") { "%02x".format(it) }
-            val payload = RpcPayload(
-                jsonrpc = "2.0",
-                method = "state_getStorage",
-                params = buildJsonArray { add(storageKey) },
-                id = 1,
-            )
+            val storageKey =
+                "0x" +
+                    SYSTEM_ACCOUNT_PREFIX +
+                    blake2b128.joinToString("") { "%02x".format(it) } +
+                    pubKey.joinToString("") { "%02x".format(it) }
+            val payload =
+                RpcPayload(
+                    jsonrpc = "2.0",
+                    method = "state_getStorage",
+                    params = buildJsonArray { add(storageKey) },
+                    id = 1,
+                )
             val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-            val result = response.body<PolkadotGetStorageJson>().result
-                ?: return BigInteger.ZERO
+            val result = response.body<PolkadotGetStorageJson>().result ?: return BigInteger.ZERO
             val hex = result.removePrefix("0x")
             if (hex.length < 64) return BigInteger.ZERO
-            // AccountInfo SCALE layout: nonce(u32) + consumers(u32) + providers(u32) + sufficients(u32) + free(u128) + ...
+            // AccountInfo SCALE layout: nonce(u32) + consumers(u32) + providers(u32) +
+            // sufficients(u32) + free(u128) + ...
             // free balance starts at byte offset 16 (4 x u32 = 16 bytes)
-            val freeBytes = (0 until 16).map { i ->
-                hex.substring(32 + i * 2, 34 + i * 2).toInt(16).toByte()
-            }.toByteArray()
+            val freeBytes =
+                (0 until 16)
+                    .map { i -> hex.substring(32 + i * 2, 34 + i * 2).toInt(16).toByte() }
+                    .toByteArray()
             return BigInteger(1, freeBytes.reversedArray())
         } catch (e: Exception) {
             Timber.e("Error fetching Polkadot balance: ${e.message}")
