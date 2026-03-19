@@ -868,15 +868,13 @@ internal fun TokenChip(
                 )
                 .padding(all = 6.dp),
     ) {
-        selectedToken?.let { token ->
-            TokenAndChainLogo(
-                tokenLogo = token.tokenLogo,
-                tokenTicker = token.title,
-                chainLogo = token.chainLogo,
-                chainLogoSize = 16.dp,
-                tokenLogoSize = 36.dp,
-            )
-        }
+        TokenAndChainLogo(
+            tokenLogo = selectedToken?.tokenLogo ?: "",
+            tokenTicker = selectedToken?.title ?: "",
+            chainLogo = selectedToken?.chainLogo,
+            chainLogoSize = 16.dp,
+            tokenLogoSize = 36.dp,
+        )
 
         UiSpacer(8.dp)
 
