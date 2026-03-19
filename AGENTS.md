@@ -10,7 +10,7 @@ Android wallet app with Jetpack Compose UI and DKLS23 TSS implementation. Kotlin
 git clone https://github.com/vultisig/vultisig-android.git
 cd vultisig-android
 git submodule update --init --recursive
-# Set GITHUB_USER + GITHUB_TOKEN in ~/.gradle/gradle.properties (for WalletCore)
+# Set TRUSTWALLET_USER + TRUSTWALLET_PAT in ~/.gradle/gradle.properties (for WalletCore)
 ./gradlew assembleDebug
 ./gradlew test
 ```

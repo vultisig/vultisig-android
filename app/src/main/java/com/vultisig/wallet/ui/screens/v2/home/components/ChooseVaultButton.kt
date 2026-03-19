@@ -14,8 +14,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType.*
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType.*
+import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType.Bordered
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType.SECONDARY
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.theme.Theme
@@ -34,7 +34,7 @@ internal fun ChooseVaultButton(
         type = SECONDARY,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             UiIcon(

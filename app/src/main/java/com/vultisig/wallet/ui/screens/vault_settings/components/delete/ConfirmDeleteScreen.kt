@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,7 +30,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.library.form.VsUiCheckbox
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.SettingInfoHorizontalItem
 import com.vultisig.wallet.ui.screens.itemModifier
 import com.vultisig.wallet.ui.theme.Theme
@@ -62,14 +61,9 @@ private fun ConfirmDeleteScreen(
     onConfirmClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    Scaffold(
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.vault_settings_delete_title),
-                iconLeft = R.drawable.ic_caret_left,
-                onIconLeftClick = onBackClick,
-            )
-        },
+    V2Scaffold(
+        title = stringResource(R.string.vault_settings_delete_title),
+        onBackClick = onBackClick,
         bottomBar = {
             VsButton(
                 onClick = onConfirmClick,
@@ -82,13 +76,7 @@ private fun ConfirmDeleteScreen(
             )
         },
     ) {
-        Column(
-            modifier =
-                Modifier.padding(it)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-        ) {
+        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             DeleteVaultBanner()
             UiSpacer(14.dp)
             SettingInfoHorizontalItem(

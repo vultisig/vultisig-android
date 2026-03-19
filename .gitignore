@@ -36,3 +36,4 @@ fastlane/report.xml
 
 # Crush AI assistant
 .crush/
+.worktrees/
