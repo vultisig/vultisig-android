@@ -8,8 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
@@ -21,7 +20,6 @@ import androidx.compose.foundation.text.input.then
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,20 +29,15 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.ui.components.v2.utils.toPx
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.textAsFlow
-import kotlin.math.roundToInt
 
 private const val FAST_VAULT_VERIFICATION_CODE_CHARS = 4
 
@@ -93,35 +86,13 @@ internal fun VsCodeInputField(
 
         val value = textFieldState.text
 
-        val boxSize = remember { mutableIntStateOf(0) }
-        val density = LocalDensity.current
+        val boxModifier = Modifier.size(width = 58.dp, height = 46.dp)
 
-        val minSizePx = 46.dp.toPx().roundToInt()
-
-        val onSizeChanged: (IntSize) -> Unit =
-            remember(density) {
-                { size ->
-                    val maxDimension = maxOf(size.width, size.height)
-                    val newSize = maxOf(maxDimension, minSizePx)
-                    boxSize.intValue = maxOf(newSize, boxSize.intValue)
-                }
-            }
-
-        val boxModifier =
-            remember(boxSize.intValue, density) {
-                if (boxSize.intValue > 0) {
-                    val height = with(density) { boxSize.intValue.toDp() }
-                    Modifier.size(width = height * 1.25f, height = height)
-                } else {
-                    Modifier.wrapContentSize()
-                }
-            }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             repeat(maxCharacters) { index ->
                 val isActiveBox = focusedState.value && index == value.length
 
-                val inputBoxShape = CircleShape
+                val inputBoxShape = RoundedCornerShape(24.dp)
                 val inputManager = LocalSoftwareKeyboardController.current
 
                 Box(
@@ -181,7 +152,7 @@ internal fun VsCodeInputField(
                         text = displayChar.toString(),
                         color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.body.m.medium,
-                        modifier = Modifier.onSizeChanged(onSizeChanged),
+                        modifier = Modifier,
                     )
                 }
             }

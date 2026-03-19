@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
@@ -87,6 +89,7 @@ internal fun FastVaultVerificationScreen(
     val hasClipContent = textToPaste != null
 
     V3Scaffold(
+        applyDefaultPaddings = false,
         title = null,
         onBackClick = onBackClick,
         content = {
@@ -100,7 +103,7 @@ internal fun FastVaultVerificationScreen(
             )
 
             Column(
-                Modifier.imePadding().verticalScroll(scrollState),
+                Modifier.imePadding().padding(22.dp).verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 UiSpacer(size = 32.dp)
@@ -130,9 +133,7 @@ internal fun FastVaultVerificationScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.spacedBy(6.dp, alignment = Alignment.CenterHorizontally),
-                    verticalAlignment = CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
                 ) {
                     VsCodeInputField(
                         textFieldState = codeFieldState,
@@ -146,11 +147,14 @@ internal fun FastVaultVerificationScreen(
                             },
                         modifier = Modifier.testTag("FastVaultVerificationScreen.codeField"),
                     )
+                    UiSpacer(4.dp)
 
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier =
-                            Modifier.background(
+                            Modifier.width(78.dp)
+                                .height(46.dp)
+                                .background(
                                     color = Theme.v2.colors.backgrounds.secondary,
                                     shape = RoundedCornerShape(size = 99.dp),
                                 )
@@ -159,7 +163,7 @@ internal fun FastVaultVerificationScreen(
                                     color = Theme.v2.colors.border.extraLight,
                                     shape = RoundedCornerShape(size = 99.dp),
                                 )
-                                .padding(horizontal = 10.dp, vertical = 16.dp)
+                                .padding(horizontal = 12.dp, vertical = 12.dp)
                                 .clickable(
                                     enabled = hasClipContent,
                                     onClick = {
