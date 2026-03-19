@@ -173,7 +173,6 @@
     <string name="keysign">Segno chiave</string>
     <string name="generating_key_screen_keygen_failed">Keygen non riuscito</string>
     <string name="bottom_warning_msg_keygen_error_screen">Mantieni i dispositivi sulla stessa rete WiFi, correggi il vault e associa i dispositivi.\nAssicurati che nessun altro dispositivo stia eseguendo Vultisig.</string>
-    <string name="verify_transaction_consent_correct_dst">Non sto inviando a una truffa o a un hacker</string>
     <string name="naming_vault_screen_invalid_name">Nome non valido</string>
     <string name="rename_vault_invalid_name">Nome non valido</string>
     <string name="vault_name_too_long_error">Il nome del caveau è troppo lungo</string>

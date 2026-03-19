@@ -129,7 +129,6 @@
     <string name="verify_transaction_join_keysign">Doe mee met Keysign</string>
     <string name="verify_transaction_consent_address">Ik stuur naar het juiste adres</string>
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
-    <string name="verify_transaction_consent_correct_dst">Ik stuur niet naar een oplichter of hacker</string>
     <string name="verify_transaction_error_not_enough_consent">Controleer alle toestemmingen</string>
     <string name="camera_permission_denied">Cameratoestemming niet verleend. Schakel deze in de instellingen in.</string>
     <string name="join_keysign_discovering_session_id">Sessienummer ontdekken</string>

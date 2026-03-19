@@ -92,7 +92,6 @@ internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewMo
         confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
-        onConsentDst = viewModel::checkConsentDst,
         onConfirm = viewModel::joinKeySign,
         onBackClick = viewModel::back,
         onFastSignClick = viewModel::fastSign,
@@ -111,7 +110,6 @@ internal fun VerifySendScreen(
     onConfirm: () -> Unit,
     onConsentAddress: (Boolean) -> Unit = {},
     onConsentAmount: (Boolean) -> Unit = {},
-    onConsentDst: (Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
@@ -328,12 +326,6 @@ internal fun VerifySendScreen(
                             isChecked = state.consentAmount,
                             onCheckedChange = onConsentAmount,
                         )
-
-                        VsCheckField(
-                            title = stringResource(R.string.verify_transaction_consent_correct_dst),
-                            isChecked = state.consentDst,
-                            onCheckedChange = onConsentDst,
-                        )
                     }
                 }
             }
@@ -425,7 +417,6 @@ private fun PreviewVerifySendScreen() {
         confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = {},
         onConsentAmount = {},
-        onConsentDst = {},
         onFastSignClick = {},
         onConfirm = {},
     )
