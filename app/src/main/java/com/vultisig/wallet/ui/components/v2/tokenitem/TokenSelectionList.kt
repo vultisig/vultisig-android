@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.components.v2.tokenitem
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.widthIn
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,6 +29,7 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel.*
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel.*
+import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.theme.Theme
 
 internal data class TokenSelectionGroupUiModel<T>(
@@ -137,24 +140,29 @@ internal fun <T> TokenSelectionList(
             if (groups.isEmpty() || (groups.size == 1 && groups[0].items.isEmpty())) {
                 notFoundContent()
             } else
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 74.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = if (bannerContent != null) Modifier.weight(1f) else Modifier,
-                ) {
-                    groups.forEach { (title, items, mapper, plusUiModel) ->
-                        title?.let { item(span = { GridItemSpan(maxLineSpan) }) { GridTitle(it) } }
+                Box(modifier = if (bannerContent != null) Modifier.weight(1f) else Modifier) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 74.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        groups.forEach { (title, items, mapper, plusUiModel) ->
+                            title?.let {
+                                item(span = { GridItemSpan(maxLineSpan) }) { GridTitle(it) }
+                            }
 
-                        plusUiModel?.let { item { GridPlus(model = it) } }
+                            plusUiModel?.let { item { GridPlus(model = it) } }
 
-                        items(items) { item ->
-                            GridItem(
-                                uiModel = mapper(item),
-                                onCheckedChange = { onCheckChange(it, item) },
-                            )
+                            items(items) { item ->
+                                GridItem(
+                                    uiModel = mapper(item),
+                                    onCheckedChange = { onCheckChange(it, item) },
+                                )
+                            }
                         }
                     }
+
+                    BottomFadeEffect(modifier = Modifier.align(Alignment.BottomCenter))
                 }
 
             bannerContent?.invoke()

@@ -17,7 +17,7 @@ internal fun BottomFadeEffect(modifier: Modifier = Modifier) {
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(70.dp)
+                .height(60.dp)
                 .background(
                     brush =
                         Brush.verticalGradient(
