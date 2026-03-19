@@ -18,7 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,7 +56,7 @@ import com.vultisig.wallet.ui.utils.asString
 @Composable
 internal fun EnterVaultInfoScreen(viewModel: EnterVaultInfoViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
-    var showReferralSheet by remember { mutableStateOf(false) }
+    var showReferralSheet by rememberSaveable { mutableStateOf(false) }
     val referralCode by viewModel.referralCode.collectAsState()
 
     EnterVaultInfoScreen(

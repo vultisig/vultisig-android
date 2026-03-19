@@ -611,7 +611,9 @@ constructor(
             vaultDataStoreRepository.setBackupStatus(vaultId = vaultId, false)
         }
 
-        referralCodeSettingsRepository.consumePendingReferral(vaultId)
+        if (action == TssAction.KEYGEN) {
+            referralCodeSettingsRepository.consumePendingReferral(vaultId)
+        }
 
         lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
 

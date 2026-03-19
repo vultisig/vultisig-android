@@ -14,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -40,7 +41,7 @@ import com.vultisig.wallet.ui.utils.asString
 @Composable
 internal fun FastVaultEmailScreen(model: FastVaultEmailViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
-    var showReferralSheet by remember { mutableStateOf(false) }
+    var showReferralSheet by rememberSaveable { mutableStateOf(false) }
     val referralCode by model.referralCode.collectAsState()
 
     FastVaultEmailScreen(

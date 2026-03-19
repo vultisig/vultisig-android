@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,7 +57,7 @@ import com.vultisig.wallet.ui.utils.asString
 @Composable
 internal fun FastVaultPasswordScreen(model: FastVaultPasswordViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
-    var showReferralSheet by remember { mutableStateOf(false) }
+    var showReferralSheet by rememberSaveable { mutableStateOf(false) }
     val referralCode by model.referralCode.collectAsState()
 
     FastVaultPasswordScreen(
