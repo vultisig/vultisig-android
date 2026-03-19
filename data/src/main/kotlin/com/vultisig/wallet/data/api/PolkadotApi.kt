@@ -64,6 +64,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                     )
                     .result ?: return BigInteger.ZERO
             val hex = result.removePrefix("0x")
+            // minimum 64 hex chars = 32 bytes = 4×u32 header (nonce+consumers+providers+sufficients)
             if (hex.length < 64) return BigInteger.ZERO
             // AccountInfo SCALE layout: nonce(u32) + consumers(u32) + providers(u32) +
             // sufficients(u32) + free(u128) + ...
@@ -74,7 +75,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                     .toByteArray()
             return BigInteger(1, freeBytes.reversedArray())
         } catch (e: Exception) {
-            Timber.e("Error fetching Polkadot balance: ${e.message}")
+            Timber.e(e, "Error fetching Polkadot balance")
             return BigInteger.ZERO
         }
     }
