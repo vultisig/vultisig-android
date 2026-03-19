@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.PolkadotGetStorageJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotBroadcastTransactionJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotExtrinsicResponseJson
@@ -7,7 +8,6 @@ import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHashJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHeaderJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetNonceJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetRunTimeVersionJson
-import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetStorageJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
 import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.utils.bodyOrThrow
@@ -23,6 +23,19 @@ import timber.log.Timber
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.Hash
+
+internal fun parsePolkadotFreeBalance(hex: String): BigInteger {
+    // minimum 64 hex chars = 32 bytes: 16-byte header (4×u32) + 16-byte free balance (u128)
+    if (hex.length < 64) return BigInteger.ZERO
+    // AccountInfo SCALE layout: nonce(u32) + consumers(u32) + providers(u32) +
+    // sufficients(u32) + free(u128) + ...
+    // free balance starts at byte offset 16 (4 x u32 = 16 bytes)
+    val freeBytes =
+        (0 until 16)
+            .map { i -> hex.substring(32 + i * 2, 34 + i * 2).toInt(16).toByte() }
+            .toByteArray()
+    return BigInteger(1, freeBytes.reversedArray())
+}
 
 interface PolkadotApi {
     suspend fun getBalance(address: String): BigInteger
@@ -64,17 +77,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                     )
                     .result ?: return BigInteger.ZERO
             val hex = result.removePrefix("0x")
-            // minimum 64 hex chars = 32 bytes = 4×u32 header
-            // (nonce+consumers+providers+sufficients)
-            if (hex.length < 64) return BigInteger.ZERO
-            // AccountInfo SCALE layout: nonce(u32) + consumers(u32) + providers(u32) +
-            // sufficients(u32) + free(u128) + ...
-            // free balance starts at byte offset 16 (4 x u32 = 16 bytes)
-            val freeBytes =
-                (0 until 16)
-                    .map { i -> hex.substring(32 + i * 2, 34 + i * 2).toInt(16).toByte() }
-                    .toByteArray()
-            return BigInteger(1, freeBytes.reversedArray())
+            return parsePolkadotFreeBalance(hex)
         } catch (e: Exception) {
             Timber.e(e, "Error fetching Polkadot balance")
             return BigInteger.ZERO
