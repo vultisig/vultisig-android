@@ -98,6 +98,8 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
 
             Chain.Sei -> AnyAddress.isValid(address, CoinType.ETHEREUM)
 
+            Chain.Bittensor -> AnyAddress.isValidSS58(address, CoinType.POLKADOT, 42)
+
             else -> chain.coinType.validate(address)
         }
 
