@@ -173,7 +173,6 @@
     <string name="keysign">Keysign</string>
     <string name="generating_key_screen_keygen_failed">Keygen nije uspio</string>
     <string name="bottom_warning_msg_keygen_error_screen">Držite uređaje na istoj WiFi mreži, ispravite trezor i uparite uređaje.\nUvjerite se da nijedan drugi uređaj ne pokreće Vultisig.</string>
-    <string name="verify_transaction_consent_correct_dst">Ne šaljem prijevaru ili hakeru</string>
     <string name="naming_vault_screen_invalid_name">Nevažeći naziv</string>
     <string name="rename_vault_invalid_name">Nevažeći naziv</string>
     <string name="vault_name_too_long_error">Naziv trezora je predug</string>

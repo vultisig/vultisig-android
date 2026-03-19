@@ -64,7 +64,6 @@ internal data class VerifyTransactionUiModel(
     val transaction: TransactionDetailsUiModel = TransactionDetailsUiModel(),
     val consentAddress: Boolean = false,
     val consentAmount: Boolean = false,
-    val consentDst: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
     val functionSignature: String? = null,
@@ -74,7 +73,7 @@ internal data class VerifyTransactionUiModel(
     val isLoadingFees: Boolean = false,
 ) {
     val hasAllConsents: Boolean
-        get() = consentAddress && consentAmount && consentDst
+        get() = consentAddress && consentAmount
 }
 
 sealed class TransactionScanStatus {
@@ -179,10 +178,6 @@ constructor(
 
     fun checkConsentAmount(checked: Boolean) {
         viewModelScope.launch { uiState.update { it.copy(consentAmount = checked) } }
-    }
-
-    fun checkConsentDst(checked: Boolean) {
-        viewModelScope.launch { uiState.update { it.copy(consentDst = checked) } }
     }
 
     fun authFastSign() {

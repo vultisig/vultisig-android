@@ -130,7 +130,6 @@
     <string name="verify_transaction_join_keysign">Unirse a la firma de clave</string>
     <string name="verify_transaction_consent_address">Estoy enviando a la dirección correcta</string>
     <string name="verify_transaction_consent_amount">La cantidad es correcta</string>
-    <string name="verify_transaction_consent_correct_dst">No estoy enviando a una estafa ni a un hacker</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, revise todos los consentimientos</string>
     <string name="join_keysign_discovering_session_id">Descubriendo el ID de sesión</string>
     <string name="qr_address_screen_title">Dirección</string>

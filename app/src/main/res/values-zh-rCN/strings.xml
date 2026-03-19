@@ -219,7 +219,6 @@
     <string name="verify_transaction_join_keysign">加入密钥签名</string>
     <string name="verify_transaction_consent_address">我正在发送到正确的地址</string>
     <string name="verify_transaction_consent_amount">金额正确</string>
-    <string name="verify_transaction_consent_correct_dst">我没有发送给诈骗者或黑客</string>
     <string name="verify_transaction_error_not_enough_consent">请检查所有同意项</string>
 
     <!-- Camera & QR -->

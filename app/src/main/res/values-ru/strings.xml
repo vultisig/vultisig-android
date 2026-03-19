@@ -129,7 +129,6 @@
     <string name="verify_transaction_join_keysign">Присоединиться к ключевой подписи</string>
     <string name="verify_transaction_consent_address">Я отправляю на правильный адрес</string>
     <string name="verify_transaction_consent_amount">Сумма верна</string>
-    <string name="verify_transaction_consent_correct_dst">Я не отправляю мошеннику или хакеру</string>
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
     <string name="camera_permission_denied">Разрешение на камеру не предоставлено. Пожалуйста, включите его в настройках.</string>
     <string name="join_keysign_discovering_session_id">Обнаружение ID сессии</string>
