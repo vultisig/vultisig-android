@@ -92,7 +92,6 @@ internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewMo
         confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
-        onConsentDst = viewModel::checkConsentDst,
         onConfirm = viewModel::joinKeySign,
         onBackClick = viewModel::back,
         onFastSignClick = viewModel::fastSign,
@@ -111,7 +110,6 @@ internal fun VerifySendScreen(
     onConfirm: () -> Unit,
     onConsentAddress: (Boolean) -> Unit = {},
     onConsentAmount: (Boolean) -> Unit = {},
-    onConsentDst: (Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
@@ -298,7 +296,7 @@ internal fun VerifySendScreen(
 
                             Text(
                                 text = chain.raw,
-                                style = Theme.brockmann.supplementary.footnote,
+                                style = Theme.brockmann.body.s.medium,
                                 color = Theme.v2.colors.text.primary,
                                 textAlign = TextAlign.End,
                                 maxLines = 1,
@@ -331,12 +329,6 @@ internal fun VerifySendScreen(
                             isChecked = state.consentAmount,
                             onCheckedChange = onConsentAmount,
                         )
-
-                        VsCheckField(
-                            title = stringResource(R.string.verify_transaction_consent_correct_dst),
-                            isChecked = state.consentDst,
-                            onCheckedChange = onConsentDst,
-                        )
                     }
                 }
             }
@@ -347,14 +339,18 @@ internal fun VerifySendScreen(
 @Composable
 internal fun AddressField(title: String, address: String, divider: Boolean = true) {
     Column {
-        Text(text = title, color = Theme.v2.colors.neutrals.n100, style = Theme.montserrat.heading5)
+        Text(
+            text = title,
+            color = Theme.v2.colors.text.tertiary,
+            style = Theme.brockmann.headings.subtitle,
+        )
 
         UiSpacer(size = 16.dp)
 
         Text(
             text = address,
-            style = Theme.montserrat.subtitle3,
-            color = Theme.v2.colors.backgrounds.teal,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
         )
 
         if (divider) {
@@ -374,8 +370,8 @@ internal fun OtherField(title: String, value: String, divider: Boolean = true) {
         ) {
             Text(
                 text = title,
-                color = Theme.v2.colors.neutrals.n100,
-                style = Theme.montserrat.subtitle1,
+                color = Theme.v2.colors.text.tertiary,
+                style = Theme.brockmann.body.s.medium,
             )
 
             UiSpacer(weight = 1f)
@@ -384,8 +380,8 @@ internal fun OtherField(title: String, value: String, divider: Boolean = true) {
             Text(
                 text = value,
                 textAlign = TextAlign.End,
-                color = Theme.v2.colors.neutrals.n100,
-                style = Theme.menlo.subtitle1,
+                color = Theme.v2.colors.text.primary,
+                style = Theme.brockmann.body.s.medium,
             )
         }
 
@@ -424,7 +420,6 @@ private fun PreviewVerifySendScreen() {
         confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = {},
         onConsentAmount = {},
-        onConsentDst = {},
         onFastSignClick = {},
         onConfirm = {},
     )

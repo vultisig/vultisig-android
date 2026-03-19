@@ -243,9 +243,11 @@ constructor(
 
     fun selectDevice(device: ParticipantName) {
         state.update {
+            val maxOtherDevices = it.minimumDevices - 1
             it.copy(
                 selectedDevices =
                     if (device in it.selectedDevices) it.selectedDevices - device
+                    else if (it.selectedDevices.size >= maxOtherDevices) it.selectedDevices
                     else it.selectedDevices + device
             )
         }
@@ -418,7 +420,10 @@ constructor(
                     val existingDevices = currentState.devices.toSet()
                     val newDevices = devices - existingDevices
 
-                    val selectedDevices = currentState.selectedDevices.toSet() + newDevices
+                    val maxOtherDevices = currentState.minimumDevices - 1
+                    val remainingSlots = maxOtherDevices - currentState.selectedDevices.size
+                    val devicesToAutoSelect = newDevices.take(remainingSlots.coerceAtLeast(0))
+                    val selectedDevices = currentState.selectedDevices.toSet() + devicesToAutoSelect
 
                     state.update {
                         it.copy(devices = devices, selectedDevices = selectedDevices.toList())

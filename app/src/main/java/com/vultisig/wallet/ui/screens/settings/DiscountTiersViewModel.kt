@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.screens.settings
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavHostController
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
 import com.vultisig.wallet.data.models.Chain
@@ -19,7 +18,10 @@ import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOL
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.PLATINUM_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.ULTIMATE_TIER_THRESHOLD
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigInteger
 import javax.inject.Inject
@@ -51,6 +53,7 @@ constructor(
     private val tiersNFTRepository: TiersNFTRepository,
     private val remoteNFTService: TierRemoteNFTService,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val navigator: Navigator<Destination>,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -158,7 +161,11 @@ constructor(
         }
     }
 
-    fun navigateToSwaps(navController: NavHostController, vaultId: String) {
+    fun back() {
+        viewModelScope.launch { navigator.back() }
+    }
+
+    fun navigateToSwaps() {
         viewModelScope.launch {
             try {
                 val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
@@ -190,7 +197,7 @@ constructor(
                     }
                 }
 
-                navController.navigate(
+                navigator.route(
                     Route.Swap(
                         vaultId = vaultId,
                         chainId = Chain.Ethereum.id,
@@ -200,7 +207,7 @@ constructor(
                 )
             } catch (e: Exception) {
                 Timber.e(e, "Error preparing swap navigation")
-                navController.navigate(
+                navigator.route(
                     Route.Swap(
                         vaultId = vaultId,
                         chainId = Chain.Ethereum.id,

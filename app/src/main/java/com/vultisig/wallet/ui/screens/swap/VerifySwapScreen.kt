@@ -484,7 +484,7 @@ internal fun VerifyCardDetails(
             ) {
                 Text(
                     text = subtitle,
-                    style = Theme.brockmann.supplementary.footnote,
+                    style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -492,7 +492,7 @@ internal fun VerifyCardDetails(
                 )
                 Text(
                     text = "($bracketValue)",
-                    style = Theme.brockmann.supplementary.footnote,
+                    style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary,
                     textAlign = TextAlign.End,
                     maxLines = 1,
@@ -501,12 +501,14 @@ internal fun VerifyCardDetails(
                 )
             }
         } else {
+            UiSpacer(weight = 1f)
+
             Text(
                 text = subtitle,
-                style = Theme.brockmann.supplementary.footnote,
+                style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
                 textAlign = TextAlign.End,
-                modifier = Modifier.weight(1f),
+                modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier,
                 maxLines = if (showAllContent) 5 else 1,
                 overflow = TextOverflow.MiddleEllipsis,
             )
@@ -537,7 +539,7 @@ internal fun VerifyVaultDetails(
         ) {
             Text(
                 text = subtitle,
-                style = Theme.brockmann.supplementary.footnote,
+                style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
                 textAlign = TextAlign.End,
                 overflow = TextOverflow.Ellipsis,
@@ -556,7 +558,7 @@ internal fun VerifyVaultDetails(
 
                 Text(
                     text = display,
-                    style = Theme.brockmann.supplementary.footnote,
+                    style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary,
                     maxLines = 1,
                 )

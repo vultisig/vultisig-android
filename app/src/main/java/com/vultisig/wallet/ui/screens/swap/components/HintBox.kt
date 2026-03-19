@@ -36,7 +36,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-private fun PointerShape(
+private fun PointerShapeUp(
     modifier: Modifier = Modifier,
     shapeSize: DpSize = DpSize(width = 40.dp, height = 15.dp),
     shapeColor: Color,
@@ -68,9 +68,42 @@ private fun PointerShape(
 }
 
 @Composable
+private fun PointerShapeDown(
+    modifier: Modifier = Modifier,
+    shapeSize: DpSize = DpSize(width = 40.dp, height = 15.dp),
+    shapeColor: Color,
+) {
+    Canvas(modifier = modifier.width(shapeSize.width).height(shapeSize.height)) {
+        val path =
+            Path().apply {
+                val maxWidth = size.width
+                val maxHeight = size.height + 1
+                val offSet = 30f
+
+                moveTo(0f, 0f)
+                relativeLineTo(offSet, 0f)
+                lineTo(maxWidth.div(2), maxHeight)
+                lineTo(maxWidth - offSet, 0f)
+                relativeLineTo(offSet, 0f)
+                close()
+            }
+
+        val paint =
+            Paint().apply {
+                color = shapeColor
+                style = PaintingStyle.Fill
+                pathEffect = PathEffect.cornerPathEffect(20f)
+            }
+
+        drawIntoCanvas { canvas -> canvas.drawPath(path, paint) }
+    }
+}
+
+@Composable
 internal fun HintBox(
     modifier: Modifier = Modifier,
     isVisible: Boolean,
+    isPointerTriangleOnTop: Boolean = true,
     title: String,
     message: String,
     offset: IntOffset,
@@ -84,6 +117,7 @@ internal fun HintBox(
                 modifier = modifier,
                 title = title,
                 message = message,
+                isPointerOnTop = isPointerTriangleOnTop,
                 pointerAlignment = pointerAlignment,
                 pointerOffset = pointerOffset,
                 onDismissClick = onDismissClick,
@@ -97,6 +131,7 @@ private fun HintBoxPopupContent(
     modifier: Modifier = Modifier,
     title: String,
     message: String,
+    isPointerOnTop: Boolean,
     pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     pointerOffset: DpOffset = DpOffset.Zero,
     onDismissClick: () -> Unit,
@@ -104,12 +139,14 @@ private fun HintBoxPopupContent(
 
     val shapeColor = Theme.v2.colors.neutrals.n200
     Column(modifier = modifier.clickable(onClick = onDismissClick)) {
-        PointerShape(
-            shapeColor = shapeColor,
-            modifier =
-                Modifier.align(alignment = pointerAlignment)
-                    .offset(x = pointerOffset.x, y = pointerOffset.y),
-        )
+        if (isPointerOnTop) {
+            PointerShapeUp(
+                shapeColor = shapeColor,
+                modifier =
+                    Modifier.align(alignment = pointerAlignment)
+                        .offset(x = pointerOffset.x, y = pointerOffset.y),
+            )
+        }
         Column(
             modifier =
                 Modifier.fillMaxWidth()
@@ -129,7 +166,7 @@ private fun HintBoxPopupContent(
                 Text(
                     text = title,
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.backgrounds.primary,
+                    color = Theme.v2.colors.text.inverse,
                 )
                 UiSpacer(weight = 1f)
                 UiIcon(
@@ -147,12 +184,21 @@ private fun HintBoxPopupContent(
                 style = Theme.brockmann.supplementary.footnote,
             )
         }
+
+        if (isPointerOnTop.not()) {
+            PointerShapeDown(
+                shapeColor = shapeColor,
+                modifier =
+                    Modifier.align(alignment = pointerAlignment)
+                        .offset(x = pointerOffset.x, y = pointerOffset.y),
+            )
+        }
     }
 }
 
 @Preview
 @Composable
-private fun HintBoxPreview() {
+private fun HintBoxTopPointerPreview() {
     // In preview mode, the popup displays an unwanted background that's not visible in the actual
     // app.
     HintBox(
@@ -162,5 +208,21 @@ private fun HintBoxPreview() {
         onDismissClick = {},
         offset = IntOffset.Zero,
         isVisible = true,
+    )
+}
+
+@Preview
+@Composable
+private fun HintBoxDownPointerPreview() {
+    // In preview mode, the popup displays an unwanted background that's not visible in the actual
+    // app.
+    HintBox(
+        modifier = Modifier.width(250.dp),
+        title = "Insufficient funds",
+        message = "Insufficient funds to execute the swap. Please fund the wallet.",
+        onDismissClick = {},
+        offset = IntOffset.Zero,
+        isVisible = true,
+        isPointerTriangleOnTop = false,
     )
 }
