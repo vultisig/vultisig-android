@@ -70,7 +70,7 @@ internal fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClic
 
                 RiveAnimation(
                     animation = R.raw.riv_backup_vault_splash,
-                    modifier = Modifier.size(width = 266.dp, height = 170.dp),
+                    modifier = Modifier.size(width = 340.dp, height = 240.dp),
                     fit = Fit.COVER,
                 )
 
