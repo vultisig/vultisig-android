@@ -3,12 +3,14 @@ package com.vultisig.wallet.ui.screens.deposit
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,14 +34,18 @@ import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiAlertDialog
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormSelection
+import com.vultisig.wallet.ui.components.library.form.FormTextField
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.FormTitleCollapsibleTextField
+import com.vultisig.wallet.ui.components.library.form.TextFieldValidator
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
@@ -48,6 +54,7 @@ import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -185,95 +192,34 @@ internal fun BondFormContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(all = 16.dp).verticalScroll(rememberScrollState()),
         ) {
-            // Node address — always first
-            FormTextFieldCard(
-                title = stringResource(R.string.deposit_form_node_address_title),
-                hint = stringResource(R.string.deposit_form_node_address_title),
-                keyboardType = KeyboardType.Text,
-                textFieldState = nodeAddressFieldState,
-                onLostFocus = onNodeAddressLostFocus,
-                error = state.nodeAddressError,
-            ) {
-                UiIcon(
-                    drawableResId = R.drawable.camera,
-                    size = 20.dp,
-                    modifier = Modifier.clickOnce { onScan() },
-                )
-                UiSpacer(size = 8.dp)
-                PasteIcon(onPaste = onSetNodeAddress)
-                UiSpacer(size = 8.dp)
-            }
-
-            // Amount — ThorChain bond requires an amount
-            if (depositChain == Chain.ThorChain) {
-                FormTextFieldCard(
-                    title =
-                        stringResource(
-                            R.string.deposit_form_amount_title,
-                            state.balance.asString(),
-                        ),
-                    hint = stringResource(R.string.send_amount_currency_hint),
-                    keyboardType = KeyboardType.Number,
-                    textFieldState = tokenAmountFieldState,
-                    onLostFocus = onTokenAmountLostFocus,
-                    error = state.tokenAmountError,
-                )
-            }
-
-            // MayaChain: asset selection + LP units
             if (depositChain == Chain.MayaChain) {
-                if (state.bondableAssets.isNotEmpty()) {
-                    FormSelection(
-                        selected = state.selectedBondAsset,
-                        options = state.bondableAssets,
-                        onSelectOption = onSelectBondAsset,
-                        mapTypeToString = { it },
-                    )
-                } else {
-                    FormTextFieldCard(
-                        title = stringResource(R.string.deposit_form_screen_assets),
-                        hint = stringResource(R.string.deposit_form_enter_asset_hint),
-                        keyboardType = KeyboardType.Text,
-                        textFieldState = assetsFieldState,
-                        onLostFocus = onAssetsLostFocus,
-                        error = state.assetsError,
-                    )
-                }
-
-                FormTextFieldCard(
-                    title = stringResource(R.string.deposit_form_screen_lpunits),
-                    hint = "LP units",
-                    keyboardType = KeyboardType.Number,
-                    textFieldState = lpUnitsFieldState,
-                    onLostFocus = onLpUnitsLostFocus,
-                    error = state.lpUnitsError,
+                MayaBondFormContent(
+                    state = state,
+                    nodeAddressFieldState = nodeAddressFieldState,
+                    assetsFieldState = assetsFieldState,
+                    lpUnitsFieldState = lpUnitsFieldState,
+                    onNodeAddressLostFocus = onNodeAddressLostFocus,
+                    onAssetsLostFocus = onAssetsLostFocus,
+                    onLpUnitsLostFocus = onLpUnitsLostFocus,
+                    onSetNodeAddress = onSetNodeAddress,
+                    onSelectBondAsset = onSelectBondAsset,
+                    onScan = onScan,
                 )
-            }
-
-            // THORChain: operator fee
-            if (depositChain == Chain.ThorChain) {
-                FormTextFieldCard(
-                    title = stringResource(R.string.deposit_form_operator_fee_title),
-                    hint = "0.0",
-                    keyboardType = KeyboardType.Number,
-                    textFieldState = operatorFeeFieldState,
-                    onLostFocus = onOperatorFeeLostFocus,
-                    error = state.operatorFeeError,
+            } else {
+                ThorchainBondFormContent(
+                    state = state,
+                    nodeAddressFieldState = nodeAddressFieldState,
+                    providerFieldState = providerFieldState,
+                    operatorFeeFieldState = operatorFeeFieldState,
+                    tokenAmountFieldState = tokenAmountFieldState,
+                    onNodeAddressLostFocus = onNodeAddressLostFocus,
+                    onProviderLostFocus = onProviderLostFocus,
+                    onOperatorFeeLostFocus = onOperatorFeeLostFocus,
+                    onTokenAmountLostFocus = onTokenAmountLostFocus,
+                    onSetNodeAddress = onSetNodeAddress,
+                    onSetProvider = onSetProvider,
+                    onScan = onScan,
                 )
-            }
-
-            // Provider — collapsible for ThorChain, hidden for MayaChain (not in design)
-            if (depositChain == Chain.ThorChain) {
-                FormTitleCollapsibleTextField(
-                    title = stringResource(R.string.deposit_form_provider_title),
-                    hint = stringResource(R.string.deposit_form_provider_hint),
-                    keyboardType = KeyboardType.Text,
-                    textFieldState = providerFieldState,
-                    onLostFocus = onProviderLostFocus,
-                ) {
-                    PasteIcon(onPaste = onSetProvider)
-                    UiSpacer(size = 8.dp)
-                }
             }
 
             UiSpacer(size = 80.dp)
@@ -288,6 +234,178 @@ internal fun BondFormContent(
             state = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
             modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(all = 16.dp),
         )
+    }
+}
+
+@Composable
+private fun MayaBondFormContent(
+    state: DepositFormUiModel,
+    nodeAddressFieldState: TextFieldState,
+    assetsFieldState: TextFieldState,
+    lpUnitsFieldState: TextFieldState,
+    onNodeAddressLostFocus: () -> Unit,
+    onAssetsLostFocus: () -> Unit,
+    onLpUnitsLostFocus: () -> Unit,
+    onSetNodeAddress: (String) -> Unit,
+    onSelectBondAsset: (String) -> Unit,
+    onScan: () -> Unit,
+) {
+    // Address card — "Address" header + "Node (Address)" sublabel + text field
+    TextFieldValidator(errorText = state.nodeAddressError) {
+        FormCard {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.deposit_form_node_address_title),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.primary,
+                )
+            }
+            UiHorizontalDivider()
+            Text(
+                text = stringResource(R.string.deposit_form_node_address_title),
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.tertiary,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            )
+            FormTextField(
+                hint = stringResource(R.string.deposit_form_node_address_title),
+                keyboardType = KeyboardType.Text,
+                textFieldState = nodeAddressFieldState,
+                onLostFocus = onNodeAddressLostFocus,
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.camera,
+                    size = 20.dp,
+                    modifier = Modifier.clickOnce { onScan() },
+                )
+                UiSpacer(size = 8.dp)
+                PasteIcon(onPaste = onSetNodeAddress)
+                UiSpacer(size = 8.dp)
+            }
+        }
+    }
+
+    // Asset selection + LP Units — grouped in one card
+    FormCard {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.deposit_form_screen_assets),
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+        }
+        UiHorizontalDivider()
+
+        if (state.bondableAssets.isNotEmpty()) {
+            FormSelection(
+                selected = state.selectedBondAsset,
+                options = state.bondableAssets,
+                onSelectOption = onSelectBondAsset,
+                mapTypeToString = { it },
+                embedInCard = false,
+            )
+        } else {
+            TextFieldValidator(errorText = state.assetsError) {
+                FormTextField(
+                    hint = stringResource(R.string.deposit_form_enter_asset_hint),
+                    keyboardType = KeyboardType.Text,
+                    textFieldState = assetsFieldState,
+                    onLostFocus = onAssetsLostFocus,
+                )
+            }
+        }
+
+        UiHorizontalDivider()
+
+        TextFieldValidator(errorText = state.lpUnitsError) {
+            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                Text(
+                    text = stringResource(R.string.deposit_form_screen_lpunits),
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                UiSpacer(size = 4.dp)
+                FormTextField(
+                    hint = "0",
+                    keyboardType = KeyboardType.Number,
+                    textFieldState = lpUnitsFieldState,
+                    onLostFocus = onLpUnitsLostFocus,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThorchainBondFormContent(
+    state: DepositFormUiModel,
+    nodeAddressFieldState: TextFieldState,
+    providerFieldState: TextFieldState,
+    operatorFeeFieldState: TextFieldState,
+    tokenAmountFieldState: TextFieldState,
+    onNodeAddressLostFocus: () -> Unit,
+    onProviderLostFocus: () -> Unit,
+    onOperatorFeeLostFocus: () -> Unit,
+    onTokenAmountLostFocus: () -> Unit,
+    onSetNodeAddress: (String) -> Unit,
+    onSetProvider: (String) -> Unit,
+    onScan: () -> Unit,
+) {
+    // Node address — first
+    FormTextFieldCard(
+        title = stringResource(R.string.deposit_form_node_address_title),
+        hint = stringResource(R.string.deposit_form_node_address_title),
+        keyboardType = KeyboardType.Text,
+        textFieldState = nodeAddressFieldState,
+        onLostFocus = onNodeAddressLostFocus,
+        error = state.nodeAddressError,
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.camera,
+            size = 20.dp,
+            modifier = Modifier.clickOnce { onScan() },
+        )
+        UiSpacer(size = 8.dp)
+        PasteIcon(onPaste = onSetNodeAddress)
+        UiSpacer(size = 8.dp)
+    }
+
+    // Amount
+    FormTextFieldCard(
+        title = stringResource(R.string.deposit_form_amount_title, state.balance.asString()),
+        hint = stringResource(R.string.send_amount_currency_hint),
+        keyboardType = KeyboardType.Number,
+        textFieldState = tokenAmountFieldState,
+        onLostFocus = onTokenAmountLostFocus,
+        error = state.tokenAmountError,
+    )
+
+    // Operator fee
+    FormTextFieldCard(
+        title = stringResource(R.string.deposit_form_operator_fee_title),
+        hint = "0.0",
+        keyboardType = KeyboardType.Number,
+        textFieldState = operatorFeeFieldState,
+        onLostFocus = onOperatorFeeLostFocus,
+        error = state.operatorFeeError,
+    )
+
+    // Provider — collapsible
+    FormTitleCollapsibleTextField(
+        title = stringResource(R.string.deposit_form_provider_title),
+        hint = stringResource(R.string.deposit_form_provider_hint),
+        keyboardType = KeyboardType.Text,
+        textFieldState = providerFieldState,
+        onLostFocus = onProviderLostFocus,
+    ) {
+        PasteIcon(onPaste = onSetProvider)
+        UiSpacer(size = 8.dp)
     }
 }
 
