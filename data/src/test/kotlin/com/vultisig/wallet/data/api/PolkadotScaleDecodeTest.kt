@@ -6,7 +6,8 @@ import org.junit.Test
 
 class PolkadotScaleDecodeTest {
 
-    // AccountInfo layout: nonce(u32)+consumers(u32)+providers(u32)+sufficients(u32) = 16-byte header
+    // AccountInfo layout: nonce(u32)+consumers(u32)+providers(u32)+sufficients(u32) = 16-byte
+    // header
     private val header = "01000000000000000100000000000000"
 
     @Test
