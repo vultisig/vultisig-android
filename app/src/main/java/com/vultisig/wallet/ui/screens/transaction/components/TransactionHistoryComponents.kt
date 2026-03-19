@@ -115,7 +115,7 @@ internal fun ToSeparator(modifier: Modifier = Modifier) {
     ) {
         Box(modifier = Modifier.size(24.dp), contentAlignment = Alignment.Center) {
             Image(
-                painter = painterResource(R.drawable.frame),
+                painter = painterResource(R.drawable.ic_transaction_receive),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
             )
