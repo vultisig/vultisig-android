@@ -37,7 +37,11 @@ internal fun AddReferralBottomSheet(
     val state by viewModel.state.collectAsState()
 
     ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = {
+            if (!state.isLoading) {
+                onDismissRequest()
+            }
+        },
         containerColor = Theme.v2.colors.backgrounds.secondary,
         shape = RoundedCornerShape(24.dp),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -47,7 +51,11 @@ internal fun AddReferralBottomSheet(
             state = state,
             textFieldState = viewModel.textFieldState,
             onApplyClick = { viewModel.applyReferral(onApply) },
-            onClearClick = viewModel::clearInput,
+            onClearClick = {
+                if (!state.isLoading) {
+                    viewModel.clearInput()
+                }
+            },
         )
     }
 }

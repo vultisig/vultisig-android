@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -30,6 +31,7 @@ internal fun AddReferralHeaderButton(
     Row(
         modifier =
             modifier
+                .sizeIn(minHeight = 48.dp)
                 .clip(shape)
                 .border(
                     width = 1.dp,
