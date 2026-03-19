@@ -438,7 +438,9 @@ constructor(
                         currentState.selectedDevices.count {
                             !it.startsWith(LOCAL_PARTY_ID_PREFIX, ignoreCase = true)
                         }
-                    val maxOtherDevices = currentState.minimumDevices - 1
+                    val maxOtherDevices =
+                        if (currentState.minimumDevices > 1) currentState.minimumDevices - 1
+                        else currentState.minimumDevices
                     val remainingSlots = maxOtherDevices - existingUserDevices
                     val userDevicesToAutoSelect = userDevices.take(remainingSlots.coerceAtLeast(0))
                     val selectedDevices =
