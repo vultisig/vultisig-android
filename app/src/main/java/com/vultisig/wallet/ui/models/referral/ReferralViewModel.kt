@@ -177,7 +177,10 @@ constructor(
                 val (message, innerState) =
                     if (exists) {
                         withContext(Dispatchers.IO) {
-                            referralCodeRepository.saveExternalReferral(vaultId, referralCode)
+                            referralCodeRepository.saveExternalReferral(
+                                vaultId,
+                                referralCode.uppercase(),
+                            )
                         }
                         R.string.referral_external_linked.asUiText() to
                             VsTextInputFieldInnerState.Success

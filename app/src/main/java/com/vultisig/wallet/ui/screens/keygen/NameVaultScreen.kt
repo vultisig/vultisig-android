@@ -55,10 +55,7 @@ internal fun NameVaultScreen(model: NameVaultViewModel = hiltViewModel()) {
 
     if (showReferralSheet) {
         AddReferralBottomSheet(
-            onApply = { code ->
-                model.setReferralCode(code)
-                showReferralSheet = false
-            },
+            onApply = { _ -> showReferralSheet = false },
             onDismissRequest = { showReferralSheet = false },
         )
     }

@@ -56,10 +56,7 @@ internal fun FastVaultEmailScreen(model: FastVaultEmailViewModel = hiltViewModel
 
     if (showReferralSheet) {
         AddReferralBottomSheet(
-            onApply = { code ->
-                model.setReferralCode(code)
-                showReferralSheet = false
-            },
+            onApply = { _ -> showReferralSheet = false },
             onDismissRequest = { showReferralSheet = false },
         )
     }

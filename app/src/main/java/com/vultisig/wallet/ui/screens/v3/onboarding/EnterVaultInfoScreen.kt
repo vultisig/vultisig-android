@@ -68,10 +68,7 @@ internal fun EnterVaultInfoScreen(viewModel: EnterVaultInfoViewModel = hiltViewM
 
     if (showReferralSheet) {
         AddReferralBottomSheet(
-            onApply = { code ->
-                viewModel.setReferralCode(code)
-                showReferralSheet = false
-            },
+            onApply = { _ -> showReferralSheet = false },
             onDismissRequest = { showReferralSheet = false },
         )
     }

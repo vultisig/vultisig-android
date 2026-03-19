@@ -113,6 +113,7 @@ constructor(
     }
 
     fun back() {
+        referralCodeSettingsRepository.setPendingReferral(null)
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 }
