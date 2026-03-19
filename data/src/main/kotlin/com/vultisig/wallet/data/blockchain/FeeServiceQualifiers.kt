@@ -8,6 +8,8 @@ import javax.inject.Qualifier
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class PolkadotFee
 
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class BittensorFee
+
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class RippleFee
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class SuiFee

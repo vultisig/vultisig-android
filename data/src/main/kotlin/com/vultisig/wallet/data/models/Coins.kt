@@ -2015,6 +2015,23 @@ object Coins {
         val all = listOf(DOT)
     }
 
+    object Bittensor {
+        val TAO =
+            Coin(
+                chain = Chain.Bittensor,
+                ticker = "TAO",
+                logo = "bittensor",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "bittensor",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+
+        val all = listOf(TAO)
+    }
+
     object Polygon {
         val AVAX =
             Coin(
@@ -2893,6 +2910,7 @@ object Coins {
             Chain.Optimism to Optimism.all,
             Chain.Osmosis to Osmosis.all,
             Chain.Polkadot to Polkadot.all,
+            Chain.Bittensor to Bittensor.all,
             Chain.Polygon to Polygon.all,
             Chain.Ripple to Ripple.all,
             Chain.Solana to Solana.all,

@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.MergeAccount
+import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -124,6 +125,7 @@ constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val tronResourceDataSource: TronResourceDataSource,
     private val polkadotApi: PolkadotApi,
+    private val bittensorApi: BittensorApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
@@ -488,6 +490,7 @@ constructor(
                                 }
                             }
                             Polkadot -> polkadotApi.getBalance(address)
+                            Chain.Bittensor -> bittensorApi.getBalance(address)
 
                             Sui -> suiApi.getBalance(address, coin.contractAddress)
 

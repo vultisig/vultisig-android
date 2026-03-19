@@ -1,0 +1,263 @@
+package com.vultisig.wallet.data.chains.helpers
+
+import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.common.toHexByteArray
+import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.tss.getSignature
+import com.vultisig.wallet.data.utils.Numeric
+import wallet.core.jni.PublicKey
+import wallet.core.jni.PublicKeyType
+import java.io.ByteArrayOutputStream
+import java.math.BigInteger
+
+/**
+ * Bittensor signing helper — custom extrinsic builder.
+ *
+ * Bypasses TW Core's TransactionCompiler because Bittensor requires
+ * the CheckMetadataHash signed extension which TW Core doesn't support.
+ */
+class BittensorHelper(private val vaultHexPublicKey: String) {
+
+    fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
+        val payload = buildSigningPayload(keysignPayload)
+        // Substrate: if payload > 256 bytes, blake2b-256 hash it
+        val toSign = if (payload.size > 256) {
+            Utils.blake2bHash(payload)
+        } else {
+            payload
+        }
+        return listOf(Numeric.toHexStringNoPrefix(toSign))
+    }
+
+    fun getSignedTransaction(
+        keysignPayload: KeysignPayload,
+        signatures: Map<String, tss.KeysignResponse>,
+    ): SignedTransactionResult {
+        val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
+
+        val payload = buildSigningPayload(keysignPayload)
+        val toSign = if (payload.size > 256) {
+            Utils.blake2bHash(payload)
+        } else {
+            payload
+        }
+        val hashHex = Numeric.toHexStringNoPrefix(toSign)
+
+        val signature = signatures[hashHex]?.getSignature()
+            ?: throw Exception("Signature not found")
+
+        if (!publicKey.verify(signature, toSign)) {
+            throw Exception("Signature verification failed")
+        }
+
+        val polkadotSpecific =
+            keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot
+                ?: throw IllegalArgumentException("Invalid blockChainSpecific")
+
+        val callData = buildCallData(keysignPayload)
+        val signedExtra = buildSignedExtra(polkadotSpecific)
+        val signerPubkey = publicKey.data()
+
+        val extrinsic = assembleExtrinsic(signerPubkey, signature, callData, signedExtra)
+        val rawTx = Numeric.toHexStringNoPrefix(extrinsic)
+        val txHash = Numeric.toHexString(Utils.blake2bHash(extrinsic))
+
+        return SignedTransactionResult(
+            rawTransaction = rawTx,
+            transactionHash = txHash,
+        )
+    }
+
+    fun getZeroSignedTransaction(keysignPayload: KeysignPayload): String {
+        val polkadotSpecific =
+            keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot
+                ?: throw IllegalArgumentException("Invalid blockChainSpecific")
+
+        val callData = buildCallData(keysignPayload)
+        val signedExtra = buildSignedExtra(polkadotSpecific)
+        val dummySigner = ByteArray(32)
+        val dummySignature = ByteArray(64)
+
+        val extrinsic = assembleExtrinsic(dummySigner, dummySignature, callData, signedExtra)
+        return Numeric.toHexStringNoPrefix(extrinsic)
+    }
+
+    private fun buildSigningPayload(keysignPayload: KeysignPayload): ByteArray {
+        val polkadotSpecific =
+            keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot
+                ?: throw IllegalArgumentException("Invalid blockChainSpecific")
+
+        val callData = buildCallData(keysignPayload)
+        val signedExtra = buildSignedExtra(polkadotSpecific)
+        val additionalSigned = buildAdditionalSigned(polkadotSpecific)
+
+        return callData + signedExtra + additionalSigned
+    }
+
+    /**
+     * Call data for Balances.transfer_keep_alive(dest, value)
+     * Encoding: [pallet:5, call:3] ++ MultiAddress::Id(0x00) ++ dest(32B) ++ compact(amount)
+     */
+    private fun buildCallData(keysignPayload: KeysignPayload): ByteArray {
+        val destBytes = ss58Decode(keysignPayload.toAddress)
+        val amount = keysignPayload.toAmount
+
+        val out = ByteArrayOutputStream()
+        out.write(BALANCES_PALLET.toInt())
+        out.write(TRANSFER_KEEP_ALIVE.toInt())
+        out.write(MULTI_ADDRESS_ID.toInt()) // MultiAddress::Id
+        out.write(destBytes)
+        out.write(compactEncode(amount))
+        return out.toByteArray()
+    }
+
+    /**
+     * Signed extensions (extra) in the extrinsic body.
+     * Era | Nonce(compact) | Tip(compact, 0) | CheckMetadataHash(0x00)
+     */
+    private fun buildSignedExtra(specific: BlockChainSpecific.Polkadot): ByteArray {
+        val out = ByteArrayOutputStream()
+        out.write(encodeMortalEra(specific.currentBlockNumber.toInt(), 64))
+        out.write(compactEncode(specific.nonce.toBigInteger()))
+        out.write(compactEncode(BigInteger.ZERO)) // tip = 0
+        out.write(METADATA_HASH_DISABLED.toInt()) // CheckMetadataHash: Disabled
+        return out.toByteArray()
+    }
+
+    /**
+     * Additional signed data for the signing payload.
+     * specVersion(u32le) | txVersion(u32le) | genesisHash(32B) | blockHash(32B) | CheckMetadataHash(0x00)
+     */
+    private fun buildAdditionalSigned(specific: BlockChainSpecific.Polkadot): ByteArray {
+        val out = ByteArrayOutputStream()
+        out.write(uint32LE(specific.specVersion.toInt()))
+        out.write(uint32LE(specific.transactionVersion.toInt()))
+        out.write(hexToBytes(specific.genesisHash))
+        out.write(hexToBytes(specific.recentBlockHash))
+        out.write(METADATA_HASH_DISABLED.toInt()) // CheckMetadataHash additional signed
+        return out.toByteArray()
+    }
+
+    /**
+     * Assemble final signed extrinsic.
+     * compactLen | 0x84 | MultiAddress::Id(signer) | MultiSignature::Ed25519(sig) | signedExtra | callData
+     */
+    private fun assembleExtrinsic(
+        signerPubkey: ByteArray,
+        signature: ByteArray,
+        callData: ByteArray,
+        signedExtra: ByteArray,
+    ): ByteArray {
+        val body = ByteArrayOutputStream()
+        body.write(0x84) // signed extrinsic, version 4
+        body.write(MULTI_ADDRESS_ID.toInt())
+        body.write(signerPubkey)
+        body.write(MULTI_SIGNATURE_ED25519.toInt())
+        body.write(signature)
+        body.write(signedExtra)
+        body.write(callData)
+
+        val bodyBytes = body.toByteArray()
+        val lengthPrefix = compactEncode(bodyBytes.size.toBigInteger())
+        return lengthPrefix + bodyBytes
+    }
+
+    companion object {
+        const val BALANCES_PALLET: Byte = 5
+        const val TRANSFER_KEEP_ALIVE: Byte = 3
+        const val MULTI_ADDRESS_ID: Byte = 0x00
+        const val MULTI_SIGNATURE_ED25519: Byte = 0x00
+        const val METADATA_HASH_DISABLED: Byte = 0x00
+        const val DEFAULT_FEE_RAO = 100_000L
+        const val SS58_PREFIX = 42
+
+        fun compactEncode(value: BigInteger): ByteArray {
+            return when {
+                value < BigInteger.valueOf(64) -> byteArrayOf((value.toInt() shl 2).toByte())
+                value < BigInteger.valueOf(16384) -> {
+                    val v = (value.toInt() shl 2) or 1
+                    byteArrayOf((v and 0xFF).toByte(), ((v shr 8) and 0xFF).toByte())
+                }
+                value < BigInteger.valueOf(1073741824) -> {
+                    val v = (value.toInt() shl 2) or 2
+                    byteArrayOf(
+                        (v and 0xFF).toByte(),
+                        ((v shr 8) and 0xFF).toByte(),
+                        ((v shr 16) and 0xFF).toByte(),
+                        ((v shr 24) and 0xFF).toByte()
+                    )
+                }
+                else -> {
+                    val bytes = value.toByteArray().let { b ->
+                        // BigInteger is big-endian, reverse to little-endian
+                        // Remove leading zero byte if present
+                        val trimmed = if (b[0] == 0.toByte() && b.size > 1) b.drop(1).toByteArray() else b
+                        trimmed.reversedArray()
+                    }
+                    val prefix = ((bytes.size - 4) shl 2) or 3
+                    byteArrayOf(prefix.toByte()) + bytes
+                }
+            }
+        }
+
+        fun encodeMortalEra(blockNumber: Int, period: Int): ByteArray {
+            val calPeriod = Integer.highestOneBit(period).coerceIn(2, 65536)
+            val phase = blockNumber % calPeriod
+            val quantizeFactor = (calPeriod shr 12).coerceAtLeast(1)
+            val quantizedPhase = (phase / quantizeFactor) * quantizeFactor
+            val encoded = (Integer.numberOfTrailingZeros(calPeriod) - 1).coerceIn(1, 15) +
+                    ((quantizedPhase / quantizeFactor) shl 4)
+            return byteArrayOf((encoded and 0xFF).toByte(), ((encoded shr 8) and 0xFF).toByte())
+        }
+
+        fun uint32LE(value: Int): ByteArray {
+            return byteArrayOf(
+                (value and 0xFF).toByte(),
+                ((value shr 8) and 0xFF).toByte(),
+                ((value shr 16) and 0xFF).toByte(),
+                ((value shr 24) and 0xFF).toByte()
+            )
+        }
+
+        fun hexToBytes(hex: String): ByteArray {
+            val clean = if (hex.startsWith("0x")) hex.substring(2) else hex
+            return ByteArray(clean.length / 2) { i ->
+                clean.substring(i * 2, i * 2 + 2).toInt(16).toByte()
+            }
+        }
+
+        /**
+         * Decode SS58 address to raw 32-byte public key.
+         * SS58 = base58(prefix ++ pubkey ++ checksum)
+         */
+        fun ss58Decode(address: String): ByteArray {
+            val decoded = base58Decode(address)
+            // For prefix < 64: 1 byte prefix + 32 bytes pubkey + 2 bytes checksum = 35 bytes
+            // For prefix 64-16383: 2 byte prefix + 32 bytes pubkey + 2 bytes checksum = 36 bytes
+            return when {
+                decoded.size == 35 -> decoded.sliceArray(1..32)
+                decoded.size == 36 -> decoded.sliceArray(2..33)
+                else -> throw IllegalArgumentException("Invalid SS58 address length: ${decoded.size}")
+            }
+        }
+
+        private val BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+
+        fun base58Decode(input: String): ByteArray {
+            var result = BigInteger.ZERO
+            for (c in input) {
+                val index = BASE58_ALPHABET.indexOf(c)
+                if (index < 0) throw IllegalArgumentException("Invalid base58 character: $c")
+                result = result.multiply(BigInteger.valueOf(58)).add(BigInteger.valueOf(index.toLong()))
+            }
+            val bytes = result.toByteArray()
+            // Remove leading zero from BigInteger sign byte
+            val trimmed = if (bytes[0] == 0.toByte() && bytes.size > 1) bytes.drop(1).toByteArray() else bytes
+            // Count leading '1's in input (each = leading zero byte)
+            val leadingZeros = input.takeWhile { it == '1' }.length
+            return ByteArray(leadingZeros) + trimmed
+        }
+    }
+}
