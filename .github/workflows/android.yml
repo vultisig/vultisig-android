@@ -44,8 +44,8 @@ jobs:
       # Build and run unit tests
       - name: Build and run unit tests
         env:
-          GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
-          GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
+          TRUSTWALLET_PAT: ${{ secrets.TRUSTWALLET_PAT }}
+          TRUSTWALLET_USER: ${{ secrets.TRUSTWALLET_USER }}
         run: ./gradlew build --parallel --build-cache --no-daemon
 
       # Enable KVM for better emulator performance
@@ -74,8 +74,8 @@ jobs:
       - name: Run instrumented tests with emulator
         uses: reactivecircus/android-emulator-runner@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
-          GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
+          TRUSTWALLET_PAT: ${{ secrets.TRUSTWALLET_PAT }}
+          TRUSTWALLET_USER: ${{ secrets.TRUSTWALLET_USER }}
         with:
           api-level: 29
           target: default

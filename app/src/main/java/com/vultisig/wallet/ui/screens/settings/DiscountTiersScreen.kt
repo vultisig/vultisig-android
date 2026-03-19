@@ -18,7 +18,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -36,7 +35,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -44,7 +42,7 @@ import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheet
 import com.vultisig.wallet.ui.screens.v2.components.VsButton
 import com.vultisig.wallet.ui.theme.Theme
@@ -54,38 +52,26 @@ import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
-internal fun DiscountTiersScreen(
-    navController: NavHostController,
-    vaultId: String,
-    model: DiscountTiersViewModel = hiltViewModel(),
-) {
+internal fun DiscountTiersScreen(model: DiscountTiersViewModel = hiltViewModel()) {
     val uriHandler = VsUriHandler()
     val state by model.state.collectAsState()
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.secondary),
-        topBar = {
-            V2Topbar(
-                title = stringResource(R.string.vault_settings_discounts),
-                onBackClick = { navController.popBackStack() },
-                actions = {
-                    VsCircleButton(
-                        icon = R.drawable.settings_globe,
-                        onClick = { uriHandler.openUri(VsAuxiliaryLinks.VULT_TOKEN_DOCS) },
-                        type = VsCircleButtonType.Secondary,
-                        designType = DesignType.Shined,
-                        size = VsCircleButtonSize.Small,
-                        hasBorder = false,
-                    )
-                },
+    V2Scaffold(
+        title = stringResource(R.string.vault_settings_discounts),
+        onBackClick = model::back,
+        actions = {
+            VsCircleButton(
+                icon = R.drawable.settings_globe,
+                onClick = { uriHandler.openUri(VsAuxiliaryLinks.VULT_TOKEN_DOCS) },
+                type = VsCircleButtonType.Secondary,
+                designType = DesignType.Shined,
+                size = VsCircleButtonSize.Small,
+                hasBorder = false,
             )
         },
     ) {
         Column(
-            modifier =
-                Modifier.padding(it)
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .verticalScroll(rememberScrollState()),
+            modifier = Modifier.verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start,
         ) {
             Box(
@@ -174,7 +160,7 @@ internal fun DiscountTiersScreen(
             tier = state.tierClicked!!,
             onContinue = {
                 model.dismissBottomSheet()
-                model.navigateToSwaps(navController, vaultId)
+                model.navigateToSwaps()
             },
             onDismissRequest = { model.dismissBottomSheet() },
         )

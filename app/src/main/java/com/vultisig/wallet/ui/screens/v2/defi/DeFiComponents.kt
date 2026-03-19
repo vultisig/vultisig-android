@@ -251,13 +251,13 @@ fun ActionButton(
                 }
             },
         shape = RoundedCornerShape(50),
-        contentPadding = PaddingValues(horizontal = 6.dp),
+        contentPadding = PaddingValues(start = 4.dp, end = 16.dp),
         modifier = modifier.height(42.dp),
     ) {
         if (icon != null) {
             Box(
                 modifier =
-                    Modifier.size(32.dp)
+                    Modifier.size(34.dp)
                         .background(
                             if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
                             RoundedCornerShape(50),
@@ -267,7 +267,7 @@ fun ActionButton(
                 Icon(
                     painter = painterResource(id = icon),
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(12.dp),
                     tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
                 )
             }
@@ -532,7 +532,7 @@ internal fun HeaderDeFiWidget(
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.size(48.dp),
             )
 
             UiSpacer(12.dp)
@@ -682,7 +682,7 @@ internal fun HeaderDeFiWidget(
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.size(48.dp),
             )
 
             UiSpacer(12.dp)
@@ -735,10 +735,10 @@ internal fun HeaderDeFiWidget(
             ActionButton(
                 title = buttonFirstActionText,
                 icon = R.drawable.circle_minus,
-                background = Color.Transparent,
-                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
+                background = Theme.v2.colors.backgrounds.tertiary_2,
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.03f)),
                 contentColor = Theme.v2.colors.text.primary,
-                iconCircleColor = Theme.v2.colors.text.primary.copy(alpha = 0.1f),
+                iconCircleColor = Color.White.copy(alpha = 0.12f),
                 modifier = Modifier.weight(1f),
                 onClick = onClickFirstAction,
             )
@@ -746,9 +746,10 @@ internal fun HeaderDeFiWidget(
             ActionButton(
                 title = buttonSecondActionText,
                 icon = null,
-                background = Theme.v2.colors.buttons.tertiary,
+                background = Theme.v2.colors.buttons.ctaPrimary,
+                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent3),
                 contentColor = Theme.v2.colors.text.primary,
-                iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                iconCircleColor = Color.White.copy(alpha = 0.12f),
                 modifier = Modifier.weight(1f),
                 onClick = onClickSecondAction,
             )
