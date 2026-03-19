@@ -99,7 +99,7 @@ internal fun VsOverviewToken(
 internal fun TokenAndChainLogo(
     tokenLogo: ImageModel,
     tokenTicker: String,
-    chainLogo: Int,
+    chainLogo: Int?,
     tokenLogoSize: Dp = 36.dp,
     chainLogoSize: Dp = 20.dp,
     chainLogoOffset: DpOffset = DpOffset(x = 5.dp, y = 5.dp),
