@@ -129,9 +129,10 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
 internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
-    contentWithFastSelection<Route.Swap.SwapMain, Route.Swap>(navController = navController) { onDragStart,
-                                                                                               onDrag,
-                                                                                               onDragEnd ->
+    contentWithFastSelection<Route.Swap.SwapMain, Route.Swap>(navController = navController) {
+        onDragStart,
+        onDrag,
+        onDragEnd ->
         val model: SwapFormViewModel = hiltViewModel()
         val state by model.uiState.collectAsState()
 
@@ -187,11 +188,11 @@ internal fun SwapScreen(
     var isFeeDetailsExpanded by remember { mutableStateOf(false) }
 
     val rotationAngle by
-    animateFloatAsState(
-        targetValue = if (isFeeDetailsExpanded) 180f else 0f,
-        animationSpec = tween(durationMillis = 200),
-        label = "caretRotation",
-    )
+        animateFloatAsState(
+            targetValue = if (isFeeDetailsExpanded) 180f else 0f,
+            animationSpec = tween(durationMillis = 200),
+            label = "caretRotation",
+        )
 
     V2Scaffold(
         title = stringResource(R.string.chain_account_view_swap),
@@ -280,8 +281,7 @@ internal fun SwapScreen(
                                 )
                                 Box(
                                     modifier =
-                                        Modifier
-                                            .graphicsLayer {
+                                        Modifier.graphicsLayer {
                                                 this.translationY = -size.height / 2 + topCenter.y
                                                 this.translationX =
                                                     (topCenter.x + bottomCenter.x).div(2) -
@@ -326,8 +326,7 @@ internal fun SwapScreen(
                                                 contentDescription = null,
                                                 tint = Theme.v2.colors.text.primary,
                                                 modifier =
-                                                    Modifier
-                                                        .clickable {
+                                                    Modifier.clickable {
                                                             spinTrigger++
                                                             onFlipSelectedTokens()
                                                         }
@@ -380,9 +379,7 @@ internal fun SwapScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.padding(horizontal = 8.dp),
                     ) {
-                        val placeHolderModifier = Modifier
-                            .height(16.dp)
-                            .width(80.dp)
+                        val placeHolderModifier = Modifier.height(16.dp).width(80.dp)
                         FormDetails2(
                             title = stringResource(R.string.swap_screen_provider_title),
                             value = state.provider.asString(),
@@ -425,8 +422,7 @@ internal fun SwapScreen(
                             Row(modifier = Modifier.height(IntrinsicSize.Max)) {
                                 Box(
                                     modifier =
-                                        Modifier
-                                            .width(1.5.dp)
+                                        Modifier.width(1.5.dp)
                                             .fillMaxHeight()
                                             .background(
                                                 color = Theme.v2.colors.border.primaryAccent4,
@@ -568,29 +564,20 @@ internal fun SwapScreen(
             ) { showPercentagePicker ->
                 if (showPercentagePicker) {
                     Column {
-                        HorizontalDivider(
-                            thickness = 1.dp,
-                            color = Theme.v2.colors.border.light
-                        )
+                        HorizontalDivider(thickness = 1.dp, color = Theme.v2.colors.border.light)
 
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier =
-                                Modifier
-                                    .fillMaxWidth()
+                                Modifier.fillMaxWidth()
                                     .background(color = Theme.v2.colors.backgrounds.secondary)
-                                    .padding(
-                                        vertical = 12.dp,
-                                        horizontal = 8.dp
-                                    ),
+                                    .padding(vertical = 12.dp, horizontal = 8.dp),
                         ) {
                             PercentageItem(
                                 title = "25%",
                                 onClick = { onSelectSrcPercentage(0.25f) },
                             )
-                            PercentageItem(
-                                title = "50%",
-                                onClick = { onSelectSrcPercentage(0.5f) })
+                            PercentageItem(title = "50%", onClick = { onSelectSrcPercentage(0.5f) })
                             PercentageItem(
                                 title = "75%",
                                 onClick = { onSelectSrcPercentage(0.75f) },
@@ -622,12 +609,7 @@ internal fun SwapScreen(
                             onSwap()
                         },
                         modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    vertical = 12.dp,
-                                    horizontal = 24.dp
-                                ),
+                            Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 24.dp),
                     )
                 }
             }
@@ -643,8 +625,7 @@ private fun RowScope.PercentageItem(title: String, onClick: () -> Unit) {
         color = Theme.v2.colors.text.primary,
         textAlign = TextAlign.Center,
         modifier =
-            Modifier
-                .clickable(onClick = onClick)
+            Modifier.clickable(onClick = onClick)
                 .background(
                     color = Theme.v2.colors.backgrounds.tertiary_2,
                     shape = RoundedCornerShape(99.dp),
@@ -678,26 +659,21 @@ private fun VultDiscountTier(vultBpsDiscount: Int, tierType: TierType?) {
         val infiniteTransition = rememberInfiniteTransition(label = "rotation")
 
         val rotation by
-        infiniteTransition.animateFloat(
-            initialValue = 0f,
-            targetValue = 360f,
-            animationSpec =
-                infiniteRepeatable(
-                    animation = tween(
-                        durationMillis = 10000,
-                        easing = LinearEasing
+            infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec =
+                    infiniteRepeatable(
+                        animation = tween(durationMillis = 10000, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart,
                     ),
-                    repeatMode = RepeatMode.Restart,
-                ),
-            label = "rotation",
-        )
+                label = "rotation",
+            )
 
         Image(
             painterResource(logo),
             contentDescription = null,
-            modifier = Modifier
-                .size(16.dp)
-                .rotate(rotation),
+            modifier = Modifier.size(16.dp).rotate(rotation),
         )
 
         Text(
@@ -741,11 +717,7 @@ private fun TokenInput(
                         else Theme.v2.colors.backgrounds.disabled,
                     shape = shape,
                 )
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.border.light,
-                    shape = shape
-                )
+                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
                 .clip(shape)
                 .padding(all = 16.dp),
     ) {
@@ -782,27 +754,20 @@ private fun TokenInput(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            TokenChip(
-                selectedToken = selectedToken,
-                onSelectTokenClick = onSelectTokenClick
-            )
+            TokenChip(selectedToken = selectedToken, onSelectTokenClick = onSelectTokenClick)
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
                 horizontalAlignment = Alignment.End,
             ) {
                 if (isLoading && title == stringResource(R.string.swap_form_dst_token_title)) {
-                    UiPlaceholderLoader(modifier = Modifier
-                        .height(24.dp)
-                        .width(150.dp))
+                    UiPlaceholderLoader(modifier = Modifier.height(24.dp).width(150.dp))
                 } else {
                     textFieldContent()
                 }
 
                 if (isLoading) {
-                    UiPlaceholderLoader(modifier = Modifier
-                        .height(16.dp)
-                        .width(80.dp))
+                    UiPlaceholderLoader(modifier = Modifier.height(16.dp).width(80.dp))
                 } else {
                     Text(
                         text = fiatValue,
@@ -832,8 +797,7 @@ internal fun TokenChip(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier =
-            Modifier
-                .clickable(onClick = onSelectTokenClick)
+            Modifier.clickable(onClick = onSelectTokenClick)
                 .onGloballyPositioned { coordinates ->
                     fieldPosition = coordinates.positionInWindow()
                 }
@@ -929,10 +893,7 @@ private fun QuoteTimer(expiredAt: Instant, modifier: Modifier = Modifier) {
                     color = Theme.v2.colors.backgrounds.secondary,
                     shape = RoundedCornerShape(99.dp),
                 )
-                .padding(
-                    vertical = 6.dp,
-                    horizontal = 12.dp
-                ),
+                .padding(vertical = 6.dp, horizontal = 12.dp),
     ) {
         Text(
             text = timeLeft,
@@ -956,12 +917,7 @@ private fun formatDurationAsMinutesSeconds(duration: Duration): String {
     val totalSeconds = duration.inWholeSeconds.coerceAtLeast(0)
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
-    return String.format(
-        Locale.getDefault(),
-        "%02d:%02d",
-        minutes,
-        seconds
-    )
+    return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
 }
 
 @Preview
@@ -1085,19 +1041,9 @@ private val longTokenInput =
                                             contractAddress = "",
                                             isNativeToken = true,
                                         ),
-                                    tokenValue = TokenValue(
-                                        BigInteger("2500000000"),
-                                        "RUNE",
-                                        8
-                                    ),
-                                    fiatValue = FiatValue(
-                                        BigDecimal("5.25"),
-                                        "USD"
-                                    ),
-                                    price = FiatValue(
-                                        BigDecimal("2.10"),
-                                        "USD"
-                                    ),
+                                    tokenValue = TokenValue(BigInteger("2500000000"), "RUNE", 8),
+                                    fiatValue = FiatValue(BigDecimal("5.25"), "USD"),
+                                    price = FiatValue(BigDecimal("2.10"), "USD"),
                                 )
                             ),
                     ),
@@ -1116,19 +1062,9 @@ private val longTokenInput =
                                 contractAddress = "",
                                 isNativeToken = true,
                             ),
-                        tokenValue = TokenValue(
-                            BigInteger("2500000000"),
-                            "RUNE",
-                            8
-                        ),
-                        fiatValue = FiatValue(
-                            BigDecimal("5.25"),
-                            "USD"
-                        ),
-                        price = FiatValue(
-                            BigDecimal("2.10"),
-                            "USD"
-                        ),
+                        tokenValue = TokenValue(BigInteger("2500000000"), "RUNE", 8),
+                        fiatValue = FiatValue(BigDecimal("5.25"), "USD"),
+                        price = FiatValue(BigDecimal("2.10"), "USD"),
                     ),
             ),
         title = "LP-THOR.RUJI/ ETH.USDC-XYK",
@@ -1165,19 +1101,9 @@ private val tokenInput =
                                             contractAddress = "",
                                             isNativeToken = true,
                                         ),
-                                    tokenValue = TokenValue(
-                                        BigInteger("1000000000"),
-                                        "CACAO",
-                                        6
-                                    ),
-                                    fiatValue = FiatValue(
-                                        BigDecimal("4.10"),
-                                        "USD"
-                                    ),
-                                    price = FiatValue(
-                                        BigDecimal("0.41"),
-                                        "USD"
-                                    ),
+                                    tokenValue = TokenValue(BigInteger("1000000000"), "CACAO", 6),
+                                    fiatValue = FiatValue(BigDecimal("4.10"), "USD"),
+                                    price = FiatValue(BigDecimal("0.41"), "USD"),
                                 )
                             ),
                     ),
@@ -1196,19 +1122,9 @@ private val tokenInput =
                                 contractAddress = "",
                                 isNativeToken = true,
                             ),
-                        tokenValue = TokenValue(
-                            BigInteger("1000000000"),
-                            "CACAO",
-                            6
-                        ),
-                        fiatValue = FiatValue(
-                            BigDecimal("4.10"),
-                            "USD"
-                        ),
-                        price = FiatValue(
-                            BigDecimal("0.41"),
-                            "USD"
-                        ),
+                        tokenValue = TokenValue(BigInteger("1000000000"), "CACAO", 6),
+                        fiatValue = FiatValue(BigDecimal("4.10"), "USD"),
+                        price = FiatValue(BigDecimal("0.41"), "USD"),
                     ),
             ),
         title = "CACAO",
