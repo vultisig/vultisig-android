@@ -281,8 +281,7 @@ internal fun SwapScreen(
                                 )
                                 Box(
                                     modifier =
-                                        Modifier
-                                            .graphicsLayer {
+                                        Modifier.graphicsLayer {
                                                 this.translationY = -size.height / 2 + topCenter.y
                                                 this.translationX =
                                                     (topCenter.x + bottomCenter.x).div(2) -
@@ -327,8 +326,7 @@ internal fun SwapScreen(
                                                 contentDescription = null,
                                                 tint = Theme.v2.colors.text.primary,
                                                 modifier =
-                                                    Modifier
-                                                        .clickable {
+                                                    Modifier.clickable {
                                                             spinTrigger++
                                                             onFlipSelectedTokens()
                                                         }
@@ -381,9 +379,7 @@ internal fun SwapScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.padding(horizontal = 8.dp),
                     ) {
-                        val placeHolderModifier = Modifier
-                            .height(16.dp)
-                            .width(80.dp)
+                        val placeHolderModifier = Modifier.height(16.dp).width(80.dp)
                         FormDetails2(
                             title = stringResource(R.string.swap_screen_provider_title),
                             value = state.provider.asString(),
@@ -426,8 +422,7 @@ internal fun SwapScreen(
                             Row(modifier = Modifier.height(IntrinsicSize.Max)) {
                                 Box(
                                     modifier =
-                                        Modifier
-                                            .width(1.5.dp)
+                                        Modifier.width(1.5.dp)
                                             .fillMaxHeight()
                                             .background(
                                                 color = Theme.v2.colors.border.primaryAccent4,
@@ -574,8 +569,7 @@ internal fun SwapScreen(
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier =
-                                Modifier
-                                    .fillMaxWidth()
+                                Modifier.fillMaxWidth()
                                     .background(color = Theme.v2.colors.backgrounds.secondary)
                                     .padding(vertical = 12.dp, horizontal = 8.dp),
                         ) {
@@ -615,9 +609,7 @@ internal fun SwapScreen(
                             onSwap()
                         },
                         modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 12.dp, horizontal = 24.dp),
+                            Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 24.dp),
                     )
                 }
             }
@@ -633,8 +625,7 @@ private fun RowScope.PercentageItem(title: String, onClick: () -> Unit) {
         color = Theme.v2.colors.text.primary,
         textAlign = TextAlign.Center,
         modifier =
-            Modifier
-                .clickable(onClick = onClick)
+            Modifier.clickable(onClick = onClick)
                 .background(
                     color = Theme.v2.colors.backgrounds.tertiary_2,
                     shape = RoundedCornerShape(99.dp),
@@ -682,9 +673,7 @@ private fun VultDiscountTier(vultBpsDiscount: Int, tierType: TierType?) {
         Image(
             painterResource(logo),
             contentDescription = null,
-            modifier = Modifier
-                .size(16.dp)
-                .rotate(rotation),
+            modifier = Modifier.size(16.dp).rotate(rotation),
         )
 
         Text(
@@ -772,17 +761,13 @@ private fun TokenInput(
                 horizontalAlignment = Alignment.End,
             ) {
                 if (isLoading && title == stringResource(R.string.swap_form_dst_token_title)) {
-                    UiPlaceholderLoader(modifier = Modifier
-                        .height(24.dp)
-                        .width(150.dp))
+                    UiPlaceholderLoader(modifier = Modifier.height(24.dp).width(150.dp))
                 } else {
                     textFieldContent()
                 }
 
                 if (isLoading) {
-                    UiPlaceholderLoader(modifier = Modifier
-                        .height(16.dp)
-                        .width(80.dp))
+                    UiPlaceholderLoader(modifier = Modifier.height(16.dp).width(80.dp))
                 } else {
                     Text(
                         text = fiatValue,
@@ -812,8 +797,7 @@ internal fun TokenChip(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier =
-            Modifier
-                .clickable(onClick = onSelectTokenClick)
+            Modifier.clickable(onClick = onSelectTokenClick)
                 .onGloballyPositioned { coordinates ->
                     fieldPosition = coordinates.positionInWindow()
                 }
@@ -851,7 +835,10 @@ internal fun TokenChip(
         TokenAndChainLogo(
             tokenLogo = selectedToken?.tokenLogo ?: "",
             tokenTicker = selectedToken?.title ?: "",
-            chainLogo = selectedToken?.chainLogo,
+            chainLogo =
+                selectedToken?.chainLogo.takeIf {
+                    selectedToken?.isNativeToken == false || selectedToken?.isLayer2 == true
+                },
             chainLogoSize = 16.dp,
             tokenLogoSize = 36.dp,
         )

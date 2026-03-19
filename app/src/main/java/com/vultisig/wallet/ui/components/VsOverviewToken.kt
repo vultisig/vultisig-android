@@ -30,6 +30,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
@@ -68,7 +69,7 @@ internal fun VsOverviewToken(
         TokenAndChainLogo(
             tokenLogo = getCoinLogo(token.logo),
             tokenTicker = token.ticker,
-            chainLogo = chainLogo,
+            chainLogo = chainLogo.takeIf { !token.isNativeToken || token.chain.isLayer2 },
         )
 
         UiSpacer(12.dp)
@@ -133,18 +134,6 @@ internal fun TokenAndChainLogo(
                         .align(BottomEnd),
             )
         }
-                Image(
-                    painter = painterResource(id = it),
-                    contentDescription = null,
-                    modifier =
-                        Modifier.offset(x = chainLogoOffset.x, y = chainLogoOffset.y)
-                            .size(chainLogoSize)
-                            .clip(CircleShape)
-                            .background(chainBackgroundColor, CircleShape)
-                            .border(width = 2.dp, color = chainBorderColor, shape = CircleShape)
-                            .align(BottomEnd),
-                )
-            }
     }
 }
 
