@@ -172,7 +172,6 @@
     <string name="keysign">Schlüsselzeichen</string>
     <string name="generating_key_screen_keygen_failed">Keygen fehlgeschlagen</string>
     <string name="bottom_warning_msg_keygen_error_screen">Behalten Sie die Geräte im selben WLAN-Netzwerk, korrigieren Sie den Tresor und koppeln Sie die Geräte.\nStellen Sie sicher, dass Vultisig auf keinem anderen Gerät ausgeführt wird.</string>
-    <string name="verify_transaction_consent_correct_dst">Ich sende nicht an einen Betrüger oder Hacker</string>
     <string name="naming_vault_screen_invalid_name">Ungültiger Name</string>
     <string name="rename_vault_invalid_name">Ungültiger Name</string>
     <string name="vault_name_too_long_error">Der Tresorname ist zu lang</string>
@@ -181,13 +180,13 @@
     <string name="insufficient_utxos_error">Nicht genügend verfügbare UTXOs, um den ausgewählten Betrag zu decken. Bitte fügen Sie mehr Guthaben hinzu oder reduzieren Sie den zu sendenden Betrag</string>
     <string name="send_error_insufficient_balance">Unzureichende Mittel</string>
     <string name="send_error_insufficient_native_balance_with_fees">Unzureichendes %1$s-Guthaben</string>
-    <string name="verify_swap_agree_receive_amount">Ich bin mit dem Betrag einverstanden, den ich nach dem Tausch erhalte</string>
+    <string name="verify_swap_agree_receive_amount">Ich bin mit dem Mindestbetrag einverstanden, den ich erhalte</string>
     <string name="vault_settings_success_backup_file">Datei gespeichert in Downloads/%1$s</string>
     <string name="swap_form_estimated_fees_title">Swap Gebühr</string>
     <string name="keysign_screen_error_please_try_again">Fehler! Bitte versuchen Sie es erneut. %1$s</string>
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_keysign_discovery_service">Service entdecken</string>
-    <string name="vault_settings_delete_subtitle">Löschen Sie Ihre Tresorfreigabe dauerhaft</string>
+    <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft.</string>
     <string name="default_chain_screen_title">Standardketten</string>
     <string name="danger_icon">Gefahrensymbol</string>
     <string name="currency_unit_setting_screen_title">Währung\n</string>
@@ -595,7 +594,7 @@
     <string name="vault_settings_backup_vault">Vault‑Freigabe sichern</string>
     <string name="vault_settings_back_up_your">Sichern Sie Ihre Vault‑Freigabe auf einem Gerät oder auf dem Server.</string>
     <string name="vault_settings_migrate_gg20">GG20‑Vault auf DKLS migrieren</string>
-    <string name="vault_settings_reshare_change">Erneut teilen, TSS ändern oder Nachrichten signieren.</string>
+    <string name="vault_settings_reshare_change">Erneut teilen, Sicherheit verwalten oder Nachrichten signieren.</string>
     <string name="vault_backup_summary_start_using_vault">Jetzt Ihren Tresor nutzen.</string>
     <string name="vault_backup_summary_choose_chains">Wählen Sie Ketten</string>
     <string name="transaction_done_form_approve">Genehmigen</string>
@@ -650,7 +649,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">Genehmigungs-Tx-Hash</string>
     <string name="swap_transaction_overview_track">Tracking</string>
     <string name="token_selection_screen_select_tokens">Token auswählen</string>
-    <string name="send_form_est_network_fee">Geschätzte Netzwerkgebühr</string>
+    <string name="send_form_est_network_fee">Netzwerkgebühr</string>
     <string name="send_form_minimum_send_amount_is_requires_this">Der Mindestsendebetrag beträgt %1$s %2$s. %3$s erfordert dies, um Spam zu verhindern.</string>
     <string name="minimum_send_amount_is_ada">Der Mindestsendebetrag beträgt %1$s ADA. Cardano erfordert dies, um Spam zu verhindern.</string>
     <string name="insufficient_balance_try_send">Unzureichendes Guthaben. Versuchen Sie stattdessen „Max. senden“, um %1$s ADA zu senden.</string>
@@ -820,7 +819,7 @@
     <string name="tx_overview_screen_tx_memo">Memo</string>
     <string name="verify_sign_message_message_field_title">Nachricht</string>
     <string name="verify_sign_message_method_field_title">Methode</string>
-    <string name="fast_vault_password_screen_title">Vultiserver-Passwort</string>
+    <string name="fast_vault_password_screen_title">Passwort wählen</string>
     <string name="fast_vault_password_screen_hint">Dies geschieht, weil das Passwort zur lokalen Verschlüsselung der Sicherungsdatei verwendet wird, ähnlich wie bei der Festplattenverschlüsselung. Im nächsten Schritt können Sie einen Hinweis hinzufügen.</string>
     <string name="fast_vault_password_screen_hint_title">Weitere Informationen</string>
     <string name="peer_discovery_local_mode_hint">Sie befinden sich im lokalen Modus.</string>
@@ -847,7 +846,7 @@
     <string name="scan_qr_code_modal_scan_the">Scannen Sie den</string>
     <string name="scan_qr_code_modal_qr_code">QR-Code</string>
     <string name="create_new_vault_screen_or">ODER</string>
-    <string name="tx_overview_screen_title">Übersicht</string>
+    <string name="tx_overview_screen_title">Fertig</string>
     <string name="fast_vault_password_screen_warning">Passwort kann nicht zurückgesetzt oder wiederhergestellt werden</string>
     <string name="referral_top_bar_list">Empfehlung</string>
     <string name="onboarding_desc_page_1_part_3">Ihr neuer Tresor</string>
@@ -947,7 +946,7 @@
     <string name="transaction_history_tab_send">Senden</string>
     <string name="transaction_history_tab_swap">Swaps</string>
     <string name="transaction_history_empty_title">Noch keine Transaktionen</string>
-    <string name="transaction_history_empty_desc">Ihr Transaktionsverlauf wird hier angezeigt</string>
+    <string name="transaction_history_empty_desc">Sie haben noch keine Swaps, Senden oder Genehmigungen aus diesem Tresor vorgenommen.</string>
     <string name="transaction_history_search_asset_title">Asset suchen</string>
     <string name="transaction_history_search_asset_not_found">Kein Asset gefunden</string>
     <string name="transaction_history_clear_filters">Filter löschen</string>
@@ -1026,7 +1025,7 @@
     <string name="welcome_fast_and_easy">Schnell &amp; einfach</string>
     <string name="welcome_fast_and_easy_desc">Signieren Sie mit nur 1 Gerät. Unser sicherer Server signiert mit Ihnen für Multisig-Sicherheit. Plugin-kompatibel.</string>
     <string name="welcome_fast_and_easy_highlight">nur 1 Gerät.</string>
-    <string name="welcome_plugin_compatible">Plugin Store kompatibel</string>
+    <string name="welcome_plugin_compatible">Plugin Marketplace kompatibel</string>
     <string name="welcome_tip">Tipp: Sie können einen Browser als Gerät verwenden</string>
     <string name="welcome_only_your_devices">Nur Ihre Geräte</string>
     <string name="welcome_only_your_devices_desc">Nur Ihre Geräte sind autorisierte Unterzeichner. Das Signieren von Transaktionen erfordert 2 Geräte. Vollständige Selbstverwahrung auf Knopfdruck.</string>

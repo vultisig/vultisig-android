@@ -24,7 +24,7 @@
     <string name="vault_settings_security_screen_title_content">Вы можете отключить защиту в режиме реального времени, предоставляемую Blockaid.</string>
     <string name="vault_settings_reshare_subtitle">Повторное совместное использование хранилища с новым комитетом</string>
     <string name="vault_settings_delete_title">Удалить</string>
-    <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда</string>
+    <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда.</string>
     <string name="vault_settings_security_title">Безопасность в сети</string>
     <string name="vault_settings_security_subtitle">Управляйте своей безопасностью в сети</string>
     <string name="vault_settings_discounts">$VULT Уровни Скидок</string>
@@ -129,7 +129,6 @@
     <string name="verify_transaction_join_keysign">Присоединиться к ключевой подписи</string>
     <string name="verify_transaction_consent_address">Я отправляю на правильный адрес</string>
     <string name="verify_transaction_consent_amount">Сумма верна</string>
-    <string name="verify_transaction_consent_correct_dst">Я не отправляю мошеннику или хакеру</string>
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
     <string name="camera_permission_denied">Разрешение на камеру не предоставлено. Пожалуйста, включите его в настройках.</string>
     <string name="join_keysign_discovering_session_id">Обнаружение ID сессии</string>
@@ -188,7 +187,7 @@
     <string name="swap_form_gas_title">Сетевой сбор</string>
     <string name="swap_form_total_fees_title">Общая сумма сборов</string>
     <string name="share_qr_utils_choose_an_app">Выберите приложение</string>
-    <string name="verify_swap_agree_receive_amount">Я согласен с суммой, которую получу после обмена</string>
+    <string name="verify_swap_agree_receive_amount">Я согласен с минимальной суммой, которую получу</string>
     <string name="verify_swap_consent_amount">Сумма обмена корректна</string>
     <string name="chain_token_screen_address_copied">%1$s скопировано в буфер обмена</string>
     <string name="tx_done_address_copied">%1$s скопировано в буфер обмена</string>
@@ -592,7 +591,7 @@
     <string name="vault_settings_backup_vault">Резервное копирование общего ресурса хранилища</string>
     <string name="vault_settings_back_up_your">Создание резервной копии общего ресурса хранилища на устройстве или сервере.</string>
     <string name="vault_settings_migrate_gg20">Миграция хранилища GG20 DKLS</string>
-    <string name="vault_settings_reshare_change">Повторный доступ, изменение TSS или подпись сообщений.</string>
+    <string name="vault_settings_reshare_change">Повторный доступ, управление безопасностью или подпись сообщений.</string>
     <string name="vault_backup_summary_start_using_vault">Начать использовать хранилище</string>
     <string name="vault_backup_summary_choose_chains">Выберите цепочки</string>
     <string name="transaction_done_form_approve">Одобрить</string>
@@ -645,7 +644,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">Хеш транзакции подтверждения</string>
     <string name="swap_transaction_overview_track">Отслеживание</string>
     <string name="token_selection_screen_select_tokens">Выбор токенов</string>
-    <string name="send_form_est_network_fee">Расчётная комиссия сети</string>
+    <string name="send_form_est_network_fee">Сетевой сбор</string>
     <string name="send_form_minimum_send_amount_is_requires_this">Минимальная сумма отправки — %1$s %2$s. %3$s требует этого для предотвращения спама.</string>
     <string name="minimum_send_amount_is_ada">Минимальная сумма отправки — %1$s ADA. Cardano требует этого для предотвращения спама.</string>
     <string name="insufficient_balance_try_send">Недостаточно средств. Попробуйте «Отправить максимум», чтобы отправить %1$s ADA.</string>
@@ -815,7 +814,7 @@
     <string name="tx_overview_screen_tx_memo">Памятка</string>
     <string name="verify_sign_message_message_field_title">Сообщение</string>
     <string name="verify_sign_message_method_field_title">Способ</string>
-    <string name="fast_vault_password_screen_title">Пароль Vultisig</string>
+    <string name="fast_vault_password_screen_title">Выберите пароль</string>
     <string name="fast_vault_password_screen_hint">Это происходит потому, что пароль используется для локального шифрования файла резервной копии, аналогично шифрованию жёсткого диска. На следующем шаге вы можете добавить подсказку.</string>
     <string name="fast_vault_password_screen_hint_title">Подробнее</string>
     <string name="peer_discovery_local_mode_hint">Вы работаете в локальном режиме</string>
@@ -842,7 +841,7 @@
     <string name="scan_qr_code_modal_scan_the">Сканируйте</string>
     <string name="scan_qr_code_modal_qr_code">QR-код</string>
     <string name="create_new_vault_screen_or">ИЛИ</string>
-    <string name="tx_overview_screen_title">Обзор</string>
+    <string name="tx_overview_screen_title">Готово</string>
     <string name="fast_vault_password_screen_warning">Пароль не может быть сброшен или восстановлен</string>
     <string name="referral_top_bar_list">Реферал</string>
     <string name="onboarding_desc_page_1_part_3">ваш новый</string>
@@ -942,7 +941,7 @@
     <string name="transaction_history_tab_send">Отправить</string>
     <string name="transaction_history_tab_swap">Свопы</string>
     <string name="transaction_history_empty_title">Транзакций пока нет</string>
-    <string name="transaction_history_empty_desc">История ваших транзакций появится здесь</string>
+    <string name="transaction_history_empty_desc">Вы ещё не совершали свопов, отправок или подтверждений из этого хранилища.</string>
     <string name="transaction_history_search_asset_title">Поиск актива</string>
     <string name="transaction_history_search_asset_not_found">Активы не найдены</string>
     <string name="transaction_history_clear_filters">Сбросить фильтры</string>
@@ -1025,7 +1024,7 @@
     <string name="welcome_fast_and_easy">Быстро &amp; просто</string>
     <string name="welcome_fast_and_easy_desc">Подписывайте всего с 1 устройством. Наш защищённый сервер подписывает вместе с вами для мультисиг-безопасности. Совместим с плагинами.</string>
     <string name="welcome_fast_and_easy_highlight">всего с 1 устройством.</string>
-    <string name="welcome_plugin_compatible">Совместимо с Plugin Store</string>
+    <string name="welcome_plugin_compatible">Совместимо с Plugin Marketplace</string>
     <string name="welcome_tip">Совет: Вы можете использовать браузер как устройство</string>
     <string name="welcome_only_your_devices">Только ваши устройства</string>
     <string name="welcome_only_your_devices_desc">Только ваши устройства являются авторизованными подписантами. Для подписания транзакций требуется 2 устройства. Полное самостоятельное хранение в ваших руках.</string>
@@ -1045,12 +1044,12 @@
     <string name="vault_setup_1_device_signing">Подпись 1 устройством</string>
     <string name="vault_setup_1_device_signing_desc">Удобная подпись одним устройством в движении. Идеально для повседневных транзакций или торговли небольшими суммами.</string>
     <string name="vault_setup_fast_and_secure_setup">Быстрая и безопасная настройка</string>
-    <string name="vault_setup_fast_and_secure_setup_desc">Без долгой настройки. Только ваш e-mail и пароль, плюс две резервные копии.</string>
+    <string name="vault_setup_fast_and_secure_setup_desc">Без долгой настройки. Только ваш email и пароль, плюс две резервные копии.</string>
     <string name="vault_setup_multisig_with_one_device">Мультисиг с одним устройством</string>
     <string name="vault_setup_multisig_with_one_device_desc">Со-подписант никогда не может инициировать транзакции; только помогает их подписывать.</string>
     <string name="vault_setup_no_inspiration">Нет идей для названия? Вы всегда можете изменить имя позже в настройках.</string>
     <string name="naming_saving_vault">Сохранение хранилища</string>
-    <string name="email_enter_your_email">Введите ваш e-mail</string>
+    <string name="email_enter_your_email">Введите ваш email</string>
     <string name="email_only_used_once">Это будет использовано только один раз для отправки вашего резервного файла. Vultisig не хранит никаких данных.</string>
     <string name="password_choose_a_password">Выберите пароль</string>
     <string name="password_extra_layer">Если вы хотите дополнительный уровень безопасности, выберите пароль. Пароль невозможно восстановить.</string>
@@ -1064,9 +1063,9 @@
     <string name="backup_device_backup_and_password_are_key">Резервная копия устройства и пароль являются ключом. Сервер только со-подписывает и резервную копию можно запросить.</string>
     <string name="backup_store_backups_separately">Храните резервные копии отдельно</string>
     <string name="backup_keep_each_backup_in_different_place">Храните каждую резервную копию в разном месте. Если одна будет скомпрометирована, ваши средства останутся в безопасности.</string>
-    <string name="backup_4_digit_code_received_via_email">4-значный код, полученный по e-mail</string>
+    <string name="backup_4_digit_code_received_via_email">4-значный код, полученный по email</string>
     <string name="backup_this_will_activate_the_co_signer">Это активирует со-подписанта</string>
-    <string name="backup_use_a_different_email">Использовать другой e-mail</string>
+    <string name="backup_use_a_different_email">Использовать другой email</string>
     <string name="backup_send_to_email">Отправить на %1$s</string>
     <string name="backup_incorrect_code_try_again">Неверный код. Попробуйте снова.</string>
     <string name="backup_save_backup_to_the_cloud">Сохранить резервную копию в облаке</string>

@@ -17,7 +17,7 @@
     <string name="select_asset_no_result">No se encontraron resultados.</string>
     <string name="select_chain_chain_title">Cadena</string>
     <string name="select_chain_balance_title">Saldo</string>
-    <string name="vault_settings_delete_subtitle">Eliminar tu recurso compartido de bóveda de forma permanente</string>
+    <string name="vault_settings_delete_subtitle">Eliminar tu bóveda de forma permanente.</string>
     <string name="vault_settings_security_screen_title_bottomsheet">Seguridad en cadena desactivada</string>
     <string name="vault_settings_security_screen_content_bottomsheet">Desactivar la seguridad en cadena significa que Blockaid no puede verificar las transacciones. Estará menos protegido.</string>
     <string name="vault_settings_security_title">Seguridad en cadena</string>
@@ -130,7 +130,6 @@
     <string name="verify_transaction_join_keysign">Unirse a la firma de clave</string>
     <string name="verify_transaction_consent_address">Estoy enviando a la dirección correcta</string>
     <string name="verify_transaction_consent_amount">La cantidad es correcta</string>
-    <string name="verify_transaction_consent_correct_dst">No estoy enviando a una estafa ni a un hacker</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, revise todos los consentimientos</string>
     <string name="join_keysign_discovering_session_id">Descubriendo el ID de sesión</string>
     <string name="qr_address_screen_title">Dirección</string>
@@ -181,7 +180,7 @@
     <string name="swap_form_gas_title">Tarifa de red</string>
     <string name="swap_form_total_fees_title">Tarifas totales</string>
     <string name="share_qr_utils_choose_an_app">Elige una aplicación</string>
-    <string name="verify_swap_agree_receive_amount">Estoy de acuerdo con la cantidad que recibiré después del intercambio.</string>
+    <string name="verify_swap_agree_receive_amount">Estoy de acuerdo con la cantidad mínima que recibiré</string>
     <string name="verify_swap_consent_amount">El monto del intercambio es correcto</string>
     <string name="tx_done_address_copied">%1$s copiada al portapapeles</string>
     <string name="verify_swap_sign_button">Firmar transacción</string>
@@ -595,7 +594,7 @@
     <string name="vault_settings_backup_vault">Copia de seguridad del recurso compartido de bóveda</string>
     <string name="vault_settings_back_up_your">Realice una copia de seguridad del recurso compartido de bóveda en un dispositivo o servidor</string>
     <string name="vault_settings_migrate_gg20">Migrar bóveda GG20 a DKLS</string>
-    <string name="vault_settings_reshare_change">Recompartir, cambiar TSS o firmar mensajes</string>
+    <string name="vault_settings_reshare_change">Recompartir, gestionar seguridad o firmar mensajes.</string>
     <string name="vault_backup_summary_start_using_vault">Comienza a usar tu bóveda</string>
     <string name="vault_backup_summary_choose_chains">Elegir cadenas</string>
     <string name="transaction_done_form_approve">Aprobar</string>
@@ -648,7 +647,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">Hash de transacción de aprobación</string>
     <string name="swap_transaction_overview_track">Seguimiento</string>
     <string name="token_selection_screen_select_tokens">Seleccionar tokens</string>
-    <string name="send_form_est_network_fee">Tarifa de red estimada</string>
+    <string name="send_form_est_network_fee">Tarifa de red</string>
     <string name="send_form_minimum_send_amount_is_requires_this">El importe mínimo de envío es de %1$s %2$s. %3$s lo requiere para evitar el spam.</string>
     <string name="minimum_send_amount_is_ada">El importe mínimo de envío es de %1$s ADA. Cardano lo requiere para evitar el spam.</string>
     <string name="insufficient_balance_try_send">Saldo insuficiente. Prueba \"Enviar Máximo\" para enviar %1$s ADA.</string>
@@ -818,7 +817,7 @@
     <string name="tx_overview_screen_tx_memo">Memorándum</string>
     <string name="verify_sign_message_message_field_title">Mensaje</string>
     <string name="verify_sign_message_method_field_title">Método</string>
-    <string name="fast_vault_password_screen_title">Contraseña de Vultisig</string>
+    <string name="fast_vault_password_screen_title">Elige una contraseña</string>
     <string name="fast_vault_password_screen_hint">Esto ocurre porque la contraseña se usa para cifrar localmente el archivo de copia de seguridad, de forma similar a como se cifra un disco duro. En el siguiente paso, tiene la opción de añadir una pista.</string>
     <string name="fast_vault_password_screen_hint_title">Más información</string>
     <string name="peer_discovery_local_mode_hint">Estás en modo local</string>
@@ -845,7 +844,7 @@
     <string name="scan_qr_code_modal_scan_the">Escanear</string>
     <string name="scan_qr_code_modal_qr_code">Código QR</string>
     <string name="create_new_vault_screen_or">O</string>
-    <string name="tx_overview_screen_title">Resumen</string>
+    <string name="tx_overview_screen_title">Listo</string>
     <string name="fast_vault_password_screen_warning">La contraseña no se puede restablecer ni recuperar.</string>
     <string name="referral_top_bar_list">Referido</string>
     <string name="onboarding_desc_page_1_part_3">Tu nuevo</string>
@@ -945,7 +944,7 @@
     <string name="transaction_history_tab_send">Enviar</string>
     <string name="transaction_history_tab_swap">Intercambiar</string>
     <string name="transaction_history_empty_title">Aún no hay transacciones</string>
-    <string name="transaction_history_empty_desc">Tu historial de transacciones aparecerá aquí</string>
+    <string name="transaction_history_empty_desc">Aún no has realizado ningún swap, envío ni aprobación desde esta bóveda.</string>
     <string name="transaction_history_search_asset_title">Buscar activo</string>
     <string name="transaction_history_search_asset_not_found">No se encontraron activos</string>
     <string name="transaction_history_clear_filters">Borrar filtros</string>
@@ -1024,7 +1023,7 @@
     <string name="welcome_fast_and_easy">Rápido &amp; fácil</string>
     <string name="welcome_fast_and_easy_desc">Firma con solo 1 dispositivo. Nuestro servidor seguro firma contigo para seguridad multisig. Compatible con plugins.</string>
     <string name="welcome_fast_and_easy_highlight">solo 1 dispositivo.</string>
-    <string name="welcome_plugin_compatible">Compatible con Plugin Store</string>
+    <string name="welcome_plugin_compatible">Compatible con Plugin Marketplace</string>
     <string name="welcome_tip">Consejo: Puedes usar un navegador como dispositivo</string>
     <string name="welcome_only_your_devices">Solo tus dispositivos</string>
     <string name="welcome_only_your_devices_desc">Solo tus dispositivos son firmantes autorizados. Firmar transacciones requiere 2 dispositivos. Autocustodia total al alcance de tu mano.</string>

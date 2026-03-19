@@ -125,8 +125,8 @@ private fun TxLinkAndHash(
                     if (isApproved) R.string.transaction_done_form_approve
                     else R.string.transaction_done_form_title
                 ),
-            color = Theme.v2.colors.neutrals.n50,
-            style = Theme.montserrat.heading5,
+            color = Theme.v2.colors.text.primary,
+            style = Theme.brockmann.headings.subtitle,
         )
 
         CopyIcon(textToCopy = transactionLink)
@@ -139,8 +139,8 @@ private fun TxLinkAndHash(
     }
     Text(
         text = transactionHash,
-        color = Theme.v2.colors.backgrounds.teal,
-        style = Theme.menlo.subtitle3,
+        color = Theme.v2.colors.text.primary,
+        style = Theme.brockmann.body.s.medium,
     )
 }
 
@@ -210,10 +210,10 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                     withStyle(
                         style =
                             SpanStyle(
-                                color = Theme.v2.colors.neutrals.n100,
+                                color = Theme.v2.colors.text.tertiary,
                                 fontSize = 14.sp,
-                                fontFamily = Theme.montserrat.subtitle1.fontFamily,
-                                fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                                fontFamily = Theme.brockmann.body.s.medium.fontFamily,
+                                fontWeight = Theme.brockmann.body.s.medium.fontWeight,
                             )
                     ) {
                         append(stringResource(R.string.verify_transaction_network_fee))
@@ -224,10 +224,10 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                     withStyle(
                         style =
                             SpanStyle(
-                                color = Theme.v2.colors.neutrals.n100,
+                                color = Theme.v2.colors.text.primary,
                                 fontSize = 14.sp,
-                                fontFamily = Theme.montserrat.subtitle1.fontFamily,
-                                fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                                fontFamily = Theme.brockmann.body.s.medium.fontFamily,
+                                fontWeight = Theme.brockmann.body.s.medium.fontWeight,
                             )
                     ) {
                         append(transaction.networkFeeTokenValue)
@@ -235,10 +235,10 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                     withStyle(
                         style =
                             SpanStyle(
-                                color = Theme.v2.colors.neutrals.n400,
+                                color = Theme.v2.colors.text.tertiary,
                                 fontSize = 14.sp,
-                                fontFamily = Theme.montserrat.subtitle1.fontFamily,
-                                fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                                fontFamily = Theme.brockmann.body.s.medium.fontFamily,
+                                fontWeight = Theme.brockmann.body.s.medium.fontWeight,
                             )
                     ) {
                         append(" (~${transaction.networkFeeFiatValue})")

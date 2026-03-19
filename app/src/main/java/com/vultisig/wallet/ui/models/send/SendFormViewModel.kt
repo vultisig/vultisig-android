@@ -105,6 +105,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -124,6 +125,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.proto.Bitcoin
@@ -1088,11 +1090,15 @@ constructor(
                     )
                 }
 
-                val gasFee =
-                    gasFee.value
-                        ?: throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_no_gas_fee)
-                        )
+                val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+
+                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_amount)
+                    )
+                }
+
+                val gasFee = awaitGasFee()
 
                 if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
                     throw InvalidTransactionDataException(
@@ -1115,14 +1121,6 @@ constructor(
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_address)
-                    )
-                }
-
-                val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
-
-                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_amount)
                     )
                 }
 
@@ -2180,6 +2178,24 @@ constructor(
         uiState.update { it.copy(errorText = text) }
     }
 
+    private suspend fun awaitGasFee(): TokenValue {
+        // Return cached value immediately if the background debounce already resolved
+        gasFee.value?.let {
+            return it
+        }
+
+        // Wait for the background calculateGasFees() debounce to emit.
+        // If it doesn't resolve (e.g. RPC error swallowed by the flow), throw
+        // the localized gas fee error so the user can retry.
+        try {
+            return withTimeout(GAS_FEE_TIMEOUT_MS) { gasFee.filterNotNull().first() }
+        } catch (_: TimeoutCancellationException) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_gas_fee)
+            )
+        }
+    }
+
     private fun loadAccounts(vaultId: VaultId) {
         loadAccountsJob?.cancel()
         loadAccountsJob =
@@ -2954,11 +2970,14 @@ constructor(
 
         val chain = selectedAccount.token.chain
 
-        val gasFee =
-            gasFee.value
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_gas_fee)
-                )
+        val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
+        val gasFee = awaitGasFee()
 
         if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
             throw InvalidTransactionDataException(
@@ -3251,6 +3270,7 @@ constructor(
     }
 
     companion object {
+        private const val GAS_FEE_TIMEOUT_MS = 5_000L
         private const val REQUEST_ADDRESS_ID = "request_address_id"
         private const val REQUEST_PROVIDER_ADDRESS_ID = "request_provider_address_id"
     }

@@ -140,7 +140,7 @@ constructor(
     override suspend fun getUnstakableTcyAmount(address: String): String? {
         return try {
             val response =
-                httpClient.get("https://thornode.ninerealms.com/thorchain/tcy_staker/$address") {
+                httpClient.get("https://thornode.thorchain.network/thorchain/tcy_staker/$address") {
                     header(xClientID, xClientIDValue)
                 }
             if (!response.status.isSuccess()) {
@@ -155,7 +155,7 @@ constructor(
     }
 
     override suspend fun getTcyAutoCompoundAmount(address: String): String? {
-        val url = "https://thornode.ninerealms.com/cosmos/bank/v1beta1/balances/$address"
+        val url = "https://thornode.thorchain.network/cosmos/bank/v1beta1/balances/$address"
         val response = httpClient.get(url)
         return if (!response.status.isSuccess()) {
             null
@@ -176,7 +176,7 @@ constructor(
     override suspend fun getBalance(address: String): List<CosmosBalance> {
         val response =
             httpClient.get(
-                "https://thornode.ninerealms.com/cosmos/bank/v1beta1/balances/$address"
+                "https://thornode.thorchain.network/cosmos/bank/v1beta1/balances/$address"
             ) {
                 header(xClientID, xClientIDValue)
             }
@@ -197,7 +197,7 @@ constructor(
             buildAffiliateParams(referralCode = referralCode, discountBps = bpsDiscount)
 
         val response =
-            httpClient.get("https://thornode.ninerealms.com/thorchain/quote/swap") {
+            httpClient.get("https://thornode.thorchain.network/thorchain/quote/swap") {
                 parameter("from_asset", fromAsset)
                 parameter("to_asset", toAsset)
                 parameter("amount", amount)
@@ -267,7 +267,7 @@ constructor(
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response =
-            httpClient.get("https://thornode.ninerealms.com/auth/accounts/$address") {
+            httpClient.get("https://thornode.thorchain.network/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
             }
         return response.body<THORChainAccountResultJson>().result?.value
@@ -276,7 +276,7 @@ constructor(
 
     override suspend fun getTHORChainNativeTransactionFee(): BigInteger {
         val response =
-            httpClient.get("https://thornode.ninerealms.com/thorchain/network") {
+            httpClient.get("https://thornode.thorchain.network/thorchain/network") {
                 header(xClientID, xClientIDValue)
             }
         val content = response.body<NativeTxFeeRune>()
@@ -285,7 +285,7 @@ constructor(
 
     override suspend fun getTHORChainReferralFees(): NativeTxFeeRune {
         return httpClient
-            .get("https://thornode.ninerealms.com/thorchain/network") {
+            .get("https://thornode.thorchain.network/thorchain/network") {
                 header(xClientID, xClientIDValue)
             }
             .bodyOrThrow<NativeTxFeeRune>()
@@ -315,7 +315,7 @@ constructor(
 
     override suspend fun getNetworkChainId(): String =
         httpClient
-            .get("https://rpc.ninerealms.com/status")
+            .get("https://rpc.thorchain.network/status")
             .body<JsonObject>()["result"]
             ?.jsonObject
             ?.get("node_info")
@@ -326,14 +326,15 @@ constructor(
 
     override suspend fun resolveName(name: String, chain: String): String? =
         httpClient
-            .get("https://midgard.ninerealms.com/v2/thorname/lookup/$name")
+            .get("https://midgard.thorchain.network/v2/thorname/lookup/$name")
             .body<ThorNameResponseJson>()
             .entries
             .find { it.chain == chain }
             ?.address
 
     override suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson {
-        val response = httpClient.get("https://thornode.ninerealms.com/cosmos/tx/v1beta1/txs/$tx")
+        val response =
+            httpClient.get("https://thornode.thorchain.network/cosmos/tx/v1beta1/txs/$tx")
         if (!response.status.isSuccess()) {
             // The  URL initially returns a 'not found' response but eventually
             // provides a successful response after some time
@@ -354,7 +355,7 @@ constructor(
 
     override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> {
         val response =
-            httpClient.get("https://thornode.ninerealms.com/thorchain/inbound_addresses") {
+            httpClient.get("https://thornode.thorchain.network/thorchain/inbound_addresses") {
                 header(xClientID, xClientIDValue)
             }
         if (!response.status.isSuccess()) {
@@ -662,9 +663,9 @@ constructor(
     }
 
     companion object {
-        private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
-        private const val THORNODE_BASE = "https://thornode.ninerealms.com"
-        private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2"
+        private const val NNRLM_URL = "https://thornode.thorchain.network/thorchain"
+        private const val THORNODE_BASE = "https://thornode.thorchain.network"
+        private const val MIDGARD_URL = "https://midgard.thorchain.network/v2"
     }
 }
 

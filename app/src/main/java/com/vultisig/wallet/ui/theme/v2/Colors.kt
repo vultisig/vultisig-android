@@ -28,7 +28,7 @@ data class Buttons(
     val primary: Color = Color(0xFF33E6BF),
     val secondary: Color = Color(0xFF061B3A),
     val tertiary: Color = Color(0xFF2155DF),
-    val disabled: Color = Color(0xFF0B1A3A),
+    val disabled: Color = Color(0xFF0F1E36),
     val disabledError: Color = Color(0xFF501E1E),
     val ctaPrimary: Color = Color(0xFF0B4EFF),
     val ctaDisabled: Color = Color(0xFF23376D),
@@ -58,6 +58,7 @@ data class Backgrounds(
     val dark: Color = Color(0xFF061C3C),
     val state: BackgroundStates = BackgroundStates(),
     val surface5: Color = Color(0xFF394E6D),
+    val gradientMid: Color = Color(0xFF284570),
 )
 
 data class BackgroundStates(
@@ -84,13 +85,13 @@ data class Text(
 data class TextButton(
     val dark: Color = Color(0xFF02122B),
     val primary: Color = Color(0xFFF0F4FC),
-    val disabled: Color = Color(0xFF718096),
+    val disabled: Color = Color(0xFF4D5F75),
     val dim: Color = Color(0xFF5180FC),
 )
 
 data class Border(
     val normal: Color = Color(0xFF1B3F73),
-    val light: Color = Color(0xFF12284A),
+    val light: Color = Color(0xFF11284A),
     val extraLight: Color = Color(0xFF02122B),
     val primaryAccent4: Color = Color(0xFF4879FD),
     val disabled: Color = Color(0x992155DF),

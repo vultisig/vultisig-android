@@ -203,10 +203,7 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
 
         composable<Route.FAQSetting> { FaqSettingScreen(navController = navController) }
 
-        composable<Route.DiscountTiers> {
-            val vaultId = it.toRoute<Route.DiscountTiers>().vaultId
-            DiscountTiersScreen(navController = navController, vaultId = vaultId)
-        }
+        composable<Route.DiscountTiers> { DiscountTiersScreen() }
 
         composable<Route.LanguageSetting> { LanguageSettingScreen(navController = navController) }
 

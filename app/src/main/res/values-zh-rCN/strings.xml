@@ -88,7 +88,7 @@
     <string name="vault_settings_reshare_title">重新分享</string>
     <string name="vault_settings_reshare_subtitle">与新委员会重新分享金库</string>
     <string name="vault_settings_delete_title">删除</string>
-    <string name="vault_settings_delete_subtitle">永久删除您的金库份额</string>
+    <string name="vault_settings_delete_subtitle">永久删除您的金库。</string>
     <string name="vault_settings_security_title">链上安全</string>
     <string name="vault_settings_security_subtitle">管理您的链上安全</string>
     <string name="vault_settings_discounts">$VULT 折扣等级</string>
@@ -222,7 +222,6 @@
     <string name="verify_transaction_join_keysign">加入密钥签名</string>
     <string name="verify_transaction_consent_address">我正在发送到正确的地址</string>
     <string name="verify_transaction_consent_amount">金额正确</string>
-    <string name="verify_transaction_consent_correct_dst">我没有发送给诈骗者或黑客</string>
     <string name="verify_transaction_error_not_enough_consent">请检查所有同意项</string>
 
     <!-- Camera & QR -->
@@ -324,7 +323,7 @@
     <string name="share_qr_utils_choose_an_app">选择应用</string>
 
     <!-- Verify Swap -->
-    <string name="verify_swap_agree_receive_amount">我同意交换后将收到的金额</string>
+    <string name="verify_swap_agree_receive_amount">我同意将收到的最低金额</string>
     <string name="verify_swap_consent_amount">交换金额正确</string>
 
     <!-- Chain Token Screen -->
@@ -814,7 +813,7 @@
     <string name="send_form_balance_available">可用余额：</string>
     <string name="send_form_add_memo">添加备注</string>
     <string name="send_form_enter_memo">输入备注</string>
-    <string name="send_form_est_network_fee">预估网络费用</string>
+    <string name="send_form_est_network_fee">网络费用</string>
     <string name="send_form_minimum_send_amount_is_requires_this">最小发送金额为 %1$s %2$s。%3$s 要求此限制以防止垃圾交易。</string>
     <string name="minimum_send_amount_is_ada">最小发送金额为 %1$s ADA。Cardano 要求此限制以防止垃圾交易。</string>
     <string name="insufficient_balance_try_send">余额不足。尝试"发送最大"以发送 %1$s ADA。</string>
@@ -962,7 +961,7 @@
     <string name="vault_settings_backup_vault">备份金库份额</string>
     <string name="vault_settings_back_up_your">将您的金库份额备份到设备或服务器。</string>
     <string name="vault_settings_migrate_gg20">将 GG20 金库迁移到 DKLS</string>
-    <string name="vault_settings_reshare_change">重新分享、更改 TSS 或签署消息。</string>
+    <string name="vault_settings_reshare_change">重新分享、管理安全性或签署消息。</string>
 
     <!-- Transaction -->
     <string name="transaction_buy">购买</string>
@@ -1155,7 +1154,7 @@
     <string name="tx_overview_screen_tx_memo">备注</string>
     <string name="verify_sign_message_message_field_title">消息</string>
     <string name="verify_sign_message_method_field_title">方法</string>
-    <string name="fast_vault_password_screen_title">Vultiserver 密码</string>
+    <string name="fast_vault_password_screen_title">选择密码</string>
     <string name="fast_vault_password_screen_hint">这是因为密码用于对备份文件进行本地加密，类似于硬盘的加密方式。下一步，您可以选择添加密码提示。</string>
     <string name="fast_vault_password_screen_hint_title">更多信息</string>
     <string name="peer_discovery_local_mode_hint">您处于本地模式</string>
@@ -1182,7 +1181,7 @@
     <string name="scan_qr_code_modal_scan_the">扫描</string>
     <string name="scan_qr_code_modal_qr_code">二维码</string>
     <string name="create_new_vault_screen_or">或</string>
-    <string name="tx_overview_screen_title">概述</string>
+    <string name="tx_overview_screen_title">完成</string>
     <string name="fast_vault_password_screen_warning">密码无法重置或恢复</string>
     <string name="referral_top_bar_list">推荐</string>
     <string name="onboarding_desc_page_1_part_3">您的新</string>
@@ -1284,7 +1283,7 @@
     <string name="transaction_history_tab_send">发送</string>
     <string name="transaction_history_tab_swap">交换</string>
     <string name="transaction_history_empty_title">暂无交易记录</string>
-    <string name="transaction_history_empty_desc">您的交易历史将显示在此处</string>
+    <string name="transaction_history_empty_desc">您尚未从此金库进行任何兑换、发送或审批。</string>
     <string name="transaction_history_search_asset_title">搜索资产</string>
     <string name="transaction_history_search_asset_not_found">未找到资产</string>
     <string name="transaction_history_clear_filters">清除筛选</string>
@@ -1361,7 +1360,7 @@
     <string name="welcome_fast_and_easy">快速 &amp; 简便</string>
     <string name="welcome_fast_and_easy_desc">仅用1台设备签署。我们的安全服务器与您共同签署以实现多签安全。兼容插件。</string>
     <string name="welcome_fast_and_easy_highlight">仅用1台设备签署。</string>
-    <string name="welcome_plugin_compatible">兼容 Plugin Store</string>
+    <string name="welcome_plugin_compatible">兼容 Plugin Marketplace</string>
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>
     <string name="welcome_only_your_devices">仅您的设备</string>
     <string name="welcome_only_your_devices_desc">只有您的设备是授权签署方。签署交易需要2台设备。完全自我托管触手可及。</string>
