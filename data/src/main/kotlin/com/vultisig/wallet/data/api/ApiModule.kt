@@ -26,6 +26,8 @@ internal interface ApiModule {
 
     @Binds @Singleton fun bindPolkadotApi(impl: PolkadotApiImp): PolkadotApi
 
+    @Binds @Singleton fun bindBittensorApi(impl: BittensorApiImp): BittensorApi
+
     @Binds fun bindSessionApi(impl: SessionApiImpl): SessionApi
 
     @Binds @Singleton fun bindCoinGeckoApi(impl: CoinGeckoApiImpl): CoinGeckoApi

@@ -564,6 +564,7 @@ constructor(
                 Chain.Hyperliquid -> setOf(SwapProvider.LIFI)
 
                 Chain.Polkadot,
+                Chain.Bittensor,
                 Chain.Dydx,
                 Chain.Sui,
                 Chain.Ton,

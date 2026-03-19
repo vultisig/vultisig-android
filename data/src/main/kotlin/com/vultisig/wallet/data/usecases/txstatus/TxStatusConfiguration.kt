@@ -50,6 +50,7 @@ internal class TxStatusConfigurationProviderImpl @Inject constructor() :
             Chain.Sui to TxStatusConfiguration(2, 2 * 60),
             Chain.Ton to TxStatusConfiguration(3, 5 * 60),
             Chain.Polkadot to TxStatusConfiguration(3, 5 * 60),
+            Chain.Bittensor to TxStatusConfiguration(3, 5 * 60),
             Chain.Ripple to TxStatusConfiguration(2, 5 * 60),
             Chain.Tron to TxStatusConfiguration(2, 5 * 60),
         )

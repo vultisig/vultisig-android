@@ -218,6 +218,7 @@ fun Vault.getPubKeyByChain(chain: Chain): String {
         // Others
         Chain.Solana -> pubKeyEDDSA
         Chain.Polkadot -> pubKeyEDDSA
+        Chain.Bittensor -> pubKeyEDDSA
         Chain.Sui -> pubKeyEDDSA
         Chain.Ton -> pubKeyEDDSA
         Chain.Ripple -> pubKeyEDDSA

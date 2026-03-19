@@ -178,6 +178,16 @@ constructor(
                         )
                     }
 
+                    Chain.Bittensor -> {
+                        val nativeToken = tokenRepository.getNativeToken(chain.id)
+
+                        TokenValue(
+                            value = BittensorHelper.DEFAULT_FEE_RAO.toBigInteger(),
+                            unit = chain.feeUnit,
+                            decimals = nativeToken.decimal,
+                        )
+                    }
+
                     Chain.Sui -> {
                         val nativeToken = tokenRepository.getNativeToken(chain.id)
                         TokenValue(

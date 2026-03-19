@@ -62,6 +62,7 @@ constructor(
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
+    private val bittensorApi: BittensorApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
@@ -123,6 +124,10 @@ constructor(
 
             Polkadot -> {
                 polkadotApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
+            }
+
+            Chain.Bittensor -> {
+                bittensorApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
             }
 
             Sui -> {
