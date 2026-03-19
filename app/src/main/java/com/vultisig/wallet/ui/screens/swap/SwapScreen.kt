@@ -653,6 +653,7 @@ private fun VultDiscountTier(vultBpsDiscount: Int, tierType: TierType?) {
             TierType.GOLD -> R.string.vault_tier_gold to R.drawable.type_gold_tier__size_small
             TierType.PLATINUM ->
                 R.string.vault_tier_platinum to R.drawable.type_platinum_tier__size_small
+
             TierType.DIAMOND -> R.string.vault_tier_diamond to R.drawable.type_diamond__size_small
             TierType.ULTIMATE -> R.string.vault_tier_ultimate to R.drawable.tier_ultimate
             else -> null to null
