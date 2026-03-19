@@ -177,11 +177,11 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
             return when {
                 value < BigInteger.valueOf(64) -> byteArrayOf((value.toInt() shl 2).toByte())
                 value < BigInteger.valueOf(16384) -> {
-                    val v = (value.toInt() shl 2) or 1
+                    val v = (value.toLong() shl 2) or 1L
                     byteArrayOf((v and 0xFF).toByte(), ((v shr 8) and 0xFF).toByte())
                 }
                 value < BigInteger.valueOf(1073741824) -> {
-                    val v = (value.toInt() shl 2) or 2
+                    val v = (value.toLong() shl 2) or 2L
                     byteArrayOf(
                         (v and 0xFF).toByte(),
                         ((v shr 8) and 0xFF).toByte(),
@@ -203,7 +203,9 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
         }
 
         fun encodeMortalEra(blockNumber: Int, period: Int): ByteArray {
-            val calPeriod = Integer.highestOneBit(period).coerceIn(2, 65536)
+            // Round UP to next power of 2 (matching Substrate spec)
+            val calPeriod = (if (period > 0 && (period and (period - 1)) == 0) period
+                else Integer.highestOneBit(period) shl 1).coerceIn(4, 65536)
             val phase = blockNumber % calPeriod
             val quantizeFactor = (calPeriod shr 12).coerceAtLeast(1)
             val quantizedPhase = (phase / quantizeFactor) * quantizeFactor
