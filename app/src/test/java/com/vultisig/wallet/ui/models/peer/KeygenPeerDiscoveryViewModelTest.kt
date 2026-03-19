@@ -153,14 +153,23 @@ internal class KeygenPeerDiscoveryViewModelTest {
         val existingDevices = currentState.devices.toSet()
         val newDevices = discoveredDevices - existingDevices
 
+        val serverDevices = newDevices.filter { it.startsWith(SERVER_PREFIX, ignoreCase = true) }
+        val userDevices = newDevices.filter { !it.startsWith(SERVER_PREFIX, ignoreCase = true) }
+        val existingUserDevices =
+            currentState.selectedDevices.count { !it.startsWith(SERVER_PREFIX, ignoreCase = true) }
         val maxOtherDevices = currentState.minimumDevices - 1
-        val remainingSlots = maxOtherDevices - currentState.selectedDevices.size
-        val devicesToAutoSelect = newDevices.take(remainingSlots.coerceAtLeast(0))
-        val selectedDevices = currentState.selectedDevices.toSet() + devicesToAutoSelect
+        val remainingSlots = maxOtherDevices - existingUserDevices
+        val userDevicesToAutoSelect = userDevices.take(remainingSlots.coerceAtLeast(0))
+        val selectedDevices =
+            currentState.selectedDevices.toSet() + serverDevices + userDevicesToAutoSelect
 
         vm.state.update {
             it.copy(devices = discoveredDevices, selectedDevices = selectedDevices.toList())
         }
+    }
+
+    private companion object {
+        const val SERVER_PREFIX = "Server"
     }
 
     // --- selectDevice tests ---
@@ -351,6 +360,43 @@ internal class KeygenPeerDiscoveryViewModelTest {
 
         // Should auto-select only 1 more (d2), not all 3
         assertEquals(2, vm.state.value.selectedDevices.size)
+        assertTrue(vm.state.value.selectedDevices.contains("d1"))
+        assertTrue(vm.state.value.selectedDevices.contains("d2"))
+        assertFalse(vm.state.value.selectedDevices.contains("d3"))
+    }
+
+    @Test
+    fun `selectDevice always allows server party regardless of limit`() {
+        stubRoute(deviceCount = 1) // fast vault: minimumDevices = 1, maxOtherDevices = 0
+        val vm = createViewModel()
+
+        vm.selectDevice("Server-263")
+
+        assertEquals(1, vm.state.value.selectedDevices.size)
+        assertTrue(vm.state.value.selectedDevices.contains("Server-263"))
+    }
+
+    @Test
+    fun `auto-discovery always selects server party for fast vault`() {
+        stubRoute(deviceCount = 1) // fast vault
+        val vm = createViewModel()
+
+        simulateAutoDiscovery(vm, listOf("Server-263"))
+
+        assertEquals(1, vm.state.value.selectedDevices.size)
+        assertTrue(vm.state.value.selectedDevices.contains("Server-263"))
+    }
+
+    @Test
+    fun `auto-discovery selects server party but caps user devices`() {
+        stubRoute(deviceCount = 3) // minimumDevices = 3, maxOtherDevices = 2
+        val vm = createViewModel()
+
+        simulateAutoDiscovery(vm, listOf("Server-263", "d1", "d2", "d3"))
+
+        // Server always selected + 2 user devices
+        assertEquals(3, vm.state.value.selectedDevices.size)
+        assertTrue(vm.state.value.selectedDevices.contains("Server-263"))
         assertTrue(vm.state.value.selectedDevices.contains("d1"))
         assertTrue(vm.state.value.selectedDevices.contains("d2"))
         assertFalse(vm.state.value.selectedDevices.contains("d3"))
