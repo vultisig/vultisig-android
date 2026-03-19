@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.transaction.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -112,17 +113,11 @@ internal fun ToSeparator(modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Box(
-            modifier =
-                Modifier.size(24.dp)
-                    .border(1.dp, Theme.v2.colors.border.primaryAccent4, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_arrow_down),
+        Box(modifier = Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+            Image(
+                painter = painterResource(R.drawable.frame),
                 contentDescription = null,
-                tint = Theme.v2.colors.alerts.info,
-                modifier = Modifier.size(12.dp),
+                modifier = Modifier.size(24.dp),
             )
         }
         Text(
