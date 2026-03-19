@@ -344,14 +344,18 @@ internal fun VerifySendScreen(
 @Composable
 internal fun AddressField(title: String, address: String, divider: Boolean = true) {
     Column {
-        Text(text = title, color = Theme.v2.colors.neutrals.n100, style = Theme.montserrat.heading5)
+        Text(
+            text = title,
+            color = Theme.v2.colors.text.tertiary,
+            style = Theme.brockmann.headings.subtitle,
+        )
 
         UiSpacer(size = 16.dp)
 
         Text(
             text = address,
-            style = Theme.montserrat.subtitle3,
-            color = Theme.v2.colors.backgrounds.teal,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
         )
 
         if (divider) {
@@ -371,8 +375,8 @@ internal fun OtherField(title: String, value: String, divider: Boolean = true) {
         ) {
             Text(
                 text = title,
-                color = Theme.v2.colors.neutrals.n100,
-                style = Theme.montserrat.subtitle1,
+                color = Theme.v2.colors.text.tertiary,
+                style = Theme.brockmann.body.s.medium,
             )
 
             UiSpacer(weight = 1f)
@@ -381,8 +385,8 @@ internal fun OtherField(title: String, value: String, divider: Boolean = true) {
             Text(
                 text = value,
                 textAlign = TextAlign.End,
-                color = Theme.v2.colors.neutrals.n100,
-                style = Theme.menlo.subtitle1,
+                color = Theme.v2.colors.text.primary,
+                style = Theme.brockmann.body.s.medium,
             )
         }
 
