@@ -63,6 +63,7 @@ import com.vultisig.wallet.ui.screens.VaultRenameScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
 import com.vultisig.wallet.ui.screens.backup.ServerBackupScreen
 import com.vultisig.wallet.ui.screens.backup.VaultsToBackupScreen
+import com.vultisig.wallet.ui.screens.deposit.BondFormScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.home.FastVaultPasswordReminderDialog
@@ -194,6 +195,16 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
                 chainId = args.chainId,
                 depositType = args.depositType,
                 bondAddress = args.bondAddress,
+            )
+        }
+
+        composable<Route.BondForm> { entry ->
+            val args = entry.toRoute<Route.BondForm>()
+
+            BondFormScreen(
+                navController = navController,
+                vaultId = args.vaultId,
+                chainId = args.chainId,
             )
         }
 

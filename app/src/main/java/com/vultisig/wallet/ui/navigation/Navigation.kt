@@ -436,6 +436,8 @@ internal sealed class Route {
         val bondAddress: String? = null,
     )
 
+    @Serializable data class BondForm(val vaultId: String, val chainId: String)
+
     @Serializable data class Settings(val vaultId: String)
 
     @Serializable data object DefaultChainSetting

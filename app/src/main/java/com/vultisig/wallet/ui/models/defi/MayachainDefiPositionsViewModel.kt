@@ -548,13 +548,7 @@ constructor(
 
     fun bondToNode() {
         viewModelScope.launch {
-            navigator.route(
-                Route.Deposit(
-                    vaultId = vaultId,
-                    chainId = Chain.MayaChain.id,
-                    depositType = DeFiNavActions.BOND.type,
-                )
-            )
+            navigator.route(Route.BondForm(vaultId = vaultId, chainId = Chain.MayaChain.id))
         }
     }
 
