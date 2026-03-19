@@ -172,7 +172,6 @@
     <string name="keysign">Sinal de chave</string>
     <string name="generating_key_screen_keygen_failed">Falha na geração de chaves</string>
     <string name="bottom_warning_msg_keygen_error_screen">Mantenha os dispositivos na mesma rede WiFi, corrija o cofre e pareie os dispositivos.\nCertifique-se de que nenhum outro dispositivo esteja executando o Vultisig.</string>
-    <string name="verify_transaction_consent_correct_dst">Não estou enviando para um golpe ou hacker</string>
     <string name="naming_vault_screen_invalid_name">Nome inválido</string>
     <string name="rename_vault_invalid_name">Nome inválido</string>
     <string name="vault_name_too_long_error">O nome do cofre é muito longo</string>
