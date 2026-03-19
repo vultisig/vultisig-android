@@ -95,7 +95,7 @@ import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.utils.timerFlow
-import com.vultisig.wallet.ui.components.TokenLogo
+import com.vultisig.wallet.ui.components.TokenAndChainLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -831,12 +831,15 @@ internal fun TokenChip(
                 )
                 .padding(all = 6.dp),
     ) {
-        TokenLogo(
-            errorLogoModifier = Modifier.size(32.dp).background(Theme.v2.colors.neutrals.n100),
-            logo = selectedToken?.tokenLogo ?: "",
-            title = selectedToken?.title ?: "",
-            modifier = Modifier.size(32.dp),
-        )
+        selectedToken?.let { token ->
+            TokenAndChainLogo(
+                tokenLogo = token.tokenLogo,
+                tokenTicker = token.title,
+                chainLogo = token.chainLogo,
+                chainLogoSize = 16.dp,
+                tokenLogoSize = 36.dp,
+            )
+        }
 
         UiSpacer(8.dp)
 

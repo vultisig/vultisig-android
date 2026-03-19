@@ -24,9 +24,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.ui.components.util.CutoutPosition
@@ -63,7 +65,11 @@ internal fun VsOverviewToken(
 
         UiSpacer(12.dp)
 
-        TokenAndChainLogo(token, chainLogo)
+        TokenAndChainLogo(
+            tokenLogo = getCoinLogo(token.logo),
+            tokenTicker = token.ticker,
+            chainLogo = chainLogo,
+        )
 
         UiSpacer(12.dp)
 
@@ -91,52 +97,41 @@ internal fun VsOverviewToken(
 
 @Composable
 internal fun TokenAndChainLogo(
-    token: Coin,
+    tokenLogo: ImageModel,
+    tokenTicker: String,
     chainLogo: Int,
     tokenLogoSize: Dp = 36.dp,
-    chainLogoSize:Dp = 20.dp,
+    chainLogoSize: Dp = 20.dp,
+    chainLogoOffset: DpOffset = DpOffset(x = 5.dp, y = 5.dp),
     tokenBorderColor: Color = Theme.v2.colors.border.light,
     chainBorderColor: Color = Theme.v2.colors.backgrounds.primary,
     tokenBackgroundErrorColor: Color = Theme.v2.colors.neutrals.n200,
-    chainBackgroundErrorColor: Color = Theme.v2.colors.neutrals.n100,
+    chainBackgroundColor: Color = Theme.v2.colors.neutrals.n100,
 ) {
     Box {
         TokenLogo(
-            logo = getCoinLogo(token.logo),
-            title = token.ticker,
+            logo = tokenLogo,
+            title = tokenTicker,
             modifier =
-                Modifier
-                    .size(tokenLogoSize)
-                    .border(
-                        width = 1.dp,
-                        color = tokenBorderColor,
-                        shape = CircleShape,
-                    )
+                Modifier.size(tokenLogoSize)
+                    .border(width = 1.dp, color = tokenBorderColor, shape = CircleShape)
                     .align(Alignment.Center),
             errorLogoModifier =
-                Modifier
-                    .size(tokenLogoSize)
-                    .clip(CircleShape)
-                    .background(tokenBackgroundErrorColor),
+                Modifier.size(tokenLogoSize).clip(CircleShape).background(tokenBackgroundErrorColor),
         )
 
         chainLogo
-            .takeIf { it != getCoinLogo(token.logo) }
+            .takeIf { it != tokenLogo }
             ?.let {
                 Image(
                     painter = painterResource(id = it),
                     contentDescription = null,
                     modifier =
-                        Modifier
-                            .offset(x = 5.dp, y = 5.dp)
+                        Modifier.offset(x = chainLogoOffset.x, y = chainLogoOffset.y)
                             .size(chainLogoSize)
                             .clip(CircleShape)
-                            .background(chainBackgroundErrorColor, CircleShape)
-                            .border(
-                                width = 2.dp,
-                                color = chainBorderColor,
-                                shape = CircleShape,
-                            )
+                            .background(chainBackgroundColor, CircleShape)
+                            .border(width = 2.dp, color = chainBorderColor, shape = CircleShape)
                             .align(BottomEnd),
                 )
             }
