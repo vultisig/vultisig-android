@@ -1138,4 +1138,7 @@
     <string name="server_backup_error_too_many_requests">Zu viele Sicherungsanfragen. Bitte versuchen Sie es später erneut.</string>
     <string name="server_backup_error_bad_request">Etwas ist schiefgelaufen. Bitte überprüfen Sie Ihre Angaben und versuchen Sie es erneut.</string>
     <string name="resend_notification">Benachrichtigung erneut senden</string>
+    <string name="apy_approx">APY (ca.)</string>
+    <string name="apy_approx_hint_title">Belohnungen</string>
+    <string name="apy_approx_hint_message">Belohnungen werden automatisch Ihrem Guthaben gutgeschrieben.</string>
 </resources>
