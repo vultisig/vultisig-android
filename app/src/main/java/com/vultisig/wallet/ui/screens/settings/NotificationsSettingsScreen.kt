@@ -78,6 +78,12 @@ private fun NotificationsSettingsScreen(
 
             if (state.masterEnabled && state.vaults.isNotEmpty()) {
                 UiSpacer(size = 22.dp)
+                Text(
+                    text = stringResource(R.string.vault_notifications),
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                UiSpacer(size = 12.dp)
                 Column(
                     modifier =
                         Modifier.background(
