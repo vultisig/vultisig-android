@@ -477,7 +477,7 @@ internal fun VerifyCardDetails(
 
         Text(
             text = subtitle,
-            style = Theme.brockmann.supplementary.footnote,
+            style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.End,
             modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier,
@@ -510,7 +510,7 @@ internal fun VerifyVaultDetails(
         ) {
             Text(
                 text = subtitle,
-                style = Theme.brockmann.supplementary.footnote,
+                style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
                 textAlign = TextAlign.End,
                 overflow = TextOverflow.Ellipsis,
@@ -529,7 +529,7 @@ internal fun VerifyVaultDetails(
 
                 Text(
                     text = display,
-                    style = Theme.brockmann.supplementary.footnote,
+                    style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary,
                     maxLines = 1,
                 )
