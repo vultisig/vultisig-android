@@ -1,32 +1,43 @@
 package com.vultisig.wallet.ui.screens.transaction
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
+import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Broadcasted
+import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Confirmed
 import com.vultisig.wallet.ui.screens.transaction.components.SendAmountText
 import com.vultisig.wallet.ui.screens.transaction.components.ToSeparator
-import com.vultisig.wallet.ui.screens.transaction.components.TokenAmountAnnotated
 import com.vultisig.wallet.ui.screens.transaction.components.TokenCircle
 import com.vultisig.wallet.ui.screens.transaction.components.TransactionStatusWidget
 import com.vultisig.wallet.ui.screens.transaction.components.TypeBadge
+import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -43,71 +54,66 @@ internal fun SwapTransactionCard(
         type = ContainerType.SECONDARY,
         borderType = ContainerBorderType.Bordered(),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TypeBadge(
-                    iconRes = R.drawable.swap_v2,
-                    label = stringResource(R.string.transaction_history_tab_swap),
-                )
-                TransactionStatusWidget(status = item.status)
-            }
-
-            UiSpacer(size = 12.dp)
-
-            if (isInProgress) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    TokenCircle(logo = item.fromTokenLogo, ticker = item.fromToken, size = 32)
-                    TokenAmountAnnotated(amount = item.fromAmount, token = item.fromToken)
-                }
-
-                UiSpacer(size = 8.dp)
-
-                ToSeparator(modifier = Modifier.fillMaxWidth())
-
-                UiSpacer(size = 8.dp)
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    TokenCircle(logo = item.toTokenLogo, ticker = item.toToken, size = 32)
-                    Column {
-                        Text(
-                            text = stringResource(R.string.transaction_history_min_payout_label),
-                            style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.tertiary,
-                        )
-                        TokenAmountAnnotated(amount = item.toAmount, token = item.toToken)
-                    }
-                }
-
-                if (item.provider.isNotEmpty()) {
-                    UiSpacer(size = 8.dp)
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Box(modifier = Modifier.weight(1f))
-                        ViaBadge(provider = item.provider)
-                    }
-                }
-            } else {
+        Box {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
+                    TypeBadge(
+                        iconRes = R.drawable.swap,
+                        label = stringResource(R.string.transaction_type_button_swap),
+                    )
+                    TransactionStatusWidget(status = item.status)
+                }
+
+                if (isInProgress) {
+                    UiSpacer(size = 22.dp)
+
                     Row(
-                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        TokenCircle(logo = item.fromTokenLogo, ticker = item.fromToken, size = 24)
+                        SwapAmountText(amount = item.fromAmount, token = item.fromToken)
+                    }
+
+                    TokenRowConnector()
+
+                    ToSeparator(modifier = Modifier.fillMaxWidth())
+
+                    TokenRowConnector()
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        TokenCircle(logo = item.toTokenLogo, ticker = item.toToken, size = 24)
+                        Column {
+                            Text(
+                                text =
+                                    stringResource(R.string.transaction_history_min_payout_label),
+                                style = Theme.brockmann.supplementary.captionSmall,
+                                color = Theme.v2.colors.text.tertiary,
+                            )
+                            SwapAmountText(amount = item.toAmount, token = item.toToken)
+                        }
+                    }
+
+                    if (item.provider.isNotEmpty()) {
+                        UiSpacer(size = 15.dp)
+                    }
+                } else {
+                    UiSpacer(size = 12.dp)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         TokenCircle(logo = item.fromTokenLogo, ticker = item.fromToken, size = 24)
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             if (!item.fiatValue.isNullOrEmpty()) {
                                 Text(
                                     text = item.fiatValue,
@@ -118,27 +124,119 @@ internal fun SwapTransactionCard(
                             SendAmountText(amount = item.fromAmount, token = item.fromToken)
                         }
                     }
-                    if (item.provider.isNotEmpty()) {
-                        ViaBadge(provider = item.provider)
-                    }
                 }
+            }
+
+            if (item.provider.isNotEmpty()) {
+                ViaBadge(
+                    provider = item.provider,
+                    providerLogo = item.providerLogo,
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ViaBadge(provider: String, modifier: Modifier = Modifier) {
+private fun TokenRowConnector() {
+    Box(modifier = Modifier.fillMaxWidth().height(12.dp)) {
+        Box(
+            modifier =
+                Modifier.padding(start = 11.5.dp)
+                    .width(1.dp)
+                    .height(12.dp)
+                    .background(color = Theme.v2.colors.border.normal)
+        )
+    }
+}
+
+@Composable
+private fun SwapAmountText(amount: String, token: String, modifier: Modifier = Modifier) {
     Text(
-        text = stringResource(R.string.transaction_history_via_label, provider),
-        style = Theme.brockmann.supplementary.caption,
-        color = Theme.v2.colors.text.secondary,
+        text =
+            buildAnnotatedString {
+                withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(amount) }
+                append(" ")
+                withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(token) }
+            },
+        style = Theme.brockmann.body.s.medium,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun ViaBadge(provider: String, providerLogo: ImageModel?, modifier: Modifier = Modifier) {
+    val shape =
+        RoundedCornerShape(topStart = 12.dp, topEnd = 0.dp, bottomEnd = 0.dp, bottomStart = 0.dp)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier =
             modifier
-                .background(
-                    color = Theme.v2.colors.backgrounds.tertiary_2,
-                    shape = RoundedCornerShape(100.dp),
-                )
-                .padding(horizontal = 10.dp, vertical = 4.dp),
+                .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.normal, shape = shape)
+                .padding(start = 8.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+    ) {
+        if (providerLogo != null) {
+            TokenCircle(logo = providerLogo, ticker = provider, size = 16)
+        }
+        Text(
+            text =
+                buildAnnotatedString {
+                    withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
+                        append(stringResource(R.string.transaction_history_via_prefix))
+                        append(" ")
+                    }
+                    withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(provider) }
+                },
+            style = Theme.brockmann.supplementary.caption,
+        )
+    }
+}
+
+private val previewSwapItem =
+    TransactionHistoryItemUiModel.Swap(
+        id = "1",
+        txHash = "0xabc123",
+        chain = "Ethereum",
+        status = Confirmed,
+        explorerUrl = "",
+        timestamp = System.currentTimeMillis(),
+        fromToken = "RUNE",
+        fromAmount = "1,000.12",
+        fromChain = "THORChain",
+        fromTokenLogo = R.drawable.rune,
+        toToken = "WBTC",
+        toAmount = "0.1251",
+        toChain = "Bitcoin",
+        toTokenLogo = R.drawable.bitcoin,
+        provider = "THORChain",
+        providerLogo = R.drawable.rune,
+        fiatValue = "$3,847.50",
+        fromAddress = null,
+        toAddress = null,
+        feeEstimate = null,
     )
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewSwapCardInProgress() {
+    OnBoardingComposeTheme {
+        SwapTransactionCard(
+            item = previewSwapItem.copy(status = Broadcasted),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewSwapCardCompleted() {
+    OnBoardingComposeTheme {
+        SwapTransactionCard(
+            item = previewSwapItem.copy(status = Confirmed),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        )
+    }
 }

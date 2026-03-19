@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryType
 import com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase
@@ -105,6 +106,7 @@ sealed interface TransactionHistoryItemUiModel {
         val toChain: String,
         val toTokenLogo: ImageModel,
         val provider: String,
+        val providerLogo: ImageModel?,
         val fiatValue: String?,
         val fromAddress: String?,
         val toAddress: String?,
@@ -397,6 +399,7 @@ constructor(
                     toChain = p.toChain,
                     toTokenLogo = getCoinLogo(p.toTokenLogo),
                     provider = p.provider,
+                    providerLogo = getProviderLogo(p.provider),
                     fiatValue = p.fiatValue,
                     fromAddress = null,
                     toAddress = null,
