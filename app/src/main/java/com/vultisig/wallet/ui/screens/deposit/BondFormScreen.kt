@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,11 +32,14 @@ import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiAlertDialog
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
+import com.vultisig.wallet.ui.components.library.form.FormTitleCollapsibleTextField
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
@@ -138,6 +140,7 @@ private fun BondFormContent(
         onSetNodeAddress = model::setNodeAddress,
         onSetProvider = model::setProvider,
         onSelectBondAsset = model::selectBondAsset,
+        onScan = model::scan,
         onDismissError = model::dismissError,
         onDeposit = model::deposit,
     )
@@ -161,6 +164,7 @@ internal fun BondFormContent(
     onSetNodeAddress: (String) -> Unit = {},
     onSetProvider: (String) -> Unit = {},
     onSelectBondAsset: (String) -> Unit = {},
+    onScan: () -> Unit = {},
     onDismissError: () -> Unit = {},
     onDeposit: () -> Unit = {},
 ) {
@@ -181,7 +185,26 @@ internal fun BondFormContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(all = 16.dp).verticalScroll(rememberScrollState()),
         ) {
-            // Amount — THORChain bond requires an amount
+            // Node address — always first
+            FormTextFieldCard(
+                title = stringResource(R.string.deposit_form_node_address_title),
+                hint = stringResource(R.string.deposit_form_node_address_title),
+                keyboardType = KeyboardType.Text,
+                textFieldState = nodeAddressFieldState,
+                onLostFocus = onNodeAddressLostFocus,
+                error = state.nodeAddressError,
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.camera,
+                    size = 20.dp,
+                    modifier = Modifier.clickOnce { onScan() },
+                )
+                UiSpacer(size = 8.dp)
+                PasteIcon(onPaste = onSetNodeAddress)
+                UiSpacer(size = 8.dp)
+            }
+
+            // Amount — ThorChain bond requires an amount
             if (depositChain == Chain.ThorChain) {
                 FormTextFieldCard(
                     title =
@@ -195,32 +218,6 @@ internal fun BondFormContent(
                     onLostFocus = onTokenAmountLostFocus,
                     error = state.tokenAmountError,
                 )
-            }
-
-            // Node address
-            FormTextFieldCard(
-                title = stringResource(R.string.deposit_form_node_address_title),
-                hint = stringResource(R.string.deposit_form_node_address_title),
-                keyboardType = KeyboardType.Text,
-                textFieldState = nodeAddressFieldState,
-                onLostFocus = onNodeAddressLostFocus,
-                error = state.nodeAddressError,
-            ) {
-                PasteIcon(onPaste = onSetNodeAddress)
-                UiSpacer(size = 8.dp)
-            }
-
-            // Provider address
-            FormTextFieldCard(
-                title = stringResource(R.string.deposit_form_provider_title),
-                hint = stringResource(R.string.deposit_form_provider_hint),
-                keyboardType = KeyboardType.Text,
-                textFieldState = providerFieldState,
-                onLostFocus = onProviderLostFocus,
-                error = state.providerError,
-            ) {
-                PasteIcon(onPaste = onSetProvider)
-                UiSpacer(size = 8.dp)
             }
 
             // MayaChain: asset selection + LP units
@@ -263,6 +260,20 @@ internal fun BondFormContent(
                     onLostFocus = onOperatorFeeLostFocus,
                     error = state.operatorFeeError,
                 )
+            }
+
+            // Provider — collapsible for ThorChain, hidden for MayaChain (not in design)
+            if (depositChain == Chain.ThorChain) {
+                FormTitleCollapsibleTextField(
+                    title = stringResource(R.string.deposit_form_provider_title),
+                    hint = stringResource(R.string.deposit_form_provider_hint),
+                    keyboardType = KeyboardType.Text,
+                    textFieldState = providerFieldState,
+                    onLostFocus = onProviderLostFocus,
+                ) {
+                    PasteIcon(onPaste = onSetProvider)
+                    UiSpacer(size = 8.dp)
+                }
             }
 
             UiSpacer(size = 80.dp)
