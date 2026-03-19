@@ -106,6 +106,6 @@ constructor(
 
     private companion object {
         const val MAX_REFERRAL_LENGTH = 4
-        val ALPHANUMERIC_REGEX = Regex("^[A-Za-z0-9]*$")
+        val ALPHANUMERIC_REGEX = Regex("^[A-Za-z0-9]+$")
     }
 }
