@@ -420,7 +420,9 @@ constructor(
                     val existingDevices = currentState.devices.toSet()
                     val newDevices = devices - existingDevices
 
-                    val maxOtherDevices = currentState.minimumDevices - 1
+                    val maxOtherDevices =
+                        if (currentState.minimumDevices > 1) currentState.minimumDevices - 1
+                        else currentState.minimumDevices
                     val remainingSlots = maxOtherDevices - currentState.selectedDevices.size
                     val devicesToAutoSelect = newDevices.take(remainingSlots.coerceAtLeast(0))
                     val selectedDevices = currentState.selectedDevices.toSet() + devicesToAutoSelect
