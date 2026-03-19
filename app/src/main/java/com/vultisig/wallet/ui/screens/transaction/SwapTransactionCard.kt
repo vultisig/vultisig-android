@@ -69,7 +69,7 @@ internal fun SwapTransactionCard(
                 }
 
                 if (isInProgress) {
-                    UiSpacer(size = 20.dp)
+                    UiSpacer(size = 22.dp)
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -102,7 +102,7 @@ internal fun SwapTransactionCard(
                     }
 
                     if (item.provider.isNotEmpty()) {
-                        UiSpacer(size = 32.dp)
+                        UiSpacer(size = 15.dp)
                     }
                 } else {
                     UiSpacer(size = 12.dp)
@@ -123,10 +123,6 @@ internal fun SwapTransactionCard(
                             }
                             SendAmountText(amount = item.fromAmount, token = item.fromToken)
                         }
-                    }
-
-                    if (item.provider.isNotEmpty()) {
-                        UiSpacer(size = 32.dp)
                     }
                 }
             }
