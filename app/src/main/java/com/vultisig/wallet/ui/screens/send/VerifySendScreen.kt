@@ -295,7 +295,7 @@ internal fun VerifySendScreen(
 
                             Text(
                                 text = chain.raw,
-                                style = Theme.brockmann.supplementary.footnote,
+                                style = Theme.brockmann.body.s.medium,
                                 color = Theme.v2.colors.text.primary,
                                 textAlign = TextAlign.End,
                                 maxLines = 1,
