@@ -84,6 +84,10 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                     )
                 }
                 val publicKey = PublicKey(eddsaPubKey.hexToByteArray(), PublicKeyType.ED25519)
+                if (chain == Chain.Bittensor) {
+                    val address = AnyAddress.createSS58WithPublicKey(publicKey, CoinType.POLKADOT, 42)
+                    return Pair(address.description(), eddsaPubKey)
+                }
                 return Pair(chain.coinType.deriveAddressFromPublicKey(publicKey), eddsaPubKey)
             }
         }
