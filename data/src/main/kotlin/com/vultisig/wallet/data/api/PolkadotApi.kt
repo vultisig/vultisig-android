@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetNonceJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetRunTimeVersionJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetStorageJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
+import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -54,15 +55,14 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                     SYSTEM_ACCOUNT_PREFIX +
                     blake2b128.joinToString("") { "%02x".format(it) } +
                     pubKey.joinToString("") { "%02x".format(it) }
-            val payload =
-                RpcPayload(
-                    jsonrpc = "2.0",
-                    method = "state_getStorage",
-                    params = buildJsonArray { add(storageKey) },
-                    id = 1,
-                )
-            val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-            val result = response.body<PolkadotGetStorageJson>().result ?: return BigInteger.ZERO
+            val result =
+                httpClient
+                    .postRpc<PolkadotGetStorageJson>(
+                        url = POLKADOT_API_URL,
+                        method = "state_getStorage",
+                        params = buildJsonArray { add(storageKey) },
+                    )
+                    .result ?: return BigInteger.ZERO
             val hex = result.removePrefix("0x")
             if (hex.length < 64) return BigInteger.ZERO
             // AccountInfo SCALE layout: nonce(u32) + consumers(u32) + providers(u32) +
