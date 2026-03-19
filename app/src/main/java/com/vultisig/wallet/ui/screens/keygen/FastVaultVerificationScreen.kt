@@ -109,7 +109,7 @@ internal fun FastVaultVerificationScreen(
                 UiSpacer(size = 32.dp)
 
                 V3Icon(
-                    logo = R.drawable.icon_shield_solid,
+                    logo = R.drawable.icon_inbox_notification,
                     shinedBottom = Theme.v2.colors.alerts.info,
                     borderWidth = 1.5.dp,
                     borderColor = Theme.v2.colors.neutrals.n50.copy(alpha = 0.15f),
