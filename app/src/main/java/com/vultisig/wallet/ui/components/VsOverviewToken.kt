@@ -120,9 +120,19 @@ internal fun TokenAndChainLogo(
                 Modifier.size(tokenLogoSize).clip(CircleShape).background(tokenBackgroundErrorColor),
         )
 
-        chainLogo
-            .takeIf { it != tokenLogo }
-            ?.let {
+        chainLogo?.let {
+            Image(
+                painter = painterResource(id = it),
+                contentDescription = null,
+                modifier =
+                    Modifier.offset(x = chainLogoOffset.x, y = chainLogoOffset.y)
+                        .size(chainLogoSize)
+                        .clip(CircleShape)
+                        .background(chainBackgroundColor, CircleShape)
+                        .border(width = 2.dp, color = chainBorderColor, shape = CircleShape)
+                        .align(BottomEnd),
+            )
+        }
                 Image(
                     painter = painterResource(id = it),
                     contentDescription = null,
