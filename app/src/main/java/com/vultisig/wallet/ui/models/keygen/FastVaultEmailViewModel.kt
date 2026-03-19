@@ -37,7 +37,7 @@ constructor(
 
     val state = MutableStateFlow(FastVaultEmailState())
     val emailFieldState = TextFieldState()
-    val referralCode = MutableStateFlow(referralCodeSettingsRepository.getPendingReferral() ?: "")
+    val referralCode = referralCodeSettingsRepository.pendingReferralFlow
 
     private val args = savedStateHandle.toRoute<Route.VaultInfo.Email>()
 
@@ -109,7 +109,6 @@ constructor(
     }
 
     fun setReferralCode(code: String) {
-        referralCode.value = code
         referralCodeSettingsRepository.setPendingReferral(code)
     }
 

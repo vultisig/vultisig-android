@@ -46,7 +46,7 @@ internal fun FastVaultEmailScreen(model: FastVaultEmailViewModel = hiltViewModel
     FastVaultEmailScreen(
         state = state,
         textFieldState = model.emailFieldState,
-        hasReferral = referralCode.isNotEmpty(),
+        hasReferral = !referralCode.isNullOrEmpty(),
         onReferralClick = { showReferralSheet = true },
         onNextClick = model::navigateToPassword,
         onClearClick = model::clearInput,

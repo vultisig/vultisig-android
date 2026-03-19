@@ -153,7 +153,7 @@ constructor(
             )
         )
 
-    val referralCode = MutableStateFlow(referralCodeSettingsRepository.getPendingReferral() ?: "")
+    val referralCode = referralCodeSettingsRepository.pendingReferralFlow
 
     private var vaultNamesList = emptyList<String>()
 
@@ -491,7 +491,6 @@ constructor(
     }
 
     fun setReferralCode(code: String) {
-        referralCode.value = code
         referralCodeSettingsRepository.setPendingReferral(code)
     }
 }

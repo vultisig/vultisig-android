@@ -50,7 +50,7 @@ constructor(
 
     val nameFieldState = TextFieldState()
     val state = MutableStateFlow(NameVaultUiModel())
-    val referralCode = MutableStateFlow(referralCodeSettingsRepository.getPendingReferral() ?: "")
+    val referralCode = referralCodeSettingsRepository.pendingReferralFlow
     private var vaultNamesList = emptyList<String>()
 
     init {
@@ -143,7 +143,6 @@ constructor(
     }
 
     fun setReferralCode(code: String) {
-        referralCode.value = code
         referralCodeSettingsRepository.setPendingReferral(code)
     }
 

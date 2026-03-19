@@ -64,7 +64,7 @@ internal fun FastVaultPasswordScreen(model: FastVaultPasswordViewModel = hiltVie
         state = state,
         passwordTextFieldState = model.passwordTextFieldState,
         confirmPasswordTextFieldState = model.confirmPasswordTextFieldState,
-        hasReferral = referralCode.isNotEmpty(),
+        hasReferral = !referralCode.isNullOrEmpty(),
         onReferralClick = { showReferralSheet = true },
         onNextClick = model::navigateToHint,
         onBackClick = model::back,

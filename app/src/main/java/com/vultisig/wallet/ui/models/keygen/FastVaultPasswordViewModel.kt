@@ -40,7 +40,7 @@ constructor(
     private val args = savedStateHandle.toRoute<Route.VaultInfo.Password>()
 
     val state = MutableStateFlow(FastVaultPasswordUiModel())
-    val referralCode = MutableStateFlow(referralCodeSettingsRepository.getPendingReferral() ?: "")
+    val referralCode = referralCodeSettingsRepository.pendingReferralFlow
 
     private val passwordDelegate = PasswordViewModelDelegate()
 
@@ -120,7 +120,6 @@ constructor(
     }
 
     fun setReferralCode(code: String) {
-        referralCode.value = code
         referralCodeSettingsRepository.setPendingReferral(code)
     }
 

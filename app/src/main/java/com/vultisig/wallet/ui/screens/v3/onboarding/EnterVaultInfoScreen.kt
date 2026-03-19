@@ -61,7 +61,7 @@ internal fun EnterVaultInfoScreen(viewModel: EnterVaultInfoViewModel = hiltViewM
 
     EnterVaultInfoScreen(
         uiState = uiState,
-        hasReferral = referralCode.isNotEmpty(),
+        hasReferral = !referralCode.isNullOrEmpty(),
         onReferralClick = { showReferralSheet = true },
         onEvent = viewModel::onEvent,
     )

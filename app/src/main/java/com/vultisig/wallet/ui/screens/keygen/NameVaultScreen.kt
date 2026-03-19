@@ -45,7 +45,7 @@ internal fun NameVaultScreen(model: NameVaultViewModel = hiltViewModel()) {
     NameVaultScreen(
         state = state,
         textFieldState = model.nameFieldState,
-        hasReferral = referralCode.isNotEmpty(),
+        hasReferral = !referralCode.isNullOrEmpty(),
         onReferralClick = { showReferralSheet = true },
         onNextClick = model::navigateToEmail,
         onClearClick = model::clearInput,
