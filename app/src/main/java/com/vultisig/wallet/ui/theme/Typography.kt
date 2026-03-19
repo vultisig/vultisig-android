@@ -478,7 +478,7 @@ internal data class SatoshiPriceTypography(
         ),
     val bodyS: TextStyle =
         TextStyle(
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight(550),
             fontSize = 14.sp,
             lineHeight = 20.sp,
             letterSpacing = (0.2).sp,
