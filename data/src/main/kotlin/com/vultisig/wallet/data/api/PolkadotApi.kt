@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.api.models.PolkadotResponseJson
+import com.vultisig.wallet.data.api.models.PolkadotGetStorageJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotBroadcastTransactionJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotExtrinsicResponseJson
@@ -9,17 +9,33 @@ import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHeaderJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetNonceJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetRunTimeVersionJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
+import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import timber.log.Timber
+import wallet.core.jni.AnyAddress
+import wallet.core.jni.CoinType
+import wallet.core.jni.Hash
+
+internal fun parsePolkadotFreeBalance(hex: String): BigInteger {
+    // minimum 64 hex chars = 32 bytes: 16-byte header (4×u32) + 16-byte free balance (u128)
+    if (hex.length < 64) return BigInteger.ZERO
+    // AccountInfo SCALE layout: nonce(u32) + consumers(u32) + providers(u32) +
+    // sufficients(u32) + free(u128) + ...
+    // free balance starts at byte offset 16 (4 x u32 = 16 bytes)
+    val freeBytes =
+        (0 until 16)
+            .map { i -> hex.substring(32 + i * 2, 34 + i * 2).toInt(16).toByte() }
+            .toByteArray()
+    return BigInteger(1, freeBytes.reversedArray())
+}
 
 interface PolkadotApi {
     suspend fun getBalance(address: String): BigInteger
@@ -45,17 +61,25 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
     PolkadotApi {
     override suspend fun getBalance(address: String): BigInteger {
         try {
-            val bodyMap = mapOf("key" to address)
-            val response = httpClient.post(POLKADOT_BALANCE_API_URL) { setBody(bodyMap) }
-            val rpcResp = response.body<PolkadotResponseJson>()
-            val respCode = rpcResp.code
-            if (respCode == 10004) {
-                return BigInteger.ZERO
-            }
-            val balance = BigDecimal(rpcResp.data.account.balance)
-            return balance.multiply(BigDecimal(10000000000)).toBigInteger()
+            val pubKey = AnyAddress(address, CoinType.POLKADOT).data()
+            val blake2b128 = Hash.blake2b(pubKey, 16)
+            val storageKey =
+                "0x" +
+                    SYSTEM_ACCOUNT_PREFIX +
+                    blake2b128.joinToString("") { "%02x".format(it) } +
+                    pubKey.joinToString("") { "%02x".format(it) }
+            val result =
+                httpClient
+                    .postRpc<PolkadotGetStorageJson>(
+                        url = POLKADOT_API_URL,
+                        method = "state_getStorage",
+                        params = buildJsonArray { add(storageKey) },
+                    )
+                    .result ?: return BigInteger.ZERO
+            val hex = result.removePrefix("0x")
+            return parsePolkadotFreeBalance(hex)
         } catch (e: Exception) {
-            Timber.e("Error fetching Polkadot balance: ${e.message}")
+            Timber.e(e, "Error fetching Polkadot balance")
             return BigInteger.ZERO
         }
     }
@@ -166,9 +190,10 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
 
     private companion object {
         private const val POLKADOT_API_URL = "https://api.vultisig.com/dot/"
-        private const val POLKADOT_BALANCE_API_URL =
-            "https://assethub-polkadot.api.subscan.io/api/v2/scan/search"
         private const val POLKADOT_EXTRINSIC_API_URL =
             "https://assethub-polkadot.api.subscan.io/api/scan/extrinsic"
+        // xxHash128("System") + xxHash128("Account") — well-known Substrate storage prefix
+        private const val SYSTEM_ACCOUNT_PREFIX =
+            "26aa394eea5630e07c48ae0c9558cef7b99d880ec681799c0cf30e8886371da9"
     }
 }
