@@ -69,6 +69,7 @@ internal fun KeygenScreen(model: KeygenViewModel = hiltViewModel()) {
         when (state.keygenState) {
             KeygenState.KeygenECDSA,
             KeygenState.KeygenEdDSA,
+            KeygenState.KeygenMLDSA,
             KeygenState.Success -> {
                 view.performHaptic()
             }

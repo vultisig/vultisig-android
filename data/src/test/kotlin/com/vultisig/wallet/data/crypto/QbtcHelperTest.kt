@@ -76,7 +76,7 @@ class QbtcHelperTest {
         val addr64 = QbtcHelper.deriveAddress(key64)
         val addr1312 = QbtcHelper.deriveAddress(key1312)
 
-        // RIPEMD160 always produces 20 bytes → same bech32 length
+        // RIPEMD160 always produces 20 bytes -> same bech32 length
         assertEquals(addr32.length, addr64.length)
         assertEquals(addr64.length, addr1312.length)
     }

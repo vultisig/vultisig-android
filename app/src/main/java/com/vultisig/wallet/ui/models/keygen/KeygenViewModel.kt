@@ -168,6 +168,7 @@ constructor(
                 if (cachedVault != null) {
                     vault.pubKeyECDSA = cachedVault.pubKeyECDSA
                     vault.pubKeyEDDSA = cachedVault.pubKeyEDDSA
+                    vault.pubKeyMLDSA = cachedVault.pubKeyMLDSA
                     vault.keyshares = cachedVault.keyshares
                 }
             }
@@ -180,6 +181,9 @@ constructor(
                 }
 
                 if (action == TssAction.SingleKeygen) {
+                    require(vault.pubKeyECDSA.isNotBlank() && vault.pubKeyEDDSA.isNotBlank()) {
+                        "SingleKeygen requires an existing vault with ECDSA and EdDSA keys"
+                    }
                     startSingleKeygen()
                 } else {
                     when (libType) {
@@ -291,11 +295,21 @@ constructor(
         vault.pubKeyEDDSA = keyshareEddsa.pubKey
         vault.hexChainCode = keyshareEcdsa.chaincode
 
-        vault.keyshares =
-            listOf(
+        val newKeyshares =
+            mutableListOf(
                 KeyShare(pubKey = keyshareEcdsa.pubKey, keyShare = keyshareEcdsa.keyshare),
                 KeyShare(pubKey = keyshareEddsa.pubKey, keyShare = keyshareEddsa.keyshare),
             )
+
+        // Preserve existing MLDSA keyshare during ReShare/Migrate
+        if (vault.pubKeyMLDSA.isNotBlank()) {
+            val existingMldsaShare = vault.keyshares.find { it.pubKey == vault.pubKeyMLDSA }
+            if (existingMldsaShare != null) {
+                newKeyshares.add(existingMldsaShare)
+            }
+        }
+
+        vault.keyshares = newKeyshares
 
         if (action == TssAction.Migrate) {
             vault.libType = SigningLibType.DKLS
@@ -327,7 +341,7 @@ constructor(
 
         vault.pubKeyMLDSA = mldsaKeyshare.pubKey
         vault.keyshares =
-            vault.keyshares +
+            vault.keyshares.filterNot { it.pubKey == mldsaKeyshare.pubKey } +
                 KeyShare(pubKey = mldsaKeyshare.pubKey, keyShare = mldsaKeyshare.keyshare)
 
         sessionApi.markLocalPartyComplete(serverUrl, sessionId, listOf(vault.localPartyID))
@@ -851,7 +865,9 @@ constructor(
 
                                 is KeygenState.KeygenMLDSA ->
                                     KeygenStepUiModel(
-                                        UiText.DynamicString("Generating MLDSA key"),
+                                        UiText.StringResource(
+                                            R.string.keygen_step_generating_mldsa
+                                        ),
                                         true,
                                     )
 

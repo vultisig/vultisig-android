@@ -25,7 +25,8 @@ class CosmosFeeService : FeeService {
             Chain.Kujira,
             Chain.Osmosis,
             Chain.Terra,
-            Chain.Akash -> {
+            Chain.Akash,
+            Chain.Qbtc -> {
                 GasFees(limit = gasLimit.toBigInteger(), amount = 7500.toBigInteger())
             }
             Chain.Noble -> {
@@ -36,9 +37,6 @@ class CosmosFeeService : FeeService {
             }
             Chain.Dydx -> {
                 GasFees(limit = gasLimit.toBigInteger(), amount = 2500000000000000L.toBigInteger())
-            }
-            Chain.Qbtc -> {
-                GasFees(limit = 200000L.toBigInteger(), amount = 7500.toBigInteger())
             }
             else -> error("Chain Not Supported: ${chain.name}")
         }
