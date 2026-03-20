@@ -102,7 +102,7 @@ internal fun DeviceCountSelector(
                 Modifier.width(2.dp)
                     .height(12.dp)
                     .clip(CircleShape)
-                    .background(Theme.v2.colors.border.light)
+                    .background(Theme.v2.colors.border.light),
         )
 
         UiSpacer(size = 4.dp)
@@ -134,7 +134,7 @@ private fun ChangeCountButton(
                             targetValue =
                                 if (enabled) Theme.v2.colors.backgrounds.surface2
                                 else Theme.v2.colors.buttons.ctaDisabled,
-                        ).value
+                        ).value,
                 )
                 .clickable(enabled = enabled, onClick = onClick),
         content = {
@@ -169,15 +169,15 @@ private fun BoxScope.TrackBackground(fillFraction: Float) {
                                     Color(218, 255, 246),
                                     Color(19, 200, 157),
                                     Color(92, 167, 255),
-                                )
-                            )
-                    )
+                                ),
+                            ),
+                    ),
         )
         Box(
             modifier =
                 Modifier.size(8.dp)
                     .align(Alignment.Center)
-                    .background(color = Theme.v2.colors.neutrals.n50, shape = CircleShape)
+                    .background(color = Theme.v2.colors.neutrals.n50, shape = CircleShape),
         )
     }
 }
