@@ -438,8 +438,6 @@ internal sealed class Route {
 
     @Serializable data class Settings(val vaultId: String)
 
-    @Serializable data object DefaultChainSetting
-
     @Serializable data object FAQSetting
 
     @Serializable data class DiscountTiers(val vaultId: String)
@@ -460,8 +458,6 @@ internal sealed class Route {
     @Serializable data class ShareVaultQr(val vaultId: String)
 
     @Serializable data class ReshareStartScreen(val vaultId: String)
-
-    @Serializable data class BiometricsEnable(val vaultId: String)
 
     @Serializable data object OnChainSecurity
 

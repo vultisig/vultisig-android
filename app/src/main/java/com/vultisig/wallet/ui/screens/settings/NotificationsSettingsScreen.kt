@@ -125,7 +125,7 @@ private fun MasterNotificationToggle(isChecked: Boolean, onToggle: (Boolean) -> 
                             .get_notified_when_your_signature_is_required_or_a_device_requests_access
                     ),
                 style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.v2.colors.text.tertiary,
             )
         }
         UiSpacer(size = 70.dp)
@@ -141,13 +141,13 @@ private fun VaultNotificationToggle(
 ) {
     Column() {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             VaultIcon(
                 isFastVault = vault.isFastVault,
-                size = 20.dp,
+                size = 16.dp,
                 contentDescription = null,
                 modifier =
                     Modifier.border(

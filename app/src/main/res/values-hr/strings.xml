@@ -188,7 +188,6 @@
     <string name="join_keysign_discovering_session_id">Otkrivanje ID-a sesije</string>
     <string name="join_keysign_discovery_service">Usluga otkrivanja</string>
     <string name="vault_settings_delete_subtitle">Trajno izbrišite svoj trezor.</string>
-    <string name="default_chain_screen_title">Zadani lanci</string>
     <string name="danger_icon">Ikona opasnosti</string>
     <string name="currency_unit_setting_screen_title">Valuta\n</string>
     <string name="share_qr_utils_choose_an_app">Odaberite aplikaciju</string>
@@ -232,7 +231,6 @@
     <string name="deposit_form_amount_title">Iznos (Stanje: %1$s)</string>
     <string name="share_vault_qr_title">Podijelite Vault QR</string>
     <string name="share_vault_qr_save" >Spremi</string>
-    <string name="vault_settings_enable_biometrics_save" >Spremi</string>
     <string name="share_vault_qr_share" >Podijeli</string>
     <string name="deposit_form_node_address_title">Adresa čvora</string>
     <string name="deposit_form_provider_title">Davatelj (neobavezno)</string>
@@ -264,9 +262,6 @@
     <string name="reshare_start_screen_start_reshare">Počnite ponovno dijeliti</string>
     <string name="threshold_error">Prag nije dosegnut Nedostaje dovoljno početnih uređaja</string>
     <string name="add_folder_folder_name_title">Naziv mape</string>
-    <string name="vault_settings_biometrics_screen_title">Omogući biometriju</string>
-    <string name="vault_settings_biometrics_screen_description">Unesite lozinku za brzo potpisivanje</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Upišite ovdje</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">Biometrija za brzo potpisivanje je omogućena</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">Biometrija za brzo potpisivanje je onemogućena</string>
     <string name="biometry_keysign_login_button">Brzi znak s biometrijom</string>
@@ -1142,4 +1137,16 @@
     <string name="apy_approx">APY (otprilike)</string>
     <string name="apy_approx_hint_title">Nagrade</string>
     <string name="apy_approx_hint_message">Nagrade se automatski pripisuju vašem saldu.</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Dodaj preporuku</string>
+    <string name="referral_added">Preporuka dodana</string>
+    <string name="add_referral_sheet_title">Kod preporuke</string>
+    <string name="add_referral_sheet_description">Unesite svoj kod preporuke ovdje. Uživajte 10% popusta na svaku transakciju.</string>
+    <string name="add_referral_sheet_placeholder">Unesite do 4 znaka</string>
+    <string name="add_referral_sheet_apply">Primijeni preporuku</string>
+    <string name="add_referral_error_length">Referalni kod može sadržavati do 4 znaka</string>
+    <string name="add_referral_error_chars">Referalni kod smije sadržavati samo alfanumeričke znakove</string>
+    <string name="add_referral_error_not_found">Referalni kod nije pronađen</string>
+    <string name="add_referral_error_network">Provjera referalnog koda nije uspjela. Pokušajte ponovo.</string>
 </resources>

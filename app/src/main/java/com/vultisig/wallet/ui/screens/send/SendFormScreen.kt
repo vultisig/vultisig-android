@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -626,7 +627,9 @@ private fun FoldableAmountWidget(
                                 focusManager.clearFocus()
                                 onSend()
                             },
-                            modifier = Modifier.width(IntrinsicSize.Min),
+                            modifier =
+                                Modifier.width(IntrinsicSize.Min)
+                                    .testTag("SendFormScreen.amountField"),
                             decorator = { textField ->
                                 if (primaryFieldState.text.isEmpty()) {
                                     Text(
@@ -966,7 +969,7 @@ private fun FoldableDestinationAddressWidget(
                     if (state.dstAddressError != null) VsTextInputFieldInnerState.Error
                     else VsTextInputFieldInnerState.Default,
                 footNote = state.dstAddressError?.asString(),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("SendFormScreen.addressField"),
             )
 
             UiSpacer(16.dp)
@@ -1059,7 +1062,7 @@ private fun FoldableBondDestinationAddress(
                     if (state.dstAddressError != null) VsTextInputFieldInnerState.Error
                     else VsTextInputFieldInnerState.Default,
                 footNote = state.dstAddressError?.asString(),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("SendFormScreen.addressField"),
             )
 
             UiSpacer(16.dp)
@@ -1184,31 +1187,35 @@ private fun FoldableAssetWidget(
         Column(
             modifier = Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
         ) {
-            ChainSelector(
-                title = stringResource(R.string.send_from_address),
-                // TODO selectedChain should not be nullable
-                //  or default value should be something else
-                chain = state.selectedCoin?.model?.address?.chain ?: Chain.ThorChain,
-                onClick = onSelectNetworkRequest,
-                onDragCancel = onNetworkDragCancel,
-                onDrag = onNetworkDrag,
-                onDragStart = onNetworkDragStart,
-                onDragEnd = onNetworkDragEnd,
-                onLongPressStarted = onNetworkLongPressStarted,
-            )
+            Box(modifier = Modifier.testTag("SendFormScreen.chainSelector")) {
+                ChainSelector(
+                    title = stringResource(R.string.send_from_address),
+                    // TODO selectedChain should not be nullable
+                    //  or default value should be something else
+                    chain = state.selectedCoin?.model?.address?.chain ?: Chain.ThorChain,
+                    onClick = onSelectNetworkRequest,
+                    onDragCancel = onNetworkDragCancel,
+                    onDrag = onNetworkDrag,
+                    onDragStart = onNetworkDragStart,
+                    onDragEnd = onNetworkDragEnd,
+                    onLongPressStarted = onNetworkLongPressStarted,
+                )
+            }
 
             UiSpacer(12.dp)
 
             Row(modifier = Modifier.fillMaxWidth()) {
-                TokenChip(
-                    selectedToken = state.selectedCoin,
-                    onSelectTokenClick = onSelectTokenRequest,
-                    onDragCancel = onAssetDragCancel,
-                    onDrag = onAssetDrag,
-                    onDragStart = onAssetDragStart,
-                    onDragEnd = onAssetDragEnd,
-                    onLongPressStarted = onAssetLongPressStarted,
-                )
+                Box(modifier = Modifier.testTag("SendFormScreen.tokenSelector")) {
+                    TokenChip(
+                        selectedToken = state.selectedCoin,
+                        onSelectTokenClick = onSelectTokenRequest,
+                        onDragCancel = onAssetDragCancel,
+                        onDrag = onAssetDrag,
+                        onDragStart = onAssetDragStart,
+                        onDragEnd = onAssetDragEnd,
+                        onLongPressStarted = onAssetLongPressStarted,
+                    )
+                }
 
                 Column(
                     horizontalAlignment = Alignment.End,

@@ -121,7 +121,6 @@
     <string name="settings_screen_title">Configuración</string>
     <string name="language_setting_screen_title">Idioma</string>
     <string name="currency_unit_setting_screen_title">Moneda\n</string>
-    <string name="default_chain_screen_title">Cadenas predeterminadas</string>
     <string name="faq_setting_screen_title">Preguntas Frecuentes</string>
     <string name="verify_transaction_screen_title">Verificar</string>
     <string name="verify_transaction_from_title">De</string>
@@ -231,7 +230,6 @@
     <string name="deposit_form_amount_title">Importe (Saldo: %1$s)</string>
     <string name="share_vault_qr_title">Compartir Bóveda QR</string>
     <string name="share_vault_qr_save" >Guardar</string>
-    <string name="vault_settings_enable_biometrics_save" >Guardar</string>
     <string name="share_vault_qr_share" >Compartir</string>
     <string name="deposit_form_node_address_title">Dirección del nodo</string>
     <string name="deposit_form_provider_title">Proveedor (opcional)</string>
@@ -263,9 +261,6 @@
     <string name="reshare_start_screen_start_reshare">Empezar a compartir</string>
     <string name="threshold_error">Umbral no alcanzado\n Faltan suficientes dispositivos iniciales</string>
     <string name="add_folder_folder_name_title">Nombre de la carpeta</string>
-    <string name="vault_settings_biometrics_screen_title">Habilitar la biometría</string>
-    <string name="vault_settings_biometrics_screen_description">Introduzca la contraseña para iniciar sesión rápidamente</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Escribe aquí</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">La biometría para la firma rápida está habilitada</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">La biometría para firma rápida está deshabilitada</string>
     <string name="biometry_keysign_login_button">Señalización rápida con biometría</string>
@@ -1139,4 +1134,16 @@
     <string name="apy_approx">APY (aprox.)</string>
     <string name="apy_approx_hint_title">Recompensas</string>
     <string name="apy_approx_hint_message">Las recompensas se acreditan automáticamente a tu saldo.</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Añadir referido</string>
+    <string name="referral_added">Referido añadido</string>
+    <string name="add_referral_sheet_title">Código de referido</string>
+    <string name="add_referral_sheet_description">Ingresa tu código de referido aquí. Disfruta un 10% de descuento en cada transacción.</string>
+    <string name="add_referral_sheet_placeholder">Ingresa hasta 4 caracteres</string>
+    <string name="add_referral_sheet_apply">Aplicar referido</string>
+    <string name="add_referral_error_length">El código de referido puede contener hasta 4 caracteres</string>
+    <string name="add_referral_error_chars">El código de referido solo debe contener caracteres alfanuméricos</string>
+    <string name="add_referral_error_not_found">Código de referido no encontrado</string>
+    <string name="add_referral_error_network">Error al verificar el código de referido. Por favor, inténtalo de nuevo.</string>
 </resources>

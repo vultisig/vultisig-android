@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateUniqueName
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
@@ -117,8 +118,6 @@ internal sealed interface EnterVaultInfoEvent {
 
     object Back : EnterVaultInfoEvent
 
-    object Referral : EnterVaultInfoEvent
-
     object ClearInput : EnterVaultInfoEvent
 
     object ClearConfirmInput : EnterVaultInfoEvent
@@ -136,6 +135,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val isNameLengthValid: IsVaultNameValid,
     private val generateUniqueName: GenerateUniqueName,
+    private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -152,6 +152,8 @@ constructor(
                 confirmPasswordTextFieldState = passwordDelegate.confirmPasswordTextFieldState
             )
         )
+
+    val referralCode = referralCodeSettingsRepository.pendingReferralFlow
 
     private var vaultNamesList = emptyList<String>()
 
@@ -270,7 +272,6 @@ constructor(
         when (event) {
             EnterVaultInfoEvent.Back -> prev()
             EnterVaultInfoEvent.Next -> next()
-            EnterVaultInfoEvent.Referral -> referral()
             EnterVaultInfoEvent.ClearInput -> clearInput()
             EnterVaultInfoEvent.ClearConfirmInput -> clearConfirmInput()
             EnterVaultInfoEvent.TogglePasswordVisibility -> togglePasswordVisibility()
@@ -487,6 +488,4 @@ constructor(
         val name = nameTextFieldState.text.toString()
         return isNameValid(name) && isNameAvailable(name)
     }
-
-    private fun referral() {}
 }

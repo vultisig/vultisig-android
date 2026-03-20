@@ -498,13 +498,17 @@ constructor(
     }
 
     override suspend fun existsReferralCode(code: String): Boolean {
-        try {
-            val response =
-                httpClient.get("$NNRLM_URL/thorname/$code") { header(xClientID, xClientIDValue) }
-            return response.status.isSuccess()
-        } catch (e: Exception) {
-            Timber.tag("THORChainService").e("Error checking referral code: ${e.message}")
+        val response =
+            httpClient.get("$NNRLM_URL/thorname/$code") { header(xClientID, xClientIDValue) }
+
+        if (response.status == HttpStatusCode.NotFound) {
             return false
+        }
+
+        val thorName = response.bodyOrThrow<ThorOwnerData>()
+
+        return thorName.aliases.any { alias ->
+            alias.chain.equals("THOR", ignoreCase = true) && alias.address.isNotBlank()
         }
     }
 

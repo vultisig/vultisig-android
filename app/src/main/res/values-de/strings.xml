@@ -187,7 +187,6 @@
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_keysign_discovery_service">Service entdecken</string>
     <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft.</string>
-    <string name="default_chain_screen_title">Standardketten</string>
     <string name="danger_icon">Gefahrensymbol</string>
     <string name="currency_unit_setting_screen_title">Währung\n</string>
     <string name="share_qr_utils_choose_an_app">Wählen Sie eine App</string>
@@ -231,7 +230,6 @@
     <string name="deposit_form_amount_title">Betrag (Guthaben: %1$s)</string>
     <string name="share_vault_qr_title">Vault-QR teilen</string>
     <string name="share_vault_qr_save" >Speichern</string>
-    <string name="vault_settings_enable_biometrics_save" >Speichern</string>
     <string name="share_vault_qr_share" >Teilen</string>
     <string name="deposit_form_node_address_title">Knotenadresse</string>
     <string name="deposit_form_provider_title">Anbieter (optional)</string>
@@ -263,9 +261,6 @@
     <string name="reshare_start_screen_start_reshare">Neu teilen starten</string>
     <string name="threshold_error">Schwellenwert nicht erreicht.\n Es fehlen ausreichend Erstausrüstungen.</string>
     <string name="add_folder_folder_name_title">Ordnername</string>
-    <string name="vault_settings_biometrics_screen_title">Biometrie aktivieren</string>
-    <string name="vault_settings_biometrics_screen_description">Geben Sie das Passwort für die schnelle Signatur ein</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Geben Sie hier ein</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">Biometrie für schnelles Signieren ist aktiviert</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">Biometrie für schnelles Signieren ist deaktiviert</string>
     <string name="biometry_keysign_login_button">Fast Sign mit Biometrie</string>
@@ -1141,4 +1136,16 @@
     <string name="apy_approx">APY (ca.)</string>
     <string name="apy_approx_hint_title">Belohnungen</string>
     <string name="apy_approx_hint_message">Belohnungen werden automatisch Ihrem Guthaben gutgeschrieben.</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Empfehlung hinzufügen</string>
+    <string name="referral_added">Empfehlung hinzugefügt</string>
+    <string name="add_referral_sheet_title">Empfehlungscode</string>
+    <string name="add_referral_sheet_description">Geben Sie hier Ihren Empfehlungscode ein. Genießen Sie 10 % Rabatt auf jede Transaktion.</string>
+    <string name="add_referral_sheet_placeholder">Bis zu 4 Zeichen eingeben</string>
+    <string name="add_referral_sheet_apply">Empfehlung anwenden</string>
+    <string name="add_referral_error_length">Der Empfehlungscode darf höchstens 4 Zeichen lang sein</string>
+    <string name="add_referral_error_chars">Der Empfehlungscode darf nur alphanumerische Zeichen enthalten</string>
+    <string name="add_referral_error_not_found">Empfehlungscode nicht gefunden</string>
+    <string name="add_referral_error_network">Fehler beim Überprüfen des Empfehlungscodes. Bitte versuchen Sie es erneut.</string>
 </resources>

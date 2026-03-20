@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateUniqueName
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
@@ -42,12 +43,14 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val isNameLengthValid: IsVaultNameValid,
     private val generateUniqueName: GenerateUniqueName,
+    private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VaultInfo.Name>()
 
     val nameFieldState = TextFieldState()
     val state = MutableStateFlow(NameVaultUiModel())
+    val referralCode = referralCodeSettingsRepository.pendingReferralFlow
     private var vaultNamesList = emptyList<String>()
 
     init {

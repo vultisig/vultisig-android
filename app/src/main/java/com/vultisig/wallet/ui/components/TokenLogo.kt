@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
@@ -9,6 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.vultisig.wallet.data.models.ImageModel
@@ -21,6 +24,17 @@ internal fun TokenLogo(
     logo: ImageModel,
     title: String,
 ) {
+    val isInspectionMode = LocalInspectionMode.current
+
+    if (isInspectionMode && logo is Int) {
+        Image(
+            painter = painterResource(logo),
+            contentDescription = null,
+            modifier = modifier.clip(CircleShape),
+        )
+        return
+    }
+
     val context = LocalContext.current
 
     val imageRequest =

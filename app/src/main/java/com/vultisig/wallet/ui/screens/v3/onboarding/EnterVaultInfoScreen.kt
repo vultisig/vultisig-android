@@ -17,6 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +41,8 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
+import com.vultisig.wallet.ui.components.referral.AddReferralBottomSheet
+import com.vultisig.wallet.ui.components.referral.AddReferralHeaderButton
 import com.vultisig.wallet.ui.components.v2.modifiers.shinedBottom
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.v3.onboarding.EnterVaultInfoEvent
@@ -51,18 +56,38 @@ import com.vultisig.wallet.ui.utils.asString
 @Composable
 internal fun EnterVaultInfoScreen(viewModel: EnterVaultInfoViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
-    EnterVaultInfoScreen(uiState = uiState, onEvent = viewModel::onEvent)
+    var showReferralSheet by rememberSaveable { mutableStateOf(false) }
+    val referralCode by viewModel.referralCode.collectAsState()
+
+    EnterVaultInfoScreen(
+        uiState = uiState,
+        hasReferral = !referralCode.isNullOrEmpty(),
+        onReferralClick = { showReferralSheet = true },
+        onEvent = viewModel::onEvent,
+    )
+
+    if (showReferralSheet) {
+        AddReferralBottomSheet(
+            onApply = { _ -> showReferralSheet = false },
+            onDismissRequest = { showReferralSheet = false },
+        )
+    }
 }
 
 @Composable
 internal fun EnterVaultInfoScreen(
     uiState: EnterVaultInfoUiState,
+    hasReferral: Boolean = false,
+    onReferralClick: () -> Unit = {},
     onEvent: (EnterVaultInfoEvent) -> Unit,
 ) {
 
     BackHandler { onEvent(EnterVaultInfoEvent.Back) }
 
-    V3Scaffold(onBackClick = { onEvent(EnterVaultInfoEvent.Back) }) {
+    V3Scaffold(
+        onBackClick = { onEvent(EnterVaultInfoEvent.Back) },
+        actions = { AddReferralHeaderButton(hasReferral = hasReferral, onClick = onReferralClick) },
+    ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,

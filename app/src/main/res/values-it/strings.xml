@@ -188,7 +188,6 @@
     <string name="join_keysign_discovering_session_id">Individuazione dell\'ID sessione</string>
     <string name="join_keysign_discovery_service">Scoprire il servizio</string>
     <string name="vault_settings_delete_subtitle">Elimina definitivamente il tuo vault.</string>
-    <string name="default_chain_screen_title">Catene predefinite</string>
     <string name="danger_icon">Icona di pericolo</string>
     <string name="currency_unit_setting_screen_title">Valuta</string>
     <string name="share_qr_utils_choose_an_app">Scegli un\'app</string>
@@ -232,7 +231,6 @@
     <string name="deposit_form_amount_title">Importo (Saldo: %1$s)</string>
     <string name="share_vault_qr_title">Condividi Vault QR</string>
     <string name="share_vault_qr_save" >Salva</string>
-    <string name="vault_settings_enable_biometrics_save" >Salva</string>
     <string name="share_vault_qr_share" >Condividi</string>
     <string name="deposit_form_node_address_title">Indirizzo del nodo</string>
     <string name="deposit_form_provider_title">Fornitore (facoltativo)</string>
@@ -264,9 +262,6 @@
     <string name="reshare_start_screen_start_reshare">Inizia la condivisione</string>
     <string name="threshold_error">Soglia non raggiunta Mancano \n abbastanza dispositivi iniziali</string>
     <string name="add_folder_folder_name_title">Nome cartella</string>
-    <string name="vault_settings_biometrics_screen_title">Abilita la biometria</string>
-    <string name="vault_settings_biometrics_screen_description">Inserisci la password per la firma rapida</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Scrivi qui</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">La biometria per la firma rapida è abilitata</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">La biometria per la firma rapida è disabilitata</string>
     <string name="biometry_keysign_login_button">Fast Sign con biometria</string>
@@ -1142,4 +1137,16 @@
     <string name="apy_approx">APY (circa)</string>
     <string name="apy_approx_hint_title">Premi</string>
     <string name="apy_approx_hint_message">I premi vengono accreditati automaticamente al tuo saldo.</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Aggiungi referral</string>
+    <string name="referral_added">Referral aggiunto</string>
+    <string name="add_referral_sheet_title">Codice referral</string>
+    <string name="add_referral_sheet_description">Inserisci qui il tuo codice referral. Goditi il 10% di sconto su ogni transazione.</string>
+    <string name="add_referral_sheet_placeholder">Inserisci fino a 4 caratteri</string>
+    <string name="add_referral_sheet_apply">Applica referral</string>
+    <string name="add_referral_error_length">Il codice referral può contenere fino a 4 caratteri</string>
+    <string name="add_referral_error_chars">Il codice referral deve contenere solo caratteri alfanumerici</string>
+    <string name="add_referral_error_not_found">Codice di invito non trovato</string>
+    <string name="add_referral_error_network">Errore durante la verifica del codice referral. Riprova.</string>
 </resources>
