@@ -8,25 +8,30 @@ import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetNonceJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetRunTimeVersionJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
 import com.vultisig.wallet.data.api.utils.postRpc
-import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonArray
-import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
 
 interface BittensorApi {
     suspend fun getBalance(address: String): BigInteger
+
     suspend fun getNonce(address: String): BigInteger
+
     suspend fun getBlockHash(isGenesis: Boolean = false): String
+
     suspend fun getGenesisBlockHash(): String
+
     suspend fun getRuntimeVersion(): Pair<BigInteger, BigInteger>
+
     suspend fun getBlockHeader(): BigInteger
+
     suspend fun broadcastTransaction(tx: String): String?
+
     suspend fun getPartialFee(tx: String): BigInteger
 }
 
@@ -109,16 +114,13 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
     }
 
     override suspend fun getPartialFee(tx: String): BigInteger {
-        val payload =
-            RpcPayload(
-                jsonrpc = "2.0",
+        val hexTx = if (tx.startsWith("0x")) tx else "0x$tx"
+        return httpClient
+            .postRpc<PolkadotQueryInfoResponseJson>(
+                url = BITTENSOR_RPC_URL,
                 method = "payment_queryInfo",
-                params = buildJsonArray { add(if (tx.startsWith("0x")) tx else "0x$tx") },
-                id = 1,
+                params = buildJsonArray { add(hexTx) },
             )
-        val response = httpClient.post(BITTENSOR_RPC_URL) { setBody(payload) }
-        return response
-            .bodyOrThrow<PolkadotQueryInfoResponseJson>()
             .result
             ?.partialFee
             ?.toBigIntegerOrNull() ?: throw Exception("Can't obtain Bittensor partial fee")
@@ -126,8 +128,7 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
 
     /** Compute System.Account storage key for an SS58 address */
     private fun computeAccountStorageKey(address: String): String {
-        val pubkey =
-            com.vultisig.wallet.data.chains.helpers.BittensorHelper.ss58Decode(address)
+        val pubkey = com.vultisig.wallet.data.chains.helpers.BittensorHelper.ss58Decode(address)
         val blake2Hash = wallet.core.jni.Hash.blake2b(pubkey, 16)
         return "0x" +
             SYSTEM_ACCOUNT_PREFIX +
@@ -141,8 +142,7 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
         if (clean.length < 64) return BigInteger.ZERO
         // free balance at bytes 16-31 (hex chars 32-63), u128 LE
         val freeHex = clean.substring(32, 64)
-        val beHex =
-            freeHex.chunked(2).reversed().joinToString("")
+        val beHex = freeHex.chunked(2).reversed().joinToString("")
         return BigInteger(beHex, 16)
     }
 
@@ -153,7 +153,4 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
     }
 }
 
-@kotlinx.serialization.Serializable
-private data class StorageResponse(
-    val result: String? = null,
-)
+@kotlinx.serialization.Serializable private data class StorageResponse(val result: String? = null)
