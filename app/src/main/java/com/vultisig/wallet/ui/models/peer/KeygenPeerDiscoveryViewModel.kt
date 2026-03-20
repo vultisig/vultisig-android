@@ -48,7 +48,6 @@ import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
-import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -244,16 +243,11 @@ constructor(
 
     fun selectDevice(device: ParticipantName) {
         state.update {
-            val isServer = device.startsWith(LOCAL_PARTY_ID_PREFIX, ignoreCase = true)
-            val userDeviceCount =
-                it.selectedDevices.count { d ->
-                    !d.startsWith(LOCAL_PARTY_ID_PREFIX, ignoreCase = true)
-                }
             val maxOtherDevices = it.minimumDevices - 1
             it.copy(
                 selectedDevices =
                     if (device in it.selectedDevices) it.selectedDevices - device
-                    else if (!isServer && userDeviceCount >= maxOtherDevices) it.selectedDevices
+                    else if (it.selectedDevices.size >= maxOtherDevices) it.selectedDevices
                     else it.selectedDevices + device
             )
         }
@@ -426,27 +420,12 @@ constructor(
                     val existingDevices = currentState.devices.toSet()
                     val newDevices = devices - existingDevices
 
-                    val serverDevices =
-                        newDevices.filter {
-                            it.startsWith(LOCAL_PARTY_ID_PREFIX, ignoreCase = true)
-                        }
-                    val userDevices =
-                        newDevices.filter {
-                            !it.startsWith(LOCAL_PARTY_ID_PREFIX, ignoreCase = true)
-                        }
-                    val existingUserDevices =
-                        currentState.selectedDevices.count {
-                            !it.startsWith(LOCAL_PARTY_ID_PREFIX, ignoreCase = true)
-                        }
                     val maxOtherDevices =
                         if (currentState.minimumDevices > 1) currentState.minimumDevices - 1
                         else currentState.minimumDevices
-                    val remainingSlots = maxOtherDevices - existingUserDevices
-                    val userDevicesToAutoSelect = userDevices.take(remainingSlots.coerceAtLeast(0))
-                    val selectedDevices =
-                        currentState.selectedDevices.toSet() +
-                            serverDevices +
-                            userDevicesToAutoSelect
+                    val remainingSlots = maxOtherDevices - currentState.selectedDevices.size
+                    val devicesToAutoSelect = newDevices.take(remainingSlots.coerceAtLeast(0))
+                    val selectedDevices = currentState.selectedDevices.toSet() + devicesToAutoSelect
 
                     state.update {
                         it.copy(devices = devices, selectedDevices = selectedDevices.toList())
