@@ -138,15 +138,14 @@ private fun ChangeCountButton(
                         .value,
                 )
                 .clickable(enabled = enabled, onClick = onClick),
-        content = {
-            if (isIncrease) {
-                PlusSign(modifier = Modifier.size(15.dp))
-            } else {
-                MinusSign(modifier = Modifier.size(15.dp))
-            }
-        },
         contentAlignment = Alignment.Center,
-    )
+    ) {
+        if (isIncrease) {
+            PlusSign(modifier = Modifier.size(15.dp))
+        } else {
+            MinusSign(modifier = Modifier.size(15.dp))
+        }
+    }
 }
 
 @Composable
