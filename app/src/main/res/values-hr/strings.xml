@@ -108,7 +108,6 @@
     <string name="verify_transaction_join_keysign">Pridruži se potpisu ključa</string>
     <string name="verify_transaction_consent_address">Šaljem na pravu adresu</string>
     <string name="verify_transaction_consent_amount">Iznos je točan</string>
-    <string name="qr_address_screen_title">Adresa</string>
     <string name="transaction_done_title">Gotovo</string>
     <string name="transaction_done_complete">Dovršeno</string>
     <string name="transaction_done_form_title">Transakcija</string>
@@ -314,7 +313,6 @@
     <string name="do_not_remind_me_again">Nemoj me ponovno podsjećati</string>
     <string name="monthly_backup_reminder_title">Ne zaboravite sigurnosno kopirati svoje dionice trezora i provjeriti cjelovitost.</string>
     <string name="transaction_complete_screen_title">Transakcija dovršena</string>
-    <string name="qr_address_screen_description">%1$s adresa:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Odabran je pogrešan trezor</string>
     <string name="verify_swap_screen_total_fees">Ukupne naknade</string>
     <string name="scan_qr_code_error_text">Nepovezani QR kod se skenira</string>
