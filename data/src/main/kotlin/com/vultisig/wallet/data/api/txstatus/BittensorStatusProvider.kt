@@ -6,7 +6,7 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import javax.inject.Inject
 
-class BittensorStatusProvider @Inject constructor(private val bittensorApi: BittensorApi) :
+internal class BittensorStatusProvider @Inject constructor(private val bittensorApi: BittensorApi) :
     TransactionStatusProvider {
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
