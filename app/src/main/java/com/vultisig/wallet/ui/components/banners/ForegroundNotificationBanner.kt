@@ -52,7 +52,7 @@ private fun Modifier.bannerBackground(
     drawRect(
         brush =
             Brush.linearGradient(
-                colorStops = arrayOf(0.2077f to gradientStart, 1.0f to gradientEnd),
+                colorStops = arrayOf(0.2077f to gradientStart, 1.0997f to gradientEnd),
                 start = Offset(cx - sinA * halfLen, cy + cosA * halfLen),
                 end = Offset(cx + sinA * halfLen, cy - cosA * halfLen),
             )

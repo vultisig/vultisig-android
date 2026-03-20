@@ -16,6 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +28,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.vultisig.wallet.app.activity.ForegroundNotificationState
 import com.vultisig.wallet.app.activity.MainViewModel
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.components.banners.ForegroundNotificationBanner
@@ -46,6 +50,8 @@ internal fun MainActivityContent(
     onNavigationReady: () -> Unit,
 ) {
     val foregroundNotification by mainViewModel.foregroundNotification.collectAsStateWithLifecycle()
+    var lastNotification by remember { mutableStateOf<ForegroundNotificationState?>(null) }
+    if (foregroundNotification != null) lastNotification = foregroundNotification
     val density = LocalDensity.current
     val statusBarHeightPx = WindowInsets.statusBars.getTop(density)
 
@@ -61,7 +67,7 @@ internal fun MainActivityContent(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             OfflineBanner(mainViewModel.isOffline.value)
-            key(foregroundNotification?.qrCodeData) {
+            key(lastNotification?.qrCodeData) {
                 AnimatedVisibility(
                     visible = foregroundNotification != null,
                     enter = slideInVertically { -it },
@@ -74,12 +80,14 @@ internal fun MainActivityContent(
                             }
                         },
                 ) {
-                    ForegroundNotificationBanner(
-                        qrCodeData = foregroundNotification?.qrCodeData ?: "",
-                        vaultName = foregroundNotification?.vaultName ?: "",
-                        transactionSummary = foregroundNotification?.transactionSummary ?: "",
-                        onTap = mainViewModel::onForegroundBannerTapped,
-                    )
+                    lastNotification?.let { notification ->
+                        ForegroundNotificationBanner(
+                            qrCodeData = notification.qrCodeData,
+                            vaultName = notification.vaultName,
+                            transactionSummary = notification.transactionSummary,
+                            onTap = mainViewModel::onForegroundBannerTapped,
+                        )
+                    }
                 }
             }
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
