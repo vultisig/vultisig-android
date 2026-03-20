@@ -107,7 +107,6 @@ import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.send.sendScreen
 import com.vultisig.wallet.ui.screens.settings.CheckForUpdateScreen
 import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
-import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreen
 import com.vultisig.wallet.ui.screens.settings.FaqSettingScreen
 import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
@@ -198,8 +197,6 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         }
 
         composable<Route.Settings> { SettingsScreen() }
-
-        composable<Route.DefaultChainSetting> { DefaultChainSetting(navController = navController) }
 
         composable<Route.FAQSetting> { FaqSettingScreen(navController = navController) }
 

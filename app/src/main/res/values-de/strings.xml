@@ -187,7 +187,6 @@
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_keysign_discovery_service">Service entdecken</string>
     <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft.</string>
-    <string name="default_chain_screen_title">Standardketten</string>
     <string name="danger_icon">Gefahrensymbol</string>
     <string name="currency_unit_setting_screen_title">Währung\n</string>
     <string name="share_qr_utils_choose_an_app">Wählen Sie eine App</string>

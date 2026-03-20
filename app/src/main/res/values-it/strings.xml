@@ -188,7 +188,6 @@
     <string name="join_keysign_discovering_session_id">Individuazione dell\'ID sessione</string>
     <string name="join_keysign_discovery_service">Scoprire il servizio</string>
     <string name="vault_settings_delete_subtitle">Elimina definitivamente il tuo vault.</string>
-    <string name="default_chain_screen_title">Catene predefinite</string>
     <string name="danger_icon">Icona di pericolo</string>
     <string name="currency_unit_setting_screen_title">Valuta</string>
     <string name="share_qr_utils_choose_an_app">Scegli un\'app</string>
