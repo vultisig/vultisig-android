@@ -2791,11 +2791,6 @@ constructor(
                             PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
                         }
 
-                        selectedChain == Chain.Bittensor &&
-                            selectedToken.ticker == Coins.Bittensor.TAO.ticker -> {
-                            500L.toBigInteger() // 500 RAO existential deposit
-                        }
-
                         selectedChain == Chain.Ripple &&
                             selectedToken.ticker == Coins.Ripple.XRP.ticker -> {
                             RippleHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
@@ -2811,7 +2806,6 @@ constructor(
                                 UiText.StringResource(
                                     when (selectedChain) {
                                         Chain.Polkadot -> R.string.send_form_polka_reaping_warning
-                                        Chain.Bittensor -> R.string.send_form_polka_reaping_warning
                                         Chain.Ripple -> R.string.send_form_ripple_reaping_warning
                                         else -> return
                                     }

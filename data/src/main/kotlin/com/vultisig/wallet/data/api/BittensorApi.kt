@@ -31,7 +31,20 @@ interface BittensorApi {
     suspend fun getBlockHeader(): BigInteger
     suspend fun broadcastTransaction(tx: String): String?
     suspend fun getPartialFee(tx: String): BigInteger
+    suspend fun getTxStatus(txHash: String): TaostatsExtrinsicData?
 }
+
+@Serializable
+data class TaostatsExtrinsicResponse(
+    val pagination: TaostatsPagination? = null,
+    val data: List<TaostatsExtrinsicData>? = null,
+)
+
+@Serializable
+data class TaostatsExtrinsicData(
+    val success: Boolean? = null,
+    @SerialName("block_number") val blockNumber: Int? = null,
+)
 
 @Serializable
 data class TaostatsAccountResponse(
@@ -149,6 +162,19 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
             .result
             ?.partialFee
             ?.toBigIntegerOrNull() ?: throw Exception("Can't obtain Bittensor partial fee")
+    }
+
+    override suspend fun getTxStatus(txHash: String): TaostatsExtrinsicData? {
+        return try {
+            val hash = if (txHash.startsWith("0x")) txHash else "0x$txHash"
+            val response = httpClient.get("$TAOSTATS_API_URL/extrinsic/v1?hash=$hash") {
+                header("Authorization", TAOSTATS_API_KEY)
+            }
+            val result = response.body<TaostatsExtrinsicResponse>()
+            result.data?.firstOrNull()
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private companion object {
