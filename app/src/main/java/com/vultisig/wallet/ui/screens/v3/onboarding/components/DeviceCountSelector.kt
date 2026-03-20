@@ -131,10 +131,10 @@ private fun ChangeCountButton(
                 .background(
                     color =
                         animateColorAsState(
-                                targetValue =
-                                    if (enabled) Theme.v2.colors.backgrounds.surface2
-                                    else Theme.v2.colors.buttons.ctaDisabled
-                            )
+                            targetValue =
+                                if (enabled) Theme.v2.colors.backgrounds.surface2
+                                else Theme.v2.colors.buttons.ctaDisabled
+                        )
                             .value
                 )
                 .clickable(enabled = enabled, onClick = onClick),
