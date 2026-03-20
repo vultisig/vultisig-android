@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -67,7 +68,7 @@ internal fun SearchBar(
                 if (isFocusedState)
                     ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal)
                 else ContainerBorderType.Borderless,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).height(42.dp),
             cornerType = CornerType.Circular,
         ) {
             BasicTextField(
