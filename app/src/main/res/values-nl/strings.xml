@@ -230,7 +230,6 @@
     <string name="deposit_form_amount_title">Bedrag (Saldo: %1$s)</string>
     <string name="share_vault_qr_title">Deel Vault QR</string>
     <string name="share_vault_qr_save" >Opslaan</string>
-    <string name="vault_settings_enable_biometrics_save" >Opslaan</string>
     <string name="share_vault_qr_share" >Delen</string>
     <string name="deposit_form_node_address_title">Knooppuntadres</string>
     <string name="deposit_form_provider_title">Provider (optioneel)</string>
@@ -262,9 +261,6 @@
     <string name="reshare_start_screen_start_reshare">Start opnieuw delen</string>
     <string name="threshold_error">Drempelwaarde niet bereikt\nEr ontbreken voldoende initiële apparaten</string>
     <string name="add_folder_folder_name_title">Mapnaam</string>
-    <string name="vault_settings_biometrics_screen_title">Biometrie inschakelen</string>
-    <string name="vault_settings_biometrics_screen_description">Voer wachtwoord in voor snelle ondertekening</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Typ hier</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">Biometrie voor snelle ondertekening is ingeschakeld</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">Biometrie voor snelle ondertekening is uitgeschakeld</string>
     <string name="biometry_keysign_login_button">Snel ondertekenen met biometrie</string>

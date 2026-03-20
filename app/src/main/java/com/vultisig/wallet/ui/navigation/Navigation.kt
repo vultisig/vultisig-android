@@ -459,8 +459,6 @@ internal sealed class Route {
 
     @Serializable data class ReshareStartScreen(val vaultId: String)
 
-    @Serializable data class BiometricsEnable(val vaultId: String)
-
     @Serializable data object OnChainSecurity
 
     @Serializable data class ReferralOnboarding(val vaultId: String)

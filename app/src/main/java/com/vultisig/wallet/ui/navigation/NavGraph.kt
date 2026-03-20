@@ -128,7 +128,6 @@ import com.vultisig.wallet.ui.screens.v3.onboarding.EnterVaultInfoScreen
 import com.vultisig.wallet.ui.screens.v3.onboarding.ReviewVaultDevicesScreen
 import com.vultisig.wallet.ui.screens.v3.onboarding.SetupVaultInfoScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
-import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.security.SecurityScannerEnableScreen
 import com.vultisig.wallet.ui.theme.slideInFromBottomEnterTransition
@@ -217,8 +216,6 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         dialog<Route.CustomToken> { CustomTokenScreen() }
 
         composable<Route.ReshareStartScreen> { ReshareStartScreen(navController) }
-
-        composable<Route.BiometricsEnable> { BiometricsEnableScreen(navController) }
 
         composable<Route.OnChainSecurity> { SecurityScannerEnableScreen(navController) }
 

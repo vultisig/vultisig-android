@@ -399,7 +399,6 @@
     <!-- Share Vault QR -->
     <string name="share_vault_qr_title">分享金库二维码</string>
     <string name="share_vault_qr_save">保存</string>
-    <string name="vault_settings_enable_biometrics_save">保存</string>
     <string name="share_vault_qr_share">分享</string>
 
     <!-- Deposit Form -->
@@ -476,10 +475,6 @@
     <string name="vault_settings_security_screen_title_content">您可以禁用由 Blockaid 提供的实时链上安全。</string>
     <string name="vault_settings_security_screen_title">安全</string>
 
-    <!-- Vault Settings Biometrics -->
-    <string name="vault_settings_biometrics_screen_title">启用生物识别</string>
-    <string name="vault_settings_biometrics_screen_description">输入快速签名密码</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">在此输入</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">快速签名生物识别已启用</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">快速签名生物识别已禁用</string>
 

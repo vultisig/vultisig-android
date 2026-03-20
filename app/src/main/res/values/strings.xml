@@ -303,7 +303,6 @@
     <string name="deposit_form_rewards_title">Pending Rewards (Balance: %1$s)</string>
     <string name="share_vault_qr_title">Share Vault QR</string>
     <string name="share_vault_qr_save">Save</string>
-    <string name="vault_settings_enable_biometrics_save">Save</string>
     <string name="share_vault_qr_share">Share</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="deposit_form_provider_title">Provider (optional)</string>
@@ -349,9 +348,6 @@
     <string name="vault_settings_security_screen_title_switch">Manage your on-chain security</string>
     <string name="vault_settings_security_screen_title_content">You can disable your realtime on-chain security provided by Blockaid.</string>
     <string name="vault_settings_security_screen_title">Security</string>
-    <string name="vault_settings_biometrics_screen_title">Enable Biometrics</string>
-    <string name="vault_settings_biometrics_screen_description">Enter Password for Fast Signing</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Type here</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">Biometrics for Fast Signing is enabled</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">Biometrics for Fast Signing is disabled</string>
     <string name="biometry_keysign_login_button">Fast Sign with biometry</string>
