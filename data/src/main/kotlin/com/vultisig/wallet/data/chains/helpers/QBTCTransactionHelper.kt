@@ -24,10 +24,6 @@ class QBTCTransactionHelper {
         private const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"
         private const val MSG_IBC_TRANSFER_TYPE_URL = "/ibc.applications.transfer.v1.MsgTransfer"
         private const val MSG_VOTE_TYPE_URL = "/cosmos.gov.v1beta1.MsgVote"
-        private const val MSG_DELEGATE_TYPE_URL = "/cosmos.staking.v1beta1.MsgDelegate"
-        private const val MSG_UNDELEGATE_TYPE_URL = "/cosmos.staking.v1beta1.MsgUndelegate"
-        private const val MSG_WITHDRAW_REWARD_TYPE_URL =
-            "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward"
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
@@ -102,39 +98,10 @@ class QBTCTransactionHelper {
                 anyMsg to null
             }
 
-            TransactionType.TRANSACTION_TYPE_DELEGATE -> {
-                val anyMsg =
-                    buildDelegateAny(
-                        keysignPayload.coin.address,
-                        keysignPayload.toAddress,
-                        keysignPayload.toAmount.toString(),
-                    )
-                anyMsg to keysignPayload.memo
-            }
-
-            TransactionType.TRANSACTION_TYPE_UNDELEGATE -> {
-                val anyMsg =
-                    buildUndelegateAny(
-                        keysignPayload.coin.address,
-                        keysignPayload.toAddress,
-                        keysignPayload.toAmount.toString(),
-                    )
-                anyMsg to keysignPayload.memo
-            }
-
-            TransactionType.TRANSACTION_TYPE_WITHDRAW_REWARD -> {
-                val anyMsg =
-                    buildWithdrawRewardAny(keysignPayload.coin.address, keysignPayload.toAddress)
-                anyMsg to keysignPayload.memo
-            }
-
-            TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
-            TransactionType.TRANSACTION_TYPE_TRANSFER -> {
+            else -> {
                 val anyMsg = buildMsgSendAny(keysignPayload)
                 anyMsg to keysignPayload.memo
             }
-
-            else -> error("Unsupported QBTC transaction type: ${cosmosSpecific.transactionType}")
         }
     }
 
@@ -232,35 +199,6 @@ class QBTCTransactionHelper {
             "NOWITHVETO" -> 4L
             else -> error("Unrecognized vote option: $description")
         }
-
-    // Staking
-
-    fun buildDelegateAny(delegator: String, validator: String, amount: String): ByteArray {
-        val msg = buildStakingMsg(delegator, validator, amount)
-        return wrapAny(MSG_DELEGATE_TYPE_URL, msg)
-    }
-
-    fun buildUndelegateAny(delegator: String, validator: String, amount: String): ByteArray {
-        val msg = buildStakingMsg(delegator, validator, amount)
-        return wrapAny(MSG_UNDELEGATE_TYPE_URL, msg)
-    }
-
-    private fun buildStakingMsg(delegator: String, validator: String, amount: String): ByteArray {
-        val result = ByteArray(0).toMutableList()
-        result.addAll(protoString(1, delegator))
-        result.addAll(protoString(2, validator))
-        result.addAll(protoBytes(3, buildCoin(DENOM, amount)))
-        return result.toByteArray()
-    }
-
-    // Distribution
-
-    fun buildWithdrawRewardAny(delegator: String, validator: String): ByteArray {
-        val result = ByteArray(0).toMutableList()
-        result.addAll(protoString(1, delegator))
-        result.addAll(protoString(2, validator))
-        return wrapAny(MSG_WITHDRAW_REWARD_TYPE_URL, result.toByteArray())
-    }
 
     // Common builders
 
