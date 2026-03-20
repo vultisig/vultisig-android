@@ -33,9 +33,9 @@ constructor(private val compressorStreamProvider: CompressorStreamProvider) : De
     override fun invoke(input: ByteArray): ByteArray =
         try {
             BufferedInputStream(input.inputStream()).use { inputStream ->
-                compressorStreamProvider.createCompressorInputStream(COMPRESSION_ALGO, inputStream).use {
-                    it.readBytes()
-                }
+                compressorStreamProvider
+                    .createCompressorInputStream(COMPRESSION_ALGO, inputStream)
+                    .use { it.readBytes() }
             }
         } catch (_: CompressorException) {
             input
