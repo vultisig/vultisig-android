@@ -119,7 +119,6 @@
     <string name="settings_screen_title">Instellingen</string>
     <string name="language_setting_screen_title">Taal</string>
     <string name="currency_unit_setting_screen_title">Valuta\n</string>
-    <string name="default_chain_screen_title">Standaard kettingen</string>
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="verify_transaction_screen_title">Verifiëren</string>
     <string name="verify_transaction_from_title">Van</string>
