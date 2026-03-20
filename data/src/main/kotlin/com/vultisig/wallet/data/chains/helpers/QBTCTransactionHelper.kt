@@ -102,10 +102,39 @@ class QBTCTransactionHelper {
                 anyMsg to null
             }
 
-            else -> {
+            TransactionType.TRANSACTION_TYPE_DELEGATE -> {
+                val anyMsg =
+                    buildDelegateAny(
+                        keysignPayload.coin.address,
+                        keysignPayload.toAddress,
+                        keysignPayload.toAmount.toString(),
+                    )
+                anyMsg to keysignPayload.memo
+            }
+
+            TransactionType.TRANSACTION_TYPE_UNDELEGATE -> {
+                val anyMsg =
+                    buildUndelegateAny(
+                        keysignPayload.coin.address,
+                        keysignPayload.toAddress,
+                        keysignPayload.toAmount.toString(),
+                    )
+                anyMsg to keysignPayload.memo
+            }
+
+            TransactionType.TRANSACTION_TYPE_WITHDRAW_REWARD -> {
+                val anyMsg =
+                    buildWithdrawRewardAny(keysignPayload.coin.address, keysignPayload.toAddress)
+                anyMsg to keysignPayload.memo
+            }
+
+            TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+            TransactionType.TRANSACTION_TYPE_TRANSFER -> {
                 val anyMsg = buildMsgSendAny(keysignPayload)
                 anyMsg to keysignPayload.memo
             }
+
+            else -> error("Unsupported QBTC transaction type: ${cosmosSpecific.transactionType}")
         }
     }
 
@@ -145,6 +174,9 @@ class QBTCTransactionHelper {
             keysignPayload.memo?.split(":")
                 ?: error("IBC transfer requires memo with source channel")
         val sourceChannel = memoParts.getOrElse(1) { "" }
+        require(sourceChannel.isNotBlank()) {
+            "IBC transfer requires memo with source channel at index 1"
+        }
 
         val timeouts = cosmosSpecific.ibcDenomTraces?.latestBlock?.split("_") ?: emptyList()
         val timeout = timeouts.lastOrNull()?.toLongOrNull() ?: 0L
@@ -198,7 +230,7 @@ class QBTCTransactionHelper {
             "NO" -> 3L
             "NO_WITH_VETO",
             "NOWITHVETO" -> 4L
-            else -> 0L
+            else -> error("Unrecognized vote option: $description")
         }
 
     // Staking

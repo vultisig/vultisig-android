@@ -298,6 +298,7 @@ constructor(
             val hasMldsaKey =
                 vault?.pubKeyMLDSA?.isNotBlank() == true &&
                     vault?.keyshares?.any { it.pubKey == vault.pubKeyMLDSA } == true
+            val supportsDilithiumKeygen = vault != null && vault.libType != SigningLibType.KeyImport
 
             val newItems =
                 uiModel.value.settingGroups.map { group ->
@@ -316,7 +317,7 @@ constructor(
                                     is VaultSettingsItem.Reshare ->
                                         it.copy(isEnabled = !hasFastSign)
                                     is VaultSettingsItem.DilithiumKeygen ->
-                                        it.copy(isEnabled = !hasMldsaKey)
+                                        it.copy(isEnabled = supportsDilithiumKeygen && !hasMldsaKey)
                                     else -> it
                                 }
                             }
@@ -451,7 +452,7 @@ constructor(
             val hasValidMldsaKey =
                 vault.pubKeyMLDSA.isNotBlank() &&
                     vault.keyshares.any { it.pubKey == vault.pubKeyMLDSA }
-            if (hasValidMldsaKey) {
+            if (hasValidMldsaKey || vault.libType == SigningLibType.KeyImport) {
                 return@launch
             }
             if (hasFastSign) {

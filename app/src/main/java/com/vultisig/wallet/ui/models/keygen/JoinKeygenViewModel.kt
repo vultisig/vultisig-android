@@ -207,6 +207,14 @@ constructor(
                                         )
                                     )
 
+                            require(existingVault.pubKeyMLDSA.isBlank()) {
+                                "Vault already has an MLDSA key"
+                            }
+
+                            require(existingVault.libType != SigningLibType.KeyImport) {
+                                "Key import vaults do not support MLDSA keygen"
+                            }
+
                             val serverUrl =
                                 if (message.useVultisigRelay) {
                                     Endpoints.VULTISIG_RELAY_URL
