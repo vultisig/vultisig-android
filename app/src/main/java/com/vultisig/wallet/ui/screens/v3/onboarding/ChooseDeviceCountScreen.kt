@@ -60,7 +60,6 @@ private val DescriptionShape =
 
 @Composable
 internal fun ChooseDeviceCountScreen(viewModel: ChooseDeviceCountViewModel = hiltViewModel()) {
-
     val uiState by viewModel.uiState.collectAsState()
 
     ChooseDeviceCountScreen(uiState = uiState, onEvent = viewModel::handleEvent)
