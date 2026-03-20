@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.usecases
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
+import org.apache.commons.compress.compressors.CompressorException
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.CompressorStreamProvider
 
@@ -36,7 +37,7 @@ constructor(private val compressorStreamProvider: CompressorStreamProvider) : De
                     it.readBytes()
                 }
             }
-        } catch (_: Exception) {
+        } catch (_: CompressorException) {
             input
         }
 }
