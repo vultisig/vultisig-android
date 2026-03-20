@@ -34,7 +34,7 @@ constructor(private val compressorStreamProvider: CompressorStreamProvider) : De
         try {
             BufferedInputStream(input.inputStream()).use { inputStream ->
                 compressorStreamProvider
-                    .createCompressorInputStream(COMPRESSION_ALGO, inputStream)
+                    .createCompressorInputStream(COMPRESSION_ALGO, inputStream, true)
                     .use { it.readBytes() }
             }
         } catch (_: CompressorException) {
