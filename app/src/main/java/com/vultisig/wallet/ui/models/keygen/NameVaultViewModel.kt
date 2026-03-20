@@ -142,13 +142,7 @@ constructor(
         nameFieldState.clearText()
     }
 
-    fun setReferralCode(code: String) {
-        referralCodeSettingsRepository.setPendingReferral(code)
-    }
-
     fun back() {
-        // Clear pending referral when backing out of the first vault setup screen
-        referralCodeSettingsRepository.setPendingReferral(null)
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 }

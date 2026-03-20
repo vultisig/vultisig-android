@@ -500,7 +500,16 @@ constructor(
     override suspend fun existsReferralCode(code: String): Boolean {
         val response =
             httpClient.get("$NNRLM_URL/thorname/$code") { header(xClientID, xClientIDValue) }
-        return response.status.isSuccess()
+
+        if (!response.status.isSuccess()) {
+            return false
+        }
+
+        val thorName = response.bodyOrThrow<ThorOwnerData>()
+
+        return thorName.aliases.any { alias ->
+            alias.chain.equals("THOR", ignoreCase = true) && alias.address.isNotBlank()
+        }
     }
 
     override suspend fun getReferralCodeInfo(code: String): ThorOwnerData {

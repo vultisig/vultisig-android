@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.keygen
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -11,7 +12,9 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -33,19 +36,23 @@ constructor(
 
     val state = MutableStateFlow(AddReferralUiModel())
     val textFieldState = TextFieldState(referralCodeSettingsRepository.getPendingReferral() ?: "")
+    private var applyReferralJob: Job? = null
 
     init {
         viewModelScope.launch {
-            textFieldState.textAsFlow().collect {
-                state.update {
-                    it.copy(errorMessage = null, innerState = VsTextInputFieldInnerState.Default)
-                }
+            textFieldState.textAsFlow().collect { text ->
+                if (state.value.isLoading) return@collect
+
+                validateLocalInput(text.toString().trim())
             }
         }
     }
 
     fun applyReferral(onSuccess: (String) -> Unit) {
+        if (state.value.isLoading) return
+
         val code = textFieldState.text.toString().trim()
+        val normalizedCode = code.uppercase()
 
         if (code.length > MAX_REFERRAL_LENGTH) {
             state.update {
@@ -69,39 +76,87 @@ constructor(
 
         state.update { it.copy(isLoading = true, errorMessage = null) }
 
-        viewModelScope.launch {
-            try {
-                val exists = withContext(Dispatchers.IO) { thorChainApi.existsReferralCode(code) }
+        applyReferralJob =
+            viewModelScope.launch {
+                try {
+                    val exists =
+                        withContext(Dispatchers.IO) {
+                            thorChainApi.existsReferralCode(normalizedCode)
+                        }
 
-                if (exists) {
-                    val uppercasedCode = code.uppercase()
-                    referralCodeSettingsRepository.setPendingReferral(uppercasedCode)
+                    if (exists) {
+                        referralCodeSettingsRepository.setPendingReferral(normalizedCode)
+                        state.update { it.copy(isLoading = false) }
+                        onSuccess(normalizedCode)
+                    } else {
+                        state.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage =
+                                    UiText.StringResource(R.string.add_referral_error_not_found),
+                                innerState = VsTextInputFieldInnerState.Error,
+                            )
+                        }
+                    }
+                } catch (_: CancellationException) {
                     state.update { it.copy(isLoading = false) }
-                    onSuccess(uppercasedCode)
-                } else {
+                } catch (_: Exception) {
                     state.update {
                         it.copy(
                             isLoading = false,
                             errorMessage =
-                                UiText.StringResource(R.string.add_referral_error_not_found),
+                                UiText.StringResource(R.string.add_referral_error_network),
                             innerState = VsTextInputFieldInnerState.Error,
                         )
                     }
-                }
-            } catch (_: Exception) {
-                state.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = UiText.StringResource(R.string.add_referral_error_network),
-                        innerState = VsTextInputFieldInnerState.Error,
-                    )
+                } finally {
+                    applyReferralJob = null
                 }
             }
+    }
+
+    fun cancelApplyReferral() {
+        applyReferralJob?.cancel()
+        applyReferralJob = null
+        resetToPendingReferral()
+    }
+
+    fun resetToPendingReferral() {
+        textFieldState.setTextAndPlaceCursorAtEnd(
+            referralCodeSettingsRepository.getPendingReferral().orEmpty()
+        )
+        state.update {
+            it.copy(
+                isLoading = false,
+                errorMessage = null,
+                innerState = VsTextInputFieldInnerState.Default,
+            )
         }
     }
 
     fun clearInput() {
         textFieldState.edit { replace(0, length, "") }
+    }
+
+    private fun validateLocalInput(code: String) {
+        val validationError =
+            when {
+                code.isEmpty() -> null
+                code.length > MAX_REFERRAL_LENGTH ->
+                    UiText.StringResource(R.string.add_referral_error_length)
+                !code.matches(ALPHANUMERIC_REGEX) ->
+                    UiText.StringResource(R.string.add_referral_error_chars)
+                else -> null
+            }
+
+        state.update {
+            it.copy(
+                errorMessage = validationError,
+                innerState =
+                    if (validationError != null) VsTextInputFieldInnerState.Error
+                    else VsTextInputFieldInnerState.Default,
+            )
+        }
     }
 
     private companion object {

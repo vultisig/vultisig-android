@@ -314,7 +314,6 @@ constructor(
     }
 
     private fun back() {
-        referralCodeSettingsRepository.setPendingReferral(null)
         viewModelScope.launch { navigator.back() }
     }
 
@@ -488,9 +487,5 @@ constructor(
     private fun isNameValid(): Boolean {
         val name = nameTextFieldState.text.toString()
         return isNameValid(name) && isNameAvailable(name)
-    }
-
-    fun setReferralCode(code: String) {
-        referralCodeSettingsRepository.setPendingReferral(code)
     }
 }

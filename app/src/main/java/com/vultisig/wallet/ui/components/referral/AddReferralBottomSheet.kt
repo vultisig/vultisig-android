@@ -1,33 +1,34 @@
 package com.vultisig.wallet.ui.components.referral
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.models.keygen.AddReferralUiModel
 import com.vultisig.wallet.ui.models.keygen.AddReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AddReferralBottomSheet(
     onApply: (String) -> Unit,
@@ -36,16 +37,12 @@ internal fun AddReferralBottomSheet(
 ) {
     val state by viewModel.state.collectAsState()
 
-    ModalBottomSheet(
+    VsModalBottomSheet(
         onDismissRequest = {
-            if (!state.isLoading) {
-                onDismissRequest()
-            }
+            viewModel.cancelApplyReferral()
+            onDismissRequest()
         },
-        containerColor = Theme.v2.colors.backgrounds.secondary,
-        shape = RoundedCornerShape(24.dp),
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        dragHandle = null,
+        showDragHandle = false,
     ) {
         AddReferralBottomSheetContent(
             state = state,
@@ -95,6 +92,7 @@ private fun AddReferralBottomSheetContent(
             hint = stringResource(R.string.add_referral_sheet_placeholder),
             innerState = state.innerState,
             footNote = state.errorMessage?.asString(),
+            enabled = !state.isLoading,
             trailingIcon = R.drawable.close_circle,
             onTrailingIconClick = onClearClick,
             modifier = Modifier.fillMaxWidth(),
@@ -103,12 +101,29 @@ private fun AddReferralBottomSheetContent(
         UiSpacer(24.dp)
 
         VsButton(
-            label = stringResource(R.string.add_referral_sheet_apply),
             state =
                 if (state.isLoading || textFieldState.text.isEmpty()) VsButtonState.Disabled
                 else VsButtonState.Enabled,
             modifier = Modifier.fillMaxWidth(),
             onClick = onApplyClick,
-        )
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (state.isLoading) {
+                    V2Loading(modifier = Modifier.size(16.dp))
+                }
+
+                Text(
+                    text = stringResource(R.string.add_referral_sheet_apply),
+                    style = Theme.brockmann.button.semibold.small,
+                    color =
+                        if (state.isLoading || textFieldState.text.isEmpty())
+                            Theme.v2.colors.text.button.disabled
+                        else Theme.v2.colors.text.button.primary,
+                )
+            }
+        }
     }
 }

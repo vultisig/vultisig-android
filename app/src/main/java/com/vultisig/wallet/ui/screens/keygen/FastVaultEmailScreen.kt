@@ -72,7 +72,6 @@ private fun FastVaultEmailScreen(
     onClearClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-
     V2Scaffold(
         title = null,
         onBackClick = onBackClick,

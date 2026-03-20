@@ -119,12 +119,7 @@ constructor(
         }
     }
 
-    fun setReferralCode(code: String) {
-        referralCodeSettingsRepository.setPendingReferral(code)
-    }
-
     fun back() {
-        referralCodeSettingsRepository.setPendingReferral(null)
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 }
