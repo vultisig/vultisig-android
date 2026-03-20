@@ -7,27 +7,28 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
-import wallet.core.jni.PublicKey
-import wallet.core.jni.PublicKeyType
 import java.io.ByteArrayOutputStream
 import java.math.BigInteger
+import wallet.core.jni.PublicKey
+import wallet.core.jni.PublicKeyType
 
 /**
  * Bittensor signing helper — custom extrinsic builder.
  *
- * Bypasses TW Core's TransactionCompiler because Bittensor requires
- * the CheckMetadataHash signed extension which TW Core doesn't support.
+ * Bypasses TW Core's TransactionCompiler because Bittensor requires the CheckMetadataHash signed
+ * extension which TW Core doesn't support.
  */
 class BittensorHelper(private val vaultHexPublicKey: String) {
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val payload = buildSigningPayload(keysignPayload)
         // Substrate: if payload > 256 bytes, blake2b-256 hash it
-        val toSign = if (payload.size > 256) {
-            Utils.blake2bHash(payload)
-        } else {
-            payload
-        }
+        val toSign =
+            if (payload.size > 256) {
+                Utils.blake2bHash(payload)
+            } else {
+                payload
+            }
         return listOf(Numeric.toHexStringNoPrefix(toSign))
     }
 
@@ -38,15 +39,16 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
         val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
 
         val payload = buildSigningPayload(keysignPayload)
-        val toSign = if (payload.size > 256) {
-            Utils.blake2bHash(payload)
-        } else {
-            payload
-        }
+        val toSign =
+            if (payload.size > 256) {
+                Utils.blake2bHash(payload)
+            } else {
+                payload
+            }
         val hashHex = Numeric.toHexStringNoPrefix(toSign)
 
-        val signature = signatures[hashHex]?.getSignature()
-            ?: throw Exception("Signature not found")
+        val signature =
+            signatures[hashHex]?.getSignature() ?: throw Exception("Signature not found")
 
         if (!publicKey.verify(signature, toSign)) {
             throw Exception("Signature verification failed")
@@ -64,10 +66,7 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
         val rawTx = Numeric.toHexStringNoPrefix(extrinsic)
         val txHash = Numeric.toHexString(Utils.blake2bHash(extrinsic))
 
-        return SignedTransactionResult(
-            rawTransaction = rawTx,
-            transactionHash = txHash,
-        )
+        return SignedTransactionResult(rawTransaction = rawTx, transactionHash = txHash)
     }
 
     fun getZeroSignedTransaction(keysignPayload: KeysignPayload): String {
@@ -97,8 +96,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
     }
 
     /**
-     * Call data for Balances.transfer_allow_death(dest, value)
-     * Encoding: [pallet:5, call:0] ++ MultiAddress::Id(0x00) ++ dest(32B) ++ compact(amount)
+     * Call data for Balances.transfer_allow_death(dest, value) Encoding: [pallet:5, call:0] ++
+     * MultiAddress::Id(0x00) ++ dest(32B) ++ compact(amount)
      */
     private fun buildCallData(keysignPayload: KeysignPayload): ByteArray {
         val destBytes = ss58Decode(keysignPayload.toAddress)
@@ -114,8 +113,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
     }
 
     /**
-     * Signed extensions (extra) in the extrinsic body.
-     * Era | Nonce(compact) | Tip(compact, 0) | CheckMetadataHash(0x00)
+     * Signed extensions (extra) in the extrinsic body. Era | Nonce(compact) | Tip(compact, 0) |
+     * CheckMetadataHash(0x00)
      */
     private fun buildSignedExtra(specific: BlockChainSpecific.Polkadot): ByteArray {
         val out = ByteArrayOutputStream()
@@ -127,8 +126,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
     }
 
     /**
-     * Additional signed data for the signing payload.
-     * specVersion(u32le) | txVersion(u32le) | genesisHash(32B) | blockHash(32B) | CheckMetadataHash(0x00)
+     * Additional signed data for the signing payload. specVersion(u32le) | txVersion(u32le) |
+     * genesisHash(32B) | blockHash(32B) | CheckMetadataHash(0x00)
      */
     private fun buildAdditionalSigned(specific: BlockChainSpecific.Polkadot): ByteArray {
         val out = ByteArrayOutputStream()
@@ -141,8 +140,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
     }
 
     /**
-     * Assemble final signed extrinsic.
-     * compactLen | 0x84 | MultiAddress::Id(signer) | MultiSignature::Ed25519(sig) | signedExtra | callData
+     * Assemble final signed extrinsic. compactLen | 0x84 | MultiAddress::Id(signer) |
+     * MultiSignature::Ed25519(sig) | signedExtra | callData
      */
     private fun assembleExtrinsic(
         signerPubkey: ByteArray,
@@ -186,16 +185,18 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
                         (v and 0xFF).toByte(),
                         ((v shr 8) and 0xFF).toByte(),
                         ((v shr 16) and 0xFF).toByte(),
-                        ((v shr 24) and 0xFF).toByte()
+                        ((v shr 24) and 0xFF).toByte(),
                     )
                 }
                 else -> {
-                    val bytes = value.toByteArray().let { b ->
-                        // BigInteger is big-endian, reverse to little-endian
-                        // Remove leading zero byte if present
-                        val trimmed = if (b[0] == 0.toByte() && b.size > 1) b.drop(1).toByteArray() else b
-                        trimmed.reversedArray()
-                    }
+                    val bytes =
+                        value.toByteArray().let { b ->
+                            // BigInteger is big-endian, reverse to little-endian
+                            // Remove leading zero byte if present
+                            val trimmed =
+                                if (b[0] == 0.toByte() && b.size > 1) b.drop(1).toByteArray() else b
+                            trimmed.reversedArray()
+                        }
                     val prefix = ((bytes.size - 4) shl 2) or 3
                     byteArrayOf(prefix.toByte()) + bytes
                 }
@@ -204,12 +205,15 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
 
         private fun encodeMortalEra(blockNumber: Long, period: Int): ByteArray {
             // Round UP to next power of 2 (matching Substrate spec)
-            val calPeriod = (if (period > 0 && (period and (period - 1)) == 0) period
-                else Integer.highestOneBit(period) shl 1).coerceIn(4, 65536)
+            val calPeriod =
+                (if (period > 0 && (period and (period - 1)) == 0) period
+                    else Integer.highestOneBit(period) shl 1)
+                    .coerceIn(4, 65536)
             val phase = (blockNumber % calPeriod).toInt()
             val quantizeFactor = (calPeriod shr 12).coerceAtLeast(1)
             val quantizedPhase = (phase / quantizeFactor) * quantizeFactor
-            val encoded = (Integer.numberOfTrailingZeros(calPeriod) - 1).coerceIn(1, 15) +
+            val encoded =
+                (Integer.numberOfTrailingZeros(calPeriod) - 1).coerceIn(1, 15) +
                     ((quantizedPhase / quantizeFactor) shl 4)
             return byteArrayOf((encoded and 0xFF).toByte(), ((encoded shr 8) and 0xFF).toByte())
         }
@@ -219,13 +223,13 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
                 (value and 0xFF).toByte(),
                 ((value shr 8) and 0xFF).toByte(),
                 ((value shr 16) and 0xFF).toByte(),
-                ((value shr 24) and 0xFF).toByte()
+                ((value shr 24) and 0xFF).toByte(),
             )
         }
 
         /**
-         * SS58 encode raw 32-byte pubkey with Bittensor prefix (42).
-         * Format: base58(prefix_byte ++ pubkey ++ blake2b_checksum[0..2])
+         * SS58 encode raw 32-byte pubkey with Bittensor prefix (42). Format: base58(prefix_byte ++
+         * pubkey ++ blake2b_checksum[0..2])
          */
         fun ss58Encode(pubkey: ByteArray): String {
             require(pubkey.size == 32) { "SS58 encode requires 32-byte pubkey, got ${pubkey.size}" }
@@ -261,8 +265,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
         }
 
         /**
-         * Decode SS58 address to raw 32-byte public key.
-         * SS58 = base58(prefix ++ pubkey ++ checksum)
+         * Decode SS58 address to raw 32-byte public key. SS58 = base58(prefix ++ pubkey ++
+         * checksum)
          */
         private fun ss58Decode(address: String): ByteArray {
             val decoded = base58Decode(address)
@@ -282,7 +286,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
                     pubkey = decoded.sliceArray(2..33)
                     checksum = decoded.sliceArray(34..35)
                 }
-                else -> throw IllegalArgumentException("Invalid SS58 address length: ${decoded.size}")
+                else ->
+                    throw IllegalArgumentException("Invalid SS58 address length: ${decoded.size}")
             }
             // Verify blake2b-512 checksum
             val payload = decoded.sliceArray(0 until prefixLen + 32)
@@ -300,11 +305,13 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
             for (c in input) {
                 val index = BASE58_ALPHABET.indexOf(c)
                 if (index < 0) throw IllegalArgumentException("Invalid base58 character: $c")
-                result = result.multiply(BigInteger.valueOf(58)).add(BigInteger.valueOf(index.toLong()))
+                result =
+                    result.multiply(BigInteger.valueOf(58)).add(BigInteger.valueOf(index.toLong()))
             }
             val bytes = result.toByteArray()
             // Remove leading zero from BigInteger sign byte
-            val trimmed = if (bytes[0] == 0.toByte() && bytes.size > 1) bytes.drop(1).toByteArray() else bytes
+            val trimmed =
+                if (bytes[0] == 0.toByte() && bytes.size > 1) bytes.drop(1).toByteArray() else bytes
             // Count leading '1's in input (each = leading zero byte)
             val leadingZeros = input.takeWhile { it == '1' }.length
             return ByteArray(leadingZeros) + trimmed

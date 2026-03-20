@@ -44,7 +44,8 @@ constructor(
             TokenStandard.COSMOS -> cosmosProvider
             TokenStandard.THORCHAIN -> thorChainProvider
             TokenStandard.SOL -> solanaProvider
-            TokenStandard.SUBSTRATE -> if (chain == Chain.Bittensor) bittensorProvider else polkadotProvider
+            TokenStandard.SUBSTRATE ->
+                if (chain == Chain.Bittensor) bittensorProvider else polkadotProvider
             TokenStandard.SUI -> suiProvider
             TokenStandard.TON -> tonProvider
             TokenStandard.RIPPLE -> rippleProvider

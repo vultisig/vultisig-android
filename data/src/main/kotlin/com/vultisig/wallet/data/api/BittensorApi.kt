@@ -14,23 +14,31 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import java.math.BigInteger
+import javax.inject.Inject
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import timber.log.Timber
-import java.math.BigInteger
-import javax.inject.Inject
 
 interface BittensorApi {
     suspend fun getBalance(address: String): BigInteger
+
     suspend fun getNonce(address: String): BigInteger
+
     suspend fun getBlockHash(isGenesis: Boolean = false): String
+
     suspend fun getGenesisBlockHash(): String
+
     suspend fun getRuntimeVersion(): Pair<BigInteger, BigInteger>
+
     suspend fun getBlockHeader(): BigInteger
+
     suspend fun broadcastTransaction(tx: String): String?
+
     suspend fun getPartialFee(tx: String): BigInteger
+
     suspend fun getTxStatus(txHash: String): TaostatsExtrinsicData?
 }
 
@@ -52,24 +60,22 @@ data class TaostatsAccountResponse(
     val data: List<TaostatsAccountData>? = null,
 )
 
-@Serializable
-data class TaostatsPagination(
-    @SerialName("total_items") val totalItems: Int = 0,
-)
+@Serializable data class TaostatsPagination(@SerialName("total_items") val totalItems: Int = 0)
 
 @Serializable
-data class TaostatsAccountData(
-    @SerialName("balance_free") val balanceFree: String = "0",
-)
+data class TaostatsAccountData(@SerialName("balance_free") val balanceFree: String = "0")
 
 internal class BittensorApiImp @Inject constructor(private val httpClient: HttpClient) :
     BittensorApi {
 
     override suspend fun getBalance(address: String): BigInteger {
         try {
-            val response = httpClient.get("$TAOSTATS_API_URL/account/latest/v1?address=$address&network=finney") {
-                header("Authorization", TAOSTATS_API_KEY)
-            }
+            val response =
+                httpClient.get(
+                    "$TAOSTATS_API_URL/account/latest/v1?address=$address&network=finney"
+                ) {
+                    header("Authorization", TAOSTATS_API_KEY)
+                }
             val taostatsResp = response.body<TaostatsAccountResponse>()
             val data = taostatsResp.data
             if (data.isNullOrEmpty()) return BigInteger.ZERO
@@ -81,23 +87,25 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
     }
 
     override suspend fun getNonce(address: String): BigInteger {
-        val payload = RpcPayload(
-            jsonrpc = "2.0",
-            method = "system_accountNextIndex",
-            params = buildJsonArray { add(address) },
-            id = 1,
-        )
+        val payload =
+            RpcPayload(
+                jsonrpc = "2.0",
+                method = "system_accountNextIndex",
+                params = buildJsonArray { add(address) },
+                id = 1,
+            )
         val response = httpClient.post(BITTENSOR_RPC_URL) { setBody(payload) }
         return response.body<PolkadotGetNonceJson>().result
     }
 
     override suspend fun getBlockHash(isGenesis: Boolean): String {
-        val payload = RpcPayload(
-            jsonrpc = "2.0",
-            method = "chain_getBlockHash",
-            params = buildJsonArray { if (isGenesis) add(0) },
-            id = 1,
-        )
+        val payload =
+            RpcPayload(
+                jsonrpc = "2.0",
+                method = "chain_getBlockHash",
+                params = buildJsonArray { if (isGenesis) add(0) },
+                id = 1,
+            )
         val response = httpClient.post(BITTENSOR_RPC_URL) { setBody(payload) }
         return response.body<PolkadotGetBlockHashJson>().result
     }
@@ -105,36 +113,39 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
     override suspend fun getGenesisBlockHash(): String = getBlockHash(true)
 
     override suspend fun getRuntimeVersion(): Pair<BigInteger, BigInteger> {
-        val payload = RpcPayload(
-            jsonrpc = "2.0",
-            method = "state_getRuntimeVersion",
-            params = buildJsonArray {},
-            id = 1,
-        )
+        val payload =
+            RpcPayload(
+                jsonrpc = "2.0",
+                method = "state_getRuntimeVersion",
+                params = buildJsonArray {},
+                id = 1,
+            )
         val response = httpClient.post(BITTENSOR_RPC_URL) { setBody(payload) }
         val rpcResp = response.body<PolkadotGetRunTimeVersionJson>()
         return Pair(rpcResp.result.specVersion, rpcResp.result.transactionVersion)
     }
 
     override suspend fun getBlockHeader(): BigInteger {
-        val payload = RpcPayload(
-            jsonrpc = "2.0",
-            method = "chain_getHeader",
-            params = buildJsonArray {},
-            id = 1,
-        )
+        val payload =
+            RpcPayload(
+                jsonrpc = "2.0",
+                method = "chain_getHeader",
+                params = buildJsonArray {},
+                id = 1,
+            )
         val response = httpClient.post(BITTENSOR_RPC_URL) { setBody(payload) }
         val responseContent = response.body<PolkadotGetBlockHeaderJson>()
         return BigInteger(responseContent.result.number.drop(2), 16)
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
-        val payload = RpcPayload(
-            jsonrpc = "2.0",
-            method = "author_submitExtrinsic",
-            params = buildJsonArray { add(if (tx.startsWith("0x")) tx else "0x$tx") },
-            id = 1,
-        )
+        val payload =
+            RpcPayload(
+                jsonrpc = "2.0",
+                method = "author_submitExtrinsic",
+                params = buildJsonArray { add(if (tx.startsWith("0x")) tx else "0x$tx") },
+                id = 1,
+            )
         val response = httpClient.post(BITTENSOR_RPC_URL) { setBody(payload) }
         val responseContent = response.body<PolkadotBroadcastTransactionJson>()
         if (responseContent.error != null) {
@@ -150,12 +161,13 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
     }
 
     override suspend fun getPartialFee(tx: String): BigInteger {
-        val payload = RpcPayload(
-            jsonrpc = "2.0",
-            method = "payment_queryInfo",
-            params = buildJsonArray { add(if (tx.startsWith("0x")) tx else "0x$tx") },
-            id = 1,
-        )
+        val payload =
+            RpcPayload(
+                jsonrpc = "2.0",
+                method = "payment_queryInfo",
+                params = buildJsonArray { add(if (tx.startsWith("0x")) tx else "0x$tx") },
+                id = 1,
+            )
         val response = httpClient.post(BITTENSOR_RPC_URL) { setBody(payload) }
         return response
             .bodyOrThrow<PolkadotQueryInfoResponseJson>()
@@ -167,9 +179,10 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
     override suspend fun getTxStatus(txHash: String): TaostatsExtrinsicData? {
         return try {
             val hash = if (txHash.startsWith("0x")) txHash else "0x$txHash"
-            val response = httpClient.get("$TAOSTATS_API_URL/extrinsic/v1?hash=$hash") {
-                header("Authorization", TAOSTATS_API_KEY)
-            }
+            val response =
+                httpClient.get("$TAOSTATS_API_URL/extrinsic/v1?hash=$hash") {
+                    header("Authorization", TAOSTATS_API_KEY)
+                }
             val result = response.body<TaostatsExtrinsicResponse>()
             result.data?.firstOrNull()
         } catch (e: Exception) {
