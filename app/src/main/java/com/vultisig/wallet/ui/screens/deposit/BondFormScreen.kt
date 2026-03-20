@@ -411,16 +411,37 @@ private fun ThorchainBondFormContent(
 
 @Preview(showBackground = true, backgroundColor = 0xFF02122B)
 @Composable
-private fun BondFormContentPreview() {
+private fun BondFormContentThorPreview() {
     OnBoardingComposeTheme {
         BondFormContent(
             state = DepositFormUiModel(depositChain = Chain.ThorChain),
-            nodeAddressFieldState = TextFieldState(),
+            nodeAddressFieldState = TextFieldState("thor1mtqtupwgjwn397w3dx9fqmqgzr"),
             providerFieldState = TextFieldState(),
             operatorFeeFieldState = TextFieldState(),
             tokenAmountFieldState = TextFieldState(),
             assetsFieldState = TextFieldState(),
             lpUnitsFieldState = TextFieldState(),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun BondFormContentMayaPreview() {
+    OnBoardingComposeTheme {
+        BondFormContent(
+            state =
+                DepositFormUiModel(
+                    depositChain = Chain.MayaChain,
+                    bondableAssets = listOf("RUNE", "CACAO"),
+                    selectedBondAsset = "RUNE",
+                ),
+            nodeAddressFieldState = TextFieldState("maya1abctupwgjwn397w3dx9fqmqgzr"),
+            providerFieldState = TextFieldState(),
+            operatorFeeFieldState = TextFieldState(),
+            tokenAmountFieldState = TextFieldState(),
+            assetsFieldState = TextFieldState(),
+            lpUnitsFieldState = TextFieldState("0"),
         )
     }
 }

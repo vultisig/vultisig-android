@@ -299,6 +299,7 @@ constructor(
             // TODO: Unify loading cache code into one service with DeFi Maya (generic loading)
             val thorchainAddress = addresses.find { it.chain == Chain.ThorChain }
             val ethereumAddress = addresses.find { it.chain == Chain.Ethereum }
+            val mayaAddress = addresses.find { it.chain == Chain.MayaChain }
 
             val cachedDeFiThorchainBalances =
                 thorchainAddress?.let {
@@ -318,7 +319,17 @@ constructor(
                     )
                 } ?: emptyList()
 
-            val cacheBalances = cachedDeFiThorchainBalances + cacheDeFiEthereumBalances
+            val cacheDeFiMayaBalances =
+                mayaAddress?.let {
+                    balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+                        address = mayaAddress.address,
+                        coin = Coins.MayaChain.CACAO,
+                        vaultId = vaultId,
+                    )
+                } ?: emptyList()
+
+            val cacheBalances =
+                cachedDeFiThorchainBalances + cacheDeFiEthereumBalances + cacheDeFiMayaBalances
 
             if (cacheBalances.isNotEmpty()) {
                 val balancesByTicker =
