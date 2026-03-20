@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
@@ -20,10 +19,10 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
-import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.app.activity.MainViewModel
@@ -68,7 +67,12 @@ internal fun MainActivityContent(
                     enter = slideInVertically { -it },
                     exit = slideOutVertically { -it },
                     modifier =
-                        Modifier.fillMaxWidth().offset { IntOffset(x = 0, y = -statusBarHeightPx) },
+                        Modifier.fillMaxWidth().layout { measurable, constraints ->
+                            val placeable = measurable.measure(constraints)
+                            layout(placeable.width, placeable.height - statusBarHeightPx) {
+                                placeable.placeRelative(0, -statusBarHeightPx)
+                            }
+                        },
                 ) {
                     ForegroundNotificationBanner(
                         qrCodeData = foregroundNotification?.qrCodeData ?: "",
