@@ -125,7 +125,7 @@ private fun MasterNotificationToggle(isChecked: Boolean, onToggle: (Boolean) -> 
                             .get_notified_when_your_signature_is_required_or_a_device_requests_access
                     ),
                 style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.v2.colors.text.tertiary,
             )
         }
         UiSpacer(size = 70.dp)
