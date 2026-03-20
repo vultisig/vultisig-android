@@ -3,7 +3,7 @@
 
 echo "ktfmt: formatting Kotlin files..."
 
-./gradlew :app:ktfmtFormat :data:ktfmtFormat --quiet 2>&1
+./gradlew ktfmtFormat --quiet 2>&1
 
 if [ $? -ne 0 ]; then
   echo "ktfmt: formatting failed. Commit aborted."
