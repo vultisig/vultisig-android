@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.app.activity.MainViewModel
@@ -43,6 +41,8 @@ internal fun MainActivityContent(
     startDestination: Any,
     onNavigationReady: () -> Unit,
 ) {
+    val foregroundNotification by mainViewModel.foregroundNotification.collectAsStateWithLifecycle()
+
     Box(
         modifier =
             Modifier.semantics {
@@ -55,6 +55,21 @@ internal fun MainActivityContent(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             OfflineBanner(mainViewModel.isOffline.value)
+            key(foregroundNotification?.qrCodeData) {
+                AnimatedVisibility(
+                    visible = foregroundNotification != null,
+                    enter = slideInVertically { -it },
+                    exit = slideOutVertically { -it },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    ForegroundNotificationBanner(
+                        qrCodeData = foregroundNotification?.qrCodeData ?: "",
+                        vaultName = foregroundNotification?.vaultName ?: "",
+                        transactionSummary = foregroundNotification?.transactionSummary ?: "",
+                        onTap = mainViewModel::onForegroundBannerTapped,
+                    )
+                }
+            }
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 SetupNavGraph(navController = navController, startDestination = startDestination)
             }
@@ -73,27 +88,6 @@ internal fun MainActivityContent(
 
             mainViewModel.onNavigationReady()
             onNavigationReady()
-        }
-
-        val foregroundNotification by
-            mainViewModel.foregroundNotification.collectAsStateWithLifecycle()
-
-        key(foregroundNotification?.qrCodeData) {
-            AnimatedVisibility(
-                visible = foregroundNotification != null,
-                enter = slideInVertically { -it },
-                exit = slideOutVertically { -it },
-                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(),
-            ) {
-                ForegroundNotificationBanner(
-                    qrCodeData = foregroundNotification?.qrCodeData ?: "",
-                    vaultName = foregroundNotification?.vaultName ?: "",
-                    transactionSummary = foregroundNotification?.transactionSummary ?: "",
-                    onTap = mainViewModel::onForegroundBannerTapped,
-                    onDismiss = mainViewModel::onForegroundBannerDismissed,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            }
         }
 
         BiometryAuthScreen()

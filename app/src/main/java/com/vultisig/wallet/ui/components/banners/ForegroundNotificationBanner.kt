@@ -27,9 +27,6 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.theme.Theme
 
 private val bannerGradient
@@ -51,7 +48,6 @@ internal fun ForegroundNotificationBanner(
     vaultName: String,
     transactionSummary: String,
     onTap: () -> Unit,
-    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(24.dp)
@@ -81,13 +77,6 @@ internal fun ForegroundNotificationBanner(
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.align(Alignment.Center),
-                )
-                VsCircleButton(
-                    onClick = onDismiss,
-                    icon = R.drawable.x,
-                    size = VsCircleButtonSize.Small,
-                    type = VsCircleButtonType.Tertiary,
-                    modifier = Modifier.align(Alignment.CenterEnd),
                 )
             }
 
@@ -146,6 +135,5 @@ private fun ForegroundNotificationBannerPreview() {
         vaultName = "Vault #2",
         transactionSummary = "Swap 10 ETH → USDC",
         onTap = {},
-        onDismiss = {},
     )
 }
