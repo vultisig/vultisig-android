@@ -219,7 +219,7 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
 
         dialog<Route.CustomToken> { CustomTokenScreen() }
 
-        composable<Route.ReshareStartScreen> { ReshareStartScreen(navController) }
+        composable<Route.ReshareStartScreen> { ReshareStartScreen() }
 
         composable<Route.BiometricsEnable> { BiometricsEnableScreen(navController) }
 

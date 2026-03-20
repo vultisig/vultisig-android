@@ -24,6 +24,10 @@ constructor(
 
     private val vaultId: String = savedStateHandle.toRoute<Route.ReshareStartScreen>().vaultId
 
+    fun back() {
+        viewModelScope.launch { navigator.navigate(Destination.Back) }
+    }
+
     fun start() {
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: error("Vault $vaultId does not exist")
