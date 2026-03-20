@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
