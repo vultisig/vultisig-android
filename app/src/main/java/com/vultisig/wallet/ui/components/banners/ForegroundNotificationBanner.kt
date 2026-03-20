@@ -74,7 +74,7 @@ internal fun ForegroundNotificationBanner(
     onTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(40.dp)
+    val shape = RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp)
     val imagePainter = painterResource(R.drawable.foreground_layer)
 
     Box(
