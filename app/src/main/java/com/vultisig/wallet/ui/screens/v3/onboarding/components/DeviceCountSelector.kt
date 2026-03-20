@@ -90,7 +90,7 @@ internal fun DeviceCountSelector(
         UiSpacer(size = 22.dp)
 
         Box(modifier = modifier) {
-            TrackBackground()
+            TrackBackground(fillFraction = (thumbPositionAnimated + 1f) / 2f)
 
             AnimatedThumb(position = thumbPositionAnimated)
         }
@@ -138,36 +138,45 @@ private fun ChangeCountButton(
                             .value
                 )
                 .clickable(enabled = enabled, onClick = onClick),
-        content = {
-            if (isIncrease) {
-                PlusSign(modifier = Modifier.size(15.dp))
-            } else {
-                MinusSign(modifier = Modifier.size(15.dp))
-            }
-        },
         contentAlignment = Alignment.Center,
-    )
+    ) {
+        if (isIncrease) {
+            PlusSign(modifier = Modifier.size(15.dp))
+        } else {
+            MinusSign(modifier = Modifier.size(15.dp))
+        }
+    }
 }
 
 @Composable
-private fun BoxScope.TrackBackground() {
+private fun BoxScope.TrackBackground(fillFraction: Float) {
     Box(
         modifier =
             Modifier.fillMaxWidth()
                 .align(Alignment.Center)
                 .height(12.dp)
-                .background(
-                    brush =
-                        Brush.horizontalGradient(
-                            listOf(Color(218, 255, 246), Color(19, 200, 157), Color(92, 167, 255))
-                        ),
-                    shape = CircleShape,
-                ),
-        contentAlignment = Alignment.Center,
+                .clip(CircleShape)
+                .background(color = Color(0xFF23376D))
     ) {
         Box(
             modifier =
+                Modifier.fillMaxWidth(fraction = fillFraction)
+                    .height(12.dp)
+                    .background(
+                        brush =
+                            Brush.horizontalGradient(
+                                listOf(
+                                    Color(218, 255, 246),
+                                    Color(19, 200, 157),
+                                    Color(92, 167, 255),
+                                )
+                            )
+                    )
+        )
+        Box(
+            modifier =
                 Modifier.size(8.dp)
+                    .align(Alignment.Center)
                     .background(color = Theme.v2.colors.neutrals.n50, shape = CircleShape)
         )
     }
@@ -185,7 +194,7 @@ private fun BoxScope.AnimatedThumb(position: Float) {
         UiIcon(
             drawableResId = R.drawable.icon_shield_solid,
             tint = Theme.v2.colors.text.inverse,
-            size = 20.dp,
+            size = 24.dp,
         )
     }
 }
