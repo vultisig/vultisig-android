@@ -39,6 +39,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v3.HorizontalAnimatedPager
 import com.vultisig.wallet.ui.components.v3.V3Icon
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
@@ -76,6 +77,7 @@ private fun ChooseDeviceCountScreen(
                 VsButton(
                     label = stringResource(R.string.referral_onboarding_get_started),
                     modifier = Modifier.fillMaxWidth(),
+                    variant = VsButtonVariant.CTA,
                     onClick = { onEvent(ChooseDeviceCountUiEvent.Next) },
                 )
             }
