@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.components.banners
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,9 +15,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -28,19 +31,40 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
-private val bannerGradient
-    @Composable
-    get() =
-        Brush.linearGradient(
-            colorStops =
-                arrayOf(
-                    0.2077f to Theme.v2.colors.primary.accent2,
-                    1.0f to Theme.v2.colors.primary.accent4,
-                ),
-            start = Offset(0f, Float.POSITIVE_INFINITY),
-            end = Offset(Float.POSITIVE_INFINITY, 0f),
-        )
+// background: url(<image>) lightgray -122.071px -89.692px / 162.123% 190.598% no-repeat,
+//             linear-gradient(46deg, #0439C7 20.77%, #4879FD 109.97%);
+private fun Modifier.bannerBackground(
+    imagePainter: Painter,
+    gradientStart: Color,
+    gradientEnd: Color,
+): Modifier = drawBehind {
+    // Layer 2 (bottom): linear-gradient(46deg, #0439C7 20.77%, #4879FD 109.97%)
+    val angleRad = Math.toRadians(46.0)
+    val sinA = sin(angleRad).toFloat()
+    val cosA = cos(angleRad).toFloat()
+    val halfLen = (abs(size.width * sinA) + abs(size.height * cosA)) / 2f
+    val cx = size.width / 2f
+    val cy = size.height / 2f
+    drawRect(
+        brush =
+            Brush.linearGradient(
+                colorStops = arrayOf(0.2077f to gradientStart, 1.0f to gradientEnd),
+                start = Offset(cx - sinA * halfLen, cy + cosA * halfLen),
+                end = Offset(cx + sinA * halfLen, cy - cosA * halfLen),
+            )
+    )
+
+    // Layer 1 (top): url(<image>) -122.071px -89.692px / 162.123% 190.598% no-repeat
+    val imgWidth = size.width * 1.62123f
+    val imgHeight = size.height * 1.90598f
+    translate(left = -122.071f * density, top = -89.692f * density) {
+        with(imagePainter) { draw(Size(imgWidth, imgHeight)) }
+    }
+}
 
 @Composable
 internal fun ForegroundNotificationBanner(
@@ -50,26 +74,26 @@ internal fun ForegroundNotificationBanner(
     onTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(24.dp)
+    val shape = RoundedCornerShape(40.dp)
+    val imagePainter = painterResource(R.drawable.foreground_layer)
 
     Box(
         modifier =
             modifier
                 .fillMaxWidth()
                 .clip(shape)
-                .background(bannerGradient)
+                .bannerBackground(
+                    imagePainter = imagePainter,
+                    gradientStart = Theme.v2.colors.primary.accent2,
+                    gradientEnd = Theme.v2.colors.primary.accent4,
+                )
                 .clickable(onClick = onTap)
     ) {
-        Image(
-            painter = painterResource(R.drawable.foreground_layer),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize(),
-        )
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 20.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            UiSpacer(67.dp)
             Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = stringResource(R.string.foreground_notification_banner_title),
@@ -123,6 +147,7 @@ internal fun ForegroundNotificationBanner(
                     textAlign = TextAlign.Center,
                 )
             }
+            UiSpacer(24.dp)
         }
     }
 }
