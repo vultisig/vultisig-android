@@ -252,6 +252,7 @@
     <string name="keysign_screen_preparing_vault">准备保险库…</string>
     <string name="keysign_screen_signing_with_ecdsa">使用 ECDSA 签名…</string>
     <string name="keysign_screen_signing_with_eddsa">使用 EdDSA 签名…</string>
+    <string name="keysign_screen_signing_with_mldsa">使用 MLDSA 签名…</string>
     <string name="keysign_screen_keysign_finished">密钥签名完成！</string>
     <string name="keysign_screen_error_please_try_again">错误！请重试。%1$s</string>
 

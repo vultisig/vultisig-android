@@ -266,7 +266,9 @@ constructor(
             val hasMigration = vault?.libType == SigningLibType.GG20
             hasFastSign = isVaultHasFastSignById(vaultId) && vault?.signers?.count() == 2
             val hasPassword = vaultPasswordRepository.getPassword(vaultId) != null
-            val hasMldsaKey = vault?.pubKeyMLDSA?.isNotBlank() == true
+            val hasMldsaKey =
+                vault?.pubKeyMLDSA?.isNotBlank() == true &&
+                    vault?.keyshares?.any { it.pubKey == vault.pubKeyMLDSA } == true
 
             val newItems =
                 uiModel.value.settingGroups.map { group ->
@@ -415,7 +417,10 @@ constructor(
     fun navigateToDilithiumKeygen() {
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId exists")
-            if (vault.pubKeyMLDSA.isNotBlank()) {
+            val hasValidMldsaKey =
+                vault.pubKeyMLDSA.isNotBlank() &&
+                    vault.keyshares.any { it.pubKey == vault.pubKeyMLDSA }
+            if (hasValidMldsaKey) {
                 return@launch
             }
             if (hasFastSign) {

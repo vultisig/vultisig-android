@@ -149,6 +149,7 @@
     <string name="keysign_screen_preparing_vault">Kluis voorbereiden…</string>
     <string name="keysign_screen_signing_with_ecdsa">Ondertekenen met ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">Ondertekenen met EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">Ondertekenen met MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign voltooid!</string>
     <string name="keysign_screen_error_please_try_again">Fout! Probeer het opnieuw. %1$s</string>
     <string name="successfully_scanned_barcode">Barcode succesvol gescand: %1$s</string>

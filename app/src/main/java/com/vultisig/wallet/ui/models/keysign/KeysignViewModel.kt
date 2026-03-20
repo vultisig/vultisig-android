@@ -338,7 +338,7 @@ constructor(
                     currentState.value = KeysignState.KeysignMLDSA
 
                     Timber.d(
-                        "MLDSA keysign: pubKeyMLDSA=${vault.pubKeyMLDSA.take(20)}..., isInitiating=$isInitiatingDevice"
+                        "MLDSA keysign: pubKeyMLDSA=${vault.pubKeyMLDSA.take(20)}..., keyshares=${vault.keyshares.map { it.pubKey.take(20) }}, isInitiating=$isInitiatingDevice"
                     )
 
                     val mldsa =

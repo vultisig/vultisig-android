@@ -107,9 +107,9 @@ class MldsaKeysign(
                 mldsa_sign_setupmsg_new(
                     MldsaSecurityLevel.MlDsa44,
                     keyIdSlice,
-                    ids,
-                    msgSlice,
                     null,
+                    msgSlice,
+                    ids,
                     buf,
                 )
             if (err != LIB_OK) {
@@ -281,8 +281,13 @@ class MldsaKeysign(
         try {
             val keysignSetupMsg: ByteArray
 
+            Timber.d(
+                "MLDSA keysign attempt=$attempt, isInitiate=$isInitiateDevice, msgHash=$msgHash, sessionID=$sessionID, committee=$keysignCommittee, localParty=$localPartyID"
+            )
+
             if (isInitiateDevice && attempt == 0) {
                 keysignSetupMsg = getMldsaKeysignSetupMessage(messageToSign)
+                Timber.d("MLDSA setup message created, size=${keysignSetupMsg.size}, uploading...")
 
                 sessionApi.uploadSetupMessage(
                     serverUrl = mediatorURL,
@@ -315,37 +320,33 @@ class MldsaKeysign(
             }
             val decodedSetupMsg = keysignSetupMsg.toGoSlice()
             val handler = Handle()
+            val keyshareHandle = Handle()
             try {
                 val localPartyIDArr = localPartyID.toByteArray()
                 val localPartySlice = localPartyIDArr.toGoSlice()
                 val keyShareBytes = getKeyshareBytes()
                 val keyshareSlice = keyShareBytes.toGoSlice()
-                val keyshareHandle = Handle()
-                try {
-                    val result = mldsa_keyshare_from_bytes(keyshareSlice, keyshareHandle)
-                    if (result != LIB_OK) {
-                        error("fail to create MLDSA keyshare handle from bytes, $result")
-                    }
-                    val sessionResult =
-                        mldsa_sign_session_from_setup(
-                            MldsaSecurityLevel.MlDsa44,
-                            decodedSetupMsg,
-                            localPartySlice,
-                            keyshareHandle,
-                            handler,
-                        )
-                    if (sessionResult != LIB_OK) {
-                        error(
-                            "fail to create MLDSA sign session from setup message, error: $sessionResult"
-                        )
-                    }
-                } finally {
-                    mldsa_keyshare_free(keyshareHandle)
-                    keyshareHandle.delete()
+                val result = mldsa_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+                if (result != LIB_OK) {
+                    error("fail to create MLDSA keyshare handle from bytes, $result")
+                }
+                val sessionResult =
+                    mldsa_sign_session_from_setup(
+                        MldsaSecurityLevel.MlDsa44,
+                        decodedSetupMsg,
+                        localPartySlice,
+                        keyshareHandle,
+                        handler,
+                    )
+                if (sessionResult != LIB_OK) {
+                    error(
+                        "fail to create MLDSA sign session from setup message, error: $sessionResult"
+                    )
                 }
                 processMldsaOutboundMessage(handler)
                 val isFinished = pullInboundMessages(handler, msgHash)
                 if (isFinished) {
+                    processMldsaOutboundMessage(handler)
                     val sig = mldsaSignSessionFinish(handler)
                     val resp = KeysignResponse()
                     resp.msg = messageToSign
@@ -358,6 +359,8 @@ class MldsaKeysign(
             } finally {
                 mldsa_sign_session_free(handler)
                 handler.delete()
+                mldsa_keyshare_free(keyshareHandle)
+                keyshareHandle.delete()
             }
         } catch (e: CancellationException) {
             throw e

@@ -150,6 +150,7 @@
     <string name="chain_account_view_swap">SCAMBIA</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">FIRMANDO CON CHIAVE EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">FIRMANDO CON CHIAVE MLDSA…</string>
     <string name="signing_error_please_try_again_s">Errore di Firma. Per favore, riprova.%s</string>
     <string name="faq_settings_q1">Che cos\'è Vultisig?</string>
     <string name="vault_list_vaults_list">Cassaforti</string>
