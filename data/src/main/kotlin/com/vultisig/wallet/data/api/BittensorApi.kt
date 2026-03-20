@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
 import com.vultisig.wallet.data.api.utils.postRpc
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import java.math.BigInteger
@@ -33,7 +34,18 @@ interface BittensorApi {
     suspend fun broadcastTransaction(tx: String): String?
 
     suspend fun getPartialFee(tx: String): BigInteger
+
+    suspend fun getTxStatus(txHash: String): TaostatsExtrinsicData?
 }
+
+@kotlinx.serialization.Serializable
+data class TaostatsExtrinsicResponse(val data: List<TaostatsExtrinsicData>? = null)
+
+@kotlinx.serialization.Serializable
+data class TaostatsExtrinsicData(
+    val success: Boolean? = null,
+    @kotlinx.serialization.SerialName("block_number") val blockNumber: Int? = null,
+)
 
 internal class BittensorApiImp @Inject constructor(private val httpClient: HttpClient) :
     BittensorApi {
@@ -146,8 +158,18 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
         return BigInteger(beHex, 16)
     }
 
+    override suspend fun getTxStatus(txHash: String): TaostatsExtrinsicData? {
+        val hash = if (txHash.startsWith("0x")) txHash else "0x$txHash"
+        val response =
+            httpClient
+                .get("${TAOSTATS_PROXY_URL}/extrinsic/v1?hash=$hash")
+                .body<TaostatsExtrinsicResponse>()
+        return response.data?.firstOrNull()
+    }
+
     private companion object {
         const val BITTENSOR_RPC_URL = "https://bittensor-finney.api.onfinality.io/public"
+        const val TAOSTATS_PROXY_URL = "https://api.vultisig.com/tao"
         const val SYSTEM_ACCOUNT_PREFIX =
             "26aa394eea5630e07c48ae0c9558cef7b99d880ec681799c0cf30e8886371da9"
     }

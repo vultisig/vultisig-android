@@ -268,7 +268,7 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
          * Decode SS58 address to raw 32-byte public key. SS58 = base58(prefix ++ pubkey ++
          * checksum)
          */
-        private fun ss58Decode(address: String): ByteArray {
+        fun ss58Decode(address: String): ByteArray {
             val decoded = base58Decode(address)
             // For prefix < 64: 1 byte prefix + 32 bytes pubkey + 2 bytes checksum = 35 bytes
             // For prefix 64-16383: 2 byte prefix + 32 bytes pubkey + 2 bytes checksum = 36 bytes
