@@ -134,8 +134,7 @@ private fun ChangeCountButton(
                             targetValue =
                                 if (enabled) Theme.v2.colors.backgrounds.surface2
                                 else Theme.v2.colors.buttons.ctaDisabled,
-                        )
-                            .value
+                        ).value
                 )
                 .clickable(enabled = enabled, onClick = onClick),
         content = {
