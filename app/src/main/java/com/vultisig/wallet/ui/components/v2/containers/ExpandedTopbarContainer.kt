@@ -20,6 +20,9 @@ internal fun ExpandedTopbarContainer(
     modifier: Modifier = Modifier,
     backgroundColor: Color = Theme.v2.colors.backgrounds.primary,
     shineSpotColor: Color = Theme.v2.colors.primary.accent1,
+    shineSpotCenterXRatio: Float = 0.5f,
+    shineSpotCenterYRatio: Float = -0.5f,
+    shineSpotRadiusRatio: Float = 1f,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val windowInfo = LocalWindowInfo.current
@@ -33,8 +36,12 @@ internal fun ExpandedTopbarContainer(
                     brush =
                         Brush.radialGradient(
                             colors = listOf(shineSpotColor, backgroundColor),
-                            radius = screenWidthPx,
-                            center = Offset(screenWidthPx / 2, -screenWidthPx * 0.5f),
+                            radius = screenWidthPx * shineSpotRadiusRatio,
+                            center =
+                                Offset(
+                                    screenWidthPx * shineSpotCenterXRatio,
+                                    screenWidthPx * shineSpotCenterYRatio,
+                                ),
                         )
                 )
                 .padding(all = 16.dp),

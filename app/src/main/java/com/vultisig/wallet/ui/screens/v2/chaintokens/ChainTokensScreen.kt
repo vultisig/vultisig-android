@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -122,7 +123,12 @@ internal fun ChainTokensScreen(
         snackbarState = snackbarState,
         backgroundColor = Theme.v2.colors.backgrounds.primary,
         topBarExpandedContent = {
-            ExpandedTopbarContainer {
+            ExpandedTopbarContainer(
+                shineSpotColor = Color(0xFF0439C7).copy(alpha = 0.35f),
+                shineSpotCenterXRatio = 0.92f,
+                shineSpotCenterYRatio = -0.15f,
+                shineSpotRadiusRatio = 0.45f,
+            ) {
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
