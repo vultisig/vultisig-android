@@ -32,9 +32,9 @@ constructor(private val compressorStreamProvider: CompressorStreamProvider) : De
     override fun invoke(input: ByteArray): ByteArray =
         try {
             BufferedInputStream(input.inputStream()).use { inputStream ->
-                compressorStreamProvider
-                    .createCompressorInputStream(inputStream)
-                    .use { it.readBytes() }
+                compressorStreamProvider.createCompressorInputStream(inputStream).use {
+                    it.readBytes()
+                }
             }
         } catch (_: Exception) {
             input
