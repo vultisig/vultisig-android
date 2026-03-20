@@ -232,7 +232,6 @@
     <string name="deposit_form_amount_title">Valor (Saldo: %1$s)</string>
     <string name="share_vault_qr_title">Partilhar QR do cofre</string>
     <string name="share_vault_qr_save">Guardar</string>
-    <string name="vault_settings_enable_biometrics_save">Guardar</string>
     <string name="share_vault_qr_share">Compartilhar</string>
     <string name="deposit_form_node_address_title">Endereço do nó</string>
     <string name="deposit_form_provider_title">Fornecedor (opcional)</string>
@@ -263,9 +262,6 @@
     <string name="reshare_start_screen_start_reshare">Iniciar nova partilha</string>
     <string name="threshold_error">Limite não atingido\n Faltam dispositivos iniciais suficientes</string>
     <string name="add_folder_folder_name_title">Nome da pasta</string>
-    <string name="vault_settings_biometrics_screen_title">Ativar biometria</string>
-    <string name="vault_settings_biometrics_screen_description">Introduza a senha para assinatura rápida</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Digite aqui</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">A biometria para assinatura rápida está ativada</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">A biometria para assinatura rápida está desativada</string>
     <string name="biometry_keysign_login_button">Sinal Rápido com biometria</string>

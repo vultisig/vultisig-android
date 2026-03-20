@@ -229,7 +229,6 @@
     <string name="deposit_form_amount_title">Сумма (Баланс: %1$s)</string>
     <string name="share_vault_qr_title">Поделиться хранилищем QR</string>
     <string name="share_vault_qr_save" >Сохранить</string>
-    <string name="vault_settings_enable_biometrics_save" >Сохранить</string>
     <string name="share_vault_qr_share" >Поделиться</string>
     <string name="deposit_form_node_address_title">Адрес узла</string>
     <string name="deposit_form_provider_title">Поставщик (необязательно)</string>
@@ -262,9 +261,6 @@
     <string name="reshare_start_screen_start_reshare">Начать репост</string>
     <string name="threshold_error">Порог не достигнут\nОтсутствует достаточное количество начальных устройств</string>
     <string name="add_folder_folder_name_title">Имя папки</string>
-    <string name="vault_settings_biometrics_screen_title">Включить биометрию</string>
-    <string name="vault_settings_biometrics_screen_description">Введите пароль для быстрой подписи</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Введите здесь</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">Биометрия для быстрой подписи включена</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">Биометрия для быстрой подписи отключена</string>
     <string name="biometry_keysign_login_button">Быстрая регистрация с биометрией</string>

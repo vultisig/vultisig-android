@@ -231,7 +231,6 @@
     <string name="deposit_form_amount_title">Betrag (Guthaben: %1$s)</string>
     <string name="share_vault_qr_title">Vault-QR teilen</string>
     <string name="share_vault_qr_save" >Speichern</string>
-    <string name="vault_settings_enable_biometrics_save" >Speichern</string>
     <string name="share_vault_qr_share" >Teilen</string>
     <string name="deposit_form_node_address_title">Knotenadresse</string>
     <string name="deposit_form_provider_title">Anbieter (optional)</string>
@@ -263,9 +262,6 @@
     <string name="reshare_start_screen_start_reshare">Neu teilen starten</string>
     <string name="threshold_error">Schwellenwert nicht erreicht.\n Es fehlen ausreichend Erstausrüstungen.</string>
     <string name="add_folder_folder_name_title">Ordnername</string>
-    <string name="vault_settings_biometrics_screen_title">Biometrie aktivieren</string>
-    <string name="vault_settings_biometrics_screen_description">Geben Sie das Passwort für die schnelle Signatur ein</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Geben Sie hier ein</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">Biometrie für schnelles Signieren ist aktiviert</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">Biometrie für schnelles Signieren ist deaktiviert</string>
     <string name="biometry_keysign_login_button">Fast Sign mit Biometrie</string>

@@ -420,10 +420,6 @@ constructor(
         viewModelScope.launch { navigator.route(Route.ReshareStartScreen(vaultId)) }
     }
 
-    fun navigateToBiometricsScreen() {
-        viewModelScope.launch { navigator.route(Route.BiometricsEnable(vaultId)) }
-    }
-
     fun navigateToOnChainSecurityScreen() {
         viewModelScope.launch { navigator.route(Route.OnChainSecurity) }
     }

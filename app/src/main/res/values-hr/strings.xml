@@ -232,7 +232,6 @@
     <string name="deposit_form_amount_title">Iznos (Stanje: %1$s)</string>
     <string name="share_vault_qr_title">Podijelite Vault QR</string>
     <string name="share_vault_qr_save" >Spremi</string>
-    <string name="vault_settings_enable_biometrics_save" >Spremi</string>
     <string name="share_vault_qr_share" >Podijeli</string>
     <string name="deposit_form_node_address_title">Adresa čvora</string>
     <string name="deposit_form_provider_title">Davatelj (neobavezno)</string>
@@ -264,9 +263,6 @@
     <string name="reshare_start_screen_start_reshare">Počnite ponovno dijeliti</string>
     <string name="threshold_error">Prag nije dosegnut Nedostaje dovoljno početnih uređaja</string>
     <string name="add_folder_folder_name_title">Naziv mape</string>
-    <string name="vault_settings_biometrics_screen_title">Omogući biometriju</string>
-    <string name="vault_settings_biometrics_screen_description">Unesite lozinku za brzo potpisivanje</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Upišite ovdje</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">Biometrija za brzo potpisivanje je omogućena</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">Biometrija za brzo potpisivanje je onemogućena</string>
     <string name="biometry_keysign_login_button">Brzi znak s biometrijom</string>
