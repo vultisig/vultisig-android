@@ -215,6 +215,7 @@
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
     <string name="keysign_screen_signing_with_ecdsa">Signing with ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">Signing with EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">Signing with MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign Finished!</string>
     <string name="keysign_screen_error_please_try_again">Error! Please try again. %1$s</string>
     <string name="successfully_scanned_barcode">Successfully scanned barcode: %1$s</string>

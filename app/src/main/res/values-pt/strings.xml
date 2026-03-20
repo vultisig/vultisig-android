@@ -128,6 +128,7 @@
     <string name="keysign_screen_preparing_vault">PREPARANDO COFRE…</string>
     <string name="keysign_screen_signing_with_ecdsa">ASSINANDO USANDO CHAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">ASSINANDO USANDO CHAVE EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">ASSINANDO USANDO CHAVE MLDSA…</string>
     <string name="vault_settings_delete_vault_caution1">Estou ciente de que o cofre será excluído permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Estou ciente de que posso perder fundos</string>
     <string name="vault_settings_delete_vault_caution3">Fiz um backup do cofre</string>

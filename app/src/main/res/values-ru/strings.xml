@@ -151,6 +151,7 @@
     <string name="keysign_screen_preparing_vault">Подготовка хранилища…</string>
     <string name="keysign_screen_signing_with_ecdsa">Подписание с использованием ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">Подписание с использованием EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">Подписание с использованием MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Подписание ключа завершено!</string>
     <string name="keysign_screen_error_please_try_again">Ошибка! Пожалуйста, попробуйте снова. %1$s</string>
     <string name="successfully_scanned_barcode">Штрихкод успешно отсканирован: %1$s</string>

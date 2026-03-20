@@ -125,6 +125,7 @@
     <string name="keysign_screen_preparing_vault">TRESOR VORBEREITEN…</string>
     <string name="keysign_screen_signing_with_ecdsa">MIT ECDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
     <string name="keysign_screen_signing_with_eddsa">MIT EdDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
+    <string name="keysign_screen_signing_with_mldsa">MIT MLDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
     <string name="vault_settings_delete_vault_caution1">Mir ist bewusst, dass der Tresor dauerhaft gelöscht wird</string>
     <string name="vault_settings_delete_vault_caution2">Mir ist bewusst, dass ich Geld verlieren kann</string>
     <string name="vault_settings_delete_vault_caution3">Ich habe eine Sicherung des Tresors erstellt</string>

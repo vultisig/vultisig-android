@@ -77,6 +77,8 @@ internal sealed class KeysignState {
 
     data object KeysignEdDSA : KeysignState()
 
+    data object KeysignMLDSA : KeysignState()
+
     data class KeysignFinished(val transactionStatus: TransactionStatus) : KeysignState()
 
     data class Error(val errorMessage: String) : KeysignState()
@@ -241,7 +243,11 @@ internal class KeysignViewModel(
                 }
 
                 TssKeyType.MLDSA -> {
-                    currentState.value = KeysignState.KeysignECDSA
+                    currentState.value = KeysignState.KeysignMLDSA
+
+                    Timber.d(
+                        "MLDSA keysign: pubKeyMLDSA=${vault.pubKeyMLDSA.take(20)}..., keyshares=${vault.keyshares.map { it.pubKey.take(20) }}, isInitiating=$isInitiatingDevice"
+                    )
 
                     val mldsa =
                         MldsaKeysign(
