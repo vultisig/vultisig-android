@@ -141,13 +141,13 @@ private fun VaultNotificationToggle(
 ) {
     Column() {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             VaultIcon(
                 isFastVault = vault.isFastVault,
-                size = 20.dp,
+                size = 16.dp,
                 contentDescription = null,
                 modifier =
                     Modifier.border(
