@@ -501,7 +501,7 @@ constructor(
         val response =
             httpClient.get("$NNRLM_URL/thorname/$code") { header(xClientID, xClientIDValue) }
 
-        if (!response.status.isSuccess()) {
+        if (response.status == HttpStatusCode.NotFound) {
             return false
         }
 

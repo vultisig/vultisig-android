@@ -18,6 +18,8 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -43,7 +45,13 @@ internal fun MainActivityContent(
 ) {
     Box(
         modifier =
-            Modifier.background(color = Theme.v2.colors.backgrounds.primary).safeDrawingPadding()
+            Modifier.semantics {
+                    // Expose Compose test tags through the accessibility/resource-id channel
+                    // so external automation tooling can target them reliably.
+                    testTagsAsResourceId = true
+                }
+                .background(color = Theme.v2.colors.backgrounds.primary)
+                .safeDrawingPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             OfflineBanner(mainViewModel.isOffline.value)

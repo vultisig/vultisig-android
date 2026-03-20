@@ -612,7 +612,12 @@ constructor(
         }
 
         if (action == TssAction.KEYGEN) {
-            referralCodeSettingsRepository.consumePendingReferral(vaultId)
+            withContext(Dispatchers.IO) {
+                runCatching { referralCodeSettingsRepository.consumePendingReferral(vaultId) }
+                    .onFailure { error ->
+                        Timber.w(error, "Failed to persist pending referral for vault $vaultId")
+                    }
+            }
         }
 
         lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
