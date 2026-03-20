@@ -97,8 +97,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
     }
 
     /**
-     * Call data for Balances.transfer_keep_alive(dest, value)
-     * Encoding: [pallet:5, call:3] ++ MultiAddress::Id(0x00) ++ dest(32B) ++ compact(amount)
+     * Call data for Balances.transfer_allow_death(dest, value)
+     * Encoding: [pallet:5, call:0] ++ MultiAddress::Id(0x00) ++ dest(32B) ++ compact(amount)
      */
     private fun buildCallData(keysignPayload: KeysignPayload): ByteArray {
         val destBytes = ss58Decode(keysignPayload.toAddress)
@@ -106,7 +106,7 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
 
         val out = ByteArrayOutputStream()
         out.write(BALANCES_PALLET.toInt())
-        out.write(TRANSFER_KEEP_ALIVE.toInt())
+        out.write(TRANSFER_ALLOW_DEATH.toInt())
         out.write(MULTI_ADDRESS_ID.toInt()) // MultiAddress::Id
         out.write(destBytes)
         out.write(compactEncode(amount))
@@ -119,8 +119,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
      */
     private fun buildSignedExtra(specific: BlockChainSpecific.Polkadot): ByteArray {
         val out = ByteArrayOutputStream()
-        out.write(encodeMortalEra(specific.currentBlockNumber.toInt(), 64))
-        out.write(compactEncode(specific.nonce.toBigInteger()))
+        out.write(encodeMortalEra(specific.currentBlockNumber.toLong(), 64))
+        out.write(compactEncode(specific.nonce))
         out.write(compactEncode(BigInteger.ZERO)) // tip = 0
         out.write(METADATA_HASH_DISABLED.toInt()) // CheckMetadataHash: Disabled
         return out.toByteArray()
@@ -165,15 +165,15 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
     }
 
     companion object {
-        const val BALANCES_PALLET: Byte = 5
-        const val TRANSFER_KEEP_ALIVE: Byte = 3
-        const val MULTI_ADDRESS_ID: Byte = 0x00
-        const val MULTI_SIGNATURE_ED25519: Byte = 0x00
-        const val METADATA_HASH_DISABLED: Byte = 0x00
-        const val DEFAULT_FEE_RAO = 100_000L
-        const val SS58_PREFIX = 42
+        private const val BALANCES_PALLET: Byte = 5
+        private const val TRANSFER_ALLOW_DEATH: Byte = 0
+        private const val MULTI_ADDRESS_ID: Byte = 0x00
+        private const val MULTI_SIGNATURE_ED25519: Byte = 0x00
+        private const val METADATA_HASH_DISABLED: Byte = 0x00
+        const val DEFAULT_FEE_RAO = 200_000L
+        private const val SS58_PREFIX = 42
 
-        fun compactEncode(value: BigInteger): ByteArray {
+        private fun compactEncode(value: BigInteger): ByteArray {
             return when {
                 value < BigInteger.valueOf(64) -> byteArrayOf((value.toInt() shl 2).toByte())
                 value < BigInteger.valueOf(16384) -> {
@@ -202,11 +202,11 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
             }
         }
 
-        fun encodeMortalEra(blockNumber: Int, period: Int): ByteArray {
+        private fun encodeMortalEra(blockNumber: Long, period: Int): ByteArray {
             // Round UP to next power of 2 (matching Substrate spec)
             val calPeriod = (if (period > 0 && (period and (period - 1)) == 0) period
                 else Integer.highestOneBit(period) shl 1).coerceIn(4, 65536)
-            val phase = blockNumber % calPeriod
+            val phase = (blockNumber % calPeriod).toInt()
             val quantizeFactor = (calPeriod shr 12).coerceAtLeast(1)
             val quantizedPhase = (phase / quantizeFactor) * quantizeFactor
             val encoded = (Integer.numberOfTrailingZeros(calPeriod) - 1).coerceIn(1, 15) +
@@ -214,13 +214,43 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
             return byteArrayOf((encoded and 0xFF).toByte(), ((encoded shr 8) and 0xFF).toByte())
         }
 
-        fun uint32LE(value: Int): ByteArray {
+        private fun uint32LE(value: Int): ByteArray {
             return byteArrayOf(
                 (value and 0xFF).toByte(),
                 ((value shr 8) and 0xFF).toByte(),
                 ((value shr 16) and 0xFF).toByte(),
                 ((value shr 24) and 0xFF).toByte()
             )
+        }
+
+        /**
+         * SS58 encode raw 32-byte pubkey with Bittensor prefix (42).
+         * Format: base58(prefix_byte ++ pubkey ++ blake2b_checksum[0..2])
+         */
+        fun ss58Encode(pubkey: ByteArray): String {
+            require(pubkey.size == 32) { "SS58 encode requires 32-byte pubkey, got ${pubkey.size}" }
+            val prefixByte = byteArrayOf(SS58_PREFIX.toByte())
+            val payload = prefixByte + pubkey
+            // Checksum = blake2b-512("SS58PRE" + payload)[0..2]
+            val checksumInput = "SS58PRE".toByteArray() + payload
+            val hash = wallet.core.jni.Hash.blake2b(checksumInput, 64)
+            val checksum = hash.sliceArray(0..1)
+            return base58Encode(payload + checksum)
+        }
+
+        private fun base58Encode(data: ByteArray): String {
+            var n = BigInteger(1, data) // positive big-endian
+            val sb = StringBuilder()
+            while (n > BigInteger.ZERO) {
+                val (quot, rem) = n.divideAndRemainder(BigInteger.valueOf(58))
+                sb.append(BASE58_ALPHABET[rem.toInt()])
+                n = quot
+            }
+            // Leading zeros
+            for (b in data) {
+                if (b == 0.toByte()) sb.append('1') else break
+            }
+            return sb.reverse().toString()
         }
 
         fun hexToBytes(hex: String): ByteArray {
@@ -234,20 +264,38 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
          * Decode SS58 address to raw 32-byte public key.
          * SS58 = base58(prefix ++ pubkey ++ checksum)
          */
-        fun ss58Decode(address: String): ByteArray {
+        private fun ss58Decode(address: String): ByteArray {
             val decoded = base58Decode(address)
             // For prefix < 64: 1 byte prefix + 32 bytes pubkey + 2 bytes checksum = 35 bytes
             // For prefix 64-16383: 2 byte prefix + 32 bytes pubkey + 2 bytes checksum = 36 bytes
-            return when {
-                decoded.size == 35 -> decoded.sliceArray(1..32)
-                decoded.size == 36 -> decoded.sliceArray(2..33)
+            val prefixLen: Int
+            val pubkey: ByteArray
+            val checksum: ByteArray
+            when {
+                decoded.size == 35 -> {
+                    prefixLen = 1
+                    pubkey = decoded.sliceArray(1..32)
+                    checksum = decoded.sliceArray(33..34)
+                }
+                decoded.size == 36 -> {
+                    prefixLen = 2
+                    pubkey = decoded.sliceArray(2..33)
+                    checksum = decoded.sliceArray(34..35)
+                }
                 else -> throw IllegalArgumentException("Invalid SS58 address length: ${decoded.size}")
             }
+            // Verify blake2b-512 checksum
+            val payload = decoded.sliceArray(0 until prefixLen + 32)
+            val hash = wallet.core.jni.Hash.blake2b("SS58PRE".toByteArray() + payload, 64)
+            if (!hash.sliceArray(0..1).contentEquals(checksum)) {
+                throw IllegalArgumentException("Invalid SS58 checksum for address: $address")
+            }
+            return pubkey
         }
 
         private val BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
-        fun base58Decode(input: String): ByteArray {
+        private fun base58Decode(input: String): ByteArray {
             var result = BigInteger.ZERO
             for (c in input) {
                 val index = BASE58_ALPHABET.indexOf(c)

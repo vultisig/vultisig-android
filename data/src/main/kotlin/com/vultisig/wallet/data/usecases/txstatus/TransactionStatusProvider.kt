@@ -32,6 +32,7 @@ constructor(
     @param:CardanoTxStatus private val cardanoProvider: TransactionStatusProvider,
     @param:RippleTxStatus private val rippleProvider: TransactionStatusProvider,
     @param:TronTxStatus private val tronProvider: TransactionStatusProvider,
+    @param:BittensorTxStatus private val bittensorProvider: TransactionStatusProvider,
 ) : TransactionStatusRepository {
     private fun getProvider(chain: Chain) =
         when (chain.standard) {
@@ -43,7 +44,7 @@ constructor(
             TokenStandard.COSMOS -> cosmosProvider
             TokenStandard.THORCHAIN -> thorChainProvider
             TokenStandard.SOL -> solanaProvider
-            TokenStandard.SUBSTRATE -> polkadotProvider
+            TokenStandard.SUBSTRATE -> if (chain == Chain.Bittensor) bittensorProvider else polkadotProvider
             TokenStandard.SUI -> suiProvider
             TokenStandard.TON -> tonProvider
             TokenStandard.RIPPLE -> rippleProvider

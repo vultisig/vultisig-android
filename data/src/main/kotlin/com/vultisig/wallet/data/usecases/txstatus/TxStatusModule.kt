@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases.txstatus
 
+import com.vultisig.wallet.data.api.txstatus.BittensorStatusProvider
 import com.vultisig.wallet.data.api.txstatus.CardanoStatusProvider
 import com.vultisig.wallet.data.api.txstatus.CosmosStatusProvider
 import com.vultisig.wallet.data.api.txstatus.EvmStatusProvider
@@ -83,6 +84,11 @@ internal interface TxStatusModule {
     @Singleton
     fun bindTronStatusProvider(impl: TronStatusProvider): TransactionStatusProvider
 
+    @BittensorTxStatus
+    @Binds
+    @Singleton
+    fun bindBittensorStatusProvider(impl: BittensorStatusProvider): TransactionStatusProvider
+
     @Binds
     @Singleton
     fun bindTxStatusConfigurationProvider(
@@ -115,3 +121,5 @@ internal interface TxStatusModule {
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class RippleTxStatus
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class TronTxStatus
+
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class BittensorTxStatus
