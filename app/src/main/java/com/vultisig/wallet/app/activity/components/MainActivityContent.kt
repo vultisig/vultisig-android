@@ -7,9 +7,12 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,8 +20,10 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.app.activity.MainViewModel
@@ -42,6 +47,8 @@ internal fun MainActivityContent(
     onNavigationReady: () -> Unit,
 ) {
     val foregroundNotification by mainViewModel.foregroundNotification.collectAsStateWithLifecycle()
+    val density = LocalDensity.current
+    val statusBarHeightPx = WindowInsets.statusBars.getTop(density)
 
     Box(
         modifier =
@@ -60,7 +67,8 @@ internal fun MainActivityContent(
                     visible = foregroundNotification != null,
                     enter = slideInVertically { -it },
                     exit = slideOutVertically { -it },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier =
+                        Modifier.fillMaxWidth().offset { IntOffset(x = 0, y = -statusBarHeightPx) },
                 ) {
                     ForegroundNotificationBanner(
                         qrCodeData = foregroundNotification?.qrCodeData ?: "",
