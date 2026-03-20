@@ -16,7 +16,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
-class BittensorFeeService @Inject constructor(private val bittensorApi: BittensorApi) : FeeService {
+internal class BittensorFeeService @Inject constructor(private val bittensorApi: BittensorApi) :
+    FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
         require(transaction is Transfer) {
             "Invalid Transaction type: ${transaction::class.simpleName}"
