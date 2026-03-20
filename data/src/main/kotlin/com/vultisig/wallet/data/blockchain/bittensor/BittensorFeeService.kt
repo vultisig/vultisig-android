@@ -28,7 +28,11 @@ class BittensorFeeService @Inject constructor(private val bittensorApi: Bittenso
         val amount = transaction.amount
 
         val keySignPayload =
-            buildBittensorSpecific(fromAddress = fromAddress, toAddress = toAddress, amount = amount)
+            buildBittensorSpecific(
+                fromAddress = fromAddress,
+                toAddress = toAddress,
+                amount = amount,
+            )
 
         val serializedTransaction =
             BittensorHelper(valHexPublicKey).getZeroSignedTransaction(keySignPayload)

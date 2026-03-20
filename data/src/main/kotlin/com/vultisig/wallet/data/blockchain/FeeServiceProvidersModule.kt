@@ -1,18 +1,18 @@
 package com.vultisig.wallet.data.blockchain
 
+import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
-import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.blockchain.bittensor.BittensorFeeService
 import com.vultisig.wallet.data.blockchain.cosmos.CosmosFeeService
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.ethereum.ZkFeeService
-import com.vultisig.wallet.data.blockchain.bittensor.BittensorFeeService
 import com.vultisig.wallet.data.blockchain.polkadot.PolkadotFeeService
 import com.vultisig.wallet.data.blockchain.solana.SolanaFeeService
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService

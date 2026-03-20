@@ -10,8 +10,7 @@ class BittensorStatusProvider @Inject constructor(private val bittensorApi: Bitt
     TransactionStatusProvider {
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         return try {
-            val tx = bittensorApi.getTxStatus(txHash)
-                ?: return TransactionResult.Pending
+            val tx = bittensorApi.getTxStatus(txHash) ?: return TransactionResult.Pending
             when (tx.success) {
                 true -> TransactionResult.Confirmed
                 false -> TransactionResult.Failed("Transaction failed on Bittensor")
