@@ -50,7 +50,8 @@ import com.vultisig.wallet.ui.screens.v3.onboarding.components.DeviceCountSelect
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
-private val DescriptionShape = RoundedCornerShape(24.dp)
+private val DescriptionShape =
+    RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 20.dp, bottomEnd = 20.dp)
 
 @Composable
 internal fun ChooseDeviceCountScreen(viewModel: ChooseDeviceCountViewModel = hiltViewModel()) {
