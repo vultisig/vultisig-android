@@ -27,8 +27,10 @@ internal fun RoundedBorderWithLeaf(
     checkMarkColor: Color = Theme.v2.colors.alerts.success,
     borderWidth: Dp = 1.5.dp,
     cornerRadius: Dp = 24.dp,
-    leafXLength: Dp = 32.dp,
-    leafYLength: Dp = 24.dp,
+    leafXLength: Dp = 24.dp,
+    leafYLength: Dp = 32.dp,
+    leafCornerTopLeft: Dp = 40.dp,
+    leafCornerBottomRight: Dp = 25.dp,
     checkMarkScale: Float = 2f,
     checkMarkWidth: Float = 4f,
     checkMarkOffset: Offset = Offset(-4f, 8f),
@@ -38,6 +40,8 @@ internal fun RoundedBorderWithLeaf(
     val borderWidthPx = borderWidth.toPx()
     val leafWidthPx = leafXLength.toPx()
     val leafHeighPx = leafYLength.toPx()
+    val leafCornerTopLeftPx = leafCornerTopLeft.toPx()
+    val leafCornerBottomRightPx = leafCornerBottomRight.toPx()
 
     Canvas(modifier = modifier.size(borderSize)) {
         val canvasWidth = size.width
@@ -86,7 +90,18 @@ internal fun RoundedBorderWithLeaf(
                             top = leafStartTop,
                             right = leafStartLeft + borderExcludedWidth,
                             bottom = leafStartTop + borderExcludedHeight,
-                            cornerRadius = CornerRadius(x = cornerRadiusPx, y = cornerRadiusPx),
+                            topLeftCornerRadius =
+                                CornerRadius(
+                                    x = leafCornerTopLeftPx,
+                                    y = leafCornerTopLeftPx,
+                                ),
+                            topRightCornerRadius = CornerRadius.Zero,
+                            bottomRightCornerRadius =
+                                CornerRadius(
+                                    x = leafCornerBottomRightPx,
+                                    y = leafCornerBottomRightPx,
+                                ),
+                            bottomLeftCornerRadius = CornerRadius.Zero,
                         )
                     )
                 },

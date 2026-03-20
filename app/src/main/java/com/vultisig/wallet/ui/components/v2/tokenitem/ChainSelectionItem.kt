@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
@@ -83,13 +84,22 @@ internal fun GridItem(
                 RoundedBorderWithLeaf()
             }
 
+            val logoAlpha = if (checked) 1f else 0.5f
             when (uiModel.tokenSelectionUiModel) {
-                is TokenUiPair -> TokenUiGridLogo(tokens = uiModel.tokenSelectionUiModel)
-                is TokenUiSingle -> TokenUiGridLogo(token = uiModel.tokenSelectionUiModel)
+                is TokenUiPair ->
+                    TokenUiGridLogo(
+                        tokens = uiModel.tokenSelectionUiModel,
+                        modifier = Modifier.alpha(logoAlpha),
+                    )
+                is TokenUiSingle ->
+                    TokenUiGridLogo(
+                        token = uiModel.tokenSelectionUiModel,
+                        modifier = Modifier.alpha(logoAlpha),
+                    )
             }
         }
 
-        UiSpacer(size = 10.dp)
+        UiSpacer(size = 11.dp)
 
         when (uiModel.tokenSelectionUiModel) {
             is TokenUiPair -> TokenUiGridName(tokens = uiModel.tokenSelectionUiModel)
@@ -196,13 +206,17 @@ fun PreviewRChainSelectionItem3() {
 }
 
 @Composable
-private fun TokenUiGridLogo(tokens: TokenUiPair, space: Float = 4f) {
+private fun TokenUiGridLogo(
+    modifier: Modifier = Modifier,
+    tokens: TokenUiPair,
+    space: Float = 4f,
+) {
 
     val rightToken = tokens.right
     val leftToken = tokens.left
     val halfSpace = space / 2
 
-    Box {
+    Box(modifier = modifier) {
         TokenUiGridLogo(
             token = leftToken,
             modifier =
