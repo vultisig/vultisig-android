@@ -1142,4 +1142,16 @@
     <string name="apy_approx">APY (otprilike)</string>
     <string name="apy_approx_hint_title">Nagrade</string>
     <string name="apy_approx_hint_message">Nagrade se automatski pripisuju vašem saldu.</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Dodaj preporuku</string>
+    <string name="referral_added">Preporuka dodana</string>
+    <string name="add_referral_sheet_title">Kod preporuke</string>
+    <string name="add_referral_sheet_description">Unesite svoj kod preporuke ovdje. Uživajte 10% popusta na svaku transakciju.</string>
+    <string name="add_referral_sheet_placeholder">Unesite do 4 znaka</string>
+    <string name="add_referral_sheet_apply">Primijeni preporuku</string>
+    <string name="add_referral_error_length">Referalni kod može sadržavati do 4 znaka</string>
+    <string name="add_referral_error_chars">Referalni kod smije sadržavati samo alfanumeričke znakove</string>
+    <string name="add_referral_error_not_found">Referalni kod nije pronađen</string>
+    <string name="add_referral_error_network">Provjera referalnog koda nije uspjela. Pokušajte ponovo.</string>
 </resources>

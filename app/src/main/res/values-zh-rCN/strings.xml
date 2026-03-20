@@ -1476,4 +1476,16 @@
     <string name="apy_approx">APY（约）</string>
     <string name="apy_approx_hint_title">奖励</string>
     <string name="apy_approx_hint_message">奖励将自动计入您的余额。</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">添加推荐</string>
+    <string name="referral_added">推荐已添加</string>
+    <string name="add_referral_sheet_title">推荐码</string>
+    <string name="add_referral_sheet_description">在此输入您的推荐码。每笔交易享受10%折扣。</string>
+    <string name="add_referral_sheet_placeholder">输入最多4个字符</string>
+    <string name="add_referral_sheet_apply">应用推荐</string>
+    <string name="add_referral_error_length">推荐码最多4个字符</string>
+    <string name="add_referral_error_chars">推荐码只能包含字母和数字</string>
+    <string name="add_referral_error_not_found">推荐码未找到</string>
+    <string name="add_referral_error_network">检查推荐码失败，请重试。</string>
 </resources>

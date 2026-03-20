@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -30,12 +31,16 @@ internal data class FastVaultPasswordUiModel(
 @HiltViewModel
 internal class FastVaultPasswordViewModel
 @Inject
-constructor(private val navigator: Navigator<Destination>, savedStateHandle: SavedStateHandle) :
-    ViewModel() {
+constructor(
+    private val navigator: Navigator<Destination>,
+    savedStateHandle: SavedStateHandle,
+    private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
+) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VaultInfo.Password>()
 
     val state = MutableStateFlow(FastVaultPasswordUiModel())
+    val referralCode = referralCodeSettingsRepository.pendingReferralFlow
 
     private val passwordDelegate = PasswordViewModelDelegate()
 

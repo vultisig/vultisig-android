@@ -1136,4 +1136,16 @@
     <string name="apy_approx">APY (ca.)</string>
     <string name="apy_approx_hint_title">Beloningen</string>
     <string name="apy_approx_hint_message">Beloningen worden automatisch bijgeschreven op uw saldo.</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Verwijzing toevoegen</string>
+    <string name="referral_added">Verwijzing toegevoegd</string>
+    <string name="add_referral_sheet_title">Verwijzingscode</string>
+    <string name="add_referral_sheet_description">Voer hier je verwijzingscode in. Geniet van 10% korting op elke transactie.</string>
+    <string name="add_referral_sheet_placeholder">Voer maximaal 4 tekens in</string>
+    <string name="add_referral_sheet_apply">Verwijzing toepassen</string>
+    <string name="add_referral_error_length">Verwijzingscode mag maximaal 4 tekens bevatten</string>
+    <string name="add_referral_error_chars">Verwijzingscode mag alleen alfanumerieke tekens bevatten</string>
+    <string name="add_referral_error_not_found">Verwijzingscode niet gevonden</string>
+    <string name="add_referral_error_network">Verwijzingscode controleren mislukt. Probeer het opnieuw.</string>
 </resources>

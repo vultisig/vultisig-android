@@ -1140,4 +1140,16 @@
     <string name="apy_approx">APY (aprox.)</string>
     <string name="apy_approx_hint_title">Recompensas</string>
     <string name="apy_approx_hint_message">As recompensas são creditadas automaticamente no seu saldo.</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Adicionar indicação</string>
+    <string name="referral_added">Indicação adicionada</string>
+    <string name="add_referral_sheet_title">Código de indicação</string>
+    <string name="add_referral_sheet_description">Insira seu código de indicação aqui. Aproveite 10% de desconto em cada transação.</string>
+    <string name="add_referral_sheet_placeholder">Insira até 4 caracteres</string>
+    <string name="add_referral_sheet_apply">Aplicar indicação</string>
+    <string name="add_referral_error_length">O código de indicação pode conter até 4 caracteres</string>
+    <string name="add_referral_error_chars">O código de indicação deve conter apenas caracteres alfanuméricos</string>
+    <string name="add_referral_error_not_found">Código de indicação não encontrado</string>
+    <string name="add_referral_error_network">Falha ao verificar o código de indicação. Tente novamente.</string>
 </resources>

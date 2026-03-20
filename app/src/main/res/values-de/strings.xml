@@ -1141,4 +1141,16 @@
     <string name="apy_approx">APY (ca.)</string>
     <string name="apy_approx_hint_title">Belohnungen</string>
     <string name="apy_approx_hint_message">Belohnungen werden automatisch Ihrem Guthaben gutgeschrieben.</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Empfehlung hinzufügen</string>
+    <string name="referral_added">Empfehlung hinzugefügt</string>
+    <string name="add_referral_sheet_title">Empfehlungscode</string>
+    <string name="add_referral_sheet_description">Geben Sie hier Ihren Empfehlungscode ein. Genießen Sie 10 % Rabatt auf jede Transaktion.</string>
+    <string name="add_referral_sheet_placeholder">Bis zu 4 Zeichen eingeben</string>
+    <string name="add_referral_sheet_apply">Empfehlung anwenden</string>
+    <string name="add_referral_error_length">Der Empfehlungscode darf höchstens 4 Zeichen lang sein</string>
+    <string name="add_referral_error_chars">Der Empfehlungscode darf nur alphanumerische Zeichen enthalten</string>
+    <string name="add_referral_error_not_found">Empfehlungscode nicht gefunden</string>
+    <string name="add_referral_error_network">Fehler beim Überprüfen des Empfehlungscodes. Bitte versuchen Sie es erneut.</string>
 </resources>
