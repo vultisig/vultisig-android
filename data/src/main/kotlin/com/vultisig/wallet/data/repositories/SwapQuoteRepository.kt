@@ -573,7 +573,8 @@ constructor(
                 Chain.Noble,
                 Chain.Akash,
                 Chain.Cardano,
-                Chain.Sei -> emptySet()
+                Chain.Sei,
+                Chain.Qbtc -> emptySet()
             }
 
     companion object {

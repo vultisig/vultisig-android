@@ -78,6 +78,7 @@ class DeepLinkHelper(input: String) {
                 "RESHARE" -> return TssAction.ReShare
                 "MIGRATE" -> return TssAction.Migrate
                 "KEYIMPORT" -> return TssAction.KeyImport
+                "SINGLEKEYGEN" -> return TssAction.SingleKeygen
                 else -> return null
             }
         }

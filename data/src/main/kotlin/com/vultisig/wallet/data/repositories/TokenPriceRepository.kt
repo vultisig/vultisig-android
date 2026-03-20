@@ -102,7 +102,7 @@ constructor(
                     priceProviderIds.add(token.priceProviderID)
                 }
 
-                else -> {
+                token.contractAddress.isNotEmpty() -> {
                     val existingChain =
                         chainContractAddresses.getOrPut(token.chain) { mutableListOf() }
                     chainContractAddresses[token.chain] = existingChain + token

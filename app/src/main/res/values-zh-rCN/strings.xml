@@ -84,6 +84,8 @@
     <string name="vault_settings_rename_subtitle">编辑您的金库名称</string>
     <string name="vault_settings_reshare_title">重新分享</string>
     <string name="vault_settings_reshare_subtitle">与新委员会重新分享金库</string>
+    <string name="vault_settings_dilithium_keygen_title">启用 QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">生成密钥以启用 QBTC 链</string>
     <string name="vault_settings_delete_title">删除</string>
     <string name="vault_settings_delete_subtitle">永久删除您的金库。</string>
     <string name="vault_settings_security_title">链上安全</string>
@@ -259,6 +261,7 @@
     <string name="keysign_screen_preparing_vault">准备金库…</string>
     <string name="keysign_screen_signing_with_ecdsa">使用 ECDSA 签名…</string>
     <string name="keysign_screen_signing_with_eddsa">使用 EdDSA 签名…</string>
+    <string name="keysign_screen_signing_with_mldsa">使用 MLDSA 签名…</string>
     <string name="keysign_screen_keysign_finished">密钥签名完成！</string>
     <string name="keysign_screen_error_please_try_again">错误！请重试。%1$s</string>
 
@@ -639,6 +642,7 @@
     <string name="keygen_step_preparing_vault">准备金库</string>
     <string name="keygen_step_generating_ecdsa">生成 ECDSA 密钥</string>
     <string name="keygen_step_generating_eddsa">生成 EdDSA 密钥</string>
+    <string name="keygen_step_generating_mldsa">生成 MLDSA 密钥</string>
     <string name="keygen_step_generating_chain_keys">生成链密钥</string>
     <string name="reshare_step_generating_ecdsa">生成 ECDSA 密钥</string>
     <string name="reshare_step_generating_eddsa">生成 EdDSA 密钥</string>

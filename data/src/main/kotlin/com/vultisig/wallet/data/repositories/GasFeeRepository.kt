@@ -118,7 +118,8 @@ constructor(
                     Chain.Kujira,
                     Chain.Osmosis,
                     Chain.Terra,
-                    Chain.Akash -> {
+                    Chain.Akash,
+                    Chain.Qbtc -> {
                         val nativeToken = tokenRepository.getNativeToken(chain.id)
                         TokenValue(
                             value = 7500.toBigInteger(),

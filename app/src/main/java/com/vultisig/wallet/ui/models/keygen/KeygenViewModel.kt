@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.keygen.DKLSKeygen
+import com.vultisig.wallet.data.keygen.MldsaKeygen
 import com.vultisig.wallet.data.keygen.SchnorrKeygen
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Chain
@@ -72,6 +73,8 @@ internal sealed interface KeygenState {
     data object KeygenECDSA : KeygenState
 
     data object KeygenEdDSA : KeygenState
+
+    data object KeygenMLDSA : KeygenState
 
     data object KeygenChains : KeygenState
 
@@ -164,6 +167,7 @@ constructor(
                 if (cachedVault != null) {
                     vault.pubKeyECDSA = cachedVault.pubKeyECDSA
                     vault.pubKeyEDDSA = cachedVault.pubKeyEDDSA
+                    vault.pubKeyMLDSA = cachedVault.pubKeyMLDSA
                     vault.keyshares = cachedVault.keyshares
                 }
             }
@@ -175,10 +179,17 @@ constructor(
                     startKeygen()
                 }
 
-                when (libType) {
-                    SigningLibType.DKLS -> startKeygenDkls()
-                    SigningLibType.GG20 -> startKeygenGG20()
-                    SigningLibType.KeyImport -> startKeyImportKeygen()
+                if (action == TssAction.SingleKeygen) {
+                    require(vault.pubKeyECDSA.isNotBlank() && vault.pubKeyEDDSA.isNotBlank()) {
+                        "SingleKeygen requires an existing vault with ECDSA and EdDSA keys"
+                    }
+                    startSingleKeygen()
+                } else {
+                    when (libType) {
+                        SigningLibType.DKLS -> startKeygenDkls()
+                        SigningLibType.GG20 -> startKeygenGG20()
+                        SigningLibType.KeyImport -> startKeyImportKeygen()
+                    }
                 }
 
                 updateStep(KeygenState.Success)
@@ -245,6 +256,7 @@ constructor(
             TssAction.Migrate -> dklsKeygen.dklsKeygenWithRetry(0)
             TssAction.ReShare -> dklsKeygen.reshareWithRetry(0)
             TssAction.KeyImport -> error("KeyImport is handled by startKeyImportKeygen()")
+            TssAction.SingleKeygen -> error("SingleKeygen is handled by startSingleKeygen()")
         }
 
         updateStep(KeygenState.KeygenEdDSA)
@@ -272,6 +284,7 @@ constructor(
             TssAction.Migrate -> schnorr.schnorrKeygenWithRetry(0)
             TssAction.ReShare -> schnorr.schnorrReshareWithRetry(0)
             TssAction.KeyImport -> error("KeyImport is handled by startKeyImportKeygen()")
+            TssAction.SingleKeygen -> error("SingleKeygen is handled by startSingleKeygen()")
         }
 
         val keyshareEcdsa = dklsKeygen.keyshare!!
@@ -280,15 +293,55 @@ constructor(
         vault.pubKeyECDSA = keyshareEcdsa.pubKey
         vault.pubKeyEDDSA = keyshareEddsa.pubKey
         vault.hexChainCode = keyshareEcdsa.chaincode
-        vault.keyshares =
-            listOf(
+
+        val newKeyshares =
+            mutableListOf(
                 KeyShare(pubKey = keyshareEcdsa.pubKey, keyShare = keyshareEcdsa.keyshare),
                 KeyShare(pubKey = keyshareEddsa.pubKey, keyShare = keyshareEddsa.keyshare),
             )
 
+        // Preserve existing MLDSA keyshare during ReShare/Migrate
+        if (vault.pubKeyMLDSA.isNotBlank()) {
+            val existingMldsaShare = vault.keyshares.find { it.pubKey == vault.pubKeyMLDSA }
+            if (existingMldsaShare != null) {
+                newKeyshares.add(existingMldsaShare)
+            }
+        }
+
+        vault.keyshares = newKeyshares
+
         if (action == TssAction.Migrate) {
             vault.libType = SigningLibType.DKLS
         }
+
+        sessionApi.markLocalPartyComplete(serverUrl, sessionId, listOf(vault.localPartyID))
+
+        waitCompleteParties()
+    }
+
+    private suspend fun startSingleKeygen() {
+        updateStep(KeygenState.KeygenMLDSA)
+
+        val mldsaKeygen =
+            MldsaKeygen(
+                localPartyId = vault.localPartyID,
+                keygenCommittee = keygenCommittee,
+                mediatorURL = serverUrl,
+                sessionID = sessionId,
+                encryptionKeyHex = encryptionKeyHex,
+                isInitiateDevice = isInitiatingDevice,
+                encryption = encryption,
+                sessionApi = sessionApi,
+            )
+
+        mldsaKeygen.mldsaKeygenWithRetry(0)
+
+        val mldsaKeyshare = mldsaKeygen.keyshare ?: error("Failed to generate MLDSA keyshare")
+
+        vault.pubKeyMLDSA = mldsaKeyshare.pubKey
+        vault.keyshares =
+            vault.keyshares.filterNot { it.pubKey == mldsaKeyshare.pubKey } +
+                KeyShare(pubKey = mldsaKeyshare.pubKey, keyShare = mldsaKeyshare.keyshare)
 
         sessionApi.markLocalPartyComplete(serverUrl, sessionId, listOf(vault.localPartyID))
 
@@ -524,6 +577,8 @@ constructor(
                     }
 
                     TssAction.KeyImport -> error("KeyImport will not support for GG20")
+                    TssAction.SingleKeygen ->
+                        error("SingleKeygen is handled by startSingleKeygen()")
                 }
 
                 // here is the keygen process is done
@@ -590,7 +645,11 @@ constructor(
         val vaultId = vault.id
 
         val password = args.password
-        if (!args.email.isNullOrBlank() && !password.isNullOrBlank()) {
+        if (
+            !args.email.isNullOrBlank() &&
+                !password.isNullOrBlank() &&
+                action != TssAction.SingleKeygen
+        ) {
             temporaryVaultRepository.add(
                 TempVaultDto(
                     vault = vault,
@@ -603,6 +662,15 @@ constructor(
             if (context.canAuthenticateBiometric()) {
                 vaultPasswordRepository.savePassword(vaultId, password)
             }
+        } else if (action == TssAction.SingleKeygen) {
+            // For SingleKeygen, load the full existing vault and merge only the MLDSA
+            // changes to avoid wiping coins, signers, chainPublicKeys via full upsert
+            val existingVault =
+                vaultRepository.get(vaultId)
+                    ?: error("No vault with id $vaultId exists for SingleKeygen save")
+            existingVault.pubKeyMLDSA = vault.pubKeyMLDSA
+            existingVault.keyshares = vault.keyshares
+            saveVault(existingVault, true)
         } else {
             val shouldOverrideVault = isReshareMode || action == TssAction.Migrate
 
@@ -692,6 +760,8 @@ constructor(
                                 passwordType = BackupPasswordType.UserSelectionPassword,
                             )
                         }
+
+                    TssAction.SingleKeygen -> Route.Home(openVaultId = vaultId)
                 },
             opts =
                 NavigationOptions(popUpToRoute = Route.Keygen.Generating::class, inclusive = true),
@@ -757,8 +827,9 @@ constructor(
                             if (libType == SigningLibType.KeyImport) 0.25f else 0.33f
 
                         is KeygenState.KeygenEdDSA ->
-                            if (libType == SigningLibType.KeyImport) 0.50f else 0.66f
+                            if (libType == SigningLibType.KeyImport) 0.50f else 0.50f
 
+                        is KeygenState.KeygenMLDSA -> 0.75f
                         is KeygenState.KeygenChains -> 0.75f
                         is KeygenState.ReshareECDSA -> 0.33f
                         is KeygenState.ReshareEdDSA -> 0.66f
@@ -787,6 +858,14 @@ constructor(
                                     KeygenStepUiModel(
                                         UiText.StringResource(
                                             R.string.keygen_step_generating_eddsa
+                                        ),
+                                        true,
+                                    )
+
+                                is KeygenState.KeygenMLDSA ->
+                                    KeygenStepUiModel(
+                                        UiText.StringResource(
+                                            R.string.keygen_step_generating_mldsa
                                         ),
                                         true,
                                     )

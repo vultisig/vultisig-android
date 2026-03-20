@@ -88,6 +88,8 @@
     <string name="vault_settings_rename_subtitle">Edit your vault name</string>
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Reshare vault with a new committee</string>
+    <string name="vault_settings_dilithium_keygen_title">Enable QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generate key to enable QBTC chain</string>
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_delete_subtitle">Delete your vault permanently.</string>
     <string name="vault_settings_security_title">On-chain Security</string>
@@ -213,6 +215,7 @@
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
     <string name="keysign_screen_signing_with_ecdsa">Signing with ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">Signing with EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">Signing with MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign Finished!</string>
     <string name="keysign_screen_error_please_try_again">Error! Please try again. %1$s</string>
     <string name="successfully_scanned_barcode">Successfully scanned barcode: %1$s</string>
@@ -536,6 +539,7 @@
     <string name="keygen_step_preparing_vault">Preparing Vault</string>
     <string name="keygen_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="keygen_step_generating_eddsa">Generating EdDSA Key</string>
+    <string name="keygen_step_generating_mldsa">Generating MLDSA Key</string>
     <string name="keygen_step_generating_chain_keys">Generating Chain Keys</string>
     <string name="reshare_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="reshare_step_generating_eddsa">Generating EdDSA Key</string>

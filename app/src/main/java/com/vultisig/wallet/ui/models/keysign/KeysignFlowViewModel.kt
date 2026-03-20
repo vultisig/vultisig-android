@@ -586,6 +586,12 @@ constructor(
 
             if (!password.isNullOrBlank()) {
                 val vault = _currentVault!!
+                val chain = _keysignPayload?.coin?.chain?.raw ?: ""
+                val isEcdsa = tssKeysignType == TssKeyType.ECDSA
+                Timber.tag("KeysignFlowViewModel")
+                    .d(
+                        "joinKeysign: chain=$chain, isEcdsa=$isEcdsa, tssKeysignType=$tssKeysignType, messages=${messagesToSign.map { it.take(16) }}"
+                    )
                 vultiSignerRepository.joinKeysign(
                     JoinKeysignRequestJson(
                         publicKeyEcdsa = vault.pubKeyECDSA,
@@ -594,11 +600,13 @@ constructor(
                         hexEncryptionKey = _encryptionKeyHex,
                         derivePath =
                             (_keysignPayload?.coin?.coinType ?: CoinType.ETHEREUM).derivationPath(),
-                        isEcdsa = tssKeysignType == TssKeyType.ECDSA,
+                        isEcdsa = isEcdsa,
                         password = password,
-                        chain = _keysignPayload?.coin?.chain?.name ?: "",
+                        chain = chain,
+                        mldsa = tssKeysignType == TssKeyType.MLDSA,
                     )
                 )
+                Timber.tag("KeysignFlowViewModel").d("joinKeysign: server notified successfully")
             }
         } catch (e: Exception) {
             Timber.tag("KeysignFlowViewModel").e("startSession: ${e.stackTraceToString()}")

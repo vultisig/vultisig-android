@@ -25,7 +25,8 @@ class CosmosFeeService : FeeService {
             Chain.Kujira,
             Chain.Osmosis,
             Chain.Terra,
-            Chain.Akash -> {
+            Chain.Akash,
+            Chain.Qbtc -> {
                 GasFees(limit = gasLimit.toBigInteger(), amount = 7500.toBigInteger())
             }
             Chain.Noble -> {

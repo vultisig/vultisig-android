@@ -7,6 +7,8 @@
     <string name="vault_settings_rename_subtitle">Uredite ime vašeg sefa</string>
     <string name="vault_settings_reshare_title">Ponovno podijeli</string>
     <string name="vault_settings_reshare_subtitle">Ponovno podijelite sef s novim odborom</string>
+    <string name="vault_settings_dilithium_keygen_title">Omogući QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generiraj ključ za omogućavanje QBTC mreže</string>
     <string name="vault_settings_delete_title">Izbriši</string>
     <string name="vault_settings_security_title">On-chain sigurnost</string>
     <string name="vault_settings_security_subtitle">Upravljajte svojom on-chain sigurnošću</string>
@@ -149,6 +151,7 @@
     <string name="chain_account_view_swap">ZAMIJENI</string>
     <string name="keysign_screen_signing_with_ecdsa">POTPISIVANJE KORISTEĆI ECDSA KLJUČ…</string>
     <string name="keysign_screen_signing_with_eddsa">POTPISIVANJE KORISTEĆI EdDSA KLJUČ…</string>
+    <string name="keysign_screen_signing_with_mldsa">POTPISIVANJE KORISTEĆI MLDSA KLJUČ…</string>
     <string name="signing_error_please_try_again_s">Greška pri prijavi. Molimo pokušajte ponovno. %s</string>
     <string name="faq_settings_q1">Moram li se registrirati?</string>
     <string name="swap_screen_invalid_vault">Transakcija će vjerojatno propasti, trezor se nije mogao učitati.</string>
@@ -421,6 +424,7 @@
     <string name="reshare_step_generating_eddsa">Generiranje EDDSA ključa</string>
     <string name="keygen_connecting_with_server">Povezivanje sa serverom...</string>
     <string name="keygen_step_generating_eddsa">Generiranje EDDSA ključa</string>
+    <string name="keygen_step_generating_mldsa">Generiranje MLDSA ključa</string>
     <string name="keygen_step_generating_chain_keys">Generiranje ključeva lanca</string>
     <string name="reshare_step_generating_ecdsa">Generiranje ECDSA ključa</string>
     <string name="merge_account_doesnt_exist">Odabrani token nije pronađen za ovu adresu</string>

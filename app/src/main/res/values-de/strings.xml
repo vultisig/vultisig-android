@@ -8,6 +8,8 @@
     <string name="vault_settings_rename_subtitle">Den Namen Ihres Tresors bearbeiten</string>
     <string name="vault_settings_reshare_title">Erneut teilen</string>
     <string name="vault_settings_reshare_subtitle">Tresor mit einem neuen Komitee erneut teilen</string>
+    <string name="vault_settings_dilithium_keygen_title">QBTC aktivieren</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Schlüssel generieren, um die QBTC-Blockchain zu aktivieren</string>
     <string name="vault_settings_delete_title">Löschen</string>
     <string name="select_asset_title">Asset auswählen</string>
     <string name="select_asset_no_result">Kein Ergebnis gefunden.</string>
@@ -123,6 +125,7 @@
     <string name="keysign_screen_preparing_vault">TRESOR VORBEREITEN…</string>
     <string name="keysign_screen_signing_with_ecdsa">MIT ECDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
     <string name="keysign_screen_signing_with_eddsa">MIT EdDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
+    <string name="keysign_screen_signing_with_mldsa">MIT MLDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
     <string name="vault_settings_delete_vault_caution1">Mir ist bewusst, dass der Tresor dauerhaft gelöscht wird</string>
     <string name="vault_settings_delete_vault_caution2">Mir ist bewusst, dass ich Geld verlieren kann</string>
     <string name="vault_settings_delete_vault_caution3">Ich habe eine Sicherung des Tresors erstellt</string>
@@ -420,6 +423,7 @@
     <string name="reshare_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
     <string name="keygen_connecting_with_server">Mit Server verbinden …</string>
     <string name="keygen_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
+    <string name="keygen_step_generating_mldsa">Generieren eines MLDSA-Schlüssels</string>
     <string name="keygen_step_generating_chain_keys">Ketten-Schlüssel generieren</string>
     <string name="reshare_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
     <string name="merge_account_doesnt_exist">Das ausgewählte Token wurde für diese Adresse nicht gefunden.</string>

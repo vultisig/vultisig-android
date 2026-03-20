@@ -138,6 +138,7 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "wsthype" -> R.drawable.wsthype
         "ada" -> R.drawable.cardano
         "aztec" -> R.drawable.aztec
+        "qbtc" -> R.drawable.qbtc
         else -> logoName
     }
 }
