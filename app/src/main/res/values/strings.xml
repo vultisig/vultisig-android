@@ -819,6 +819,7 @@
     <string name="wallet">Wallet</string>
     <string name="hide_balance">Hide balance</string>
     <string name="show_balance">Show balance</string>
+    <string name="hide_defi_balance">Hide DeFi balance</string>
     <string name="no_chains_found">No chains found</string>
     <string name="no_chain_make_sure_that">Make sure that the chain you’re looking for is enabled.</string>
     <string name="no_chain_customize_chains">Customize chains</string>
