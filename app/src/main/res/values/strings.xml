@@ -549,7 +549,7 @@
     <string name="fast_vault_name_screen_desc">You can always rename your vault later in the settings</string>
     <string name="enter_email_screen_title">Enter your email</string>
     <string name="enter_email_screen_hint">Email</string>
-    <string name="enter_email_screen_desc">This email is only used to send the server backup</string>
+    <string name="enter_email_screen_desc">This email is used for cloud backup and shared with no third party</string>
     <string name="fast_vault_password_screen_title">Choose a password</string>
     <string name="fast_vault_password_screen_hint">This occurs because the password is used to locally encrypt the backup file, similar to how a hard drive is encrypted. In the following step, you have the option to add a hint.</string>
     <string name="fast_vault_password_screen_hint_title">More Info</string>
