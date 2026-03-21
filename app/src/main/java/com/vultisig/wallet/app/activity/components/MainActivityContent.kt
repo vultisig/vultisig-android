@@ -118,32 +118,36 @@ private fun MainActivityContent(
                 .background(color = Theme.v2.colors.backgrounds.primary)
                 .safeDrawingPadding()
     ) {
+        // navContent drawn first (behind) so the banner's transparent corners
+        // reveal the screen's gradient instead of the solid outer Box background.
         Column(modifier = Modifier.fillMaxSize()) {
             OfflineBanner(isOffline)
-            key(lastNotification?.qrCodeData) {
-                AnimatedVisibility(
-                    visible = foregroundNotification != null,
-                    enter = slideInVertically { -it },
-                    exit = slideOutVertically { -it },
-                    modifier =
-                        Modifier.fillMaxWidth().layout { measurable, constraints ->
-                            val placeable = measurable.measure(constraints)
-                            layout(placeable.width, placeable.height - statusBarHeightPx) {
-                                placeable.placeRelative(0, -statusBarHeightPx)
-                            }
-                        },
-                ) {
-                    lastNotification?.let { notification ->
-                        ForegroundNotificationBanner(
-                            qrCodeData = notification.qrCodeData,
-                            vaultName = notification.vaultName,
-                            transactionSummary = notification.transactionSummary,
-                            onTap = onBannerTap,
-                        )
-                    }
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) { navContent() }
+        }
+
+        // Banner drawn as overlay on top of navContent.
+        key(lastNotification?.qrCodeData) {
+            AnimatedVisibility(
+                visible = foregroundNotification != null,
+                enter = slideInVertically { -it },
+                exit = slideOutVertically { -it },
+                modifier =
+                    Modifier.fillMaxWidth().layout { measurable, constraints ->
+                        val placeable = measurable.measure(constraints)
+                        layout(placeable.width, placeable.height - statusBarHeightPx) {
+                            placeable.placeRelative(0, -statusBarHeightPx)
+                        }
+                    },
+            ) {
+                lastNotification?.let { notification ->
+                    ForegroundNotificationBanner(
+                        qrCodeData = notification.qrCodeData,
+                        vaultName = notification.vaultName,
+                        transactionSummary = notification.transactionSummary,
+                        onTap = onBannerTap,
+                    )
                 }
             }
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) { navContent() }
         }
 
         overlayContent()
