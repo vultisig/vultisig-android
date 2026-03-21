@@ -446,13 +446,6 @@ internal sealed class Route {
 
     @Serializable data object CurrencyUnitSetting
 
-    @Serializable
-    data class QrAddressScreen(
-        val vaultId: String? = null,
-        val address: String,
-        val chainName: String,
-    )
-
     @Serializable data class ConfirmDelete(val vaultId: String)
 
     @Serializable data class ShareVaultQr(val vaultId: String)
