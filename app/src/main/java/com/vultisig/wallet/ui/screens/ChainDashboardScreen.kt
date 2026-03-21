@@ -15,7 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.ui.models.ChainDashboardUiModel
 import com.vultisig.wallet.ui.models.ChainDashboardViewModel
+import com.vultisig.wallet.ui.models.ChainTokenUiModel
+import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionCircle
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionTokens
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.Wallet
@@ -29,6 +33,31 @@ import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewModel()) {
     val uiModel by viewModel.uiState.collectAsState()
 
+    ChainDashboardScreen(
+        uiModel = uiModel,
+        onTypeClick = viewModel::updateCryptoConnectionType,
+        onCameraClick = viewModel::openCamera,
+        content = {
+            when (val route = uiModel.route) {
+                is PositionCircle -> CircleDeFiPositionsScreen(vaultId = route.vaultId)
+
+                is PositionTokens -> ThorchainDefiPositionsScreen(vaultId = route.vaultId)
+
+                is Wallet -> ChainTokensScreen(vaultId = route.vaultId, chainId = route.chainId)
+
+                null -> Unit
+            }
+        },
+    )
+}
+
+@Composable
+private fun ChainDashboardScreen(
+    uiModel: ChainDashboardUiModel,
+    onTypeClick: (CryptoConnectionType) -> Unit,
+    onCameraClick: () -> Unit,
+    content: @Composable () -> Unit = {},
+) {
     Scaffold(
         bottomBar = {
             Box(modifier = Modifier.fillMaxWidth().animateContentSize()) {
@@ -43,32 +72,16 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
                         CryptoConnectionSelect(
                             activeType = uiModel.cryptoConnectionType,
                             availableCryptoTypes = uiModel.availableCryptoTypes,
-                            onTypeClick = viewModel::updateCryptoConnectionType,
+                            onTypeClick = onTypeClick,
                         )
-                        CameraButton(onClick = viewModel::openCamera)
+                        CameraButton(onClick = onCameraClick)
                     }
                 }
             }
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
-            when (uiModel.route) {
-                is PositionCircle ->
-                    CircleDeFiPositionsScreen(vaultId = (uiModel.route as PositionCircle).vaultId)
-
-                is PositionTokens ->
-                    ThorchainDefiPositionsScreen(
-                        vaultId = (uiModel.route as PositionTokens).vaultId
-                    )
-
-                is Wallet ->
-                    ChainTokensScreen(
-                        vaultId = (uiModel.route as Wallet).vaultId,
-                        chainId = (uiModel.route as Wallet).chainId,
-                    )
-
-                null -> Unit
-            }
+            content()
         }
     }
 }
@@ -76,5 +89,42 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
 @Preview
 @Composable
 private fun ChainDashboardScreenPreview() {
-    ChainDashboardScreen()
+    ChainDashboardScreen(
+        uiModel = ChainDashboardUiModel(route = Wallet(vaultId = "sdsda", "007")),
+        onTypeClick = {},
+        onCameraClick = {},
+        content = {
+            ChainTokensScreen(
+                uiModel =
+                    ChainTokensUiModel(
+                        chainName = "Ethereum",
+                        chainAddress = "0x1234567890abcdef",
+                        totalBalance = "$1,234.56",
+                        canSwap = true,
+                        canBuy = false,
+                        canDeposit = false,
+                        tokens =
+                            listOf(
+                                ChainTokenUiModel(
+                                    name = "Ethereum",
+                                    balance = "0.5",
+                                    fiatBalance = "$1,234.56",
+                                )
+                            ),
+                    ),
+                onRefresh = {},
+                onShowSearchBar = {},
+                onHideSearchBar = {},
+                onSend = {},
+                onSwap = {},
+                onBuy = {},
+                onDeposit = {},
+                onReceive = {},
+                onSelectTokens = {},
+                onTokenClick = {},
+                onBackClick = {},
+                onShowReviewPopUp = {},
+            )
+        },
+    )
 }
