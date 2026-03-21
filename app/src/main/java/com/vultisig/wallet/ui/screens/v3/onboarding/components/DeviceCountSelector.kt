@@ -125,14 +125,14 @@ private fun ChangeCountButton(
     Box(
         modifier =
             modifier
-                .alpha(animateFloatAsState(if (enabled) 1f else 0.5f).value)
+                .alpha(animateFloatAsState(if (enabled) 1f else 0.25f).value)
                 .size(width = 64.dp, height = 46.dp)
                 .clip(shape = CircleShape)
                 .background(
                     color =
                         animateColorAsState(
                                 targetValue =
-                                    if (enabled) Theme.v2.colors.backgrounds.surface2
+                                    if (isIncrease || enabled) Theme.v2.colors.backgrounds.surface2
                                     else Theme.v2.colors.buttons.ctaDisabled
                             )
                             .value

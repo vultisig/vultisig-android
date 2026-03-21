@@ -223,7 +223,6 @@
     <!-- Camera & QR -->
     <string name="camera_permission_denied">相机权限未授予。请在设置中启用。</string>
     <string name="join_keysign_discovering_session_id">发现会话 ID</string>
-    <string name="qr_address_screen_title">地址</string>
 
     <!-- Transaction Done -->
     <string name="transaction_done_title">完成</string>
@@ -580,8 +579,6 @@
     <!-- Transaction Complete -->
     <string name="transaction_complete_screen_title">交易完成</string>
 
-    <!-- QR Address Screen -->
-    <string name="qr_address_screen_description">%1$s 地址：\n%2$s</string>
 
     <!-- Join Keysign -->
     <string name="join_keysign_wrong_vault">选择了错误的金库</string>
