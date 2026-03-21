@@ -92,6 +92,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
@@ -276,6 +277,7 @@ constructor(
                 addressBookRepository = addressBookRepository,
                 transactionStatusServiceManager = transactionStatusServiceManager,
                 txStatusConfigurationProvider = txStatusConfigurationProvider,
+                vaultRepository = vaultRepository,
                 transactionHistoryData = transactionHistoryData,
                 transactionHistoryRepository = transactionHistoryRepository,
             )
@@ -988,12 +990,55 @@ constructor(
                         )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
-                    transactionTypeUiModel = TransactionTypeUiModel.Send(transactionToUiModel)
-                    transactionHistoryData = mapTransactionHistoryData(transactionToUiModel)
+
+                    val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+                    val normalizedSrcAddress = normalizeAddressForLookup(address)
+                    val srcVaultName =
+                        allVaults
+                            .firstOrNull { v ->
+                                v.coins.any {
+                                    it.chain == chain &&
+                                        normalizeAddressForLookup(it.address) ==
+                                            normalizedSrcAddress
+                                }
+                            }
+                            ?.name
+                    val normalizedDstAddress = normalizeAddressForLookup(payload.toAddress)
+                    val dstVaultName =
+                        allVaults
+                            .firstOrNull { v ->
+                                v.coins.any {
+                                    it.chain == chain &&
+                                        normalizeAddressForLookup(it.address) ==
+                                            normalizedDstAddress
+                                }
+                            }
+                            ?.name
+                    val isSavedInAddressBook =
+                        dstVaultName == null &&
+                            addressBookRepository.entryExists(chain.id, payload.toAddress)
+                    val dstAddressBookTitle =
+                        if (isSavedInAddressBook) {
+                            runCatching {
+                                    addressBookRepository
+                                        .getEntry(chain.id, payload.toAddress)
+                                        .title
+                                }
+                                .getOrNull()
+                        } else null
+
+                    val namedTransactionUiModel =
+                        transactionToUiModel.copy(
+                            srcVaultName = srcVaultName,
+                            dstVaultName = dstVaultName,
+                            dstAddressBookTitle = dstAddressBookTitle,
+                        )
+                    transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
+                    transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)
                     verifyUiModel.value =
                         VerifyUiModel.Send(
                             VerifyTransactionUiModel(
-                                transaction = transactionToUiModel,
+                                transaction = namedTransactionUiModel,
                                 functionSignature = functionInfo?.signature,
                                 functionInputs = functionInfo?.inputs,
                             )

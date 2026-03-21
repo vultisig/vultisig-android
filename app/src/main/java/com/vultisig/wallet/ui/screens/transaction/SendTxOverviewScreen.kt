@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
+import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
@@ -87,18 +88,20 @@ internal fun SendTxOverviewScreen(
         },
         detailContent = {
             Column {
-                TextDetails(
+                VerifyCardDetails(
                     title = stringResource(R.string.tx_overview_screen_tx_from),
-                    subtitle = tx.from,
+                    subtitle = tx.fromLabel ?: tx.from,
+                    bracketValue = tx.fromLabel?.let { tx.from },
                 )
 
                 VerifyCardDivider(size = 1.dp)
 
                 if (showSaveToAddressBook) {
                     Column {
-                        TextDetails(
+                        VerifyCardDetails(
                             title = stringResource(R.string.tx_overview_screen_tx_to),
-                            subtitle = tx.to,
+                            subtitle = tx.toLabel ?: tx.to,
+                            bracketValue = tx.toLabel?.let { tx.to },
                         )
 
                         UiSpacer(8.dp)
@@ -110,9 +113,10 @@ internal fun SendTxOverviewScreen(
                         UiSpacer(size = 12.dp)
                     }
                 } else {
-                    TextDetails(
+                    VerifyCardDetails(
                         title = stringResource(R.string.tx_overview_screen_tx_to),
-                        subtitle = tx.to,
+                        subtitle = tx.toLabel ?: tx.to,
+                        bracketValue = tx.toLabel?.let { tx.to },
                     )
                 }
 
@@ -275,7 +279,9 @@ internal data class UiTransactionInfo(
     val type: UiTransactionInfoType,
     val token: ValuedToken,
     val from: String,
+    val fromLabel: String? = null,
     val to: String,
+    val toLabel: String? = null,
     val memo: String,
     val networkFeeTokenValue: String,
     val networkFeeFiatValue: String,

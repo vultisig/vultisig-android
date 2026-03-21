@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.utils
 
+import java.util.Locale
+
 internal fun String.getAddressFromQrCode(): String {
     val removedSlashPrefix =
         if (contains("/")) {
@@ -52,3 +54,6 @@ internal fun String.forCanvasMinify(numSymbolsKeep: Int = 10): String {
     if (length <= numSymbolsKeep * 2) return this
     return "${substring(0, numSymbolsKeep)}...${substring(length - numSymbolsKeep)}"
 }
+
+internal fun normalizeAddressForLookup(address: String): String =
+    if (address.startsWith("0x", ignoreCase = true)) address.lowercase(Locale.ROOT) else address
