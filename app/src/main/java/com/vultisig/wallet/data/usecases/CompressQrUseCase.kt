@@ -1,7 +1,9 @@
 package com.vultisig.wallet.data.usecases
 
+import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
+import org.apache.commons.compress.compressors.CompressorException
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.CompressorStreamProvider
 
@@ -29,9 +31,13 @@ internal class DecompressQrUseCaseImpl
 constructor(private val compressorStreamProvider: CompressorStreamProvider) : DecompressQrUseCase {
 
     override fun invoke(input: ByteArray): ByteArray =
-        input.inputStream().use { inputStream ->
-            compressorStreamProvider
-                .createCompressorInputStream(COMPRESSION_ALGO, inputStream, false)
-                .use { it.readBytes() }
+        try {
+            BufferedInputStream(input.inputStream()).use { inputStream ->
+                compressorStreamProvider
+                    .createCompressorInputStream(COMPRESSION_ALGO, inputStream, true)
+                    .use { it.readBytes() }
+            }
+        } catch (_: CompressorException) {
+            input
         }
 }
