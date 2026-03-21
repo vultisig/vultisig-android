@@ -373,6 +373,7 @@ constructor(
                     validateNameInput()
                 } else {
                     nameErrorMessage.value = null
+                    nameInnerState.value = VsTextInputFieldInnerState.Default
                     uiState.update { currentState ->
                         currentState.copy(isNextButtonEnabled = false)
                     }
@@ -395,7 +396,7 @@ constructor(
             val isNextButtonEnabled = errorMessage == null
             nameInnerState.value =
                 if (errorMessage != null) VsTextInputFieldInnerState.Error
-                else VsTextInputFieldInnerState.Default
+                else VsTextInputFieldInnerState.Success
             nameErrorMessage.value = errorMessage
             uiState.update { it.copy(isNextButtonEnabled = isNextButtonEnabled) }
         }
