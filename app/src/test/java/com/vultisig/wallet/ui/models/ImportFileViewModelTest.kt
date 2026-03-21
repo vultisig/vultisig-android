@@ -27,7 +27,6 @@ import io.mockk.unmockkStatic
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -131,21 +130,24 @@ internal class ImportFileViewModelTest {
     }
 
     @Test
-    fun `decryptVaultData sends duplicate snackbar on SQLite constraint`() = runTest {
+    fun `decryptVaultData shows error state on SQLite constraint`() = runTest {
         coEvery { parseVaultFromString(any(), any()) } returns testVault()
         coEvery { saveVault(any(), false) } throws SQLiteConstraintException()
         val vm = createViewModel(fileName = "share1of2-test.bak")
 
         vm.decryptVaultData()
 
+        val state = vm.uiModel.value
         assertEquals(
             UiText.StringResource(R.string.import_file_screen_duplicate_vault),
-            vm.snackBarChannelFlow.first(),
+            state.error,
         )
+        assertEquals(null, state.fileName)
+        assertEquals(null, state.fileContent)
     }
 
     @Test
-    fun `saveFileToAppDir sends duplicate snackbar on SQLite constraint`() = runTest {
+    fun `saveFileToAppDir shows error state on SQLite constraint`() = runTest {
         val uri = mockk<Uri>()
         mockkStatic("com.vultisig.wallet.data.common.FileHelperKt")
         coEvery { uri.fileContent(context) } returns "test-content"
@@ -157,9 +159,12 @@ internal class ImportFileViewModelTest {
 
         vm.saveFileToAppDir()
 
+        val state = vm.uiModel.value
         assertEquals(
             UiText.StringResource(R.string.import_file_screen_duplicate_vault),
-            vm.snackBarChannelFlow.first(),
+            state.error,
         )
+        assertEquals(null, state.fileName)
+        assertEquals(null, state.fileContent)
     }
 }
