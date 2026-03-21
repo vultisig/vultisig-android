@@ -76,7 +76,7 @@
     <string name="open_account_button">Open Account</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
-    <string name="tokens">Tokens</string>
+    <string name="tokens">Assets</string>
     <string name="keysign">Keysign</string>
     <string name="danger_icon">Danger Icon</string>
     <string name="signing_error_please_try_again_s">Signing Error. Please try again. %s</string>
@@ -226,7 +226,7 @@
 
     <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
-    <string name="vault_accounts_account_assets">%1$s Assets</string>
+    <string name="vault_accounts_account_assets">%1$s assets</string>
     <string name="s_of_s_vault">%1$s-of-%2$s Vault Setup</string>
     <string name="scan_qr_screen_return_vault">Return to Vault</string>
     <string name="rename_vault_screen_vault_name">Vault name</string>
