@@ -61,6 +61,8 @@ import com.vultisig.wallet.ui.utils.KeyboardAware
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.showReviewPopUp
 
+private val ChainTokensTopbarShineColor = Color(0xFF0439C7).copy(alpha = 0.35f)
+
 @Composable
 internal fun ChainTokensScreen(
     vaultId: VaultId,
@@ -124,7 +126,7 @@ internal fun ChainTokensScreen(
         backgroundColor = Theme.v2.colors.backgrounds.primary,
         topBarExpandedContent = {
             ExpandedTopbarContainer(
-                shineSpotColor = Color(0xFF0439C7).copy(alpha = 0.35f),
+                shineSpotColor = ChainTokensTopbarShineColor,
                 shineSpotCenterXRatio = 0.92f,
                 shineSpotCenterYRatio = -0.15f,
                 shineSpotRadiusRatio = 0.45f,

@@ -12,6 +12,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -48,4 +49,17 @@ internal fun ExpandedTopbarContainer(
         horizontalAlignment = Alignment.CenterHorizontally,
         content = content,
     )
+}
+
+@Preview
+@Composable
+private fun ExpandedTopbarContainerPreview() {
+    ExpandedTopbarContainer(
+        shineSpotColor = Color(0xFF0439C7).copy(alpha = 0.35f),
+        shineSpotCenterXRatio = 0.92f,
+        shineSpotCenterYRatio = -0.15f,
+        shineSpotRadiusRatio = 0.45f,
+    ) {
+        // preview content
+    }
 }
