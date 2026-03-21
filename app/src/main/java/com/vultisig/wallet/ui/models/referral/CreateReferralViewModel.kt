@@ -138,13 +138,9 @@ constructor(
     }
 
     private fun loadAddress() {
-        viewModelScope.launch {
-            try {
-                accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect { address ->
-                    this@CreateReferralViewModel.address = address
-                }
-            } catch (e: Exception) {
-                Timber.e(e)
+        viewModelScope.safeLaunch(onError = { e -> Timber.e(e, "Failed to load address") }) {
+            accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect { address ->
+                this@CreateReferralViewModel.address = address
             }
         }
     }
