@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
@@ -78,6 +79,7 @@ constructor(
     private val cosmosApiFactory: CosmosApiFactory,
     private val blockChairApi: BlockChairApi,
     private val polkadotApi: PolkadotApi,
+    private val bittensorApi: BittensorApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
@@ -372,6 +374,28 @@ constructor(
                             val nonceDeferred = async { polkadotApi.getNonce(address) }
                             val blockHeaderDeferred = async { polkadotApi.getBlockHeader() }
                             val genesisHashDeferred = async { polkadotApi.getGenesisBlockHash() }
+
+                            val (specVersion, transactionVersion) = runtimeVersionDeferred.await()
+
+                            BlockChainSpecificAndUtxo(
+                                BlockChainSpecific.Polkadot(
+                                    recentBlockHash = blockHashDeferred.await(),
+                                    nonce = nonceDeferred.await(),
+                                    currentBlockNumber = blockHeaderDeferred.await(),
+                                    specVersion = specVersion.toLong().toUInt(),
+                                    transactionVersion = transactionVersion.toLong().toUInt(),
+                                    genesisHash = genesisHashDeferred.await(),
+                                    gas = gasFee.value.toString().toULong(),
+                                )
+                            )
+                        }
+                    Chain.Bittensor ->
+                        coroutineScope {
+                            val runtimeVersionDeferred = async { bittensorApi.getRuntimeVersion() }
+                            val blockHashDeferred = async { bittensorApi.getBlockHash() }
+                            val nonceDeferred = async { bittensorApi.getNonce(address) }
+                            val blockHeaderDeferred = async { bittensorApi.getBlockHeader() }
+                            val genesisHashDeferred = async { bittensorApi.getGenesisBlockHash() }
 
                             val (specVersion, transactionVersion) = runtimeVersionDeferred.await()
 

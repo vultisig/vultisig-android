@@ -25,6 +25,7 @@ internal val Chain.logo: Int
             Chain.MayaChain -> R.drawable.maya
             Chain.CronosChain -> R.drawable.cro
             Chain.Polkadot -> R.drawable.dot
+            Chain.Bittensor -> R.drawable.bittensor
             Chain.Dydx -> R.drawable.dydx
             Chain.ZkSync -> R.drawable.zksync
             Chain.Sui -> R.drawable.sui
@@ -66,6 +67,7 @@ internal val Chain.monoToneLogo: Int
             Chain.MayaChain -> R.drawable.maya_mono
             Chain.CronosChain -> R.drawable.cronos_mono
             Chain.Polkadot -> R.drawable.dot_mono
+            Chain.Bittensor -> R.drawable.bittensor // TODO: Add mono variant
             Chain.Dydx -> R.drawable.dxdy_mono
             Chain.ZkSync -> R.drawable.zksync_mono
             Chain.Sui -> R.drawable.sui_mono

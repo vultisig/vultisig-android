@@ -172,6 +172,11 @@ object SigningHelper {
                         dotHelper.getPreSignedImageHash(payload)
                     }
 
+                    Chain.Bittensor -> {
+                        val bittensorHelper = BittensorHelper(eddsaKey)
+                        bittensorHelper.getPreSignedImageHash(payload)
+                    }
+
                     Chain.Sui -> {
                         SuiHelper.getPreSignedImageHash(payload)
                     }
@@ -330,6 +335,11 @@ object SigningHelper {
             Chain.Polkadot -> {
                 val dotHelper = PolkadotHelper(eddsaKey)
                 return dotHelper.getSignedTransaction(keysignPayload, signatures)
+            }
+
+            Chain.Bittensor -> {
+                val bittensorHelper = BittensorHelper(eddsaKey)
+                return bittensorHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
             Chain.Sui -> {
