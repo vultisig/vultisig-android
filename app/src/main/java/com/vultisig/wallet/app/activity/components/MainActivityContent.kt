@@ -20,7 +20,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
@@ -45,7 +44,6 @@ import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
 import com.vultisig.wallet.ui.theme.Theme
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -64,11 +62,11 @@ internal fun MainActivityContent(
     MainActivityContent(
         foregroundNotification = foregroundNotification,
         lastNotification = lastNotification,
-        isOffline = mainViewModel.isOffline.value,
+        isOffline = mainViewModel.isOffline.collectAsStateWithLifecycle().value,
         onBannerTap = mainViewModel::onForegroundBannerTapped,
         navContent = {
             LaunchedEffect(navController) {
-                snapshotFlow { navController.currentBackStackEntry }.filterNotNull().first()
+                navController.currentBackStackEntryFlow.first()
 
                 // Start collectors before signalling readiness so they are subscribed
                 // (Main.immediate dispatches run immediately until first suspension).

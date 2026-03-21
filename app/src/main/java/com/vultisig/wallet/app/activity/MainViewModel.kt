@@ -74,8 +74,8 @@ constructor(
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
     val isLoading: State<Boolean> = _isLoading
-    private val _isOffline: MutableState<Boolean> = mutableStateOf(false)
-    val isOffline: State<Boolean> = _isOffline
+    private val _isOffline = MutableStateFlow(false)
+    val isOffline: StateFlow<Boolean> = _isOffline.asStateFlow()
 
     private val _startUpdateEvent = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
     val startUpdateEvent = _startUpdateEvent.asSharedFlow()
