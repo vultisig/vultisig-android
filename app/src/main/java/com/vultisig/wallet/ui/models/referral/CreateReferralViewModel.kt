@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.utils.decimals
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
@@ -107,7 +108,7 @@ constructor(
     }
 
     private fun loadFees() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             state.update { it.copy(fees = FeesReferral.Loading) }
 
             nativeRuneFees = withContext(Dispatchers.IO) { thorChainApi.getTHORChainReferralFees() }

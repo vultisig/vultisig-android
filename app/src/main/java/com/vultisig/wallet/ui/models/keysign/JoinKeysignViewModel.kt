@@ -69,6 +69,7 @@ import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
@@ -1080,7 +1081,7 @@ constructor(
     private fun onServerAddressDiscovered(address: String) {
         _serverAddress = address
         if (!payloadId.isEmpty() && tempKeysignMessageProto != null) {
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 // when Payload is not in the QRCode
                 routerApi.getPayload(_serverAddress, payloadId).let { payload ->
                     if (payload.isNotEmpty()) {

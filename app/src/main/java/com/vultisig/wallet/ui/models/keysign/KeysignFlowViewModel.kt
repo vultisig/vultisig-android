@@ -659,7 +659,7 @@ constructor(
                 }
             }
 
-        viewModelScope.launch(Dispatchers.IO) { updateKeysignPayload(context) }
+        viewModelScope.safeLaunch { withContext(Dispatchers.IO) { updateKeysignPayload(context) } }
     }
 
     private suspend fun startKeysign() {
