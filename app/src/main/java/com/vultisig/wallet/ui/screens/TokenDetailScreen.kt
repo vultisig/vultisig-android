@@ -1,11 +1,13 @@
 package com.vultisig.wallet.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -169,13 +171,13 @@ private fun TokenDetailsContent(
 
         UiSpacer(size = 40.dp)
 
-        TopShineContainer(backgroundColor = Theme.v2.colors.backgrounds.primary) {
-            Column {
+        TopShineContainer(backgroundColor = Theme.v2.colors.backgrounds.surface1) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 TokenMeta(
                     key = stringResource(R.string.token_details_bottom_sheet_price),
                     value = uiModel.token.price,
                 )
-                UiHorizontalDivider()
+                UiHorizontalDivider(modifier = Modifier.width(320.dp))
                 TokenMeta(
                     key = stringResource(R.string.token_details_bottom_sheet_network),
                     value = uiModel.token.network,
@@ -189,7 +191,12 @@ private fun TokenDetailsContent(
 
 @Composable
 private fun TokenMeta(key: String, value: String?, isVisible: Boolean = true) {
-    Row(modifier = Modifier.fillMaxWidth().padding(all = 16.dp)) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(Theme.v2.colors.backgrounds.primary)
+                .padding(all = 16.dp)
+    ) {
         V2Container {
             Text(
                 text = key,
