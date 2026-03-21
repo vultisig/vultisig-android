@@ -122,7 +122,12 @@ internal fun ChainTokensScreen(
         snackbarState = snackbarState,
         backgroundColor = Theme.v2.colors.backgrounds.primary,
         topBarExpandedContent = {
-            ExpandedTopbarContainer {
+            ExpandedTopbarContainer(
+                shineSpotColor = Theme.v2.colors.primary.accent2.copy(alpha = 0.35f),
+                shineSpotCenterXRatio = 0.92f,
+                shineSpotCenterYRatio = -0.15f,
+                shineSpotRadiusRatio = 0.45f,
+            ) {
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
