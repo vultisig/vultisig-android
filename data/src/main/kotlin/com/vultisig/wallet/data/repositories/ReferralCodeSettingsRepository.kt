@@ -5,6 +5,9 @@ import androidx.core.content.edit
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.vultisig.wallet.data.sources.AppDataStore
 import jakarta.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 
 interface ReferralCodeSettingsRepositoryContract {
@@ -24,6 +27,14 @@ interface ReferralCodeSettingsRepositoryContract {
 
     fun setCurrentVaultId(vaultId: String)
 
+    val pendingReferralFlow: StateFlow<String?>
+
+    fun getPendingReferral(): String?
+
+    fun setPendingReferral(referralCode: String?)
+
+    fun consumePendingReferral(vaultId: String)
+
     suspend fun setAsShown()
 
     suspend fun isShown(): Boolean
@@ -35,6 +46,12 @@ constructor(
     private val encryptedSharedPreferences: SharedPreferences,
     private val appDataStore: AppDataStore,
 ) : ReferralCodeSettingsRepositoryContract {
+
+    private val _pendingReferralFlow =
+        MutableStateFlow(encryptedSharedPreferences.getString(PENDING_REFERRAL_CODE_KEY, null))
+
+    override val pendingReferralFlow: StateFlow<String?> = _pendingReferralFlow.asStateFlow()
+
     override fun hasVisitReferralCode(): Boolean {
         return encryptedSharedPreferences.getBoolean(HAS_VISIT_REFERRAL_CODE_KEY, false)
     }
@@ -75,6 +92,25 @@ constructor(
         encryptedSharedPreferences.edit { putString(CURRENT_VAULT_CODE_KEY, vaultId) }
     }
 
+    override fun getPendingReferral(): String? {
+        return encryptedSharedPreferences.getString(PENDING_REFERRAL_CODE_KEY, null)
+    }
+
+    override fun setPendingReferral(referralCode: String?) {
+        encryptedSharedPreferences.edit { putString(PENDING_REFERRAL_CODE_KEY, referralCode) }
+        _pendingReferralFlow.value = referralCode
+    }
+
+    override fun consumePendingReferral(vaultId: String) {
+        val pending = getPendingReferral() ?: return
+        val externalKey = EXTERNAL_REFERRAL_CODE_KEY + vaultId
+        encryptedSharedPreferences.edit(commit = true) {
+            putString(externalKey, pending)
+            remove(PENDING_REFERRAL_CODE_KEY)
+        }
+        _pendingReferralFlow.value = null
+    }
+
     override suspend fun setAsShown() {
         appDataStore.editData { preferences -> preferences[SHOW_REFERRAL_HOW_IT_WORKS] = true }
     }
@@ -87,6 +123,7 @@ constructor(
         const val VAULT_REFERRAL_CODE_KEY = "referral_code_"
         const val EXTERNAL_REFERRAL_CODE_KEY = "external_referral_code_"
         const val CURRENT_VAULT_CODE_KEY = "current_vault_key"
+        const val PENDING_REFERRAL_CODE_KEY = "pending_referral_code"
 
         private val SHOW_REFERRAL_HOW_IT_WORKS = booleanPreferencesKey("SHOW_REFERRAL_HOW_IT_WORKS")
     }

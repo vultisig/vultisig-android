@@ -556,7 +556,9 @@ constructor(
                 Chain.Blast,
                 Chain.CronosChain -> setOf(SwapProvider.LIFI)
                 Chain.Solana ->
-                    setOf(SwapProvider.THORCHAIN, SwapProvider.JUPITER, SwapProvider.LIFI)
+                    if (isNativeToken)
+                        setOf(SwapProvider.THORCHAIN, SwapProvider.JUPITER, SwapProvider.LIFI)
+                    else setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
 
                 Chain.Ripple -> setOf(SwapProvider.THORCHAIN)
                 Chain.Tron -> setOf(SwapProvider.THORCHAIN)

@@ -111,7 +111,6 @@
     <string name="verify_transaction_join_keysign">Juntar-se à assinatura de chave</string>
     <string name="verify_transaction_consent_address">Estou enviando para o endereço correto</string>
     <string name="verify_transaction_consent_amount">A quantidade está correta</string>
-    <string name="qr_address_screen_title">Endereço</string>
     <string name="transaction_done_title">Concluído</string>
     <string name="transaction_done_complete">Continuar</string>
     <string name="transaction_done_form_title">Transação</string>
@@ -187,7 +186,6 @@
     <string name="join_keysign_discovering_session_id">Descobrindo o ID da sessão</string>
     <string name="join_keysign_discovery_service">Descobrindo o Serviço</string>
     <string name="vault_settings_delete_subtitle">Exclua seu cofre permanentemente.</string>
-    <string name="default_chain_screen_title">Cadeias Padrão</string>
     <string name="danger_icon">Ícone de perigo</string>
     <string name="currency_unit_setting_screen_title">Moeda\n</string>
     <string name="share_qr_utils_choose_an_app">Escolha um aplicativo</string>
@@ -232,7 +230,6 @@
     <string name="deposit_form_amount_title">Valor (Saldo: %1$s)</string>
     <string name="share_vault_qr_title">Partilhar QR do cofre</string>
     <string name="share_vault_qr_save">Guardar</string>
-    <string name="vault_settings_enable_biometrics_save">Guardar</string>
     <string name="share_vault_qr_share">Compartilhar</string>
     <string name="deposit_form_node_address_title">Endereço do nó</string>
     <string name="deposit_form_provider_title">Fornecedor (opcional)</string>
@@ -263,9 +260,6 @@
     <string name="reshare_start_screen_start_reshare">Iniciar nova partilha</string>
     <string name="threshold_error">Limite não atingido\n Faltam dispositivos iniciais suficientes</string>
     <string name="add_folder_folder_name_title">Nome da pasta</string>
-    <string name="vault_settings_biometrics_screen_title">Ativar biometria</string>
-    <string name="vault_settings_biometrics_screen_description">Introduza a senha para assinatura rápida</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Digite aqui</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">A biometria para assinatura rápida está ativada</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">A biometria para assinatura rápida está desativada</string>
     <string name="biometry_keysign_login_button">Sinal Rápido com biometria</string>
@@ -318,7 +312,6 @@
     <string name="do_not_remind_me_again">Não me lembre outra vez</string>
     <string name="monthly_backup_reminder_title">Não se esqueça de fazer uma cópia de segurança das partilhas do cofre e verificar se estão completas.</string>
     <string name="transaction_complete_screen_title">Transação concluída</string>
-    <string name="qr_address_screen_description">Endereço %1$s:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Cofre errado selecionado</string>
     <string name="verify_swap_screen_total_fees">Taxas totais</string>
     <string name="scan_qr_code_error_text">O código QR não relacionado é digitalizado</string>
@@ -1140,6 +1133,21 @@
     <string name="server_backup_error_too_many_requests">Demasiados pedidos de backup. Tente novamente mais tarde.</string>
     <string name="server_backup_error_bad_request">Algo correu mal. Verifique os seus dados e tente novamente.</string>
     <string name="resend_notification">Reenviar notificação</string>
+    <string name="apy_approx">APY (aprox.)</string>
+    <string name="apy_approx_hint_title">Recompensas</string>
+    <string name="apy_approx_hint_message">As recompensas são creditadas automaticamente no seu saldo.</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Adicionar indicação</string>
+    <string name="referral_added">Indicação adicionada</string>
+    <string name="add_referral_sheet_title">Código de indicação</string>
+    <string name="add_referral_sheet_description">Insira seu código de indicação aqui. Aproveite 10% de desconto em cada transação.</string>
+    <string name="add_referral_sheet_placeholder">Insira até 4 caracteres</string>
+    <string name="add_referral_sheet_apply">Aplicar indicação</string>
+    <string name="add_referral_error_length">O código de indicação pode conter até 4 caracteres</string>
+    <string name="add_referral_error_chars">O código de indicação deve conter apenas caracteres alfanuméricos</string>
+    <string name="add_referral_error_not_found">Código de indicação não encontrado</string>
+    <string name="add_referral_error_network">Falha ao verificar o código de indicação. Tente novamente.</string>
     <string name="cacao_pool">pool CACAO</string>
     <string name="staked_ruji_header">Staking RUJI</string>
     <string name="staked_tcy_header">Staking TCY</string>

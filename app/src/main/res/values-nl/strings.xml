@@ -119,7 +119,6 @@
     <string name="settings_screen_title">Instellingen</string>
     <string name="language_setting_screen_title">Taal</string>
     <string name="currency_unit_setting_screen_title">Valuta\n</string>
-    <string name="default_chain_screen_title">Standaard kettingen</string>
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="verify_transaction_screen_title">Verifiëren</string>
     <string name="verify_transaction_from_title">Van</string>
@@ -132,7 +131,6 @@
     <string name="verify_transaction_error_not_enough_consent">Controleer alle toestemmingen</string>
     <string name="camera_permission_denied">Cameratoestemming niet verleend. Schakel deze in de instellingen in.</string>
     <string name="join_keysign_discovering_session_id">Sessienummer ontdekken</string>
-    <string name="qr_address_screen_title">Adres</string>
     <string name="transaction_done_title">Gedaan</string>
     <string name="transaction_done_complete">Voltooid</string>
     <string name="transaction_done_form_title">Transactie</string>
@@ -231,7 +229,6 @@
     <string name="deposit_form_amount_title">Bedrag (Saldo: %1$s)</string>
     <string name="share_vault_qr_title">Deel Vault QR</string>
     <string name="share_vault_qr_save" >Opslaan</string>
-    <string name="vault_settings_enable_biometrics_save" >Opslaan</string>
     <string name="share_vault_qr_share" >Delen</string>
     <string name="deposit_form_node_address_title">Knooppuntadres</string>
     <string name="deposit_form_provider_title">Provider (optioneel)</string>
@@ -263,9 +260,6 @@
     <string name="reshare_start_screen_start_reshare">Start opnieuw delen</string>
     <string name="threshold_error">Drempelwaarde niet bereikt\nEr ontbreken voldoende initiële apparaten</string>
     <string name="add_folder_folder_name_title">Mapnaam</string>
-    <string name="vault_settings_biometrics_screen_title">Biometrie inschakelen</string>
-    <string name="vault_settings_biometrics_screen_description">Voer wachtwoord in voor snelle ondertekening</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Typ hier</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">Biometrie voor snelle ondertekening is ingeschakeld</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">Biometrie voor snelle ondertekening is uitgeschakeld</string>
     <string name="biometry_keysign_login_button">Snel ondertekenen met biometrie</string>
@@ -318,7 +312,6 @@
     <string name="do_not_remind_me_again">Herinner me er niet meer aan</string>
     <string name="monthly_backup_reminder_title">Vergeet niet een back-up te maken van uw kluisshares en de volledigheid ervan te verifiëren.</string>
     <string name="transaction_complete_screen_title">Transactie voltooid</string>
-    <string name="qr_address_screen_description">%1$s adres:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Verkeerde kluis geselecteerd</string>
     <string name="verify_swap_screen_total_fees">Totale kosten</string>
     <string name="scan_qr_code_error_text">Niet-gerelateerde QR-code wordt gescand</string>
@@ -1136,6 +1129,21 @@
     <string name="server_backup_error_too_many_requests">Te veel back-upverzoeken. Probeer het later opnieuw.</string>
     <string name="server_backup_error_bad_request">Er is iets misgegaan. Controleer uw gegevens en probeer het opnieuw.</string>
     <string name="resend_notification">Melding opnieuw sturen</string>
+    <string name="apy_approx">APY (ca.)</string>
+    <string name="apy_approx_hint_title">Beloningen</string>
+    <string name="apy_approx_hint_message">Beloningen worden automatisch bijgeschreven op uw saldo.</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Verwijzing toevoegen</string>
+    <string name="referral_added">Verwijzing toegevoegd</string>
+    <string name="add_referral_sheet_title">Verwijzingscode</string>
+    <string name="add_referral_sheet_description">Voer hier je verwijzingscode in. Geniet van 10% korting op elke transactie.</string>
+    <string name="add_referral_sheet_placeholder">Voer maximaal 4 tekens in</string>
+    <string name="add_referral_sheet_apply">Verwijzing toepassen</string>
+    <string name="add_referral_error_length">Verwijzingscode mag maximaal 4 tekens bevatten</string>
+    <string name="add_referral_error_chars">Verwijzingscode mag alleen alfanumerieke tekens bevatten</string>
+    <string name="add_referral_error_not_found">Verwijzingscode niet gevonden</string>
+    <string name="add_referral_error_network">Verwijzingscode controleren mislukt. Probeer het opnieuw.</string>
     <string name="cacao_pool">CACAO-pool</string>
     <string name="staked_ruji_header">Gestaked RUJI</string>
     <string name="staked_tcy_header">Gestaked TCY</string>

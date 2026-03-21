@@ -119,7 +119,6 @@
     <string name="settings_screen_title">Настройки</string>
     <string name="language_setting_screen_title">Язык</string>
     <string name="currency_unit_setting_screen_title">Валюта\n</string>
-    <string name="default_chain_screen_title">Сети по умолчанию</string>
     <string name="faq_setting_screen_title">ЧАВО</string>
     <string name="verify_transaction_screen_title">Проверить</string>
     <string name="verify_transaction_from_title">От</string>
@@ -132,7 +131,6 @@
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
     <string name="camera_permission_denied">Разрешение на камеру не предоставлено. Пожалуйста, включите его в настройках.</string>
     <string name="join_keysign_discovering_session_id">Обнаружение ID сессии</string>
-    <string name="qr_address_screen_title">Адрес</string>
     <string name="transaction_done_title">Готово</string>
     <string name="transaction_done_complete">Завершено</string>
     <string name="transaction_done_form_title">Транзакция</string>
@@ -229,7 +227,6 @@
     <string name="deposit_form_amount_title">Сумма (Баланс: %1$s)</string>
     <string name="share_vault_qr_title">Поделиться хранилищем QR</string>
     <string name="share_vault_qr_save" >Сохранить</string>
-    <string name="vault_settings_enable_biometrics_save" >Сохранить</string>
     <string name="share_vault_qr_share" >Поделиться</string>
     <string name="deposit_form_node_address_title">Адрес узла</string>
     <string name="deposit_form_provider_title">Поставщик (необязательно)</string>
@@ -262,9 +259,6 @@
     <string name="reshare_start_screen_start_reshare">Начать репост</string>
     <string name="threshold_error">Порог не достигнут\nОтсутствует достаточное количество начальных устройств</string>
     <string name="add_folder_folder_name_title">Имя папки</string>
-    <string name="vault_settings_biometrics_screen_title">Включить биометрию</string>
-    <string name="vault_settings_biometrics_screen_description">Введите пароль для быстрой подписи</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">Введите здесь</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">Биометрия для быстрой подписи включена</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">Биометрия для быстрой подписи отключена</string>
     <string name="biometry_keysign_login_button">Быстрая регистрация с биометрией</string>
@@ -317,7 +311,6 @@
     <string name="do_not_remind_me_again">Не напоминай мне больше</string>
     <string name="monthly_backup_reminder_title">Не забудьте сделать резервную копию общих ресурсов хранилища и проверить их полноту.</string>
     <string name="transaction_complete_screen_title">Транзакция завершена</string>
-    <string name="qr_address_screen_description">%1$s адрес:\n %2$s</string>
     <string name="join_keysign_wrong_vault">Выбрано неправильное хранилище</string>
     <string name="verify_swap_screen_total_fees">Общая сумма сборов</string>
     <string name="scan_qr_code_error_text">Сканируется несвязанный QR-код</string>
@@ -1140,6 +1133,21 @@
     <string name="server_backup_error_too_many_requests">Слишком много запросов на резервное копирование. Попробуйте позже.</string>
     <string name="server_backup_error_bad_request">Что-то пошло не так. Проверьте свои данные и попробуйте снова.</string>
     <string name="resend_notification">Повторно отправить уведомление</string>
+    <string name="apy_approx">APY (прибл.)</string>
+    <string name="apy_approx_hint_title">Вознаграждения</string>
+    <string name="apy_approx_hint_message">Вознаграждения автоматически начисляются на ваш баланс.</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">Добавить реферала</string>
+    <string name="referral_added">Реферал добавлен</string>
+    <string name="add_referral_sheet_title">Реферальный код</string>
+    <string name="add_referral_sheet_description">Введите ваш реферальный код здесь. Получите скидку 10% на каждую транзакцию.</string>
+    <string name="add_referral_sheet_placeholder">Введите до 4 символов</string>
+    <string name="add_referral_sheet_apply">Применить реферала</string>
+    <string name="add_referral_error_length">Реферальный код должен содержать не более 4 символов</string>
+    <string name="add_referral_error_chars">Реферальный код должен содержать только буквы и цифры</string>
+    <string name="add_referral_error_not_found">Реферальный код не найден</string>
+    <string name="add_referral_error_network">Не удалось проверить реферальный код. Попробуйте ещё раз.</string>
     <string name="cacao_pool">пул CACAO</string>
     <string name="staked_ruji_header">Стейкинг RUJI</string>
     <string name="staked_tcy_header">Стейкинг TCY</string>

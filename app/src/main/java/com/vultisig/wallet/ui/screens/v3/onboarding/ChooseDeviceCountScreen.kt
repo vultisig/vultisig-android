@@ -39,6 +39,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v3.HorizontalAnimatedPager
 import com.vultisig.wallet.ui.components.v3.V3Icon
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
@@ -50,7 +51,8 @@ import com.vultisig.wallet.ui.screens.v3.onboarding.components.DeviceCountSelect
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
-private val DescriptionShape = RoundedCornerShape(24.dp)
+private val DescriptionShape =
+    RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 20.dp, bottomEnd = 20.dp)
 
 @Composable
 internal fun ChooseDeviceCountScreen(viewModel: ChooseDeviceCountViewModel = hiltViewModel()) {
@@ -75,6 +77,7 @@ private fun ChooseDeviceCountScreen(
                 VsButton(
                     label = stringResource(R.string.referral_onboarding_get_started),
                     modifier = Modifier.fillMaxWidth(),
+                    variant = VsButtonVariant.CTA,
                     onClick = { onEvent(ChooseDeviceCountUiEvent.Next) },
                 )
             }

@@ -16,11 +16,14 @@ import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
+import com.vultisig.wallet.ui.models.keygen.VaultBackupState
+import com.vultisig.wallet.ui.models.keygen.VerifyPinState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
+import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
@@ -48,6 +51,7 @@ class PreviewActivity : ComponentActivity() {
                     "send_tx_done" -> SendTxDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "empty_referral" -> EmptyReferralBanner(onClickedCreateReferral = {})
+                    "fast_vault_verification" -> FastVaultVerificationPreview()
                     "bond_form_thor" -> BondFormThorPreview()
                     "bond_form_maya" -> BondFormMayaPreview()
                     else -> SwapConfirmPreview()
@@ -115,6 +119,22 @@ private fun SwapConfirmPreview() {
         onFastSignClick = {},
         onConfirm = {},
         onBackClick = {},
+    )
+}
+
+@Composable
+private fun FastVaultVerificationPreview() {
+    FastVaultVerificationScreen(
+        state =
+            VaultBackupState(
+                verifyPinState = VerifyPinState.Idle,
+                sentEmailTo = "user@example.com",
+            ),
+        codeFieldState = TextFieldState(),
+        onBackClick = {},
+        onCodeChanged = {},
+        onPasteClick = {},
+        onChangeEmailClick = {},
     )
 }
 

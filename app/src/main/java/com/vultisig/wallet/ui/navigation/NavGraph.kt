@@ -53,7 +53,6 @@ import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.DeFiChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ImportFileScreen
 import com.vultisig.wallet.ui.screens.OnRampScreen
-import com.vultisig.wallet.ui.screens.QrAddressScreen
 import com.vultisig.wallet.ui.screens.SecretScreen
 import com.vultisig.wallet.ui.screens.ShareVaultQrScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
@@ -108,7 +107,6 @@ import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.send.sendScreen
 import com.vultisig.wallet.ui.screens.settings.CheckForUpdateScreen
 import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
-import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreen
 import com.vultisig.wallet.ui.screens.settings.FaqSettingScreen
 import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
@@ -130,7 +128,6 @@ import com.vultisig.wallet.ui.screens.v3.onboarding.EnterVaultInfoScreen
 import com.vultisig.wallet.ui.screens.v3.onboarding.ReviewVaultDevicesScreen
 import com.vultisig.wallet.ui.screens.v3.onboarding.SetupVaultInfoScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
-import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.security.SecurityScannerEnableScreen
 import com.vultisig.wallet.ui.theme.slideInFromBottomEnterTransition
@@ -210,8 +207,6 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
 
         composable<Route.Settings> { SettingsScreen() }
 
-        composable<Route.DefaultChainSetting> { DefaultChainSetting(navController = navController) }
-
         composable<Route.FAQSetting> { FaqSettingScreen(navController = navController) }
 
         composable<Route.DiscountTiers> { DiscountTiersScreen() }
@@ -222,17 +217,13 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             CurrencyUnitSettingScreen(navController = navController)
         }
 
-        composable<Route.QrAddressScreen> { QrAddressScreen(navController = navController) }
-
         composable<Route.ConfirmDelete> { ConfirmDeleteScreen(navController) }
 
         composable<Route.ShareVaultQr> { ShareVaultQrScreen(navController = navController) }
 
         dialog<Route.CustomToken> { CustomTokenScreen() }
 
-        composable<Route.ReshareStartScreen> { ReshareStartScreen(navController) }
-
-        composable<Route.BiometricsEnable> { BiometricsEnableScreen(navController) }
+        composable<Route.ReshareStartScreen> { ReshareStartScreen() }
 
         composable<Route.OnChainSecurity> { SecurityScannerEnableScreen(navController) }
 

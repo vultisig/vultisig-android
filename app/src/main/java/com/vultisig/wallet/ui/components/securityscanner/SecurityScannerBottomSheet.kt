@@ -1,19 +1,17 @@
 package com.vultisig.wallet.ui.components.securityscanner
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -22,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -32,7 +29,6 @@ import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
-import com.vultisig.wallet.ui.components.buttons.VsButtonState.Disabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
 import com.vultisig.wallet.ui.theme.Theme
@@ -48,8 +44,8 @@ internal fun SecurityScannerBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        containerColor = Theme.v2.colors.backgrounds.secondary,
-        shape = RoundedCornerShape(24.dp),
+        containerColor = Theme.v2.colors.backgrounds.background,
+        shape = RoundedCornerShape(topStart = 38.dp, topEnd = 38.dp),
         dragHandle = null,
     ) {
         SecurityScannerBottomSheetContent(
@@ -69,8 +65,8 @@ internal fun SettingsSecurityScannerBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        containerColor = Theme.v2.colors.backgrounds.secondary,
-        shape = RoundedCornerShape(24.dp),
+        containerColor = Theme.v2.colors.backgrounds.background,
+        shape = RoundedCornerShape(topStart = 38.dp, topEnd = 38.dp),
         dragHandle = null,
     ) {
         SecurityScannerBottomSheetContent(
@@ -92,13 +88,13 @@ fun SecurityScannerBottomSheetContent(
     Column(
         modifier = Modifier.padding(16.dp).fillMaxWidth().navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         Icon(
-            imageVector = contentStyle.image,
+            painter = painterResource(contentStyle.image),
             contentDescription = "Warning",
             tint = contentStyle.imageColor,
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(24.dp),
         )
 
         Text(
@@ -137,26 +133,27 @@ fun SecurityScannerBottomSheetContent(
             }
         }
 
-        VsButton(
-            label = stringResource(R.string.security_scanner_continue_go_back),
-            variant = Primary,
-            state = Enabled,
-            size = Medium,
-            onClick = onDismissRequest,
+        Column(
             modifier = Modifier.fillMaxWidth(),
-        )
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            VsButton(
+                label = stringResource(R.string.security_scanner_continue_go_back),
+                variant = Primary,
+                state = Enabled,
+                size = Medium,
+                onClick = onDismissRequest,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
-        VsButton(
-            label = stringResource(R.string.security_scanner_continue_anyway),
-            variant = Primary,
-            state = Disabled,
-            size = Medium,
-            forceClickable = true,
-            onClick = onContinueAnyway,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.security_scanner_continue_anyway),
+                color = Color(0xFF718096),
+                style = Theme.brockmann.supplementary.captionSmall,
+                modifier = Modifier.clickable { onContinueAnyway() },
+            )
+        }
     }
 }
 
@@ -175,9 +172,9 @@ fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerB
     val description = description ?: stringResource(R.string.security_scanner_default_description)
     val (color, icon) =
         if (riskLevel == SecurityRiskLevel.CRITICAL || riskLevel == SecurityRiskLevel.HIGH) {
-            Pair(Theme.v2.colors.alerts.error, Icons.Outlined.Warning)
+            Pair(Theme.v2.colors.alerts.error, R.drawable.ic_triangle_alert)
         } else {
-            Pair(Theme.v2.colors.alerts.warning, Icons.Outlined.Info)
+            Pair(Theme.v2.colors.alerts.warning, R.drawable.alert)
         }
 
     return SecurityScannerBottomSheetStyle(
@@ -194,12 +191,12 @@ private fun buildSettingsSecurityScannerBottomSheeStyle() =
         title = stringResource(R.string.vault_settings_security_screen_title_bottomsheet),
         description = stringResource(R.string.vault_settings_security_screen_content_bottomsheet),
         imageColor = Theme.v2.colors.alerts.warning,
-        image = Icons.Outlined.Info,
+        image = R.drawable.alert,
     )
 
 data class SecurityScannerBottomSheetStyle(
     val title: String,
     val description: String,
-    val image: ImageVector,
+    @DrawableRes val image: Int,
     val imageColor: Color,
 )

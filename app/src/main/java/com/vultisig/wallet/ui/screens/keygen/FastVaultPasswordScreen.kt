@@ -19,7 +19,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +43,8 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
+import com.vultisig.wallet.ui.components.referral.AddReferralBottomSheet
+import com.vultisig.wallet.ui.components.referral.AddReferralHeaderButton
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.utils.roundToPx
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordUiModel
@@ -53,12 +57,16 @@ import com.vultisig.wallet.ui.utils.asString
 @Composable
 internal fun FastVaultPasswordScreen(model: FastVaultPasswordViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
+    var showReferralSheet by rememberSaveable { mutableStateOf(false) }
+    val referralCode by model.referralCode.collectAsState()
 
     FastVaultPasswordScreen(
         title = stringResource(R.string.fast_vault_password_screen_title),
         state = state,
         passwordTextFieldState = model.passwordTextFieldState,
         confirmPasswordTextFieldState = model.confirmPasswordTextFieldState,
+        hasReferral = !referralCode.isNullOrEmpty(),
+        onReferralClick = { showReferralSheet = true },
         onNextClick = model::navigateToHint,
         onBackClick = model::back,
         onShowMoreInfo = model::showMoreInfo,
@@ -66,6 +74,13 @@ internal fun FastVaultPasswordScreen(model: FastVaultPasswordViewModel = hiltVie
         onTogglePasswordVisibilityClick = model::togglePasswordVisibility,
         onToggleConfirmPasswordVisibilityClick = model::toggleConfirmPasswordVisibility,
     )
+
+    if (showReferralSheet) {
+        AddReferralBottomSheet(
+            onApply = { _ -> showReferralSheet = false },
+            onDismissRequest = { showReferralSheet = false },
+        )
+    }
 }
 
 @Composable
@@ -74,6 +89,8 @@ internal fun FastVaultPasswordScreen(
     passwordTextFieldState: TextFieldState,
     confirmPasswordTextFieldState: TextFieldState,
     title: String,
+    hasReferral: Boolean = false,
+    onReferralClick: () -> Unit = {},
     onNextClick: () -> Unit,
     onBackClick: () -> Unit,
     onShowMoreInfo: () -> Unit,
@@ -87,6 +104,7 @@ internal fun FastVaultPasswordScreen(
     V2Scaffold(
         title = null,
         onBackClick = onBackClick,
+        actions = { AddReferralHeaderButton(hasReferral = hasReferral, onClick = onReferralClick) },
         content = {
             Column {
                 Text(

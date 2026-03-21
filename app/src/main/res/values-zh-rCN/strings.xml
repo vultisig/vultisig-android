@@ -209,7 +209,6 @@
     <!-- Settings Titles -->
     <string name="language_setting_screen_title">语言</string>
     <string name="currency_unit_setting_screen_title">货币\n</string>
-    <string name="default_chain_screen_title">默认区块链</string>
     <string name="faq_setting_screen_title">常见问题</string>
 
     <!-- Verify Transaction -->
@@ -227,7 +226,6 @@
     <!-- Camera & QR -->
     <string name="camera_permission_denied">相机权限未授予。请在设置中启用。</string>
     <string name="join_keysign_discovering_session_id">发现会话 ID</string>
-    <string name="qr_address_screen_title">地址</string>
 
     <!-- Transaction Done -->
     <string name="transaction_done_title">完成</string>
@@ -403,7 +401,6 @@
     <!-- Share Vault QR -->
     <string name="share_vault_qr_title">分享金库二维码</string>
     <string name="share_vault_qr_save">保存</string>
-    <string name="vault_settings_enable_biometrics_save">保存</string>
     <string name="share_vault_qr_share">分享</string>
 
     <!-- Deposit Form -->
@@ -480,10 +477,6 @@
     <string name="vault_settings_security_screen_title_content">您可以禁用由 Blockaid 提供的实时链上安全。</string>
     <string name="vault_settings_security_screen_title">安全</string>
 
-    <!-- Vault Settings Biometrics -->
-    <string name="vault_settings_biometrics_screen_title">启用生物识别</string>
-    <string name="vault_settings_biometrics_screen_description">输入快速签名密码</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder">在此输入</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled">快速签名生物识别已启用</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled">快速签名生物识别已禁用</string>
 
@@ -589,8 +582,6 @@
     <!-- Transaction Complete -->
     <string name="transaction_complete_screen_title">交易完成</string>
 
-    <!-- QR Address Screen -->
-    <string name="qr_address_screen_description">%1$s 地址：\n%2$s</string>
 
     <!-- Join Keysign -->
     <string name="join_keysign_wrong_vault">选择了错误的金库</string>
@@ -1476,6 +1467,21 @@
     <string name="server_backup_error_too_many_requests">备份请求过多。请稍后重试。</string>
     <string name="server_backup_error_bad_request">出错了。请检查您的信息并重试。</string>
     <string name="resend_notification">重新发送通知</string>
+    <string name="apy_approx">APY（约）</string>
+    <string name="apy_approx_hint_title">奖励</string>
+    <string name="apy_approx_hint_message">奖励将自动计入您的余额。</string>
+
+    <!-- Add Referral during vault setup -->
+    <string name="add_referral">添加推荐</string>
+    <string name="referral_added">推荐已添加</string>
+    <string name="add_referral_sheet_title">推荐码</string>
+    <string name="add_referral_sheet_description">在此输入您的推荐码。每笔交易享受10%折扣。</string>
+    <string name="add_referral_sheet_placeholder">输入最多4个字符</string>
+    <string name="add_referral_sheet_apply">应用推荐</string>
+    <string name="add_referral_error_length">推荐码最多4个字符</string>
+    <string name="add_referral_error_chars">推荐码只能包含字母和数字</string>
+    <string name="add_referral_error_not_found">推荐码未找到</string>
+    <string name="add_referral_error_network">检查推荐码失败，请重试。</string>
     <string name="cacao_pool">CACAO 池</string>
     <string name="staked_ruji_header">已质押 RUJI</string>
     <string name="staked_tcy_header">已质押 TCY</string>

@@ -8,12 +8,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
@@ -23,16 +26,24 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
@@ -49,7 +60,9 @@ import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGroupUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
+import com.vultisig.wallet.ui.components.v2.utils.roundToPx
 import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
+import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
@@ -142,8 +155,15 @@ private fun BalanceBannerLoadingPreview() {
 }
 
 @Composable
-fun InfoItem(icon: Int, label: String, value: String?) {
-    Column(horizontalAlignment = Alignment.Start) {
+fun InfoItem(
+    modifier: Modifier = Modifier,
+    icon: Int,
+    label: String,
+    value: String?,
+    onMoreInfoClick: (() -> Unit)? = null,
+    onMoreInfoIconModifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.Start) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             UiIcon(
                 size = 16.dp,
@@ -159,6 +179,17 @@ fun InfoItem(icon: Int, label: String, value: String?) {
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.body.s.medium,
             )
+
+            if (onMoreInfoClick != null) {
+                UiSpacer(size = 4.dp)
+
+                UiIcon(
+                    drawableResId = R.drawable.circleinfo,
+                    size = 16.dp,
+                    tint = Theme.v2.colors.text.tertiary,
+                    modifier = onMoreInfoIconModifier.clickable { onMoreInfoClick() },
+                )
+            }
         }
 
         if (value != null) {
@@ -531,11 +562,81 @@ internal fun HeaderDeFiWidget(
 
         UiSpacer(16.dp)
 
+        ApyApproxWithHint()
+
+        UiSpacer(16.dp)
+
         VsButton(
             label = buttonText,
             modifier = Modifier.fillMaxWidth(),
             onClick = onClickAction,
             state = VsButtonState.Enabled,
+        )
+    }
+}
+
+@Composable
+private fun ApyApprox(
+    modifier: Modifier = Modifier,
+    apy: String = "1%",
+    onMoreInfoClick: (() -> Unit)? = null,
+    onMoreInfoIconModifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        InfoItem(
+            icon = R.drawable.ic_icon_percentage,
+            label = stringResource(R.string.apy_approx),
+            value = null,
+            modifier = Modifier.fillMaxHeight(),
+            onMoreInfoClick = onMoreInfoClick,
+            onMoreInfoIconModifier = onMoreInfoIconModifier,
+        )
+
+        UiSpacer(1f)
+        Text(
+            text = apy,
+            style = Theme.brockmann.body.m.medium,
+            color = Theme.v2.colors.alerts.success,
+        )
+    }
+}
+
+@Composable
+private fun ApyApproxWithHint(modifier: Modifier = Modifier, apy: String = "1%") {
+    var showHint by remember { mutableStateOf(false) }
+    var iconPosition by remember { mutableStateOf(Offset.Zero) }
+    var boxCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var hintBoxSize by remember { mutableStateOf(IntSize.Zero) }
+    val iconSize = 16.dp
+
+    Box(modifier = modifier.onGloballyPositioned { boxCoords = it }) {
+        ApyApprox(
+            apy = apy,
+            onMoreInfoClick = { showHint = !showHint },
+            onMoreInfoIconModifier =
+                Modifier.onGloballyPositioned { coordinates ->
+                    iconPosition =
+                        boxCoords?.localPositionOf(coordinates, Offset.Zero) ?: Offset.Zero
+                },
+        )
+
+        HintBox(
+            modifier = Modifier.width(200.dp).onGloballyPositioned { hintBoxSize = it.size },
+            isVisible = showHint,
+            title = stringResource(R.string.apy_approx_hint_title),
+            message = stringResource(R.string.apy_approx_hint_message),
+            offset =
+                IntOffset(
+                    x =
+                        iconPosition.x.toInt() - hintBoxSize.width.div(2) +
+                            iconSize.roundToPx().div(2),
+                    y = (iconPosition.y - hintBoxSize.height).toInt(),
+                ),
+            onDismissClick = { showHint = false },
+            isPointerTriangleOnTop = false,
         )
     }
 }
@@ -608,6 +709,10 @@ internal fun HeaderDeFiWidget(
         UiSpacer(16.dp)
 
         UiHorizontalDivider(color = Theme.v2.colors.border.light)
+
+        UiSpacer(16.dp)
+
+        ApyApproxWithHint()
 
         UiSpacer(16.dp)
 
@@ -786,6 +891,22 @@ private fun ActionButtonsRowPreview() {
                 onClick = {},
             )
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Header DeFi Widget - Two Actions")
+@Composable
+private fun HeaderDeFiWidgetTwoActionsPreview() {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
+        HeaderDeFiWidget(
+            title = "USDC Deposit",
+            iconRes = R.drawable.usdc,
+            buttonFirstActionText = "Withdraw",
+            buttonSecondActionText = "Deposit USDC",
+            onClickFirstAction = {},
+            onClickSecondAction = {},
+            totalAmount = "0.7031 USDC",
+        )
     }
 }
 

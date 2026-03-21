@@ -95,7 +95,7 @@ import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.utils.timerFlow
-import com.vultisig.wallet.ui.components.TokenLogo
+import com.vultisig.wallet.ui.components.TokenAndChainLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -644,6 +644,7 @@ private fun VultDiscountTier(vultBpsDiscount: Int, tierType: TierType?) {
             TierType.GOLD -> R.string.vault_tier_gold to R.drawable.type_gold_tier__size_small
             TierType.PLATINUM ->
                 R.string.vault_tier_platinum to R.drawable.type_platinum_tier__size_small
+
             TierType.DIAMOND -> R.string.vault_tier_diamond to R.drawable.type_diamond__size_small
             TierType.ULTIMATE -> R.string.vault_tier_ultimate to R.drawable.tier_ultimate
             else -> null to null
@@ -831,11 +832,15 @@ internal fun TokenChip(
                 )
                 .padding(all = 6.dp),
     ) {
-        TokenLogo(
-            errorLogoModifier = Modifier.size(32.dp).background(Theme.v2.colors.neutrals.n100),
-            logo = selectedToken?.tokenLogo ?: "",
-            title = selectedToken?.title ?: "",
-            modifier = Modifier.size(32.dp),
+        TokenAndChainLogo(
+            tokenLogo = selectedToken?.tokenLogo ?: "",
+            tokenTicker = selectedToken?.title ?: "",
+            chainLogo =
+                selectedToken?.chainLogo.takeIf {
+                    selectedToken?.isNativeToken == false || selectedToken?.isLayer2 == true
+                },
+            chainLogoSize = 16.dp,
+            tokenLogoSize = 36.dp,
         )
 
         UiSpacer(8.dp)

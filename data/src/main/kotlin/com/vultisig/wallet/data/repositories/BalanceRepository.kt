@@ -446,7 +446,9 @@ constructor(
                             ZkSync,
                             Sei,
                             Hyperliquid -> {
-                                evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
+                                evmApiFactory
+                                    .createEvmApi(coin.chain)
+                                    .getBalance(coin.copy(address = address))
                             }
 
                             GaiaChain,

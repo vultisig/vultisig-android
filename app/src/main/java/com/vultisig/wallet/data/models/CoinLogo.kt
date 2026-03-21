@@ -2,6 +2,19 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.R
 
+internal fun getProviderLogo(providerName: String): ImageModel? {
+    return when (providerName.lowercase()) {
+        "thorchain" -> R.drawable.rune
+        "maya" -> R.drawable.maya
+        "jupiter" -> R.drawable.jup
+        "uni" -> R.drawable.uni
+        "1inch" -> R.drawable.oneinch
+        "kyberswap" -> R.drawable.kyberswap
+        "li.fi" -> R.drawable.lifi
+        else -> null
+    }
+}
+
 internal fun getCoinLogo(logoName: String): ImageModel {
     return when (logoName.lowercase()) {
         "btc" -> R.drawable.bitcoin

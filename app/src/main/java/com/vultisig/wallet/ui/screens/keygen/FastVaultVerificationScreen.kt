@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,7 +27,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -73,7 +74,7 @@ internal fun FastVaultVerificationScreen(model: FastVaultVerificationViewModel =
 }
 
 @Composable
-private fun FastVaultVerificationScreen(
+internal fun FastVaultVerificationScreen(
     state: VaultBackupState,
     codeFieldState: TextFieldState,
     onBackClick: () -> Unit,
@@ -88,6 +89,7 @@ private fun FastVaultVerificationScreen(
     val hasClipContent = textToPaste != null
 
     V3Scaffold(
+        applyDefaultPaddings = false,
         title = null,
         onBackClick = onBackClick,
         content = {
@@ -101,13 +103,13 @@ private fun FastVaultVerificationScreen(
             )
 
             Column(
-                Modifier.imePadding().verticalScroll(scrollState),
+                Modifier.imePadding().padding(22.dp).verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 UiSpacer(size = 32.dp)
 
                 V3Icon(
-                    logo = R.drawable.icon_shield_solid,
+                    logo = R.drawable.icon_inbox_notification,
                     shinedBottom = Theme.v2.colors.alerts.info,
                     borderWidth = 1.5.dp,
                     borderColor = Theme.v2.colors.neutrals.n50.copy(alpha = 0.15f),
@@ -131,9 +133,7 @@ private fun FastVaultVerificationScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.spacedBy(6.dp, alignment = Alignment.CenterHorizontally),
-                    verticalAlignment = CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
                 ) {
                     VsCodeInputField(
                         textFieldState = codeFieldState,
@@ -147,14 +147,23 @@ private fun FastVaultVerificationScreen(
                             },
                         modifier = Modifier.testTag("FastVaultVerificationScreen.codeField"),
                     )
+                    UiSpacer(4.dp)
 
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier =
-                            Modifier.background(
+                            Modifier.width(78.dp)
+                                .height(46.dp)
+                                .background(
                                     color = Theme.v2.colors.backgrounds.secondary,
-                                    shape = CircleShape,
+                                    shape = RoundedCornerShape(size = 99.dp),
                                 )
+                                .border(
+                                    width = 1.dp,
+                                    color = Theme.v2.colors.border.extraLight,
+                                    shape = RoundedCornerShape(size = 99.dp),
+                                )
+                                .padding(horizontal = 12.dp, vertical = 12.dp)
                                 .clickable(
                                     enabled = hasClipContent,
                                     onClick = {
@@ -162,8 +171,7 @@ private fun FastVaultVerificationScreen(
                                             onPasteClick(textToPaste.toString())
                                         }
                                     },
-                                )
-                                .padding(horizontal = 17.dp, vertical = 12.dp),
+                                ),
                     ) {
                         Text(
                             text = stringResource(R.string.vault_backup_screen_paste),
@@ -229,14 +237,17 @@ private fun FastVaultVerificationScreen(
 
                                 Text(
                                     text = stringResource(R.string.backup_use_a_different_email),
-                                    color = Theme.v2.colors.text.secondary,
-                                    style = Theme.brockmann.body.s.medium,
+                                    color = Theme.v2.colors.variables.textButtonSecondaryLightDark,
+                                    style = Theme.brockmann.supplementary.caption,
                                     modifier =
-                                        Modifier.clip(shape = CircleShape)
-                                            .background(color = Theme.v2.colors.buttons.ctaDisabled)
-                                            .border(
+                                        Modifier.border(
                                                 width = 1.dp,
-                                                color = Theme.v2.colors.border.extraLight,
+                                                color = Theme.v2.colors.variables.bordersExtraLight,
+                                                shape = RoundedCornerShape(12.dp),
+                                            )
+                                            .background(
+                                                color = Theme.v2.colors.buttons.secondary,
+                                                shape = RoundedCornerShape(12.dp),
                                             )
                                             .padding(horizontal = 12.dp, vertical = 8.dp)
                                             .clickOnce(
