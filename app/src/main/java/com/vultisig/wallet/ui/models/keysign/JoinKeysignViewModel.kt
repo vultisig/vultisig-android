@@ -1081,7 +1081,13 @@ constructor(
     private fun onServerAddressDiscovered(address: String) {
         _serverAddress = address
         if (!payloadId.isEmpty() && tempKeysignMessageProto != null) {
-            viewModelScope.safeLaunch {
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    Timber.e(e, "Failed to fetch keysign payload")
+                    currentState.value =
+                        JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+                }
+            ) {
                 // when Payload is not in the QRCode
                 routerApi.getPayload(_serverAddress, payloadId).let { payload ->
                     if (payload.isNotEmpty()) {

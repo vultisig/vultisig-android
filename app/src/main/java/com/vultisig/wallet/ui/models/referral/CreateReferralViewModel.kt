@@ -55,6 +55,8 @@ internal data class CreateReferralUiState(
 internal interface FeesReferral {
     data object Loading : FeesReferral
 
+    data object Error : FeesReferral
+
     data class Result(
         val registrationFeesToken: String = "",
         val registrationFeesPrice: String = "",
@@ -108,7 +110,12 @@ constructor(
     }
 
     private fun loadFees() {
-        viewModelScope.safeLaunch {
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.e(e, "Failed to load referral fees")
+                state.update { it.copy(fees = FeesReferral.Error) }
+            }
+        ) {
             state.update { it.copy(fees = FeesReferral.Loading) }
 
             nativeRuneFees = withContext(Dispatchers.IO) { thorChainApi.getTHORChainReferralFees() }
