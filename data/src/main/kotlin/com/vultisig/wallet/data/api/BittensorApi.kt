@@ -169,7 +169,7 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
 
     private companion object {
         const val BITTENSOR_RPC_URL = "https://bittensor-finney.api.onfinality.io/public"
-        const val TAOSTATS_PROXY_URL = "https://api.vultisig.com/tao"
+        const val TAOSTATS_PROXY_URL = "https://api.vultisig.com/tao-tx"
         const val SYSTEM_ACCOUNT_PREFIX =
             "26aa394eea5630e07c48ae0c9558cef7b99d880ec681799c0cf30e8886371da9"
     }
