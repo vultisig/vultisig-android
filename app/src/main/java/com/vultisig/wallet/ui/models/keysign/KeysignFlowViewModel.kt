@@ -47,6 +47,7 @@ import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
@@ -142,6 +143,7 @@ constructor(
     private val transactionRepository: TransactionRepository,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
+    private val vaultRepository: VaultRepository,
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
     private val mapDepositTransactionUiModel: DepositTransactionToUiModelMapper,
     private val mapSwapTransactionToUiModel: SwapTransactionToUiModelMapper,
@@ -230,6 +232,7 @@ constructor(
                 addressBookRepository = addressBookRepository,
                 transactionStatusServiceManager = transactionStatusServiceManager,
                 txStatusConfigurationProvider = txStatusConfigurationProvider,
+                vaultRepository = vaultRepository,
                 transactionHistoryData = transactionHistoryData.value,
                 transactionHistoryRepository = transactionHistoryRepository,
             )

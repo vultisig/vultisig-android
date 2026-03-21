@@ -198,14 +198,17 @@ internal fun VerifySendScreen(
 
                     VerifyCardDetails(
                         title = stringResource(R.string.verify_transaction_from_title),
-                        subtitle = tx.srcAddress,
+                        subtitle = tx.srcVaultName ?: tx.srcAddress,
+                        bracketValue = tx.srcVaultName?.let { tx.srcAddress },
                     )
 
                     VerifyCardDivider(0.dp)
 
+                    val toDstLabel = tx.dstVaultName ?: tx.dstAddressBookTitle ?: tx.dstLabel
                     VerifyCardDetails(
                         title = stringResource(R.string.verify_transaction_to_title),
-                        subtitle = tx.dstAddress,
+                        subtitle = toDstLabel ?: tx.dstAddress,
+                        bracketValue = toDstLabel?.let { tx.dstAddress },
                     )
 
                     if (tx.memo != null) {

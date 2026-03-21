@@ -12,6 +12,7 @@ data class Transaction(
     val token: Coin,
     val srcAddress: String,
     val dstAddress: String,
+    val dstLabel: String? = null,
     val tokenValue: TokenValue,
     val fiatValue: FiatValue,
     val gasFee: TokenValue,

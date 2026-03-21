@@ -9,7 +9,8 @@ enum class AppLanguage(val mainName: String, val engName: String?, val localeCod
     RU("Русский", "Russian", "ru"),
     NL("Nederlands", "Dutch", "nl"),
     PT("Português", "Portuguese", "pt"),
-    ZH_CN("简体中文", "Chinese (Simplified)", "zh-CN");
+    ZH_CN("简体中文", "Chinese (Simplified)", "zh-CN"),
+    KO("한국어", "Korean", "ko");
 
     companion object {
         fun String.fromName(): AppLanguage {
@@ -24,6 +25,7 @@ enum class AppLanguage(val mainName: String, val engName: String?, val localeCod
                 "Nederlands" -> NL
                 "Português" -> PT
                 "简体中文" -> ZH_CN
+                "한국어" -> KO
                 else -> error("lang name not defined AppLanguage")
             }
         }

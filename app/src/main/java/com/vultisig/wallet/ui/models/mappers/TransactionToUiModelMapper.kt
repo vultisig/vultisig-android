@@ -26,6 +26,7 @@ constructor(
                 ),
             srcAddress = from.srcAddress,
             dstAddress = from.dstAddress,
+            dstLabel = from.dstLabel,
             memo = from.memo,
             signAmino = from.signAmino,
             signDirect = from.signDirect,
