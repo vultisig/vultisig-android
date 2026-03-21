@@ -659,7 +659,14 @@ constructor(
                 }
             }
 
-        viewModelScope.safeLaunch { withContext(Dispatchers.IO) { updateKeysignPayload(context) } }
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.e(e, "Failed to update keysign payload")
+                moveToState(Error(e.message ?: "Failed to update keysign payload"))
+            }
+        ) {
+            withContext(Dispatchers.IO) { updateKeysignPayload(context) }
+        }
     }
 
     private suspend fun startKeysign() {
