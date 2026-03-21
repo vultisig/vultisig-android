@@ -157,10 +157,6 @@ constructor(
         onPushNotificationReceived(qrCodeData)
     }
 
-    fun onForegroundBannerDismissed() {
-        _foregroundNotification.value = null
-    }
-
     fun onPushNotificationReceived(qrCodeData: String) {
         viewModelScope.safeLaunch {
             _navigationReady.await()

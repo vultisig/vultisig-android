@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -51,10 +54,20 @@ private val RevealedTopPadding = 32.dp
 internal fun KeyImportFeatureSpotlightScreen(
     model: KeyImportFeatureSpotlightViewModel = hiltViewModel()
 ) {
-    var revealed by remember { mutableStateOf(false) }
-    var contentVisible by remember { mutableStateOf(false) }
+    KeyImportFeatureSpotlightScreenContent(onBack = model::back, onGetStarted = model::getStarted)
+}
+
+@Composable
+private fun KeyImportFeatureSpotlightScreenContent(
+    onBack: () -> Unit = {},
+    onGetStarted: () -> Unit = {},
+    skipAnimation: Boolean = false,
+) {
+    var revealed by remember { mutableStateOf(skipAnimation) }
+    var contentVisible by remember { mutableStateOf(skipAnimation) }
 
     LaunchedEffect(Unit) {
+        if (skipAnimation) return@LaunchedEffect
         delay(3000)
         revealed = true
         delay(700)
@@ -78,69 +91,84 @@ internal fun KeyImportFeatureSpotlightScreen(
             label = "contentAlpha",
         )
 
-    V2Scaffold(onBackClick = model::back) {
-        Column(modifier = Modifier.fillMaxSize().onSizeChanged { availableHeightPx = it.height }) {
-            Spacer(modifier = Modifier.height(riveTop))
+    val effectiveRiveTop = if (skipAnimation) RevealedTopPadding else riveTop
+    val effectiveContentAlpha = if (skipAnimation) 1f else contentAlpha
 
-            RiveAnimation(
-                animation = R.raw.riv_import_seedphrase,
-                modifier = Modifier.fillMaxWidth().height(RiveHeight),
-                fit = Fit.CONTAIN,
+    V2Scaffold(
+        onBackClick = onBack,
+        bottomBar = {
+            VsButton(
+                label = stringResource(R.string.key_import_spotlight_get_started),
+                onClick = onGetStarted,
+                modifier = Modifier.fillMaxWidth(),
             )
-
-            Spacer(modifier = Modifier.weight(1f))
-
+        },
+        content = {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).alpha(contentAlpha)
-            ) {
-                Text(
-                    text = stringResource(R.string.key_import_spotlight_before_you_start),
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.secondary,
-                )
-
-                UiSpacer(12.dp)
-
-                val headingText = buildAnnotatedString {
-                    append(stringResource(R.string.key_import_spotlight_heading_part1))
-                    withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
-                        append(stringResource(R.string.key_import_spotlight_heading_highlight))
+                modifier =
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).onSizeChanged {
+                        availableHeightPx = it.height
                     }
-                    append(stringResource(R.string.key_import_spotlight_heading_part2))
+            ) {
+                Spacer(modifier = Modifier.height(effectiveRiveTop))
+
+                RiveAnimation(
+                    animation = R.raw.riv_import_seedphrase,
+                    modifier = Modifier.fillMaxWidth().height(RiveHeight),
+                    fit = Fit.CONTAIN,
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Column(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                            .alpha(effectiveContentAlpha)
+                ) {
+                    Text(
+                        text = stringResource(R.string.key_import_spotlight_before_you_start),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.secondary,
+                    )
+
+                    UiSpacer(12.dp)
+
+                    val headingText = buildAnnotatedString {
+                        append(stringResource(R.string.key_import_spotlight_heading_part1))
+                        withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
+                            append(stringResource(R.string.key_import_spotlight_heading_highlight))
+                        }
+                        append(stringResource(R.string.key_import_spotlight_heading_part2))
+                    }
+
+                    Text(
+                        text = headingText,
+                        style = Theme.brockmann.headings.title2.copy(lineHeight = 30.sp),
+                        color = Theme.v2.colors.text.primary,
+                    )
+
+                    UiSpacer(32.dp)
+
+                    BulletItem(
+                        icon = R.drawable.ic_seedphrase,
+                        title = stringResource(R.string.key_import_spotlight_seedphrase_title),
+                        description = stringResource(R.string.key_import_spotlight_seedphrase_desc),
+                    )
+
+                    UiSpacer(24.dp)
+
+                    BulletItem(
+                        icon = R.drawable.ic_devices,
+                        title = stringResource(R.string.key_import_spotlight_device_title),
+                        description = stringResource(R.string.key_import_spotlight_device_desc),
+                    )
+
+                    UiSpacer(65.dp)
                 }
-
-                Text(
-                    text = headingText,
-                    style = Theme.brockmann.headings.title2.copy(lineHeight = 30.sp),
-                    color = Theme.v2.colors.text.primary,
-                )
-
-                UiSpacer(32.dp)
-
-                BulletItem(
-                    icon = R.drawable.ic_seedphrase,
-                    title = stringResource(R.string.key_import_spotlight_seedphrase_title),
-                    description = stringResource(R.string.key_import_spotlight_seedphrase_desc),
-                )
-
-                UiSpacer(24.dp)
-
-                BulletItem(
-                    icon = R.drawable.ic_devices,
-                    title = stringResource(R.string.key_import_spotlight_device_title),
-                    description = stringResource(R.string.key_import_spotlight_device_desc),
-                )
-
-                UiSpacer(65.dp)
-
-                VsButton(
-                    label = stringResource(R.string.key_import_spotlight_get_started),
-                    onClick = model::getStarted,
-                    modifier = Modifier.fillMaxWidth(),
-                )
             }
-        }
-    }
+        },
+    )
 }
 
 @Composable
@@ -166,4 +194,10 @@ private fun BulletItem(icon: Int, title: String, description: String) {
             )
         }
     }
+}
+
+@Composable
+@Preview(widthDp = 360, heightDp = 640)
+private fun KeyImportFeatureSpotlightScreenPreview() {
+    KeyImportFeatureSpotlightScreenContent(skipAnimation = true)
 }

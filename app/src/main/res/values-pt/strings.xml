@@ -111,7 +111,6 @@
     <string name="verify_transaction_join_keysign">Juntar-se à assinatura de chave</string>
     <string name="verify_transaction_consent_address">Estou enviando para o endereço correto</string>
     <string name="verify_transaction_consent_amount">A quantidade está correta</string>
-    <string name="qr_address_screen_title">Endereço</string>
     <string name="transaction_done_title">Concluído</string>
     <string name="transaction_done_complete">Continuar</string>
     <string name="transaction_done_form_title">Transação</string>
@@ -313,7 +312,6 @@
     <string name="do_not_remind_me_again">Não me lembre outra vez</string>
     <string name="monthly_backup_reminder_title">Não se esqueça de fazer uma cópia de segurança das partilhas do cofre e verificar se estão completas.</string>
     <string name="transaction_complete_screen_title">Transação concluída</string>
-    <string name="qr_address_screen_description">Endereço %1$s:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Cofre errado selecionado</string>
     <string name="verify_swap_screen_total_fees">Taxas totais</string>
     <string name="scan_qr_code_error_text">O código QR não relacionado é digitalizado</string>
