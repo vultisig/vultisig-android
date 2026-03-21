@@ -79,9 +79,9 @@ internal fun SearchBar(
                             listOf(Theme.v2.colors.primary.accent4, Theme.v2.colors.primary.accent4)
                     ),
                 modifier =
-                    Modifier.padding(all = 12.dp).focusRequester(focusRequester).onFocusChanged {
-                        isFocusedState = it.isFocused
-                    },
+                    Modifier.padding(horizontal = 12.dp)
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { isFocusedState = it.isFocused },
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Text,
