@@ -1098,7 +1098,7 @@ constructor(
                                 payloadId = payloadId,
                             )
                         if (handleKeysignMessage(keysignMsgProto)) {
-                            return@launch
+                            return@safeLaunch
                         }
                         currentState.value = JoinKeysignState.JoinKeysign
                     }
