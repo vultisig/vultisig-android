@@ -205,11 +205,7 @@ fun PreviewRChainSelectionItem3() {
 }
 
 @Composable
-private fun TokenUiGridLogo(
-    modifier: Modifier = Modifier,
-    tokens: TokenUiPair,
-    space: Float = 4f,
-) {
+private fun TokenUiGridLogo(modifier: Modifier = Modifier, tokens: TokenUiPair, space: Float = 4f) {
     val rightToken = tokens.right
     val leftToken = tokens.left
     val halfSpace = space / 2

@@ -38,7 +38,7 @@ internal fun RoundedBorderWithLeaf(
     val cornerRadiusPx = cornerRadius.toPx()
     val borderWidthPx = borderWidth.toPx()
     val leafWidthPx = leafXLength.toPx()
-    val leafHeighPx = leafYLength.toPx()
+    val leafHeightPx = leafYLength.toPx()
     val leafCornerTopLeftPx = leafCornerTopLeft.toPx()
     val leafCornerBottomRightPx = leafCornerBottomRight.toPx()
 
@@ -75,7 +75,7 @@ internal fun RoundedBorderWithLeaf(
                 ),
         )
 
-        val leafStartTop = borderExcludedHeight - leafHeighPx
+        val leafStartTop = borderExcludedHeight - leafHeightPx
         val leafStartLeft = borderExcludedWidth - leafWidthPx
         val leafPath = Path()
 
@@ -90,10 +90,7 @@ internal fun RoundedBorderWithLeaf(
                             right = leafStartLeft + borderExcludedWidth,
                             bottom = leafStartTop + borderExcludedHeight,
                             topLeftCornerRadius =
-                                CornerRadius(
-                                    x = leafCornerTopLeftPx,
-                                    y = leafCornerTopLeftPx,
-                                ),
+                                CornerRadius(x = leafCornerTopLeftPx, y = leafCornerTopLeftPx),
                             topRightCornerRadius = CornerRadius.Zero,
                             bottomRightCornerRadius =
                                 CornerRadius(
