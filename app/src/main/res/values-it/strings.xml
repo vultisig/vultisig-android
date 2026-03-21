@@ -108,7 +108,6 @@
     <string name="verify_transaction_join_keysign">Unisciti alla firma chiave</string>
     <string name="verify_transaction_consent_address">Sto inviando all\'indirizzo corretto</string>
     <string name="verify_transaction_consent_amount">La quantità è corretta</string>
-    <string name="qr_address_screen_title">Indirizzo</string>
     <string name="transaction_done_title">Fatto</string>
     <string name="transaction_done_complete">Completo</string>
     <string name="transaction_done_form_title">Transazione</string>
@@ -314,7 +313,6 @@
     <string name="do_not_remind_me_again">Non ricordarmelo più</string>
     <string name="monthly_backup_reminder_title">Non dimenticare di eseguire il backup delle condivisioni del vault e di verificarne la completezza.</string>
     <string name="transaction_complete_screen_title">Transazione completata</string>
-    <string name="qr_address_screen_description">%1$s indirizzo:\n %2$s</string>
     <string name="join_keysign_wrong_vault">È stato selezionato il caveau sbagliato</string>
     <string name="verify_swap_screen_total_fees">Totale commissioni</string>
     <string name="scan_qr_code_error_text">Il codice QR non correlato è stato scansionato</string>
