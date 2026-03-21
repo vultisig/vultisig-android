@@ -1177,7 +1177,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Server Backup</string>
     <string name="server_backup_email_label">Email</string>
-    <string name="server_backup_email_description">Enter the email to receive the vault share.</string>
+    <string name="server_backup_email_description">This email is used for cloud backup and shared with no third party</string>
     <string name="server_backup_email_error">Incorrect email, please check</string>
     <string name="server_backup_password_label">Password</string>
     <string name="server_backup_password_description">Enter the password you set when creating this Vault.</string>
