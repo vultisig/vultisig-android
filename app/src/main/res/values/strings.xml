@@ -159,7 +159,7 @@
     <string name="send_shares_currency_hint">Enter Shares</string>
     <string name="send_continue_button">Continue</string>
     <string name="send_percent" translatable="false">%d%%</string>
-    <string name="chain_account_view_swap">SWAP</string>
+    <string name="chain_account_view_swap">Swap</string>
     <string name="chain_account_view_deposit">DEPOSIT</string>
     <string name="chain_account_view_send">SEND</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
