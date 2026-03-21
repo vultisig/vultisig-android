@@ -24,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -60,8 +59,6 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.KeyboardAware
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.showReviewPopUp
-
-private val ChainTokensTopbarShineColor = Color(0xFF0439C7).copy(alpha = 0.35f)
 
 @Composable
 internal fun ChainTokensScreen(
@@ -126,7 +123,7 @@ internal fun ChainTokensScreen(
         backgroundColor = Theme.v2.colors.backgrounds.primary,
         topBarExpandedContent = {
             ExpandedTopbarContainer(
-                shineSpotColor = ChainTokensTopbarShineColor,
+                shineSpotColor = Theme.v2.colors.primary.accent2.copy(alpha = 0.35f),
                 shineSpotCenterXRatio = 0.92f,
                 shineSpotCenterYRatio = -0.15f,
                 shineSpotRadiusRatio = 0.45f,

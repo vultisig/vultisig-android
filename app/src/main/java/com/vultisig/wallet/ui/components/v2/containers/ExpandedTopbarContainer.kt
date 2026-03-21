@@ -3,7 +3,9 @@ package com.vultisig.wallet.ui.components.v2.containers
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -55,11 +57,11 @@ internal fun ExpandedTopbarContainer(
 @Composable
 private fun ExpandedTopbarContainerPreview() {
     ExpandedTopbarContainer(
-        shineSpotColor = Color(0xFF0439C7).copy(alpha = 0.35f),
+        shineSpotColor = Theme.v2.colors.primary.accent2.copy(alpha = 0.35f),
         shineSpotCenterXRatio = 0.92f,
         shineSpotCenterYRatio = -0.15f,
         shineSpotRadiusRatio = 0.45f,
     ) {
-        // preview content
+        Spacer(modifier = Modifier.height(112.dp))
     }
 }
