@@ -59,7 +59,6 @@ internal fun GridItem(
     uiModel: TokenSelectionGridUiModel,
     onCheckedChange: (Boolean) -> Unit = {},
 ) {
-
     val checked = uiModel.isChecked
     Column(
         modifier = modifier.toggleable(value = checked, onValueChange = onCheckedChange),
@@ -211,7 +210,6 @@ private fun TokenUiGridLogo(
     tokens: TokenUiPair,
     space: Float = 4f,
 ) {
-
     val rightToken = tokens.right
     val leftToken = tokens.left
     val halfSpace = space / 2
@@ -233,7 +231,6 @@ private fun TokenUiGridLogo(
 
 @Composable
 private fun TokenUiGridLogo(modifier: Modifier = Modifier, size: Dp = 28.dp, token: TokenUiSingle) {
-
     Box(modifier = modifier) {
         SubcomposeAsyncImage(
             model = token.logo,

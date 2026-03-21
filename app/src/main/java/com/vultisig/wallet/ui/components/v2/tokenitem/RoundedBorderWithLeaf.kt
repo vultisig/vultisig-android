@@ -35,7 +35,6 @@ internal fun RoundedBorderWithLeaf(
     checkMarkWidth: Float = 4f,
     checkMarkOffset: Offset = Offset(-4f, 8f),
 ) {
-
     val cornerRadiusPx = cornerRadius.toPx()
     val borderWidthPx = borderWidth.toPx()
     val leafWidthPx = leafXLength.toPx()
