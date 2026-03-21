@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.getPubKeyByChain
+import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -34,6 +35,7 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
+import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigInteger
 import javax.inject.Inject
@@ -52,7 +54,11 @@ internal data class TransactionDetailsUiModel(
     val networkFeeFiatValue: String = "",
     val networkFeeTokenValue: String = "",
     val srcAddress: String = "",
+    val srcVaultName: String? = null,
     val dstAddress: String = "",
+    val dstVaultName: String? = null,
+    val dstAddressBookTitle: String? = null,
+    val dstLabel: String? = null,
     val memo: String? = null,
     val signAmino: String? = null,
     val signDirect: String? = null,
@@ -99,6 +105,7 @@ constructor(
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
+    private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCase,
     private val tokenRepository: TokenRepository,
@@ -287,9 +294,40 @@ constructor(
                     }
             val transactionUiModel = mapTransactionToUiModel(transaction)
 
-            uiState.update { it.copy(transaction = transactionUiModel, isLoadingFees = true) }
+            val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+            val chain = transaction.token.chain
+            val srcVaultName = allVaults.find { it.id == vaultId }?.name
+            val normalizedDstAddress = normalizeAddressForLookup(transaction.dstAddress)
+            val dstVaultName =
+                allVaults
+                    .firstOrNull { vault ->
+                        vault.coins.any {
+                            it.chain == chain &&
+                                normalizeAddressForLookup(it.address) == normalizedDstAddress
+                        }
+                    }
+                    ?.name
+            val dstInAddressBook =
+                dstVaultName == null &&
+                    addressBookRepository.entryExists(chain.id, transaction.dstAddress)
+            val dstAddressBookTitle =
+                if (dstInAddressBook) {
+                    runCatching {
+                            addressBookRepository.getEntry(chain.id, transaction.dstAddress).title
+                        }
+                        .getOrNull()
+                } else null
 
-            calculateFees(transactionUiModel)
+            val namedUiModel =
+                transactionUiModel.copy(
+                    srcVaultName = srcVaultName,
+                    dstVaultName = dstVaultName,
+                    dstAddressBookTitle = dstAddressBookTitle,
+                )
+
+            uiState.update { it.copy(transaction = namedUiModel, isLoadingFees = true) }
+
+            calculateFees(namedUiModel)
             scanTransaction()
         }
     }

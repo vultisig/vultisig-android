@@ -102,6 +102,7 @@ import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -119,6 +120,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -301,6 +303,8 @@ constructor(
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
+    private val resolvedDstAddress = MutableStateFlow<String?>(null)
+    private val dstAddressLabel = MutableStateFlow<String?>(null)
 
     private var gasSettings = MutableStateFlow<GasSettings?>(null)
 
@@ -341,15 +345,51 @@ constructor(
         collectMaxAmount()
     }
 
+    @OptIn(FlowPreview::class)
     private fun collectAddress() {
         viewModelScope.launch {
             addressFieldState
                 .textAsFlow()
+                .debounce(300)
                 .combine(selectedToken.filterNotNull()) { address, token ->
-                    val isAddressValid =
-                        chainAccountAddressRepository.isValid(token.chain, address.toString())
-                    if (isAddressValid) {
+                    address.toString() to token
+                }
+                .mapLatest { (addressStr, token) ->
+                    if (chainAccountAddressRepository.isValid(token.chain, addressStr)) {
+                        // Only clear ENS label if the user typed a new raw address,
+                        // not when we programmatically set the field to the resolved address.
+                        if (addressStr != resolvedDstAddress.value) {
+                            dstAddressLabel.value = null
+                        }
+                        resolvedDstAddress.value = addressStr
                         expandSection(SendSections.Amount)
+                    } else if (addressStr.isNotEmpty()) {
+                        // Clear stale resolved address while async resolution is in-flight
+                        resolvedDstAddress.value = null
+                        dstAddressLabel.value = null
+                        try {
+                            val resolved =
+                                addressParserRepository.resolveName(addressStr, token.chain)
+                            // Ignore stale result if user changed input while resolving
+                            if (addressFieldState.text.toString() != addressStr) return@mapLatest
+                            if (chainAccountAddressRepository.isValid(token.chain, resolved)) {
+                                dstAddressLabel.value = addressStr
+                                resolvedDstAddress.value = resolved
+                                addressFieldState.setTextAndPlaceCursorAtEnd(resolved)
+                                expandSection(SendSections.Amount)
+                            } else {
+                                resolvedDstAddress.value = null
+                                dstAddressLabel.value = null
+                            }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {
+                            resolvedDstAddress.value = null
+                            dstAddressLabel.value = null
+                        }
+                    } else {
+                        resolvedDstAddress.value = null
+                        dstAddressLabel.value = null
                     }
                 }
                 .collect()
@@ -1105,17 +1145,26 @@ constructor(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
+                val rawInput = addressFieldState.text.toString()
                 val dstAddress =
                     try {
-                        addressParserRepository.resolveName(
-                            addressFieldState.text.toString(),
-                            chain,
-                        )
+                        addressParserRepository.resolveName(rawInput, chain)
                     } catch (e: Exception) {
                         Timber.e(e)
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.failed_to_resolve_address)
                         )
+                    }
+                // Use the label from collectAddress() if available (ENS/thorname was already
+                // resolved
+                // and the field was rewritten to the resolved address). Fall back to rawInput for
+                // cases where the user typed an ENS name and taps send before debounce completes.
+                val labelCandidate = dstAddressLabel.value ?: rawInput
+                val dstLabel =
+                    labelCandidate.takeIf {
+                        it.isNotBlank() &&
+                            !chainAccountAddressRepository.isValid(chain, it) &&
+                            chainAccountAddressRepository.isValid(chain, dstAddress)
                     }
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
@@ -1295,6 +1344,7 @@ constructor(
                         token = selectedToken,
                         srcAddress = srcAddress,
                         dstAddress = dstAddress,
+                        dstLabel = dstLabel,
                         tokenValue =
                             TokenValue(
                                 value = tokenAmountInt,
@@ -2478,7 +2528,7 @@ constructor(
                                             vaultHexPublicKey = vault.getPubKeyByChain(chain),
                                         ),
                                     amount = tokenAmountInt,
-                                    to = dst,
+                                    to = resolvedDstAddress.value ?: dst,
                                     memo = memo,
                                     isMax = false,
                                 )

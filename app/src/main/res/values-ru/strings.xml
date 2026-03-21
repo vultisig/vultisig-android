@@ -131,7 +131,6 @@
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
     <string name="camera_permission_denied">Разрешение на камеру не предоставлено. Пожалуйста, включите его в настройках.</string>
     <string name="join_keysign_discovering_session_id">Обнаружение ID сессии</string>
-    <string name="qr_address_screen_title">Адрес</string>
     <string name="transaction_done_title">Готово</string>
     <string name="transaction_done_complete">Завершено</string>
     <string name="transaction_done_form_title">Транзакция</string>
@@ -312,7 +311,6 @@
     <string name="do_not_remind_me_again">Не напоминай мне больше</string>
     <string name="monthly_backup_reminder_title">Не забудьте сделать резервную копию общих ресурсов хранилища и проверить их полноту.</string>
     <string name="transaction_complete_screen_title">Транзакция завершена</string>
-    <string name="qr_address_screen_description">%1$s адрес:\n %2$s</string>
     <string name="join_keysign_wrong_vault">Выбрано неправильное хранилище</string>
     <string name="verify_swap_screen_total_fees">Общая сумма сборов</string>
     <string name="scan_qr_code_error_text">Сканируется несвязанный QR-код</string>

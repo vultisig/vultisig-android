@@ -34,6 +34,8 @@ import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.put
 import timber.log.Timber
+import wallet.core.jni.AnyAddress
+import wallet.core.jni.CoinType
 
 interface EvmApi {
     suspend fun getBalance(coin: Coin): BigInteger
@@ -378,7 +380,6 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
     }
 
     override suspend fun resolveENS(namehash: String): String {
-
         val resolverAddress =
             fetchEns(
                 mapOf(
@@ -386,12 +387,17 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
                     "data" to "$FETCH_RESOLVER_PREFIX${namehash.stripHexPrefix()}",
                 )
             )
-        return fetchEns(
-            mapOf(
-                "to" to resolverAddress,
-                "data" to "$FETCH_ADDRESS_PREFIX${namehash.stripHexPrefix()}",
+        val resolved =
+            fetchEns(
+                mapOf(
+                    "to" to resolverAddress,
+                    "data" to "$FETCH_ADDRESS_PREFIX${namehash.stripHexPrefix()}",
+                )
             )
-        )
+        val hex = resolved.removePrefix("0x")
+        require(hex.length == 40) { "ENS resolved to invalid address: $resolved" }
+        require(hex.any { it != '0' }) { "ENS resolved to zero address" }
+        return AnyAddress(resolved, CoinType.ETHEREUM).description()
     }
 
     override suspend fun getBaseFee(): BigInteger {

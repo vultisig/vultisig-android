@@ -133,8 +133,8 @@ private fun TokenDetailsContent(
 
         Row(
             horizontalArrangement =
-                Arrangement.spacedBy(space = 12.dp, alignment = Alignment.CenterHorizontally),
-            modifier = Modifier.fillMaxWidth(),
+                Arrangement.spacedBy(space = 20.dp, alignment = Alignment.CenterHorizontally),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
         ) {
             if (uiModel.canSwap) {
                 TransactionTypeButton(

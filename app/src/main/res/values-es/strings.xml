@@ -131,7 +131,6 @@
     <string name="verify_transaction_consent_amount">La cantidad es correcta</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, revise todos los consentimientos</string>
     <string name="join_keysign_discovering_session_id">Descubriendo el ID de sesión</string>
-    <string name="qr_address_screen_title">Dirección</string>
     <string name="transaction_done_title">Hecho</string>
     <string name="transaction_done_complete">Completo</string>
     <string name="transaction_done_form_title">Transacción</string>
@@ -313,7 +312,6 @@
     <string name="do_not_remind_me_again">No me lo recuerdes otra vez</string>
     <string name="monthly_backup_reminder_title">No olvides hacer una copia de seguridad de tus recursos compartidos de bóveda y verificar que estén completos.</string>
     <string name="transaction_complete_screen_title">Transacción completada</string>
-    <string name="qr_address_screen_description">Dirección de %1$s:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Bóveda incorrecta seleccionada</string>
     <string name="verify_swap_screen_total_fees">Tarifas totales</string>
     <string name="scan_qr_code_error_text">Se escanea un código QR no relacionado</string>
