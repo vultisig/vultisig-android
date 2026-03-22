@@ -28,8 +28,8 @@ internal fun <T> FormSelection(
     selected: T,
     options: List<T>,
     onSelectOption: (T) -> Unit,
-    mapTypeToString: @Composable (T) -> String,
     embedInCard: Boolean = true,
+    mapTypeToString: @Composable (T) -> String,
 ) {
     var isListExpanded by remember { mutableStateOf(false) }
 
