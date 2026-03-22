@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.utils.decimals
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
@@ -53,6 +54,8 @@ internal data class CreateReferralUiState(
 
 internal interface FeesReferral {
     data object Loading : FeesReferral
+
+    data object Error : FeesReferral
 
     data class Result(
         val registrationFeesToken: String = "",
@@ -107,7 +110,12 @@ constructor(
     }
 
     private fun loadFees() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.e(e, "Failed to load referral fees")
+                state.update { it.copy(fees = FeesReferral.Error) }
+            }
+        ) {
             state.update { it.copy(fees = FeesReferral.Loading) }
 
             nativeRuneFees = withContext(Dispatchers.IO) { thorChainApi.getTHORChainReferralFees() }
@@ -130,13 +138,9 @@ constructor(
     }
 
     private fun loadAddress() {
-        viewModelScope.launch {
-            try {
-                accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect { address ->
-                    this@CreateReferralViewModel.address = address
-                }
-            } catch (e: Exception) {
-                Timber.e(e)
+        viewModelScope.safeLaunch(onError = { e -> Timber.e(e, "Failed to load address") }) {
+            accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect { address ->
+                this@CreateReferralViewModel.address = address
             }
         }
     }

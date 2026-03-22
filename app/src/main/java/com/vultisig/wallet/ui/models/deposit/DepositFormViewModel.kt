@@ -59,6 +59,7 @@ import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.getChain
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
@@ -545,7 +546,9 @@ constructor(
     }
 
     private fun collectSecuredAssetAddresses() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { Timber.e(it, "Failed to collect secured asset addresses") }
+        ) {
             val (thorAddress) =
                 chainAccountAddressRepository.getAddress(
                     chain = Chain.ThorChain,
