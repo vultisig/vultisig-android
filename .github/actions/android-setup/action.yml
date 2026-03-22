@@ -1,12 +1,9 @@
 name: Android Setup
-description: Checkout, set up JDK 21, init submodules, and make gradlew executable
+description: Set up JDK 21, init submodules, and make gradlew executable (requires prior checkout)
 
 runs:
   using: composite
   steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
