@@ -56,7 +56,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import wallet.core.jni.CoinType
 
 private val MAYA_BOND_POSITIONS_DIALOG: List<PositionUiModelDialog>
     get() =
@@ -139,6 +138,8 @@ constructor(
 
     private var observTotalRowJob: Job? = null
     private var savedPositionsJob: Job? = null
+    private var loadBondedJob: Job? = null
+    private var loadStakingJob: Job? = null
 
     private val currentModel: MayachainDefiPositionsUiModel
         get() =
@@ -193,8 +194,10 @@ constructor(
                 }
                 reloadLpTab()
 
-                launch { loadBondedNodes() }
-                launch { loadStakingPosition() }
+                loadBondedJob?.cancel()
+                loadBondedJob = launch { loadBondedNodes() }
+                loadStakingJob?.cancel()
+                loadStakingJob = launch { loadStakingPosition() }
             }
         }
 
@@ -250,7 +253,10 @@ constructor(
                                     status = node.node.state.fromApiStatus(),
                                     apy = node.apy.formatPercentage(),
                                     bondedAmount =
-                                        node.amount.formatAmount(CoinType.THORCHAIN, cacaoSymbol),
+                                        node.amount.formatAmount(
+                                            Coins.MayaChain.CACAO.decimal,
+                                            cacaoSymbol,
+                                        ),
                                     nextAward = formatCacaoReward(node.nextReward),
                                     nextChurn = node.nextChurn.formatDate(),
                                 )
@@ -259,7 +265,7 @@ constructor(
                         val totalBondedRaw =
                             activeNodes.fold(BigInteger.ZERO) { acc, node -> acc + node.amount }
                         val totalBonded =
-                            totalBondedRaw.formatAmount(CoinType.THORCHAIN, cacaoSymbol)
+                            totalBondedRaw.formatAmount(Coins.MayaChain.CACAO.decimal, cacaoSymbol)
 
                         val bondedPrice = calculateBondedFiatPrice(totalBondedRaw)
 
@@ -346,7 +352,7 @@ constructor(
                     }
                     .collect { details ->
                         _totalStakingRaw.value = details.stakeAmount
-                        val stakeAmount = CoinType.THORCHAIN.toValue(details.stakeAmount)
+                        val stakeAmount = details.stakeAmount.toValue(Coins.MayaChain.CACAO.decimal)
                         val stakedFiat = calculateStakingFiatPrice(stakeAmount)
                         val position =
                             StakePositionUiModel(
@@ -385,7 +391,7 @@ constructor(
         viewModelScope.launch {
             try {
                 val currency = appCurrencyRepository.currency.first()
-                val totalInCacao = CoinType.THORCHAIN.toValue(bondedRaw)
+                val totalInCacao = bondedRaw.toValue(Coins.MayaChain.CACAO.decimal)
                 val fiatValue = createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
                 val currencyFormat =
                     withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
@@ -419,7 +425,7 @@ constructor(
 
     private suspend fun calculateBondedFiatPrice(totalBondedRaw: BigInteger): String {
         return try {
-            val totalInCacao = CoinType.THORCHAIN.toValue(totalBondedRaw)
+            val totalInCacao = totalBondedRaw.toValue(Coins.MayaChain.CACAO.decimal)
             val currency = appCurrencyRepository.currency.first()
             val fiatValue = createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
             val currencyFormat =
@@ -559,8 +565,9 @@ constructor(
 
 private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
     val assetTicker = asset.substringAfter(".")
+    val coinName = assetTicker.substringBefore("-").lowercase()
     return PositionUiModelDialog(
-        logo = getCoinLogo(assetTicker.lowercase()),
+        logo = getCoinLogo(coinName),
         ticker = "$assetTicker/CACAO",
         isSelected = false,
     )
@@ -568,6 +575,7 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
 
 private fun formatCacaoReward(reward: Double): String {
     val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
-    val cacaoAmount = CoinType.THORCHAIN.toValue(rewardBase).setScale(4, RoundingMode.DOWN)
+    val cacaoAmount =
+        rewardBase.toValue(Coins.MayaChain.CACAO.decimal).setScale(4, RoundingMode.DOWN)
     return "${cacaoAmount.toPlainString()} ${Coins.MayaChain.CACAO.ticker}"
 }

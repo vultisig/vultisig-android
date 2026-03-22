@@ -82,8 +82,8 @@ constructor(
 
                 for (node in allNodes) {
                     val myBondMetrics =
-                        calculateBondMetrics(
-                            nodeAddress = node.nodeAddress,
+                        calculateBondMetricsFromNode(
+                            node = node,
                             myBondAddress = address,
                             networkApy = networkInfo.apy,
                         )
@@ -139,13 +139,12 @@ constructor(
         return Date((currentTimestamp * 1000).toLong() + (etaSeconds * 1000).toLong())
     }
 
-    private suspend fun calculateBondMetrics(
-        nodeAddress: String,
+    private fun calculateBondMetricsFromNode(
+        node: com.vultisig.wallet.data.api.MayaNodeInfo,
         myBondAddress: String,
         networkApy: Double,
     ): MayaBondMetrics {
-        val nodeData = mayachainBondRepository.getNodeDetails(nodeAddress)
-        val bondProviders = nodeData.bondProviders.providers
+        val bondProviders = node.bondProviders.providers
 
         var myBond = BigInteger.ZERO
         var totalBond = BigInteger.ZERO
@@ -166,14 +165,14 @@ constructor(
             }
 
         val nodeOperatorFee =
-            (nodeData.bondProviders.nodeOperatorFee.toBigDecimalOrNull() ?: BigDecimal.ZERO).divide(
+            (node.bondProviders.nodeOperatorFee.toBigDecimalOrNull() ?: BigDecimal.ZERO).divide(
                 BigDecimal(10_000),
                 8,
                 RoundingMode.DOWN,
             )
 
         val currentAward =
-            (nodeData.currentAward.toBigDecimalOrNull() ?: BigDecimal.ZERO) *
+            (node.currentAward.toBigDecimalOrNull() ?: BigDecimal.ZERO) *
                 (BigDecimal.ONE - nodeOperatorFee)
         val myAward = myBondOwnershipPercentage * currentAward
 
@@ -181,7 +180,7 @@ constructor(
             myBond = myBond,
             myAward = myAward.toDouble(),
             apy = networkApy,
-            nodeStatus = nodeData.status,
+            nodeStatus = node.status,
         )
     }
 }
