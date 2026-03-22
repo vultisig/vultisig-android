@@ -389,6 +389,8 @@ constructor(
     }
 
     private fun loadMayaBondableAssets() {
+        state.update { it.copy(bondableAssets = emptyList(), selectedBondAsset = "") }
+        assetsFieldState.clearText()
         viewModelScope.safeLaunch {
             val assets =
                 withContext(Dispatchers.IO) {
