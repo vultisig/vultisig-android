@@ -42,8 +42,6 @@ internal interface ApiModule {
 
     @Binds @Singleton fun bindLiFiChainApi(impl: LiFiChainApiImpl): LiFiChainApi
 
-    @Binds @Singleton fun bindBlowfishApi(impl: BlowfishApiImpl): BlowfishApi
-
     @Binds @Singleton fun bindFeatureFlagApi(impl: FeatureFlagApiImpl): FeatureFlagApi
 
     @Binds @Singleton fun bindSuiApi(impl: SuiApiImpl): SuiApi
