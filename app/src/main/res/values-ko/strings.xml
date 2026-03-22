@@ -29,6 +29,7 @@
 
     <string name="deposit_option_bond">본딩</string>
     <string name="deposit_option_unbond">언본딩</string>
+    <string name="total_bonded_coin">총 본딩된 %s</string>
     <string name="total_bonded_rune">총 본딩된 Rune</string>
     <string name="bonded_amount">본딩됨: %s</string>
     <string name="bond_to_node">노드에 본딩</string>
@@ -70,6 +71,9 @@
     <string name="defi_tab_staked">스테이킹됨</string>
     <string name="defi_tab_bonded">본딩됨</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">본딩</string>
+    <string name="defi_stake">스테이킹</string>
+    <string name="liquidity_pool">유동성 풀</string>
     <string name="circle_defi_description">USDC를 Circle 계정에 예치하고 수익을 얻으세요. Vultisig 볼트 내에서 안전하게 관리됩니다.</string>
     <string name="circle_defi_control_info">자금은 완전히 볼트의 통제 하에 있습니다. Circle 계정은 자기 수탁형이며 수익은 안전한 오프체인 트레저리를 통해 생성됩니다.</string>
     <string name="usdc_deposit_title">USDC 예치</string>
@@ -1191,4 +1195,13 @@
     <string name="apy_approx">APY (약)</string>
     <string name="apy_approx_hint_title">보상</string>
     <string name="apy_approx_hint_message">보상은 잔액에 자동으로 반영됩니다.</string>
+    <string name="cacao_pool">CACAO 풀</string>
+    <string name="staked_ruji_header">스테이킹된 RUJI</string>
+    <string name="staked_tcy_header">스테이킹된 TCY</string>
+    <string name="staked_ytcy_header">스테이킹된 yTCY</string>
+    <string name="staked_yrune_header">스테이킹된 yRUNE</string>
+    <string name="compounded_tcy_header">복리 TCY</string>
+    <string name="native_asset">네이티브</string>
+    <string name="invalid_integer_error">유효하지 않은 정수 금액</string>
+    <string name="empty_lps_field">LP 단위 필드가 비어 있음</string>
 </resources>
