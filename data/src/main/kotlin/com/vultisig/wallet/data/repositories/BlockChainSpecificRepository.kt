@@ -20,6 +20,9 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
+import com.vultisig.wallet.data.blockchain.model.Swap
+import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
@@ -182,7 +185,29 @@ constructor(
                     val nonce = evmApi.getNonce(address)
 
                     val gasLimitFee = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
-                    val fees = feeServiceComposite.calculateFees(chain, gasLimitFee, isSwap)
+                    val fees =
+                        if (isSwap) {
+                            feeServiceComposite.calculateDefaultFees(
+                                Swap(
+                                    coin = token,
+                                    vault = VaultData("", ""),
+                                    amount = tokenAmountValue ?: BigInteger.ZERO,
+                                    to = dstAddress ?: address,
+                                    callData = "",
+                                    approvalData = null,
+                                )
+                            )
+                        } else {
+                            feeServiceComposite.calculateFees(
+                                Transfer(
+                                    coin = token,
+                                    vault = VaultData("", ""),
+                                    amount = tokenAmountValue ?: BigInteger.ZERO,
+                                    to = address,
+                                    memo = memo,
+                                )
+                            )
+                        }
 
                     val (maxFeePerGas, priorityFeeWei) =
                         when (fees) {
