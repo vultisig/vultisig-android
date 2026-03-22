@@ -1145,5 +1145,4 @@
     <string name="add_referral_error_chars">Реферальный код должен содержать только буквы и цифры</string>
     <string name="add_referral_error_not_found">Реферальный код не найден</string>
     <string name="add_referral_error_network">Не удалось проверить реферальный код. Попробуйте ещё раз.</string>
-    <string name="hide_defi_balance">Hide DeFi balance</string>
 </resources>
