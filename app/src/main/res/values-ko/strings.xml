@@ -1101,4 +1101,6 @@
     <string name="apy_approx">APY (약)</string>
     <string name="apy_approx_hint_title">보상</string>
     <string name="apy_approx_hint_message">보상은 잔액에 자동으로 반영됩니다.</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
 </resources>

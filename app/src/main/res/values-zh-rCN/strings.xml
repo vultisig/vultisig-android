@@ -1389,4 +1389,6 @@
     <string name="add_referral_error_chars">推荐码只能包含字母和数字</string>
     <string name="add_referral_error_not_found">推荐码未找到</string>
     <string name="add_referral_error_network">检查推荐码失败，请重试。</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
 </resources>
