@@ -3,7 +3,6 @@
     <string name="token_logo">Token logo</string>
     <string name="tokens">Activa</string>
     <string name="keysign">Sleutel tekenen</string>
-    <string name="danger_icon">Gevaarpictogram</string>
     <string name="signing_error_please_try_again_s">Ondertekeningsfout. Probeer het opnieuw. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Houd apparaten op hetzelfde WiFi-netwerk, correct kluis en paar apparaten.\nZorg ervoor dat er geen andere apparaten zijn het draaien van Vultisig.</string>
     <string name="try_again">Probeer opnieuw</string>
@@ -209,11 +208,8 @@
     <string name="import_file_screen_password_error">Onjuist wachtwoord, probeer het opnieuw.</string>
     <string name="add_vault_save">Opslaan</string>
     <string name="backup_password_screen_enter_password">Voer wachtwoord in</string>
-    <string name="import_file_screen_enter_password">Voer het wachtwoord voor de gedeelde kluis in.</string>
     <string name="import_file_screen_enter_password_sub">Dit wachtwoord is ingesteld toen de kluis werd geëxporteerd.</string>
     <string name="import_file_screen_hint_password">Wachtwoord</string>
-    <string name="import_file_screen_ok">OK</string>
-    <string name="import_file_screen_cancel">Annuleren</string>
     <string name="backup_password_screen_permission_required">Voor back-upbewerkingen zijn bestandsrechten vereist.</string>
     <string name="share_qr_screen_permission_required">Voor het delen van bewerkingen is bestandsmachtiging vereist.</string>
     <string name="token_selection_search_hint">Zoekopdracht…</string>
@@ -273,7 +269,6 @@
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
     <string name="keysign_sign_transaction">Transactie ondertekenen</string>
     <string name="keysign_password_title">Wachtwoord</string>
-    <string name="home_screen_import_vault">Kluis importeren</string>
     <string name="start_screen_new">NIEUW</string>
     <string name="start_screen_import_seedphrase">Seedphrase importeren</string>
     <string name="start_screen_import_seedphrase_desc">Voer het in, maak een kluis aan, kijk nooit meer om.</string>
@@ -345,7 +340,6 @@
     <string name="push_notification_partial_failure">%1$d van %2$d kluizen bijgewerkt, %3$d mislukt</string>
     <string name="push_notifications_sent">Melding succesvol verzonden</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Ontvang een melding wanneer uw handtekening vereist is of een apparaat toegang aanvraagt.</string>
-    <string name="enable_push_notifications">Pushmeldingen inschakelen</string>
     <string name="keysign_notification_channel_name">Ondertekeningsverzoeken</string>
     <string name="keysign_notification_title">Transactie ondertekenen</string>
     <string name="keysign_notification_body">Er wacht een nieuw ondertekeningsverzoek op u</string>
@@ -390,8 +384,6 @@
     <string name="deposit_option_merge">Merge</string>
     <string name="deposit_option_withdraw_ruji">RUJI opnemen</string>
     <string name="withdraw_amount">%s opnemen</string>
-    <string name="deposit_option_stake_tcy">Stake TCY</string>
-    <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Voer percentage in om te unstaken</string>
     <string name="scan_qr_screen_title">QR-code scannen</string>
     <string name="verify_transaction_function_inputs_title">Functie-ingangen</string>
@@ -420,19 +412,9 @@
     <string name="reshare_step_generating_ecdsa">ECDSA-sleutel genereren</string>
     <string name="merge_account_doesnt_exist">Geselecteerde token niet gevonden voor dit adres</string>
     <string name="keygen_email_error">Onjuist emailadres, controleer dit</string>
-    <string name="deposit_option_stake_ruji">RUJI staken</string>
-    <string name="deposit_option_unstake_ruji">RUJI unstaken</string>
-    <string name="deposit_option_collect_ruji">Verzamel RUJI-stakingbeloningen</string>
-    <string name="deposit_form_rewards_title">In afwachting van beloningen (Saldo: %1$s)</string>
-    <string name="deposit_form_pending_rewards_hint">In afwachting van beloningen</string>
     <string name="tx_overview_screen_tx_send">Sturen</string>
     <string name="tx_overview_screen_tx_deposit">Storting</string>
     <string name="swap_error_small_insufficient_funds">Onvoldoende financiële middelen</string>
-    <string name="deposit_error_max_amount">Er kan maximaal 100 % worden unstaked</string>
-    <string name="deposit_option_receive_yrune">yRUNE ontvangen</string>
-    <string name="deposit_option_receive_ytcy">yTCY ontvangen</string>
-    <string name="deposit_option_sell_yrune">yRUNE verkopen</string>
-    <string name="deposit_option_sell_ytcy">yTCY verkopen</string>
     <string name="defi_tab_deposited">Gestort</string>
     <string name="defi_tab_staked">Gestaked</string>
     <string name="defi_tab_bonded">Gebonden</string>
@@ -541,7 +523,6 @@
     <string name="vultisig_community">Vultisig Community</string>
     <string name="vault_management">Kluis</string>
     <string name="other">Overig</string>
-    <string name="unstake_tcy_zero_error">Unstake kan niet worden uitgevoerd als het saldo lager is dan 1</string>
     <string name="check_updates_title">Controleer op updates</string>
     <string name="update_available">Er is een update beschikbaar</string>
     <string name="app_up_to_date">De app is up-to-date</string>
@@ -581,7 +562,6 @@
     <string name="vault_settings_back_up_your">Maak een back-up van uw Vault Share naar een apparaat of server.</string>
     <string name="vault_settings_migrate_gg20">Migreer GG20-kluis DKLS</string>
     <string name="vault_settings_reshare_change">Deel opnieuw, beheer beveiliging of onderteken berichten.</string>
-    <string name="vault_backup_summary_start_using_vault">Begin met het gebruiken van uw kluis</string>
     <string name="vault_backup_summary_choose_chains">Kies kettingen</string>
     <string name="transaction_done_form_approve">Goedkeuren</string>
     <string name="vault_settings_migration_title">Migreren</string>
@@ -599,7 +579,6 @@
     <string name="no_chain_make_sure_that">Zorg ervoor dat de keten die u zoekt is ingeschakeld.</string>
     <string name="no_chain_customize_chains">Ketens aanpassen</string>
     <string name="search_bar_search">Zoeken</string>
-    <string name="search_bar_cancel">Annuleren</string>
     <string name="chain_selection_select_chains">Selecteer ketens</string>
     <string name="chain_selection_select_defi_chains">Selecteer DeFi ketens</string>
     <string name="chain_selection_no_chains_found">Geen ketens gevonden</string>
@@ -674,7 +653,6 @@
     <string name="address_book_saved_addresses">Opgeslagen adressen</string>
     <string name="address_book_my_vaults">Mijn kluizen</string>
     <string name="address_entry_select">Selecteren</string>
-    <string name="backup_vault_online_storage_is_recommended">Online opslag wordt aanbevolen en is veilig - gedeelde kluisbestanden zijn hiervoor ontworpen.</string>
     <string name="deposit_form_enter_asset_hint">Activa invoeren</string>
     <string name="share_balance_loading">Laden...</string>
     <string name="custom_token_screen_finding_token">Token vinden</string>
@@ -712,23 +690,14 @@
     <string name="keygen_benefit_4_emphasized">Beschikbaar</string>
     <string name="onboarding_intro_preview_part_2">zaadzinnen</string>
     <string name="onboarding_intro_back">Terug</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1">Je kluis bevat %s shares,</string>
-    <string name="onboarding_security_backup_desc_page_1_part_2">Elk apparaat heeft een eigen back-up nodig.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_1">Back-up</string>
     <string name="migration_onboarding_step_1_text_emphasized">\'s werelds snelste MPC-protocol</string>
     <string name="migration_onboarding_step_1_text_end">en onderteken sneller dan ooit tevoren</string>
-    <string name="error_view_try_again_button">Probeer opnieuw</string>
     <string name="error_view_default_title">Er is iets misgegaan</string>
     <string name="error_view_default_description">Er is een fout opgetreden</string>
     <string name="keygen_benefit_5_template">Word niet opnieuw opgelicht</string>
     <string name="keygen_benefit_5_emphasized">Een seedless wallet,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_1">Je kluis bevat 2 shares,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_2">Maak nu een back-up</string>
     <string name="keygen_vault_created_success_part_1">Kluis aangemaakt</string>
     <string name="vault_created_success_part_2">Succesvol</string>
-    <string name="backup_vault_backup_now_button">Maak nu een back-up</string>
-    <string name="backup_vault_backup_vault_share_title">Maak online een back‑up van uw kluis</string>
-    <string name="backup_vault_topbar_title">Back-upkluis</string>
     <string name="backup_password_request_no_password_action">Maak een back-up zonder wachtwoord</string>
     <string name="address_bookmark_error_invalid_address">Dit adres is niet geldig voor %s</string>
     <string name="address_bookmark_error_empty_label">Label mag niet leeg zijn</string>
@@ -736,15 +705,9 @@
     <string name="send_form_ripple_reaping_warning">Zorg ervoor dat je voldoende saldo achterlaat om de kosten te dekken. Als het saldo onder de 1 XRP (Existentiële Storting) komt, wordt het account gedeactiveerd (opgenomen) en gaat het resterende saldo verloren. Je kunt het adres op elk moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Hiermee krijg je het verloren geld echter niet terug.</string>
     <string name="error_invalid_chain">Ketting is ongeldig</string>
     <string name="vault_backup_verifying_pin">Code verifiëren, even geduld a.u.b.</string>
-    <string name="vault_backup_screen_change_email">Wijzig emailadres en start de keygen opnieuw</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_1">Het wordt naar je verzonden zodat je het zelf kunt beheren!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">Controleer je emailadres om te verifiëren</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_1">We hebben uw nieuwe servershare naar u verzonden!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Controleer je emailadres om te verifiëren</string>
     <string name="select_vault_type_next">Volgende</string>
     <string name="select_vault_type_choose_setup">Kies \'Instellen\'</string>
     <string name="home_screen_scan_qr_code">QR scannen</string>
-    <string name="create_new_vault_screen_create_new_vault">Maak een nieuwe kluis aan</string>
     <string name="onboarding_desc_page_6_part_2">Ontgrendel uw kluis</string>
     <string name="onboarding_summary_button">Maak je kluis aan</string>
     <string name="keygen_benefit_3_template">Wissel uw favoriete tokens allemaal in één kluis</string>
@@ -785,8 +748,6 @@
     <string name="select_vault_type_secure">Beveiligen</string>
     <string name="select_vault_type_fast">Snel</string>
     <string name="vault_backup_screen_paste">Plakken</string>
-    <string name="enter_backup_screen_title">Voer de 4-cijferige code in die we u per email hebben gestuurd</string>
-    <string name="enter_backup_screen_desc">Deze code bevestigt dat u uw kluisshare 1 per email hebt ontvangen</string>
     <string name="vault_backup_error_pin">Fout bij het verifiëren van de code, probeer het opnieuw</string>
     <string name="tx_overview_screen_tx_hash">Transactiehash</string>
     <string name="tx_overview_screen_tx_from">Van</string>
@@ -795,8 +756,6 @@
     <string name="keygen_benefit_1_template">Verwijder het single point of failure</string>
     <string name="keygen_benefit_1_emphasized">Multifactorbeveiliging</string>
     <string name="keygen_benefit_2_template">Geeft volledige controle over uw vermogen</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_1">Deel 1 van de kluisdeling zal zijn:</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_2">vastgehouden door de server.</string>
     <string name="onboarding_summary_check">Ik heb gelezen en begrepen wat ik moet doen</string>
     <string name="send_error_invalid_plan_fee">Ongeldige abonnementskosten</string>
     <string name="onboarding_desc_page_3_part_2">in je kluis opgeslagen</string>
@@ -825,13 +784,10 @@
     <string name="scan_qr_code_modal_next">Volgende</string>
     <string name="home_page_no_chains_enabled">Geen ketens ingeschakeld</string>
     <string name="onboarding_desc_page_3_part_3">één kluis delen</string>
-    <string name="onboarding_security_backup_desc_page_2_part_3">om toegang te garanderen, bij voorkeur</string>
-    <string name="onboarding_security_backup_desc_page_2_part_4">online.</string>
     <string name="select_vault_type_fast_title">Snelle installatie van 1 apparaat</string>
     <string name="select_vault_type_fast_desc_1">Slechts 1 apparaat nodig</string>
     <string name="scan_qr_code_modal_scan_the">Scan het</string>
     <string name="scan_qr_code_modal_qr_code">QR-code</string>
-    <string name="create_new_vault_screen_or">OF</string>
     <string name="tx_overview_screen_title">Klaar</string>
     <string name="fast_vault_password_screen_warning">Wachtwoord kan niet worden gereset of hersteld</string>
     <string name="referral_top_bar_list">Verwijzing</string>
@@ -856,14 +812,12 @@
     <string name="onboarding_desc_page_6_part_1">Deze shares werken samen om</string>
     <string name="enter_email_screen_desc">Dit emailadres wordt gebruikt voor cloudback-up en wordt niet gedeeld met derden</string>
     <string name="keygen_connecting_with_server_take_a_second">Dit zou slechts een seconde moeten duren</string>
-    <string name="onboarding_security_backup_desc_page_2_part_2">Deze kluis delen</string>
     <string name="function_switch_thorchain_address">THORChain-adres</string>
     <string name="tx_transaction_successful_screen_title">Transactie succesvol</string>
     <string name="migration_onboarding_step_3_text_end">bij het upgraden</string>
     <string name="migration_onboarding_upgrade_your_vault">Upgrade uw kluis</string>
     <string name="migration_onboarding_upgrade_now">Upgrade nu</string>
     <string name="migration_onboarding_step_1_text_start">Upgrade deze kluis naar</string>
-    <string name="onboarding_security_backup_title">Vaultoverzicht</string>
     <string name="onboarding_desc_page_1_part_2">Vault-shares,</string>
     <string name="verify_swap_youre_swapping_title">Je wisselt</string>
     <string name="keysign_app_version_text">Versie %1$s (%2$s)</string>
@@ -877,7 +831,7 @@
     <string name="energy">Energie</string>
     <string name="bandwidth_dec">Bandbreedtepunten zijn vereist voor elke transactie op TRON, inclusief zowel standaard tokenverzendingen als interacties met smart contracts. Elke TRON-gebruiker ontvangt 600 gratis bandbreedtepunten per dag, goed voor ongeveer twee basisverzendingen. Daarnaast kunt u extra bandbreedtepunten verdienen door TRX te staken, waardoor uw dagelijkse saldo toeneemt en u meer transacties kunt ondersteunen. Als u voldoende bandbreedtepunten heeft, kunt u tokens verzenden, TRX staken of met smart contracts werken zonder TRX aan gaskosten te betalen.</string>
     <string name="energy_dec">Vereist voor complexere acties, zoals interactie met smart contracts (bijv. swaps of dApp-transacties). In tegenstelling tot bandbreedte wordt energie niet gratis verstrekt: u moet TRX staken om energie te verdienen. (Meer gevorderde gebruikers kunnen ook energie verkrijgen via leasemechanismen zoals JustLend of de Energy Rental Markets van Tronify). Met Energy kunt u de gaskosten voor interacties met slimme contracten echter aanzienlijk verlagen of zelfs elimineren. Dit maakt Energy waardevol voor mensen die regelmatig TRON dApps gebruiken.</string>
-    
+
     <!-- Bond Form -->
     <string name="bond_node_address">Node-adres</string>
     <string name="bond_operator_fees_basis_point">Operator-kosten (Basispunten)</string>
@@ -901,7 +855,6 @@
     <string name="circle_msca_account_created_failed">Kan Circle MSCA-account niet aanmaken. Probeer het opnieuw.</string>
     <string name="circle_usdc_account">Circle USDC-account</string>
     <string name="withdraw">Opnemen</string>
-    <string name="send_form_network_fee">Netwerkkosten (automatisch)</string>
     <string name="swap_form_vult_discount_bps">VULT (%1$s - %2$d bps)</string>
     <string name="swap_form_referral_discount_bps">Verwijzing (-%1$d bps)</string>
     <string name="amino_sign">Amino-handtekening</string>
@@ -935,13 +888,10 @@
     <string name="transaction_history_search_asset_title">Asset zoeken</string>
     <string name="transaction_history_search_asset_not_found">Geen activa gevonden</string>
     <string name="transaction_history_clear_filters">Filters wissen</string>
-    <string name="transaction_status_broadcasted_label">Uitgezonden</string>
-    <string name="transaction_status_pending_label">In behandeling · %1$s</string>
     <string name="transaction_status_confirmed_label">Geslaagd</string>
     <string name="transaction_status_failed_label">Fout</string>
     <string name="transaction_status_in_progress_label">Bezig…</string>
     <string name="transaction_history_to_label">Aan</string>
-    <string name="transaction_history_via_label">via %s</string>
     <string name="transaction_history_via_prefix">via</string>
     <string name="transaction_history_min_payout_label">min. uitbetaling</string>
     <string name="transaction_history_date_today">Vandaag</string>
@@ -960,7 +910,6 @@
     <string name="transaction_history_view_on_explorer">Bekijk op Explorer</string>
 
     <!-- Key Import / Seed Phrase Import -->
-    <string name="home_screen_import_seed_phrase">Herstelzin importeren</string>
     <string name="import_seedphrase_title">Voer uw herstelzin in</string>
     <string name="import_seedphrase_subtitle">Voer uw herstelzin van 12 of 24 woorden in</string>
     <string name="import_seedphrase_label">Herstelzin</string>
@@ -991,21 +940,12 @@
     <string name="key_import_chains_customize">Ketens aanpassen</string>
     <string name="key_import_chains_no_active_title">Geen actieve ketens gevonden</string>
     <string name="key_import_chains_no_active_desc">Er zijn geen saldi gevonden. Selecteer handmatig de ketens die u wilt importeren.</string>
-    <string name="key_import_chains_select_title">Ketens selecteren (%1$d)</string>
-    <string name="key_import_chains_all">Alles</string>
-    <string name="key_import_chains_none">Geen</string>
     <string name="key_import_chains_get_started">Aan de slag</string>
     <string name="key_import_chains_no_results">Geen ketens komen overeen met uw zoekopdracht</string>
 
     <string name="key_import_device_count_get_started">Aan de slag</string>
     <string name="vault_count_recommended">Aanbevolen</string>
 
-    <string name="welcome_preference_title">Welk type kluis geeft u de voorkeur?</string>
-    <string name="welcome_preference_desc">Kies tussen een persoonlijke kluis of deel deze met iemand die u vertrouwt.</string>
-    <string name="welcome_preference_personal_title">Persoonlijke Kluis</string>
-    <string name="welcome_preference_shared_title">Gedeelde Kluis</string>
-    <string name="welcome_preference_personal_desc">Een kluis voor persoonlijke fondsen. Onderteken transacties met uw eigen apparaten.</string>
-    <string name="welcome_preference_shared_desc">Co-onderteken met meerdere mensen die u vertrouwt (bijv. familiekluizen, uw accountant, een combinatie…)</string>
     <string name="welcome_preference_devices_title">Hoeveel apparaten heeft u?</string>
     <string name="welcome_fast_and_easy">Snel &amp; eenvoudig</string>
     <string name="welcome_fast_and_easy_desc">Onderteken met slechts 1 apparaat. Onze beveiligde server ondertekent met u voor multisig-beveiliging. Plugin-compatibel.</string>
@@ -1040,7 +980,6 @@
     <string name="password_choose_a_password">Kies een wachtwoord</string>
     <string name="password_extra_layer">Als u een extra beveiligingslaag wilt, kies dan een wachtwoord. Het wachtwoord kan niet worden hersteld.</string>
     <string name="password_extra_layer_highlight">Het wachtwoord kan niet worden hersteld.</string>
-    <string name="referral_enter_referral_code">Voer hier uw verwijzingscode in. Geniet van 10% korting op elke transactie.</string>
     <string name="backup_backups">Back-ups,</string>
     <string name="backup_your_new_recovery_method">uw nieuwe herstelmethode</string>
     <string name="backup_backups_power_your_vault">Back-ups versterken uw kluis. Elk apparaat heeft zijn eigen back-up. Een back-up alleen kan geen fondsen verplaatsen, het is alleen voor herstel. Importeer en herstel elk verloren apparaat.</string>
@@ -1052,8 +991,6 @@
     <string name="backup_4_digit_code_received_via_email">4-cijferige code ontvangen via email</string>
     <string name="backup_this_will_activate_the_co_signer">Dit activeert de co-ondertekenaar</string>
     <string name="backup_use_a_different_email">Gebruik een ander emailadres</string>
-    <string name="backup_send_to_email">Verzenden naar %1$s</string>
-    <string name="backup_incorrect_code_try_again">Onjuiste code. Probeer opnieuw.</string>
     <string name="backup_save_backup_to_the_cloud">Back-up opslaan in de cloud</string>
     <string name="backup_vault_screen_export_prefix">Exporteer dit back-upbestand en sla het op in de cloud. Het is</string>
     <string name="backup_vault_screen_encrypted">versleuteld</string>
@@ -1078,36 +1015,11 @@
     <string name="vault_setup_dynamic_device_management">Dynamisch apparaatbeheer</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">Voeg zoveel apparaten toe als u wilt en ontvang institutionele beveiliging.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Gebouwd voor teams en schatkamers</string>
-    <string name="vault_setup_ideal_for_teams_managing_shared_funds">Ideaal voor teams die gedeelde fondsen en hoogwaardige kluizen beheren, waarvoor meer ondertekenaars nodig zijn.</string>
-    <string name="vault_setup_no_inspiration_desc">Geen inspiratie? U kunt de naam later altijd wijzigen in de instellingen.</string>
-    <string name="vault_setup_scan_qr_on_your_other_devices">Scan de QR op uw andere apparaten</string>
-    <string name="vault_setup_on_your_other_device_open_the_app_and_tap_scan_qr">Open op uw andere apparaat de app en tik op "QR scannen" om het te verbinden.</string>
-    <string name="vault_setup_start_scanning">Begin met scannen</string>
-    <string name="vault_setup_waiting_for_devices_to_connect">Wachten tot apparaten verbinding maken…</string>
-    <string name="vault_setup_waiting_for_device_to_join">Wachten tot apparaat zich aansluit</string>
-    <string name="vault_setup_want_to_create_a_vault_privately">Wilt u een kluis privé aanmaken?</string>
-    <string name="vault_setup_use_local_mode">Lokale modus gebruiken</string>
-    <string name="vault_setup_connected">Verbonden</string>
-    <string name="vault_setup_local_mode_waiting_on_devices">Lokale modus, wachten op apparaten</string>
-    <string name="vault_setup_short_description_of_local_mode">Korte beschrijving van de lokale modus staat hier</string>
-    <string name="vault_setup_not_want_to_use_local_switch_back">Wilt u de lokale modus niet gebruiken? Schakel terug.</string>
-    <string name="vault_setup_use_standard_mode">Standaardmodus gebruiken</string>
-    <string name="vault_setup_review_your_vault_devices">Controleer uw kluis-apparaten</string>
-    <string name="vault_setup_make_sure_that_these_are_the_correct_devices">Zorg ervoor dat dit de juiste apparaten zijn die u heeft toegevoegd:</string>
-    <string name="vault_setup_backups">Back-ups,</string>
-    <string name="vault_setup_your_new_recovery_method">uw nieuwe herstelmethode</string>
-    <string name="vault_setup_backups_power_your_vault">Back-ups versterken uw kluis. Elk apparaat heeft zijn eigen back-up. Een back-up alleen kan geen fondsen verplaatsen, het is alleen voor herstel. Importeer en herstel elk verloren apparaat.</string>
     <string name="vault_setup_back_up_each_device">Maak een back-up van elk apparaat</string>
     <string name="vault_setup_you_ll_create_n_backups_in_total">U maakt in totaal %1$d back-ups. U doet dit op elk apparaat.</string>
-    <string name="vault_setup_store_backups_separately">Sla back-ups apart op</string>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Sla elke back-up op in een andere cloudservice of met een ander wachtwoord. Als er één gecompromitteerd is, blijven uw fondsen veilig.</string>
-    <string name="vault_setup_looks_good">Ziet er goed uit</string>
     <string name="vault_setup_i_understand">Ik begrijp het</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Sla back-up %1$d van %2$d op in de cloud</string>
-    <string name="vault_setup_export_this_backup_file_then_save_it_to_the_cloud">Exporteer dit back-upbestand en sla het op in de cloud. Gebruik voor elke back-up een andere cloudservice of account. Wanneer u klaar bent, verwijdert u het bestand van dit apparaat.</string>
-    <string name="vault_setup_your_vault_is_ready_to_use">Uw kluis is klaar voor gebruik</string>
-    <string name="scanning_qr_troubleshooting_scanning">Problemen met scannen? Als de QR-code niet meteen scant: Beweeg de telefoon iets dichter bij of verder van het scherm. Zorg ervoor dat het scherm goed verlicht is en vrij van schittering. Houd beide apparaten even stil.</string>
-    <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">Met hoeveel mensen wilt u de kluis delen?</string>
 
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Serverback-up</string>

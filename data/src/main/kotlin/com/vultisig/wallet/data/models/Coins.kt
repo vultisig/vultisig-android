@@ -543,19 +543,6 @@ object Coins {
                 isNativeToken = false,
             )
 
-        val WEWE =
-            Coin(
-                chain = Chain.Base,
-                ticker = "WEWE",
-                logo = "wewe",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x6b9bb36519538e0C073894E964E90172E1c0B41F",
-                isNativeToken = false,
-            )
-
         val cbETH =
             Coin(
                 chain = Chain.Base,
@@ -595,7 +582,7 @@ object Coins {
                 isNativeToken = false,
             )
 
-        val all = listOf(AERO, DAI, ETH, OM, PYTH, SNX, USDC, W, WEWE, cbETH, ezETH, rETH)
+        val all = listOf(AERO, DAI, ETH, OM, PYTH, SNX, USDC, W, cbETH, ezETH, rETH)
     }
 
     object Bitcoin {
