@@ -96,11 +96,13 @@ internal interface BlockchainServicesModule {
             mayachainBondUseCase: MayachainBondUseCase,
             mayaCacaoStakingService: MayaCacaoStakingService,
             activeBondedNodeRepository: ActiveBondedNodeRepository,
+            stakingDetailsRepository: StakingDetailsRepository,
         ): MayaDeFiBalanceService =
             MayaDeFiBalanceService(
                 mayachainBondUseCase = mayachainBondUseCase,
                 mayaCacaoStakingService = mayaCacaoStakingService,
                 activeBondedNodeRepository = activeBondedNodeRepository,
+                stakingDetailsRepository = stakingDetailsRepository,
             )
     }
 }
