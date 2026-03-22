@@ -13,35 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
+  ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Android setup
-        uses: ./.github/actions/android-setup
-
-      - name: Run lint
-        env:
-          TRUSTWALLET_PAT: ${{ secrets.TRUSTWALLET_PAT }}
-          TRUSTWALLET_USER: ${{ secrets.TRUSTWALLET_USER }}
-        run: ./gradlew lint --no-daemon
-
-      - name: Archive lint reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Lint-Reports
-          path: |
-            **/build/reports/lint-*/**
-            **/build/intermediates/**/lintReport*/**
-
-  build-and-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    needs: lint
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,7 +32,23 @@ jobs:
           sudo apt-get clean
           df -h
 
-      # Build and run unit tests
+      # Lint runs first as a fast-fail gate
+      - name: Run lint
+        env:
+          TRUSTWALLET_PAT: ${{ secrets.TRUSTWALLET_PAT }}
+          TRUSTWALLET_USER: ${{ secrets.TRUSTWALLET_USER }}
+        run: ./gradlew lint --no-daemon
+
+      - name: Archive lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lint-Reports
+          path: |
+            **/build/reports/lint-*/**
+            **/build/intermediates/**/lintReport*/**
+
+      # Build and unit tests reuse Gradle cache from lint compilation
       - name: Build and run unit tests
         env:
           TRUSTWALLET_PAT: ${{ secrets.TRUSTWALLET_PAT }}
