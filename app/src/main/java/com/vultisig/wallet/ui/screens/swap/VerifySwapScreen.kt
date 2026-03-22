@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -460,6 +461,7 @@ internal fun VerifyCardDetails(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
+    bracketValue: String? = null,
     showAllContent: Boolean = false,
 ) {
     Row(
@@ -471,19 +473,46 @@ internal fun VerifyCardDetails(
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.tertiary,
             maxLines = 1,
+            modifier = Modifier.defaultMinSize(minWidth = 52.dp),
         )
 
-        UiSpacer(weight = 1f)
+        if (bracketValue != null) {
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = subtitle,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(end = 4.dp),
+                )
+                Text(
+                    text = "($bracketValue)",
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.tertiary,
+                    textAlign = TextAlign.End,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        } else {
+            UiSpacer(weight = 1f)
 
-        Text(
-            text = subtitle,
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
-            textAlign = TextAlign.End,
-            modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier,
-            maxLines = if (showAllContent) 5 else 1,
-            overflow = TextOverflow.MiddleEllipsis,
-        )
+            Text(
+                text = subtitle,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+                textAlign = TextAlign.End,
+                modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier,
+                maxLines = if (showAllContent) 5 else 1,
+                overflow = TextOverflow.MiddleEllipsis,
+            )
+        }
     }
 }
 

@@ -104,7 +104,7 @@ private fun SwapConfirmPreview() {
                 txScanStatus =
                     TransactionScanStatus.Scanned(
                         SecurityScannerResult(
-                            provider = "Blowfish",
+                            provider = "1Inch",
                             isSecure = true,
                             riskLevel = SecurityRiskLevel.NONE,
                             warnings = emptyList(),

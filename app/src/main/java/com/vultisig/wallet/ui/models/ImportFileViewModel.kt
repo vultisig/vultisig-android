@@ -92,42 +92,54 @@ constructor(
         val vaultFileContent = uiModel.value.fileContent
         if (!vaultFileContent.isNullOrBlank()) {
             viewModelScope.launch {
-                try {
-                    saveToDb(vaultFileContent, key)
-                    hidePasswordPromptDialog()
-                } catch (e: SQLiteConstraintException) {
-                    Timber.tag("ImportFileInsertVaultData").e(e)
-                    snackBarChannel.send(
-                        UiText.StringResource(R.string.import_file_screen_duplicate_vault)
-                    )
-                } catch (e: Exception) {
-                    Timber.e(e)
-                    showErrorHint()
-                }
+                val result = saveToDb(vaultFileContent, key)
+                hidePasswordPromptDialog()
+                if (result == SaveResult.Failed) showErrorHint()
             }
         }
     }
 
     private suspend fun parseFileContent() {
         val fileContent = uiModel.value.fileContent ?: return
-        try {
-            saveToDb(fileContent, null)
-        } catch (e: SQLiteConstraintException) {
-            Timber.tag("ImportFileInsertVaultData").e(e)
-            snackBarChannel.send(UiText.StringResource(R.string.import_file_screen_duplicate_vault))
-        } catch (e: Exception) {
-            Timber.e(e)
-            uiModel.update { it.copy(showPasswordPrompt = true, passwordErrorHint = null) }
+        when (saveToDb(fileContent, null)) {
+            SaveResult.Success -> Unit
+            SaveResult.Duplicate -> Unit
+            SaveResult.Failed ->
+                uiModel.update { it.copy(showPasswordPrompt = true, passwordErrorHint = null) }
         }
     }
 
-    private suspend fun saveToDb(fileContent: String, password: String?) {
+    private suspend fun saveToDb(fileContent: String, password: String?): SaveResult =
         try {
             insertVaultToDb(parseVaultFromString(fileContent, password))
+            SaveResult.Success
         } catch (e: DuplicateVaultException) {
             Timber.e(e)
-            snackBarChannel.send(UiText.StringResource(R.string.import_file_screen_duplicate_vault))
+            setDuplicateError()
+            SaveResult.Duplicate
+        } catch (e: SQLiteConstraintException) {
+            Timber.e(e)
+            setDuplicateError()
+            SaveResult.Duplicate
+        } catch (e: Exception) {
+            Timber.e(e)
+            SaveResult.Failed
         }
+
+    private fun setDuplicateError() {
+        uiModel.update {
+            it.copy(
+                error = UiText.StringResource(R.string.import_file_screen_duplicate_vault),
+                fileName = null,
+                fileContent = null,
+            )
+        }
+    }
+
+    private enum class SaveResult {
+        Success,
+        Duplicate,
+        Failed,
     }
 
     private suspend fun insertVaultToDb(vault: Vault) {

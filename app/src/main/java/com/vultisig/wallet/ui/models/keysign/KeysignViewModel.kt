@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
@@ -41,6 +42,7 @@ import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
@@ -51,6 +53,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import java.math.BigInteger
 import java.util.Base64
 import kotlin.time.Duration.Companion.seconds
@@ -126,6 +129,7 @@ internal class KeysignViewModel(
     private val addressBookRepository: AddressBookRepository,
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
+    private val vaultRepository: VaultRepository,
     private val transactionHistoryData: TransactionHistoryData?,
     private val transactionHistoryRepository: TransactionHistoryRepository,
 ) : ViewModel() {
@@ -138,6 +142,7 @@ internal class KeysignViewModel(
     val approveTxLink = MutableStateFlow("")
     val swapProgressLink = MutableStateFlow<String?>(null)
     val showSaveToAddressBook = MutableStateFlow(false)
+    val resolvedTransactionUiModel = MutableStateFlow(transactionTypeUiModel)
 
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
@@ -154,14 +159,41 @@ internal class KeysignViewModel(
     init {
         val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
         sendTx?.tx?.let { tx ->
-            viewModelScope.launch {
-                val isSavedBefore =
-                    addressBookRepository.entryExists(
-                        address = tx.dstAddress,
-                        chainId = tx.token.token.chain.id,
-                    )
+            viewModelScope.safeLaunch {
+                val chain = tx.token.token.chain
+                val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+                val normalizedDstAddress = normalizeAddressForLookup(tx.dstAddress)
+                val dstVaultName =
+                    allVaults
+                        .firstOrNull { v ->
+                            v.coins.any {
+                                it.chain == chain &&
+                                    normalizeAddressForLookup(it.address) == normalizedDstAddress
+                            }
+                        }
+                        ?.name
 
-                showSaveToAddressBook.value = isSavedBefore.not()
+                val isSavedBefore =
+                    addressBookRepository.entryExists(address = tx.dstAddress, chainId = chain.id)
+
+                showSaveToAddressBook.value = isSavedBefore.not() && dstVaultName == null
+
+                val dstAddressBookTitle =
+                    if (dstVaultName == null && isSavedBefore) {
+                        runCatching {
+                                addressBookRepository.getEntry(chain.id, tx.dstAddress).title
+                            }
+                            .getOrNull()
+                    } else null
+
+                resolvedTransactionUiModel.value =
+                    TransactionTypeUiModel.Send(
+                        tx.copy(
+                            srcVaultName = vault.name,
+                            dstVaultName = dstVaultName,
+                            dstAddressBookTitle = dstAddressBookTitle,
+                        )
+                    )
             }
         }
     }

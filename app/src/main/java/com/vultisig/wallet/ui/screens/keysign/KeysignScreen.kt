@@ -85,7 +85,7 @@ private fun Keysign(
     }
     KeysignView(
         state = state,
-        transactionTypeUiModel = keysignViewModel.transactionTypeUiModel,
+        transactionTypeUiModel = keysignViewModel.resolvedTransactionUiModel.collectAsState().value,
         txHash = keysignViewModel.txHash.collectAsState().value,
         approveTransactionHash = keysignViewModel.approveTxHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
