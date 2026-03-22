@@ -1479,4 +1479,6 @@
     <string name="add_referral_error_chars">推荐码只能包含字母和数字</string>
     <string name="add_referral_error_not_found">推荐码未找到</string>
     <string name="add_referral_error_network">检查推荐码失败，请重试。</string>
+    <string name="swap_form_outbound_fee_title">Outbound Fee</string>
+    <string name="hide_defi_balance">Hide DeFi balance</string>
 </resources>

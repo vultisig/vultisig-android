@@ -1145,4 +1145,6 @@
     <string name="add_referral_error_chars">O código de indicação deve conter apenas caracteres alfanuméricos</string>
     <string name="add_referral_error_not_found">Código de indicação não encontrado</string>
     <string name="add_referral_error_network">Falha ao verificar o código de indicação. Tente novamente.</string>
+    <string name="swap_form_outbound_fee_title">Outbound Fee</string>
+    <string name="hide_defi_balance">Hide DeFi balance</string>
 </resources>
