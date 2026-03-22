@@ -38,6 +38,7 @@ internal fun ScaffoldWithExpandableTopBar(
     PullToRefreshBox(onRefresh = onRefresh, isRefreshing = isRefreshing) {
         Scaffold(
             modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            containerColor = backgroundColor,
             topBar = {
                 if (topBarCollapsedContent != null) {
                     VsExpandableTopBar(

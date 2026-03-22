@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.appupdate.AppUpdateManager
@@ -86,11 +87,11 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             OnBoardingComposeTheme {
-                val screen by mainViewModel.startDestination
+                val screen by mainViewModel.startDestination.collectAsStateWithLifecycle()
 
                 val navController = rememberNavController()
 
-                val isLoading by mainViewModel.isLoading
+                val isLoading by mainViewModel.isLoading.collectAsStateWithLifecycle()
                 var showSplash by remember { mutableStateOf(true) }
 
                 if (showSplash) {
