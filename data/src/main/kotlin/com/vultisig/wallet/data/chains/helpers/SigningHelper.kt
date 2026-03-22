@@ -85,11 +85,7 @@ object SigningHelper {
                 }
                 else -> Unit
             }
-        } else if (
-            swapPayload != null &&
-                swapPayload is SwapPayload.MayaChain &&
-                !swapPayload.srcToken.isNativeToken
-        ) {
+        } else if (swapPayload != null && !swapPayload.srcToken.isNativeToken) {
             messages +=
                 THORChainSwaps(ecdsaKey, ecdsaChainCode, eddsaKey)
                     .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
@@ -242,11 +238,7 @@ object SigningHelper {
 
                 else -> {}
             }
-        } else if (
-            swapPayload != null &&
-                swapPayload is SwapPayload.MayaChain &&
-                !swapPayload.srcToken.isNativeToken
-        ) {
+        } else if (swapPayload != null && !swapPayload.srcToken.isNativeToken) {
             return THORChainSwaps(ecdsaKey, ecdsaChainCode, eddsaKey)
                 .getSignedTransaction(swapPayload.data, keysignPayload, signatures, nonceAcc)
         }
