@@ -85,8 +85,6 @@
     <string name="send_amount_currency_hint">Menge eingeben</string>
     <string name="send_continue_button">Fortfahren</string>
     <string name="chain_account_view_swap">TAUSCHEN</string>
-    <string name="chain_account_view_deposit">Einzahlung</string>
-    <string name="chain_account_view_send">SENDEN</string>
     <string name="circle_defi_description">Zahlen Sie Ihr USDC auf ein Circle-Konto ein und erzielen Sie Rendite. Sicher in Ihrem Vultisig-Tresor.</string>
     <string name="circle_defi_control_info">Die Mittel bleiben vollständig unter der Kontrolle Ihres Tresors. Circle-Konten sind selbstverwaltet und Erträge werden durch sichere Off-Chain-Treasuries generiert.</string>
     <string name="usdc_deposit_title">USDC-Einzahlung</string>
@@ -186,7 +184,6 @@
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_keysign_discovery_service">Service entdecken</string>
     <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft.</string>
-    <string name="danger_icon">Gefahrensymbol</string>
     <string name="currency_unit_setting_screen_title">Währung\n</string>
     <string name="share_qr_utils_choose_an_app">Wählen Sie eine App</string>
     <string name="vault_accounts_account_assets">%1$s Vermögenswerte</string>
@@ -212,8 +209,6 @@
     <string name="backup_password_screen_enter_password">Passwort eingeben</string>
     <string name="import_file_screen_enter_password_sub">Dieses Passwort wurde beim Export der Tresorfreigabe festgelegt.</string>
     <string name="import_file_screen_hint_password">Passwort</string>
-    <string name="import_file_screen_ok">OK</string>
-    <string name="import_file_screen_cancel">Stornieren</string>
     <string name="backup_password_screen_permission_required">Für Sicherungsvorgänge sind Dateiberechtigungen erforderlich.</string>
     <string name="share_qr_screen_permission_required">Für Freigabevorgänge sind Dateiberechtigungen erforderlich.</string>
     <string name="token_selection_search_hint">Suchen…</string>
@@ -273,7 +268,6 @@
     <string name="verify_transaction_fast_sign_btn_title">Schnelles Zeichen</string>
     <string name="keysign_sign_transaction">Transaktion unterschreiben</string>
     <string name="keysign_password_title">Passwort</string>
-    <string name="home_screen_import_vault">Tresor importieren</string>
     <string name="start_screen_new">NEU</string>
     <string name="start_screen_import_seedphrase">Seed-Phrase importieren</string>
     <string name="start_screen_import_seedphrase_desc">Gib sie ein, erstelle einen Tresor, schau nie zurück.</string>
@@ -345,7 +339,6 @@
     <string name="push_notification_partial_failure">%1$d von %2$d Tresoren aktualisiert, %3$d fehlgeschlagen</string>
     <string name="push_notifications_sent">Benachrichtigung erfolgreich gesendet</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Erhalten Sie eine Benachrichtigung, wenn Ihre Unterschrift erforderlich ist oder ein Gerät Zugriff anfordert.</string>
-    <string name="enable_push_notifications">Push-Benachrichtigungen aktivieren</string>
     <string name="keysign_notification_channel_name">Keysign-Anfragen</string>
     <string name="keysign_notification_title">Transaktion signieren</string>
     <string name="keysign_notification_body">Eine neue Signierungsanfrage wartet auf Sie</string>
@@ -390,8 +383,6 @@
     <string name="deposit_option_merge">Merge</string>
     <string name="deposit_option_withdraw_ruji">RUJI abheben</string>
     <string name="withdraw_amount">%s abheben</string>
-    <string name="deposit_option_stake_tcy">Stake TCY</string>
-    <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Prozentsatz zum Unstaking eingeben</string>
     <string name="scan_qr_screen_title">QR-Code scannen</string>
     <string name="verify_transaction_function_inputs_title">Funktionseingänge</string>
@@ -422,19 +413,9 @@
     <string name="reshare_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
     <string name="merge_account_doesnt_exist">Das ausgewählte Token wurde für diese Adresse nicht gefunden.</string>
     <string name="keygen_email_error">Falsche E-Mail, bitte überprüfen</string>
-    <string name="deposit_option_stake_ruji">RUJI staken</string>
-    <string name="deposit_option_unstake_ruji">RUJI entstaken</string>
-    <string name="deposit_option_collect_ruji">Sammeln Sie RUJI-Staking-Belohnungen</string>
-    <string name="deposit_form_rewards_title">Ausstehende Rewards (Guthaben: %1$s)</string>
-    <string name="deposit_form_pending_rewards_hint">Ausstehende Rewards</string>
     <string name="tx_overview_screen_tx_send">Senden</string>
     <string name="tx_overview_screen_tx_deposit">Einzahlung</string>
     <string name="swap_error_small_insufficient_funds">Unzureichende Mittel</string>
-    <string name="deposit_error_max_amount">Nur bis zu 100 % können zurückgenommen werden</string>
-    <string name="deposit_option_receive_yrune">yRUNE erhalten</string>
-    <string name="deposit_option_receive_ytcy">yTCY erhalten</string>
-    <string name="deposit_option_sell_yrune">yRUNE verkaufen</string>
-    <string name="deposit_option_sell_ytcy">yTCY verkaufen</string>
     <string name="defi_tab_deposited">Eingezahlt</string>
     <string name="defi_tab_staked">Gestaked</string>
     <string name="defi_tab_bonded">Gebondet</string>
@@ -543,7 +524,6 @@
     <string name="vultisig_community">Vultisig-Community</string>
     <string name="vault_management">Tresorverwaltung</string>
     <string name="other">Sonstiges</string>
-    <string name="unstake_tcy_zero_error">Das Aufheben der Einsätze kann nicht durchgeführt werden, wenn der Kontostand unter 1 liegt</string>
     <string name="check_updates_title">Aktualisierungen prüfen</string>
     <string name="update_available">Update verfügbar</string>
     <string name="app_up_to_date">App ist aktuell</string>
@@ -585,7 +565,6 @@
     <string name="vault_settings_back_up_your">Sichern Sie Ihre Vault‑Freigabe auf einem Gerät oder auf dem Server.</string>
     <string name="vault_settings_migrate_gg20">GG20‑Vault auf DKLS migrieren</string>
     <string name="vault_settings_reshare_change">Erneut teilen, Sicherheit verwalten oder Nachrichten signieren.</string>
-    <string name="vault_backup_summary_start_using_vault">Jetzt Ihren Tresor nutzen.</string>
     <string name="vault_backup_summary_choose_chains">Wählen Sie Ketten</string>
     <string name="transaction_done_form_approve">Genehmigen</string>
     <string name="vault_settings_migration_title">Migrieren</string>
@@ -603,7 +582,6 @@
     <string name="no_chain_make_sure_that">Stellen Sie sicher, dass die gesuchte Kette aktiviert ist.</string>
     <string name="no_chain_customize_chains">Ketten anpassen</string>
     <string name="search_bar_search">Suche</string>
-    <string name="search_bar_cancel">Abbrechen</string>
     <string name="chain_selection_select_chains">Ketten auswählen</string>
     <string name="chain_selection_select_defi_chains">DeFi-Ketten auswählen</string>
     <string name="chain_selection_no_chains_found">Keine Ketten gefunden</string>
@@ -678,7 +656,6 @@
     <string name="address_book_saved_addresses">Gespeicherte Adressen</string>
     <string name="address_book_my_vaults">Meine Tresore</string>
     <string name="address_entry_select">Auswählen</string>
-    <string name="backup_vault_online_storage_is_recommended">Online-Speicherung ist empfehlenswert und sicher – Tresorfreigaben sind dafür konzipiert.</string>
     <string name="deposit_form_enter_asset_hint">Assets eingeben</string>
     <string name="share_balance_loading">Wird geladen...</string>
     <string name="custom_token_screen_finding_token">Token wird gesucht …</string>
@@ -716,23 +693,14 @@
     <string name="keygen_benefit_4_emphasized">Verfügbar</string>
     <string name="onboarding_intro_preview_part_2">Seed-Phrasen</string>
     <string name="onboarding_intro_back">Zurück</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1">Ihr Tresor enthält %s Anteile.</string>
-    <string name="onboarding_security_backup_desc_page_1_part_2">benötigt ein eigenes Backup.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_1">Sicherung</string>
-    <string name="error_view_try_again_button">Erneut versuchen</string>
     <string name="error_view_default_title">Etwas ist schiefgelaufen</string>
     <string name="error_view_default_description">Ein Fehler ist aufgetreten</string>
     <string name="migration_onboarding_step_1_text_emphasized">das weltweit schnellste MPC-Protokoll</string>
     <string name="migration_onboarding_step_1_text_end">und schneller als je zuvor signieren</string>
     <string name="keygen_benefit_5_template">Lassen Sie sich nicht erneut betrügen!</string>
     <string name="keygen_benefit_5_emphasized">Eine Seedless-Wallet</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_1">Ihr Tresor enthält 2 Anteile.</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_2">Jetzt sichern</string>
     <string name="keygen_vault_created_success_part_1">Tresor erstellt</string>
     <string name="vault_created_success_part_2">Erfolgreich</string>
-    <string name="backup_vault_backup_now_button">Jetzt sichern</string>
-    <string name="backup_vault_backup_vault_share_title">Vault-Freigabe online sichern</string>
-    <string name="backup_vault_topbar_title">Vault sichern</string>
     <string name="backup_password_request_no_password_action">Backup ohne Passwort</string>
     <string name="address_bookmark_error_invalid_address">Diese Adresse ist für %s ungültig.</string>
     <string name="address_bookmark_error_empty_label">Das Label darf nicht leer sein</string>
@@ -740,15 +708,9 @@
     <string name="send_form_ripple_reaping_warning">Stellen Sie sicher, dass Ihr Konto ausreichend Guthaben zur Deckung der Gebühren aufweist. Fällt Ihr Kontostand unter 1 XRP (Einzahlung), wird das Konto deaktiviert (eingezogen) und das verbleibende Guthaben geht verloren. Sie können die Adresse jederzeit mit einer neuen Einzahlung, die höher als die Mindesteinzahlung ist, reaktivieren. Dadurch werden die verlorenen Guthaben jedoch nicht wiederhergestellt.</string>
     <string name="error_invalid_chain">Die Kette ist ungültig</string>
     <string name="vault_backup_verifying_pin">Code wird überprüft, bitte warten</string>
-    <string name="vault_backup_screen_change_email">Ändere deine E-Mail-Adresse und starte den Keygen neu</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_1">Es wird Ihnen zur vollständigen Selbstverwahrung zugesandt!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">Überprüfe deine E-Mails zur Bestätigung</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_1">Wir haben Ihnen Ihre neue Serverfreigabe gesendet!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Überprüfe deine E-Mails zur Bestätigung</string>
     <string name="select_vault_type_next">Weiter</string>
     <string name="select_vault_type_choose_setup">Wähle „Einrichtung“</string>
     <string name="home_screen_scan_qr_code">QR-Code scannen</string>
-    <string name="create_new_vault_screen_create_new_vault">Erstelle einen neuen Tresor</string>
     <string name="onboarding_desc_page_6_part_2">Öffne deinen Tresor</string>
     <string name="onboarding_summary_button">Tresor erstellen</string>
     <string name="keygen_benefit_3_template">Tauschen Sie Ihre bevorzugten Token in einem einzigen Tresor</string>
@@ -789,8 +751,6 @@
     <string name="select_vault_type_secure">Sichern</string>
     <string name="select_vault_type_fast">Schnell</string>
     <string name="vault_backup_screen_paste">Einfügen</string>
-    <string name="enter_backup_screen_title">Geben Sie den 4-stelligen Code ein, den wir Ihnen per E-Mail zugesendet haben.</string>
-    <string name="enter_backup_screen_desc">Dieser Code bestätigt, dass Sie Ihre Tresorfreigabe 1 per E-Mail erhalten haben.</string>
     <string name="vault_backup_error_pin">Fehler beim Überprüfen des Codes. Bitte versuchen Sie es erneut.</string>
     <string name="tx_overview_screen_tx_hash">Transaktions-Hash</string>
     <string name="tx_overview_screen_tx_from">Von</string>
@@ -799,8 +759,6 @@
     <string name="keygen_benefit_1_template">Beseitigung des Single Point of Failure</string>
     <string name="keygen_benefit_1_emphasized">Multifaktor-Sicherheit</string>
     <string name="keygen_benefit_2_template">Volle Kontrolle über Ihre Vermögenswerte</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_1">Teil 1 der Tresorfreigaben:</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_2">Vom Server gespeichert.</string>
     <string name="onboarding_summary_check">Ich habe die Anweisungen gelesen und verstanden.</string>
     <string name="send_error_invalid_plan_fee">Ungültige Tarifgebühr</string>
     <string name="onboarding_desc_page_3_part_2">In Ihrem Tresor gespeichert</string>
@@ -829,13 +787,10 @@
     <string name="peer_discovery_action_next_title">Weiter</string>
     <string name="home_page_no_chains_enabled">Keine Ketten aktiviert</string>
     <string name="onboarding_desc_page_3_part_3">Ein Tresor freigeben</string>
-    <string name="onboarding_security_backup_desc_page_2_part_3">Um den Zugriff zu gewährleisten, vorzugsweise</string>
-    <string name="onboarding_security_backup_desc_page_2_part_4">Online</string>
     <string name="select_vault_type_fast_title">Schnelle Einrichtung mit nur einem Gerät</string>
     <string name="select_vault_type_fast_desc_1">Nur 1 Gerät erforderlich</string>
     <string name="scan_qr_code_modal_scan_the">Scannen Sie den</string>
     <string name="scan_qr_code_modal_qr_code">QR-Code</string>
-    <string name="create_new_vault_screen_or">ODER</string>
     <string name="tx_overview_screen_title">Fertig</string>
     <string name="fast_vault_password_screen_warning">Passwort kann nicht zurückgesetzt oder wiederhergestellt werden</string>
     <string name="referral_top_bar_list">Empfehlung</string>
@@ -860,14 +815,12 @@
     <string name="onboarding_desc_page_6_part_1">Diese Freigaben arbeiten zusammen, um</string>
     <string name="enter_email_screen_desc">Diese E-Mail-Adresse wird nur zum Senden der Serversicherung verwendet.</string>
     <string name="keygen_connecting_with_server_take_a_second">Dies dauert nur einen Augenblick.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_2">Diese Tresorfreigabe</string>
     <string name="function_switch_thorchain_address">THORChain-Adresse</string>
     <string name="tx_transaction_successful_screen_title">Transaktion erfolgreich</string>
     <string name="migration_onboarding_step_3_text_end">Beim Upgrade</string>
     <string name="migration_onboarding_upgrade_your_vault">Verbessere deinen Tresor</string>
     <string name="migration_onboarding_upgrade_now">Jetzt upgraden</string>
     <string name="migration_onboarding_step_1_text_start">Verbessere diesen Tresor auf die</string>
-    <string name="onboarding_security_backup_title">Tresorübersicht</string>
     <string name="onboarding_desc_page_1_part_2">Tresorfreigaben</string>
     <string name="verify_swap_youre_swapping_title">Sie tauschen gerade Daten aus.</string>
     <string name="keysign_app_version_text">Version %1$s (%2$s)</string>
@@ -881,7 +834,7 @@
     <string name="energy">Energie</string>
     <string name="bandwidth_dec">Bandbreitenpunkte werden für jede Transaktion auf TRON benötigt, sowohl für Standard-Token-Sendungen als auch für Smart-Contract-Interaktionen. Jeder TRON-Nutzer erhält täglich 600 kostenlose Bandbreitenpunkte, was für etwa zwei einfache Sendungen ausreicht. Zusätzlich können Sie durch das Staking von TRX weitere Bandbreitenpunkte verdienen und so Ihr tägliches Guthaben erhöhen, um mehr Transaktionen zu ermöglichen. Mit genügend Bandbreitenpunkten können Sie Token senden, TRX staken oder mit Smart Contracts interagieren, ohne TRX an Gasgebühren zahlen zu müssen.</string>
     <string name="energy_dec">Energie wird für komplexere Aktionen benötigt, wie z. B. die Interaktion mit Smart Contracts (z. B. Swaps oder dApp-Transaktionen). Im Gegensatz zu Bandbreite ist Energie nicht kostenlos – Sie müssen TRX staken, um Energie zu erhalten. (Fortgeschrittene Nutzer können Energie auch über Leasing-Mechanismen wie JustLend oder die Energie-Mietmärkte von Tronify erwerben.) Energie kann die Gasgebühren für Smart-Contract-Interaktionen jedoch deutlich reduzieren oder sogar eliminieren und ist daher besonders wertvoll für Nutzer, die häufig TRON-dApps verwenden.</string>
-    
+
     <!-- Bond Form -->
     <string name="bond_node_address">Knotenadresse</string>
     <string name="bond_operator_fees_basis_point">Betreiber-Gebühren (Basispunkte)</string>
@@ -905,12 +858,10 @@
     <string name="circle_msca_account_created_failed">Circle MSCA-Konto konnte nicht erstellt werden. Bitte versuchen Sie es erneut.</string>
     <string name="circle_usdc_account">Circle USDC-Konto</string>
     <string name="withdraw">Abheben</string>
-    <string name="send_form_network_fee">Netzwerkgebühr (automatisch)</string>
     <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
     <string name="swap_form_referral_discount_bps">Empfehlung (-%1$d bps)</string>
     <string name="amino_sign">Amino-Signatur</string>
     <string name="amino_direct">Direkte Signatur</string>
-    <string name="import_file_screen_enter_password">Geben Sie das Passwort für die Tresorfreigabe ein.</string>
     <string name="transaction_status_confirmed">Transaktion bestätigt</string>
     <string name="transaction_status_failed">Transaktion fehlgeschlagen</string>
     <string name="transaction_status_not_found">Transaktion nicht gefunden</string>
@@ -940,13 +891,10 @@
     <string name="transaction_history_search_asset_title">Asset suchen</string>
     <string name="transaction_history_search_asset_not_found">Kein Asset gefunden</string>
     <string name="transaction_history_clear_filters">Filter löschen</string>
-    <string name="transaction_status_broadcasted_label">Gesendet</string>
-    <string name="transaction_status_pending_label">Ausstehend · %1$s</string>
     <string name="transaction_status_confirmed_label">Erfolgreich</string>
     <string name="transaction_status_failed_label">Fehler</string>
     <string name="transaction_status_in_progress_label">In Bearbeitung…</string>
     <string name="transaction_history_to_label">An</string>
-    <string name="transaction_history_via_label">über %s</string>
     <string name="transaction_history_via_prefix">über</string>
     <string name="transaction_history_min_payout_label">Min. Auszahlung</string>
     <string name="transaction_history_date_today">Heute</string>
@@ -965,7 +913,6 @@
     <string name="transaction_history_view_on_explorer">Im Explorer anzeigen</string>
 
     <!-- Key Import / Seed Phrase Import -->
-    <string name="home_screen_import_seed_phrase">Seed-Phrase importieren</string>
     <string name="import_seedphrase_title">Seed-Phrase eingeben</string>
     <string name="import_seedphrase_subtitle">Geben Sie Ihre Wiederherstellungsphrase mit 12 oder 24 Wörtern ein</string>
     <string name="import_seedphrase_label">Seed-Phrase</string>
@@ -996,21 +943,12 @@
     <string name="key_import_chains_customize">Blockchains anpassen</string>
     <string name="key_import_chains_no_active_title">Keine aktiven Blockchains gefunden</string>
     <string name="key_import_chains_no_active_desc">Es wurden keine Guthaben gefunden. Bitte wählen Sie die Blockchains manuell aus, die Sie importieren möchten.</string>
-    <string name="key_import_chains_select_title">Blockchains auswählen (%1$d)</string>
-    <string name="key_import_chains_all">Alle</string>
-    <string name="key_import_chains_none">Keine</string>
     <string name="key_import_chains_get_started">Loslegen</string>
     <string name="key_import_chains_no_results">Keine Blockchains entsprechen Ihrer Suche</string>
 
     <string name="key_import_device_count_get_started">Loslegen</string>
     <string name="vault_count_recommended">Empfohlen</string>
 
-    <string name="welcome_preference_title">Welchen Tresor-Typ bevorzugen Sie?</string>
-    <string name="welcome_preference_desc">Wählen Sie zwischen einem persönlichen Tresor oder teilen Sie ihn mit jemandem, dem Sie vertrauen.</string>
-    <string name="welcome_preference_personal_title">Persönlicher Tresor</string>
-    <string name="welcome_preference_shared_title">Geteilter Tresor</string>
-    <string name="welcome_preference_personal_desc">Ein Tresor für persönliche Mittel. Signieren Sie Transaktionen mit Ihren eigenen Geräten.</string>
-    <string name="welcome_preference_shared_desc">Gemeinsam signieren mit mehreren Personen, denen Sie vertrauen (z.B. Familientresore, Ihr Buchhalter, eine Kombination…)</string>
     <string name="welcome_preference_devices_title">Wie viele Geräte haben Sie?</string>
     <string name="welcome_fast_and_easy">Schnell &amp; einfach</string>
     <string name="welcome_fast_and_easy_desc">Signieren Sie mit nur 1 Gerät. Unser sicherer Server signiert mit Ihnen für Multisig-Sicherheit. Plugin-kompatibel.</string>
@@ -1045,7 +983,6 @@
     <string name="password_choose_a_password">Wählen Sie ein Passwort</string>
     <string name="password_extra_layer">Wenn Sie eine zusätzliche Sicherheitsebene möchten, wählen Sie ein Passwort. Das Passwort kann nicht wiederhergestellt werden.</string>
     <string name="password_extra_layer_highlight">Das Passwort kann nicht wiederhergestellt werden.</string>
-    <string name="referral_enter_referral_code">Geben Sie hier Ihren Empfehlungscode ein. Genießen Sie 10 % Rabatt auf jede Transaktion.</string>
     <string name="backup_backups">Backups,</string>
     <string name="backup_your_new_recovery_method">Ihre neue Wiederherstellungsmethode</string>
     <string name="backup_backups_power_your_vault">Backups stärken Ihren Tresor. Jedes Gerät hat sein eigenes Backup. Ein Backup allein kann keine Gelder bewegen, es dient nur zur Wiederherstellung. Importieren und stellen Sie jedes verlorene Gerät wieder her.</string>
@@ -1057,8 +994,6 @@
     <string name="backup_4_digit_code_received_via_email">4-stelliger Code, der per E-Mail empfangen wurde</string>
     <string name="backup_this_will_activate_the_co_signer">Dies aktiviert den Mitunterzeichner</string>
     <string name="backup_use_a_different_email">Eine andere E-Mail verwenden</string>
-    <string name="backup_send_to_email">An %1$s senden</string>
-    <string name="backup_incorrect_code_try_again">Falscher Code. Bitte erneut versuchen.</string>
     <string name="backup_save_backup_to_the_cloud">Backup in der Cloud speichern</string>
     <string name="backup_vault_screen_export_prefix">Exportieren Sie diese Backup-Datei und speichern Sie sie in der Cloud. Sie ist</string>
     <string name="backup_vault_screen_encrypted">verschlüsselt</string>
@@ -1083,36 +1018,11 @@
     <string name="vault_setup_dynamic_device_management">Dynamische Geräteverwaltung</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">Fügen Sie so viele Geräte hinzu, wie Sie möchten, und erhalten Sie institutionelle Sicherheit.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Für Teams und Schatzkammern entwickelt</string>
-    <string name="vault_setup_ideal_for_teams_managing_shared_funds">Ideal für Teams, die gemeinsame Mittel und höherwertige Tresore verwalten, die mehr Unterzeichner erfordern.</string>
-    <string name="vault_setup_no_inspiration_desc">Keine Inspiration? Sie können den Namen später jederzeit in den Einstellungen ändern.</string>
-    <string name="vault_setup_scan_qr_on_your_other_devices">Scannen Sie den QR-Code auf Ihren anderen Geräten</string>
-    <string name="vault_setup_on_your_other_device_open_the_app_and_tap_scan_qr">Öffnen Sie auf Ihrem anderen Gerät die App und tippen Sie auf "QR scannen", um es zu verbinden.</string>
-    <string name="vault_setup_start_scanning">Scannen starten</string>
-    <string name="vault_setup_waiting_for_devices_to_connect">Warten auf die Verbindung der Geräte…</string>
-    <string name="vault_setup_waiting_for_device_to_join">Warten auf den Beitritt des Geräts</string>
-    <string name="vault_setup_want_to_create_a_vault_privately">Möchten Sie einen Tresor privat erstellen?</string>
-    <string name="vault_setup_use_local_mode">Lokalen Modus verwenden</string>
-    <string name="vault_setup_connected">Verbunden</string>
-    <string name="vault_setup_local_mode_waiting_on_devices">Lokaler Modus, warten auf Geräte</string>
-    <string name="vault_setup_short_description_of_local_mode">Kurze Beschreibung des lokalen Modus folgt hier</string>
-    <string name="vault_setup_not_want_to_use_local_switch_back">Lokalen Modus nicht verwenden? Zurück wechseln.</string>
-    <string name="vault_setup_use_standard_mode">Standardmodus verwenden</string>
-    <string name="vault_setup_review_your_vault_devices">Ihre Tresor-Geräte überprüfen</string>
-    <string name="vault_setup_make_sure_that_these_are_the_correct_devices">Stellen Sie sicher, dass dies die richtigen Geräte sind, die Sie hinzugefügt haben:</string>
-    <string name="vault_setup_backups">Backups,</string>
-    <string name="vault_setup_your_new_recovery_method">Ihre neue Wiederherstellungsmethode</string>
-    <string name="vault_setup_backups_power_your_vault">Backups stärken Ihren Tresor. Jedes Gerät hat sein eigenes Backup. Ein Backup allein kann keine Gelder bewegen, es dient nur zur Wiederherstellung. Importieren und stellen Sie jedes verlorene Gerät wieder her.</string>
     <string name="vault_setup_back_up_each_device">Jedes Gerät sichern</string>
     <string name="vault_setup_you_ll_create_n_backups_in_total">Sie werden insgesamt %1$d Backups erstellen. Sie tun dies auf jedem Gerät.</string>
-    <string name="vault_setup_store_backups_separately">Backups getrennt aufbewahren</string>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Speichern Sie jedes Backup in einem anderen Cloud-Dienst oder mit einem anderen Passwort. Wenn eines kompromittiert wird, bleiben Ihre Gelder sicher.</string>
-    <string name="vault_setup_looks_good">Sieht gut aus</string>
     <string name="vault_setup_i_understand">Ich verstehe</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Backup %1$d von %2$d in der Cloud speichern</string>
-    <string name="vault_setup_export_this_backup_file_then_save_it_to_the_cloud">Exportieren Sie diese Backup-Datei und speichern Sie sie in der Cloud. Verwenden Sie für jedes Backup einen anderen Cloud-Dienst oder ein anderes Konto. Wenn Sie fertig sind, löschen Sie die Datei von diesem Gerät.</string>
-    <string name="vault_setup_your_vault_is_ready_to_use">Ihr Tresor ist einsatzbereit</string>
-    <string name="scanning_qr_troubleshooting_scanning">Probleme beim Scannen? Wenn der QR-Code nicht sofort gescannt wird: Bewegen Sie das Telefon leicht näher oder weiter vom Bildschirm. Stellen Sie sicher, dass der Bildschirm gut beleuchtet und frei von Blendlicht ist. Halten Sie beide Geräte einen Moment lang ruhig.</string>
-    <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">Mit wie vielen Personen möchten Sie den Tresor teilen?</string>
 
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Serversicherung</string>
