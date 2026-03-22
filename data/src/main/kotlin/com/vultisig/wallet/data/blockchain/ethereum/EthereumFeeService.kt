@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.GasFees
+import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.isLayer2
@@ -19,33 +20,6 @@ import kotlinx.coroutines.coroutineScope
 
 class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory) :
     FeeService {
-
-    @Deprecated("Use calculateFees(transaction: BlockchainTransaction): Fee")
-    override suspend fun calculateFees(
-        chain: Chain,
-        limit: BigInteger,
-        isSwap: Boolean,
-        to: String?,
-    ): Fee {
-        require(limit > BigInteger.ZERO) { "Limit should not be 0" }
-        val evmApi = evmApiFactory.createEvmApi(chain)
-
-        val fees =
-            if (chain.supportsLegacyGas) {
-                calculateLegacyGasFees(limit, evmApi)
-            } else {
-                calculateEip1559Fees(limit, chain, isSwap, evmApi)
-            }
-
-        val l1Fees =
-            if (chain.isLayer2) {
-                calculateLayer1Fees()
-            } else {
-                BigInteger.ZERO
-            }
-
-        return fees.addL1Amount(l1Fees)
-    }
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
         require(transaction is Transfer) {
@@ -108,9 +82,24 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
         val chain = transaction.coin.chain
         val defaultLimit = getDefaultLimit(transaction)
-        val isSwap = transaction is Transfer
+        val isSwap = transaction is Swap
+        val evmApi = evmApiFactory.createEvmApi(chain)
 
-        return calculateFees(chain, defaultLimit, isSwap)
+        val fees =
+            if (chain.supportsLegacyGas) {
+                calculateLegacyGasFees(defaultLimit, evmApi)
+            } else {
+                calculateEip1559Fees(defaultLimit, chain, isSwap, evmApi)
+            }
+
+        val l1Fees =
+            if (chain.isLayer2) {
+                calculateLayer1Fees()
+            } else {
+                BigInteger.ZERO
+            }
+
+        return fees.addL1Amount(l1Fees)
     }
 
     private suspend fun calculateLegacyGasFees(limit: BigInteger, evmApi: EvmApi): GasFees {
