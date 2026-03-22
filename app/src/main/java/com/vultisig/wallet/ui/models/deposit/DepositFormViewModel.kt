@@ -59,6 +59,7 @@ import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.getChain
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
@@ -149,6 +150,8 @@ internal data class DepositFormUiModel(
     val availableSecuredAssets: List<TokenWithdrawSecureAsset> = emptyList(),
     val selectedSecuredAsset: TokenWithdrawSecureAsset =
         availableSecuredAssets.firstOrNull() ?: TokenWithdrawSecureAsset.EMPTY,
+    val bondableAssets: List<String> = emptyList(),
+    val selectedBondAsset: String = "",
 )
 
 @HiltViewModel
@@ -371,21 +374,42 @@ constructor(
     }
 
     private fun setMetadataInfo() {
-        if (!depositTypeAction.isNullOrEmpty()) {
-            val action = parseDepositType(depositTypeAction)
+        val action = depositTypeAction?.takeIf { it.isNotEmpty() } ?: return
+        depositTypeAction = null
 
-            if (action != null) {
-                val depositOption =
-                    when (action) {
-                        DeFiNavActions.UNBOND -> DepositOption.Unbond
+        val depositOption =
+            when (parseDepositType(action)) {
+                DeFiNavActions.BOND -> DepositOption.Bond
+                DeFiNavActions.UNBOND -> DepositOption.Unbond
+                DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
+                DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
+                else -> DepositOption.Bond
+            }
+        selectDepositOption(depositOption)
+    }
 
-                        else -> DepositOption.Bond
-                    }
-                selectDepositOption(depositOption)
-            } else {
-                Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
+    private fun loadMayaBondableAssets() {
+        state.update { it.copy(bondableAssets = emptyList(), selectedBondAsset = "") }
+        assetsFieldState.clearText()
+        viewModelScope.safeLaunch {
+            val assets =
+                withContext(Dispatchers.IO) {
+                    mayaChainApi
+                        .getMayaNodePools()
+                        .filter { it.status == "Available" && it.bondable }
+                        .map { it.asset }
+                }
+            val firstAsset = assets.firstOrNull() ?: ""
+            state.update { it.copy(bondableAssets = assets, selectedBondAsset = firstAsset) }
+            if (firstAsset.isNotEmpty()) {
+                assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
             }
         }
+    }
+
+    fun selectBondAsset(asset: String) {
+        state.update { it.copy(selectedBondAsset = asset) }
+        assetsFieldState.setTextAndPlaceCursorAtEnd(asset)
     }
 
     private suspend fun updateTokenAmount(
@@ -491,11 +515,24 @@ constructor(
                 }
 
                 DepositOption.Bond,
-                DepositOption.Unbond,
-                DepositOption.Leave ->
+                DepositOption.Unbond -> {
+                    val defaultBondToken =
+                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
+                        else Coins.ThorChain.RUNE
                     state.update {
-                        it.copy(selectedToken = Coins.ThorChain.RUNE, unstakableAmount = null)
+                        it.copy(selectedToken = defaultBondToken, unstakableAmount = null)
                     }
+                    if (chain == Chain.MayaChain) {
+                        loadMayaBondableAssets()
+                    }
+                }
+
+                DepositOption.Leave -> {
+                    val leaveToken =
+                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
+                        else Coins.ThorChain.RUNE
+                    state.update { it.copy(selectedToken = leaveToken, unstakableAmount = null) }
+                }
 
                 DepositOption.RemoveCacaoPool -> {
                     handleRemoveCacaoOption()

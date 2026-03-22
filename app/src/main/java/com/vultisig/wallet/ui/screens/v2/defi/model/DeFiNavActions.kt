@@ -20,6 +20,8 @@ internal enum class DeFiNavActions(val type: String) {
     UNSTAKE_STCY("unstake_stcy"),
     DEPOSIT_USDC_CIRCLE("deposit_usdc_circle"),
     WITHDRAW_USDC_CIRCLE("withdraw_usdc_circle"),
+    STAKE_CACAO("stake_cacao"),
+    UNSTAKE_CACAO("unstake_cacao"),
 }
 
 internal fun parseDepositType(type: String?): DeFiNavActions? {
@@ -59,6 +61,10 @@ internal fun parseDepositType(type: String?): DeFiNavActions? {
         "unstake_stcy" -> DeFiNavActions.UNSTAKE_STCY
         "deposit_usdc_circle" -> DeFiNavActions.DEPOSIT_USDC_CIRCLE
         "withdraw_usdc_circle" -> DeFiNavActions.WITHDRAW_USDC_CIRCLE
+        "stakecacao",
+        "stake_cacao" -> DeFiNavActions.STAKE_CACAO
+        "unstakecacao",
+        "unstake_cacao" -> DeFiNavActions.UNSTAKE_CACAO
         else -> {
             try {
                 type?.let { DeFiNavActions.valueOf(it.uppercase()) }
@@ -77,6 +83,7 @@ internal fun Coin.getStakeDeFiNavAction(): DeFiNavActions {
         Coins.ThorChain.yRUNE -> DeFiNavActions.MINT_YRUNE
         Coins.ThorChain.yTCY -> DeFiNavActions.MINT_YTCY
         Coins.ThorChain.sTCY -> DeFiNavActions.STAKE_STCY
+        Coins.MayaChain.CACAO -> DeFiNavActions.STAKE_CACAO
         else -> error("Not supported ${this.coinType.name}")
     }
 }
@@ -88,6 +95,7 @@ internal fun Coin.getUnstakeDeFiNavAction(): DeFiNavActions {
         Coins.ThorChain.yRUNE -> DeFiNavActions.REDEEM_YRUNE
         Coins.ThorChain.yTCY -> DeFiNavActions.REDEEM_YTCY
         Coins.ThorChain.sTCY -> DeFiNavActions.UNSTAKE_STCY
+        Coins.MayaChain.CACAO -> DeFiNavActions.UNSTAKE_CACAO
         else -> error("Not supported ${this.coinType.name}")
     }
 }

@@ -363,7 +363,7 @@
 
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
-    <string name="total_bonded_rune">Totaal Gebonden Rune</string>
+    <string name="total_bonded_coin">Totaal Gebonden %s</string>
     <string name="bonded_amount">Gebonden: %s</string>
     <string name="bond_to_node">Binden aan Node</string>
     <string name="node_address_formatted">Adres: %s</string>
@@ -437,6 +437,9 @@
     <string name="defi_tab_staked">Gestaked</string>
     <string name="defi_tab_bonded">Gebonden</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">Bond</string>
+    <string name="defi_stake">Stake</string>
+    <string name="liquidity_pool">Liquiditeitspool</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Slippage is vereist</string>
     <string name="slippage_invalid_error">Slippage moet tussen 1 en 100 liggen</string>
@@ -877,7 +880,7 @@
     <string name="energy">Energie</string>
     <string name="bandwidth_dec">Bandbreedtepunten zijn vereist voor elke transactie op TRON, inclusief zowel standaard tokenverzendingen als interacties met smart contracts. Elke TRON-gebruiker ontvangt 600 gratis bandbreedtepunten per dag, goed voor ongeveer twee basisverzendingen. Daarnaast kunt u extra bandbreedtepunten verdienen door TRX te staken, waardoor uw dagelijkse saldo toeneemt en u meer transacties kunt ondersteunen. Als u voldoende bandbreedtepunten heeft, kunt u tokens verzenden, TRX staken of met smart contracts werken zonder TRX aan gaskosten te betalen.</string>
     <string name="energy_dec">Vereist voor complexere acties, zoals interactie met smart contracts (bijv. swaps of dApp-transacties). In tegenstelling tot bandbreedte wordt energie niet gratis verstrekt: u moet TRX staken om energie te verdienen. (Meer gevorderde gebruikers kunnen ook energie verkrijgen via leasemechanismen zoals JustLend of de Energy Rental Markets van Tronify). Met Energy kunt u de gaskosten voor interacties met slimme contracten echter aanzienlijk verlagen of zelfs elimineren. Dit maakt Energy waardevol voor mensen die regelmatig TRON dApps gebruiken.</string>
-    
+
     <!-- Bond Form -->
     <string name="bond_node_address">Node-adres</string>
     <string name="bond_operator_fees_basis_point">Operator-kosten (Basispunten)</string>
@@ -887,12 +890,12 @@
     <string name="address_auto_filled">Adres %1$s (automatisch ingevuld)</string>
     <string name="generated_memo">Memo gegenereerd:</string>
     <string name="amount_to_withdraw">Bedrag om op te nemen (Saldo: %1$s)</string>
-    <string name="mint_secured_asset_secure">Mint Onderpand (SECURE+)</string>
+    <string name="mint_secured_asset_secure">Mint Gedekte activa (SECURE+)</string>
     <string name="target_asset">Doelactiva: %1$s-%2$s</string>
-    <string name="thor_address">Thor Adres</string>
+    <string name="thor_address">THORChain-adres</string>
     <string name="operation">Operatie</string>
     <string name="thorchain_address_not_found_in_vault">THORChain-adres niet gevonden in de kluis. Zorg ervoor dat RUNE in uw kluis staat.</string>
-    <string name="deposit_error_not_secured_asset">Het geselecteerde item is geen beveiligd item en kan niet worden verwerkt.</string>
+    <string name="deposit_error_not_secured_asset">Het geselecteerde item is geen gedekte activa en kan niet worden verwerkt.</string>
     <string name="keysign_password_hide_hint">Verberg hint</string>
     <string name="keysign_password_show_hint">Toon hint</string>
 
@@ -1141,4 +1144,13 @@
     <string name="add_referral_error_chars">Verwijzingscode mag alleen alfanumerieke tekens bevatten</string>
     <string name="add_referral_error_not_found">Verwijzingscode niet gevonden</string>
     <string name="add_referral_error_network">Verwijzingscode controleren mislukt. Probeer het opnieuw.</string>
+    <string name="cacao_pool">CACAO-pool</string>
+    <string name="staked_ruji_header">Gestaked RUJI</string>
+    <string name="staked_tcy_header">Gestaked TCY</string>
+    <string name="staked_ytcy_header">Gestaked yTCY</string>
+    <string name="staked_yrune_header">Gestaked yRUNE</string>
+    <string name="compounded_tcy_header">Samengesteld TCY</string>
+    <string name="native_asset">Native</string>
+    <string name="invalid_integer_error">Ongeldig geheel getal</string>
+    <string name="empty_lps_field">Leeg LP-eenheden-veld</string>
 </resources>

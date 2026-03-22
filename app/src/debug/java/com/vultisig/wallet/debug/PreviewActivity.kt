@@ -10,16 +10,19 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
 import com.vultisig.wallet.ui.models.keygen.VerifyPinState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
@@ -49,6 +52,8 @@ class PreviewActivity : ComponentActivity() {
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "empty_referral" -> EmptyReferralBanner(onClickedCreateReferral = {})
                     "fast_vault_verification" -> FastVaultVerificationPreview()
+                    "bond_form_thor" -> BondFormThorPreview()
+                    "bond_form_maya" -> BondFormMayaPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -130,6 +135,37 @@ private fun FastVaultVerificationPreview() {
         onCodeChanged = {},
         onPasteClick = {},
         onChangeEmailClick = {},
+    )
+}
+
+@Composable
+private fun BondFormThorPreview() {
+    BondFormContent(
+        state = DepositFormUiModel(depositChain = Chain.ThorChain),
+        nodeAddressFieldState = TextFieldState("thor1mtqtupwgjwn397w3dx9fqmqgzr"),
+        providerFieldState = TextFieldState(),
+        operatorFeeFieldState = TextFieldState("2000"),
+        tokenAmountFieldState = TextFieldState("500"),
+        assetsFieldState = TextFieldState(),
+        lpUnitsFieldState = TextFieldState(),
+    )
+}
+
+@Composable
+private fun BondFormMayaPreview() {
+    BondFormContent(
+        state =
+            DepositFormUiModel(
+                depositChain = Chain.MayaChain,
+                bondableAssets = listOf("RUNE", "CACAO"),
+                selectedBondAsset = "RUNE",
+            ),
+        nodeAddressFieldState = TextFieldState("mayaxyxf1515615s"),
+        providerFieldState = TextFieldState(),
+        operatorFeeFieldState = TextFieldState(),
+        tokenAmountFieldState = TextFieldState(),
+        assetsFieldState = TextFieldState(),
+        lpUnitsFieldState = TextFieldState("0"),
     )
 }
 

@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.MAYA_STREAMING_INTERVAL
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -27,6 +28,8 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.http.path
 import javax.inject.Inject
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 
@@ -55,6 +58,58 @@ interface MayaChainApi {
     suspend fun getCacaoProvider(address: String): CacaoProviderResponse
 
     suspend fun getMayaConstants(): Map<String, Long>
+
+    suspend fun getAllNodes(): List<MayaNodeInfo>
+
+    suspend fun getNodeDetails(nodeAddress: String): MayaNodeInfo
+
+    suspend fun getMidgardNetworkData(): MayaMidgardNetworkData
+
+    suspend fun getMidgardHealth(): MayaMidgardHealth
+
+    suspend fun getMayaNodePools(): List<MayaNodePool>
+}
+
+@Serializable
+data class MayaNodeInfo(
+    @SerialName("node_address") val nodeAddress: String,
+    @SerialName("status") val status: String,
+    @SerialName("bond") val bond: String = "0",
+    @SerialName("current_award") val currentAward: String = "0",
+    @SerialName("bond_providers") val bondProviders: MayaBondProviders,
+)
+
+@Serializable
+data class MayaBondProviders(
+    @SerialName("node_operator_fee") val nodeOperatorFee: String,
+    @SerialName("providers") val providers: List<MayaBondProvider>,
+)
+
+@Serializable
+data class MayaBondProvider(
+    @SerialName("bond_address") val bondAddress: String,
+    @SerialName("bonded") val bonded: Boolean = false,
+    @SerialName("reward") val reward: String = "0",
+    @SerialName("pools") val pools: Map<String, String> = emptyMap(),
+)
+
+@Serializable
+data class MayaMidgardNetworkData(
+    @SerialName("bondingAPY") val bondingAPY: String,
+    @SerialName("liquidityAPY") val liquidityAPY: String = "0",
+    @SerialName("nextChurnHeight") val nextChurnHeight: String,
+)
+
+@Serializable
+data class MayaNodePool(
+    @SerialName("asset") val asset: String,
+    @SerialName("status") val status: String,
+    @SerialName("bondable") val bondable: Boolean = false,
+)
+
+@Serializable
+data class MayaMidgardHealth(@SerialName("lastThorNode") val lastMayaNode: MayaHeightInfo) {
+    @Serializable data class MayaHeightInfo(val height: Long, val timestamp: Long)
 }
 
 internal class MayaChainApiImp
@@ -204,5 +259,37 @@ constructor(
             Timber.tag("MayaChainService").e("Error getMayaConstants: ${e.message}")
             throw e
         }
+    }
+
+    override suspend fun getAllNodes(): List<MayaNodeInfo> =
+        httpClient
+            .get("$MAYA_NODE_BASE/mayachain/nodes") { header(xClientID, xClientIDValue) }
+            .bodyOrThrow<List<MayaNodeInfo>>()
+
+    override suspend fun getNodeDetails(nodeAddress: String): MayaNodeInfo =
+        httpClient
+            .get("$MAYA_NODE_BASE/mayachain/node/$nodeAddress") {
+                header(xClientID, xClientIDValue)
+            }
+            .bodyOrThrow<MayaNodeInfo>()
+
+    override suspend fun getMidgardNetworkData(): MayaMidgardNetworkData =
+        httpClient
+            .get("$MAYA_MIDGARD_BASE/network") { header(xClientID, xClientIDValue) }
+            .bodyOrThrow<MayaMidgardNetworkData>()
+
+    override suspend fun getMidgardHealth(): MayaMidgardHealth =
+        httpClient
+            .get("$MAYA_MIDGARD_BASE/health") { header(xClientID, xClientIDValue) }
+            .bodyOrThrow<MayaMidgardHealth>()
+
+    override suspend fun getMayaNodePools(): List<MayaNodePool> =
+        httpClient
+            .get("$MAYA_NODE_BASE/mayachain/pools") { header(xClientID, xClientIDValue) }
+            .bodyOrThrow<List<MayaNodePool>>()
+
+    companion object {
+        private const val MAYA_NODE_BASE = "https://mayanode.mayachain.info"
+        private const val MAYA_MIDGARD_BASE = "https://midgard.mayachain.info/v2"
     }
 }

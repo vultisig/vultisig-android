@@ -39,6 +39,8 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.getStakeDeFiNavAction
 import com.vultisig.wallet.ui.screens.v2.defi.model.getUnstakeDeFiNavAction
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
 
 @Composable
@@ -101,7 +103,7 @@ internal fun StakingWidget(
 
             Column {
                 Text(
-                    text = state.stakeAssetHeader,
+                    text = state.stakeAssetHeader.asString(),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary,
                 )
@@ -117,6 +119,16 @@ internal fun StakingWidget(
                         style = Theme.brockmann.headings.title1,
                         color = Theme.v2.colors.text.primary,
                     )
+
+                    if (state.stakedFiatDisplay.isNotEmpty()) {
+                        Text(
+                            text =
+                                if (isBalanceVisible) state.stakedFiatDisplay
+                                else HIDE_BALANCE_CHARS,
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.text.tertiary,
+                        )
+                    }
                 }
             }
         }
@@ -284,6 +296,7 @@ private fun getHeaderIcon(assetStake: String): Int {
         assetStake.contains("stcy", ignoreCase = true) -> R.drawable.stcy
         assetStake.contains("ruji", ignoreCase = true) -> R.drawable.ruji_staking
         assetStake.contains("tcy", ignoreCase = true) -> R.drawable.tcy_staking
+        assetStake.contains("cacao", ignoreCase = true) -> R.drawable.cacao
         else -> R.drawable.wewe
     }
 }
@@ -320,7 +333,7 @@ private fun StakingWidgetFullActionsPreview() {
             state =
                 StakePositionUiModel(
                     coin = Coins.ThorChain.RUJI,
-                    stakeAssetHeader = "Staked RUJI",
+                    stakeAssetHeader = UiText.StringResource(R.string.staked_ruji_header),
                     stakedAmountDisplay = "1000 RUJI",
                     apy = "18.5%",
                     canWithdraw = true,
@@ -346,7 +359,7 @@ private fun StakingWidgetLoadingPreview() {
             state =
                 StakePositionUiModel(
                     coin = Coins.ThorChain.RUJI,
-                    stakeAssetHeader = "Staked RUJI",
+                    stakeAssetHeader = UiText.StringResource(R.string.staked_ruji_header),
                     stakedAmountDisplay = "0 RUJI",
                     apy = "0%",
                     canWithdraw = false,
