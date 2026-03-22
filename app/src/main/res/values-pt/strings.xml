@@ -83,6 +83,8 @@
     <string name="send_amount_currency_hint">Inserir Quantidade</string>
     <string name="send_continue_button">Continuar</string>
     <string name="chain_account_view_swap">TROCAR</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
     <string name="circle_defi_description">Deposite seu USDC em uma conta Circle e obtenha rendimento. Com segurança dentro do seu cofre Vultisig.</string>
     <string name="circle_defi_control_info">Os fundos permanecem totalmente sob o controle do seu cofre. As contas Circle são autocustodiais e o rendimento é gerado através de tesourarias seguras fora da cadeia.</string>
     <string name="usdc_deposit_title">Depósito USDC</string>
@@ -1055,6 +1057,4 @@
     <string name="add_referral_error_chars">O código de indicação deve conter apenas caracteres alfanuméricos</string>
     <string name="add_referral_error_not_found">Código de indicação não encontrado</string>
     <string name="add_referral_error_network">Falha ao verificar o código de indicação. Tente novamente.</string>
-    <string name="chain_account_view_deposit">DEPOSIT</string>
-    <string name="chain_account_view_send">SEND</string>
 </resources>

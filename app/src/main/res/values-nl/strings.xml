@@ -92,6 +92,8 @@
     <string name="send_amount_currency_hint">Voer bedrag in</string>
     <string name="send_continue_button">Doorgaan</string>
     <string name="chain_account_view_swap">WISSELEN</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
     <string name="circle_defi_description">Stort je USDC op een Circle-account en verdien rendement. Veilig binnen je Vultisig-kluis.</string>
     <string name="circle_defi_control_info">Fondsen blijven volledig onder controle van je kluis. Circle-accounts zijn zelfbeheerd en rendement wordt gegenereerd via veilige off-chain schatkisten.</string>
     <string name="usdc_deposit_title">USDC-storting</string>
@@ -1051,6 +1053,4 @@
     <string name="add_referral_error_chars">Verwijzingscode mag alleen alfanumerieke tekens bevatten</string>
     <string name="add_referral_error_not_found">Verwijzingscode niet gevonden</string>
     <string name="add_referral_error_network">Verwijzingscode controleren mislukt. Probeer het opnieuw.</string>
-    <string name="chain_account_view_deposit">DEPOSIT</string>
-    <string name="chain_account_view_send">SEND</string>
 </resources>

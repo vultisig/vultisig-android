@@ -92,6 +92,8 @@
     <string name="send_amount_currency_hint">Введите сумму</string>
     <string name="send_continue_button">Продолжить</string>
     <string name="chain_account_view_swap">ОБМЕН</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
     <string name="circle_defi_description">Внесите свой USDC на счет Circle и получайте доход. Безопасно в вашем хранилище Vultisig.</string>
     <string name="circle_defi_control_info">Средства остаются полностью под контролем вашего хранилища. Счета Circle являются самостоятельными, а доход генерируется через безопасные внесетевые казначейства.</string>
     <string name="usdc_deposit_title">Депозит USDC</string>
@@ -1055,6 +1057,4 @@
     <string name="add_referral_error_chars">Реферальный код должен содержать только буквы и цифры</string>
     <string name="add_referral_error_not_found">Реферальный код не найден</string>
     <string name="add_referral_error_network">Не удалось проверить реферальный код. Попробуйте ещё раз.</string>
-    <string name="chain_account_view_deposit">DEPOSIT</string>
-    <string name="chain_account_view_send">SEND</string>
 </resources>

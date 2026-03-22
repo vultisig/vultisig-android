@@ -145,6 +145,8 @@
     <string name="swap_form_vault">Cassaforte</string>
     <string name="swap_form_min_pay">pagamento min.</string>
     <string name="chain_account_view_swap">SCAMBIA</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">FIRMANDO CON CHIAVE EdDSA…</string>
     <string name="signing_error_please_try_again_s">Errore di Firma. Per favore, riprova.%s</string>
@@ -1057,6 +1059,4 @@
     <string name="add_referral_error_chars">Il codice referral deve contenere solo caratteri alfanumerici</string>
     <string name="add_referral_error_not_found">Codice di invito non trovato</string>
     <string name="add_referral_error_network">Errore durante la verifica del codice referral. Riprova.</string>
-    <string name="chain_account_view_deposit">DEPOSIT</string>
-    <string name="chain_account_view_send">SEND</string>
 </resources>

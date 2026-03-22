@@ -143,6 +143,8 @@
     <string name="tokens">Tokeni</string>
     <string name="transaction_type_button_swap">Zamijeni</string>
     <string name="chain_account_view_swap">ZAMIJENI</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
     <string name="keysign_screen_signing_with_ecdsa">POTPISIVANJE KORISTEĆI ECDSA KLJUČ…</string>
     <string name="keysign_screen_signing_with_eddsa">POTPISIVANJE KORISTEĆI EdDSA KLJUČ…</string>
     <string name="signing_error_please_try_again_s">Greška pri prijavi. Molimo pokušajte ponovno. %s</string>
@@ -1057,6 +1059,4 @@
     <string name="add_referral_error_chars">Referalni kod smije sadržavati samo alfanumeričke znakove</string>
     <string name="add_referral_error_not_found">Referalni kod nije pronađen</string>
     <string name="add_referral_error_network">Provjera referalnog koda nije uspjela. Pokušajte ponovo.</string>
-    <string name="chain_account_view_deposit">DEPOSIT</string>
-    <string name="chain_account_view_send">SEND</string>
 </resources>

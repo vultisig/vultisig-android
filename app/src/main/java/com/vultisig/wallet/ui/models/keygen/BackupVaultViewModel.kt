@@ -82,7 +82,7 @@ constructor(
             viewModelScope.launch {
                 val vault = vaultRepository.get(args.vaultId) ?: return@launch
                 val total = vault.signers.size
-                val position = vault.getVaultPart()
+                val position = vault.getVaultPart().coerceAtLeast(1)
                 _title.value =
                     UiText.FormattedText(
                         R.string.vault_setup_save_backup_n_of_n_to_the_cloud,
