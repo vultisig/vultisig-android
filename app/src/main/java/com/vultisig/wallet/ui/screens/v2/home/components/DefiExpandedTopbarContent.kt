@@ -53,7 +53,6 @@ internal fun DefiExpandedTopbarContent(
                 isVisible = state.isBalanceValueVisible,
                 balance = state.totalDeFiValue,
                 onToggleVisibility = onToggleBalanceVisibility,
-                hideText = stringResource(R.string.hide_defi_balance),
             )
         }
     }
