@@ -95,9 +95,7 @@
     <string name="send_amount">Cantidad</string>
     <string name="send_amount_currency_hint">Ingresar Cantidad</string>
     <string name="send_continue_button">Continuar</string>
-    <string name="chain_account_view_swap">Intercambiar</string>
-    <string name="chain_account_view_deposit">Depósito</string>
-    <string name="chain_account_view_send">ENVIAR</string>
+    <string name="chain_account_view_swap">INTERCAMBIAR</string>
     <string name="circle_defi_description">Deposita tu USDC en una cuenta de Circle y obtén rendimientos. De forma segura dentro de tu bóveda Vultisig.</string>
     <string name="circle_defi_control_info">Los fondos permanecen completamente bajo el control de tu bóveda. Las cuentas de Circle son de autocustodia y el rendimiento se genera a través de tesorerías seguras fuera de la cadena.</string>
     <string name="usdc_deposit_title">Depósito USDC</string>
@@ -186,13 +184,13 @@
     <string name="swap_error_no_amount">La cantidad debe ser un número positivo</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Logotipo de token</string>
-    <string name="tokens">Activos</string>
+    <string name="tokens">Tokens</string>
     <string name="swap_screen_invalid_vault">La transacción probablemente fallará, la bóveda no pudo cargarse.</string>
     <string name="vault_settings_error_backup_file">ocurrió un error</string>
     <string name="send_error_no_address">La dirección no es válida</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="camera_permission_denied">No se ha concedido el permiso para la cámara. Habilítelo en la configuración.</string>
-    <string name="vault_accounts_account_assets">%1$s Activos</string>
+    <string name="vault_accounts_account_assets">%1$s activos</string>
     <string name="chain_token_screen_address_copied">%1$s copiada al portapapeles</string>
     <string name="s_of_s_vault">%1$s de %2$s bóveda</string>
     <string name="vault_settings_delete_vault_name">Nombre de la Bóveda:</string>
@@ -278,8 +276,8 @@
     <string name="start_screen_import_vault_share_file_types">Tipos de archivo compatibles: .bak &amp; .vult</string>
     <string name="start_screen_recover_or_convert">Recupera tu bóveda o convierte tu frase semilla en una bóveda</string>
     <string name="keysign_password_incorrect_password">La contraseña es incorrecta</string>
-    <string name="vault_list_part_n_of_t">Parte %1$d de %2$d</string>
-    <string name="vault_part_n_of_t">Parte %1$d de %2$d</string>
+    <string name="vault_list_part_n_of_t">Compartir %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Compartir %1$d-de-%2$d</string>
     <string name="qr_title_join_keygen">Únase a Keygen</string>
     <string name="qr_title_join_keysign">Únase a Keysign</string>
     <string name="qr_title_join_swap_keysign">Únete a Swap</string>
@@ -304,7 +302,7 @@
     <string name="vault_details_screen_vault_type">Tipo de bóveda</string>
     <string name="vault_settings_delete_vault_part">Compartir de la bóveda:</string>
     <string name="vault_password_hint_to_long">La pista es demasiado larga</string>
-    <string name="vault_details_screen_vault_part_desc">Parte %1$s de %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Compartir %1$s-de-%2$s</string>
     <string name="do_not_remind_me_again">No me lo recuerdes otra vez</string>
     <string name="monthly_backup_reminder_title">No olvides hacer una copia de seguridad de tus recursos compartidos de bóveda y verificar que estén completos.</string>
     <string name="transaction_complete_screen_title">Transacción completada</string>
@@ -526,7 +524,7 @@
     <string name="general">General</string>
     <string name="support">Soporte</string>
     <string name="vultisig_community">Comunidad de Vultisig</string>
-    <string name="vault_management">Bóveda</string>
+    <string name="vault_management">Gestión de bóvedas</string>
     <string name="other">Otros</string>
     <string name="check_updates_title">Consultar actualizaciones</string>
     <string name="update_available">Actualización disponible</string>
@@ -724,7 +722,7 @@
     <string name="select_vault_type_secure_desc_3">Protege cualquier cantidad de activos</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver firma automáticamente</string>
     <string name="peer_discovery_topbar_title">Escanear código QR</string>
-    <string name="peer_discovery_waiting_for_devices_action">Esperando a que los dispositivos se conecten...</string>
+    <string name="peer_discovery_waiting_for_devices_action">Esperando dispositivos...</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivos (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Enviado a %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">¿No recibiste un correo?</string>
@@ -813,7 +811,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Cambia al modo local.</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Cambia al modo de internet.</string>
     <string name="onboarding_desc_page_6_part_1">Estas comparticiones colaboran para</string>
-    <string name="enter_email_screen_desc">Este correo se usa para la copia de seguridad en la nube y no se comparte con terceros</string>
+    <string name="enter_email_screen_desc">Este correo electrónico solo se utiliza para enviar la copia de seguridad del servidor</string>
     <string name="keygen_connecting_with_server_take_a_second">Esto solo debería tardar un segundo.</string>
     <string name="function_switch_thorchain_address">Dirección de THORChain</string>
     <string name="tx_transaction_successful_screen_title">Transacción exitosa</string>
@@ -1027,7 +1025,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Copia de seguridad del servidor</string>
     <string name="server_backup_email_label">Correo electrónico</string>
-    <string name="server_backup_email_description">Este correo se usa para la copia de seguridad en la nube y no se comparte con terceros</string>
+    <string name="server_backup_email_description">Introduce el correo electrónico para recibir el recurso compartido de la bóveda.</string>
     <string name="server_backup_email_error">Correo electrónico incorrecto, por favor verifique</string>
     <string name="server_backup_password_label">Contraseña</string>
     <string name="server_backup_password_description">Introduce la contraseña que estableciste al crear esta bóveda.</string>
@@ -1056,4 +1054,6 @@
     <string name="add_referral_error_chars">El código de referido solo debe contener caracteres alfanuméricos</string>
     <string name="add_referral_error_not_found">Código de referido no encontrado</string>
     <string name="add_referral_error_network">Error al verificar el código de referido. Por favor, inténtalo de nuevo.</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
 </resources>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Vultisig</string>
-    <string name="tokens">Ativos</string>
+    <string name="tokens">Tokens</string>
     <string name="signing_error_please_try_again_s">Erro ao Assinar. Por favor, tente novamente. %s</string>
     <string name="try_again">Tentar Novamente</string>
     <string name="vault_settings_title">Configurações do Cofre</string>
@@ -82,9 +82,7 @@
     <string name="send_amount">Montante</string>
     <string name="send_amount_currency_hint">Inserir Quantidade</string>
     <string name="send_continue_button">Continuar</string>
-    <string name="chain_account_view_swap">Trocar</string>
-    <string name="chain_account_view_deposit">Depósito</string>
-    <string name="chain_account_view_send">ENVIAR</string>
+    <string name="chain_account_view_swap">TROCAR</string>
     <string name="circle_defi_description">Deposite seu USDC em uma conta Circle e obtenha rendimento. Com segurança dentro do seu cofre Vultisig.</string>
     <string name="circle_defi_control_info">Os fundos permanecem totalmente sob o controle do seu cofre. As contas Circle são autocustodiais e o rendimento é gerado através de tesourarias seguras fora da cadeia.</string>
     <string name="usdc_deposit_title">Depósito USDC</string>
@@ -278,8 +276,8 @@
     <string name="start_screen_import_vault_share_file_types">Tipos de ficheiro suportados: .bak &amp; .vult</string>
     <string name="start_screen_recover_or_convert">Recupere o seu cofre ou converta a sua frase-semente num cofre</string>
     <string name="keysign_password_incorrect_password">A palavra-passe está incorreta</string>
-    <string name="vault_list_part_n_of_t">Partilha %1$d de %2$d</string>
-    <string name="vault_part_n_of_t">Partilha %1$d de %2$d</string>
+    <string name="vault_list_part_n_of_t">Compartilhar %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Compartilhar %1$d-de-%2$d</string>
     <string name="qr_title_join_keygen">Junte-se à Keygen</string>
     <string name="qr_title_join_keysign">Junte-se ao Keysign</string>
     <string name="qr_title_join_swap_keysign">Junte-se à troca</string>
@@ -304,7 +302,7 @@
     <string name="vault_details_screen_vault_type">Tipo de cofre</string>
     <string name="vault_settings_delete_vault_part">Compartilhar do cofre:</string>
     <string name="vault_password_hint_to_long">A dica é demasiado longa</string>
-    <string name="vault_details_screen_vault_part_desc">Partilha %1$s de %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Compartilhar %1$s-de-%2$s</string>
     <string name="do_not_remind_me_again">Não me lembre outra vez</string>
     <string name="monthly_backup_reminder_title">Não se esqueça de fazer uma cópia de segurança das partilhas do cofre e verificar se estão completas.</string>
     <string name="transaction_complete_screen_title">Transação concluída</string>
@@ -522,7 +520,7 @@
     <string name="general">Geral</string>
     <string name="support">Suporte</string>
     <string name="vultisig_community">Comunidade Vultisig</string>
-    <string name="vault_management">Cofre</string>
+    <string name="vault_management">Gestão de Cofres</string>
     <string name="other">Outros</string>
     <string name="check_updates_title">Verificar atualizações</string>
     <string name="update_available">Atualização disponível</string>
@@ -723,7 +721,7 @@
     <string name="select_vault_type_secure_desc_3">Proteja qualquer quantidade de ativos</string>
     <string name="select_vault_type_fast_desc_3">Subscrições em conjunto do Vultiserver instantâneas</string>
     <string name="peer_discovery_topbar_title">Leia o QR Code</string>
-    <string name="peer_discovery_waiting_for_devices_action">A aguardar ligação dos dispositivos...</string>
+    <string name="peer_discovery_waiting_for_devices_action">Aguarda dispositivos...</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivos (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Enviado para %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">Não recebeu um email?</string>
@@ -811,7 +809,7 @@
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Pretende criar um cofre privado?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Mude para o modo local</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Volte ao modo internet</string>
-    <string name="enter_email_screen_desc">Este email é utilizado para backup na nuvem e não é partilhado com terceiros</string>
+    <string name="enter_email_screen_desc">Este email é apenas utilizado para enviar o backup do servidor</string>
     <string name="onboarding_desc_page_6_part_1">Estas ações colaboram para</string>
     <string name="keygen_connecting_with_server_take_a_second">Isto deve demorar apenas um segundo.</string>
     <string name="function_switch_thorchain_address">Endereço THORChain</string>
@@ -1028,7 +1026,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Backup do servidor</string>
     <string name="server_backup_email_label">E-mail</string>
-    <string name="server_backup_email_description">Este email é utilizado para backup na nuvem e não é partilhado com terceiros</string>
+    <string name="server_backup_email_description">Introduza o email para receber a partilha do cofre.</string>
     <string name="server_backup_email_error">E-mail incorreto, por favor verifique</string>
     <string name="server_backup_password_label">Palavra-passe</string>
     <string name="server_backup_password_description">Introduza a palavra-passe que definiu ao criar este cofre.</string>
@@ -1057,4 +1055,6 @@
     <string name="add_referral_error_chars">O código de indicação deve conter apenas caracteres alfanuméricos</string>
     <string name="add_referral_error_not_found">Código de indicação não encontrado</string>
     <string name="add_referral_error_network">Falha ao verificar o código de indicação. Tente novamente.</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
 </resources>

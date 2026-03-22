@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
-    <string name="tokens">Activa</string>
+    <string name="tokens">Tokens</string>
     <string name="keysign">Sleutel tekenen</string>
     <string name="signing_error_please_try_again_s">Ondertekeningsfout. Probeer het opnieuw. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Houd apparaten op hetzelfde WiFi-netwerk, correct kluis en paar apparaten.\nZorg ervoor dat er geen andere apparaten zijn het draaien van Vultisig.</string>
@@ -91,9 +91,7 @@
     <string name="send_amount">Bedrag</string>
     <string name="send_amount_currency_hint">Voer bedrag in</string>
     <string name="send_continue_button">Doorgaan</string>
-    <string name="chain_account_view_swap">Wisselen</string>
-    <string name="chain_account_view_deposit">STORTEN</string>
-    <string name="chain_account_view_send">VERZENDEN</string>
+    <string name="chain_account_view_swap">WISSELEN</string>
     <string name="circle_defi_description">Stort je USDC op een Circle-account en verdien rendement. Veilig binnen je Vultisig-kluis.</string>
     <string name="circle_defi_control_info">Fondsen blijven volledig onder controle van je kluis. Circle-accounts zijn zelfbeheerd en rendement wordt gegenereerd via veilige off-chain schatkisten.</string>
     <string name="usdc_deposit_title">USDC-storting</string>
@@ -160,7 +158,7 @@
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA-sleutel:</string>
     <string name="confirm_delete_permanent_delete_message">U verwijdert uw kluis permanent</string>
     <string name="confirm_delete_delete_vault">Kluis verwijderen</string>
-    <string name="vault_accounts_account_assets">%1$s Activa</string>
+    <string name="vault_accounts_account_assets">%1$s activa</string>
     <string name="s_of_s_vault">%1$s van %2$s kluis</string>
     <string name="scan_qr_screen_return_vault">Terug naar de Kluis</string>
     <string name="rename_vault_screen_vault_name">Kluisnaam</string>
@@ -277,8 +275,8 @@
     <string name="start_screen_import_vault_share_file_types">Ondersteunde bestandstypen: .bak &amp; .vult</string>
     <string name="start_screen_recover_or_convert">Herstel uw kluis of converteer uw seedphrase naar een kluis</string>
     <string name="keysign_password_incorrect_password">Wachtwoord is onjuist</string>
-    <string name="vault_list_part_n_of_t">Aandeel %1$d van %2$d</string>
-    <string name="vault_part_n_of_t">Aandeel %1$d van %2$d</string>
+    <string name="vault_list_part_n_of_t">Delen %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Delen %1$d-van-%2$d</string>
     <string name="qr_title_join_keygen">Word lid van Keygen</string>
     <string name="qr_title_join_keysign">Word lid van Keysign</string>
     <string name="qr_title_join_swap_keysign">Doe mee aan Swap</string>
@@ -303,7 +301,7 @@
     <string name="vault_details_screen_vault_type">Kluistype</string>
     <string name="vault_settings_delete_vault_part">Kluisgedeelte:</string>
     <string name="vault_password_hint_to_long">De hint is te lang</string>
-    <string name="vault_details_screen_vault_part_desc">Aandeel %1$s van %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Delen %1$s-van-%2$s</string>
     <string name="do_not_remind_me_again">Herinner me er niet meer aan</string>
     <string name="monthly_backup_reminder_title">Vergeet niet een back-up te maken van uw kluisshares en de volledigheid ervan te verifiëren.</string>
     <string name="transaction_complete_screen_title">Transactie voltooid</string>
@@ -521,7 +519,7 @@
     <string name="general">Algemeen</string>
     <string name="support">Ondersteuning</string>
     <string name="vultisig_community">Vultisig Community</string>
-    <string name="vault_management">Kluis</string>
+    <string name="vault_management">Kluisbeheer</string>
     <string name="other">Overig</string>
     <string name="check_updates_title">Controleer op updates</string>
     <string name="update_available">Er is een update beschikbaar</string>
@@ -721,7 +719,7 @@
     <string name="select_vault_type_secure_desc_3">Beveilig elk bedrag aan activa</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver ondertekent direct</string>
     <string name="peer_discovery_topbar_title">QR scannen</string>
-    <string name="peer_discovery_waiting_for_devices_action">Wachten tot apparaten verbinding maken...</string>
+    <string name="peer_discovery_waiting_for_devices_action">Wachten op apparaten...</string>
     <string name="peer_discovery_devices_n_of_n">Apparaten (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Verzonden naar %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">Geen email ontvangen?</string>
@@ -810,7 +808,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Schakel over naar de lokale modus</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Schakel terug naar de internetmodus</string>
     <string name="onboarding_desc_page_6_part_1">Deze shares werken samen om</string>
-    <string name="enter_email_screen_desc">Dit emailadres wordt gebruikt voor cloudback-up en wordt niet gedeeld met derden</string>
+    <string name="enter_email_screen_desc">Dit emailadres wordt alleen gebruikt om de serverback-up te verzenden</string>
     <string name="keygen_connecting_with_server_take_a_second">Dit zou slechts een seconde moeten duren</string>
     <string name="function_switch_thorchain_address">THORChain-adres</string>
     <string name="tx_transaction_successful_screen_title">Transactie succesvol</string>
@@ -1024,7 +1022,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Serverback-up</string>
     <string name="server_backup_email_label">E-mail</string>
-    <string name="server_backup_email_description">Dit emailadres wordt gebruikt voor cloudback-up en wordt niet gedeeld met derden</string>
+    <string name="server_backup_email_description">Voer het emailadres in om de kluisshare te ontvangen.</string>
     <string name="server_backup_email_error">Onjuist emailadres, controleer dit</string>
     <string name="server_backup_password_label">Wachtwoord</string>
     <string name="server_backup_password_description">Voer het wachtwoord in dat u hebt ingesteld bij het aanmaken van deze kluis.</string>
@@ -1053,4 +1051,6 @@
     <string name="add_referral_error_chars">Verwijzingscode mag alleen alfanumerieke tekens bevatten</string>
     <string name="add_referral_error_not_found">Verwijzingscode niet gevonden</string>
     <string name="add_referral_error_network">Verwijzingscode controleren mislukt. Probeer het opnieuw.</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
 </resources>

@@ -60,7 +60,7 @@
     <!-- Basic UI -->
     <string name="app_name">Vultisig</string>
     <string name="token_logo">代币标志</string>
-    <string name="tokens">资产</string>
+    <string name="tokens">代币</string>
     <string name="keysign">密钥签名</string>
     <string name="signing_error_please_try_again_s">签名错误。请重试。%s</string>
     <string name="bottom_warning_msg_keygen_error_screen">请保持设备在同一WiFi网络，确认金库正确并配对设备。\n确保没有其他设备正在运行Vultisig。</string>
@@ -502,8 +502,8 @@
     <string name="keysign_password_incorrect_password">密码不正确</string>
 
     <!-- Vault List -->
-    <string name="vault_list_part_n_of_t">份额 %1$d / %2$d</string>
-    <string name="vault_part_n_of_t">份额 %1$d / %2$d</string>
+    <string name="vault_list_part_n_of_t">部分 %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">份额 %1$d-of-%2$d</string>
 
     <!-- QR Titles -->
     <string name="qr_title_join_keygen">加入密钥生成</string>
@@ -548,7 +548,7 @@
     <string name="vault_details_screen_vault_type">金库类型</string>
     <string name="vault_settings_delete_vault_part">金库份额：</string>
     <string name="vault_password_hint_to_long">提示太长</string>
-    <string name="vault_details_screen_vault_part_desc">份额 %1$s / %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">份额 %1$s-of-%2$s</string>
 
     <!-- Settings Screen -->
 
@@ -863,7 +863,7 @@
     <string name="general">通用</string>
     <string name="support">支持</string>
     <string name="vultisig_community">Vultisig 社区</string>
-    <string name="vault_management">金库</string>
+    <string name="vault_management">金库管理</string>
     <string name="other">其他</string>
 
     <!-- Unstake TCY -->
@@ -1059,7 +1059,7 @@
     <string name="select_vault_type_secure_desc_3">保护任意金额的资产</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver 立即联合签名</string>
     <string name="peer_discovery_topbar_title">扫描二维码</string>
-    <string name="peer_discovery_waiting_for_devices_action">正在等待设备连接……</string>
+    <string name="peer_discovery_waiting_for_devices_action">正在等待设备……</string>
     <string name="peer_discovery_devices_n_of_n">设备（%1$s/%2$s）</string>
     <string name="onboarding_desc_page_5_part_2">单独发送</string>
     <string name="onboarding_desc_page_5_part_3">其他位置</string>
@@ -1146,7 +1146,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">切换至本地模式</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">切换回网络模式</string>
     <string name="onboarding_desc_page_6_part_1">这些共享文件协同工作</string>
-    <string name="enter_email_screen_desc">此电子邮件用于云备份，不会与任何第三方共享</string>
+    <string name="enter_email_screen_desc">此电子邮件仅用于发送服务器备份</string>
     <string name="keygen_connecting_with_server_take_a_second">这只需几秒钟。</string>
     <string name="function_switch_thorchain_address">THORChain 地址</string>
     <string name="tx_transaction_successful_screen_title">交易成功</string>
@@ -1360,7 +1360,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">服务器备份</string>
     <string name="server_backup_email_label">邮箱</string>
-    <string name="server_backup_email_description">此电子邮件用于云备份，不会与任何第三方共享</string>
+    <string name="server_backup_email_description">输入接收金库份额的电子邮件地址。</string>
     <string name="server_backup_email_error">电子邮件不正确，请检查</string>
     <string name="server_backup_password_label">密码</string>
     <string name="server_backup_password_description">输入您创建此金库时设置的密码。</string>

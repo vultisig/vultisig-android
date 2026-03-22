@@ -140,11 +140,11 @@
     <string name="verify_swap_sign_button">Firma Transazione</string>
     <string name="swap_error_no_amount">a quantità deve essere un numero positivo.</string>
     <string name="app_name">Vultisig</string>
-    <string name="tokens">Risorse</string>
+    <string name="tokens">Tokens</string>
     <string name="transaction_type_button_swap">Scambia</string>
     <string name="swap_form_vault">Cassaforte</string>
     <string name="swap_form_min_pay">pagamento min.</string>
-    <string name="chain_account_view_swap">Scambia</string>
+    <string name="chain_account_view_swap">SCAMBIA</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">FIRMANDO CON CHIAVE EdDSA…</string>
     <string name="signing_error_please_try_again_s">Errore di Firma. Per favore, riprova.%s</string>
@@ -186,7 +186,7 @@
     <string name="vault_settings_delete_subtitle">Elimina definitivamente il tuo vault.</string>
     <string name="currency_unit_setting_screen_title">Valuta</string>
     <string name="share_qr_utils_choose_an_app">Scegli un\'app</string>
-    <string name="vault_accounts_account_assets">%1$s Risorse</string>
+    <string name="vault_accounts_account_assets">%1$s risorse</string>
     <string name="chain_token_screen_address_copied">%1$s copiato negli appunti</string>
     <string name="s_of_s_vault">%1$s del caveau %2$s</string>
     <string name="camera_permission_denied">Autorizzazione della telecamera non concessa. Abilitala nelle impostazioni.</string>
@@ -276,8 +276,8 @@
     <string name="start_screen_import_vault_share_file_types">Tipi di file supportati: .bak &amp; .vult</string>
     <string name="start_screen_recover_or_convert">Recupera il tuo vault o converti la tua seedphrase in un vault</string>
     <string name="keysign_password_incorrect_password">La password è errata</string>
-    <string name="vault_list_part_n_of_t">Quota %1$d di %2$d</string>
-    <string name="vault_part_n_of_t">Quota %1$d di %2$d</string>
+    <string name="vault_list_part_n_of_t">Condividi %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Condividi %1$d-di-%2$d</string>
     <string name="qr_title_join_keygen">Unisciti a Keygen</string>
     <string name="qr_title_join_keysign">Unisciti a Keysign</string>
     <string name="qr_title_join_swap_keysign">Unisciti allo scambio</string>
@@ -302,7 +302,7 @@
     <string name="vault_details_screen_vault_type">Tipo di caveau</string>
     <string name="vault_settings_delete_vault_part">Condividi del caveau:</string>
     <string name="vault_password_hint_to_long">Il suggerimento è troppo lungo</string>
-    <string name="vault_details_screen_vault_part_desc">Quota %1$s di %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Condividi %1$s-di-%2$s</string>
     <string name="do_not_remind_me_again">Non ricordarmelo più</string>
     <string name="monthly_backup_reminder_title">Non dimenticare di eseguire il backup delle condivisioni del vault e di verificarne la completezza.</string>
     <string name="transaction_complete_screen_title">Transazione completata</string>
@@ -522,7 +522,7 @@
     <string name="general">Generale</string>
     <string name="support">Supporto</string>
     <string name="vultisig_community">Community Vultisig</string>
-    <string name="vault_management">Cassaforte</string>
+    <string name="vault_management">Gestione del caveau</string>
     <string name="other">Altro</string>
     <string name="check_updates_title">Controlla gli aggiornamenti</string>
     <string name="update_available">È disponibile un aggiornamento</string>
@@ -722,7 +722,7 @@
     <string name="select_vault_type_secure_desc_3">Proteggi qualsiasi quantità di risorse</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver co-firma istantaneamente</string>
     <string name="peer_discovery_topbar_title">Scansiona il codice QR</string>
-    <string name="peer_discovery_waiting_for_devices_action">In attesa della connessione dei dispositivi…</string>
+    <string name="peer_discovery_waiting_for_devices_action">In attesa dei dispositivi…</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivi (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Inviato a %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">Non hai ricevuto un\'email?</string>
@@ -811,7 +811,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Passa alla modalità locale</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Passa alla modalità Internet</string>
     <string name="onboarding_desc_page_6_part_1">Queste condivisioni collaborano per</string>
-    <string name="enter_email_screen_desc">Questa email viene utilizzata per il backup cloud e non viene condivisa con terze parti</string>
+    <string name="enter_email_screen_desc">Questa email viene utilizzata solo per inviare il backup del server</string>
     <string name="keygen_connecting_with_server_take_a_second">L\'operazione dovrebbe richiedere solo un secondo</string>
     <string name="function_switch_thorchain_address">Indirizzo THORChain</string>
     <string name="tx_transaction_successful_screen_title">Transazione riuscita</string>
@@ -1028,7 +1028,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Backup del server</string>
     <string name="server_backup_email_label">Email</string>
-    <string name="server_backup_email_description">Questa email viene utilizzata per il backup cloud e non viene condivisa con terze parti</string>
+    <string name="server_backup_email_description">Inserisci l\'email per ricevere la condivisione della cassaforte.</string>
     <string name="server_backup_email_error">E-mail errata, controllala</string>
     <string name="server_backup_password_label">Password</string>
     <string name="server_backup_password_description">Inserisci la password impostata durante la creazione di questa cassaforte.</string>
