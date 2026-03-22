@@ -195,16 +195,14 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
     }
 
     private fun getDefaultLimit(transaction: BlockchainTransaction): BigInteger {
-        require(transaction is Transfer) {
-            "Transaction type not supported: ${transaction::class.simpleName}"
-        }
-        val isCoinTransfer = transaction.coin.isNativeToken
         val chain = transaction.coin.chain
 
         return when {
+            transaction is Swap -> DEFAULT_SWAP_LIMIT
             chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
-            isCoinTransfer -> DEFAULT_COIN_TRANSFER_LIMIT
-            else -> DEFAULT_TOKEN_TRANSFER_LIMIT.increaseByPercent(40)
+            transaction is Transfer && transaction.coin.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
+            transaction is Transfer -> DEFAULT_TOKEN_TRANSFER_LIMIT.increaseByPercent(40)
+            else -> error("Transaction type not supported: ${transaction::class.simpleName}")
         }
     }
 
