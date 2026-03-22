@@ -1147,6 +1147,5 @@
     <string name="add_referral_error_chars">Il codice referral deve contenere solo caratteri alfanumerici</string>
     <string name="add_referral_error_not_found">Codice di invito non trovato</string>
     <string name="add_referral_error_network">Errore durante la verifica del codice referral. Riprova.</string>
-    <string name="swap_form_outbound_fee_title">Outbound Fee</string>
     <string name="hide_defi_balance">Hide DeFi balance</string>
 </resources>

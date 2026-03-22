@@ -1146,6 +1146,5 @@
     <string name="add_referral_error_chars">Der Empfehlungscode darf nur alphanumerische Zeichen enthalten</string>
     <string name="add_referral_error_not_found">Empfehlungscode nicht gefunden</string>
     <string name="add_referral_error_network">Fehler beim Überprüfen des Empfehlungscodes. Bitte versuchen Sie es erneut.</string>
-    <string name="swap_form_outbound_fee_title">Outbound Fee</string>
     <string name="hide_defi_balance">Hide DeFi balance</string>
 </resources>

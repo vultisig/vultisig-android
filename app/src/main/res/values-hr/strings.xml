@@ -1147,6 +1147,5 @@
     <string name="add_referral_error_chars">Referalni kod smije sadržavati samo alfanumeričke znakove</string>
     <string name="add_referral_error_not_found">Referalni kod nije pronađen</string>
     <string name="add_referral_error_network">Provjera referalnog koda nije uspjela. Pokušajte ponovo.</string>
-    <string name="swap_form_outbound_fee_title">Outbound Fee</string>
     <string name="hide_defi_balance">Hide DeFi balance</string>
 </resources>

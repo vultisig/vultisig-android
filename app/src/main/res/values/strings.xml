@@ -249,7 +249,6 @@
     <string name="transaction_type_button_swap">Swap</string>
     <string name="swap_form_gas_title">Network Fee</string>
     <string name="swap_form_total_fees_title">Total Fee</string>
-    <string name="swap_form_outbound_fee_title">Outbound Fee</string>
     <string name="swap_form_vault">Vault</string>
     <string name="swap_form_min_pay">min. payout</string>
     <string name="swap_form_on_chain">on</string>
