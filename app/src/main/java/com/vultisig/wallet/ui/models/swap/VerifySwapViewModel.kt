@@ -57,7 +57,7 @@ internal data class ValuedToken(
     val fiatValue: String, // e.g. $100
 ) {
     companion object {
-        val Empty = ValuedToken(token = Coins.Base.WEWE, value = "0", fiatValue = "0")
+        val Empty = ValuedToken(token = Coins.Base.OM, value = "0", fiatValue = "0")
     }
 }
 
