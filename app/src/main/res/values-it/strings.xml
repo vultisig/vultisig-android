@@ -83,9 +83,6 @@
     <string name="send_amount">Quantità</string>
     <string name="send_amount_currency_hint">Inserisci Quantità</string>
     <string name="send_continue_button">Continua</string>
-    <string name="send_form_network_fee">Commissione di rete</string>
-    <string name="chain_account_view_send">INVIA</string>
-    <string name="chain_account_view_deposit">Deposito</string>
     <string name="circle_defi_description">Deposita i tuoi USDC in un account Circle e guadagna rendimenti. In modo sicuro all interno del tuo vault Vultisig.</string>
     <string name="circle_defi_control_info">I fondi rimangono completamente sotto il controllo del tuo vault. Gli account Circle sono auto-custoditi e il rendimento è generato attraverso tesorerie sicure off-chain.</string>
     <string name="usdc_deposit_title">Deposito USDC</string>
@@ -187,7 +184,6 @@
     <string name="join_keysign_discovering_session_id">Individuazione dell\'ID sessione</string>
     <string name="join_keysign_discovery_service">Scoprire il servizio</string>
     <string name="vault_settings_delete_subtitle">Elimina definitivamente il tuo vault.</string>
-    <string name="danger_icon">Icona di pericolo</string>
     <string name="currency_unit_setting_screen_title">Valuta</string>
     <string name="share_qr_utils_choose_an_app">Scegli un\'app</string>
     <string name="vault_accounts_account_assets">%1$s risorse</string>
@@ -213,8 +209,6 @@
     <string name="backup_password_screen_enter_password">Inserisci la password</string>
     <string name="import_file_screen_enter_password_sub">Questa password è stata impostata al momento dell\'esportazione della condivisione del vault.</string>
     <string name="import_file_screen_hint_password">Password</string>
-    <string name="import_file_screen_ok">OK</string>
-    <string name="import_file_screen_cancel">Cancellare</string>
     <string name="backup_password_screen_permission_required">Per le operazioni di backup è richiesta l\'autorizzazione del file.</string>
     <string name="share_qr_screen_permission_required">Per le operazioni di condivisione è richiesta l\'autorizzazione del file.</string>
     <string name="token_selection_search_hint">Ricerca…</string>
@@ -274,7 +268,6 @@
     <string name="verify_transaction_fast_sign_btn_title">Segnale veloce</string>
     <string name="keysign_sign_transaction">Firma transazione</string>
     <string name="keysign_password_title">Password</string>
-    <string name="home_screen_import_vault">Importa Vault</string>
     <string name="start_screen_new">NUOVO</string>
     <string name="start_screen_import_seedphrase">Importa seedphrase</string>
     <string name="start_screen_import_seedphrase_desc">Inseriscila, crea un vault, non guardare indietro.</string>
@@ -346,7 +339,6 @@
     <string name="push_notification_partial_failure">%1$d cassaforti su %2$d aggiornate, %3$d non riuscite</string>
     <string name="push_notifications_sent">Notifica inviata con successo</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Ricevi una notifica quando è richiesta la tua firma o un dispositivo richiede l\'accesso.</string>
-    <string name="enable_push_notifications">Abilita notifiche push</string>
     <string name="keysign_notification_channel_name">Richieste di firma</string>
     <string name="keysign_notification_title">Firma transazione</string>
     <string name="keysign_notification_body">C\'è una nuova richiesta di firma in attesa</string>
@@ -391,8 +383,6 @@
     <string name="deposit_option_merge">Merge</string>
     <string name="deposit_option_withdraw_ruji">Ritira RUJI</string>
     <string name="withdraw_amount">Ritira %s</string>
-    <string name="deposit_option_stake_tcy">Stake TCY</string>
-    <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Inserisci la percentuale da sbloccare</string>
     <string name="scan_qr_screen_title">Scansiona il codice QR</string>
     <string name="verify_transaction_function_inputs_title">Input di funzione</string>
@@ -423,19 +413,9 @@
     <string name="reshare_step_generating_ecdsa">Generazione della chiave ECDSA</string>
     <string name="merge_account_doesnt_exist">Il token selezionato non è stato trovato per questo indirizzo</string>
     <string name="keygen_email_error">E-mail errata, controllala</string>
-    <string name="deposit_option_stake_ruji">Metti in stake RUJI</string>
-    <string name="deposit_option_unstake_ruji">Togli dallo stake RUJI</string>
-    <string name="deposit_option_collect_ruji">Raccogli ricompense staking RUJII</string>
-    <string name="deposit_form_rewards_title">Premi in Sospeso (Saldo: %1$s)</string>
-    <string name="deposit_form_pending_rewards_hint">Premi in Sospeso</string>
     <string name="tx_overview_screen_tx_send">Invia</string>
     <string name="tx_overview_screen_tx_deposit">Deposito</string>
     <string name="swap_error_small_insufficient_funds">Fondi insufficienti</string>
-    <string name="deposit_error_max_amount">Solo fino al 100 % può essere svincolato</string>
-    <string name="deposit_option_receive_yrune">Ricevi yRUNE</string>
-    <string name="deposit_option_receive_ytcy">Ricevi yTCY</string>
-    <string name="deposit_option_sell_yrune">Vendi yRUNE</string>
-    <string name="deposit_option_sell_ytcy">Vendi yTCY</string>
     <string name="defi_tab_deposited">Depositato</string>
     <string name="defi_tab_staked">Staking</string>
     <string name="defi_tab_bonded">Vincolato</string>
@@ -544,7 +524,6 @@
     <string name="vultisig_community">Community Vultisig</string>
     <string name="vault_management">Gestione del caveau</string>
     <string name="other">Altro</string>
-    <string name="unstake_tcy_zero_error">L\'annullamento dello staking non può essere eseguito se il saldo è inferiore a 1</string>
     <string name="check_updates_title">Controlla gli aggiornamenti</string>
     <string name="update_available">È disponibile un aggiornamento</string>
     <string name="app_up_to_date">L\'app è aggiornata</string>
@@ -584,7 +563,6 @@
     <string name="vault_settings_back_up_your">Esegui il backup della condivisione del vault su dispositivo o server.</string>
     <string name="vault_settings_migrate_gg20">Esegui la migrazione del vault DKLS GG20</string>
     <string name="vault_settings_reshare_change">Ricondividi, gestisci la sicurezza o firma messaggi.</string>
-    <string name="vault_backup_summary_start_using_vault">Inizia a usare la tua cassaforte</string>
     <string name="vault_backup_summary_choose_chains">Scegli le catene</string>
     <string name="transaction_done_form_approve">Approva</string>
     <string name="vault_settings_migration_title">Migrare</string>
@@ -602,7 +580,6 @@
     <string name="no_chain_make_sure_that">Assicurati che la catena che stai cercando sia abilitata.</string>
     <string name="no_chain_customize_chains">Personalizza catene</string>
     <string name="search_bar_search">Cerca</string>
-    <string name="search_bar_cancel">Annulla</string>
     <string name="chain_selection_select_chains">Seleziona catene</string>
     <string name="chain_selection_select_defi_chains">Seleziona catene DeFi</string>
     <string name="chain_selection_no_chains_found">Nessuna catena trovata</string>
@@ -677,7 +654,6 @@
     <string name="address_book_saved_addresses">Indirizzi salvati</string>
     <string name="address_book_my_vaults">I miei Vault</string>
     <string name="address_entry_select">Seleziona</string>
-    <string name="backup_vault_online_storage_is_recommended">L\'archiviazione online è consigliata e sicura: le condivisioni Vault sono progettate per questo scopo.</string>
     <string name="deposit_form_enter_asset_hint">Inserisci risorse</string>
     <string name="share_balance_loading">Caricamento in corso...</string>
     <string name="custom_token_screen_finding_token">Ricerca del token</string>
@@ -715,23 +691,14 @@
     <string name="keygen_benefit_4_emphasized">Disponibile</string>
     <string name="onboarding_intro_preview_part_2">Frasi seed</string>
     <string name="onboarding_intro_back">Indietro</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1">Il tuo vault contiene %s condivisioni,</string>
-    <string name="onboarding_security_backup_desc_page_1_part_2">Ogni dispositivo necessita di un proprio backup.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_1">Backup</string>
     <string name="migration_onboarding_step_1_text_emphasized">il protocollo MPC più veloce al mondo</string>
     <string name="migration_onboarding_step_1_text_end">e firma più velocemente che mai</string>
-    <string name="error_view_try_again_button">Riprova</string>
     <string name="error_view_default_title">Qualcosa è andato storto</string>
     <string name="error_view_default_description">Si è verificato un errore</string>
     <string name="keygen_benefit_5_template">Non farti più truffare</string>
     <string name="keygen_benefit_5_emphasized">Un portafoglio seedless,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_1">Il tuo vault contiene 2 condivisioni,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_2">esegui il backup ora</string>
     <string name="keygen_vault_created_success_part_1">Vault creato</string>
     <string name="vault_created_success_part_2">con successo</string>
-    <string name="backup_vault_backup_now_button">Esegui il backup ora</string>
-    <string name="backup_vault_backup_vault_share_title">Esegui il backup della condivisione del vault online</string>
-    <string name="backup_vault_topbar_title">Backup del Vault</string>
     <string name="backup_password_request_no_password_action">Backup senza password</string>
     <string name="address_bookmark_error_invalid_address">Questo indirizzo non è valido per %s</string>
     <string name="address_bookmark_error_empty_label">L\'etichetta non può essere vuota</string>
@@ -739,15 +706,9 @@
     <string name="send_form_ripple_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un conto scende al di sotto di 1 XRP (Deposito Esistenziale), il conto verrà disattivato (rimosso) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="error_invalid_chain">La catena non è valida</string>
     <string name="vault_backup_verifying_pin">Verifica del PIN in corso, attendere</string>
-    <string name="vault_backup_screen_change_email">Cambia email e riavvia il keygen</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_1">Ti viene inviato per la completa custodia!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">Controlla la tua email per verificare</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_1">Ti abbiamo inviato la tua nuova condivisione server!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Controlla la tua email per verificare</string>
     <string name="select_vault_type_next">Avanti</string>
     <string name="select_vault_type_choose_setup">Scegli configurazione</string>
     <string name="home_screen_scan_qr_code">Scansiona il codice QR</string>
-    <string name="create_new_vault_screen_create_new_vault">Crea un nuovo vault</string>
     <string name="onboarding_desc_page_6_part_2">Sblocca il tuo caveau</string>
     <string name="onboarding_summary_button">Crea il tuo vault</string>
     <string name="keygen_benefit_3_template">Scambia i tuoi token preferiti tutti in un\'unica cassaforte</string>
@@ -788,8 +749,6 @@
     <string name="select_vault_type_secure">Sicura</string>
     <string name="select_vault_type_fast">Veloce</string>
     <string name="vault_backup_screen_paste">Incolla</string>
-    <string name="enter_backup_screen_title">Inserisci il codice di 4 cifre che ti abbiamo inviato via email</string>
-    <string name="enter_backup_screen_desc">Questo codice confermerà che hai ricevuto la condivisione vault 1 via email</string>
     <string name="vault_backup_error_pin">Errore durante la verifica del codice, riprova</string>
     <string name="tx_overview_screen_tx_hash">Hash della transazione</string>
     <string name="tx_overview_screen_tx_from">Da</string>
@@ -798,8 +757,6 @@
     <string name="keygen_benefit_1_template">Rimozione del singolo punto di errore</string>
     <string name="keygen_benefit_1_emphasized">Sicurezza multifattoriale,</string>
     <string name="keygen_benefit_2_template">che ti dà il controllo completo sui tuoi asset</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_1">La parte 1 delle condivisioni del vault sarà</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_2">trattenuto dal server.</string>
     <string name="onboarding_summary_check">Ho letto e compreso cosa fare</string>
     <string name="send_error_invalid_plan_fee">Costo del piano non valido</string>
     <string name="onboarding_desc_page_3_part_2">nel tuo caveau</string>
@@ -828,13 +785,10 @@
     <string name="peer_discovery_action_next_title">Avanti</string>
     <string name="home_page_no_chains_enabled">Nessuna catena abilitata</string>
     <string name="onboarding_desc_page_3_part_3">condivisione di un vault</string>
-    <string name="onboarding_security_backup_desc_page_2_part_3">per garantire l\'accesso, preferibilmente</string>
-    <string name="onboarding_security_backup_desc_page_2_part_4">online.</string>
     <string name="select_vault_type_fast_title">Configurazione rapida su un solo dispositivo</string>
     <string name="select_vault_type_fast_desc_1">È necessario un solo dispositivo</string>
     <string name="scan_qr_code_modal_scan_the">Scansiona il</string>
     <string name="scan_qr_code_modal_qr_code">Codice QR</string>
-    <string name="create_new_vault_screen_or">O</string>
     <string name="tx_overview_screen_title">Fatto</string>
     <string name="fast_vault_password_screen_warning">La password non può essere reimpostata o recuperata</string>
     <string name="referral_top_bar_list">Referral</string>
@@ -859,14 +813,12 @@
     <string name="onboarding_desc_page_6_part_1">Queste condivisioni collaborano per</string>
     <string name="enter_email_screen_desc">Questa email viene utilizzata solo per inviare il backup del server</string>
     <string name="keygen_connecting_with_server_take_a_second">L\'operazione dovrebbe richiedere solo un secondo</string>
-    <string name="onboarding_security_backup_desc_page_2_part_2">questa condivisione vault</string>
     <string name="function_switch_thorchain_address">Indirizzo THORChain</string>
     <string name="tx_transaction_successful_screen_title">Transazione riuscita</string>
     <string name="migration_onboarding_step_3_text_end">durante l\'aggiornamento</string>
     <string name="migration_onboarding_upgrade_your_vault">Aggiorna il tuo caveau</string>
     <string name="migration_onboarding_upgrade_now">Aggiorna ora</string>
     <string name="migration_onboarding_step_1_text_start">Aggiorna questo caveau a</string>
-    <string name="onboarding_security_backup_title">Panoramica del Vault</string>
     <string name="onboarding_desc_page_1_part_2">Condivisioni del Vault,</string>
     <string name="verify_swap_youre_swapping_title">Stai effettuando uno scambio</string>
     <string name="keysign_app_version_text">Versione %1$s (%2$s)</string>
@@ -908,7 +860,6 @@
     <string name="swap_form_referral_discount_bps">Referral (-%1$d bps)</string>
     <string name="amino_sign">Amino Sign</string>
     <string name="amino_direct">Firma diretta</string>
-    <string name="import_file_screen_enter_password">Inserisci la password di condivisione del vault.</string>
 
     <!-- Transaction Status Strings from main branch -->
     <string name="transaction_status_confirmed">Transazione confermata</string>
@@ -940,13 +891,10 @@
     <string name="transaction_history_search_asset_title">Cerca asset</string>
     <string name="transaction_history_search_asset_not_found">Nessun asset trovato</string>
     <string name="transaction_history_clear_filters">Cancella filtri</string>
-    <string name="transaction_status_broadcasted_label">Trasmessa</string>
-    <string name="transaction_status_pending_label">In attesa · %1$s</string>
     <string name="transaction_status_confirmed_label">Riuscita</string>
     <string name="transaction_status_failed_label">Errore</string>
     <string name="transaction_status_in_progress_label">In corso…</string>
     <string name="transaction_history_to_label">A</string>
-    <string name="transaction_history_via_label">tramite %s</string>
     <string name="transaction_history_via_prefix">tramite</string>
     <string name="transaction_history_min_payout_label">pagamento min.</string>
     <string name="transaction_history_date_today">Oggi</string>
@@ -965,7 +913,6 @@
     <string name="transaction_history_view_on_explorer">Visualizza su Explorer</string>
 
     <!-- Key Import / Seed Phrase Import -->
-    <string name="home_screen_import_seed_phrase">Importa frase seed</string>
     <string name="import_seedphrase_title">Inserisci la tua frase seed</string>
     <string name="import_seedphrase_subtitle">Inserisci la tua frase di recupero di 12 o 24 parole</string>
     <string name="import_seedphrase_label">Frase seed</string>
@@ -997,21 +944,12 @@
     <string name="key_import_chains_customize">Personalizza catene</string>
     <string name="key_import_chains_no_active_title">Nessuna catena attiva trovata</string>
     <string name="key_import_chains_no_active_desc">Non sono stati trovati saldi. Seleziona manualmente le catene che vuoi importare.</string>
-    <string name="key_import_chains_select_title">Seleziona catene (%1$d)</string>
-    <string name="key_import_chains_all">Tutte</string>
-    <string name="key_import_chains_none">Nessuna</string>
     <string name="key_import_chains_get_started">Inizia</string>
     <string name="key_import_chains_no_results">Nessuna catena corrisponde alla tua ricerca</string>
 
     <string name="key_import_device_count_get_started">Inizia</string>
     <string name="vault_count_recommended">Consigliata</string>
 
-    <string name="welcome_preference_title">Che tipo di vault preferisci?</string>
-    <string name="welcome_preference_desc">Scegli tra un vault personale o condividilo con qualcuno di cui ti fidi.</string>
-    <string name="welcome_preference_personal_title">Vault Personale</string>
-    <string name="welcome_preference_shared_title">Vault Condiviso</string>
-    <string name="welcome_preference_personal_desc">Un vault per fondi personali. Firma le transazioni con i tuoi dispositivi.</string>
-    <string name="welcome_preference_shared_desc">Co-firma con più persone di cui ti fidi (es. vault familiari, il tuo commercialista, una combinazione…)</string>
     <string name="welcome_preference_devices_title">Quanti dispositivi hai?</string>
     <string name="welcome_fast_and_easy">Veloce &amp; facile</string>
     <string name="welcome_fast_and_easy_desc">Firma con solo 1 dispositivo. Il nostro server sicuro firma con te per la sicurezza multisig. Compatibile con i plugin.</string>
@@ -1046,7 +984,6 @@
     <string name="password_choose_a_password">Scegli una password</string>
     <string name="password_extra_layer">Se vuoi un ulteriore livello di sicurezza, scegli una password. La password non può essere recuperata.</string>
     <string name="password_extra_layer_highlight">La password non può essere recuperata.</string>
-    <string name="referral_enter_referral_code">Inserisci qui il tuo codice referral. Goditi uno sconto del 10%% su ogni transazione.</string>
     <string name="backup_backups">Backup,</string>
     <string name="backup_your_new_recovery_method">il tuo nuovo metodo di recupero</string>
     <string name="backup_backups_power_your_vault">I backup potenziano il tuo vault. Ogni dispositivo ha il proprio backup. Un backup da solo non può spostare fondi, serve solo per il recupero. Importa e recupera qualsiasi dispositivo perso.</string>
@@ -1058,8 +995,6 @@
     <string name="backup_4_digit_code_received_via_email">Codice a 4 cifre ricevuto via email</string>
     <string name="backup_this_will_activate_the_co_signer">Questo attiverà il co-firmatario</string>
     <string name="backup_use_a_different_email">Usa un\'email diversa</string>
-    <string name="backup_send_to_email">Invia a %1$s</string>
-    <string name="backup_incorrect_code_try_again">Codice errato. Riprova.</string>
     <string name="backup_save_backup_to_the_cloud">Salva il backup sul cloud</string>
     <string name="backup_vault_screen_export_prefix">Esporta questo file di backup, quindi salvalo sul cloud. È</string>
     <string name="backup_vault_screen_encrypted">crittografato</string>
@@ -1084,36 +1019,11 @@
     <string name="vault_setup_dynamic_device_management">Gestione dinamica dei dispositivi</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">Aggiungi quanti dispositivi vuoi e ottieni sicurezza di livello istituzionale.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Costruito per team e tesorerie</string>
-    <string name="vault_setup_ideal_for_teams_managing_shared_funds">Ideale per i team che gestiscono fondi condivisi e vault di maggior valore, che richiedono più firmatari.</string>
-    <string name="vault_setup_no_inspiration_desc">Nessuna ispirazione? Puoi sempre cambiare il nome in seguito nelle impostazioni.</string>
-    <string name="vault_setup_scan_qr_on_your_other_devices">Scansiona il QR sugli altri tuoi dispositivi</string>
-    <string name="vault_setup_on_your_other_device_open_the_app_and_tap_scan_qr">Sull\'altro dispositivo, apri l\'app e tocca "Scansiona QR" per collegarlo.</string>
-    <string name="vault_setup_start_scanning">Inizia a scansionare</string>
-    <string name="vault_setup_waiting_for_devices_to_connect">In attesa della connessione dei dispositivi…</string>
-    <string name="vault_setup_waiting_for_device_to_join">In attesa che il dispositivo si unisca</string>
-    <string name="vault_setup_want_to_create_a_vault_privately">Vuoi creare un vault in modo privato?</string>
-    <string name="vault_setup_use_local_mode">Usa modalità locale</string>
-    <string name="vault_setup_connected">Connesso</string>
-    <string name="vault_setup_local_mode_waiting_on_devices">Modalità locale, in attesa dei dispositivi</string>
-    <string name="vault_setup_short_description_of_local_mode">Breve descrizione della modalità locale qui</string>
-    <string name="vault_setup_not_want_to_use_local_switch_back">Non vuoi usare la modalità locale? Torna indietro.</string>
-    <string name="vault_setup_use_standard_mode">Usa modalità standard</string>
-    <string name="vault_setup_review_your_vault_devices">Controlla i dispositivi del tuo vault</string>
-    <string name="vault_setup_make_sure_that_these_are_the_correct_devices">Assicurati che questi siano i dispositivi corretti che hai aggiunto:</string>
-    <string name="vault_setup_backups">Backup,</string>
-    <string name="vault_setup_your_new_recovery_method">il tuo nuovo metodo di recupero</string>
-    <string name="vault_setup_backups_power_your_vault">I backup potenziano il tuo vault. Ogni dispositivo ha il proprio backup. Un backup da solo non può spostare fondi, serve solo per il recupero. Importa e recupera qualsiasi dispositivo perso.</string>
     <string name="vault_setup_back_up_each_device">Esegui il backup di ogni dispositivo</string>
     <string name="vault_setup_you_ll_create_n_backups_in_total">Creerai %1$d backup in totale. Lo farai su ogni dispositivo.</string>
-    <string name="vault_setup_store_backups_separately">Conserva i backup separatamente</string>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Salva ogni backup in un servizio cloud diverso o con una password diversa. Se uno viene compromesso, i tuoi fondi rimangono al sicuro.</string>
-    <string name="vault_setup_looks_good">Sembra buono</string>
     <string name="vault_setup_i_understand">Capisco</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Salva backup %1$d di %2$d sul cloud</string>
-    <string name="vault_setup_export_this_backup_file_then_save_it_to_the_cloud">Esporta questo file di backup, quindi salvalo sul cloud. Usa un servizio cloud o account diverso per ogni backup. Quando hai finito, elimina il file da questo dispositivo.</string>
-    <string name="vault_setup_your_vault_is_ready_to_use">Il tuo vault è pronto per l\'uso</string>
-    <string name="scanning_qr_troubleshooting_scanning">Hai problemi con la scansione? Se il codice QR non viene scansionato immediatamente: Avvicina o allontana leggermente il telefono dallo schermo. Assicurati che lo schermo sia ben illuminato e senza riflessi. Tieni entrambi i dispositivi fermi per un momento.</string>
-    <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">Con quante persone vuoi condividere il vault?</string>
 
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Backup del server</string>
