@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Логотип токена</string>
-    <string name="tokens">Токены</string>
+    <string name="tokens">Активы</string>
     <string name="keysign">Ключевая подпись</string>
     <string name="danger_icon">Иконка опасности</string>
     <string name="signing_error_please_try_again_s">Ошибка подписи. Пожалуйста, попробуйте еще раз. %s</string>
@@ -92,7 +92,7 @@
     <string name="send_amount">Сумма</string>
     <string name="send_amount_currency_hint">Введите сумму</string>
     <string name="send_continue_button">Продолжить</string>
-    <string name="chain_account_view_swap">ОБМЕН</string>
+    <string name="chain_account_view_swap">Обмен</string>
     <string name="chain_account_view_deposit">ДЕПОЗИТ</string>
     <string name="chain_account_view_send">ОТПРАВИТЬ</string>
     <string name="circle_defi_description">Внесите свой USDC на счет Circle и получайте доход. Безопасно в вашем хранилище Vultisig.</string>
@@ -161,7 +161,7 @@
     <string name="vault_settings_delete_vault_eddsa_key">Ключ EdDSA:</string>
     <string name="confirm_delete_permanent_delete_message">Вы навсегда удаляете своё хранилище</string>
     <string name="confirm_delete_delete_vault">Удалить хранилище</string>
-    <string name="vault_accounts_account_assets">%1$s активы</string>
+    <string name="vault_accounts_account_assets">%1$s Активы</string>
     <string name="s_of_s_vault">%1$s из %2$s хранилища</string>
     <string name="scan_qr_screen_return_vault">Вернуться в Хранилище</string>
     <string name="rename_vault_screen_vault_name">Имя хранилища</string>
@@ -281,8 +281,8 @@
     <string name="start_screen_import_vault_share_file_types">Поддерживаемые типы файлов: .bak &amp; .vult</string>
     <string name="start_screen_recover_or_convert">Восстановите хранилище или преобразуйте сид-фразу в хранилище</string>
     <string name="keysign_password_incorrect_password">Пароль неверный</string>
-    <string name="vault_list_part_n_of_t">Поделиться %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">Поделиться %1$d-из-%2$d</string>
+    <string name="vault_list_part_n_of_t">Доля %1$d из %2$d</string>
+    <string name="vault_part_n_of_t">Доля %1$d из %2$d</string>
     <string name="qr_title_join_keygen">Присоединяйтесь к кейгену</string>
     <string name="qr_title_join_keysign">Присоединяйтесь к Keysign</string>
     <string name="qr_title_join_swap_keysign">Присоединяйтесь к обмену</string>
@@ -307,7 +307,7 @@
     <string name="vault_details_screen_vault_type">Тип хранилища</string>
     <string name="vault_settings_delete_vault_part">Поделиться хранилища:</string>
     <string name="vault_password_hint_to_long">Подсказка слишком длинная</string>
-    <string name="vault_details_screen_vault_part_desc">Поделиться %1$s-из-%2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Доля %1$s из %2$s</string>
     <string name="do_not_remind_me_again">Не напоминай мне больше</string>
     <string name="monthly_backup_reminder_title">Не забудьте сделать резервную копию общих ресурсов хранилища и проверить их полноту.</string>
     <string name="transaction_complete_screen_title">Транзакция завершена</string>
@@ -540,7 +540,7 @@
     <string name="general">Общие</string>
     <string name="support">Поддержка</string>
     <string name="vultisig_community">Сообщество Vultisig</string>
-    <string name="vault_management">Управление хранилищем</string>
+    <string name="vault_management">Хранилище</string>
     <string name="other">Другое</string>
     <string name="unstake_tcy_zero_error">Отмена ставки невозможна, если баланс ниже 1</string>
     <string name="check_updates_title">Проверить обновления</string>
@@ -757,7 +757,7 @@
     <string name="select_vault_type_secure_desc_3">Защитите любое количество активов</string>
     <string name="select_vault_type_fast_desc_3">Vultisig мгновенно подписывается</string>
     <string name="peer_discovery_topbar_title">Сканируйте QR-код</string>
-    <string name="peer_discovery_waiting_for_devices_action">Ожидание устройств…</string>
+    <string name="peer_discovery_waiting_for_devices_action">Ожидание подключения устройств…</string>
     <string name="peer_discovery_devices_n_of_n">Устройства (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Отправлено %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">Не получили письмо?</string>
@@ -853,7 +853,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Переключитесь в локальный режим</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Переключитесь обратно в интернет-режим</string>
     <string name="onboarding_desc_page_6_part_1">Эти общие ресурсы взаимодействуют с</string>
-    <string name="enter_email_screen_desc">Этот адрес электронной почты используется только для отправки резервной копии сервера.</string>
+    <string name="enter_email_screen_desc">Этот адрес электронной почты используется для облачного резервного копирования и не передаётся третьим лицам</string>
     <string name="keygen_connecting_with_server_take_a_second">Это займёт всего секунду.</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">это хранилище общего доступа.</string>
     <string name="function_switch_thorchain_address">Адрес THORChain</string>
@@ -1116,7 +1116,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Резервное копирование сервера</string>
     <string name="server_backup_email_label">Электронная почта</string>
-    <string name="server_backup_email_description">Введите адрес электронной почты для получения общего ресурса хранилища.</string>
+    <string name="server_backup_email_description">Этот адрес электронной почты используется для облачного резервного копирования и не передаётся третьим лицам</string>
     <string name="server_backup_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>
     <string name="server_backup_password_label">Пароль</string>
     <string name="server_backup_password_description">Введите пароль, который вы установили при создании этого хранилища.</string>

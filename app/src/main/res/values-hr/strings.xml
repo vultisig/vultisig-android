@@ -143,9 +143,9 @@
     <string name="verify_swap_sign_button">Potpiši Transakciju</string>
     <string name="swap_error_no_amount">Iznos mora biti pozitivan broj. Pokušajte ponovno.</string>
     <string name="app_name">Vultisig</string>
-    <string name="tokens">Tokeni</string>
+    <string name="tokens">Sredstva</string>
     <string name="transaction_type_button_swap">Zamijeni</string>
-    <string name="chain_account_view_swap">ZAMIJENI</string>
+    <string name="chain_account_view_swap">Zamijeni</string>
     <string name="keysign_screen_signing_with_ecdsa">POTPISIVANJE KORISTEĆI ECDSA KLJUČ…</string>
     <string name="keysign_screen_signing_with_eddsa">POTPISIVANJE KORISTEĆI EdDSA KLJUČ…</string>
     <string name="signing_error_please_try_again_s">Greška pri prijavi. Molimo pokušajte ponovno. %s</string>
@@ -190,7 +190,7 @@
     <string name="danger_icon">Ikona opasnosti</string>
     <string name="currency_unit_setting_screen_title">Valuta\n</string>
     <string name="share_qr_utils_choose_an_app">Odaberite aplikaciju</string>
-    <string name="vault_accounts_account_assets">%1$s sredstva</string>
+    <string name="vault_accounts_account_assets">%1$s Sredstva</string>
     <string name="chain_token_screen_address_copied">%1$s kopirano u međuspremnik</string>
     <string name="s_of_s_vault">%1$s od %2$s trezora</string>
     <string name="camera_permission_denied">Dopuštenje za kameru nije odobreno. Omogućite ga u postavkama.</string>
@@ -283,8 +283,8 @@
     <string name="start_screen_import_vault_share_file_types">Podržane vrste datoteka: .bak &amp; .vult</string>
     <string name="start_screen_recover_or_convert">Oporavi svoj trezor ili pretvori svoju seed-frazu u trezor</string>
     <string name="keysign_password_incorrect_password">Lozinka je netočna</string>
-    <string name="vault_list_part_n_of_t">Podijeli %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">Podijeli %1$d-od-%2$d</string>
+    <string name="vault_list_part_n_of_t">Udio %1$d od %2$d</string>
+    <string name="vault_part_n_of_t">Udio %1$d od %2$d</string>
     <string name="qr_title_join_keygen">Pridružite se Keygenu</string>
     <string name="qr_title_join_keysign">Pridružite se Keysignu</string>
     <string name="qr_title_join_swap_keysign">Pridružite se Swapu</string>
@@ -309,7 +309,7 @@
     <string name="vault_details_screen_vault_type">Vrsta trezora</string>
     <string name="vault_settings_delete_vault_part">Podijeli trezora:</string>
     <string name="vault_password_hint_to_long">Savjet je predug</string>
-    <string name="vault_details_screen_vault_part_desc">Podijeli %1$s-od-%2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Udio %1$s od %2$s</string>
     <string name="do_not_remind_me_again">Nemoj me ponovno podsjećati</string>
     <string name="monthly_backup_reminder_title">Ne zaboravite sigurnosno kopirati svoje dionice trezora i provjeriti cjelovitost.</string>
     <string name="transaction_complete_screen_title">Transakcija dovršena</string>
@@ -542,7 +542,7 @@
     <string name="general">Općenito</string>
     <string name="support">Podrška</string>
     <string name="vultisig_community">Vultisig zajednica</string>
-    <string name="vault_management">Upravljanje trezorom</string>
+    <string name="vault_management">Trezor</string>
     <string name="other">Ostalo</string>
     <string name="unstake_tcy_zero_error">Uklanjanje uloga nije moguće ako je stanje ispod 1</string>
     <string name="check_updates_title">Provjeri ažuriranja</string>
@@ -762,7 +762,7 @@
     <string name="select_vault_type_secure_desc_3">Osigurajte bilo koju količinu imovine</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver supotpisuje odmah</string>
     <string name="peer_discovery_topbar_title">Skenirajte QR</string>
-    <string name="peer_discovery_waiting_for_devices_action">Čekanje na uređaje...</string>
+    <string name="peer_discovery_waiting_for_devices_action">Čekanje na povezivanje uređaja...</string>
     <string name="peer_discovery_devices_n_of_n">Uređaji (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Poslano na %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">Niste primili e-poštu?</string>
@@ -858,7 +858,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Prebacite se na lokalni način rada</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Vratite se na internetski način rada</string>
     <string name="onboarding_desc_page_6_part_1">Ovi dijeljeni resursi surađuju s</string>
-    <string name="enter_email_screen_desc">Ova e-pošta koristi se samo za slanje sigurnosne kopije poslužitelja</string>
+    <string name="enter_email_screen_desc">Ova e-pošta koristi se za sigurnosnu kopiju u oblaku i ne dijeli se s trećim stranama</string>
     <string name="keygen_connecting_with_server_take_a_second">Ovo bi trebalo trajati samo sekundu</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">ovaj trezor dijeljenja</string>
     <string name="function_switch_thorchain_address">THORChain adresa</string>
@@ -1118,7 +1118,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Sigurnosna kopija poslužitelja</string>
     <string name="server_backup_email_label">E-pošta</string>
-    <string name="server_backup_email_description">Unesite e-adresu za primanje dijeljenja trezora.</string>
+    <string name="server_backup_email_description">Ova e-pošta koristi se za sigurnosnu kopiju u oblaku i ne dijeli se s trećim stranama</string>
     <string name="server_backup_email_error">Netočna e-pošta, molimo provjerite</string>
     <string name="server_backup_password_label">Lozinka</string>
     <string name="server_backup_password_description">Unesite lozinku koju ste postavili prilikom stvaranja ovog trezora.</string>

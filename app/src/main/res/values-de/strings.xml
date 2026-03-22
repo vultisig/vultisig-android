@@ -84,7 +84,7 @@
     <string name="send_amount">Menge</string>
     <string name="send_amount_currency_hint">Menge eingeben</string>
     <string name="send_continue_button">Fortfahren</string>
-    <string name="chain_account_view_swap">TAUSCHEN</string>
+    <string name="chain_account_view_swap">Tauschen</string>
     <string name="chain_account_view_deposit">Einzahlung</string>
     <string name="chain_account_view_send">SENDEN</string>
     <string name="circle_defi_description">Zahlen Sie Ihr USDC auf ein Circle-Konto ein und erzielen Sie Rendite. Sicher in Ihrem Vultisig-Tresor.</string>
@@ -151,7 +151,7 @@
     <string name="swap_screen_invalid_vault">Die Transaktion wird wahrscheinlich fehlschlagen, Tresor konnte nicht geladen werden.</string>
     <string name="swap_error_no_amount">Die Menge muss eine positive Zahl sein</string>
     <string name="app_name">Vultisig</string>
-    <string name="tokens">Tokens</string>
+    <string name="tokens">Vermögenswerte</string>
     <string name="vault_list_vaults_list">Tresore</string>
     <string name="join_keysign_waiting_keysign_start">Warte auf den Start von Keysign.</string>
     <string name="tx_done_address_copied">%1$s in die Zwischenablage kopiert</string>
@@ -282,8 +282,8 @@
     <string name="start_screen_import_vault_share_file_types">Unterstützte Dateitypen: .bak &amp; .vult</string>
     <string name="start_screen_recover_or_convert">Stelle deinen Tresor wieder her oder konvertiere deine Seed-Phrase in einen Tresor</string>
     <string name="keysign_password_incorrect_password">Das Passwort ist falsch</string>
-    <string name="vault_list_part_n_of_t">Teilen %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">Teilen %1$d-von-%2$d</string>
+    <string name="vault_list_part_n_of_t">Anteil %1$d von %2$d</string>
+    <string name="vault_part_n_of_t">Anteil %1$d von %2$d</string>
     <string name="qr_title_join_keygen">Keygen beitreten</string>
     <string name="qr_title_join_keysign">Keysign beitreten</string>
     <string name="qr_title_join_swap_keysign">Treten Sie Swap bei</string>
@@ -308,7 +308,7 @@
     <string name="vault_details_screen_vault_type">Tresortyp</string>
     <string name="vault_settings_delete_vault_part">Tresorteil:</string>
     <string name="vault_password_hint_to_long">Der Hinweis ist zu lang</string>
-    <string name="vault_details_screen_vault_part_desc">Teilen %1$s-von-%2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Anteil %1$s von %2$s</string>
     <string name="do_not_remind_me_again">Erinnere mich nicht mehr daran</string>
     <string name="monthly_backup_reminder_title">Vergessen Sie nicht, Ihre Tresorfreigaben zu sichern und die Vollständigkeit zu überprüfen.</string>
     <string name="transaction_complete_screen_title">Transaktion abgeschlossen</string>
@@ -541,7 +541,7 @@
     <string name="general">Allgemein</string>
     <string name="support">Support</string>
     <string name="vultisig_community">Vultisig-Community</string>
-    <string name="vault_management">Tresorverwaltung</string>
+    <string name="vault_management">Tresor</string>
     <string name="other">Sonstiges</string>
     <string name="unstake_tcy_zero_error">Das Aufheben der Einsätze kann nicht durchgeführt werden, wenn der Kontostand unter 1 liegt</string>
     <string name="check_updates_title">Aktualisierungen prüfen</string>
@@ -762,7 +762,7 @@
     <string name="select_vault_type_secure_desc_3">Sichern Sie beliebige Vermögenswerte.</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver signiert sofort</string>
     <string name="peer_discovery_topbar_title">QR-Code scannen</string>
-    <string name="peer_discovery_waiting_for_devices_action">Geräte werden angefordert...</string>
+    <string name="peer_discovery_waiting_for_devices_action">Warten auf Verbindung der Geräte...</string>
     <string name="peer_discovery_devices_n_of_n">Geräte (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">An %s gesendet.</string>
     <string name="vault_backup_screen_donot_recieve_email">Keine E-Mail erhalten?</string>
@@ -858,7 +858,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">In den lokalen Modus wechseln</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Zurück in den Internetmodus wechseln</string>
     <string name="onboarding_desc_page_6_part_1">Diese Freigaben arbeiten zusammen, um</string>
-    <string name="enter_email_screen_desc">Diese E-Mail-Adresse wird nur zum Senden der Serversicherung verwendet.</string>
+    <string name="enter_email_screen_desc">Diese E-Mail wird für die Cloud-Sicherung verwendet und nicht an Dritte weitergegeben</string>
     <string name="keygen_connecting_with_server_take_a_second">Dies dauert nur einen Augenblick.</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">Diese Tresorfreigabe</string>
     <string name="function_switch_thorchain_address">THORChain-Adresse</string>
@@ -1117,7 +1117,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Serversicherung</string>
     <string name="server_backup_email_label">E-Mail</string>
-    <string name="server_backup_email_description">Geben Sie die E-Mail-Adresse ein, um die Tresorfreigabe zu erhalten.</string>
+    <string name="server_backup_email_description">Diese E-Mail wird für die Cloud-Sicherung verwendet und nicht an Dritte weitergegeben</string>
     <string name="server_backup_email_error">Falsche E-Mail, bitte überprüfen</string>
     <string name="server_backup_password_label">Passwort</string>
     <string name="server_backup_password_description">Geben Sie das Passwort ein, das Sie beim Erstellen dieses Tresors festgelegt haben.</string>
