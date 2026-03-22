@@ -217,172 +217,163 @@ constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun loadBondedNodes() {
-        viewModelScope.launch {
-            updateModel { it.copy(bonded = it.bonded.copy(isLoading = true)) }
+    private suspend fun loadBondedNodes() {
+        updateModel { it.copy(bonded = it.bonded.copy(isLoading = true)) }
 
-            try {
-                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
-                val cacaoCoin =
-                    vault?.coins?.find {
-                        it.ticker == Coins.MayaChain.CACAO.ticker && it.chain == Chain.MayaChain
-                    }
-
-                if (cacaoCoin == null) {
-                    Timber.e("Vault does not have CACAO coin")
-                    _totalBondedRaw.value = BigInteger.ZERO
-                    updateModel { it.copy(bonded = it.bonded.copy(isLoading = false)) }
-                    return@launch
+        try {
+            val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+            val cacaoCoin =
+                vault?.coins?.find {
+                    it.ticker == Coins.MayaChain.CACAO.ticker && it.chain == Chain.MayaChain
                 }
 
-                bondedNodesRefreshTrigger
-                    .flatMapLatest { bondUseCase.getActiveNodes(vaultId, cacaoCoin.address) }
-                    .catch { t ->
-                        Timber.e(t)
-                        _totalBondedRaw.value = BigInteger.ZERO
-                        updateModel { it.copy(bonded = it.bonded.copy(isLoading = false)) }
-                    }
-                    .collect { activeNodes ->
-                        val cacaoSymbol = Coins.MayaChain.CACAO.ticker
+            if (cacaoCoin == null) {
+                Timber.e("Vault does not have CACAO coin")
+                _totalBondedRaw.value = BigInteger.ZERO
+                updateModel { it.copy(bonded = it.bonded.copy(isLoading = false)) }
+                return
+            }
 
-                        val nodeUiModels =
-                            activeNodes.map { node ->
-                                BondedNodeUiModel(
-                                    address = node.node.address.formatAddress(),
-                                    fullAddress = node.node.address,
-                                    status = node.node.state.fromApiStatus(),
-                                    apy = node.apy.formatPercentage(),
-                                    bondedAmount =
-                                        node.amount.formatAmount(
-                                            Coins.MayaChain.CACAO.decimal,
-                                            cacaoSymbol,
-                                        ),
-                                    nextAward = formatCacaoReward(node.nextReward),
-                                    nextChurn = node.nextChurn.formatDate(),
-                                )
-                            }
+            bondedNodesRefreshTrigger
+                .flatMapLatest { bondUseCase.getActiveNodes(vaultId, cacaoCoin.address) }
+                .catch { t ->
+                    Timber.e(t)
+                    _totalBondedRaw.value = BigInteger.ZERO
+                    updateModel { it.copy(bonded = it.bonded.copy(isLoading = false)) }
+                }
+                .collect { activeNodes ->
+                    val cacaoSymbol = Coins.MayaChain.CACAO.ticker
 
-                        val totalBondedRaw =
-                            activeNodes.fold(BigInteger.ZERO) { acc, node -> acc + node.amount }
-                        val totalBonded =
-                            totalBondedRaw.formatAmount(Coins.MayaChain.CACAO.decimal, cacaoSymbol)
-
-                        val bondedPrice = calculateBondedFiatPrice(totalBondedRaw)
-
-                        updateModel {
-                            it.copy(
-                                isTotalAmountLoading = false,
-                                bonded =
-                                    BondedTabUiModel(
-                                        isLoading = false,
-                                        totalBondedAmount = totalBonded,
-                                        totalBondedPrice = bondedPrice,
-                                        nodes = nodeUiModels,
+                    val nodeUiModels =
+                        activeNodes.map { node ->
+                            BondedNodeUiModel(
+                                address = node.node.address.formatAddress(),
+                                fullAddress = node.node.address,
+                                status = node.node.state.fromApiStatus(),
+                                apy = node.apy.formatPercentage(),
+                                bondedAmount =
+                                    node.amount.formatAmount(
+                                        Coins.MayaChain.CACAO.decimal,
+                                        cacaoSymbol,
                                     ),
+                                nextAward = formatCacaoReward(node.nextReward),
+                                nextChurn = node.nextChurn.formatDate(),
                             )
                         }
 
-                        _totalBondedRaw.value = totalBondedRaw
+                    val totalBondedRaw =
+                        activeNodes.fold(BigInteger.ZERO) { acc, node -> acc + node.amount }
+                    val totalBonded =
+                        totalBondedRaw.formatAmount(Coins.MayaChain.CACAO.decimal, cacaoSymbol)
+
+                    val bondedPrice = calculateBondedFiatPrice(totalBondedRaw)
+
+                    updateModel {
+                        it.copy(
+                            isTotalAmountLoading = false,
+                            bonded =
+                                BondedTabUiModel(
+                                    isLoading = false,
+                                    totalBondedAmount = totalBonded,
+                                    totalBondedPrice = bondedPrice,
+                                    nodes = nodeUiModels,
+                                ),
+                        )
                     }
-            } catch (t: Throwable) {
-                if (t is CancellationException) throw t
-                Timber.e(t)
-                _totalBondedRaw.value = BigInteger.ZERO
-                updateModel {
-                    it.copy(
-                        isTotalAmountLoading = false,
-                        bonded = it.bonded.copy(isLoading = false),
-                    )
+
+                    _totalBondedRaw.value = totalBondedRaw
                 }
+        } catch (t: Throwable) {
+            if (t is CancellationException) throw t
+            Timber.e(t)
+            _totalBondedRaw.value = BigInteger.ZERO
+            updateModel {
+                it.copy(isTotalAmountLoading = false, bonded = it.bonded.copy(isLoading = false))
             }
         }
     }
 
-    private fun loadStakingPosition() {
-        viewModelScope.launch {
-            val selectedPositions = currentModel.selectedPositions
-            if (!selectedPositions.hasMayaStakingPositions()) {
-                _totalStakingRaw.value = BigInteger.ZERO
-                updateModel { it.copy(staking = StakingTabUiModel(positions = emptyList())) }
-                return@launch
-            }
+    private suspend fun loadStakingPosition() {
+        val selectedPositions = currentModel.selectedPositions
+        if (!selectedPositions.hasMayaStakingPositions()) {
+            _totalStakingRaw.value = BigInteger.ZERO
+            updateModel { it.copy(staking = StakingTabUiModel(positions = emptyList())) }
+            return
+        }
 
-            val loadingPosition =
-                StakePositionUiModel(
-                    coin = Coins.MayaChain.CACAO,
-                    stakeAssetHeader = UiText.StringResource(R.string.cacao_pool),
-                    stakedAmountDisplay = "0 CACAO",
-                    apy = null,
-                    isLoading = true,
-                    canStake = false,
-                    canUnstake = false,
-                )
-            updateModel {
-                it.copy(staking = StakingTabUiModel(positions = listOf(loadingPosition)))
-            }
+        val loadingPosition =
+            StakePositionUiModel(
+                coin = Coins.MayaChain.CACAO,
+                stakeAssetHeader = UiText.StringResource(R.string.cacao_pool),
+                stakedAmountDisplay = "0 CACAO",
+                apy = null,
+                isLoading = true,
+                canStake = false,
+                canUnstake = false,
+            )
+        updateModel { it.copy(staking = StakingTabUiModel(positions = listOf(loadingPosition))) }
 
-            try {
-                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
-                val cacaoCoin =
-                    vault?.coins?.find {
-                        it.ticker == Coins.MayaChain.CACAO.ticker && it.chain == Chain.MayaChain
-                    }
-                        ?: run {
-                            Timber.e("Vault does not have CACAO coin")
-                            _totalStakingRaw.value = BigInteger.ZERO
-                            updateModel {
-                                it.copy(staking = StakingTabUiModel(positions = emptyList()))
-                            }
-                            return@launch
-                        }
-
-                mayaCacaoStakingService
-                    .getStakingDetails(cacaoCoin.address)
-                    .catch { t ->
-                        Timber.e(t, "Failed to load CACAO staking details")
+        try {
+            val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+            val cacaoCoin =
+                vault?.coins?.find {
+                    it.ticker == Coins.MayaChain.CACAO.ticker && it.chain == Chain.MayaChain
+                }
+                    ?: run {
+                        Timber.e("Vault does not have CACAO coin")
                         _totalStakingRaw.value = BigInteger.ZERO
                         updateModel {
-                            it.copy(
-                                staking =
-                                    StakingTabUiModel(
-                                        positions = listOf(loadingPosition.copy(isLoading = false))
-                                    )
-                            )
+                            it.copy(staking = StakingTabUiModel(positions = emptyList()))
                         }
+                        return
                     }
-                    .collect { details ->
-                        _totalStakingRaw.value = details.stakeAmount
-                        val stakeAmount = details.stakeAmount.toValue(Coins.MayaChain.CACAO.decimal)
-                        val stakedFiat = calculateStakingFiatPrice(stakeAmount)
-                        val position =
-                            StakePositionUiModel(
-                                coin = Coins.MayaChain.CACAO,
-                                stakeAssetHeader = UiText.StringResource(R.string.cacao_pool),
-                                stakeAmount = stakeAmount,
-                                stakedAmountDisplay =
-                                    "${stakeAmount.setScale(4, RoundingMode.DOWN).toPlainString()} CACAO",
-                                stakedFiatDisplay = stakedFiat,
-                                apy = details.apr?.formatPercentage(),
-                                isLoading = false,
-                                canStake = true,
-                                canUnstake = details.canUnstake,
-                            )
-                        updateModel {
-                            it.copy(staking = StakingTabUiModel(positions = listOf(position)))
-                        }
+
+            mayaCacaoStakingService
+                .getStakingDetails(cacaoCoin.address)
+                .catch { t ->
+                    Timber.e(t, "Failed to load CACAO staking details")
+                    _totalStakingRaw.value = BigInteger.ZERO
+                    updateModel {
+                        it.copy(
+                            staking =
+                                StakingTabUiModel(
+                                    positions = listOf(loadingPosition.copy(isLoading = false))
+                                )
+                        )
                     }
-            } catch (t: Throwable) {
-                if (t is CancellationException) throw t
-                Timber.e(t, "Failed to load CACAO staking position")
-                _totalStakingRaw.value = BigInteger.ZERO
-                updateModel {
-                    it.copy(
-                        staking =
-                            StakingTabUiModel(
-                                positions = listOf(loadingPosition.copy(isLoading = false))
-                            )
-                    )
                 }
+                .collect { details ->
+                    _totalStakingRaw.value = details.stakeAmount
+                    val stakeAmount = details.stakeAmount.toValue(Coins.MayaChain.CACAO.decimal)
+                    val stakedFiat = calculateStakingFiatPrice(stakeAmount)
+                    val position =
+                        StakePositionUiModel(
+                            coin = Coins.MayaChain.CACAO,
+                            stakeAssetHeader = UiText.StringResource(R.string.cacao_pool),
+                            stakeAmount = stakeAmount,
+                            stakedAmountDisplay =
+                                "${stakeAmount.setScale(4, RoundingMode.DOWN).toPlainString()} CACAO",
+                            stakedFiatDisplay = stakedFiat,
+                            apy = details.apr?.formatPercentage(),
+                            isLoading = false,
+                            canStake = true,
+                            canUnstake = details.canUnstake,
+                        )
+                    updateModel {
+                        it.copy(staking = StakingTabUiModel(positions = listOf(position)))
+                    }
+                }
+        } catch (t: Throwable) {
+            if (t is CancellationException) throw t
+            Timber.e(t, "Failed to load CACAO staking position")
+            _totalStakingRaw.value = BigInteger.ZERO
+            updateModel {
+                it.copy(
+                    staking =
+                        StakingTabUiModel(
+                            positions = listOf(loadingPosition.copy(isLoading = false))
+                        )
+                )
             }
         }
     }
@@ -509,8 +500,6 @@ constructor(
             updateModel {
                 it.copy(showPositionSelectionDialog = false, selectedPositions = selectedPositions)
             }
-            // loadBondedNodes() and loadStakingPosition() are triggered by the
-            // getSelectedPositions() flow re-emitting in loadSavedPositions().
         }
     }
 
