@@ -52,7 +52,7 @@ internal class NavigatorImpl<Dst> @Inject constructor() : Navigator<Dst> {
     }
 
     override suspend fun navigate(dst: Dst, opts: NavigationOptions) {
-        Timber.d("navigate($destination, $opts)")
+        Timber.d("navigate($dst, $opts)")
         this.destination.emit(NavigateAction(dst, opts))
     }
 }
