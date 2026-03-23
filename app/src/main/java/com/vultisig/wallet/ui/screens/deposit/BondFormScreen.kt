@@ -264,6 +264,7 @@ private fun MayaBondFormContent(
 ) {
     var isAddressExpanded by remember { mutableStateOf(true) }
     var isAssetExpanded by remember { mutableStateOf(state.selectedBondAsset.isEmpty()) }
+    var isBondAssetListOpen by remember { mutableStateOf(false) }
 
     // Address card
     TextFieldValidator(errorText = state.nodeAddressError) {
@@ -400,30 +401,33 @@ private fun MayaBondFormContent(
                 UiSpacer(size = 8.dp)
                 if (state.bondableAssets.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        state.bondableAssets.forEach { asset ->
+                        // Selected chip — always visible; click to open the full list
+                        val displayAsset =
+                            state.selectedBondAsset.ifEmpty { state.bondableAssets.first() }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier =
+                                Modifier.clickOnce { isBondAssetListOpen = !isBondAssetListOpen }
+                                    .background(
+                                        color = Theme.v2.colors.backgrounds.secondary,
+                                        shape = RoundedCornerShape(99.dp),
+                                    )
+                                    .padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
+                        ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier =
-                                    Modifier.clickOnce {
-                                            onSelectBondAsset(asset)
-                                            isAssetExpanded = false
-                                        }
-                                        .background(
-                                            color = Theme.v2.colors.backgrounds.tertiary_2,
-                                            shape = RoundedCornerShape(99.dp),
-                                        )
-                                        .padding(all = 6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 TokenLogo(
-                                    logo = getCoinLogo(asset.lowercase()),
-                                    title = asset,
+                                    logo = getCoinLogo(displayAsset.lowercase()),
+                                    title = displayAsset,
                                     modifier = Modifier.size(36.dp),
                                     errorLogoModifier = Modifier.size(36.dp),
                                 )
-                                UiSpacer(size = 8.dp)
                                 Column {
                                     Text(
-                                        text = asset,
+                                        text = displayAsset,
                                         style = Theme.brockmann.supplementary.caption,
                                         color = Theme.v2.colors.text.primary,
                                     )
@@ -433,13 +437,72 @@ private fun MayaBondFormContent(
                                         color = Theme.v2.colors.text.tertiary,
                                     )
                                 }
-                                UiSpacer(size = 4.dp)
-                                UiIcon(
-                                    drawableResId = R.drawable.ic_chevron_right_small,
-                                    size = 20.dp,
-                                    tint = Theme.v2.colors.text.primary,
-                                )
-                                UiSpacer(size = 6.dp)
+                            }
+                            UiIcon(
+                                drawableResId =
+                                    if (isBondAssetListOpen) R.drawable.ic_caret_down
+                                    else R.drawable.ic_chevron_right_small,
+                                size = 20.dp,
+                                tint = Theme.v2.colors.text.primary,
+                            )
+                        }
+
+                        // Full list — visible only when chip is tapped
+                        AnimatedVisibility(visible = isBondAssetListOpen) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                state.bondableAssets.forEach { asset ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        modifier =
+                                            Modifier.clickOnce {
+                                                    onSelectBondAsset(asset)
+                                                    isBondAssetListOpen = false
+                                                    isAssetExpanded = false
+                                                }
+                                                .background(
+                                                    color = Theme.v2.colors.backgrounds.secondary,
+                                                    shape = RoundedCornerShape(99.dp),
+                                                )
+                                                .padding(
+                                                    start = 6.dp,
+                                                    end = 12.dp,
+                                                    top = 6.dp,
+                                                    bottom = 6.dp,
+                                                ),
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        ) {
+                                            TokenLogo(
+                                                logo = getCoinLogo(asset.lowercase()),
+                                                title = asset,
+                                                modifier = Modifier.size(36.dp),
+                                                errorLogoModifier = Modifier.size(36.dp),
+                                            )
+                                            Column {
+                                                Text(
+                                                    text = asset,
+                                                    style = Theme.brockmann.supplementary.caption,
+                                                    color = Theme.v2.colors.text.primary,
+                                                )
+                                                Text(
+                                                    text =
+                                                        stringResource(R.string.swap_form_native),
+                                                    style =
+                                                        Theme.brockmann.supplementary.captionSmall,
+                                                    color = Theme.v2.colors.text.tertiary,
+                                                )
+                                            }
+                                        }
+                                        UiIcon(
+                                            drawableResId = R.drawable.ic_chevron_right_small,
+                                            size = 20.dp,
+                                            tint = Theme.v2.colors.text.primary,
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -456,7 +519,6 @@ private fun MayaBondFormContent(
                         )
                     }
                 }
-                UiHorizontalDivider()
                 TextFieldValidator(errorText = state.lpUnitsError) {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
                         Text(
@@ -464,16 +526,31 @@ private fun MayaBondFormContent(
                             style = Theme.brockmann.supplementary.footnote,
                             color = Theme.v2.colors.text.tertiary,
                         )
-                        UiSpacer(size = 4.dp)
-                        FormTextField(
-                            hint = "0",
-                            keyboardType = KeyboardType.Number,
-                            textFieldState = lpUnitsFieldState,
-                            onLostFocus = {
-                                onLpUnitsLostFocus()
-                                isAssetExpanded = false
-                            },
-                        )
+                        UiSpacer(size = 16.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .background(Theme.v2.colors.backgrounds.secondary, inputShape)
+                                    .border(
+                                        1.dp,
+                                        Theme.v2.colors.variables.bordersExtraLight,
+                                        inputShape,
+                                    )
+                                    .padding(16.dp),
+                        ) {
+                            BasicFormTextField(
+                                hint = "0",
+                                keyboardType = KeyboardType.Number,
+                                textFieldState = lpUnitsFieldState,
+                                textStyle = Theme.brockmann.body.s.medium,
+                                onLostFocus = {
+                                    onLpUnitsLostFocus()
+                                    isAssetExpanded = false
+                                },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
                 }
             }
