@@ -52,7 +52,6 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
-import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
@@ -170,7 +169,6 @@ constructor(
     private val mayaChainApi: MayaChainApi,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
-    private val enableCoin: EnableTokenUseCase,
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
     private val feeServiceComposite: FeeServiceComposite,
     private val vaultRepository: VaultRepository,
@@ -400,23 +398,16 @@ constructor(
                 state.update { state -> state.copy(amountError = null, balance = value.asUiText()) }
             }
         } else {
-            val token = findCoin(chain, targetTicker)
-            token?.let {
-                enableCoin(vaultId, token)
-                loadAddress(vaultId, chain)
+            state.update {
+                it.copy(
+                    balance = UiText.Empty,
+                    amountError =
+                        UiText.FormattedText(
+                            R.string.must_be_enabled_before_proceeding,
+                            listOf(targetTicker.orEmpty()),
+                        ),
+                )
             }
-                ?: run {
-                    state.update {
-                        it.copy(
-                            balance = UiText.Empty,
-                            amountError =
-                                UiText.FormattedText(
-                                    R.string.must_be_enabled_before_proceeding,
-                                    listOf(targetTicker.orEmpty()),
-                                ),
-                        )
-                    }
-                }
         }
     }
 
@@ -1976,10 +1967,6 @@ constructor(
 
     private fun isLpUnitCharsValid(lpUnits: String) =
         lpUnits.toIntOrNull() != null && lpUnits.all { it.isDigit() } && lpUnits.toInt() > 0
-
-    @Deprecated("Use Ruji Staking through DeFi Tab")
-    private fun findCoin(chain: Chain, ticker: String?) =
-        Coins.coins[chain]?.find { it.ticker.equals(ticker, ignoreCase = true) }
 
     fun onSelectSecureAsset(asset: TokenWithdrawSecureAsset) {
         val balance = asset.tokenValue?.let(mapTokenValueToStringWithUnit)
