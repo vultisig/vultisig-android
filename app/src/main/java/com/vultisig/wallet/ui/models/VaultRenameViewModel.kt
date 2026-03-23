@@ -79,7 +79,8 @@ constructor(
         if (!isVaultNameValid(newName)) {
             return StringResource(R.string.vault_name_too_long_error)
         }
-        val isNameAlreadyExist = vaultRepository.getAll().any { it.name == newName }
+        val isNameAlreadyExist =
+            vaultRepository.getAll().any { it.name == newName && it.id != vaultId }
         if (isNameAlreadyExist) {
             return StringResource(R.string.vault_edit_this_name_already_exist)
         }
