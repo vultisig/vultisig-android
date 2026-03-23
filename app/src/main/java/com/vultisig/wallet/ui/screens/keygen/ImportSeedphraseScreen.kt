@@ -1,10 +1,10 @@
 package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -64,8 +64,20 @@ internal fun ImportSeedphraseContent(
     V2Scaffold(
         onBackClick = onBackClick,
         title = stringResource(R.string.import_seedphrase_title),
+        bottomBar = {
+            VsButton(
+                label =
+                    if (state.isImporting) stringResource(R.string.import_seedphrase_checking)
+                    else stringResource(R.string.import_seedphrase_import_button),
+                onClick = onImportClick,
+                state =
+                    if (state.isImportEnabled && !state.isImporting) VsButtonState.Enabled
+                    else VsButtonState.Disabled,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
             Text(
                 text = stringResource(R.string.import_seedphrase_subtitle),
                 style = Theme.brockmann.body.s.medium,
@@ -96,19 +108,6 @@ internal fun ImportSeedphraseContent(
                     ),
                 style = Theme.brockmann.supplementary.footnote,
                 color = Theme.v2.colors.text.primary,
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            VsButton(
-                label =
-                    if (state.isImporting) stringResource(R.string.import_seedphrase_checking)
-                    else stringResource(R.string.import_seedphrase_import_button),
-                onClick = onImportClick,
-                state =
-                    if (state.isImportEnabled && !state.isImporting) VsButtonState.Enabled
-                    else VsButtonState.Disabled,
-                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

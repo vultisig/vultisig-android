@@ -974,7 +974,7 @@
     <string name="import_seedphrase_label">시드 구문</string>
     <string name="import_seedphrase_hint">복구 구문을 입력하세요…</string>
     <string name="import_seedphrase_word_count">%1$d / %2$d 단어</string>
-    <string name="import_seedphrase_invalid_word_count">%2$s 단어가 필요하지만 %1$s 단어가 입력되었습니다</string>
+    <string name="import_seedphrase_invalid_word_count">%1$s 단어를 입력하셨습니다. 시드 구문은 12 또는 24 단어여야 합니다</string>
     <string name="import_seedphrase_invalid_phrase">유효하지 않은 시드 구문</string>
     <string name="import_seedphrase_already_imported">이 시드 구문은 이미 가져온 상태입니다</string>
     <string name="import_seedphrase_duplicate_description">다른 시드 구문을 가져와 주세요</string>

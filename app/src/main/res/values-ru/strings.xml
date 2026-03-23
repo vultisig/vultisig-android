@@ -913,7 +913,7 @@
     <string name="import_seedphrase_label">Сид-фраза</string>
     <string name="import_seedphrase_hint">Введите вашу фразу восстановления…</string>
     <string name="import_seedphrase_word_count">%1$d / %2$d слов</string>
-    <string name="import_seedphrase_invalid_word_count">Ожидалось %2$s слов, получено %1$s</string>
+    <string name="import_seedphrase_invalid_word_count">Вы ввели %1$s слов. Сид-фраза должна содержать 12 или 24 слова</string>
     <string name="import_seedphrase_invalid_phrase">Недействительная сид-фраза</string>
     <string name="import_seedphrase_already_imported">Эта сид-фраза уже была импортирована</string>
     <string name="import_seedphrase_duplicate_description">Пожалуйста, импортируйте другую сид-фразу</string>

@@ -918,7 +918,7 @@
     <string name="import_seedphrase_label">Frase seed</string>
     <string name="import_seedphrase_hint">Inserisci la tua frase di recupero…</string>
     <string name="import_seedphrase_word_count">%1$d / %2$d parole</string>
-    <string name="import_seedphrase_invalid_word_count">Previste %2$s parole, ottenute %1$s</string>
+    <string name="import_seedphrase_invalid_word_count">Hai inserito %1$s parole. La frase seed deve essere di 12 o 24</string>
     <string name="import_seedphrase_invalid_phrase">Frase seed non valida</string>
     <string name="import_seedphrase_already_imported">Questa frase seed è già stata importata</string>
     <string name="import_seedphrase_duplicate_description">Per favore importa una frase seed diversa</string>

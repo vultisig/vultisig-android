@@ -917,7 +917,7 @@
     <string name="import_seedphrase_label">Fraza za oporavak</string>
     <string name="import_seedphrase_hint">Unesite svoju frazu za oporavak…</string>
     <string name="import_seedphrase_word_count">%1$d / %2$d riječi</string>
-    <string name="import_seedphrase_invalid_word_count">Očekivano %2$s riječi, dobiveno %1$s</string>
+    <string name="import_seedphrase_invalid_word_count">Unijeli ste %1$s riječi. Fraza za oporavak mora imati 12 ili 24</string>
     <string name="import_seedphrase_invalid_phrase">Nevažeća fraza za oporavak</string>
     <string name="import_seedphrase_already_imported">Ova fraza za oporavak je već uvezena</string>
     <string name="import_seedphrase_duplicate_description">Molimo uvezite drugu frazu za oporavak</string>

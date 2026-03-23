@@ -971,7 +971,7 @@
     <string name="import_seedphrase_label">Seed Phrase</string>
     <string name="import_seedphrase_hint">Enter your recovery phrase…</string>
     <string name="import_seedphrase_word_count">%1$d / %2$d words</string>
-    <string name="import_seedphrase_invalid_word_count">Expected %2$s words, got %1$s</string>
+    <string name="import_seedphrase_invalid_word_count">You entered %1$s words. Seed phrase must be 12 or 24</string>
     <string name="import_seedphrase_invalid_phrase">Invalid seed phrase</string>
     <string name="import_seedphrase_already_imported">This seed phrase has already been imported</string>
     <string name="import_seedphrase_duplicate_description">Please import a different seed phrase</string>
