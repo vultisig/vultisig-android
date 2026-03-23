@@ -247,10 +247,14 @@ data class SuiSpecific(
     @SerialName("coins") val coins: List<SuiCoin>,
 )
 
+/** Cardano blockchain-specific parameters for test fixtures. */
 @Serializable
 data class CardanoSpecific(
+    /** Fee per byte in lovelace. */
     @SerialName("byte_fee") val byteFee: Long,
+    /** Whether to send the maximum available amount. */
     @SerialName("send_max_amount") val sendMaxAmount: Boolean = false,
+    /** Transaction time-to-live (slot number). */
     val ttl: Long,
 )
 
