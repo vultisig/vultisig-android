@@ -190,7 +190,7 @@ constructor(
     private fun collectCurrentVaultAndFolder(vaultId: VaultId) {
         viewModelScope.launch {
             val vaultOrder = vaultOrderRepository.find(name = vaultId)
-            val vault = requireNotNull(vaultRepository.get(vaultId))
+            val vault = vaultRepository.get(vaultId) ?: return@launch
             state.update {
                 it.copy(
                     currentVaultId = vaultId,
