@@ -56,7 +56,7 @@ constructor(
 
     val state = MutableStateFlow(VaultListUiModel())
 
-    lateinit var openType: Route.VaultList.OpenType
+    var openType: Route.VaultList.OpenType? = null
     private var vaultId: VaultId? = null
     private var reIndexJob: Job? = null
     private var collectVaultsJob: Job? = null
@@ -144,6 +144,7 @@ constructor(
 
     fun selectVault(vaultId: String) {
         viewModelScope.launch {
+            val openType = openType ?: return@launch
             when (openType) {
                 is Route.VaultList.OpenType.DeepLink -> {
                     val sendDeepLinkData =

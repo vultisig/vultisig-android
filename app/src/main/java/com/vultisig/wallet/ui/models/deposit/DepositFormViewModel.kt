@@ -183,7 +183,7 @@ constructor(
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
 ) : ViewModel() {
 
-    private lateinit var vaultId: String
+    private var vaultId: String? = null
     private var chain: Chain? = null
 
     private var rujiMergeBalances = MutableStateFlow<List<MergeAccount>?>(null)
@@ -468,6 +468,7 @@ constructor(
         val chain = chain ?: return
 
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val requestId = UUID.randomUUID().toString()
 
             navigator.route(
@@ -510,6 +511,7 @@ constructor(
                                 val gaiaAddress = inboundAddress.address
                                 nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
                             }
+                            val vaultId = vaultId ?: return@launch
                             accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect {
                                 addresses ->
                                 thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
@@ -596,6 +598,7 @@ constructor(
 
     private fun collectSecuredAssetAddresses() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val (thorAddress) =
                 chainAccountAddressRepository.getAddress(
                     chain = Chain.ThorChain,
@@ -656,6 +659,7 @@ constructor(
         state.update { it.copy(selectedDstChain = chain) }
 
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val address = accountsRepository.loadAddress(vaultId, chain).firstOrNull()
 
             if (address != null) {
@@ -777,6 +781,7 @@ constructor(
     fun deposit() {
         viewModelScope.launch {
             try {
+                val vaultId = vaultId ?: return@launch
                 isLoading = true
                 val depositOption = state.value.depositOption
 
@@ -820,6 +825,7 @@ constructor(
     }
 
     private suspend fun createUnMergeTx(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val unmergeToken = state.value.selectedUnMergeCoin
         val unMergeAccountBalance =
             rujiMergeBalances.value?.firstOrNull {
@@ -896,6 +902,7 @@ constructor(
     }
 
     private suspend fun createAddCacaoPoolTransaction(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -954,6 +961,7 @@ constructor(
 
     @OptIn(ExperimentalStdlibApi::class)
     private suspend fun createSecuredAssetTransaction(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1079,6 +1087,7 @@ constructor(
     }
 
     private suspend fun createWithdrawSecuredAssetTransaction(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1294,6 +1303,7 @@ constructor(
     }
 
     private suspend fun createRemoveCacaoPoolTransaction(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
 
         val chain =
             chain
@@ -1350,6 +1360,7 @@ constructor(
     }
 
     private suspend fun createBondTransaction(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1474,6 +1485,7 @@ constructor(
     }
 
     private suspend fun createUnbondTransaction(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1588,6 +1600,7 @@ constructor(
     }
 
     private suspend fun createLeaveTransaction(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1649,6 +1662,7 @@ constructor(
     }
 
     private suspend fun createCustomTransaction(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1705,6 +1719,7 @@ constructor(
     }
 
     private suspend fun createTonDepositTransaction(memo: DepositMemo): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1779,6 +1794,7 @@ constructor(
         createTonDepositTransaction(DepositMemo.Unstake)
 
     private suspend fun createMergeTx(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1840,6 +1856,7 @@ constructor(
     }
 
     private suspend fun createSwitchTx(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1904,6 +1921,7 @@ constructor(
     }
 
     private suspend fun createTransferIbcTx(): DepositTransaction {
+        val vaultId = requireNotNull(vaultId)
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(

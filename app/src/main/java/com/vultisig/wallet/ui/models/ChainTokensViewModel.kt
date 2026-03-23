@@ -105,8 +105,8 @@ constructor(
 ) : ViewModel() {
     private val tokens = MutableStateFlow(emptyList<Coin>())
 
-    private lateinit var chainRaw: String
-    private lateinit var vaultId: String
+    private var chainRaw: String? = null
+    private var vaultId: String? = null
     private var currentVault: Vault? = null
 
     val uiState = MutableStateFlow(ChainTokensUiModel())
@@ -115,6 +115,7 @@ constructor(
 
     private fun updateBalanceVisibility() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
             uiState.update { it.copy(isBalanceVisible = isBalanceVisible) }
         }
@@ -133,27 +134,41 @@ constructor(
     }
 
     fun send() {
-        viewModelScope.launch { navigator.route(Route.Send(vaultId = vaultId, chainId = chainRaw)) }
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
+            navigator.route(Route.Send(vaultId = vaultId, chainId = chainRaw))
+        }
     }
 
     fun swap() {
-        viewModelScope.launch { navigator.route(Route.Swap(vaultId = vaultId, chainId = chainRaw)) }
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
+            navigator.route(Route.Swap(vaultId = vaultId, chainId = chainRaw))
+        }
     }
 
     fun deposit() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
             navigator.route(Route.Deposit(vaultId = vaultId, chainId = chainRaw))
         }
     }
 
     fun buy() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
             navigator.route(Route.OnRamp(vaultId = vaultId, chainId = chainRaw))
         }
     }
 
     fun selectTokens() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
             navigator.route(Route.SelectTokens(vaultId = vaultId, chainId = chainRaw))
             requestResultRepository.request<Unit>(REFRESH_TOKEN_DATA)
             loadData(isRefresh = true)
@@ -162,6 +177,8 @@ constructor(
 
     fun openToken(model: ChainTokenUiModel) {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
             navigator.route(
                 Route.TokenDetail(
                     vaultId = vaultId,
@@ -174,6 +191,8 @@ constructor(
     }
 
     private fun loadData(isRefresh: Boolean) {
+        val vaultId = vaultId ?: return
+        val chainRaw = chainRaw ?: return
         discoverTokenUseCase(vaultId, chainRaw)
 
         loadDataJob?.cancel()
@@ -296,6 +315,7 @@ constructor(
 
     fun openAddressQr() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             navigator.route(
                 Route.AddressQr(
                     vaultId = vaultId,
@@ -328,6 +348,7 @@ constructor(
     }
 
     private fun fetchMergeBalanceFlow(chain: Chain): Flow<List<MergeAccount>> = flow {
+        val vaultId = vaultId ?: return@flow
         emit(emptyList())
         emit(accountsRepository.fetchMergeBalance(chain, vaultId))
     }

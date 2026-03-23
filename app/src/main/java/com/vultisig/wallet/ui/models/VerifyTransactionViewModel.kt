@@ -116,7 +116,7 @@ constructor(
     private val transactionId: TransactionId = args.transactionId
     private val vaultId: String = args.vaultId
 
-    private lateinit var transaction: Transaction
+    private var transaction: Transaction? = null
 
     val uiState = MutableStateFlow(VerifyTransactionUiModel())
     private val password = MutableStateFlow<String?>(null)
@@ -133,7 +133,7 @@ constructor(
     }
 
     private suspend fun calculateFees(transactionUiModel: TransactionDetailsUiModel) {
-        val tx = transaction
+        val tx = transaction ?: return
         val chain = tx.token.chain
         val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return
 
@@ -334,7 +334,7 @@ constructor(
 
     private suspend fun scanTransaction() {
         try {
-            val transaction = transaction
+            val transaction = transaction ?: return
             val chain = transaction.token.chain
 
             val isSupported =
