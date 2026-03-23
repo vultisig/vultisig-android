@@ -471,7 +471,12 @@ constructor(
     }
 
     fun toggleBalanceVisibility() {
-        val vaultId = vaultId ?: return
+        val vaultId =
+            vaultId
+                ?: run {
+                    Timber.w("toggleBalanceVisibility: vaultId is null, skipping")
+                    return
+                }
         val isBalanceValueVisible = !uiState.value.isBalanceValueVisible
         viewModelScope.launch {
             uiState.update { it.copy(isBalanceValueVisible = isBalanceValueVisible) }
@@ -480,7 +485,12 @@ constructor(
     }
 
     fun backupVault() {
-        val vaultId = vaultId ?: return
+        val vaultId =
+            vaultId
+                ?: run {
+                    Timber.w("backupVault: vaultId is null, skipping")
+                    return
+                }
         viewModelScope.launch {
             dismissBackupReminder()
             navigator.route(Route.BackupPasswordRequest(vaultId))
