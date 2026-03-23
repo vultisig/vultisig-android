@@ -154,14 +154,7 @@ internal fun MigrationOnboardingContent(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        RiveAnimation(
-            animation = animation,
-            modifier = Modifier.fillMaxWidth(),
-            onInit = {
-                // TODO it's not great that it doesn't update with passing new animation into params
-                it.setRiveResource(animation)
-            },
-        )
+        RiveAnimation(animation = animation, modifier = Modifier.fillMaxWidth())
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
