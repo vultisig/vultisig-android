@@ -1262,7 +1262,7 @@
     <string name="import_seedphrase_label">助记词</string>
     <string name="import_seedphrase_hint">输入您的恢复短语…</string>
     <string name="import_seedphrase_word_count">%1$d / %2$d 个单词</string>
-    <string name="import_seedphrase_invalid_word_count">预期 %2$s 个单词，实际 %1$s 个</string>
+    <string name="import_seedphrase_invalid_word_count">您输入了 %1$s 个单词。助记词必须是 12 或 24 个单词</string>
     <string name="import_seedphrase_invalid_phrase">无效的助记词</string>
     <string name="import_seedphrase_already_imported">该助记词已被导入</string>
     <string name="import_seedphrase_duplicate_description">请导入其他助记词</string>

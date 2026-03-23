@@ -922,7 +922,7 @@
     <string name="import_seedphrase_label">Herstelzin</string>
     <string name="import_seedphrase_hint">Voer uw herstelzin in…</string>
     <string name="import_seedphrase_word_count">%1$d / %2$d woorden</string>
-    <string name="import_seedphrase_invalid_word_count">%2$s woorden verwacht, %1$s ontvangen</string>
+    <string name="import_seedphrase_invalid_word_count">Je hebt %1$s woorden ingevoerd. De herstelzin moet 12 of 24 woorden bevatten</string>
     <string name="import_seedphrase_invalid_phrase">Ongeldige herstelzin</string>
     <string name="import_seedphrase_already_imported">Deze herstelzin is al geïmporteerd</string>
     <string name="import_seedphrase_duplicate_description">Importeer alstublieft een andere herstelzin</string>

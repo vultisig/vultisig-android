@@ -927,7 +927,7 @@
     <string name="import_seedphrase_label">Seed-Phrase</string>
     <string name="import_seedphrase_hint">Wiederherstellungsphrase eingeben…</string>
     <string name="import_seedphrase_word_count">%1$d / %2$d Wörter</string>
-    <string name="import_seedphrase_invalid_word_count">%2$s Wörter erwartet, %1$s erhalten</string>
+    <string name="import_seedphrase_invalid_word_count">Sie haben %1$s Wörter eingegeben. Die Seed-Phrase muss 12 oder 24 Wörter haben</string>
     <string name="import_seedphrase_invalid_phrase">Ungültige Seed-Phrase</string>
     <string name="import_seedphrase_already_imported">Diese Seed-Phrase wurde bereits importiert</string>
     <string name="import_seedphrase_duplicate_description">Bitte importieren Sie eine andere Seed-Phrase</string>
