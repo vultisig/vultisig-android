@@ -1037,7 +1037,7 @@
     <string name="vault_setup_no_inspiration">No inspiration? You can always change the name later in your settings.</string>
     <string name="naming_saving_vault">Saving vault</string>
     <string name="email_enter_your_email">Enter your email</string>
-    <string name="email_only_used_once">This will only be used once to send your backup file, Vultisig doesn’t store any data.</string>
+    <string name="email_only_used_once">This email is used for cloud backup and shared with no third party</string>
     <string name="password_choose_a_password">Choose a password</string>
     <string name="password_extra_layer">If you want an extra layer of security, choose a password. Password cannot be recovered.</string>
     <string name="password_extra_layer_highlight">Password cannot be recovered.</string>
