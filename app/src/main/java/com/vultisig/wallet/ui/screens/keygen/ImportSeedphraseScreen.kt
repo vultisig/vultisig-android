@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -22,10 +24,12 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel
 import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseViewModel
+import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.delay
@@ -61,7 +65,7 @@ internal fun ImportSeedphraseContent(
         focusRequester.requestFocus()
     }
 
-    V2Scaffold(
+    V3Scaffold(
         onBackClick = onBackClick,
         title = stringResource(R.string.import_seedphrase_title),
         bottomBar = {
@@ -73,7 +77,12 @@ internal fun ImportSeedphraseContent(
                 state =
                     if (state.isImportEnabled && !state.isImporting) VsButtonState.Enabled
                     else VsButtonState.Disabled,
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(
+                            vertical = V3Scaffold.PADDING_VERTICAL,
+                            horizontal = V3Scaffold.PADDING_HORIZONTAL,
+                        ),
             )
         },
     ) {
@@ -110,5 +119,41 @@ internal fun ImportSeedphraseContent(
                 color = Theme.v2.colors.text.primary,
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ImportSeedphraseContentPreview() {
+    OnBoardingComposeTheme {
+        ImportSeedphraseContent(
+            state = ImportSeedphraseUiModel(wordCount = 0, expectedWordCount = 12),
+            mnemonicFieldState = TextFieldState(),
+            onBackClick = {},
+            onImportClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ImportSeedphraseContentErrorPreview() {
+    OnBoardingComposeTheme {
+        ImportSeedphraseContent(
+            state =
+                ImportSeedphraseUiModel(
+                    wordCount = 8,
+                    expectedWordCount = 12,
+                    innerState = VsTextInputFieldInnerState.Error,
+                    errorMessage =
+                        com.vultisig.wallet.ui.utils.UiText.DynamicString(
+                            "You entered 8 words. Seed phrase must be 12 or 24"
+                        ),
+                ),
+            mnemonicFieldState =
+                TextFieldState(initialText = "apple banana cherry dog elephant frog grape horse"),
+            onBackClick = {},
+            onImportClick = {},
+        )
     }
 }
