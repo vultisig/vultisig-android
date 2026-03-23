@@ -80,6 +80,8 @@ private val MAYA_STAKE_POSITIONS_DIALOG: List<PositionUiModelDialog>
             )
         )
 
+private val MAYA_STATIC_POSITION_KEYS = setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY)
+
 private val MAYA_DEFAULT_SELECTED_POSITIONS = listOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY)
 
 @Immutable
@@ -139,6 +141,7 @@ constructor(
 
     private var observTotalRowJob: Job? = null
     private var savedPositionsJob: Job? = null
+    private var lpDialogJob: Job? = null
     private var loadBondedJob: Job? = null
     private var loadStakingJob: Job? = null
 
@@ -160,7 +163,8 @@ constructor(
         loadBalanceVisibility()
         savedPositionsJob?.cancel()
         savedPositionsJob = loadSavedPositions()
-        loadLpPositionsForDialog()
+        lpDialogJob?.cancel()
+        lpDialogJob = loadLpPositionsForDialog()
         observTotalRowJob?.cancel()
         observTotalRowJob = observeTotalRaw()
     }
@@ -183,7 +187,7 @@ constructor(
         viewModelScope.launch {
             defiPositionsRepository.getSelectedPositions(vaultId).collect { saved ->
                 val hasMayaPositions =
-                    saved.contains(MAYA_BOND_CACAO_KEY) || saved.contains(MAYA_STAKE_CACAO_KEY)
+                    saved.any { it in MAYA_STATIC_POSITION_KEYS || it.contains(".") }
                 val positions =
                     if (hasMayaPositions) {
                         saved.toList()
@@ -202,7 +206,7 @@ constructor(
             }
         }
 
-    private fun loadLpPositionsForDialog() {
+    private fun loadLpPositionsForDialog(): Job =
         viewModelScope.launch {
             try {
                 val pools =
@@ -215,7 +219,6 @@ constructor(
                 Timber.e(e, "Failed to load Maya LP positions for dialog")
             }
         }
-    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun loadBondedNodes() {
