@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -191,31 +192,35 @@ private fun CreateFolderScreen(
                         state.availableVaults.forEach { vaultAndBalance ->
                             val vault = vaultAndBalance.vault
                             val balance = vaultAndBalance.balance
-                            val check = remember { mutableStateOf(false) }
-                            VaultCeil(
-                                model =
-                                    VaultCeilUiModel(
-                                        id = vault.id,
-                                        name = vault.name,
-                                        isFolder = false,
-                                        isFastVault = vault.isFastVault(),
-                                        vaultPart = vault.getVaultPart(),
-                                        signersSize = vault.signers.size,
-                                        balance = balance,
-                                    ),
-                                isInEditMode = false,
-                                onSelect = {},
-                                trailingContent = { ->
-                                    VsSwitch(
-                                        checked = check.value,
-                                        onCheckedChange = { check.value = tryCheck(it, vault.id) },
-                                    )
-                                },
-                                isSelected = false,
-                                activeVaultName = null,
-                                vaultCounts = null,
-                            )
-                            UiSpacer(size = 8.dp)
+                            key(vault.id) {
+                                val check = remember { mutableStateOf(false) }
+                                VaultCeil(
+                                    model =
+                                        VaultCeilUiModel(
+                                            id = vault.id,
+                                            name = vault.name,
+                                            isFolder = false,
+                                            isFastVault = vault.isFastVault(),
+                                            vaultPart = vault.getVaultPart(),
+                                            signersSize = vault.signers.size,
+                                            balance = balance,
+                                        ),
+                                    isInEditMode = false,
+                                    onSelect = {},
+                                    trailingContent = { ->
+                                        VsSwitch(
+                                            checked = check.value,
+                                            onCheckedChange = {
+                                                check.value = tryCheck(it, vault.id)
+                                            },
+                                        )
+                                    },
+                                    isSelected = false,
+                                    activeVaultName = null,
+                                    vaultCounts = null,
+                                )
+                                UiSpacer(size = 8.dp)
+                            }
                         }
                     }),
             ) { vaultAndBalance ->
