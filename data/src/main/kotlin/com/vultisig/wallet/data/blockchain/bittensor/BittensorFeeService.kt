@@ -53,12 +53,13 @@ internal class BittensorFeeService @Inject constructor(private val bittensorApi:
                 ?: error("Bittensor Coin not found")
 
         val runtimeVersionDeferred = async { bittensorApi.getRuntimeVersion() }
-        val blockHashDeferred = async { bittensorApi.getBlockHash() }
         val nonceDeferred = async { bittensorApi.getNonce(fromAddress) }
-        val blockHeaderDeferred = async { bittensorApi.getBlockHeader() }
+        val blockNumberDeferred = async { bittensorApi.getBlockHeader() }
         val genesisHashDeferred = async { bittensorApi.getGenesisBlockHash() }
 
         val (specVersion, transactionVersion) = runtimeVersionDeferred.await()
+        val blockNumber = blockNumberDeferred.await()
+        val blockHash = bittensorApi.getBlockHashForNumber(blockNumber)
 
         KeysignPayload(
             coin = bittensorCoin,
@@ -66,9 +67,9 @@ internal class BittensorFeeService @Inject constructor(private val bittensorApi:
             toAmount = amount,
             blockChainSpecific =
                 BlockChainSpecific.Polkadot(
-                    recentBlockHash = blockHashDeferred.await(),
+                    recentBlockHash = blockHash,
                     nonce = nonceDeferred.await(),
-                    currentBlockNumber = blockHeaderDeferred.await(),
+                    currentBlockNumber = blockNumber,
                     specVersion = specVersion.toLong().toUInt(),
                     transactionVersion = transactionVersion.toLong().toUInt(),
                     genesisHash = genesisHashDeferred.await(),

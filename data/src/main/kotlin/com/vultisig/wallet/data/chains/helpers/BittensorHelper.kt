@@ -102,6 +102,9 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
     private fun buildCallData(keysignPayload: KeysignPayload): ByteArray {
         val destBytes = ss58Decode(keysignPayload.toAddress)
         val amount = keysignPayload.toAmount
+        require(amount >= BigInteger.ZERO) {
+            "Transfer amount must be non-negative, got $amount"
+        }
 
         val out = ByteArrayOutputStream()
         out.write(BALANCES_PALLET.toInt())
@@ -173,6 +176,9 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
         private const val SS58_PREFIX = 42
 
         private fun compactEncode(value: BigInteger): ByteArray {
+            require(value >= BigInteger.ZERO) {
+                "SCALE compact encoding requires non-negative value, got $value"
+            }
             return when {
                 value < BigInteger.valueOf(64) -> byteArrayOf((value.toInt() shl 2).toByte())
                 value < BigInteger.valueOf(16384) -> {

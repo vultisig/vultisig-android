@@ -25,6 +25,8 @@ interface BittensorApi {
 
     suspend fun getBlockHash(isGenesis: Boolean = false): String
 
+    suspend fun getBlockHashForNumber(blockNumber: BigInteger): String
+
     suspend fun getGenesisBlockHash(): String
 
     suspend fun getRuntimeVersion(): Pair<BigInteger, BigInteger>
@@ -82,6 +84,15 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
             .result
 
     override suspend fun getGenesisBlockHash(): String = getBlockHash(true)
+
+    override suspend fun getBlockHashForNumber(blockNumber: BigInteger): String =
+        httpClient
+            .postRpc<PolkadotGetBlockHashJson>(
+                url = BITTENSOR_RPC_URL,
+                method = "chain_getBlockHash",
+                params = buildJsonArray { add(blockNumber.toLong()) },
+            )
+            .result
 
     override suspend fun getRuntimeVersion(): Pair<BigInteger, BigInteger> {
         val rpcResp =
