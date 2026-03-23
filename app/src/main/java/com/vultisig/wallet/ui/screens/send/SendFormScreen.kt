@@ -186,8 +186,8 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
 private fun SendFormScreen(
     state: SendFormUiModel,
     addressFieldState: TextFieldState,
-    addressFocusRequester: FocusRequester = remember { FocusRequester() },
-    amountFocusRequester: FocusRequester = remember { FocusRequester() },
+    addressFocusRequester: FocusRequester = FocusRequester(),
+    amountFocusRequester: FocusRequester = FocusRequester(),
     tokenAmountFieldState: TextFieldState,
     fiatAmountFieldState: TextFieldState,
     memoFieldState: TextFieldState,
