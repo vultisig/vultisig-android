@@ -51,7 +51,6 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.BasicFormTextField
-import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextField
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.FormTitleCollapsibleTextField
@@ -279,7 +278,10 @@ private fun MayaBondFormContent(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier =
-                    Modifier.fillMaxWidth().clickOnce { isAddressExpanded = !isAddressExpanded },
+                    Modifier.fillMaxWidth().clickOnce {
+                        isAddressExpanded = !isAddressExpanded
+                        if (isAddressExpanded) isAssetExpanded = false
+                    },
             ) {
                 Text(
                     text = stringResource(R.string.deposit_form_address_card_title),
@@ -312,7 +314,10 @@ private fun MayaBondFormContent(
                             hint = stringResource(R.string.deposit_form_node_address_title),
                             keyboardType = KeyboardType.Text,
                             textFieldState = nodeAddressFieldState,
-                            onLostFocus = onNodeAddressLostFocus,
+                            onLostFocus = {
+                                onNodeAddressLostFocus()
+                                isAddressExpanded = false
+                            },
                             modifier = Modifier.weight(1f),
                         )
                         UiSpacer(size = 8.dp)
@@ -338,9 +343,20 @@ private fun MayaBondFormContent(
                 .border(1.dp, Theme.v2.colors.border.normal, cardShape)
                 .padding(horizontal = 12.dp, vertical = 16.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier =
+                Modifier.fillMaxWidth().clickOnce {
+                    isAssetExpanded = !isAssetExpanded
+                    if (isAssetExpanded) isAddressExpanded = false
+                },
+        ) {
             Text(
-                text = stringResource(R.string.deposit_form_screen_assets),
+                text =
+                    stringResource(
+                        if (isAssetExpanded) R.string.deposit_form_screen_asset_selection
+                        else R.string.deposit_form_screen_assets
+                    ),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
             )
@@ -368,7 +384,11 @@ private fun MayaBondFormContent(
                 UiIcon(
                     drawableResId = R.drawable.pencil,
                     size = 16.dp,
-                    modifier = Modifier.clickOnce { isAssetExpanded = true },
+                    modifier =
+                        Modifier.clickOnce {
+                            isAssetExpanded = true
+                            isAddressExpanded = false
+                        },
                 )
             } else {
                 UiSpacer(weight = 1f)
@@ -379,23 +399,60 @@ private fun MayaBondFormContent(
                 UiHorizontalDivider()
                 UiSpacer(size = 8.dp)
                 if (state.bondableAssets.isNotEmpty()) {
-                    FormSelection(
-                        selected = state.selectedBondAsset,
-                        options = state.bondableAssets,
-                        onSelectOption = {
-                            onSelectBondAsset(it)
-                            isAssetExpanded = false
-                        },
-                        mapTypeToString = { it },
-                        embedInCard = false,
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        state.bondableAssets.forEach { asset ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier =
+                                    Modifier.clickOnce {
+                                            onSelectBondAsset(asset)
+                                            isAssetExpanded = false
+                                        }
+                                        .background(
+                                            color = Theme.v2.colors.backgrounds.tertiary_2,
+                                            shape = RoundedCornerShape(99.dp),
+                                        )
+                                        .padding(all = 6.dp),
+                            ) {
+                                TokenLogo(
+                                    logo = getCoinLogo(asset.lowercase()),
+                                    title = asset,
+                                    modifier = Modifier.size(36.dp),
+                                    errorLogoModifier = Modifier.size(36.dp),
+                                )
+                                UiSpacer(size = 8.dp)
+                                Column {
+                                    Text(
+                                        text = asset,
+                                        style = Theme.brockmann.supplementary.caption,
+                                        color = Theme.v2.colors.text.primary,
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.swap_form_native),
+                                        style = Theme.brockmann.supplementary.captionSmall,
+                                        color = Theme.v2.colors.text.tertiary,
+                                    )
+                                }
+                                UiSpacer(size = 4.dp)
+                                UiIcon(
+                                    drawableResId = R.drawable.ic_chevron_right_small,
+                                    size = 20.dp,
+                                    tint = Theme.v2.colors.text.primary,
+                                )
+                                UiSpacer(size = 6.dp)
+                            }
+                        }
+                    }
                 } else {
                     TextFieldValidator(errorText = state.assetsError) {
                         FormTextField(
                             hint = stringResource(R.string.deposit_form_enter_asset_hint),
                             keyboardType = KeyboardType.Text,
                             textFieldState = assetsFieldState,
-                            onLostFocus = onAssetsLostFocus,
+                            onLostFocus = {
+                                onAssetsLostFocus()
+                                isAssetExpanded = false
+                            },
                         )
                     }
                 }
@@ -412,7 +469,10 @@ private fun MayaBondFormContent(
                             hint = "0",
                             keyboardType = KeyboardType.Number,
                             textFieldState = lpUnitsFieldState,
-                            onLostFocus = onLpUnitsLostFocus,
+                            onLostFocus = {
+                                onLpUnitsLostFocus()
+                                isAssetExpanded = false
+                            },
                         )
                     }
                 }

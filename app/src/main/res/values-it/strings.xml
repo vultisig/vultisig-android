@@ -294,6 +294,7 @@
     <string name="deposit_error_invalid_assets">Le risorse non sono valide</string>
     <string name="deposit_error_has_not_reached_maturity">Questo deposito non ha ancora raggiunto il suo periodo di scadenza</string>
     <string name="deposit_form_screen_assets">Attività</string>
+    <string name="deposit_form_screen_asset_selection">Selezione asset</string>
     <string name="deposit_form_screen_lpunits">Unità LP</string>
     <string name="join_keysign_error_wrong_vault_share">Stessa condivisione del vault. Modifica la condivisione per firmare</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Cambia Vault</string>

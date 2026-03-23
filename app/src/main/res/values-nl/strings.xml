@@ -293,6 +293,7 @@
     <string name="deposit_error_invalid_assets">Activa zijn ongeldig</string>
     <string name="deposit_error_has_not_reached_maturity">Deze deposito heeft de vervaldatum nog niet bereikt</string>
     <string name="deposit_form_screen_assets">Activa</string>
+    <string name="deposit_form_screen_asset_selection">Activaselectie</string>
     <string name="deposit_form_screen_lpunits">LP-eenheden</string>
     <string name="join_keysign_error_wrong_vault_share">Zelfde kluisshare. Verander de share naar sign</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Wijzig kluis</string>

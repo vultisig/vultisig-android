@@ -293,7 +293,8 @@
     <string name="deposit_error_invalid_lpunits">LP-Einheiten sind ungültig</string>
     <string name="deposit_error_invalid_assets">Assets ist ungültig</string>
     <string name="deposit_error_has_not_reached_maturity">Diese Einlage hat ihre Fälligkeit noch nicht erreicht.</string>
-    <string name="deposit_form_screen_assets">Vermögenswerte</string>
+    <string name="deposit_form_screen_assets">Vermögenswert</string>
+    <string name="deposit_form_screen_asset_selection">Anlagenauswahl</string>
     <string name="deposit_form_screen_lpunits">LP-Geräte</string>
     <string name="join_keysign_error_wrong_vault_share">Dieselbe Tresorfreigabe. Bitte ändern Sie die Freigabe zum Signieren</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Tresor ändern</string>

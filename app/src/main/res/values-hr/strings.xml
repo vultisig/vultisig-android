@@ -294,6 +294,7 @@
     <string name="deposit_error_invalid_assets">Sredstva su nevažeća</string>
     <string name="deposit_error_has_not_reached_maturity">Ovaj depozit još nije dostigao rok dospijeća</string>
     <string name="deposit_form_screen_assets">Imovina</string>
+    <string name="deposit_form_screen_asset_selection">Odabir imovine</string>
     <string name="deposit_form_screen_lpunits">LP jedinice</string>
     <string name="join_keysign_error_wrong_vault_share">Isti dio trezora. Molimo promijenite dionicu za potpis</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Promjena trezora</string>
