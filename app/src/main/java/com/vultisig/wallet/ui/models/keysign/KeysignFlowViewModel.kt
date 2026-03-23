@@ -195,6 +195,7 @@ constructor(
     }
 
     val isLoading = MutableStateFlow(false)
+    val isDataLoaded = MutableStateFlow(false)
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
     private var transactionHistoryData = MutableStateFlow<TransactionHistoryData?>(null)
@@ -322,6 +323,8 @@ constructor(
             _serverAddress = Endpoints.VULTISIG_RELAY_URL
             updateKeysignPayload(context)
             updateTransactionUiModel(keysignPayload, customMessagePayload, txType)
+
+            isDataLoaded.value = true
         } catch (e: Exception) {
             Timber.e(e)
             moveToState(Error(e.message.toString()))

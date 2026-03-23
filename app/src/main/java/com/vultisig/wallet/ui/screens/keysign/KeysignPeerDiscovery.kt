@@ -46,6 +46,7 @@ internal fun KeysignPeerDiscovery(
 
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.collectAsState(initial = emptyList()).value
+    val isDataLoaded by viewModel.isDataLoaded.collectAsState()
     val context = LocalContext.current.applicationContext
 
     LaunchedEffect(txType) {
@@ -84,8 +85,9 @@ internal fun KeysignPeerDiscovery(
             }
         }
     }
-    LaunchedEffect(key1 = viewModel.selection, vault) {
+    LaunchedEffect(key1 = viewModel.selection, vault, isDataLoaded) {
         viewModel.selection.asFlow().collect { newList ->
+            if (!isDataLoaded) return@collect
             if (vault.signers.isEmpty()) {
                 Timber.e("Vault signers size is 0")
                 return@collect
