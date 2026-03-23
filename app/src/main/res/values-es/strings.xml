@@ -568,9 +568,6 @@
     <string name="transaction_type_button_receive">Recibir</string>
     <string name="vault_settings_view_vault">Ver el nombre, la parte y el tipo de tu bóveda</string>
     <string name="vault_settings_biometric_fast">Biometría para la firma rápida</string>
-    <string name="vault_settings_enable_biometric">Habilitar la biometría para la firma rápida</string>
-    <string name="vault_settings_password_hint">Pista de contraseña</string>
-    <string name="vault_settings_set_a_password">Configurar una pista de contraseña para proteger la bóveda</string>
     <string name="vault_settings_backup_vault">Copia de seguridad del recurso compartido de bóveda</string>
     <string name="vault_settings_back_up_your">Realice una copia de seguridad del recurso compartido de bóveda en un dispositivo o servidor</string>
     <string name="vault_settings_migrate_gg20">Migrar bóveda GG20 a DKLS</string>
