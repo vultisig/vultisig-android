@@ -62,7 +62,6 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
-import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -243,7 +242,6 @@ constructor(
     appCurrencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tokenPriceRepository: TokenPriceRepository,
-    private val gasFeeRepository: GasFeeRepository,
     private val transactionRepository: TransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val requestResultRepository: RequestResultRepository,
@@ -2956,20 +2954,44 @@ constructor(
     }
 
     fun refreshGasFee() {
-        val srcAddress = selectedToken.value ?: return
+        val token = selectedToken.value ?: return
         viewModelScope.launch {
             uiState.update { it.copy(isRefreshing = true) }
 
             val gasFee =
                 try {
-                    gasFeeRepository.getGasFee(
-                        chain = srcAddress.chain,
-                        address = srcAddress.address,
-                        isNativeToken = srcAddress.isNativeToken,
-                        to = addressFieldState.text.toString(),
-                        memo = memoFieldState.text.toString(),
-                    )
+                    val chain = token.chain
+                    val tokenAmountInt =
+                        tokenAmountFieldState.text
+                            .toString()
+                            .toBigDecimalOrNull()
+                            ?.movePointRight(token.decimal)
+                            ?.toBigInteger() ?: BigInteger.ZERO
+
+                    val blockchainTransaction =
+                        Transfer(
+                            coin = token,
+                            vault =
+                                VaultData(
+                                    vaultHexChainCode = vault.hexChainCode,
+                                    vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                                ),
+                            amount = tokenAmountInt,
+                            to = addressFieldState.text.toString(),
+                            memo = memoFieldState.text.toString(),
+                            isMax = false,
+                        )
+
+                    val fees =
+                        withContext(Dispatchers.IO) {
+                            feeServiceComposite.calculateFees(blockchainTransaction)
+                        }
+                    val nativeCoin =
+                        withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+
+                    TokenValue(value = fees.amount, token = nativeCoin)
                 } catch (e: Exception) {
+                    Timber.e(e, "Failed to refresh gas fee")
                     uiState.update { it.copy(isRefreshing = false) }
                     return@launch
                 }
