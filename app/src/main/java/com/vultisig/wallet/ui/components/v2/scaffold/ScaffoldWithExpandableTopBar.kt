@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.components.v2.scaffold
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.ExperimentalMaterial3Api
