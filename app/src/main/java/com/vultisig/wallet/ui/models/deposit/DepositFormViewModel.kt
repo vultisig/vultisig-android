@@ -398,8 +398,9 @@ constructor(
                 val value = mapTokenValueToStringWithUnit(tokenValue)
                 state.update { state -> state.copy(amountError = null, balance = value.asUiText()) }
             } else {
-                // Account exists in vault but balance not yet loaded — clear any stale error
-                state.update { it.copy(amountError = null) }
+                // Account exists in vault but balance not yet loaded — clear stale error and
+                // balance
+                state.update { it.copy(amountError = null, balance = UiText.Empty) }
             }
         } else {
             state.update {
