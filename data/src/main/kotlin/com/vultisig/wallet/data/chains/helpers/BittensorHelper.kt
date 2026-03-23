@@ -102,9 +102,7 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
     private fun buildCallData(keysignPayload: KeysignPayload): ByteArray {
         val destBytes = ss58Decode(keysignPayload.toAddress)
         val amount = keysignPayload.toAmount
-        require(amount >= BigInteger.ZERO) {
-            "Transfer amount must be non-negative, got $amount"
-        }
+        require(amount >= BigInteger.ZERO) { "Transfer amount must be non-negative, got $amount" }
 
         val out = ByteArrayOutputStream()
         out.write(BALANCES_PALLET.toInt())
