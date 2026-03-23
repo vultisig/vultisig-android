@@ -816,16 +816,19 @@ constructor(
 
         if (result.isDisabled) {
             uiState.update { it.copy(isLoading = true) }
-            vaultId?.let {
+            val vaultId = vaultId
+            if (vaultId != null) {
                 try {
-                    val account = accountsRepository.loadAccount(vaultId!!, result.token)
+                    val account = accountsRepository.loadAccount(vaultId, result.token)
                     updateAccountInAddresses(account)
                     uiState.update { it.copy(isLoading = false) }
                 } catch (_: Throwable) {
                     uiState.update { it.copy(isLoading = false) }
                     return
                 }
-            } ?: run { uiState.update { it.copy(isLoading = false) } }
+            } else {
+                uiState.update { it.copy(isLoading = false) }
+            }
         }
 
         if (targetArg == ARG_SELECTED_SRC_TOKEN_ID) {
@@ -1176,10 +1179,8 @@ constructor(
 
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
                         val vultBPSDiscount =
-                            if (vaultId != null) {
-                                getDiscountBpsUseCase.invoke(vaultId!!, provider).takeIf { it != 0 }
-                            } else {
-                                null
+                            vaultId?.let { id ->
+                                getDiscountBpsUseCase.invoke(id, provider).takeIf { it != 0 }
                             }
 
                         val referral =

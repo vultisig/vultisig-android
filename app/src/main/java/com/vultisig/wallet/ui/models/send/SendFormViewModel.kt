@@ -722,6 +722,7 @@ constructor(
 
             uiState.update { it.copy(isAutocompound = checked) }
 
+            val vaultId = vaultId
             if (
                 (defiType == DeFiNavActions.UNSTAKE_TCY ||
                     defiType == DeFiNavActions.UNSTAKE_STCY) && vaultId != null
@@ -731,7 +732,7 @@ constructor(
                 if (checked) {
                     val regularAccounts =
                         accountsRepository
-                            .loadAddresses(vaultId!!)
+                            .loadAddresses(vaultId)
                             .map { addrs -> addrs.flatMap { it.accounts } }
                             .first()
 
@@ -748,7 +749,7 @@ constructor(
                 } else {
                     val defiAccounts =
                         accountsRepository
-                            .loadDeFiAddresses(vaultId!!, false)
+                            .loadDeFiAddresses(vaultId, false)
                             .map { addrs -> addrs.flatMap { it.accounts } }
                             .first()
 
