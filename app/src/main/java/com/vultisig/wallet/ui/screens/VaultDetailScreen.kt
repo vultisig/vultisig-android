@@ -113,12 +113,12 @@ private fun VaultDetailScreen(
 
                 VaultDetailGroup(title = stringResource(R.string.vault_details_keys)) {
                     KeyItem(
-                        type = "ECDSA Key",
+                        type = "ECDSA",
                         value = state.pubKeyECDSA,
                         onCopyCompleted = { snackBarState.show(ecdsaKeyCopiedMessage) },
                     )
                     KeyItem(
-                        type = "EdDSA Key",
+                        type = "EdDSA",
                         value = state.pubKeyEDDSA,
                         onCopyCompleted = { snackBarState.show(eddsaKeyCopiedMessage) },
                     )

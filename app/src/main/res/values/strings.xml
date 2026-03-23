@@ -69,7 +69,7 @@
     <string name="open_account_button">Open Account</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
-    <string name="tokens">Tokens</string>
+    <string name="tokens">Assets</string>
     <string name="keysign">Keysign</string>
     <string name="signing_error_please_try_again_s">Signing Error. Please try again. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Keep devices on the same WiFi Network, correct vault and pair devices.\nMake sure no other devices are running Vultisig.</string>
@@ -151,7 +151,9 @@
     <string name="send_shares_currency_hint">Enter Shares</string>
     <string name="send_continue_button">Continue</string>
     <string name="send_percent" translatable="false">%d%%</string>
-    <string name="chain_account_view_swap">SWAP</string>
+    <string name="chain_account_view_swap">Swap</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
     <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">this name already exist</string>
@@ -216,7 +218,7 @@
 
     <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
-    <string name="vault_accounts_account_assets">%1$s assets</string>
+    <string name="vault_accounts_account_assets">%1$s Assets</string>
     <string name="s_of_s_vault">%1$s-of-%2$s Vault Setup</string>
     <string name="scan_qr_screen_return_vault">Return to Vault</string>
     <string name="rename_vault_screen_vault_name">Vault name</string>
@@ -354,8 +356,8 @@
     <string name="start_screen_import_vault_share_file_types">Supported file types: .bak &amp; .vult</string>
     <string name="start_screen_recover_or_convert">Recover your vault or convert your seedphrase to a vault</string>
     <string name="keysign_password_incorrect_password">Password is incorrect</string>
-    <string name="vault_list_part_n_of_t">part %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">Share %1$d-of-%2$d</string>
+    <string name="vault_list_part_n_of_t">Share %1$d of %2$d</string>
+    <string name="vault_part_n_of_t">Share %1$d of %2$d</string>
     <string name="qr_title_join_keygen">Join Keygen</string>
     <string name="qr_title_join_keysign">Join Keysign</string>
     <string name="qr_title_join_swap_keysign">Join Swap</string>
@@ -383,7 +385,7 @@
     <string name="vault_details_screen_vault_type">Vault Type</string>
     <string name="vault_settings_delete_vault_part">Vault Share:</string>
     <string name="vault_password_hint_to_long">Hint is too long</string>
-    <string name="vault_details_screen_vault_part_desc">Share %1$s-of-%2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Share %1$s of %2$s</string>
     <string name="do_not_remind_me_again">Don\'t remind me again</string>
     <string name="monthly_backup_reminder_title">Don\'t forget to backup your vault shares and verify the completeness.</string>
     <string name="transaction_complete_screen_title">Transaction complete</string>
@@ -475,7 +477,7 @@
     <string name="peer_discovery_action_next_title">Next</string>
     <string name="peer_discovery_this_device">This Device</string>
     <string name="peer_discovery_scan_with_n_device">Scan with %1$s device</string>
-    <string name="peer_discovery_waiting_for_devices_action">Waiting on devices…</string>
+    <string name="peer_discovery_waiting_for_devices_action">Waiting for devices to connect…</string>
     <string name="peer_discovery_devices_n_of_n">Devices (%1$s/%2$s)</string>
     <string name="scan_qr_code_modal_annotation">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
     <string name="scan_qr_code_modal_next">Next</string>
@@ -514,7 +516,7 @@
     <string name="fast_vault_name_screen_desc">You can always rename your vault later in the settings</string>
     <string name="enter_email_screen_title">Enter your email</string>
     <string name="enter_email_screen_hint">Email</string>
-    <string name="enter_email_screen_desc">This email is only used to send the server backup</string>
+    <string name="enter_email_screen_desc">This email is used for cloud backup and shared with no third party</string>
     <string name="fast_vault_password_screen_title">Choose a password</string>
     <string name="fast_vault_password_screen_hint">This occurs because the password is used to locally encrypt the backup file, similar to how a hard drive is encrypted. In the following step, you have the option to add a hint.</string>
     <string name="fast_vault_password_screen_hint_title">More Info</string>
@@ -718,7 +720,7 @@
     <string name="general">General</string>
     <string name="support">Support</string>
     <string name="vultisig_community">Vultisig Community</string>
-    <string name="vault_management">Vault Management</string>
+    <string name="vault_management">Vault</string>
     <string name="other">Other</string>
 
     <string name="defi_action_stake" translatable="false">Stake</string>
@@ -1042,7 +1044,7 @@
     <string name="vault_setup_no_inspiration">No inspiration? You can always change the name later in your settings.</string>
     <string name="naming_saving_vault">Saving vault</string>
     <string name="email_enter_your_email">Enter your email</string>
-    <string name="email_only_used_once">This will only be used once to send your backup file, Vultisig doesn’t store any data.</string>
+    <string name="email_only_used_once">This email is used for cloud backup and shared with no third party</string>
     <string name="password_choose_a_password">Choose a password</string>
     <string name="password_extra_layer">If you want an extra layer of security, choose a password. Password cannot be recovered.</string>
     <string name="password_extra_layer_highlight">Password cannot be recovered.</string>
@@ -1090,7 +1092,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Server Backup</string>
     <string name="server_backup_email_label">Email</string>
-    <string name="server_backup_email_description">Enter the email to receive the vault share.</string>
+    <string name="server_backup_email_description">This email is used for cloud backup and shared with no third party</string>
     <string name="server_backup_email_error">Incorrect email, please check</string>
     <string name="server_backup_password_label">Password</string>
     <string name="server_backup_password_description">Enter the password you set when creating this Vault.</string>

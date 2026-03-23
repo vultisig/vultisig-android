@@ -153,6 +153,8 @@
     <string name="send_continue_button">계속</string>
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">스왑</string>
+    <string name="chain_account_view_deposit">입금</string>
+    <string name="chain_account_view_send">보내기</string>
     <string name="vault_settings_error_backup_file">오류가 발생했습니다</string>
     <string name="vault_settings_success_backup_file">Downloads/%1$s에 파일 저장됨</string>
     <string name="vault_edit_this_name_already_exist">이 이름은 이미 존재합니다</string>

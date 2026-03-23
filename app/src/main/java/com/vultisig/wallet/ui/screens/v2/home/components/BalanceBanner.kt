@@ -26,6 +26,8 @@ internal fun BalanceBanner(
     isVisible: Boolean,
     balance: String?,
     onToggleVisibility: () -> Unit,
+    hideText: String = stringResource(R.string.hide_balance),
+    showText: String = stringResource(R.string.show_balance),
 ) {
     Column(
         modifier = modifier,
@@ -43,6 +45,8 @@ internal fun BalanceBanner(
         ToggleBalanceVisibilityButton(
             isVisible = isVisible,
             onToggleVisibility = onToggleVisibility,
+            hideText = hideText,
+            showText = showText,
         )
     }
 }
@@ -52,6 +56,8 @@ internal fun ToggleBalanceVisibilityButton(
     modifier: Modifier = Modifier,
     isVisible: Boolean = true,
     onToggleVisibility: () -> Unit,
+    hideText: String = stringResource(R.string.hide_balance),
+    showText: String = stringResource(R.string.show_balance),
 ) {
     AnimatedContent(isVisible) { isVisible ->
         Row(
@@ -74,9 +80,7 @@ internal fun ToggleBalanceVisibilityButton(
             UiSpacer(size = 4.dp)
 
             Text(
-                text =
-                    if (isVisible) stringResource(R.string.hide_balance)
-                    else stringResource(R.string.show_balance),
+                text = if (isVisible) hideText else showText,
                 color = Theme.v2.colors.text.button.dim,
                 style = Theme.brockmann.supplementary.caption,
             )
