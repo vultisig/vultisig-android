@@ -108,6 +108,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -124,6 +125,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -208,6 +210,11 @@ internal enum class SendSections {
     BondAddress,
 }
 
+internal enum class SendFocusField {
+    ADDRESS,
+    AMOUNT,
+}
+
 enum class AddressBookType {
     OUTPUT,
     PROVIDER,
@@ -255,6 +262,9 @@ constructor(
     private val args = savedStateHandle.toRoute<Route.Send>()
 
     val uiState = MutableStateFlow(SendFormUiModel())
+
+    private val _focusFieldChannel = Channel<SendFocusField>(Channel.BUFFERED)
+    val focusFieldFlow = _focusFieldChannel.receiveAsFlow()
 
     val addressFieldState = TextFieldState()
     val tokenAmountFieldState = TextFieldState()
@@ -1106,6 +1116,17 @@ constructor(
     }
 
     fun send() {
+        if (addressFieldState.text.isBlank()) {
+            expandSection(SendSections.Address)
+            _focusFieldChannel.trySend(SendFocusField.ADDRESS)
+            return
+        }
+        if (tokenAmountFieldState.text.isBlank()) {
+            expandSection(SendSections.Amount)
+            _focusFieldChannel.trySend(SendFocusField.AMOUNT)
+            return
+        }
+
         viewModelScope.launch {
             showLoading()
             try {
