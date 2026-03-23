@@ -679,6 +679,11 @@ constructor(
 
     override fun onCleared() {
         cleanQrAddress()
+        try {
+            context.unregisterReceiver(serviceStartedReceiver)
+        } catch (_: IllegalArgumentException) {
+            // receiver was already unregistered or never registered
+        }
         stopService(context)
         super.onCleared()
     }
