@@ -145,8 +145,8 @@
     <string name="swap_form_vault">Cassaforte</string>
     <string name="swap_form_min_pay">pagamento min.</string>
     <string name="chain_account_view_swap">SCAMBIA</string>
-    <string name="chain_account_view_deposit">DEPOSIT</string>
-    <string name="chain_account_view_send">SEND</string>
+    <string name="chain_account_view_deposit">DEPOSITA</string>
+    <string name="chain_account_view_send">INVIA</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">FIRMANDO CON CHIAVE EdDSA…</string>
     <string name="signing_error_please_try_again_s">Errore di Firma. Per favore, riprova.%s</string>
