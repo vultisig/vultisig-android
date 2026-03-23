@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="keysign">Signo de clave</string>
-    <string name="danger_icon">Icono de peligro</string>
     <string name="signing_error_please_try_again_s">Error al Firmar. Por favor intenta de nuevo. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Mantenga los dispositivos en la misma red WiFi, corrija el almacenamiento y empareje los dispositivos.\nAsegúrese de que ningún otro dispositivo esté ejecutando Vultisig.</string>
     <string name="try_again">Intentar de Nuevo</string>
@@ -97,8 +96,6 @@
     <string name="send_amount_currency_hint">Ingresar Cantidad</string>
     <string name="send_continue_button">Continuar</string>
     <string name="chain_account_view_swap">INTERCAMBIAR</string>
-    <string name="chain_account_view_deposit">Depósito</string>
-    <string name="chain_account_view_send">ENVIAR</string>
     <string name="circle_defi_description">Deposita tu USDC en una cuenta de Circle y obtén rendimientos. De forma segura dentro de tu bóveda Vultisig.</string>
     <string name="circle_defi_control_info">Los fondos permanecen completamente bajo el control de tu bóveda. Las cuentas de Circle son de autocustodia y el rendimiento se genera a través de tesorerías seguras fuera de la cadena.</string>
     <string name="usdc_deposit_title">Depósito USDC</string>
@@ -213,8 +210,6 @@
     <string name="backup_password_screen_enter_password">Introducir contraseña</string>
     <string name="import_file_screen_enter_password_sub">Esta contraseña se estableció al exportar el recurso compartido de la bóveda.</string>
     <string name="import_file_screen_hint_password">Contraseña</string>
-    <string name="import_file_screen_ok">DE ACUERDO</string>
-    <string name="import_file_screen_cancel">Cancelar</string>
     <string name="backup_password_screen_permission_required">Se requiere permiso de archivo para las operaciones de copia de seguridad.</string>
     <string name="share_qr_screen_permission_required">Se requiere permiso de archivo para realizar operaciones de compartir.</string>
     <string name="token_selection_search_hint">Buscar…</string>
@@ -273,7 +268,6 @@
     <string name="verify_transaction_fast_sign_btn_title">Señal rápida</string>
     <string name="keysign_sign_transaction">Firmar transacción</string>
     <string name="keysign_password_title">Contraseña</string>
-    <string name="home_screen_import_vault">Importar bóveda</string>
     <string name="start_screen_new">NUEVO</string>
     <string name="start_screen_import_seedphrase">Importar frase semilla</string>
     <string name="start_screen_import_seedphrase_desc">Ingrésala, crea una bóveda, no mires atrás.</string>
@@ -345,7 +339,6 @@
     <string name="push_notification_partial_failure">%1$d de %2$d bóvedas actualizadas, %3$d fallidas</string>
     <string name="push_notifications_sent">Notificación enviada correctamente</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Recibe una notificación cuando se requiera tu firma o un dispositivo solicite acceso.</string>
-    <string name="enable_push_notifications">Habilitar notificaciones push</string>
     <string name="keysign_notification_channel_name">Solicitudes de firma</string>
     <string name="keysign_notification_title">Firmar transacción</string>
     <string name="keysign_notification_body">Hay una nueva solicitud de firma esperándote</string>
@@ -390,8 +383,6 @@
     <string name="deposit_option_merge">Merge</string>
     <string name="deposit_option_withdraw_ruji">Retirar RUJI</string>
     <string name="withdraw_amount">Retirar %s</string>
-    <string name="deposit_option_stake_tcy">Stake TCY</string>
-    <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Ingrese el porcentaje a desbloquear</string>
     <string name="scan_qr_screen_title">Escanear código QR</string>
     <string name="verify_transaction_function_inputs_title">Entradas de función</string>
@@ -422,19 +413,9 @@
     <string name="reshare_step_generating_eddsa">Generación de clave EDDSA</string>
     <string name="merge_account_doesnt_exist">No se encontró el token seleccionado para esta dirección</string>
     <string name="keygen_email_error">Correo electrónico incorrecto, por favor verifique</string>
-    <string name="deposit_option_stake_ruji">Stake RUJI</string>
-    <string name="deposit_option_unstake_ruji">Unstake RUJI</string>
-    <string name="deposit_option_collect_ruji">Reúne recompensas de staking de RUJI</string>
-    <string name="deposit_form_rewards_title">Recompensas Pendientes (Saldo: %1$s)</string>
-    <string name="deposit_form_pending_rewards_hint">Recompensas Pendientes</string>
     <string name="tx_overview_screen_tx_send">Enviar</string>
     <string name="tx_overview_screen_tx_deposit">Depósito</string>
     <string name="swap_error_small_insufficient_funds">Fondos insuficientes</string>
-    <string name="deposit_error_max_amount">Solo se puede desbloquear hasta el 100 %</string>
-    <string name="deposit_option_receive_yrune">Recibir yRUNE</string>
-    <string name="deposit_option_receive_ytcy">Recibir yTCY</string>
-    <string name="deposit_option_sell_yrune">Vender yRUNE</string>
-    <string name="deposit_option_sell_ytcy">Vender yTCY</string>
     <string name="defi_tab_deposited">Depositado</string>
     <string name="defi_tab_staked">Staking</string>
     <string name="defi_tab_bonded">Bondeado</string>
@@ -548,7 +529,6 @@
     <string name="vultisig_community">Comunidad de Vultisig</string>
     <string name="vault_management">Gestión de bóvedas</string>
     <string name="other">Otros</string>
-    <string name="unstake_tcy_zero_error">No se puede deshacer el staking si el saldo es inferior a 1</string>
     <string name="check_updates_title">Consultar actualizaciones</string>
     <string name="update_available">Actualización disponible</string>
     <string name="app_up_to_date">Aplicación actualizada</string>
@@ -588,7 +568,6 @@
     <string name="vault_settings_back_up_your">Realice una copia de seguridad del recurso compartido de bóveda en un dispositivo o servidor</string>
     <string name="vault_settings_migrate_gg20">Migrar bóveda GG20 a DKLS</string>
     <string name="vault_settings_reshare_change">Recompartir, gestionar seguridad o firmar mensajes.</string>
-    <string name="vault_backup_summary_start_using_vault">Comienza a usar tu bóveda</string>
     <string name="vault_backup_summary_choose_chains">Elegir cadenas</string>
     <string name="transaction_done_form_approve">Aprobar</string>
     <string name="vault_settings_migration_title">Migrar</string>
@@ -606,7 +585,6 @@
     <string name="no_chain_make_sure_that">Asegúrate de que la cadena que buscas esté activada.</string>
     <string name="no_chain_customize_chains">Personalizar cadenas</string>
     <string name="search_bar_search">Buscar</string>
-    <string name="search_bar_cancel">Cancelar</string>
     <string name="chain_selection_select_chains">Seleccionar cadenas</string>
     <string name="chain_selection_select_defi_chains">Seleccionar cadenas DeFi</string>
     <string name="chain_selection_no_chains_found">No se encontraron cadenas</string>
@@ -679,7 +657,6 @@
     <string name="address_book_saved_addresses">Direcciones guardadas</string>
     <string name="address_book_my_vaults">Mis bóvedas</string>
     <string name="address_entry_select">Seleccionar</string>
-    <string name="backup_vault_online_storage_is_recommended">Se recomienda el almacenamiento en línea, ya que es seguro; las bóvedas compartidas están diseñadas para ello.</string>
     <string name="deposit_form_enter_asset_hint">Ingresar activos</string>
     <string name="share_balance_loading">Cargando...</string>
     <string name="custom_token_screen_finding_token">Buscando tokens</string>
@@ -717,23 +694,14 @@
     <string name="keygen_benefit_4_emphasized">Disponible</string>
     <string name="onboarding_intro_preview_part_2">Frases semilla</string>
     <string name="onboarding_intro_back">Atrás</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1">Tu bóveda contiene %s participaciones,</string>
-    <string name="onboarding_security_backup_desc_page_1_part_2">Cada dispositivo necesita su propia copia de seguridad.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_1">Respaldo</string>
     <string name="migration_onboarding_step_1_text_emphasized">el protocolo MPC más rápido del mundo</string>
     <string name="migration_onboarding_step_1_text_end">y firma más rápido que nunca</string>
-    <string name="error_view_try_again_button">Intentar de Nuevo</string>
     <string name="error_view_default_title">Algo salió mal</string>
     <string name="error_view_default_description">Ocurrió un error</string>
     <string name="keygen_benefit_5_template">No vuelvas a caer en estafas.</string>
     <string name="keygen_benefit_5_emphasized">Una cartera sin semilla</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_1">Tu bóveda contiene 2 participaciones,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_2">Haz una copia de seguridad ahora</string>
     <string name="keygen_vault_created_success_part_1">Bóveda creada</string>
     <string name="vault_created_success_part_2">Correctamente.</string>
-    <string name="backup_vault_backup_now_button">Copia de seguridad ahora</string>
-    <string name="backup_vault_backup_vault_share_title">Comparte tu bóveda en línea</string>
-    <string name="backup_vault_topbar_title">Copia de seguridad de la bóveda</string>
     <string name="backup_password_request_no_password_action">Copia de seguridad sin contraseña</string>
     <string name="address_bookmark_error_invalid_address">Esta dirección no es válida para %s</string>
     <string name="address_bookmark_error_empty_label">La etiqueta no puede estar vacía</string>
@@ -741,15 +709,9 @@
     <string name="send_form_ripple_reaping_warning">Asegúrate de tener fondos suficientes para cubrir las comisiones. Si el saldo de una cuenta cae por debajo de 1 XRP (Depósito Existente), la cuenta se desactivará (se liquidará) y los fondos restantes se perderán. Puedes reactivar la dirección con un nuevo depósito superior al depósito existente en cualquier momento. Sin embargo, esto no recuperará los fondos perdidos.</string>
     <string name="error_invalid_chain">La cadena no es válida.</string>
     <string name="vault_backup_verifying_pin">Verificando código, por favor espere</string>
-    <string name="vault_backup_screen_change_email">Cambia el correo electrónico y reinicia el generador de claves.</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_1">¡Se te envía para que lo tengas completamente bajo tu custodia!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">Comprueba tu correo electrónico para verificarlo.</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_1">¡Le hemos enviado su nuevo recurso compartido del servidor!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Comprueba tu correo electrónico para verificarlo.</string>
     <string name="select_vault_type_next">Siguiente</string>
     <string name="select_vault_type_choose_setup">Selecciona Configuración</string>
     <string name="home_screen_scan_qr_code">Escanear código QR</string>
-    <string name="create_new_vault_screen_create_new_vault">Crea una nueva bóveda.</string>
     <string name="onboarding_desc_page_6_part_2">Desbloquea tu bóveda</string>
     <string name="onboarding_summary_button">Crea tu bóveda</string>
     <string name="keygen_benefit_3_template">Intercambia tus tokens favoritos en una sola bóveda.</string>
@@ -790,8 +752,6 @@
     <string name="select_vault_type_secure">Proteger</string>
     <string name="select_vault_type_fast">Rápida</string>
     <string name="vault_backup_screen_paste">Pegar</string>
-    <string name="enter_backup_screen_title">Introduce el código de 4 dígitos que te enviamos por correo electrónico</string>
-    <string name="enter_backup_screen_desc">Este código confirmará que ha recibido su compartición de bóveda 1 por correo electrónico</string>
     <string name="vault_backup_error_pin">Error al verificar el código, inténtalo de nuevo</string>
     <string name="tx_overview_screen_tx_hash">Hash de la transacción</string>
     <string name="tx_overview_screen_tx_from">De</string>
@@ -800,8 +760,6 @@
     <string name="keygen_benefit_1_template">Eliminando el único punto de fallo</string>
     <string name="keygen_benefit_1_emphasized">Seguridad multifactor</string>
     <string name="keygen_benefit_2_template">Control total sobre tus activos</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_1">La primera parte de los archivos compartidos de la bóveda será:</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_2">Retenido por el servidor.</string>
     <string name="onboarding_summary_check">He leído y comprendo qué hacer.</string>
     <string name="send_error_invalid_plan_fee">Cargo por plan no válido</string>
     <string name="onboarding_desc_page_3_part_2">En tu bóveda se guarda</string>
@@ -830,13 +788,10 @@
     <string name="peer_discovery_action_next_title">Siguiente</string>
     <string name="home_page_no_chains_enabled">Sin cadenas habilitadas</string>
     <string name="onboarding_desc_page_3_part_3">Un acceso a la bóveda</string>
-    <string name="onboarding_security_backup_desc_page_2_part_3">Para garantizar el acceso, preferiblemente</string>
-    <string name="onboarding_security_backup_desc_page_2_part_4">En línea.</string>
     <string name="select_vault_type_fast_title">Configuración rápida en un solo dispositivo</string>
     <string name="select_vault_type_fast_desc_1">Solo se necesita un dispositivo</string>
     <string name="scan_qr_code_modal_scan_the">Escanear</string>
     <string name="scan_qr_code_modal_qr_code">Código QR</string>
-    <string name="create_new_vault_screen_or">O</string>
     <string name="tx_overview_screen_title">Listo</string>
     <string name="fast_vault_password_screen_warning">La contraseña no se puede restablecer ni recuperar.</string>
     <string name="referral_top_bar_list">Referido</string>
@@ -861,14 +816,12 @@
     <string name="onboarding_desc_page_6_part_1">Estas comparticiones colaboran para</string>
     <string name="enter_email_screen_desc">Este correo electrónico solo se utiliza para enviar la copia de seguridad del servidor</string>
     <string name="keygen_connecting_with_server_take_a_second">Esto solo debería tardar un segundo.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_2">Este recurso compartido</string>
     <string name="function_switch_thorchain_address">Dirección de THORChain</string>
     <string name="tx_transaction_successful_screen_title">Transacción exitosa</string>
     <string name="migration_onboarding_step_3_text_end">Al actualizar</string>
     <string name="migration_onboarding_upgrade_your_vault">Mejora tu bóveda</string>
     <string name="migration_onboarding_upgrade_now">Actualízate ahora</string>
     <string name="migration_onboarding_step_1_text_start">Mejora esta bóveda a la versión mejorada</string>
-    <string name="onboarding_security_backup_title">Descripción general de la bóveda</string>
     <string name="onboarding_desc_page_1_part_2">Recursos compartidos de la bóveda</string>
     <string name="verify_swap_youre_swapping_title">Estás intercambiando</string>
     <string name="keysign_app_version_text">Versión %1$s (%2$s)</string>
@@ -906,12 +859,10 @@
     <string name="circle_msca_account_created_failed">Error al crear la cuenta Circle MSCA. Por favor, inténtelo de nuevo.</string>
     <string name="circle_usdc_account">Cuenta Circle USDC</string>
     <string name="withdraw">Retirar</string>
-    <string name="send_form_network_fee">Tarifa de red (automática)</string>
     <string name="swap_form_vult_discount_bps">VULT (%1$s - %2$d bps)</string>
     <string name="swap_form_referral_discount_bps">Referencia (-%1$d bps)</string>
     <string name="amino_sign">Firma Amino</string>
     <string name="amino_direct">Firma directa</string>
-    <string name="import_file_screen_enter_password">Introduzca la contraseña del recurso compartido de la bóveda.</string>
     <string name="transaction_status_confirmed">Transacción confirmada</string>
     <string name="transaction_status_failed">Transacción fallida</string>
     <string name="transaction_status_not_found">Transacción no encontrada</string>
@@ -941,13 +892,10 @@
     <string name="transaction_history_search_asset_title">Buscar activo</string>
     <string name="transaction_history_search_asset_not_found">No se encontraron activos</string>
     <string name="transaction_history_clear_filters">Borrar filtros</string>
-    <string name="transaction_status_broadcasted_label">Transmitida</string>
-    <string name="transaction_status_pending_label">Pendiente · %1$s</string>
     <string name="transaction_status_confirmed_label">Confirmada</string>
     <string name="transaction_status_failed_label">Fallida</string>
     <string name="transaction_status_in_progress_label">En progreso…</string>
     <string name="transaction_history_to_label">Para</string>
-    <string name="transaction_history_via_label">vía %s</string>
     <string name="transaction_history_via_prefix">vía</string>
     <string name="transaction_history_min_payout_label">pago mín.</string>
     <string name="transaction_history_date_today">Hoy</string>
@@ -966,7 +914,6 @@
     <string name="transaction_history_view_on_explorer">Ver en el explorador</string>
 
     <!-- Key Import / Seed Phrase Import -->
-    <string name="home_screen_import_seed_phrase">Importar frase semilla</string>
     <string name="import_seedphrase_title">Ingrese su frase semilla</string>
     <string name="import_seedphrase_subtitle">Ingrese su frase de recuperación de 12 o 24 palabras</string>
     <string name="import_seedphrase_label">Frase semilla</string>
@@ -997,21 +944,12 @@
     <string name="key_import_chains_customize">Personalizar cadenas</string>
     <string name="key_import_chains_no_active_title">No se encontraron cadenas activas</string>
     <string name="key_import_chains_no_active_desc">No pudimos encontrar saldos. Seleccione las cadenas que desea importar manualmente.</string>
-    <string name="key_import_chains_select_title">Seleccionar cadenas (%1$d)</string>
-    <string name="key_import_chains_all">Todas</string>
-    <string name="key_import_chains_none">Ninguna</string>
     <string name="key_import_chains_get_started">Comenzar</string>
     <string name="key_import_chains_no_results">Ninguna cadena coincide con tu búsqueda</string>
 
     <string name="key_import_device_count_get_started">Comenzar</string>
     <string name="vault_count_recommended">Recomendado</string>
 
-    <string name="welcome_preference_title">¿Qué tipo de bóveda prefieres?</string>
-    <string name="welcome_preference_desc">Elige entre una bóveda personal o compártela con alguien de confianza.</string>
-    <string name="welcome_preference_personal_title">Bóveda Personal</string>
-    <string name="welcome_preference_shared_title">Bóveda Compartida</string>
-    <string name="welcome_preference_personal_desc">Una bóveda para fondos personales. Firma transacciones con tus propios dispositivos.</string>
-    <string name="welcome_preference_shared_desc">Co-firma con varias personas de confianza (p.ej. bóvedas familiares, tu contador, una combinación…)</string>
     <string name="welcome_preference_devices_title">¿Cuántos dispositivos tienes?</string>
     <string name="welcome_fast_and_easy">Rápido &amp; fácil</string>
     <string name="welcome_fast_and_easy_desc">Firma con solo 1 dispositivo. Nuestro servidor seguro firma contigo para seguridad multisig. Compatible con plugins.</string>
@@ -1046,7 +984,6 @@
     <string name="password_choose_a_password">Elige una contraseña</string>
     <string name="password_extra_layer">Si quieres una capa adicional de seguridad, elige una contraseña. La contraseña no se puede recuperar.</string>
     <string name="password_extra_layer_highlight">La contraseña no se puede recuperar.</string>
-    <string name="referral_enter_referral_code">Introduce tu código de referido aquí. Disfruta de un 10 % de descuento en cada transacción.</string>
     <string name="backup_backups">Copias de seguridad,</string>
     <string name="backup_your_new_recovery_method">tu nuevo método de recuperación</string>
     <string name="backup_backups_power_your_vault">Las copias de seguridad potencian tu bóveda. Cada dispositivo tiene su propia copia de seguridad. Una copia sola no puede mover fondos, solo sirve para recuperación. Importa y recupera cualquier dispositivo perdido.</string>
@@ -1058,8 +995,6 @@
     <string name="backup_4_digit_code_received_via_email">Código de 4 dígitos recibido por correo electrónico</string>
     <string name="backup_this_will_activate_the_co_signer">Esto activará el cofirmante</string>
     <string name="backup_use_a_different_email">Usar un correo electrónico diferente</string>
-    <string name="backup_send_to_email">Enviar a %1$s</string>
-    <string name="backup_incorrect_code_try_again">Código incorrecto. Inténtalo de nuevo.</string>
     <string name="backup_save_backup_to_the_cloud">Guardar copia de seguridad en la nube</string>
     <string name="backup_vault_screen_export_prefix">Exporta este archivo de copia de seguridad y guárdalo en la nube. Está</string>
     <string name="backup_vault_screen_encrypted">cifrado</string>
@@ -1084,36 +1019,11 @@
     <string name="vault_setup_dynamic_device_management">Gestión dinámica de dispositivos</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">Agrega tantos dispositivos como quieras y obtén seguridad de nivel institucional.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Diseñado para equipos y tesorerías</string>
-    <string name="vault_setup_ideal_for_teams_managing_shared_funds">Ideal para equipos que gestionan fondos compartidos y bóvedas de mayor valor, que requieren más firmantes.</string>
-    <string name="vault_setup_no_inspiration_desc">¿Sin inspiración? Siempre puedes cambiar el nombre más tarde en tus ajustes.</string>
-    <string name="vault_setup_scan_qr_on_your_other_devices">Escanea el QR en tus otros dispositivos</string>
-    <string name="vault_setup_on_your_other_device_open_the_app_and_tap_scan_qr">En tu otro dispositivo, abre la app y toca "Escanear QR" para conectarlo.</string>
-    <string name="vault_setup_start_scanning">Empezar a escanear</string>
-    <string name="vault_setup_waiting_for_devices_to_connect">Esperando que los dispositivos se conecten…</string>
-    <string name="vault_setup_waiting_for_device_to_join">Esperando que el dispositivo se una</string>
-    <string name="vault_setup_want_to_create_a_vault_privately">¿Quieres crear una bóveda de forma privada?</string>
-    <string name="vault_setup_use_local_mode">Usar modo local</string>
-    <string name="vault_setup_connected">Conectado</string>
-    <string name="vault_setup_local_mode_waiting_on_devices">Modo local, esperando dispositivos</string>
-    <string name="vault_setup_short_description_of_local_mode">Aquí va una breve descripción del modo local</string>
-    <string name="vault_setup_not_want_to_use_local_switch_back">¿No quieres usar el modo local? Vuelve al modo estándar.</string>
-    <string name="vault_setup_use_standard_mode">Usar modo estándar</string>
-    <string name="vault_setup_review_your_vault_devices">Revisar los dispositivos de tu bóveda</string>
-    <string name="vault_setup_make_sure_that_these_are_the_correct_devices">Asegúrate de que estos son los dispositivos correctos que has añadido:</string>
-    <string name="vault_setup_backups">Copias de seguridad,</string>
-    <string name="vault_setup_your_new_recovery_method">tu nuevo método de recuperación</string>
-    <string name="vault_setup_backups_power_your_vault">Las copias de seguridad potencian tu bóveda. Cada dispositivo tiene su propia copia de seguridad. Una copia sola no puede mover fondos, solo sirve para recuperación. Importa y recupera cualquier dispositivo perdido.</string>
     <string name="vault_setup_back_up_each_device">Hacer copia de seguridad de cada dispositivo</string>
     <string name="vault_setup_you_ll_create_n_backups_in_total">Crearás %1$d copias de seguridad en total. Lo harás en cada dispositivo.</string>
-    <string name="vault_setup_store_backups_separately">Guarda las copias de seguridad por separado</string>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Guarda cada copia de seguridad en un servicio de nube diferente o con una contraseña diferente. Si una se ve comprometida, tus fondos estarán seguros.</string>
-    <string name="vault_setup_looks_good">Se ve bien</string>
     <string name="vault_setup_i_understand">Entiendo</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Guardar copia de seguridad %1$d de %2$d en la nube</string>
-    <string name="vault_setup_export_this_backup_file_then_save_it_to_the_cloud">Exporta este archivo de copia de seguridad y guárdalo en la nube. Usa un servicio de nube o cuenta diferente para cada copia. Cuando termines, elimina el archivo de este dispositivo.</string>
-    <string name="vault_setup_your_vault_is_ready_to_use">Tu bóveda está lista para usar</string>
-    <string name="scanning_qr_troubleshooting_scanning">¿Tienes problemas para escanear? Si el código QR no se escanea de inmediato: Mueve el teléfono ligeramente más cerca o más lejos de la pantalla. Asegúrate de que la pantalla esté bien iluminada y sin reflejos. Mantén ambos dispositivos quietos por un momento.</string>
-    <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">¿Con cuántas personas quieres compartir la bóveda?</string>
 
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Copia de seguridad del servidor</string>

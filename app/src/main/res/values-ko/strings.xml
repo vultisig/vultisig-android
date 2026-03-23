@@ -11,7 +11,6 @@
     <string name="push_notification_partial_failure">%1$d / %2$d 볼트 업데이트됨, %3$d 실패</string>
     <string name="push_notifications_sent">알림이 성공적으로 전송되었습니다</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">서명이 필요하거나 기기가 접근을 요청할 때 알림을 받으세요.</string>
-    <string name="enable_push_notifications">푸시 알림 활성화</string>
     <string name="keysign_notification_channel_name">서명 요청</string>
     <string name="keysign_notification_title">거래 서명</string>
     <string name="keysign_notification_body">새로운 서명 요청이 대기 중입니다</string>
@@ -57,15 +56,6 @@
     <string name="deposit_option_merge">병합</string>
     <string name="deposit_option_withdraw_ruji">RUJI 출금</string>
     <string name="withdraw_amount">%s 출금</string>
-    <string name="deposit_option_stake_tcy">TCY 스테이킹</string>
-    <string name="deposit_option_unstake_tcy">TCY 언스테이킹</string>
-    <string name="deposit_option_stake_ruji">RUJI 스테이킹</string>
-    <string name="deposit_option_unstake_ruji">RUJI 언스테이킹</string>
-    <string name="deposit_option_collect_ruji">RUJI 스테이킹 보상 수령</string>
-    <string name="deposit_option_receive_yrune">yRUNE 민트</string>
-    <string name="deposit_option_receive_ytcy">yTCY 민트</string>
-    <string name="deposit_option_sell_yrune">yRUNE 상환</string>
-    <string name="deposit_option_sell_ytcy">yTCY 상환</string>
     <string name="defi_tab_deposited">예치됨</string>
     <string name="defi_tab_staked">스테이킹됨</string>
     <string name="defi_tab_bonded">본딩됨</string>
@@ -82,7 +72,6 @@
     <string name="token_logo">토큰 로고</string>
     <string name="tokens">토큰</string>
     <string name="keysign">서명</string>
-    <string name="danger_icon">위험 아이콘</string>
     <string name="signing_error_please_try_again_s">서명 오류. 다시 시도해 주세요. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">기기를 같은 WiFi 네트워크에 연결하고, 올바른 볼트를 선택한 후 기기를 페어링하세요.\n다른 기기에서 Vultisig가 실행 중이지 않은지 확인하세요.</string>
     <string name="try_again">다시 시도</string>
@@ -164,8 +153,6 @@
     <string name="send_continue_button">계속</string>
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">스왑</string>
-    <string name="chain_account_view_deposit">예치</string>
-    <string name="chain_account_view_send">보내기</string>
     <string name="vault_settings_error_backup_file">오류가 발생했습니다</string>
     <string name="vault_settings_success_backup_file">Downloads/%1$s에 파일 저장됨</string>
     <string name="vault_edit_this_name_already_exist">이 이름은 이미 존재합니다</string>
@@ -284,11 +271,8 @@
     <string name="import_file_screen_password_error">비밀번호가 틀렸습니다. 다시 시도해 주세요</string>
     <string name="add_vault_save">저장</string>
     <string name="backup_password_screen_enter_password">비밀번호 입력</string>
-    <string name="import_file_screen_enter_password">볼트 공유 비밀번호 입력</string>
     <string name="import_file_screen_enter_password_sub">이 비밀번호는 볼트 공유를 내보낼 때 설정되었습니다.</string>
     <string name="import_file_screen_hint_password">비밀번호</string>
-    <string name="import_file_screen_ok">확인</string>
-    <string name="import_file_screen_cancel">취소</string>
     <string name="backup_password_screen_permission_required">백업 작업을 위해 파일 권한이 필요합니다.</string>
     <string name="share_qr_screen_permission_required">공유 작업을 위해 파일 권한이 필요합니다.</string>
     <string name="token_selection_search_hint">검색…</string>
@@ -303,7 +287,6 @@
     <string name="custom_token_add_token">%1$s 토큰 추가</string>
     <string name="deposit_form_amount_title">금액 (잔액: %1$s)</string>
     <string name="deposit_form_shares_title">수량 (잔액: %1$s)</string>
-    <string name="deposit_form_rewards_title">대기 중인 보상 (잔액: %1$s)</string>
     <string name="share_vault_qr_title">볼트 QR 공유</string>
     <string name="share_vault_qr_save">저장</string>
     <string name="share_vault_qr_share">공유</string>
@@ -319,7 +302,6 @@
     <string name="deposit_message_deposit_title">%s 메시지 예치</string>
     <string name="deposit_form_custom_memo_title">사용자 정의 메모</string>
     <string name="deposit_form_unstake_percentage_hint">언스테이킹할 비율 입력</string>
-    <string name="deposit_form_pending_rewards_hint">대기 중인 보상</string>
     <string name="swap_screen_same_asset_error_message">출발 자산과 도착 자산이 같을 수 없습니다. </string>
     <string name="address_book_toolbar_title">주소록</string>
     <string name="address_book_settings_title">주소록</string>
@@ -364,7 +346,6 @@
     <string name="verify_transaction_fast_sign_btn_title">빠른 서명</string>
     <string name="keysign_sign_transaction">거래 서명</string>
     <string name="keysign_password_title">비밀번호</string>
-    <string name="home_screen_import_vault">볼트 가져오기</string>
     <string name="start_screen_new">새로운</string>
     <string name="start_screen_import_seedphrase">시드 구문 가져오기</string>
     <string name="start_screen_import_seedphrase_desc">입력하고, 볼트를 생성하고, 다시는 돌아보지 마세요.</string>
@@ -428,7 +409,6 @@
     <string name="join_keysign_failed_connect_to_server">서버 연결 실패</string>
     <string name="network_connection_lost">네트워크 연결이 끊어졌습니다. 인터넷 연결을 확인해 주세요</string>
     <string name="send_form_polka_reaping_warning">수수료를 충당할 충분한 자금을 남겨두세요. 계정 잔액이 1 DOT(최소 예치금) 아래로 떨어지면 계정이 비활성화(수확)되고 남은 자금이 손실됩니다. 언제든지 최소 예치금보다 큰 새 입금으로 주소를 재활성화할 수 있습니다. 그러나 손실된 자금은 복구되지 않습니다.</string>
-    <string name="send_form_network_fee">네트워크 수수료 (자동)</string>
 
 
     <string name="verify_sign_message_method_field_title">방식</string>
@@ -477,23 +457,8 @@
     <string name="onboarding_desc_page_6_part_2">볼트를 잠금 해제합니다</string>
     <string name="onboarding_summary_button">볼트 생성</string>
     <string name="onboarding_summary_check">읽었으며 무엇을 해야 하는지 이해했습니다</string>
-    <string name="onboarding_security_backup_title">볼트 개요</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1">볼트에는 %s개의 공유가 있으며,</string>
-    <string name="onboarding_security_backup_desc_page_1_part_2">각 기기마다 백업이 필요합니다.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_1">접근을 보장하기 위해</string>
-    <string name="onboarding_security_backup_desc_page_2_part_2">이 볼트 공유를</string>
-    <string name="onboarding_security_backup_desc_page_2_part_3">백업하세요. 가급적</string>
-    <string name="onboarding_security_backup_desc_page_2_part_4">온라인으로.</string>
 
-    <string name="onboarding_fast_backup_desc_page_1_part_1">볼트에는 2개의 공유가 있으며,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_2">지금 백업하세요</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_1">볼트 공유 1부는</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_2">서버가 보관합니다.</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_1">완전한 자기 수탁을 위해 전송됩니다!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">이메일을 확인하세요</string>
 
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_1">새 서버 공유를 전송했습니다!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">이메일을 확인하세요</string>
 
 
     <string name="select_vault_type_secure_title">최고 수준의 보안</string>
@@ -517,9 +482,7 @@
     <string name="scan_qr_code_modal_next">다음</string>
     <string name="scan_qr_code_modal_scan_the">스캔하세요</string>
     <string name="scan_qr_code_modal_qr_code">QR 코드</string>
-    <string name="create_new_vault_screen_or">또는</string>
     <string name="home_screen_scan_qr_code">QR 스캔</string>
-    <string name="create_new_vault_screen_create_new_vault">새 볼트 생성</string>
     <string name="select_vault_type_next">다음</string>
     <string name="select_vault_type_choose_setup">설정 선택</string>
 
@@ -568,24 +531,16 @@
     <string name="fast_vault_password_screen_reenter_password_hint">비밀번호 재입력</string>
     <string name="fast_vault_name_screen_next">다음</string>
     <string name="enter_email_screen_next">다음</string>
-    <string name="error_view_try_again_button">다시 시도</string>
     <string name="error_view_default_title">문제가 발생했습니다</string>
     <string name="error_view_default_description">오류가 발생했습니다</string>
     <string name="keygen_vault_created_success_part_1">볼트가</string>
     <string name="vault_created_success_part_2">성공적으로 생성되었습니다</string>
-    <string name="backup_vault_backup_now_button">지금 백업</string>
-    <string name="backup_vault_backup_vault_share_title">볼트 공유를 온라인으로 백업하세요</string>
-    <string name="backup_vault_topbar_title">볼트 백업</string>
     <string name="vault_backup_screen_paste">붙여넣기</string>
-    <string name="enter_backup_screen_title">이메일로 전송된 4자리 코드를 입력하세요</string>
-    <string name="enter_backup_screen_desc">이 코드는 이메일로 볼트 공유 1을 수신했는지 확인합니다</string>
     <string name="vault_backup_error_pin">코드 확인 오류, 다시 시도해 주세요</string>
     <string name="vault_backup_verifying_pin">코드 확인 중, 잠시 기다려 주세요</string>
-    <string name="vault_backup_screen_change_email">이메일 변경 후 키 생성 재시작</string>
     <string name="vault_backup_screen_email_sent_to">%s(으)로 전송됨.</string>
     <string name="vault_backup_screen_donot_recieve_email">이메일을 받지 못하셨나요?</string>
     <string name="vault_backup_screen_restart_keygen">키 생성 재시작</string>
-    <string name="vault_backup_summary_start_using_vault">볼트 사용 시작</string>
     <string name="vault_backup_summary_choose_chains">체인 선택</string>
     <string name="transaction_done_form_approve">승인</string>
     <string name="vault_settings_migration_title">마이그레이션</string>
@@ -647,7 +602,6 @@
     <string name="tx_overview_screen_tx_deposit">예치</string>
     <string name="swap_error_small_insufficient_funds">잔액 부족</string>
 
-    <string name="deposit_error_max_amount" formatted="false">최대 100%까지만 언스테이킹할 수 있습니다</string>
     <string name="verify_deposit_function_overview">함수 개요</string>
     <string name="verify_deposit_sending">보내는 중</string>
     <string name="verify_deposit_network">네트워크</string>
@@ -765,7 +719,6 @@
     <string name="vultisig_community">Vultisig 커뮤니티</string>
     <string name="vault_management">볼트 관리</string>
     <string name="other">기타</string>
-    <string name="unstake_tcy_zero_error">잔액이 1 미만이면 언스테이킹할 수 없습니다</string>
 
     <string name="defi_action_stake" translatable="false">Stake</string>
     <string name="defi_action_unstake" translatable="false">Unstake</string>
@@ -826,7 +779,6 @@
     <string name="no_chain_make_sure_that">찾고 있는 체인이 활성화되어 있는지 확인하세요.</string>
     <string name="no_chain_customize_chains">체인 사용자 정의</string>
     <string name="search_bar_search">검색</string>
-    <string name="search_bar_cancel">취소</string>
     <string name="chain_selection_select_chains">체인 선택</string>
     <string name="chain_selection_select_defi_chains">DeFi 체인 선택</string>
     <string name="chain_selection_no_chains_found">체인을 찾을 수 없습니다</string>
@@ -857,7 +809,6 @@
     <string name="address_book_saved_addresses">저장된 주소</string>
     <string name="address_book_my_vaults">내 볼트</string>
     <string name="address_entry_select">선택</string>
-    <string name="backup_vault_online_storage_is_recommended">온라인 저장을 권장하며 안전합니다 - 볼트 공유는 이를 위해 설계되었습니다.</string>
     <string name="deposit_form_enter_asset_hint">자산 입력</string>
     <string name="share_balance_loading">로딩 중...</string>
     <string name="must_be_enabled_before_proceeding">계속하기 전에 %1$s을(를) 활성화해야 합니다.</string>
@@ -999,13 +950,10 @@
     <string name="transaction_history_search_asset_title">자산 검색</string>
     <string name="transaction_history_search_asset_not_found">자산을 찾을 수 없습니다</string>
     <string name="transaction_history_clear_filters">필터 초기화</string>
-    <string name="transaction_status_broadcasted_label">전송됨</string>
-    <string name="transaction_status_pending_label">대기 중 · %1$s</string>
     <string name="transaction_status_confirmed_label">성공</string>
     <string name="transaction_status_failed_label">오류</string>
     <string name="transaction_status_in_progress_label">진행 중…</string>
     <string name="transaction_history_to_label">수신</string>
-    <string name="transaction_history_via_label">%s 경유</string>
     <string name="transaction_history_via_prefix">경유</string>
     <string name="transaction_history_min_payout_label">최소 수령액</string>
     <string name="transaction_history_date_today">오늘</string>
@@ -1024,7 +972,6 @@
     <string name="transaction_history_view_on_explorer">Explorer에서 보기</string>
 
     <!-- Key Import / Seed Phrase Import -->
-    <string name="home_screen_import_seed_phrase">시드 구문 가져오기</string>
     <string name="import_seedphrase_title">시드 구문 입력</string>
     <string name="import_seedphrase_subtitle">12자 또는 24자 복구 구문을 입력하세요</string>
     <string name="import_seedphrase_label">시드 구문</string>
@@ -1052,9 +999,6 @@
     <string name="key_import_chains_customize">체인 사용자 정의</string>
     <string name="key_import_chains_no_active_title">활성 체인을 찾을 수 없음</string>
     <string name="key_import_chains_no_active_desc">잔액을 찾을 수 없습니다. 가져올 체인을 수동으로 선택해 주세요.</string>
-    <string name="key_import_chains_select_title">체인 선택 (%1$d)</string>
-    <string name="key_import_chains_all">전체</string>
-    <string name="key_import_chains_none">없음</string>
     <string name="key_import_chains_get_started">시작하기</string>
     <string name="key_import_chains_no_results">검색에 일치하는 체인이 없습니다</string>
     <string name="key_import_device_count_get_started">시작하기</string>
@@ -1065,12 +1009,6 @@
     <string name="review_vault_devices_something_wrong">문제가 있습니다</string>
     <string name="review_vault_devices_this_device_label">%1$s (이 기기)</string>
     <string name="review_vault_devices_device_index">기기 %1$d</string>
-    <string name="welcome_preference_title">어떤 볼트 유형을 원하시나요?</string>
-    <string name="welcome_preference_desc">개인 볼트 또는 신뢰할 수 있는 사람과 공유하는 볼트 중에서 선택하세요.</string>
-    <string name="welcome_preference_personal_title">개인 볼트</string>
-    <string name="welcome_preference_shared_title">공유 볼트</string>
-    <string name="welcome_preference_personal_desc">개인 자금을 위한 볼트. 자신의 기기로 거래에 서명합니다.</string>
-    <string name="welcome_preference_shared_desc">신뢰할 수 있는 여러 사람과 공동 서명합니다 (예: 가족 볼트, 회계사, 조합 등)</string>
     <string name="welcome_preference_devices_title">기기가\n몇 대 있으신가요?</string>
     <string name="welcome_fast_and_easy">빠르고 간편</string>
     <string name="welcome_fast_and_easy_desc">기기 1대로만 서명. 보안 서버가 멀티시그 보안을 위해 함께 서명합니다. 플러그인 호환.</string>
@@ -1105,7 +1043,6 @@
     <string name="password_choose_a_password">비밀번호를 선택하세요</string>
     <string name="password_extra_layer">추가 보안 레이어를 원하시면 비밀번호를 선택하세요. 비밀번호는 복구할 수 없습니다.</string>
     <string name="password_extra_layer_highlight">비밀번호는 복구할 수 없습니다.</string>
-    <string name="referral_enter_referral_code">추천 코드를 입력하세요. 모든 거래에서 10% 할인을 받으세요.</string>
     <string name="backup_backups">백업,</string>
     <string name="backup_your_new_recovery_method">새로운 복구 방법</string>
     <string name="backup_backups_power_your_vault">백업이 볼트를 지원합니다. 각 기기에는 고유한 백업이 있습니다. 백업만으로는 자금을 이동할 수 없으며, 복구 전용입니다. 분실된 기기를 가져오기 및 복구하세요.</string>
@@ -1117,8 +1054,6 @@
     <string name="backup_4_digit_code_received_via_email">이메일로 받은\n4자리 코드</string>
     <string name="backup_this_will_activate_the_co_signer">공동 서명자가 활성화됩니다</string>
     <string name="backup_use_a_different_email">다른 이메일 사용</string>
-    <string name="backup_send_to_email">%1$s(으)로 전송</string>
-    <string name="backup_incorrect_code_try_again">잘못된 코드입니다. 다시 시도하세요.</string>
     <string name="backup_save_backup_to_the_cloud">클라우드에 백업 저장</string>
     <string name="backup_vault_screen_export_prefix">이 백업 파일을 내보낸 다음 클라우드에 저장하세요.</string>
     <string name="backup_vault_screen_encrypted">암호화됨</string>
@@ -1143,36 +1078,11 @@
     <string name="vault_setup_dynamic_device_management">유연한 기기 관리</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">원하는 만큼 기기를 추가하고 기관급 보안을 받으세요.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">팀과 트레저리를 위해 설계</string>
-    <string name="vault_setup_ideal_for_teams_managing_shared_funds">공유 자금을 관리하는 팀과 더 많은 서명자가 필요한 고가치 볼트에 이상적입니다.</string>
-    <string name="vault_setup_no_inspiration_desc">이름이 떠오르지 않나요? 나중에 설정에서 언제든 변경할 수 있습니다.</string>
-    <string name="vault_setup_scan_qr_on_your_other_devices">다른 기기에서 QR을 스캔하세요</string>
-    <string name="vault_setup_on_your_other_device_open_the_app_and_tap_scan_qr">다른 기기에서 앱을 열고 "QR 스캔"을 탭하여 연결하세요.</string>
-    <string name="vault_setup_start_scanning">스캔 시작</string>
-    <string name="vault_setup_waiting_for_devices_to_connect">기기 연결 대기 중…</string>
-    <string name="vault_setup_waiting_for_device_to_join">기기 참여 대기 중</string>
-    <string name="vault_setup_want_to_create_a_vault_privately">비공개로 볼트를 생성하시겠습니까?</string>
-    <string name="vault_setup_use_local_mode">로컬 모드 사용</string>
-    <string name="vault_setup_connected">연결됨</string>
-    <string name="vault_setup_local_mode_waiting_on_devices">로컬 모드, 기기 대기 중</string>
-    <string name="vault_setup_short_description_of_local_mode">로컬 모드에 대한 간단한 설명</string>
-    <string name="vault_setup_not_want_to_use_local_switch_back">로컬을 사용하지 않으시겠습니까? 전환하세요.</string>
-    <string name="vault_setup_use_standard_mode">표준 모드 사용</string>
-    <string name="vault_setup_review_your_vault_devices">볼트 기기 확인</string>
-    <string name="vault_setup_make_sure_that_these_are_the_correct_devices">추가한 기기가 올바른지 확인하세요:</string>
-    <string name="vault_setup_backups">백업,</string>
-    <string name="vault_setup_your_new_recovery_method">새로운 복구 방법</string>
-    <string name="vault_setup_backups_power_your_vault">백업이 볼트를 지원합니다. 각 기기에는 고유한 백업이 있습니다. 백업만으로는 자금을 이동할 수 없으며, 복구 전용입니다. 분실된 기기를 가져오기 및 복구하세요.</string>
     <string name="vault_setup_back_up_each_device">각 기기를 백업하세요</string>
     <string name="vault_setup_you_ll_create_n_backups_in_total">총 %1$d개의 백업을 생성합니다. 각 기기에서 이 작업을 수행합니다.</string>
-    <string name="vault_setup_store_backups_separately">백업을 별도로 저장하세요</string>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">각 백업을 다른 클라우드 서비스나 다른 비밀번호로 저장하세요. 하나가 노출되어도 자금은 안전합니다.</string>
-    <string name="vault_setup_looks_good">확인 완료</string>
     <string name="vault_setup_i_understand">이해했습니다</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">클라우드에 백업 %1$d/%2$d 저장</string>
-    <string name="vault_setup_export_this_backup_file_then_save_it_to_the_cloud">이 백업 파일을 내보낸 다음 클라우드에 저장하세요. 각 백업마다 다른 클라우드 서비스나 계정을 사용하세요. 완료되면 이 기기에서 파일을 삭제하세요.</string>
-    <string name="vault_setup_your_vault_is_ready_to_use">볼트를 사용할 준비가 되었습니다</string>
-    <string name="scanning_qr_troubleshooting_scanning">스캔에 문제가 있나요? QR 코드가 바로 스캔되지 않으면: 휴대폰을 화면에 조금 가까이 또는 멀리 이동하세요. 화면이 잘 보이고 눈부심이 없는지 확인하세요. 두 기기를 잠시 고정하세요.</string>
-    <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">몇 명과 볼트를 공유하시겠습니까?</string>
 
     <!-- Server Backup Screen -->
     <string name="server_backup_title">서버 백업</string>

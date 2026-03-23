@@ -83,9 +83,6 @@
     <string name="send_amount">Iznos</string>
     <string name="send_amount_currency_hint">Unesite iznos</string>
     <string name="send_continue_button">Nastavi</string>
-    <string name="send_form_network_fee">Mrežna naknada (automatski)</string>
-    <string name="chain_account_view_send">POšALJI</string>
-    <string name="chain_account_view_deposit">Polog</string>
     <string name="circle_defi_description">Položite svoj USDC na Circle račun i ostvarite prinos. Sigurno unutar vašeg Vultisig trezora.</string>
     <string name="circle_defi_control_info">Sredstva ostaju u potpunosti pod kontrolom vašeg trezora. Circle računi su samoskrbni, a prinos se generira kroz sigurne izvanmrežne riznice.</string>
     <string name="usdc_deposit_title">USDC depozit</string>
@@ -187,7 +184,6 @@
     <string name="join_keysign_discovering_session_id">Otkrivanje ID-a sesije</string>
     <string name="join_keysign_discovery_service">Usluga otkrivanja</string>
     <string name="vault_settings_delete_subtitle">Trajno izbrišite svoj trezor.</string>
-    <string name="danger_icon">Ikona opasnosti</string>
     <string name="currency_unit_setting_screen_title">Valuta\n</string>
     <string name="share_qr_utils_choose_an_app">Odaberite aplikaciju</string>
     <string name="vault_accounts_account_assets">%1$s sredstva</string>
@@ -213,8 +209,6 @@
     <string name="backup_password_screen_enter_password">Unesite lozinku</string>
     <string name="import_file_screen_enter_password_sub">Ova lozinka je postavljena prilikom izvoza dijeljenja trezora.</string>
     <string name="import_file_screen_hint_password">Lozinka</string>
-    <string name="import_file_screen_ok">OK</string>
-    <string name="import_file_screen_cancel">Otkazati</string>
     <string name="backup_password_screen_permission_required">Za sigurnosne kopije potrebno je dopuštenje datoteke.</string>
     <string name="share_qr_screen_permission_required">Za sigurnosne kopije potrebno je dopuštenje datoteke.</string>
     <string name="token_selection_search_hint">Pretraživanje…</string>
@@ -274,7 +268,6 @@
     <string name="verify_transaction_fast_sign_btn_title">Brzi znak</string>
     <string name="keysign_sign_transaction">Potpiši transakciju</string>
     <string name="keysign_password_title">Lozinka</string>
-    <string name="home_screen_import_vault">Uvoz trezora</string>
     <string name="start_screen_new">NOVO</string>
     <string name="start_screen_import_seedphrase">Uvezi seed-frazu</string>
     <string name="start_screen_import_seedphrase_desc">Unesi je, stvori trezor, ne osvrći se.</string>
@@ -346,7 +339,6 @@
     <string name="push_notification_partial_failure">%1$d od %2$d trezora ažurirano, %3$d neuspješno</string>
     <string name="push_notifications_sent">Obavijest je uspješno poslana</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Primite obavijest kada je potreban vaš potpis ili uređaj zatraži pristup.</string>
-    <string name="enable_push_notifications">Omogući push obavijesti</string>
     <string name="keysign_notification_channel_name">Zahtjevi za potpisivanje</string>
     <string name="keysign_notification_title">Potpiši transakciju</string>
     <string name="keysign_notification_body">Čeka vas novi zahtjev za potpisivanje</string>
@@ -391,8 +383,6 @@
     <string name="deposit_option_merge">Merge</string>
     <string name="deposit_option_withdraw_ruji">Povuci RUJI</string>
     <string name="withdraw_amount">Povuci %s</string>
-    <string name="deposit_option_stake_tcy">Stake TCY</string>
-    <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Unesite postotak za deblokiranje</string>
     <string name="scan_qr_screen_title">Skeniraj QR kod</string>
     <string name="verify_transaction_function_inputs_title">Funkcijski ulazi</string>
@@ -423,19 +413,9 @@
     <string name="reshare_step_generating_ecdsa">Generiranje ECDSA ključa</string>
     <string name="merge_account_doesnt_exist">Odabrani token nije pronađen za ovu adresu</string>
     <string name="keygen_email_error">Netočna e-pošta, molimo provjerite</string>
-    <string name="deposit_option_stake_ruji">Uložiti RUJI</string>
-    <string name="deposit_option_unstake_ruji">Povući ulog RUJI</string>
-    <string name="deposit_option_collect_ruji">Prikupi RUJI nagrade za staking</string>
-    <string name="deposit_form_rewards_title">Nagrade na čekanju (Stanje: %1$s)</string>
-    <string name="deposit_form_pending_rewards_hint">Nagrade na čekanju</string>
     <string name="tx_overview_screen_tx_send">POŠALJI</string>
     <string name="tx_overview_screen_tx_deposit">Polog</string>
     <string name="swap_error_small_insufficient_funds">Nedovoljno sredstava</string>
-    <string name="deposit_error_max_amount">Moguće je deblokirati najviše 100 %</string>
-    <string name="deposit_option_receive_yrune">Primi yRUNE</string>
-    <string name="deposit_option_receive_ytcy">Primi yTCY</string>
-    <string name="deposit_option_sell_yrune">Prodaj yRUNE</string>
-    <string name="deposit_option_sell_ytcy">Prodaj yTCY</string>
     <string name="defi_tab_deposited">Deponirano</string>
     <string name="defi_tab_staked">Uloženo</string>
     <string name="defi_tab_bonded">Vezano</string>
@@ -547,7 +527,6 @@
     <string name="vultisig_community">Vultisig zajednica</string>
     <string name="vault_management">Upravljanje trezorom</string>
     <string name="other">Ostalo</string>
-    <string name="unstake_tcy_zero_error">Uklanjanje uloga nije moguće ako je stanje ispod 1</string>
     <string name="check_updates_title">Provjeri ažuriranja</string>
     <string name="update_available">Ažuriranje je dostupno</string>
     <string name="app_up_to_date">Aplikacija je ažurirana</string>
@@ -588,7 +567,6 @@
     <string name="vault_settings_back_up_your">Sigurnosna kopija dijeljenog trezora na uređaj ili poslužitelj.</string>
     <string name="vault_settings_migrate_gg20">Migracija DKLS-a trezora GG20</string>
     <string name="vault_settings_reshare_change">Ponovno dijeljenje, upravljanje sigurnošću ili potpisivanje poruka.</string>
-    <string name="vault_backup_summary_start_using_vault">Počnite koristiti svoj trezor</string>
     <string name="vault_backup_summary_choose_chains">Odaberite lance</string>
     <string name="transaction_done_form_approve">Odobri</string>
     <string name="vault_settings_migration_title">Migrirati</string>
@@ -606,7 +584,6 @@
     <string name="no_chain_make_sure_that">Provjerite je li lanac koji tražite omogućen.</string>
     <string name="no_chain_customize_chains">Prilagodi lance</string>
     <string name="search_bar_search">Traži</string>
-    <string name="search_bar_cancel">Otkaži</string>
     <string name="chain_selection_select_chains">Odaberite lance</string>
     <string name="chain_selection_select_defi_chains">Odaberite DeFi lance</string>
     <string name="chain_selection_no_chains_found">Nisu pronađeni lanci</string>
@@ -681,7 +658,6 @@
     <string name="address_book_saved_addresses">Spremljene adrese</string>
     <string name="address_book_my_vaults">Moji trezori</string>
     <string name="address_entry_select">Odaberi</string>
-    <string name="backup_vault_online_storage_is_recommended">Preporučuje se i sigurna je online pohrana - dijeljeni trezori su namijenjeni za to.</string>
     <string name="deposit_form_enter_asset_hint">Unesite resurse</string>
     <string name="share_balance_loading">Učitavanje...</string>
     <string name="custom_token_not_found_desc">Mogući razlozi: pogrešan ugovor, nepodržani lanac ili je token uklonjen iz registara.</string>
@@ -719,23 +695,14 @@
     <string name="keygen_benefit_4_emphasized">Dostupno</string>
     <string name="onboarding_intro_preview_part_2">početne fraze</string>
     <string name="onboarding_intro_back">Nazad</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1">Vaš trezor sadrži %s dijeljenja,</string>
-    <string name="onboarding_security_backup_desc_page_1_part_2">svaki uređaj treba vlastitu sigurnosnu kopiju.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_1">Sigurnosna kopija</string>
     <string name="migration_onboarding_step_1_text_emphasized">najbrži MPC protokol na svijetu</string>
     <string name="migration_onboarding_step_1_text_end">i prijavite se brže nego ikad prije</string>
-    <string name="error_view_try_again_button">Pokušajte ponovno</string>
     <string name="error_view_default_title">Nešto je pošlo po zlu</string>
     <string name="error_view_default_description">Dogodila se pogreška</string>
     <string name="keygen_benefit_5_template">Ne dajte se ponovno prevariti</string>
     <string name="keygen_benefit_5_emphasized">Novčanik bez sjemena,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_1">Vaš trezor sadrži 2 dijeljenja,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_2">napravite sigurnosnu kopiju odmah</string>
     <string name="keygen_vault_created_success_part_1">Trezor kreiran</string>
     <string name="vault_created_success_part_2">uspješno</string>
-    <string name="backup_vault_backup_now_button">Napravite sigurnosnu kopiju odmah</string>
-    <string name="backup_vault_backup_vault_share_title">Napravite sigurnosnu kopiju svog trezora online</string>
-    <string name="backup_vault_topbar_title">Sigurnosna kopija trezora</string>
     <string name="backup_password_request_no_password_action">Sigurnosna kopija bez lozinke</string>
     <string name="address_bookmark_error_invalid_address">Ova adresa nije važeća za %s</string>
     <string name="address_bookmark_error_empty_label">Oznaka ne može biti prazna</string>
@@ -743,15 +710,9 @@
     <string name="send_form_ripple_reaping_warning">Osigurajte dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 XRP (egzistencijalni depozit), račun će biti deaktiviran (potrošen) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati novim depozitom većim od egzistencijalnog depozita u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
     <string name="error_invalid_chain">Lanac nije valjan</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
-    <string name="vault_backup_screen_change_email">Promijenite e-poštu i ponovno pokrenite generator ključeva</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_1">Poslano vam je na potpuno samostalno čuvanje!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">Provjerite svoju e-poštu za potvrdu</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_1">Poslali smo vam vašu novu dijeljenu poslužnu mapu!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Provjerite svoju e-poštu za potvrdu</string>
     <string name="select_vault_type_next">Sljedeće</string>
     <string name="select_vault_type_choose_setup">Odaberite Postavljanje</string>
     <string name="home_screen_scan_qr_code">Skenirajte QR</string>
-    <string name="create_new_vault_screen_create_new_vault">Izradi novi trezor</string>
     <string name="onboarding_desc_page_6_part_2">otključaj svoj trezor</string>
     <string name="onboarding_summary_button">Izradite svoj trezor</string>
     <string name="keygen_benefit_3_template">Zamijenite svoje omiljene tokene sve u jednom trezoru</string>
@@ -792,8 +753,6 @@
     <string name="select_vault_type_secure">Osigurajte</string>
     <string name="select_vault_type_fast">Brzo</string>
     <string name="vault_backup_screen_paste">Zalijepi</string>
-    <string name="enter_backup_screen_title">Unesite 4-znamenkasti kod koji smo vam poslali e-poštom</string>
-    <string name="enter_backup_screen_desc">Ovaj kod će potvrditi da ste primili svoj trezor 1 putem e-pošte</string>
     <string name="vault_backup_error_pin">Pogreška pri provjeri koda, pokušajte ponovno</string>
     <string name="tx_overview_screen_tx_hash">Hash transakcije</string>
     <string name="tx_overview_screen_tx_from">Od</string>
@@ -802,8 +761,6 @@
     <string name="keygen_benefit_1_template">Uklanjanje jedinstvene točke kvara</string>
     <string name="keygen_benefit_1_emphasized">Višefaktorska sigurnost,</string>
     <string name="keygen_benefit_2_template">dajući potpunu kontrolu nad vašom imovinom</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_1">1. dio dijeljenja trezora bit će</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_2">čuva poslužitelj.</string>
     <string name="onboarding_summary_check">Pročitao/la sam i razumijem što učiniti</string>
     <string name="send_error_invalid_plan_fee">Nevažeća naknada za plan</string>
     <string name="onboarding_desc_page_3_part_2">u vašem trezoru</string>
@@ -832,13 +789,10 @@
     <string name="peer_discovery_action_next_title">Sljedeće</string>
     <string name="home_page_no_chains_enabled">Nisu omogućeni lanci</string>
     <string name="onboarding_desc_page_3_part_3">jedno dijeljenje trezora</string>
-    <string name="onboarding_security_backup_desc_page_2_part_3">kako bi se osigurao pristup, po mogućnosti</string>
-    <string name="onboarding_security_backup_desc_page_2_part_4">online.</string>
     <string name="select_vault_type_fast_title">Brzo postavljanje na 1 uređaju</string>
     <string name="select_vault_type_fast_desc_1">Potreban je samo 1 uređaj</string>
     <string name="scan_qr_code_modal_scan_the">Skenirajte</string>
     <string name="scan_qr_code_modal_qr_code">QR kod</string>
-    <string name="create_new_vault_screen_or">ILI</string>
     <string name="tx_overview_screen_title">Gotovo</string>
     <string name="fast_vault_password_screen_warning">Lozinka se ne može resetirati ili oporaviti</string>
     <string name="referral_top_bar_list">Preporuka</string>
@@ -863,14 +817,12 @@
     <string name="onboarding_desc_page_6_part_1">Ovi dijeljeni resursi surađuju s</string>
     <string name="enter_email_screen_desc">Ova e-pošta koristi se samo za slanje sigurnosne kopije poslužitelja</string>
     <string name="keygen_connecting_with_server_take_a_second">Ovo bi trebalo trajati samo sekundu</string>
-    <string name="onboarding_security_backup_desc_page_2_part_2">ovaj trezor dijeljenja</string>
     <string name="function_switch_thorchain_address">THORChain adresa</string>
     <string name="tx_transaction_successful_screen_title">Transakcija uspješna</string>
     <string name="migration_onboarding_step_3_text_end">prilikom nadogradnje</string>
     <string name="migration_onboarding_upgrade_your_vault">Nadogradi svoj trezor</string>
     <string name="migration_onboarding_upgrade_now">Nadogradite sada</string>
     <string name="migration_onboarding_step_1_text_start">Nadogradi ovaj trezor na</string>
-    <string name="onboarding_security_backup_title">Pregled trezora</string>
     <string name="onboarding_desc_page_1_part_2">dijeljenja trezora,</string>
     <string name="verify_swap_youre_swapping_title">Zamjenjujete</string>
     <string name="keysign_app_version_text">Verzija %1$s (%2$s)</string>
@@ -912,7 +864,6 @@
     <string name="swap_form_referral_discount_bps">Preporuka (-%1$d bps)</string>
     <string name="amino_sign">Amino potpis</string>
     <string name="amino_direct">Izravni potpis</string>
-    <string name="import_file_screen_enter_password">Unesite lozinku za dijeljenje trezora</string>
     <string name="transaction_status_confirmed">Transakcija potvrđena</string>
     <string name="transaction_status_failed">Transakcija nije uspjela</string>
     <string name="transaction_status_not_found">Transakcija nije pronađena</string>
@@ -942,13 +893,10 @@
     <string name="transaction_history_search_asset_title">Pretraži imovinu</string>
     <string name="transaction_history_search_asset_not_found">Nije pronađena nijedna imovina</string>
     <string name="transaction_history_clear_filters">Ukloni filtere</string>
-    <string name="transaction_status_broadcasted_label">Objavljeno</string>
-    <string name="transaction_status_pending_label">Na čekanju · %1$s</string>
     <string name="transaction_status_confirmed_label">Potvrđeno</string>
     <string name="transaction_status_failed_label">Neuspješno</string>
     <string name="transaction_status_in_progress_label">U tijeku…</string>
     <string name="transaction_history_to_label">Za</string>
-    <string name="transaction_history_via_label">putem %s</string>
     <string name="transaction_history_via_prefix">putem</string>
     <string name="transaction_history_min_payout_label">min. isplata</string>
     <string name="transaction_history_date_today">Danas</string>
@@ -967,7 +915,6 @@
     <string name="transaction_history_view_on_explorer">Pregled u istraživaču</string>
 
     <!-- Key Import / Seed Phrase Import -->
-    <string name="home_screen_import_seed_phrase">Uvezi frazu za oporavak</string>
     <string name="import_seedphrase_title">Unesite svoju frazu za oporavak</string>
     <string name="import_seedphrase_subtitle">Unesite svoju frazu za oporavak od 12 ili 24 riječi</string>
     <string name="import_seedphrase_label">Fraza za oporavak</string>
@@ -1000,21 +947,12 @@
     <string name="key_import_chains_customize">Prilagodi lance</string>
     <string name="key_import_chains_no_active_title">Nisu pronađeni aktivni lanci</string>
     <string name="key_import_chains_no_active_desc">Nismo pronašli nikakva stanja. Ručno odaberite lance koje želite uvesti.</string>
-    <string name="key_import_chains_select_title">Odaberi lance (%1$d)</string>
-    <string name="key_import_chains_all">Sve</string>
-    <string name="key_import_chains_none">Ništa</string>
     <string name="key_import_chains_get_started">Započni</string>
     <string name="key_import_chains_no_results">Nijedan lanac ne odgovara vašem pretraživanju</string>
 
     <string name="key_import_device_count_get_started">Započni</string>
     <string name="vault_count_recommended">Preporučeno</string>
 
-    <string name="welcome_preference_title">Koju vrstu trezora preferirate?</string>
-    <string name="welcome_preference_desc">Odaberite između osobnog trezora ili ga podijelite s nekim kome vjerujete.</string>
-    <string name="welcome_preference_personal_title">Osobni Trezor</string>
-    <string name="welcome_preference_shared_title">Zajednički Trezor</string>
-    <string name="welcome_preference_personal_desc">Trezor za osobna sredstva. Potpisujte transakcije svojim vlastitim uređajima.</string>
-    <string name="welcome_preference_shared_desc">Zajedno potpisujte s više osoba kojima vjerujete (npr. obiteljski trezori, vaš računovođa, kombinacija…)</string>
     <string name="welcome_preference_devices_title">Koliko uređaja imate?</string>
     <string name="welcome_fast_and_easy">Brzo &amp; jednostavno</string>
     <string name="welcome_fast_and_easy_desc">Potpisujte s samo 1 uređajem. Naš sigurni poslužitelj potpisuje s vama za multisig sigurnost. Kompatibilno s dodacima.</string>
@@ -1049,7 +987,6 @@
     <string name="password_choose_a_password">Odaberite lozinku</string>
     <string name="password_extra_layer">Ako želite dodatni sloj sigurnosti, odaberite lozinku. Lozinka se ne može oporaviti.</string>
     <string name="password_extra_layer_highlight">Lozinka se ne može oporaviti.</string>
-    <string name="referral_enter_referral_code">Unesite ovdje svoj referalni kod. Uživajte u 10 % popusta na svaku transakciju.</string>
     <string name="backup_backups">Sigurnosne kopije,</string>
     <string name="backup_your_new_recovery_method">vaša nova metoda oporavka</string>
     <string name="backup_backups_power_your_vault">Sigurnosne kopije osnažuju vaš trezor. Svaki uređaj ima svoju vlastitu sigurnosnu kopiju. Sigurnosna kopija sama ne može premjestiti sredstva, služi samo za oporavak. Uvezite i oporavite bilo koji izgubljeni uređaj.</string>
@@ -1061,8 +998,6 @@
     <string name="backup_4_digit_code_received_via_email">4-znamenkasti kôd primljen putem e-pošte</string>
     <string name="backup_this_will_activate_the_co_signer">Ovo će aktivirati supotpisnika</string>
     <string name="backup_use_a_different_email">Koristite drugu e-poštu</string>
-    <string name="backup_send_to_email">Pošalji na %1$s</string>
-    <string name="backup_incorrect_code_try_again">Netočan kôd. Pokušajte ponovo.</string>
     <string name="backup_save_backup_to_the_cloud">Spremi sigurnosnu kopiju u oblak</string>
     <string name="backup_vault_screen_export_prefix">Izvezite ovu datoteku sigurnosne kopije, zatim je spremite u oblak. Ona je</string>
     <string name="backup_vault_screen_encrypted">šifrirana</string>
@@ -1087,36 +1022,11 @@
     <string name="vault_setup_dynamic_device_management">Dinamičko upravljanje uređajima</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">Dodajte onoliko uređaja koliko želite i dobijte sigurnost institucionalnog stupnja.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Izgrađeno za timove i riznice</string>
-    <string name="vault_setup_ideal_for_teams_managing_shared_funds">Idealno za timove koji upravljaju zajedničkim sredstvima i trezorima veće vrijednosti, koji zahtijevaju više potpisnika.</string>
-    <string name="vault_setup_no_inspiration_desc">Nema inspiracije? Uvijek možete promijeniti naziv kasnije u postavkama.</string>
-    <string name="vault_setup_scan_qr_on_your_other_devices">Skenirajte QR na svojim drugim uređajima</string>
-    <string name="vault_setup_on_your_other_device_open_the_app_and_tap_scan_qr">Na svom drugom uređaju otvorite aplikaciju i dodirnite "Skeniraj QR" da ga povežete.</string>
-    <string name="vault_setup_start_scanning">Počni skenirati</string>
-    <string name="vault_setup_waiting_for_devices_to_connect">Čekanje na povezivanje uređaja…</string>
-    <string name="vault_setup_waiting_for_device_to_join">Čekanje da se uređaj pridruži</string>
-    <string name="vault_setup_want_to_create_a_vault_privately">Želite li stvoriti trezor privatno?</string>
-    <string name="vault_setup_use_local_mode">Koristi lokalni način rada</string>
-    <string name="vault_setup_connected">Spojeno</string>
-    <string name="vault_setup_local_mode_waiting_on_devices">Lokalni način rada, čekanje uređaja</string>
-    <string name="vault_setup_short_description_of_local_mode">Kratki opis lokalnog načina rada ide ovdje</string>
-    <string name="vault_setup_not_want_to_use_local_switch_back">Ne želite koristiti lokalni? Vratite se natrag.</string>
-    <string name="vault_setup_use_standard_mode">Koristi standardni način rada</string>
-    <string name="vault_setup_review_your_vault_devices">Pregledajte uređaje vašeg trezora</string>
-    <string name="vault_setup_make_sure_that_these_are_the_correct_devices">Uvjerite se da su ovo ispravni uređaji koje ste dodali:</string>
-    <string name="vault_setup_backups">Sigurnosne kopije,</string>
-    <string name="vault_setup_your_new_recovery_method">vaša nova metoda oporavka</string>
-    <string name="vault_setup_backups_power_your_vault">Sigurnosne kopije osnažuju vaš trezor. Svaki uređaj ima svoju vlastitu sigurnosnu kopiju. Sigurnosna kopija sama ne može premjestiti sredstva, služi samo za oporavak. Uvezite i oporavite bilo koji izgubljeni uređaj.</string>
     <string name="vault_setup_back_up_each_device">Napravite sigurnosnu kopiju svakog uređaja</string>
     <string name="vault_setup_you_ll_create_n_backups_in_total">Ukupno ćete stvoriti %1$d sigurnosnih kopija. To ćete učiniti na svakom uređaju.</string>
-    <string name="vault_setup_store_backups_separately">Pohranite sigurnosne kopije odvojeno</string>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Spremi svaku sigurnosnu kopiju u drugi oblak ili s drugom lozinkom. Ako jedna bude kompromitirana, vaša sredstva ostaju sigurna.</string>
-    <string name="vault_setup_looks_good">Izgleda dobro</string>
     <string name="vault_setup_i_understand">Razumijem</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Spremi sigurnosnu kopiju %1$d od %2$d u oblak</string>
-    <string name="vault_setup_export_this_backup_file_then_save_it_to_the_cloud">Izvezite ovu datoteku sigurnosne kopije, zatim je spremite u oblak. Koristite drugi oblak ili račun za svaku sigurnosnu kopiju. Kada završite, izbrišite datoteku s ovog uređaja.</string>
-    <string name="vault_setup_your_vault_is_ready_to_use">Vaš trezor je spreman za korištenje</string>
-    <string name="scanning_qr_troubleshooting_scanning">Imate problema sa skeniranjem? Ako QR kôd ne skenira odmah: Malo pomaknite telefon bliže ili dalje od ekrana. Uvjerite se da je ekran dobro osvijetljen i bez odsjaja. Držite oba uređaja mirno trenutak.</string>
-    <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">S koliko osoba želite dijeliti trezor?</string>
 
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Sigurnosna kopija poslužitelja</string>

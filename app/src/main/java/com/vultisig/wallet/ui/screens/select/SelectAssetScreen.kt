@@ -203,7 +203,7 @@ private fun SelectAssetScreenPreview() {
                 assets =
                     listOf(
                         AssetUiModel(
-                            token = Coins.Base.WEWE,
+                            token = Coins.Base.OM,
                             logo = "btc",
                             title = "BTC",
                             subtitle = "Bitcoin",
@@ -211,18 +211,10 @@ private fun SelectAssetScreenPreview() {
                             value = "$0.00",
                         ),
                         AssetUiModel(
-                            token = Coins.Base.WEWE,
+                            token = Coins.Base.OM,
                             logo = "eth",
                             title = "ETH",
                             subtitle = "Ethereum",
-                            amount = "0.00",
-                            value = "$0.00",
-                        ),
-                        AssetUiModel(
-                            token = Coins.Base.WEWE,
-                            logo = "thor",
-                            title = "LP-GAIA.ATOM/ETH.USDC-XYK",
-                            subtitle = "Thorchain",
                             amount = "0.00",
                             value = "$0.00",
                         ),

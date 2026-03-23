@@ -4,7 +4,6 @@ import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
-import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 import timber.log.Timber
@@ -50,20 +49,6 @@ constructor(
         Timber.d("Calculating default fees for chain: ${chain.name}")
 
         return service.calculateDefaultFees(transaction)
-    }
-
-    @Deprecated("Only used for ethereum, to remove upcoming PR")
-    override suspend fun calculateFees(
-        chain: Chain,
-        limit: BigInteger,
-        isSwap: Boolean,
-        to: String?,
-    ): Fee {
-        require(chain.standard == TokenStandard.EVM) {
-            "Unsupported method for ${chain.standard.name}"
-        }
-
-        return ethereumFeeService.calculateFees(chain, limit, isSwap, to)
     }
 
     private fun getFeeServiceForChain(chain: Chain): FeeService {

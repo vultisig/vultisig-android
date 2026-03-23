@@ -3,7 +3,6 @@
     <string name="token_logo">Логотип токена</string>
     <string name="tokens">Токены</string>
     <string name="keysign">Ключевая подпись</string>
-    <string name="danger_icon">Иконка опасности</string>
     <string name="signing_error_please_try_again_s">Ошибка подписи. Пожалуйста, попробуйте еще раз. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Держите устройства в одной WiFi-сети, корректный хранилище и парные устройства.\nУбедитесь, что никакие другие устройства не работают с Vultisig.</string>
     <string name="try_again">Попробуйте еще раз</string>
@@ -93,8 +92,6 @@
     <string name="send_amount_currency_hint">Введите сумму</string>
     <string name="send_continue_button">Продолжить</string>
     <string name="chain_account_view_swap">ОБМЕН</string>
-    <string name="chain_account_view_deposit">ДЕПОЗИТ</string>
-    <string name="chain_account_view_send">ОТПРАВИТЬ</string>
     <string name="circle_defi_description">Внесите свой USDC на счет Circle и получайте доход. Безопасно в вашем хранилище Vultisig.</string>
     <string name="circle_defi_control_info">Средства остаются полностью под контролем вашего хранилища. Счета Circle являются самостоятельными, а доход генерируется через безопасные внесетевые казначейства.</string>
     <string name="usdc_deposit_title">Депозит USDC</string>
@@ -212,8 +209,6 @@
     <string name="backup_password_screen_enter_password">Введите пароль</string>
     <string name="import_file_screen_enter_password_sub">Этот пароль был установлен при экспорте общего доступа к хранилищу.</string>
     <string name="import_file_screen_hint_password">Пароль</string>
-    <string name="import_file_screen_ok">ХОРОШО</string>
-    <string name="import_file_screen_cancel">Отмена</string>
     <string name="backup_password_screen_permission_required">Для операций резервного копирования требуется разрешение на доступ к файлу.</string>
     <string name="share_qr_screen_permission_required">Для операций обмена требуется разрешение на доступ к файлу.</string>
     <string name="token_selection_search_hint">Поиск…</string>
@@ -272,7 +267,6 @@
     <string name="verify_transaction_fast_sign_btn_title">Быстрый знак</string>
     <string name="keysign_sign_transaction">Подписать транзакцию</string>
     <string name="keysign_password_title">Пароль</string>
-    <string name="home_screen_import_vault">Импортировать хранилище</string>
     <string name="start_screen_new">НОВИНКА</string>
     <string name="start_screen_import_seedphrase">Импортировать сид-фразу</string>
     <string name="start_screen_import_seedphrase_desc">Введите её, создайте хранилище, не оглядывайтесь назад.</string>
@@ -344,7 +338,6 @@
     <string name="push_notification_partial_failure">Обновлено %1$d из %2$d хранилищ, %3$d не удалось</string>
     <string name="push_notifications_sent">Уведомление успешно отправлено</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Получайте уведомления, когда требуется ваша подпись или устройство запрашивает доступ.</string>
-    <string name="enable_push_notifications">Включить push-уведомления</string>
     <string name="keysign_notification_channel_name">Запросы на подписание</string>
     <string name="keysign_notification_title">Подписать транзакцию</string>
     <string name="keysign_notification_body">Новый запрос на подписание ожидает вас</string>
@@ -389,8 +382,6 @@
     <string name="deposit_option_merge">Merge</string>
     <string name="deposit_option_withdraw_ruji">Вывести RUJI</string>
     <string name="withdraw_amount">Вывести %s</string>
-    <string name="deposit_option_stake_tcy">Stake TCY</string>
-    <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Введите процент для вывода из стейкинга</string>
     <string name="scan_qr_screen_title">Сканировать QR-код</string>
     <string name="verify_transaction_function_inputs_title">Входные данные функции</string>
@@ -419,19 +410,9 @@
     <string name="reshare_step_generating_ecdsa">Генерация ключа ECDSA</string>
     <string name="merge_account_doesnt_exist">Выбранный токен не найден для этого адреса</string>
     <string name="keygen_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>
-    <string name="deposit_option_stake_ruji">Стейк RUJI</string>
-    <string name="deposit_option_unstake_ruji">Разстейк RUJI</string>
-    <string name="deposit_option_collect_ruji">Собрать награды за стейкинг RUJI</string>
-    <string name="deposit_form_rewards_title">Ожидаемые вознаграждения (Баланс: %1$s)</string>
-    <string name="deposit_form_pending_rewards_hint">Ожидаемые вознаграждения</string>
     <string name="tx_overview_screen_tx_send">Отправить</string>
     <string name="tx_overview_screen_tx_deposit">Депозит</string>
     <string name="swap_error_small_insufficient_funds">Недостаточно средств</string>
-    <string name="deposit_error_max_amount">Вывести из стейкинга можно не более 100 %</string>
-    <string name="deposit_option_receive_yrune">Получить yRUNE</string>
-    <string name="deposit_option_receive_ytcy">Получить yTCY</string>
-    <string name="deposit_option_sell_yrune">Продать yRUNE</string>
-    <string name="deposit_option_sell_ytcy">Продать yTCY</string>
     <string name="defi_tab_deposited">Депонировано</string>
     <string name="defi_tab_staked">стейкинге</string>
     <string name="defi_tab_bonded">Забондено</string>
@@ -545,7 +526,6 @@
     <string name="vultisig_community">Сообщество Vultisig</string>
     <string name="vault_management">Управление хранилищем</string>
     <string name="other">Другое</string>
-    <string name="unstake_tcy_zero_error">Отмена ставки невозможна, если баланс ниже 1</string>
     <string name="check_updates_title">Проверить обновления</string>
     <string name="update_available">Обновление доступно</string>
     <string name="app_up_to_date">Приложение обновлено</string>
@@ -585,7 +565,6 @@
     <string name="vault_settings_back_up_your">Создание резервной копии общего ресурса хранилища на устройстве или сервере.</string>
     <string name="vault_settings_migrate_gg20">Миграция хранилища GG20 DKLS</string>
     <string name="vault_settings_reshare_change">Повторный доступ, управление безопасностью или подпись сообщений.</string>
-    <string name="vault_backup_summary_start_using_vault">Начать использовать хранилище</string>
     <string name="vault_backup_summary_choose_chains">Выберите цепочки</string>
     <string name="transaction_done_form_approve">Одобрить</string>
     <string name="vault_settings_migration_title">Мигрировать</string>
@@ -603,7 +582,6 @@
     <string name="no_chain_make_sure_that">Убедитесь, что искомая цепочка включена.</string>
     <string name="no_chain_customize_chains">Настроить цепочки</string>
     <string name="search_bar_search">Поиск</string>
-    <string name="search_bar_cancel">Отмена</string>
     <string name="chain_selection_select_chains">Выбрать сети</string>
     <string name="chain_selection_select_defi_chains">Выбрать DeFi сети</string>
     <string name="chain_selection_no_chains_found">Сети не найдены</string>
@@ -676,7 +654,6 @@
     <string name="address_book_saved_addresses">Сохранённые адреса</string>
     <string name="address_book_my_vaults">Мои хранилища</string>
     <string name="address_entry_select">Выбрать</string>
-    <string name="backup_vault_online_storage_is_recommended">Рекомендуется использовать онлайн-хранилище, поскольку оно безопасно — для этого предназначены общие хранилища.</string>
     <string name="deposit_form_enter_asset_hint">Введите активы</string>
     <string name="share_balance_loading">Загрузка...</string>
     <string name="custom_token_screen_finding_token">Поиск токена</string>
@@ -714,23 +691,14 @@
     <string name="keygen_benefit_4_emphasized">Доступен</string>
     <string name="onboarding_intro_preview_part_2">Seed-фразы</string>
     <string name="onboarding_intro_back">Назад</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1">В вашем хранилище содержится %s акций,</string>
-    <string name="onboarding_security_backup_desc_page_1_part_2">каждому устройству требуется отдельная резервная копия.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_1">Резервное копирование</string>
     <string name="migration_onboarding_step_1_text_emphasized">самый быстрый в мире протокол MPC</string>
     <string name="migration_onboarding_step_1_text_end">и подпишите быстрее, чем когда-либо прежде</string>
-    <string name="error_view_try_again_button">Попробуйте еще раз</string>
     <string name="error_view_default_title">Что-то пошло не так</string>
     <string name="error_view_default_description">Произошла ошибка</string>
     <string name="keygen_benefit_5_template">Не дайте себя обмануть снова!</string>
     <string name="keygen_benefit_5_emphasized">Кошелёк без сид-фразы,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_1">В вашем хранилище содержится 2 акции,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_2">создайте резервную копию прямо сейчас</string>
     <string name="keygen_vault_created_success_part_1">Хранилище создано</string>
     <string name="vault_created_success_part_2">успешно</string>
-    <string name="backup_vault_backup_now_button">Создайте резервную копию сейчас</string>
-    <string name="backup_vault_backup_vault_share_title">Создайте резервную копию вашего хранилища онлайн</string>
-    <string name="backup_vault_topbar_title">Резервное копирование хранилища</string>
     <string name="backup_password_request_no_password_action">Резервное копирование без пароля</string>
     <string name="address_bookmark_error_invalid_address">Этот адрес недействителен для %s.</string>
     <string name="address_bookmark_error_empty_label">Метка не может быть пустой</string>
@@ -738,15 +706,9 @@
     <string name="send_form_ripple_reaping_warning">Убедитесь, что у вас достаточно средств для покрытия комиссий. Если баланс счёта опустится ниже 1 XRP (экзистенциальный депозит), счёт будет деактивирован (списан), а все оставшиеся средства будут потеряны. Вы можете в любое время повторно активировать адрес, внеся новый депозит, превышающий экзистенциальный депозит. Однако это не вернёт потерянные средства.</string>
     <string name="error_invalid_chain">Цепочка недействительна</string>
     <string name="vault_backup_verifying_pin">Подтверждение кода, пожалуйста, подождите.</string>
-    <string name="vault_backup_screen_change_email">Измените адрес электронной почты и перезапустите кейген.</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_1">Отправлено вам на полное самостоятельное хранение!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">Проверьте адрес электронной почты для подтверждения.</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_1">Мы отправили вам новый общий ресурс на сервере!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Проверьте адрес электронной почты для подтверждения.</string>
     <string name="select_vault_type_next">Далее</string>
     <string name="select_vault_type_choose_setup">Выберите конфигурацию</string>
     <string name="home_screen_scan_qr_code">Сканируйте QR-код</string>
-    <string name="create_new_vault_screen_create_new_vault">Создать новое хранилище</string>
     <string name="onboarding_desc_page_6_part_2">Разблокируйте своё хранилище</string>
     <string name="onboarding_summary_button">Создайте своё хранилище</string>
     <string name="keygen_benefit_3_template">Обменивайте все свои любимые токены в одном хранилище</string>
@@ -787,8 +749,6 @@
     <string name="select_vault_type_secure">Безопасный</string>
     <string name="select_vault_type_fast">Быстрый</string>
     <string name="vault_backup_screen_paste">Вставить</string>
-    <string name="enter_backup_screen_title">Введите 4-значный код, который мы отправили вам по электронной почте</string>
-    <string name="enter_backup_screen_desc">Этот код подтвердит, что вы получили ваш общий ресурс хранилища 1 по электронной почте.</string>
     <string name="vault_backup_error_pin">Ошибка подтверждения кода. Повторите попытку.</string>
     <string name="tx_overview_screen_tx_hash">Хэш транзакции</string>
     <string name="tx_overview_screen_tx_from">Из</string>
@@ -797,8 +757,6 @@
     <string name="keygen_benefit_1_template">Удаление единой точки отказа</string>
     <string name="keygen_benefit_1_emphasized">Многофакторная безопасность</string>
     <string name="keygen_benefit_2_template">предоставляет полный контроль над вашими активами</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_1">Часть 1 общих ресурсов Хранилища будет</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_2">Удерживается сервером.</string>
     <string name="onboarding_summary_check">Я прочитал(а) и понимаю, что делать</string>
     <string name="send_error_invalid_plan_fee">Неверный тарифный план</string>
     <string name="onboarding_desc_page_3_part_2">в вашем хранилище</string>
@@ -827,13 +785,10 @@
     <string name="peer_discovery_action_next_title">Далее</string>
     <string name="home_page_no_chains_enabled">Сети не включены</string>
     <string name="onboarding_desc_page_3_part_3">один общий ресурс хранилища</string>
-    <string name="onboarding_security_backup_desc_page_2_part_3">для обеспечения доступа, предпочтительно</string>
-    <string name="onboarding_security_backup_desc_page_2_part_4">в сети.</string>
     <string name="select_vault_type_fast_title">Быстрая настройка на одном устройстве</string>
     <string name="select_vault_type_fast_desc_1">Требуется только одно устройство</string>
     <string name="scan_qr_code_modal_scan_the">Сканируйте</string>
     <string name="scan_qr_code_modal_qr_code">QR-код</string>
-    <string name="create_new_vault_screen_or">ИЛИ</string>
     <string name="tx_overview_screen_title">Готово</string>
     <string name="fast_vault_password_screen_warning">Пароль не может быть сброшен или восстановлен</string>
     <string name="referral_top_bar_list">Реферал</string>
@@ -858,14 +813,12 @@
     <string name="onboarding_desc_page_6_part_1">Эти общие ресурсы взаимодействуют с</string>
     <string name="enter_email_screen_desc">Этот адрес электронной почты используется только для отправки резервной копии сервера.</string>
     <string name="keygen_connecting_with_server_take_a_second">Это займёт всего секунду.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_2">это хранилище общего доступа.</string>
     <string name="function_switch_thorchain_address">Адрес THORChain</string>
     <string name="tx_transaction_successful_screen_title">Транзакция выполнена успешно</string>
     <string name="migration_onboarding_step_3_text_end">при обновлении</string>
     <string name="migration_onboarding_upgrade_your_vault">Обновите своё хранилище</string>
     <string name="migration_onboarding_upgrade_now">Обновите сейчас</string>
     <string name="migration_onboarding_step_1_text_start">Обновите это хранилище до</string>
-    <string name="onboarding_security_backup_title">Обзор хранилища</string>
     <string name="onboarding_desc_page_1_part_2">Общие ресурсы хранилища</string>
     <string name="verify_swap_youre_swapping_title">Вы выполняете обмен</string>
     <string name="keysign_app_version_text">Версия %1$s (%2$s)</string>
@@ -903,12 +856,10 @@
     <string name="circle_msca_account_created_failed">Не удалось создать учетную запись Circle MSCA. Пожалуйста, попробуйте еще раз.</string>
     <string name="circle_usdc_account">Учетная запись Circle USDC</string>
     <string name="withdraw">Вывести</string>
-    <string name="send_form_network_fee">Сетевая комиссия (автоматически)</string>
     <string name="swap_form_vult_discount_bps">VULT (%1$s - %2$d bps)</string>
     <string name="swap_form_referral_discount_bps">Реферальная программа (-%1$d бит/с)</string>
     <string name="amino_sign">Амино-подпись</string>
     <string name="amino_direct">Прямая подпись</string>
-    <string name="import_file_screen_enter_password">Введите пароль для общего доступа к хранилищу.</string>
     <string name="transaction_status_confirmed">Транзакция подтверждена</string>
     <string name="transaction_status_failed">Транзакция не удалась</string>
     <string name="transaction_status_not_found">Транзакция не найдена</string>
@@ -938,13 +889,10 @@
     <string name="transaction_history_search_asset_title">Поиск актива</string>
     <string name="transaction_history_search_asset_not_found">Активы не найдены</string>
     <string name="transaction_history_clear_filters">Сбросить фильтры</string>
-    <string name="transaction_status_broadcasted_label">Отправлена</string>
-    <string name="transaction_status_pending_label">В ожидании · %1$s</string>
     <string name="transaction_status_confirmed_label">Успешно</string>
     <string name="transaction_status_failed_label">Ошибка</string>
     <string name="transaction_status_in_progress_label">В процессе…</string>
     <string name="transaction_history_to_label">На</string>
-    <string name="transaction_history_via_label">через %s</string>
     <string name="transaction_history_via_prefix">через</string>
     <string name="transaction_history_min_payout_label">мин. выплата</string>
     <string name="transaction_history_date_today">Сегодня</string>
@@ -963,7 +911,6 @@
     <string name="transaction_history_view_on_explorer">Открыть в обозревателе</string>
 
     <!-- Key Import / Seed Phrase Import -->
-    <string name="home_screen_import_seed_phrase">Импортировать сид-фразу</string>
     <string name="import_seedphrase_title">Введите вашу сид-фразу</string>
     <string name="import_seedphrase_subtitle">Введите вашу фразу восстановления из 12 или 24 слов</string>
     <string name="import_seedphrase_label">Сид-фраза</string>
@@ -998,21 +945,12 @@
     <string name="key_import_chains_customize">Настроить цепочки</string>
     <string name="key_import_chains_no_active_title">Активные цепочки не найдены</string>
     <string name="key_import_chains_no_active_desc">Балансы не найдены. Выберите цепочки для импорта вручную.</string>
-    <string name="key_import_chains_select_title">Выберите цепочки (%1$d)</string>
-    <string name="key_import_chains_all">Все</string>
-    <string name="key_import_chains_none">Ничего</string>
     <string name="key_import_chains_get_started">Начать</string>
     <string name="key_import_chains_no_results">Нет сетей, соответствующих запросу</string>
 
     <string name="key_import_device_count_get_started">Начать</string>
     <string name="vault_count_recommended">Рекомендуется</string>
 
-    <string name="welcome_preference_title">Какой тип хранилища вы предпочитаете?</string>
-    <string name="welcome_preference_desc">Выберите между личным хранилищем или поделитесь им с кем-то, кому доверяете.</string>
-    <string name="welcome_preference_personal_title">Личное Хранилище</string>
-    <string name="welcome_preference_shared_title">Общее Хранилище</string>
-    <string name="welcome_preference_personal_desc">Хранилище для личных средств. Подписывайте транзакции своими устройствами.</string>
-    <string name="welcome_preference_shared_desc">Совместная подпись с несколькими доверенными людьми (напр. семейные хранилища, ваш бухгалтер, комбинация…)</string>
     <string name="welcome_preference_devices_title">Сколько устройств у вас есть?</string>
     <string name="welcome_fast_and_easy">Быстро &amp; просто</string>
     <string name="welcome_fast_and_easy_desc">Подписывайте всего с 1 устройством. Наш защищённый сервер подписывает вместе с вами для мультисиг-безопасности. Совместим с плагинами.</string>
@@ -1047,7 +985,6 @@
     <string name="password_choose_a_password">Выберите пароль</string>
     <string name="password_extra_layer">Если вы хотите дополнительный уровень безопасности, выберите пароль. Пароль невозможно восстановить.</string>
     <string name="password_extra_layer_highlight">Пароль невозможно восстановить.</string>
-    <string name="referral_enter_referral_code">Введите ваш реферальный код здесь. Наслаждайтесь скидкой 10% на каждую транзакцию.</string>
     <string name="backup_backups">Резервные копии,</string>
     <string name="backup_your_new_recovery_method">ваш новый метод восстановления</string>
     <string name="backup_backups_power_your_vault">Резервные копии усиливают ваше хранилище. Каждое устройство имеет собственную резервную копию. Резервная копия одна не может перемещать средства, она только для восстановления. Импортируйте и восстанавливайте любое потерянное устройство.</string>
@@ -1059,8 +996,6 @@
     <string name="backup_4_digit_code_received_via_email">4-значный код, полученный по email</string>
     <string name="backup_this_will_activate_the_co_signer">Это активирует со-подписанта</string>
     <string name="backup_use_a_different_email">Использовать другой email</string>
-    <string name="backup_send_to_email">Отправить на %1$s</string>
-    <string name="backup_incorrect_code_try_again">Неверный код. Попробуйте снова.</string>
     <string name="backup_save_backup_to_the_cloud">Сохранить резервную копию в облаке</string>
     <string name="backup_vault_screen_export_prefix">Экспортируйте этот файл резервной копии, затем сохраните его в облаке. Он</string>
     <string name="backup_vault_screen_encrypted">зашифрован</string>
@@ -1085,36 +1020,11 @@
     <string name="vault_setup_dynamic_device_management">Динамическое управление устройствами</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">Добавляйте столько устройств, сколько хотите, и получите безопасность институционального уровня.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Создано для команд и казначейств</string>
-    <string name="vault_setup_ideal_for_teams_managing_shared_funds">Идеально для команд, управляющих общими средствами и хранилищами с большей ценностью, требующими большего числа подписантов.</string>
-    <string name="vault_setup_no_inspiration_desc">Нет идей для названия? Вы всегда можете изменить имя позже в настройках.</string>
-    <string name="vault_setup_scan_qr_on_your_other_devices">Сканируйте QR-код на других устройствах</string>
-    <string name="vault_setup_on_your_other_device_open_the_app_and_tap_scan_qr">На другом устройстве откройте приложение и нажмите «Сканировать QR», чтобы подключить его.</string>
-    <string name="vault_setup_start_scanning">Начать сканирование</string>
-    <string name="vault_setup_waiting_for_devices_to_connect">Ожидание подключения устройств…</string>
-    <string name="vault_setup_waiting_for_device_to_join">Ожидание присоединения устройства</string>
-    <string name="vault_setup_want_to_create_a_vault_privately">Хотите создать хранилище в приватном режиме?</string>
-    <string name="vault_setup_use_local_mode">Использовать локальный режим</string>
-    <string name="vault_setup_connected">Подключено</string>
-    <string name="vault_setup_local_mode_waiting_on_devices">Локальный режим, ожидание устройств</string>
-    <string name="vault_setup_short_description_of_local_mode">Краткое описание локального режима здесь</string>
-    <string name="vault_setup_not_want_to_use_local_switch_back">Не хотите использовать локальный? Вернитесь назад.</string>
-    <string name="vault_setup_use_standard_mode">Использовать стандартный режим</string>
-    <string name="vault_setup_review_your_vault_devices">Просмотр устройств вашего хранилища</string>
-    <string name="vault_setup_make_sure_that_these_are_the_correct_devices">Убедитесь, что это правильные устройства, которые вы добавили:</string>
-    <string name="vault_setup_backups">Резервные копии,</string>
-    <string name="vault_setup_your_new_recovery_method">ваш новый метод восстановления</string>
-    <string name="vault_setup_backups_power_your_vault">Резервные копии усиливают ваше хранилище. Каждое устройство имеет собственную резервную копию. Резервная копия одна не может перемещать средства, она только для восстановления. Импортируйте и восстанавливайте любое потерянное устройство.</string>
     <string name="vault_setup_back_up_each_device">Создайте резервную копию каждого устройства</string>
     <string name="vault_setup_you_ll_create_n_backups_in_total">Вы создадите %1$d резервных копий всего. Вы сделаете это на каждом устройстве.</string>
-    <string name="vault_setup_store_backups_separately">Храните резервные копии отдельно</string>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Сохраняйте каждую резервную копию в другом облачном сервисе или с другим паролем. Если одна будет скомпрометирована, ваши средства останутся в безопасности.</string>
-    <string name="vault_setup_looks_good">Выглядит хорошо</string>
     <string name="vault_setup_i_understand">Я понимаю</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Сохранить резервную копию %1$d из %2$d в облаке</string>
-    <string name="vault_setup_export_this_backup_file_then_save_it_to_the_cloud">Экспортируйте этот файл резервной копии, затем сохраните его в облаке. Используйте разные облачные сервисы или аккаунты для каждой копии. Когда закончите, удалите файл с этого устройства.</string>
-    <string name="vault_setup_your_vault_is_ready_to_use">Ваше хранилище готово к использованию</string>
-    <string name="scanning_qr_troubleshooting_scanning">Возникли проблемы со сканированием? Если QR-код не сканируется сразу: Немного приблизьте или отдалите телефон от экрана. Убедитесь, что экран хорошо освещён и без бликов. Держите оба устройства неподвижно на мгновение.</string>
-    <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">С каким количеством людей вы хотите поделиться хранилищем?</string>
 
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Резервное копирование сервера</string>
