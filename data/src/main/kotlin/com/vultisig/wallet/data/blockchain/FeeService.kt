@@ -26,6 +26,7 @@ internal val supportsFeeService =
         Chain.Mantle,
         // Non EVM
         Chain.Polkadot,
+        Chain.Bittensor,
         Chain.Ripple,
         Chain.Ton,
         Chain.Sui,

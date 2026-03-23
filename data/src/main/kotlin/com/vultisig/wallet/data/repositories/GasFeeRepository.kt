@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.api.models.TronChainParametersJson
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.crypto.ThorChainHelper
@@ -173,6 +174,16 @@ constructor(
 
                         TokenValue(
                             value = PolkadotHelper.DEFAULT_FEE_PLANCKS.toBigInteger(),
+                            unit = chain.feeUnit,
+                            decimals = nativeToken.decimal,
+                        )
+                    }
+
+                    Chain.Bittensor -> {
+                        val nativeToken = tokenRepository.getNativeToken(chain.id)
+
+                        TokenValue(
+                            value = BittensorHelper.DEFAULT_FEE_RAO.toBigInteger(),
                             unit = chain.feeUnit,
                             decimals = nativeToken.decimal,
                         )
