@@ -34,8 +34,11 @@ import com.vultisig.wallet.ui.models.defi.LpTabUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun LpTabContent(state: LpTabUiModel, onClickAdd: () -> Unit, onClickRemove: () -> Unit) {
-
+internal fun LpTabContent(
+    state: LpTabUiModel,
+    onClickAdd: (String) -> Unit,
+    onClickRemove: (String) -> Unit,
+) {
     Column(
         modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -44,8 +47,8 @@ internal fun LpTabContent(state: LpTabUiModel, onClickAdd: () -> Unit, onClickRe
             LpWidget(
                 state = lpPosition,
                 isLoading = state.isLoading,
-                onClickAdd = onClickAdd,
-                onClickRemove = onClickRemove,
+                onClickAdd = { onClickAdd(lpPosition.positionKey) },
+                onClickRemove = { onClickRemove(lpPosition.positionKey) },
             )
         }
     }

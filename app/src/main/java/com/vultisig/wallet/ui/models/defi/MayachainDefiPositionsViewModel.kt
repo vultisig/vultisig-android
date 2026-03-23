@@ -466,6 +466,7 @@ constructor(
                     icon = (pool.logo as? Int) ?: R.drawable.cacao,
                     apr = null,
                     position = "0 $assetTicker / 0 CACAO",
+                    positionKey = pool.positionKey,
                 )
             }
         updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = lpPositions)) }
@@ -515,6 +516,19 @@ constructor(
         }
     }
 
+    fun onNavigateToLp(poolId: String, action: DeFiNavActions) {
+        viewModelScope.launch {
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = Chain.MayaChain.id,
+                    depositType = action.type,
+                    poolId = poolId,
+                )
+            )
+        }
+    }
+
     fun onClickBond(nodeAddress: String) {
         viewModelScope.launch {
             navigator.route(
@@ -559,10 +573,12 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
         logo = getCoinLogo(coinName),
         ticker = "$assetTicker/CACAO",
         isSelected = false,
+        positionKey = asset,
     )
 }
 
 private fun formatCacaoReward(reward: Double): String {
+    22
     val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
     val cacaoAmount =
         rewardBase.toValue(Coins.MayaChain.CACAO.decimal).setScale(4, RoundingMode.DOWN)

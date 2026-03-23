@@ -33,6 +33,7 @@ internal fun DepositScreen(
     viewModel: DepositViewModel = hiltViewModel(),
     depositType: String? = null,
     bondAddress: String? = null,
+    poolId: String? = null,
 ) {
     val depositNavHostController = rememberNavController()
     val context = LocalContext.current
@@ -86,6 +87,7 @@ internal fun DepositScreen(
         onKeysignFinished = { viewModel.navigateToHome(shouldUseMainNavigator) },
         depositType = depositType,
         bondAddress = bondAddress,
+        poolId = poolId,
     )
 }
 
@@ -102,6 +104,7 @@ private fun DepositScreen(
     onKeysignFinished: () -> Unit = {},
     depositType: String? = null,
     bondAddress: String? = null,
+    poolId: String? = null,
 ) {
 
     V2Scaffold(
@@ -124,6 +127,7 @@ private fun DepositScreen(
                     chainId = chainId,
                     depositType = depositType,
                     bondAddress = bondAddress,
+                    poolId = poolId,
                 )
             }
             composable(

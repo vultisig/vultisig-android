@@ -46,6 +46,8 @@ import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasLpPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasMayaStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions.ADD_LP
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions.REMOVE_LP
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -89,6 +91,8 @@ internal fun MayachainDefiPositionsScreen(
                 onPositionSelectionChange = model::onPositionSelectionChange,
                 onClickStake = { model.onNavigateToStake(it) },
                 onClickUnstake = { model.onNavigateToStake(it) },
+                onClickAddLp = { model.onNavigateToLp(it, ADD_LP) },
+                onClickRemoveLp = { model.onNavigateToLp(it, REMOVE_LP) },
             )
     }
 }
@@ -109,6 +113,8 @@ internal fun MayachainDefiPositionsScreenContent(
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onClickStake: (DeFiNavActions) -> Unit = {},
     onClickUnstake: (DeFiNavActions) -> Unit = {},
+    onClickAddLp: (String) -> Unit = {},
+    onClickRemoveLp: (String) -> Unit = {},
 ) {
     val searchTextFieldState = remember { TextFieldState() }
     val tabs = MAYA_DEFI_TABS
@@ -211,7 +217,11 @@ internal fun MayachainDefiPositionsScreenContent(
                     if (!state.selectedPositions.hasLpPositions(state.lpPositionsDialog)) {
                         NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
                     } else {
-                        LpTabContent(state = state.lp, onClickAdd = {}, onClickRemove = {})
+                        LpTabContent(
+                            state = state.lp,
+                            onClickAdd = onClickAddLp,
+                            onClickRemove = onClickRemoveLp,
+                        )
                     }
                 }
             }

@@ -103,6 +103,7 @@ internal data class LpPositionUiModel(
     val icon: Int,
     val apr: String?,
     val position: String,
+    val positionKey: String = "",
 )
 
 internal data class StakePositionUiModel(

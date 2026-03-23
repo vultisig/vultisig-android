@@ -192,6 +192,7 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
                 chainId = args.chainId,
                 depositType = args.depositType,
                 bondAddress = args.bondAddress,
+                poolId = args.poolId,
             )
         }
 
