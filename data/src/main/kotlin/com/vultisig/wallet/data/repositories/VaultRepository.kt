@@ -38,6 +38,8 @@ interface VaultRepository {
 
     suspend fun hasVaults(): Boolean
 
+    suspend fun isNameTaken(name: String, excludeId: VaultId): Boolean
+
     suspend fun add(vault: Vault)
 
     suspend fun upsert(vault: Vault)
@@ -87,6 +89,9 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
     override suspend fun getAll(): List<Vault> = vaultDao.loadAll().map { it.toVault() }
 
     override suspend fun hasVaults(): Boolean = vaultDao.hasVaults()
+
+    override suspend fun isNameTaken(name: String, excludeId: VaultId): Boolean =
+        vaultDao.countByNameExcluding(name, excludeId) > 0
 
     override suspend fun add(vault: Vault) {
         vaultDao.insert(vault.toVaultDb())
