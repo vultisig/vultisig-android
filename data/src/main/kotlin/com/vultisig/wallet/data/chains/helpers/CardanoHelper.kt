@@ -89,6 +89,9 @@ object CardanoHelper {
             .toByteArray()
     }
 
+    /**
+     * Returns the Blake2b-256 pre-image hash for the given [keysignPayload], used in TSS signing.
+     */
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val inputData = getPreSignedInputData(keysignPayload)
         val hashes = TransactionCompiler.preImageHashes(CoinType.CARDANO, inputData)
@@ -102,6 +105,7 @@ object CardanoHelper {
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
 
+    /** Compiles and returns the signed Cardano transaction from TSS [signatures]. */
     fun getSignedTransaction(
         vaultHexPublicKey: String,
         vaultHexChainCode: String,
