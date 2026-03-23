@@ -4,6 +4,7 @@ import JsonReader
 import TransactionData
 import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
+import com.vultisig.wallet.data.chains.helpers.CardanoHelper
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper.Companion.ATOM_DENOM
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
@@ -25,6 +26,7 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import wallet.core.jni.CoinType
 
@@ -350,6 +352,27 @@ class ChainHelpersTest {
         }
     }
 
+    @Test
+    fun sendCardano() {
+        val transactions: List<TransactionData> = loadTransactionData(CARDANO_JSON_FILE)
+
+        transactions.forEach { transaction ->
+            val preImageHashes =
+                CardanoHelper.getPreSignedImageHash(
+                    transaction.keysignPayload.toInternalKeySignPayload()
+                )
+
+            assertEquals(1, preImageHashes.size)
+            assertTrue(
+                "Expected 64-char hex hash but got: ${preImageHashes[0]}",
+                preImageHashes[0].matches(Regex("[0-9a-f]{64}")),
+            )
+            if (transaction.expectedImageHash.isNotEmpty()) {
+                assertEquals(transaction.expectedImageHash, preImageHashes)
+            }
+        }
+    }
+
     private fun loadTransactionData(jsonFile: String): List<TransactionData> {
         val appContext: Context = InstrumentationRegistry.getInstrumentation().context
         val data =
@@ -374,6 +397,8 @@ class ChainHelpersTest {
         private const val SUI_JSON_FILE = "sui.json"
         private const val TRON_JSON_FILE = "tron.json"
         private const val KUJIRA_JSON_FILE = "kujira.json"
+
+        private const val CARDANO_JSON_FILE = "cardano.json"
 
         private const val THORCHAIN_SWAP_JSON_FILE = "thorchainswap.json"
         private const val MAYA_SWAP_JSON_FILE = "mayaswap.json"
