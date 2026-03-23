@@ -916,7 +916,7 @@
     <string name="import_seedphrase_label">Frase semilla</string>
     <string name="import_seedphrase_hint">Ingrese su frase de recuperación…</string>
     <string name="import_seedphrase_word_count">%1$d / %2$d palabras</string>
-    <string name="import_seedphrase_invalid_word_count">Ingresaste %1$s palabras. La frase semilla debe tener 12 o 24</string>
+    <string name="import_seedphrase_invalid_word_count">Ingresaste %1$s palabras. La frase semilla debe tener 12 o 24 palabras</string>
     <string name="import_seedphrase_invalid_phrase">Frase semilla no válida</string>
     <string name="import_seedphrase_already_imported">Esta frase semilla ya ha sido importada</string>
     <string name="import_seedphrase_duplicate_description">Por favor, importe una frase semilla diferente</string>
