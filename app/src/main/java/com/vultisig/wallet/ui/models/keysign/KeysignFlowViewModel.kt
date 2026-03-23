@@ -91,6 +91,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -195,6 +196,8 @@ constructor(
     }
 
     val isLoading = MutableStateFlow(false)
+    private val _isDataLoaded = MutableStateFlow(false)
+    val isDataLoaded: StateFlow<Boolean> = _isDataLoaded
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
     private var transactionHistoryData = MutableStateFlow<TransactionHistoryData?>(null)
@@ -525,6 +528,7 @@ constructor(
                                 TransactionTypeUiModel.Send(transactionDetailsUiModel)
                         }
                     }
+                    _isDataLoaded.value = true
                 }
             }
         } else {
@@ -536,6 +540,7 @@ constructor(
                             message = customMessagePayload?.message ?: "",
                         )
                 )
+            _isDataLoaded.value = true
         }
     }
 
