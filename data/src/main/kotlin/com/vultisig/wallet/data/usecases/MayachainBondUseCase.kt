@@ -73,46 +73,41 @@ constructor(
 
     override suspend fun getActiveNodesRemote(address: String): List<BondedNodePosition> =
         supervisorScope {
-            val activeNodes = mutableListOf<BondedNodePosition>()
-
             try {
                 val networkInfoDeferred = async { getNetworkInfo() }
                 val allNodes = mayachainBondRepository.getAllNodes()
                 val networkInfo = networkInfoDeferred.await()
 
-                for (node in allNodes) {
+                val myNodes =
+                    allNodes.filter { node ->
+                        node.bondProviders.providers.any { it.bondAddress == address }
+                    }
+
+                myNodes.map { node ->
                     val myBondMetrics =
                         calculateBondMetricsFromNode(
                             node = node,
                             myBondAddress = address,
                             networkApy = networkInfo.apy,
                         )
-                    if (myBondMetrics.myBond <= BigInteger.ZERO) continue
-
-                    val bondNode =
-                        BondedNodePosition.BondedNode(
-                            address = node.nodeAddress,
-                            state = node.status,
-                        )
-
-                    val activeNode =
-                        BondedNodePosition(
-                            id = Coins.MayaChain.CACAO.generateBondedId(node.nodeAddress),
-                            coin = Coins.MayaChain.CACAO,
-                            node = bondNode,
-                            amount = myBondMetrics.myBond,
-                            apy = myBondMetrics.apy,
-                            nextReward = myBondMetrics.myAward,
-                            nextChurn = networkInfo.nextChurnDate,
-                        )
-                    activeNodes.add(activeNode)
+                    BondedNodePosition(
+                        id = Coins.MayaChain.CACAO.generateBondedId(node.nodeAddress),
+                        coin = Coins.MayaChain.CACAO,
+                        node =
+                            BondedNodePosition.BondedNode(
+                                address = node.nodeAddress,
+                                state = node.status,
+                            ),
+                        amount = myBondMetrics.myBond,
+                        apy = myBondMetrics.apy,
+                        nextReward = myBondMetrics.myAward,
+                        nextChurn = networkInfo.nextChurnDate,
+                    )
                 }
             } catch (t: Throwable) {
                 Timber.e(t)
                 throw t
             }
-
-            return@supervisorScope activeNodes.toList()
         }
 
     private suspend fun getNetworkInfo(): MayaNetworkBondInfo {
