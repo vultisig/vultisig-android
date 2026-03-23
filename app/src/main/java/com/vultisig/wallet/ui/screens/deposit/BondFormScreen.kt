@@ -1,5 +1,8 @@
 package com.vultisig.wallet.ui.screens.deposit
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,7 +10,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -15,6 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,7 +40,9 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.PasteIcon
+import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
@@ -40,7 +50,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.library.form.FormCard
+import com.vultisig.wallet.ui.components.library.form.BasicFormTextField
 import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextField
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
@@ -237,6 +247,9 @@ internal fun BondFormContent(
     }
 }
 
+private val cardShape = RoundedCornerShape(12.dp)
+private val inputShape = RoundedCornerShape(12.dp)
+
 @Composable
 private fun MayaBondFormContent(
     state: DepositFormUiModel,
@@ -250,93 +263,159 @@ private fun MayaBondFormContent(
     onSelectBondAsset: (String) -> Unit,
     onScan: () -> Unit,
 ) {
-    // Address card — "Address" header + "Node (Address)" sublabel + text field
+    var isAddressExpanded by remember { mutableStateOf(true) }
+    var isAssetExpanded by remember { mutableStateOf(state.selectedBondAsset.isEmpty()) }
+
+    // Address card
     TextFieldValidator(errorText = state.nodeAddressError) {
-        FormCard {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(Theme.v2.colors.backgrounds.primary, cardShape)
+                    .border(1.dp, Theme.v2.colors.border.normal, cardShape)
+                    .padding(horizontal = 12.dp, vertical = 16.dp),
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp),
+                modifier =
+                    Modifier.fillMaxWidth().clickOnce { isAddressExpanded = !isAddressExpanded },
             ) {
                 Text(
-                    text = stringResource(R.string.deposit_form_node_address_title),
+                    text = stringResource(R.string.deposit_form_address_card_title),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.primary,
+                    modifier = Modifier.weight(1f),
                 )
             }
-            UiHorizontalDivider()
-            Text(
-                text = stringResource(R.string.deposit_form_node_address_title),
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.tertiary,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            )
-            FormTextField(
-                hint = stringResource(R.string.deposit_form_node_address_title),
-                keyboardType = KeyboardType.Text,
-                textFieldState = nodeAddressFieldState,
-                onLostFocus = onNodeAddressLostFocus,
-            ) {
-                UiIcon(
-                    drawableResId = R.drawable.camera,
-                    size = 20.dp,
-                    modifier = Modifier.clickOnce { onScan() },
-                )
-                UiSpacer(size = 8.dp)
-                PasteIcon(onPaste = onSetNodeAddress)
-                UiSpacer(size = 8.dp)
+            AnimatedVisibility(visible = isAddressExpanded) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    UiHorizontalDivider()
+                    Text(
+                        text = stringResource(R.string.deposit_form_node_address_title),
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .background(Theme.v2.colors.backgrounds.secondary, inputShape)
+                                .border(
+                                    1.dp,
+                                    Theme.v2.colors.variables.bordersExtraLight,
+                                    inputShape,
+                                )
+                                .padding(16.dp),
+                    ) {
+                        BasicFormTextField(
+                            hint = stringResource(R.string.deposit_form_node_address_title),
+                            keyboardType = KeyboardType.Text,
+                            textFieldState = nodeAddressFieldState,
+                            onLostFocus = onNodeAddressLostFocus,
+                            modifier = Modifier.weight(1f),
+                        )
+                        UiSpacer(size = 8.dp)
+                        UiIcon(
+                            drawableResId = R.drawable.camera,
+                            size = 20.dp,
+                            modifier = Modifier.clickOnce { onScan() },
+                        )
+                        UiSpacer(size = 8.dp)
+                        PasteIcon(onPaste = onSetNodeAddress)
+                    }
+                }
             }
         }
     }
 
-    // Asset selection + LP Units — grouped in one card
-    FormCard {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp),
-        ) {
+    // Asset card
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(Theme.v2.colors.backgrounds.primary, cardShape)
+                .border(1.dp, Theme.v2.colors.border.normal, cardShape)
+                .padding(horizontal = 12.dp, vertical = 16.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = stringResource(R.string.deposit_form_screen_assets),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
             )
-        }
-        UiHorizontalDivider()
-
-        if (state.bondableAssets.isNotEmpty()) {
-            FormSelection(
-                selected = state.selectedBondAsset,
-                options = state.bondableAssets,
-                onSelectOption = onSelectBondAsset,
-                mapTypeToString = { it },
-                embedInCard = false,
-            )
-        } else {
-            TextFieldValidator(errorText = state.assetsError) {
-                FormTextField(
-                    hint = stringResource(R.string.deposit_form_enter_asset_hint),
-                    keyboardType = KeyboardType.Text,
-                    textFieldState = assetsFieldState,
-                    onLostFocus = onAssetsLostFocus,
-                )
-            }
-        }
-
-        UiHorizontalDivider()
-
-        TextFieldValidator(errorText = state.lpUnitsError) {
-            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                Text(
-                    text = stringResource(R.string.deposit_form_screen_lpunits),
-                    style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.tertiary,
+            if (!isAssetExpanded && state.selectedBondAsset.isNotEmpty()) {
+                UiSpacer(size = 4.dp)
+                TokenLogo(
+                    logo = getCoinLogo(state.selectedBondAsset.lowercase()),
+                    title = state.selectedBondAsset,
+                    modifier = Modifier.size(16.dp),
+                    errorLogoModifier = Modifier.size(16.dp),
                 )
                 UiSpacer(size = 4.dp)
-                FormTextField(
-                    hint = "0",
-                    keyboardType = KeyboardType.Number,
-                    textFieldState = lpUnitsFieldState,
-                    onLostFocus = onLpUnitsLostFocus,
+                Text(
+                    text = state.selectedBondAsset,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.tertiary,
                 )
+                UiSpacer(weight = 1f)
+                UiIcon(
+                    drawableResId = R.drawable.ic_check,
+                    size = 16.dp,
+                    tint = Theme.v2.colors.alerts.success,
+                )
+                UiSpacer(size = 8.dp)
+                UiIcon(
+                    drawableResId = R.drawable.pencil,
+                    size = 16.dp,
+                    modifier = Modifier.clickOnce { isAssetExpanded = true },
+                )
+            } else {
+                UiSpacer(weight = 1f)
+            }
+        }
+        AnimatedVisibility(visible = isAssetExpanded) {
+            Column {
+                UiHorizontalDivider()
+                UiSpacer(size = 8.dp)
+                if (state.bondableAssets.isNotEmpty()) {
+                    FormSelection(
+                        selected = state.selectedBondAsset,
+                        options = state.bondableAssets,
+                        onSelectOption = {
+                            onSelectBondAsset(it)
+                            isAssetExpanded = false
+                        },
+                        mapTypeToString = { it },
+                        embedInCard = false,
+                    )
+                } else {
+                    TextFieldValidator(errorText = state.assetsError) {
+                        FormTextField(
+                            hint = stringResource(R.string.deposit_form_enter_asset_hint),
+                            keyboardType = KeyboardType.Text,
+                            textFieldState = assetsFieldState,
+                            onLostFocus = onAssetsLostFocus,
+                        )
+                    }
+                }
+                UiHorizontalDivider()
+                TextFieldValidator(errorText = state.lpUnitsError) {
+                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                        Text(
+                            text = stringResource(R.string.deposit_form_screen_lpunits),
+                            style = Theme.brockmann.supplementary.footnote,
+                            color = Theme.v2.colors.text.tertiary,
+                        )
+                        UiSpacer(size = 4.dp)
+                        FormTextField(
+                            hint = "0",
+                            keyboardType = KeyboardType.Number,
+                            textFieldState = lpUnitsFieldState,
+                            onLostFocus = onLpUnitsLostFocus,
+                        )
+                    }
+                }
             }
         }
     }
@@ -427,21 +506,42 @@ private fun BondFormContentThorPreview() {
 
 @Preview(showBackground = true, backgroundColor = 0xFF02122B)
 @Composable
-private fun BondFormContentMayaPreview() {
+private fun BondFormContentMayaExpandedPreview() {
     OnBoardingComposeTheme {
         BondFormContent(
             state =
                 DepositFormUiModel(
                     depositChain = Chain.MayaChain,
-                    bondableAssets = listOf("RUNE", "CACAO"),
-                    selectedBondAsset = "RUNE",
+                    bondableAssets = listOf("CACAO", "RUNE"),
+                    selectedBondAsset = "",
+                ),
+            nodeAddressFieldState = TextFieldState(""),
+            providerFieldState = TextFieldState(),
+            operatorFeeFieldState = TextFieldState(),
+            tokenAmountFieldState = TextFieldState(),
+            assetsFieldState = TextFieldState(),
+            lpUnitsFieldState = TextFieldState(),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun BondFormContentMayaCollapsedPreview() {
+    OnBoardingComposeTheme {
+        BondFormContent(
+            state =
+                DepositFormUiModel(
+                    depositChain = Chain.MayaChain,
+                    bondableAssets = listOf("CACAO", "RUNE"),
+                    selectedBondAsset = "CACAO",
                 ),
             nodeAddressFieldState = TextFieldState("maya1abctupwgjwn397w3dx9fqmqgzr"),
             providerFieldState = TextFieldState(),
             operatorFeeFieldState = TextFieldState(),
             tokenAmountFieldState = TextFieldState(),
             assetsFieldState = TextFieldState(),
-            lpUnitsFieldState = TextFieldState("0"),
+            lpUnitsFieldState = TextFieldState("1000"),
         )
     }
 }
