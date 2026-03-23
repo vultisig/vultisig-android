@@ -465,6 +465,7 @@ private fun SendFormContent(
             state = state,
             onExpandSection = onExpandSection,
             addressFieldState = addressFieldState,
+            addressFocusRequester = addressFocusRequester,
             providerFieldState = providerFieldState,
             onDstAddressLostFocus = onDstAddressLostFocus,
             onSetOutputAddress = onSetOutputAddress,
@@ -478,6 +479,7 @@ private fun SendFormContent(
         FoldableAmountWidget(
             state = state,
             addressFieldState = addressFieldState,
+            amountFocusRequester = amountFocusRequester,
             onExpandSection = onExpandSection,
             onGasSettingsClick = onGasSettingsClick,
             tokenAmountFieldState = tokenAmountFieldState,
@@ -525,6 +527,7 @@ private fun SendFormContent(
         FoldableAmountWidget(
             state = state,
             addressFieldState = addressFieldState,
+            amountFocusRequester = amountFocusRequester,
             onExpandSection = onExpandSection,
             onGasSettingsClick = onGasSettingsClick,
             tokenAmountFieldState = tokenAmountFieldState,
@@ -1034,6 +1037,7 @@ private fun FoldableBondDestinationAddress(
     onExpandSection: (SendSections) -> Unit,
     // dst address
     addressFieldState: TextFieldState,
+    addressFocusRequester: FocusRequester = remember { FocusRequester() },
     onDstAddressLostFocus: () -> Unit,
     onSetOutputAddress: (String) -> Unit,
     onScanDstAddressRequest: () -> Unit,
@@ -1080,6 +1084,7 @@ private fun FoldableBondDestinationAddress(
             VsTextInputField(
                 textFieldState = addressFieldState,
                 hint = stringResource(R.string.send_to_address_hint),
+                focusRequester = addressFocusRequester,
                 onFocusChanged = {
                     if (!it) {
                         onDstAddressLostFocus()
