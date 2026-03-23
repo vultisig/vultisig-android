@@ -412,7 +412,7 @@ class MediatorServiceDiscoveryListener(
                 @Suppress("DEPRECATION") serviceInfo?.host
             }
         Timber.d(
-            "Service resolved: ${serviceInfo?.serviceName}, address: ${logAddress?.address.toString()}, port: ${serviceInfo?.port}"
+            "Service resolved: ${serviceInfo?.serviceName}, address: ${logAddress?.hostAddress}, port: ${serviceInfo?.port}"
         )
 
         serviceInfo?.let { info ->

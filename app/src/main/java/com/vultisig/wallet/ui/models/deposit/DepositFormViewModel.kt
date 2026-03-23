@@ -393,9 +393,13 @@ constructor(
         vaultId: String,
     ) {
         if (account != null) {
-            account.tokenValue?.let { tokenValue ->
+            val tokenValue = account.tokenValue
+            if (tokenValue != null) {
                 val value = mapTokenValueToStringWithUnit(tokenValue)
                 state.update { state -> state.copy(amountError = null, balance = value.asUiText()) }
+            } else {
+                // Account exists in vault but balance not yet loaded — clear any stale error
+                state.update { it.copy(amountError = null) }
             }
         } else {
             state.update {
@@ -1686,9 +1690,15 @@ constructor(
 
         val selectedMergeToken = state.value.selectedCoin
         val selectedAccount =
-            address.accounts.first {
+            address.accounts.firstOrNull {
                 it.token.ticker.equals(selectedMergeToken.ticker, ignoreCase = true)
             }
+                ?: throw InvalidTransactionDataException(
+                    UiText.FormattedText(
+                        R.string.must_be_enabled_before_proceeding,
+                        listOf(selectedMergeToken.ticker),
+                    )
+                )
         val selectedToken = selectedAccount.token
 
         val srcAddress = selectedToken.address
@@ -1756,9 +1766,15 @@ constructor(
 
         val selectedMergeToken = state.value.selectedCoin
         val selectedAccount =
-            address.accounts.first {
+            address.accounts.firstOrNull {
                 it.token.ticker.equals(selectedMergeToken.ticker, ignoreCase = true)
             }
+                ?: throw InvalidTransactionDataException(
+                    UiText.FormattedText(
+                        R.string.must_be_enabled_before_proceeding,
+                        listOf(selectedMergeToken.ticker),
+                    )
+                )
         val selectedToken = selectedAccount.token
 
         val srcAddress = selectedToken.address
