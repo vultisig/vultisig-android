@@ -555,9 +555,6 @@
     <string name="transaction_type_button_receive">Получить</string>
     <string name="vault_settings_view_vault">Просмотр имени, части и типа хранилища</string>
     <string name="vault_settings_biometric_fast">Биометрическая быстрая подпись</string>
-    <string name="vault_settings_enable_biometric">Включить биометрию для быстрой подписи</string>
-    <string name="vault_settings_password_hint">Подсказка для пароля</string>
-    <string name="vault_settings_set_a_password">Установите подсказку для пароля для защиты хранилища</string>
     <string name="vault_settings_backup_vault">Резервное копирование общего ресурса хранилища</string>
     <string name="vault_settings_back_up_your">Создание резервной копии общего ресурса хранилища на устройстве или сервере.</string>
     <string name="vault_settings_migrate_gg20">Миграция хранилища GG20 DKLS</string>

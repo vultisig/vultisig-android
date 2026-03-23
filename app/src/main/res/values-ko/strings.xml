@@ -754,9 +754,6 @@
     <string name="transaction_type_button_receive">받기</string>
     <string name="vault_settings_view_vault">볼트 이름, 파트 및 유형 보기</string>
     <string name="vault_settings_biometric_fast">생체 인증 빠른 서명</string>
-    <string name="vault_settings_enable_biometric">빠른 서명을 위한 생체 인증 활성화</string>
-    <string name="vault_settings_password_hint">비밀번호 힌트</string>
-    <string name="vault_settings_set_a_password">볼트를 보호하기 위한 비밀번호 힌트 설정</string>
     <string name="vault_settings_backup_vault">볼트 공유 백업</string>
     <string name="vault_settings_back_up_your">기기 또는 서버에 볼트 공유를 백업합니다.</string>
     <string name="vault_settings_migrate_gg20">GG20 볼트를 DKLS로 마이그레이션</string>

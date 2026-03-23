@@ -557,9 +557,6 @@
     <string name="transaction_type_button_receive">Primi</string>
     <string name="vault_settings_view_vault">Prikaz naziva, dijela i vrste trezora</string>
     <string name="vault_settings_biometric_fast">Biometrijski brzi potpis</string>
-    <string name="vault_settings_enable_biometric">Omogući biometrijski pristup za brzi potpis</string>
-    <string name="vault_settings_password_hint">Podsjetnik za lozinku</string>
-    <string name="vault_settings_set_a_password">Postavi podsjetnik za lozinku kako bi zaštitio svoj trezor</string>
     <string name="vault_settings_backup_vault">Sigurnosna kopija dijeljenog trezora</string>
     <string name="vault_settings_back_up_your">Sigurnosna kopija dijeljenog trezora na uređaj ili poslužitelj.</string>
     <string name="vault_settings_migrate_gg20">Migracija DKLS-a trezora GG20</string>

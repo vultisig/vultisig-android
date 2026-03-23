@@ -921,9 +921,6 @@
     <!-- Vault Settings -->
     <string name="vault_settings_view_vault">查看金库名称、部分和类型</string>
     <string name="vault_settings_biometric_fast">生物识别快速签名</string>
-    <string name="vault_settings_enable_biometric">启用生物识别快速签名</string>
-    <string name="vault_settings_password_hint">密码提示</string>
-    <string name="vault_settings_set_a_password">设置密码提示以保护您的金库</string>
     <string name="vault_settings_backup_vault">备份金库份额</string>
     <string name="vault_settings_back_up_your">将您的金库份额备份到设备或服务器。</string>
     <string name="vault_settings_migrate_gg20">将 GG20 金库迁移到 DKLS</string>
