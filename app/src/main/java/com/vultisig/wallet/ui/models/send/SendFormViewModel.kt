@@ -2455,7 +2455,9 @@ constructor(
                 DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY
                 DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY
                 DeFiNavActions.STAKE_CACAO,
-                DeFiNavActions.UNSTAKE_CACAO -> Coins.MayaChain.CACAO
+                DeFiNavActions.UNSTAKE_CACAO,
+                DeFiNavActions.ADD_LP,
+                DeFiNavActions.REMOVE_LP -> Coins.MayaChain.CACAO
                 null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
             }
 

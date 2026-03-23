@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
@@ -569,13 +570,31 @@ constructor(
 private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
     val assetTicker = asset.substringAfter(".")
     val coinName = assetTicker.substringBefore("-").lowercase()
+    val coinLogo = getCoinLogo(coinName)
+    val logo: Int =
+        if (coinLogo is Int) coinLogo
+        else mayaPoolChainPrefixToChain(asset.substringBefore("."))?.logo ?: R.drawable.cacao
     return PositionUiModelDialog(
-        logo = getCoinLogo(coinName),
+        logo = logo,
         ticker = "$assetTicker/CACAO",
         isSelected = false,
         positionKey = asset,
     )
 }
+
+private fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
+    when (prefix.uppercase()) {
+        "BTC" -> Chain.Bitcoin
+        "ETH" -> Chain.Ethereum
+        "DASH" -> Chain.Dash
+        "KUJI" -> Chain.Kujira
+        "MAYA" -> Chain.MayaChain
+        "BASE" -> Chain.Base
+        "ARB" -> Chain.Arbitrum
+        "AVAX" -> Chain.Avalanche
+        "BSC" -> Chain.BscChain
+        else -> null
+    }
 
 private fun formatCacaoReward(reward: Double): String {
     22
