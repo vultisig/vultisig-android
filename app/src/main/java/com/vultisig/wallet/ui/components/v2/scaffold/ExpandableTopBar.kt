@@ -65,12 +65,9 @@ fun VsExpandableTopBar(
         Box(
             modifier =
                 Modifier.alpha(0f).fillMaxWidth().onGloballyPositioned { coordinates ->
-                    val newHeight = coordinates.size.height
-                    if (newHeight > 0) {
-                        collapsedHeightPx = newHeight
-                        if (expandedHeightPx > 0) {
-                            isMeasuring = false
-                        }
+                    collapsedHeightPx = coordinates.size.height
+                    if (expandedHeightPx > 0) {
+                        isMeasuring = false
                     }
                 },
             content = collapsedContent,
@@ -90,14 +87,14 @@ fun VsExpandableTopBar(
         if (expandedPlaceable.height > 0 && expandedPlaceable.height != expandedHeightPx) {
             expandedHeightPx = expandedPlaceable.height
         }
-        if (collapsedPlaceable.height > 0 && collapsedPlaceable.height != collapsedHeightPx) {
+        if (collapsedPlaceable.height != collapsedHeightPx) {
             collapsedHeightPx = collapsedPlaceable.height
         }
 
         layout(0, 0) {}
     }
 
-    if (!isMeasuring && expandedHeightPx > 0 && collapsedHeightPx > 0) {
+    if (!isMeasuring && expandedHeightPx > 0) {
         val heightDiffPx =
             remember(expandedHeightPx, collapsedHeightPx) {
                 (expandedHeightPx - collapsedHeightPx).toFloat()
