@@ -129,6 +129,7 @@
     <string name="verify_transaction_error_not_enough_consent">Por favor, revise todos los consentimientos</string>
     <string name="join_keysign_discovering_session_id">Descubriendo el ID de sesión</string>
     <string name="transaction_done_title">Hecho</string>
+    <string name="transaction_done_overview">Resumen</string>
     <string name="transaction_done_complete">Completo</string>
     <string name="transaction_done_form_title">Transacción</string>
     <string name="vault_list_vaults_list">Bóvedas</string>

@@ -55,7 +55,7 @@ internal fun TransactionDoneView(
         applyScaffoldPaddings = true,
         topBar = {
             if (showToolbar) {
-                VsTopAppBar(title = "Overview")
+                VsTopAppBar(title = stringResource(R.string.transaction_done_overview))
             }
         },
         content = {

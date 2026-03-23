@@ -129,6 +129,7 @@
     <string name="camera_permission_denied">Cameratoestemming niet verleend. Schakel deze in de instellingen in.</string>
     <string name="join_keysign_discovering_session_id">Sessienummer ontdekken</string>
     <string name="transaction_done_title">Gedaan</string>
+    <string name="transaction_done_overview">Overzicht</string>
     <string name="transaction_done_complete">Voltooid</string>
     <string name="transaction_done_form_title">Transactie</string>
     <string name="vault_list_vaults_list">Kluizen</string>

@@ -184,6 +184,7 @@
     <string name="camera_permission_denied">카메라 권한이 부여되지 않았습니다. 설정에서 활성화해 주세요.</string>
     <string name="join_keysign_discovering_session_id">세션 ID 검색 중</string>
     <string name="transaction_done_title">완료</string>
+    <string name="transaction_done_overview">개요</string>
     <string name="transaction_done_complete">완료됨</string>
     <string name="transaction_done_form_title">거래</string>
     <string name="vault_list_vaults_list">볼트</string>
