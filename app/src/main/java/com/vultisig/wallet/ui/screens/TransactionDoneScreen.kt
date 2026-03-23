@@ -181,42 +181,40 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
 }
 
 @Composable
-private fun SwapTransactionDetail(swapTransaction: SwapTransactionUiModel?) {
-    if (swapTransaction != null) {
-        UiHorizontalDivider()
+private fun SwapTransactionDetail(swapTransaction: SwapTransactionUiModel) {
+    UiHorizontalDivider()
 
+    OtherField(
+        title = stringResource(R.string.swap_form_from_title),
+        value = "${swapTransaction.src.value} ${swapTransaction.src.token.ticker}",
+    )
+
+    OtherField(
+        title = stringResource(R.string.swap_form_dst_token_title),
+        value = "${swapTransaction.dst.value} ${swapTransaction.dst.token.ticker}",
+    )
+
+    if (swapTransaction.provider.isNotEmpty()) {
         OtherField(
-            title = stringResource(R.string.swap_form_from_title),
-            value = "${swapTransaction.src.value} ${swapTransaction.src.token.ticker}",
-        )
-
-        OtherField(
-            title = stringResource(R.string.swap_form_dst_token_title),
-            value = "${swapTransaction.dst.value} ${swapTransaction.dst.token.ticker}",
-        )
-
-        if (swapTransaction.provider.isNotEmpty()) {
-            OtherField(
-                title = stringResource(R.string.swap_screen_provider_title),
-                value = swapTransaction.provider,
-            )
-        }
-
-        OtherField(
-            title = stringResource(R.string.swap_form_estimated_fees_title),
-            value = swapTransaction.providerFee.fiatValue,
-        )
-
-        OtherField(
-            title = stringResource(R.string.verify_transaction_network_fee),
-            value = swapTransaction.networkFeeFormatted,
-        )
-
-        OtherField(
-            title = stringResource(R.string.verify_swap_screen_total_fees),
-            value = swapTransaction.totalFee,
+            title = stringResource(R.string.swap_screen_provider_title),
+            value = swapTransaction.provider,
         )
     }
+
+    OtherField(
+        title = stringResource(R.string.swap_form_estimated_fees_title),
+        value = swapTransaction.providerFee.fiatValue,
+    )
+
+    OtherField(
+        title = stringResource(R.string.verify_transaction_network_fee),
+        value = swapTransaction.networkFeeFormatted,
+    )
+
+    OtherField(
+        title = stringResource(R.string.verify_swap_screen_total_fees),
+        value = swapTransaction.totalFee,
+    )
 }
 
 @Composable
