@@ -825,7 +825,8 @@ constructor(
     }
 
     private suspend fun createUnMergeTx(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val unmergeToken = state.value.selectedUnMergeCoin
         val unMergeAccountBalance =
             rujiMergeBalances.value?.firstOrNull {
@@ -902,7 +903,8 @@ constructor(
     }
 
     private suspend fun createAddCacaoPoolTransaction(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -961,7 +963,8 @@ constructor(
 
     @OptIn(ExperimentalStdlibApi::class)
     private suspend fun createSecuredAssetTransaction(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1087,7 +1090,8 @@ constructor(
     }
 
     private suspend fun createWithdrawSecuredAssetTransaction(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1303,7 +1307,8 @@ constructor(
     }
 
     private suspend fun createRemoveCacaoPoolTransaction(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
 
         val chain =
             chain
@@ -1360,7 +1365,8 @@ constructor(
     }
 
     private suspend fun createBondTransaction(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1485,7 +1491,8 @@ constructor(
     }
 
     private suspend fun createUnbondTransaction(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1600,7 +1607,8 @@ constructor(
     }
 
     private suspend fun createLeaveTransaction(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1662,7 +1670,8 @@ constructor(
     }
 
     private suspend fun createCustomTransaction(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1719,7 +1728,8 @@ constructor(
     }
 
     private suspend fun createTonDepositTransaction(memo: DepositMemo): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1794,7 +1804,8 @@ constructor(
         createTonDepositTransaction(DepositMemo.Unstake)
 
     private suspend fun createMergeTx(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1856,7 +1867,8 @@ constructor(
     }
 
     private suspend fun createSwitchTx(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1921,7 +1933,8 @@ constructor(
     }
 
     private suspend fun createTransferIbcTx(): DepositTransaction {
-        val vaultId = requireNotNull(vaultId)
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(

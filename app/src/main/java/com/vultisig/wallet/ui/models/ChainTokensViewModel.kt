@@ -191,8 +191,18 @@ constructor(
     }
 
     private fun loadData(isRefresh: Boolean) {
-        val vaultId = vaultId ?: return
-        val chainRaw = chainRaw ?: return
+        val vaultId =
+            vaultId
+                ?: run {
+                    Timber.w("loadData: vaultId is null, skipping")
+                    return
+                }
+        val chainRaw =
+            chainRaw
+                ?: run {
+                    Timber.w("loadData: chainRaw is null, skipping")
+                    return
+                }
         discoverTokenUseCase(vaultId, chainRaw)
 
         loadDataJob?.cancel()
