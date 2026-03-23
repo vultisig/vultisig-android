@@ -28,11 +28,12 @@ internal fun <T> FormSelection(
     selected: T,
     options: List<T>,
     onSelectOption: (T) -> Unit,
+    embedInCard: Boolean = true,
     mapTypeToString: @Composable (T) -> String,
 ) {
     var isListExpanded by remember { mutableStateOf(false) }
 
-    FormCard {
+    val content: @Composable () -> Unit = {
         SelectionCard(
             title = mapTypeToString(selected),
             actionIcon = R.drawable.ic_caret_down,
@@ -55,6 +56,12 @@ internal fun <T> FormSelection(
                 }
             }
         }
+    }
+
+    if (embedInCard) {
+        FormCard { content() }
+    } else {
+        content()
     }
 }
 

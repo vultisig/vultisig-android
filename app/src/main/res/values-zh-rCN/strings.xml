@@ -29,7 +29,7 @@
     <!-- Deposit Options -->
     <string name="deposit_option_bond">绑定</string>
     <string name="deposit_option_unbond">解绑</string>
-    <string name="total_bonded_rune">总绑定 Rune</string>
+    <string name="total_bonded_coin">总绑定 %s</string>
     <string name="bonded_amount">已绑定: %s</string>
     <string name="bond_to_node">绑定到节点</string>
     <string name="node_address_formatted">地址: %s</string>
@@ -55,6 +55,9 @@
     <string name="defi_tab_staked">已质押</string>
     <string name="defi_tab_bonded">已绑定</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">绑定</string>
+    <string name="defi_stake">质押</string>
+    <string name="liquidity_pool">流动性池</string>
     <string name="deposit_option_add_cacao_pool">添加到 CACAO 池</string>
 
     <!-- Basic UI -->
@@ -386,6 +389,7 @@
 
     <!-- Deposit Form -->
     <string name="deposit_form_node_address_title">节点地址</string>
+    <string name="deposit_form_address_card_title">地址</string>
     <string name="deposit_form_provider_title">提供商（可选）</string>
     <string name="deposit_form_provider_hint">提供商</string>
     <string name="deposit_form_operator_fee_title">运营商费用（可选）</string>
@@ -533,6 +537,7 @@
     <!-- Deposit Form Screen -->
     <string name="deposit_error_has_not_reached_maturity">这笔存款尚未到期。</string>
     <string name="deposit_form_screen_assets">资产</string>
+    <string name="deposit_form_screen_asset_selection">选择资产</string>
     <string name="deposit_form_screen_lpunits">LP 单位</string>
 
     <!-- Join Keysign Error -->
@@ -700,6 +705,8 @@
     <string name="deposit_error_destination_address">目标地址不应为空</string>
     <string name="deposit_error_invalid_destination_address">目标地址无效</string>
     <string name="deposit_option_remove_cacao_pool">从 CACAO 池移除</string>
+    <string name="deposit_option_add_liquidity">添加流动性</string>
+    <string name="deposit_option_remove_liquidity">移除流动性</string>
     <string name="cacaopool_only_cacao_supported">池操作仅支持 CACAO 代币</string>
     <string name="referral_create_info_content">推荐计划适用于 THORChain 交换，并尽力而为。您需要注册 THORName 才能使用 Vultisig 推荐。注册费为 10 RUNE，每年 1 RUNE，支付给 THORChain 网络。</string>
     <string name="referral_create_info_title">推荐计划</string>
@@ -1389,4 +1396,13 @@
     <string name="add_referral_error_chars">推荐码只能包含字母和数字</string>
     <string name="add_referral_error_not_found">推荐码未找到</string>
     <string name="add_referral_error_network">检查推荐码失败，请重试。</string>
+    <string name="cacao_pool">CACAO 池</string>
+    <string name="staked_ruji_header">已质押 RUJI</string>
+    <string name="staked_tcy_header">已质押 TCY</string>
+    <string name="staked_ytcy_header">已质押 yTCY</string>
+    <string name="staked_yrune_header">已质押 yRUNE</string>
+    <string name="compounded_tcy_header">已复利 TCY</string>
+    <string name="native_asset">原生</string>
+    <string name="invalid_integer_error">无效的整数数量</string>
+    <string name="empty_lps_field">LP 单位字段为空</string>
 </resources>

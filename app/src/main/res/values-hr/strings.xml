@@ -226,6 +226,7 @@
     <string name="share_vault_qr_save" >Spremi</string>
     <string name="share_vault_qr_share" >Podijeli</string>
     <string name="deposit_form_node_address_title">Adresa čvora</string>
+    <string name="deposit_form_address_card_title">Adresa</string>
     <string name="deposit_form_provider_title">Davatelj (neobavezno)</string>
     <string name="deposit_form_provider_hint">Davatelj</string>
     <string name="deposit_form_operator_fee_title">Naknada operatera (nije obavezno)</string>
@@ -293,6 +294,7 @@
     <string name="deposit_error_invalid_assets">Sredstva su nevažeća</string>
     <string name="deposit_error_has_not_reached_maturity">Ovaj depozit još nije dostigao rok dospijeća</string>
     <string name="deposit_form_screen_assets">Imovina</string>
+    <string name="deposit_form_screen_asset_selection">Odabir imovine</string>
     <string name="deposit_form_screen_lpunits">LP jedinice</string>
     <string name="join_keysign_error_wrong_vault_share">Isti dio trezora. Molimo promijenite dionicu za potpis</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Promjena trezora</string>
@@ -356,7 +358,7 @@
 
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
-    <string name="total_bonded_rune">Ukupno vezanih Rune</string>
+    <string name="total_bonded_coin">Ukupno vezanih %s</string>
     <string name="bonded_amount">Vezano: %s</string>
     <string name="bond_to_node">Veži na čvor</string>
     <string name="node_address_formatted">Adresa: %s</string>
@@ -420,6 +422,9 @@
     <string name="defi_tab_staked">Uloženo</string>
     <string name="defi_tab_bonded">Vezano</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">Bond</string>
+    <string name="defi_stake">Stake</string>
+    <string name="liquidity_pool">Pool likvidnosti</string>
     <string name="deposit_form_operator_slippage_title">Proklizavanje</string>
     <string name="slippage_required_error">Proklizavanje je obavezno</string>
     <string name="slippage_invalid_error">Proklizavanje mora biti između 1 i 100</string>
@@ -455,6 +460,8 @@
     <string name="deposit_error_invalid_destination_address">Odredišna adresa nije važeća</string>
     <string name="deposit_option_add_cacao_pool">Dodaj u CACAO pool</string>
     <string name="deposit_option_remove_cacao_pool">Ukloni iz CACAO poola</string>
+    <string name="deposit_option_add_liquidity">Dodaj likvidnost</string>
+    <string name="deposit_option_remove_liquidity">Ukloni likvidnost</string>
     <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>
     <string name="referral_create_info_title">Program preporuka</string>
     <string name="referral_create_info_content">Program preporuka primjenjuje se na THORChain razmjene i provodi se po najboljoj mogućnosti. Morate registrirati THORName za korištenje Vultisig preporuke. Naknada za registraciju je 10 RUNE i 1 RUNE za svaku godinu, koja se plaća THORChain mreži.</string>
@@ -1057,4 +1064,13 @@
     <string name="add_referral_error_chars">Referalni kod smije sadržavati samo alfanumeričke znakove</string>
     <string name="add_referral_error_not_found">Referalni kod nije pronađen</string>
     <string name="add_referral_error_network">Provjera referalnog koda nije uspjela. Pokušajte ponovo.</string>
+    <string name="cacao_pool">CACAO pool</string>
+    <string name="staked_ruji_header">Uloženo RUJI</string>
+    <string name="staked_tcy_header">Uloženo TCY</string>
+    <string name="staked_ytcy_header">Uloženo yTCY</string>
+    <string name="staked_yrune_header">Uloženo yRUNE</string>
+    <string name="compounded_tcy_header">Složeno TCY</string>
+    <string name="native_asset">Izvorno</string>
+    <string name="invalid_integer_error">Nevažeći cijeli broj</string>
+    <string name="empty_lps_field">Prazno polje LP jedinice</string>
 </resources>

@@ -28,7 +28,7 @@
 
     <string name="deposit_option_bond">본딩</string>
     <string name="deposit_option_unbond">언본딩</string>
-    <string name="total_bonded_rune">총 본딩된 Rune</string>
+    <string name="total_bonded_coin">총 본딩된 %s</string>
     <string name="bonded_amount">본딩됨: %s</string>
     <string name="bond_to_node">노드에 본딩</string>
     <string name="node_address_formatted">주소: %s</string>
@@ -60,6 +60,9 @@
     <string name="defi_tab_staked">스테이킹됨</string>
     <string name="defi_tab_bonded">본딩됨</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">본딩</string>
+    <string name="defi_stake">스테이킹</string>
+    <string name="liquidity_pool">유동성 풀</string>
     <string name="circle_defi_description">USDC를 Circle 계정에 예치하고 수익을 얻으세요. Vultisig 볼트 내에서 안전하게 관리됩니다.</string>
     <string name="circle_defi_control_info">자금은 완전히 볼트의 통제 하에 있습니다. Circle 계정은 자기 수탁형이며 수익은 안전한 오프체인 트레저리를 통해 생성됩니다.</string>
     <string name="usdc_deposit_title">USDC 예치</string>
@@ -288,6 +291,7 @@
     <string name="share_vault_qr_save">저장</string>
     <string name="share_vault_qr_share">공유</string>
     <string name="deposit_form_node_address_title">노드 주소</string>
+    <string name="deposit_form_address_card_title">주소</string>
     <string name="deposit_form_provider_title">제공자 (선택사항)</string>
     <string name="deposit_form_provider_hint">제공자</string>
     <string name="deposit_form_operator_fee_title">운영자 수수료 (선택사항)</string>
@@ -370,6 +374,7 @@
     <string name="deposit_error_invalid_assets">자산이 유효하지 않습니다</string>
     <string name="deposit_error_has_not_reached_maturity">이 예치는 아직 만기에 도달하지 않았습니다</string>
     <string name="deposit_form_screen_assets">자산</string>
+    <string name="deposit_form_screen_asset_selection">자산 선택</string>
     <string name="deposit_form_screen_lpunits">LP 유닛</string>
     <string name="join_keysign_error_wrong_vault_share">동일한 볼트 공유입니다. 서명할 공유를 변경해 주세요</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">볼트 변경</string>
@@ -645,6 +650,8 @@
     <string name="deposit_error_invalid_destination_address">수신 주소가 유효하지 않습니다</string>
     <string name="deposit_option_add_cacao_pool">CACAO 풀에 추가</string>
     <string name="deposit_option_remove_cacao_pool">CACAO 풀에서 제거</string>
+    <string name="deposit_option_add_liquidity">유동성 추가</string>
+    <string name="deposit_option_remove_liquidity">유동성 제거</string>
     <string name="cacaopool_only_cacao_supported">풀 작업에는 CACAO 토큰만 지원됩니다</string>
     <string name="referral_create_info_content">추천 프로그램은 THORChain 스왑에 적용되며 최선의 노력으로 제공됩니다. Vultisig 추천을 사용하려면 THORName을 등록해야 합니다. 등록비는 10 RUNE이며 매년 1 RUNE이 THORChain 네트워크에 지불됩니다.</string>
     <string name="referral_create_info_title">추천 프로그램</string>
@@ -1101,4 +1108,13 @@
     <string name="apy_approx">APY (약)</string>
     <string name="apy_approx_hint_title">보상</string>
     <string name="apy_approx_hint_message">보상은 잔액에 자동으로 반영됩니다.</string>
+    <string name="cacao_pool">CACAO 풀</string>
+    <string name="staked_ruji_header">스테이킹된 RUJI</string>
+    <string name="staked_tcy_header">스테이킹된 TCY</string>
+    <string name="staked_ytcy_header">스테이킹된 yTCY</string>
+    <string name="staked_yrune_header">스테이킹된 yRUNE</string>
+    <string name="compounded_tcy_header">복리 TCY</string>
+    <string name="native_asset">네이티브</string>
+    <string name="invalid_integer_error">유효하지 않은 정수 금액</string>
+    <string name="empty_lps_field">LP 단위 필드가 비어 있음</string>
 </resources>

@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.api.models.calculateResourceStats
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
 import com.vultisig.wallet.data.db.dao.TokenValueDao
@@ -134,6 +135,7 @@ constructor(
     private val tokenValueDao: TokenValueDao,
     private val thorchainDeFiBalanceService: ThorchainDeFiBalanceService,
     private val circleDeFiBalanceService: CircleDeFiBalanceService,
+    private val mayaDeFiBalanceService: MayaDeFiBalanceService,
 ) : BalanceRepository {
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
@@ -189,6 +191,7 @@ constructor(
             when (coin.chain) {
                 ThorChain -> thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Ethereum -> circleDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+                MayaChain -> mayaDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 else -> error("Not Supported ${coin.chain}")
             }
 
@@ -366,6 +369,19 @@ constructor(
                             val remote =
                                 circleDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
                             defiBalanceCache.put(address, remote)
+                            remote
+                        }
+                }
+            }
+            MayaChain -> {
+                val cacheKey = "${Chain.MayaChain.id}:$vaultId:$address"
+                val mutex = lockFor(cacheKey)
+                mutex.withLock {
+                    defiBalanceCache.get(cacheKey)
+                        ?: run {
+                            val remote =
+                                mayaDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
+                            defiBalanceCache.put(cacheKey, remote)
                             remote
                         }
                 }

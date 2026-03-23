@@ -21,6 +21,8 @@ interface ActiveBondedNodeRepository {
 
     suspend fun deleteBondedNodes(vaultId: String)
 
+    suspend fun replaceBondedNodes(vaultId: String, nodes: List<BondedNodePosition>)
+
     suspend fun deletedBondedNodeByAddress(vaultId: String, nodeAddress: String)
 }
 
@@ -49,6 +51,10 @@ constructor(private val activeBondedNodeDao: ActiveBondedNodeDao) : ActiveBonded
 
     override suspend fun deleteBondedNodes(vaultId: String) {
         activeBondedNodeDao.deleteAllByVaultId(vaultId)
+    }
+
+    override suspend fun replaceBondedNodes(vaultId: String, nodes: List<BondedNodePosition>) {
+        activeBondedNodeDao.replaceAll(vaultId, nodes.toEntities(vaultId))
     }
 
     override suspend fun deletedBondedNodeByAddress(vaultId: String, nodeAddress: String) {

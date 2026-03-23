@@ -226,6 +226,7 @@
     <string name="share_vault_qr_save" >Speichern</string>
     <string name="share_vault_qr_share" >Teilen</string>
     <string name="deposit_form_node_address_title">Knotenadresse</string>
+    <string name="deposit_form_address_card_title">Adresse</string>
     <string name="deposit_form_provider_title">Anbieter (optional)</string>
     <string name="deposit_form_provider_hint">Anbieter</string>
     <string name="deposit_form_operator_fee_title">Betreibergebühr (optional)</string>
@@ -292,7 +293,8 @@
     <string name="deposit_error_invalid_lpunits">LP-Einheiten sind ungültig</string>
     <string name="deposit_error_invalid_assets">Assets ist ungültig</string>
     <string name="deposit_error_has_not_reached_maturity">Diese Einlage hat ihre Fälligkeit noch nicht erreicht.</string>
-    <string name="deposit_form_screen_assets">Vermögenswerte</string>
+    <string name="deposit_form_screen_assets">Vermögenswert</string>
+    <string name="deposit_form_screen_asset_selection">Anlagenauswahl</string>
     <string name="deposit_form_screen_lpunits">LP-Geräte</string>
     <string name="join_keysign_error_wrong_vault_share">Dieselbe Tresorfreigabe. Bitte ändern Sie die Freigabe zum Signieren</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Tresor ändern</string>
@@ -356,7 +358,7 @@
 
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
-    <string name="total_bonded_rune">Gesamt gebundene Rune</string>
+    <string name="total_bonded_coin">Gesamt gebundene %s</string>
     <string name="bonded_amount">Gebunden: %s</string>
     <string name="bond_to_node">An Knoten binden</string>
     <string name="node_address_formatted">Adresse: %s</string>
@@ -420,6 +422,9 @@
     <string name="defi_tab_staked">Gestaked</string>
     <string name="defi_tab_bonded">Gebondet</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">Bond</string>
+    <string name="defi_stake">Stake</string>
+    <string name="liquidity_pool">Liquiditätspool</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Slippage ist erforderlich</string>
     <string name="slippage_invalid_error">Slippage muss zwischen 1 und 100 liegen</string>
@@ -455,6 +460,8 @@
     <string name="deposit_error_invalid_destination_address">Die Zieladresse ist ungültig</string>
     <string name="deposit_option_add_cacao_pool">Zum CACAO-Pool hinzufügen</string>
     <string name="deposit_option_remove_cacao_pool">Aus dem CACAO-Pool entfernen</string>
+    <string name="deposit_option_add_liquidity">Liquidität hinzufügen</string>
+    <string name="deposit_option_remove_liquidity">Liquidität entfernen</string>
     <string name="cacaopool_only_cacao_supported">Nur das CACAO-Token wird für Poolvorgänge unterstützt</string>
     <string name="referral_create_info_title">Empfehlungsprogramm</string>
     <string name="referral_create_info_content">Das Empfehlungsprogramm gilt für THORChain-Swaps und erfolgt nach bestem Bemühen. Sie müssen einen THORName registrieren, um die Vultisig-Empfehlung zu nutzen. Die Registrierungsgebühr beträgt 10 RUNE und 1 RUNE für jedes Jahr, die an das THORChain-Netzwerk gezahlt wird.</string>
@@ -1056,4 +1063,13 @@
     <string name="add_referral_error_chars">Der Empfehlungscode darf nur alphanumerische Zeichen enthalten</string>
     <string name="add_referral_error_not_found">Empfehlungscode nicht gefunden</string>
     <string name="add_referral_error_network">Fehler beim Überprüfen des Empfehlungscodes. Bitte versuchen Sie es erneut.</string>
+    <string name="cacao_pool">CACAO-Pool</string>
+    <string name="staked_ruji_header">Gestaked RUJI</string>
+    <string name="staked_tcy_header">Gestaked TCY</string>
+    <string name="staked_ytcy_header">Gestaked yTCY</string>
+    <string name="staked_yrune_header">Gestaked yRUNE</string>
+    <string name="compounded_tcy_header">Reinvestiert TCY</string>
+    <string name="native_asset">Nativ</string>
+    <string name="invalid_integer_error">Ungültige Ganzzahl</string>
+    <string name="empty_lps_field">Leeres LP-Einheiten-Feld</string>
 </resources>

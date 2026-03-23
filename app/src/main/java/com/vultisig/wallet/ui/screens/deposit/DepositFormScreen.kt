@@ -56,10 +56,11 @@ internal fun DepositFormScreen(
     chainId: String,
     depositType: String? = null,
     bondAddress: String? = null,
+    poolId: String? = null,
 ) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) { model.loadData(vaultId, chainId, depositType, bondAddress) }
+    LaunchedEffect(Unit) { model.loadData(vaultId, chainId, depositType, bondAddress, poolId) }
 
     DepositFormScreen(
         state = state,
@@ -104,6 +105,7 @@ internal fun DepositFormScreen(
         onOpenSelectToken = model::selectToken,
         onLoadRujiBalances = model::onLoadRujiMergeBalances,
         onSelectSecureAsset = model::onSelectSecureAsset,
+        onSelectBondAsset = model::selectBondAsset,
     )
 }
 
@@ -151,6 +153,7 @@ internal fun DepositFormScreen(
     onOpenSelectToken: () -> Unit = {},
     onLoadRujiBalances: () -> Unit = {},
     onSelectSecureAsset: (TokenWithdrawSecureAsset) -> Unit = {},
+    onSelectBondAsset: (String) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -204,6 +207,10 @@ internal fun DepositFormScreen(
                             stringResource(R.string.deposit_option_add_cacao_pool)
                         DepositOption.RemoveCacaoPool ->
                             stringResource(R.string.deposit_option_remove_cacao_pool)
+                        DepositOption.AddLiquidity ->
+                            stringResource(R.string.deposit_option_add_liquidity)
+                        DepositOption.RemoveLiquidity ->
+                            stringResource(R.string.deposit_option_remove_liquidity)
                         DepositOption.SecuredAsset ->
                             stringResource(R.string.deposit_option_secured_assets)
                         DepositOption.WithdrawSecuredAsset ->
@@ -292,7 +299,12 @@ internal fun DepositFormScreen(
                                     DepositOption.WithdrawSecuredAsset,
                                 ) &&
                             depositOption !in
-                                arrayOf(DepositOption.AddCacaoPool, DepositOption.RemoveCacaoPool)
+                                arrayOf(
+                                    DepositOption.AddCacaoPool,
+                                    DepositOption.RemoveCacaoPool,
+                                    DepositOption.AddLiquidity,
+                                    DepositOption.RemoveLiquidity,
+                                )
 
                     val checkMayaDepositOptions =
                         depositChain == Chain.MayaChain && depositOption == DepositOption.Custom
@@ -309,6 +321,8 @@ internal fun DepositFormScreen(
 
                     val isAddingCacaoPool = depositOption == DepositOption.AddCacaoPool
                     val isRemovingCacaoPool = depositOption == DepositOption.RemoveCacaoPool
+                    val isAddingLiquidity = depositOption == DepositOption.AddLiquidity
+                    val isRemovingLiquidity = depositOption == DepositOption.RemoveLiquidity
                     val unstakableBalance =
                         state.unstakableAmount?.takeIf { it.isNotBlank() } ?: "0"
 
@@ -329,7 +343,7 @@ internal fun DepositFormScreen(
 
                     val amountHint =
                         when {
-                            isRemovingCacaoPool ->
+                            isRemovingCacaoPool || isRemovingLiquidity ->
                                 stringResource(R.string.deposit_form_unstake_percentage_hint)
                             else -> stringResource(R.string.send_amount_currency_hint)
                         }
@@ -337,6 +351,8 @@ internal fun DepositFormScreen(
                     if (
                         isAddingCacaoPool ||
                             isRemovingCacaoPool ||
+                            isAddingLiquidity ||
+                            isRemovingLiquidity ||
                             (depositOption != DepositOption.Leave &&
                                 (depositOption !in
                                     listOf(
@@ -366,6 +382,8 @@ internal fun DepositFormScreen(
                                 DepositOption.Custom,
                                 DepositOption.RemoveCacaoPool,
                                 DepositOption.AddCacaoPool,
+                                DepositOption.AddLiquidity,
+                                DepositOption.RemoveLiquidity,
                                 DepositOption.SecuredAsset,
                                 DepositOption.WithdrawSecuredAsset,
                             )
@@ -397,14 +415,23 @@ internal fun DepositFormScreen(
                         }
 
                         if (depositChain == Chain.MayaChain) {
-                            FormTextFieldCard(
-                                title = stringResource(R.string.deposit_form_screen_assets),
-                                hint = stringResource(R.string.deposit_form_enter_asset_hint),
-                                keyboardType = KeyboardType.Text,
-                                textFieldState = assetsFieldState,
-                                onLostFocus = onAssetsLostFocus,
-                                error = state.assetsError,
-                            )
+                            if (state.bondableAssets.isNotEmpty()) {
+                                FormSelection(
+                                    selected = state.selectedBondAsset,
+                                    options = state.bondableAssets,
+                                    onSelectOption = onSelectBondAsset,
+                                    mapTypeToString = { it },
+                                )
+                            } else {
+                                FormTextFieldCard(
+                                    title = stringResource(R.string.deposit_form_screen_assets),
+                                    hint = stringResource(R.string.deposit_form_enter_asset_hint),
+                                    keyboardType = KeyboardType.Text,
+                                    textFieldState = assetsFieldState,
+                                    onLostFocus = onAssetsLostFocus,
+                                    error = state.assetsError,
+                                )
+                            }
 
                             FormTextFieldCard(
                                 title = stringResource(R.string.deposit_form_screen_lpunits),

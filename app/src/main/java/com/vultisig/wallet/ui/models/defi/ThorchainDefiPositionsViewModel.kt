@@ -43,6 +43,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.defi.thorchainSupportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
+import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -102,13 +103,15 @@ internal data class LpPositionUiModel(
     val icon: Int,
     val apr: String?,
     val position: String,
+    val positionKey: String = "",
 )
 
 internal data class StakePositionUiModel(
     val coin: Coin,
-    val stakeAssetHeader: String,
+    val stakeAssetHeader: UiText,
     val stakeAmount: BigDecimal = BigDecimal.ZERO,
     val stakedAmountDisplay: String,
+    val stakedFiatDisplay: String = "",
     val apy: String?,
     val isLoading: Boolean = false,
     val supportsMint: Boolean = false,
@@ -510,7 +513,7 @@ constructor(
                     val stakePosition =
                         StakePositionUiModel(
                             coin = details.coin,
-                            stakeAssetHeader = "Staked $RUJI_SYMBOL",
+                            stakeAssetHeader = UiText.StringResource(R.string.staked_ruji_header),
                             stakeAmount = stakedAmount,
                             stakedAmountDisplay = formattedAmount,
                             apy = details.apr?.formatPercentage(),
@@ -560,7 +563,7 @@ constructor(
                     val stakePosition =
                         StakePositionUiModel(
                             coin = position.coin,
-                            stakeAssetHeader = "Staked TCY",
+                            stakeAssetHeader = UiText.StringResource(R.string.staked_tcy_header),
                             stakedAmountDisplay = formattedAmount,
                             stakeAmount = stakedAmount,
                             apy = position.apr?.formatPercentage(),
@@ -640,7 +643,8 @@ constructor(
                                 val position =
                                     StakePositionUiModel(
                                         coin = defaultPosition.coin,
-                                        stakeAssetHeader = "$header ${coin.ticker}",
+                                        stakeAssetHeader =
+                                            UiText.DynamicString("$header ${coin.ticker}"),
                                         stakedAmountDisplay =
                                             "${stakeAmount.toPlainString()} ${coin.ticker}",
                                         stakeAmount = stakeAmount,
@@ -960,7 +964,7 @@ constructor(
             return listOf(
                 StakePositionUiModel(
                     coin = rujiCoin,
-                    stakeAssetHeader = "Staked ${rujiCoin.ticker}",
+                    stakeAssetHeader = UiText.StringResource(R.string.staked_ruji_header),
                     stakedAmountDisplay = rujiCoin.ticker,
                     apy = null,
                     canWithdraw = false,
@@ -972,7 +976,7 @@ constructor(
                 ),
                 StakePositionUiModel(
                     coin = tcy,
-                    stakeAssetHeader = "Staked ${tcy.ticker}",
+                    stakeAssetHeader = UiText.StringResource(R.string.staked_tcy_header),
                     stakedAmountDisplay = tcy.ticker,
                     apy = null,
                     canWithdraw = false,
@@ -984,7 +988,7 @@ constructor(
                 ),
                 StakePositionUiModel(
                     coin = stcy,
-                    stakeAssetHeader = "Compounded TCY",
+                    stakeAssetHeader = UiText.StringResource(R.string.compounded_tcy_header),
                     stakedAmountDisplay = stcy.ticker,
                     apy = null,
                     canWithdraw = false,
@@ -996,7 +1000,7 @@ constructor(
                 ),
                 StakePositionUiModel(
                     coin = ytcy,
-                    stakeAssetHeader = "Staked ${ytcy.ticker}",
+                    stakeAssetHeader = UiText.StringResource(R.string.staked_ytcy_header),
                     stakedAmountDisplay = ytcy.ticker,
                     apy = null,
                     canWithdraw = false,
@@ -1008,7 +1012,7 @@ constructor(
                 ),
                 StakePositionUiModel(
                     coin = yrune,
-                    stakeAssetHeader = "Staked ${yrune.ticker}",
+                    stakeAssetHeader = UiText.StringResource(R.string.staked_yrune_header),
                     stakedAmountDisplay = yrune.ticker,
                     apy = null,
                     canWithdraw = false,

@@ -286,6 +286,7 @@ val Chain.isDeFiSupported: Boolean
     get() =
         when (this) {
             Chain.ThorChain,
+            Chain.MayaChain,
             Chain.Ethereum -> true
             else -> false
         }
