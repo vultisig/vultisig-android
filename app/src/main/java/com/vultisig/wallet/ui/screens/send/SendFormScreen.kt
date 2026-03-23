@@ -70,7 +70,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -1187,19 +1186,20 @@ private fun FoldableAssetWidget(
         Column(
             modifier = Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
         ) {
-            Box(modifier = Modifier.testTag("SendFormScreen.chainSelector")) {
-                ChainSelector(
-                    title = stringResource(R.string.send_from_address),
-                    // TODO selectedChain should not be nullable
-                    //  or default value should be something else
-                    chain = state.selectedCoin?.model?.address?.chain ?: Chain.ThorChain,
-                    onClick = onSelectNetworkRequest,
-                    onDragCancel = onNetworkDragCancel,
-                    onDrag = onNetworkDrag,
-                    onDragStart = onNetworkDragStart,
-                    onDragEnd = onNetworkDragEnd,
-                    onLongPressStarted = onNetworkLongPressStarted,
-                )
+            val chain = state.selectedCoin?.model?.address?.chain
+            if (chain != null) {
+                Box(modifier = Modifier.testTag("SendFormScreen.chainSelector")) {
+                    ChainSelector(
+                        title = stringResource(R.string.send_from_address),
+                        chain = chain,
+                        onClick = onSelectNetworkRequest,
+                        onDragCancel = onNetworkDragCancel,
+                        onDrag = onNetworkDrag,
+                        onDragStart = onNetworkDragStart,
+                        onDragEnd = onNetworkDragEnd,
+                        onLongPressStarted = onNetworkLongPressStarted,
+                    )
+                }
             }
 
             UiSpacer(12.dp)
