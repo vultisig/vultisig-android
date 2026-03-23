@@ -61,7 +61,7 @@ import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGroupUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
 import com.vultisig.wallet.ui.components.v2.utils.roundToPx
-import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
+import com.vultisig.wallet.ui.screens.referral.SetBackgroundBanner
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
@@ -86,7 +86,7 @@ internal fun BalanceBanner(
                     shape = RoundedCornerShape(16.dp),
                 )
     ) {
-        SetBackgoundBanner(backgroundImageResId = image)
+        SetBackgroundBanner(backgroundImageResId = image)
 
         Column(modifier = Modifier.padding(start = 16.dp, top = 25.dp)) {
             Text(
