@@ -27,6 +27,11 @@ class UtxoFeeService @Inject constructor(private val blockChairApi: BlockChairAp
                 Chain.Zcash -> "1000".toBigInteger()
                 Chain.Cardano -> "180000".toBigInteger()
 
+                Chain.Dogecoin -> {
+                    val gas = blockChairApi.getBlockChairStats(chain)
+                    gas.multiply(BigInteger("5")).divide(BigInteger("20"))
+                }
+
                 else -> {
                     val gas = blockChairApi.getBlockChairStats(chain)
                     gas.multiply(BigInteger("5")).divide(BigInteger("2"))
