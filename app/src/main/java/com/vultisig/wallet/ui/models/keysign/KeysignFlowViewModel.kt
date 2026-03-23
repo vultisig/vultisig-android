@@ -206,36 +206,40 @@ constructor(
     private var resendCooldownJob: Job? = null
     private var lastNotifiedQrData: String = ""
 
+    private var _keysignViewModel: KeysignViewModel? = null
+
     val keysignViewModel: KeysignViewModel
-        get() =
-            KeysignViewModel(
-                vault = _currentVault!!,
-                keysignCommittee = selection.value!!,
-                serverUrl = _serverAddress,
-                sessionId = _sessionID,
-                encryptionKeyHex = _encryptionKeyHex,
-                messagesToSign = messagesToSign,
-                keyType = tssKeysignType,
-                keysignPayload = _keysignPayload,
-                customMessagePayload = customMessagePayload,
-                thorChainApi = thorChainApi,
-                broadcastTx = broadcastTx,
-                evmApiFactory = evmApiFactory,
-                explorerLinkRepository = explorerLinkRepository,
-                sessionApi = sessionApi,
-                navigator = navigator,
-                encryption = encryption,
-                featureFlagApi = featureFlagApi,
-                transactionTypeUiModel = transactionTypeUiModel,
-                pullTssMessages = pullTssMessages,
-                isInitiatingDevice = true,
-                addressBookRepository = addressBookRepository,
-                transactionStatusServiceManager = transactionStatusServiceManager,
-                txStatusConfigurationProvider = txStatusConfigurationProvider,
-                vaultRepository = vaultRepository,
-                transactionHistoryData = transactionHistoryData.value,
-                transactionHistoryRepository = transactionHistoryRepository,
-            )
+        get() = _keysignViewModel ?: createKeysignViewModel().also { _keysignViewModel = it }
+
+    private fun createKeysignViewModel(): KeysignViewModel =
+        KeysignViewModel(
+            vault = _currentVault!!,
+            keysignCommittee = selection.value!!,
+            serverUrl = _serverAddress,
+            sessionId = _sessionID,
+            encryptionKeyHex = _encryptionKeyHex,
+            messagesToSign = messagesToSign,
+            keyType = tssKeysignType,
+            keysignPayload = _keysignPayload,
+            customMessagePayload = customMessagePayload,
+            thorChainApi = thorChainApi,
+            broadcastTx = broadcastTx,
+            evmApiFactory = evmApiFactory,
+            explorerLinkRepository = explorerLinkRepository,
+            sessionApi = sessionApi,
+            navigator = navigator,
+            encryption = encryption,
+            featureFlagApi = featureFlagApi,
+            transactionTypeUiModel = transactionTypeUiModel,
+            pullTssMessages = pullTssMessages,
+            isInitiatingDevice = true,
+            addressBookRepository = addressBookRepository,
+            transactionStatusServiceManager = transactionStatusServiceManager,
+            txStatusConfigurationProvider = txStatusConfigurationProvider,
+            vaultRepository = vaultRepository,
+            transactionHistoryData = transactionHistoryData.value,
+            transactionHistoryRepository = transactionHistoryRepository,
+        )
 
     val uiState = MutableStateFlow(KeysignFlowUiState())
 
@@ -256,6 +260,7 @@ constructor(
         context: Context,
         txType: Route.Keysign.Keysign.TxType,
     ) {
+        _keysignViewModel = null
         try {
             when (txType) {
                 Send -> shareViewModel.loadTransaction(transactionId)
