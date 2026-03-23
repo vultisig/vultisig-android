@@ -470,20 +470,20 @@ constructor(
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun toggleBalanceVisibility() {
+        val vaultId = vaultId ?: return
         val isBalanceValueVisible = !uiState.value.isBalanceValueVisible
         viewModelScope.launch {
             uiState.update { it.copy(isBalanceValueVisible = isBalanceValueVisible) }
-            balanceVisibilityRepository.setVisibility(vaultId!!, isBalanceValueVisible)
+            balanceVisibilityRepository.setVisibility(vaultId, isBalanceValueVisible)
         }
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun backupVault() {
+        val vaultId = vaultId ?: return
         viewModelScope.launch {
             dismissBackupReminder()
-            navigator.route(Route.BackupPasswordRequest(vaultId!!))
+            navigator.route(Route.BackupPasswordRequest(vaultId))
         }
     }
 
