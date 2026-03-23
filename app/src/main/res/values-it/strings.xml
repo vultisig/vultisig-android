@@ -106,6 +106,7 @@
     <string name="verify_transaction_consent_address">Sto inviando all\'indirizzo corretto</string>
     <string name="verify_transaction_consent_amount">La quantità è corretta</string>
     <string name="transaction_done_title">Fatto</string>
+    <string name="transaction_done_overview">Panoramica</string>
     <string name="transaction_done_complete">Completo</string>
     <string name="transaction_done_form_title">Transazione</string>
     <string name="import_file_screen_title">Importa</string>

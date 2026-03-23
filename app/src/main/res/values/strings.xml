@@ -188,6 +188,7 @@
     <string name="camera_permission_denied">Camera permission not granted. Please, enable it in the settings.</string>
     <string name="join_keysign_discovering_session_id">Discovering Session ID</string>
     <string name="transaction_done_title">Done</string>
+    <string name="transaction_done_overview">Overview</string>
     <string name="transaction_done_complete">Complete</string>
     <string name="transaction_done_form_title">Transaction</string>
     <string name="vault_list_vaults_list">Vaults</string>

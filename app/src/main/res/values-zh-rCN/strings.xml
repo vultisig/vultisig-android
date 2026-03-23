@@ -218,6 +218,7 @@
 
     <!-- Transaction Done -->
     <string name="transaction_done_title">完成</string>
+    <string name="transaction_done_overview">概览</string>
     <string name="transaction_done_complete">完成</string>
     <string name="transaction_done_form_title">交易</string>
 

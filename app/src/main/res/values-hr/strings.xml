@@ -106,6 +106,7 @@
     <string name="verify_transaction_consent_address">Šaljem na pravu adresu</string>
     <string name="verify_transaction_consent_amount">Iznos je točan</string>
     <string name="transaction_done_title">Gotovo</string>
+    <string name="transaction_done_overview">Pregled</string>
     <string name="transaction_done_complete">Dovršeno</string>
     <string name="transaction_done_form_title">Transakcija</string>
     <string name="import_file_screen_title">Uvoz</string>

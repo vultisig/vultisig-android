@@ -131,6 +131,7 @@
     <string name="camera_permission_denied">Разрешение на камеру не предоставлено. Пожалуйста, включите его в настройках.</string>
     <string name="join_keysign_discovering_session_id">Обнаружение ID сессии</string>
     <string name="transaction_done_title">Готово</string>
+    <string name="transaction_done_overview">Обзор</string>
     <string name="transaction_done_complete">Завершено</string>
     <string name="transaction_done_form_title">Транзакция</string>
     <string name="vault_list_vaults_list">Хранилища</string>

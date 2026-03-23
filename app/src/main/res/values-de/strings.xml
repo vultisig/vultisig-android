@@ -110,6 +110,7 @@
     <string name="verify_transaction_consent_address">Ich sende an die richtige Adresse</string>
     <string name="verify_transaction_consent_amount">Die Menge ist korrekt</string>
     <string name="transaction_done_title">Fertig</string>
+    <string name="transaction_done_overview">Übersicht</string>
     <string name="transaction_done_complete">Fortfahren</string>
     <string name="transaction_done_form_title">Transaktion</string>
     <string name="import_file_screen_title">Importieren</string>
