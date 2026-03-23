@@ -26,9 +26,7 @@ internal fun ScaffoldWithExpandableTopBar(
     backgroundColor: Color = Theme.v2.colors.backgrounds.primary,
     topBarExpandedContent: @Composable BoxScope.() -> Unit,
     topBarCollapsedContent: (@Composable BoxScope.() -> Unit)? = null,
-    scrollBehavior: TopAppBarScrollBehavior =
-        if (topBarCollapsedContent == null) TopAppBarDefaults.pinnedScrollBehavior()
-        else TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
+    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
     bottomBarContent: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
     isRefreshing: Boolean = false,
@@ -40,16 +38,12 @@ internal fun ScaffoldWithExpandableTopBar(
             modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             containerColor = backgroundColor,
             topBar = {
-                if (topBarCollapsedContent != null) {
-                    VsExpandableTopBar(
-                        expandedContent = topBarExpandedContent,
-                        collapsedContent = topBarCollapsedContent,
-                        scrollBehavior = scrollBehavior,
-                        backgroundColor = backgroundColor,
-                    )
-                } else {
-                    Box(content = topBarExpandedContent)
-                }
+                VsExpandableTopBar(
+                    expandedContent = topBarExpandedContent,
+                    collapsedContent = topBarCollapsedContent ?: {},
+                    scrollBehavior = scrollBehavior,
+                    backgroundColor = backgroundColor,
+                )
             },
             bottomBar = bottomBarContent,
             content = content,
