@@ -9,12 +9,17 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.GasFeeParams
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.getPubKeyByChain
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -109,6 +114,7 @@ constructor(
     private val feeServiceComposite: FeeServiceComposite,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCase,
     private val tokenRepository: TokenRepository,
+    private val blockChainSpecificRepository: BlockChainSpecificRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VerifySend>()
@@ -152,16 +158,57 @@ constructor(
             )
 
         try {
-            val fees =
-                withContext(Dispatchers.IO) {
-                    feeServiceComposite.calculateFees(blockchainTransaction)
+            val feeAmount =
+                if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                    withContext(Dispatchers.IO) {
+                        val fees = feeServiceComposite.calculateFees(blockchainTransaction)
+                        val nativeCoin = tokenRepository.getNativeToken(chain.id)
+                        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+
+                        val specific =
+                            blockChainSpecificRepository.getSpecific(
+                                chain = chain,
+                                address = tx.token.address,
+                                token = tx.token,
+                                gasFee = gasFee,
+                                isSwap = false,
+                                isMaxAmountEnabled = false,
+                                isDeposit = false,
+                                dstAddress = tx.dstAddress,
+                                tokenAmountValue = tx.tokenValue.value,
+                                memo = tx.memo,
+                            )
+
+                        val keysignPayload =
+                            KeysignPayload(
+                                coin = tx.token,
+                                toAddress = tx.dstAddress,
+                                toAmount = tx.tokenValue.value,
+                                blockChainSpecific = specific.blockChainSpecific,
+                                memo = tx.memo,
+                                vaultPublicKeyECDSA = vault.pubKeyECDSA,
+                                vaultLocalPartyID = vault.localPartyID,
+                                utxos = specific.utxos,
+                                libType = vault.libType,
+                                wasmExecuteContractPayload = null,
+                            )
+
+                        val utxoHelper = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
+                        val plan = utxoHelper.getBitcoinTransactionPlan(keysignPayload)
+                        BigInteger.valueOf(plan.fee)
+                    }
+                } else {
+                    withContext(Dispatchers.IO) {
+                        feeServiceComposite.calculateFees(blockchainTransaction).amount
+                    }
                 }
+
             val nativeCoin =
                 withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
             val fromGas =
                 GasFeeParams(
                     gasLimit = BigInteger.ONE,
-                    gasFee = TokenValue(value = fees.amount, token = nativeCoin),
+                    gasFee = TokenValue(value = feeAmount, token = nativeCoin),
                     selectedToken = tx.token,
                 )
             val uiFeeModel = gasFeeToEstimate(fromGas)
