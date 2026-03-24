@@ -136,7 +136,7 @@ private fun AddressBookContent(
 
                             Text(
                                 text = stringResource(R.string.address_book_empty_description),
-                                style = Theme.brockmann.button.medium.small,
+                                style = Theme.brockmann.button.medium.regular,
                                 color = Theme.v2.colors.text.tertiary,
                                 textAlign = TextAlign.Center,
                             )

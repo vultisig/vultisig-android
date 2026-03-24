@@ -135,7 +135,7 @@ internal fun TransactionDetailBottomSheet(
                     ) {
                         Text(
                             text = stringResource(R.string.transaction_history_view_on_explorer),
-                            style = Theme.brockmann.button.medium.small,
+                            style = Theme.brockmann.button.medium.regular,
                             color = Theme.v2.colors.variables.textPrimary,
                         )
                     }

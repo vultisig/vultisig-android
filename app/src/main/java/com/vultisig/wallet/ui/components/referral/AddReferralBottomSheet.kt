@@ -117,7 +117,7 @@ private fun AddReferralBottomSheetContent(
 
                 Text(
                     text = stringResource(R.string.add_referral_sheet_apply),
-                    style = Theme.brockmann.button.semibold.small,
+                    style = Theme.brockmann.button.semibold.regular,
                     color =
                         if (state.isLoading || textFieldState.text.isEmpty())
                             Theme.v2.colors.text.button.disabled
