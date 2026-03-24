@@ -330,9 +330,11 @@ class ThorChainHelper(
             else getTicker(keysignPayload.coin)
         val assetTicker = getTicker(keysignPayload.coin)
         val chainName =
-            if (isSecured && memo?.contains("SECURE-:") == true) {
+            if (isSecured) {
                 keysignPayload.coin.securedAssetChain()
-            } else keysignPayload.coin.getChainName()
+            } else {
+                keysignPayload.coin.getChainName()
+            }
 
         val coin =
             Cosmos.THORChainCoin.newBuilder()

@@ -63,20 +63,15 @@ fun Coin.getNotNativeTicker(): String {
 fun Coin.isSecuredAsset(): Boolean {
     if (chain != Chain.ThorChain) return false
     if (isNativeToken) return false
-    if (contractAddress.startsWith("x/")) return false
-    return contractAddress.contains("-")
+    if (contractAddress.startsWith("x/", ignoreCase = true)) return false
+    val parts = contractAddress.split("-", limit = 2)
+    return parts.size == 2 && parts[0].isNotBlank() && parts[1].isNotBlank()
 }
 
 fun Coin.securedAssetChain(): String {
-    val chain = contractAddress.substringBefore("-")
-    return chain.ifEmpty { "THOR" }.uppercase()
+    return contractAddress.substringBefore("-").uppercase()
 }
 
-/**
- * Returns the symbol from the secured asset denom (e.g., "eth-usdc-0xa0b..." →
- * "USDC-0xA0B86991...")
- */
 fun Coin.securedAssetSymbol(): String {
-    val symbol = contractAddress.substringAfter("-")
-    return symbol.ifEmpty { ticker }.uppercase()
+    return contractAddress.substringAfter("-").uppercase()
 }
