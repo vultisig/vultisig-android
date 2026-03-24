@@ -478,7 +478,9 @@ constructor(
                     positionKey = pool.positionKey,
                 )
             }
-        updateModel { it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholderPositions)) }
+        updateModel {
+            it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholderPositions))
+        }
 
         loadLpJob?.cancel()
         loadLpJob =
@@ -492,7 +494,9 @@ constructor(
                 if (cacaoCoin == null) {
                     Timber.e("Vault does not have CACAO coin for LP positions")
                     updateModel {
-                        it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholderPositions))
+                        it.copy(
+                            lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
+                        )
                     }
                     return@safeLaunch
                 }
