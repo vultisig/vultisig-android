@@ -171,10 +171,6 @@ constructor(
             state.update { it.copy(error = null) }
 
             try {
-                if (isInitiatingDevice) {
-                    startKeygen()
-                }
-
                 when (libType) {
                     SigningLibType.DKLS -> startKeygenDkls()
                     SigningLibType.GG20 -> startKeygenGG20()
@@ -820,11 +816,6 @@ constructor(
                         ),
             )
         }
-    }
-
-    // TODO peer discovery might be a better place for that method
-    private suspend fun startKeygen() {
-        sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
     }
 
     override fun onCleared() {

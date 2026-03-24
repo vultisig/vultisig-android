@@ -261,6 +261,8 @@ constructor(
         discoverParticipantsJob?.cancel()
         viewModelScope.launch {
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
+            val keygenCommittee = listOf(localPartyId) + state.value.selectedDevices
+            sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
 
             navigator.route(
                 Route.Keygen.Generating(
@@ -270,7 +272,7 @@ constructor(
                     localPartyId = localPartyId,
                     vaultName = vaultName,
                     hexChainCode = hexChainCode,
-                    keygenCommittee = listOf(localPartyId) + state.value.selectedDevices,
+                    keygenCommittee = keygenCommittee,
                     encryptionKeyHex = encryptionKeyHex,
                     isInitiatingDevice = true,
                     libType =
