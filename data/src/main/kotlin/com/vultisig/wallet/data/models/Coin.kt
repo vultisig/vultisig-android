@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.models
 
-import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
 import java.math.BigDecimal
 import wallet.core.jni.CoinType
 
@@ -62,6 +61,19 @@ fun Coin.getNotNativeTicker(): String {
 }
 
 fun Coin.isSecuredAsset(): Boolean {
-    return SECURE_ASSETS_TICKERS.contains(ticker.uppercase()) &&
-        (isNativeToken || contractAddress == "${ticker.lowercase()}-${ticker.lowercase()}")
+    if (chain != Chain.ThorChain) return false
+    if (isNativeToken) return false
+    if (contractAddress.startsWith("x/")) return false
+    return contractAddress.contains("-")
+}
+
+fun Coin.securedAssetChain(): String {
+    val chain = contractAddress.substringBefore("-")
+    return chain.ifEmpty { "THOR" }.uppercase()
+}
+
+/** Returns the symbol from the secured asset denom (e.g., "eth-usdc-0xa0b..." → "USDC-0xA0B86991...") */
+fun Coin.securedAssetSymbol(): String {
+    val symbol = contractAddress.substringAfter("-")
+    return symbol.ifEmpty { ticker }.uppercase()
 }

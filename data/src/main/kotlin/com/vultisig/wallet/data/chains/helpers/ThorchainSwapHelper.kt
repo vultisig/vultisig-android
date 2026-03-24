@@ -5,6 +5,8 @@ import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.isSecuredAsset
+import com.vultisig.wallet.data.models.securedAssetChain
+import com.vultisig.wallet.data.models.securedAssetSymbol
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -42,7 +44,7 @@ class ThorchainSwapHelper {
         val isSecured = keysignPayload.coin.isSecuredAsset()
         val chainName =
             if (isSecured) {
-                keysignPayload.coin.ticker
+                keysignPayload.coin.securedAssetChain()
             } else keysignPayload.coin.getChainName()
 
         val coin =
@@ -50,7 +52,7 @@ class ThorchainSwapHelper {
                 .setAsset(
                     Cosmos.THORChainAsset.newBuilder()
                         .setChain(chainName)
-                        .setSymbol(getTicker(keysignPayload.coin))
+                        .setSymbol(if (isSecured) keysignPayload.coin.securedAssetSymbol() else getTicker(keysignPayload.coin))
                         .setTicker(getTicker(keysignPayload.coin))
                         .setSecured(isSecured)
                         .setSynth(false)
