@@ -6,21 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.blockchain.FeeServiceComposite
-import com.vultisig.wallet.data.blockchain.model.Transfer
-import com.vultisig.wallet.data.blockchain.model.VaultData
-import com.vultisig.wallet.data.chains.helpers.UtxoHelper
-import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.GasFeeParams
-import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
-import com.vultisig.wallet.data.models.getPubKeyByChain
-import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
-import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -28,7 +16,6 @@ import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
-import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -42,7 +29,6 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -111,10 +97,6 @@ constructor(
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
     private val addressBookRepository: AddressBookRepository,
-    private val feeServiceComposite: FeeServiceComposite,
-    private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCase,
-    private val tokenRepository: TokenRepository,
-    private val blockChainSpecificRepository: BlockChainSpecificRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VerifySend>()
@@ -136,94 +118,6 @@ constructor(
         loadFastSign()
         loadTransaction()
         loadPassword()
-    }
-
-    private suspend fun calculateFees(transactionUiModel: TransactionDetailsUiModel) {
-        val tx = transaction ?: return
-        val chain = tx.token.chain
-        val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return
-
-        val blockchainTransaction =
-            Transfer(
-                coin = tx.token,
-                vault =
-                    VaultData(
-                        vaultHexChainCode = vault.hexChainCode,
-                        vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                    ),
-                amount = tx.tokenValue.value,
-                to = tx.dstAddress,
-                memo = tx.memo,
-                isMax = false,
-            )
-
-        try {
-            val feeAmount =
-                if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                    withContext(Dispatchers.IO) {
-                        val fees = feeServiceComposite.calculateFees(blockchainTransaction)
-                        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-                        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
-
-                        val specific =
-                            blockChainSpecificRepository.getSpecific(
-                                chain = chain,
-                                address = tx.token.address,
-                                token = tx.token,
-                                gasFee = gasFee,
-                                isSwap = false,
-                                isMaxAmountEnabled = false,
-                                isDeposit = false,
-                                dstAddress = tx.dstAddress,
-                                tokenAmountValue = tx.tokenValue.value,
-                                memo = tx.memo,
-                            )
-
-                        val keysignPayload =
-                            KeysignPayload(
-                                coin = tx.token,
-                                toAddress = tx.dstAddress,
-                                toAmount = tx.tokenValue.value,
-                                blockChainSpecific = specific.blockChainSpecific,
-                                memo = tx.memo,
-                                vaultPublicKeyECDSA = vault.pubKeyECDSA,
-                                vaultLocalPartyID = vault.localPartyID,
-                                utxos = specific.utxos,
-                                libType = vault.libType,
-                                wasmExecuteContractPayload = null,
-                            )
-
-                        val utxoHelper = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
-                        val plan = utxoHelper.getBitcoinTransactionPlan(keysignPayload)
-                        BigInteger.valueOf(plan.fee)
-                    }
-                } else {
-                    withContext(Dispatchers.IO) {
-                        feeServiceComposite.calculateFees(blockchainTransaction).amount
-                    }
-                }
-
-            val nativeCoin =
-                withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-            val fromGas =
-                GasFeeParams(
-                    gasLimit = BigInteger.ONE,
-                    gasFee = TokenValue(value = feeAmount, token = nativeCoin),
-                    selectedToken = tx.token,
-                )
-            val uiFeeModel = gasFeeToEstimate(fromGas)
-            val updateTx =
-                transactionUiModel.copy(
-                    networkFeeTokenValue = uiFeeModel.formattedTokenValue,
-                    networkFeeFiatValue = uiFeeModel.formattedFiatValue,
-                )
-
-            uiState.update { it.copy(isLoadingFees = false, transaction = updateTx) }
-        } catch (t: Throwable) {
-            Timber.e(t, "Error calculating fees")
-
-            uiState.update { it.copy(isLoadingFees = false) }
-        }
     }
 
     fun checkConsentAddress(checked: Boolean) {
@@ -370,9 +264,8 @@ constructor(
                     dstAddressBookTitle = dstAddressBookTitle,
                 )
 
-            uiState.update { it.copy(transaction = namedUiModel, isLoadingFees = true) }
+            uiState.update { it.copy(transaction = namedUiModel) }
 
-            calculateFees(namedUiModel)
             scanTransaction()
         }
     }
