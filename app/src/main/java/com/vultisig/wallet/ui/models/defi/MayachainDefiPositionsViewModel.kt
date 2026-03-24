@@ -139,7 +139,7 @@ constructor(
     private val _totalBondedRaw = MutableStateFlow(BigInteger.ZERO)
     private val _totalStakingRaw = MutableStateFlow(BigInteger.ZERO)
 
-    private var observTotalRowJob: Job? = null
+    private var observeTotalRawJob: Job? = null
     private var savedPositionsJob: Job? = null
     private var lpDialogJob: Job? = null
     private var loadBondedJob: Job? = null
@@ -165,8 +165,8 @@ constructor(
         savedPositionsJob = loadSavedPositions()
         lpDialogJob?.cancel()
         lpDialogJob = loadLpPositionsForDialog()
-        observTotalRowJob?.cancel()
-        observTotalRowJob = observeTotalRaw()
+        observeTotalRawJob?.cancel()
+        observeTotalRawJob = observeTotalRaw()
     }
 
     private fun observeTotalRaw(): Job =
