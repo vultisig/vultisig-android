@@ -505,9 +505,9 @@ constructor(
 
         val placeholderPositions =
             selectedPools.map { pool ->
-                val assetTicker = pool.ticker.substringBefore("/").substringBefore("-")
+                val assetTicker = pool.ticker.substringAfter("/")
                 LpPositionUiModel(
-                    titleLp = pool.ticker,
+                    titleLp = "${pool.ticker} Pool",
                     totalPriceLp = MayachainDefiPositionsUiModel.DEFAULT_ZERO_BALANCE,
                     icon = (pool.logo as? Int) ?: R.drawable.cacao,
                     apr = null,
@@ -581,7 +581,6 @@ constructor(
 
                 val lpPositions =
                     selectedPools.map { pool ->
-                        val assetTicker = pool.ticker.substringBefore("/")
                         val memberPool = memberPoolMap[pool.positionKey]
                         val stats = poolStatsMap[pool.positionKey]
 
@@ -629,7 +628,7 @@ constructor(
                         val apr = stats?.annualPercentageRate?.toDoubleOrNull()
 
                         LpPositionUiModel(
-                            titleLp = pool.ticker,
+                            titleLp = "${pool.ticker} Pool",
                             totalPriceLp = currencyFormat.format(totalFiatValue.value),
                             icon = (pool.logo as? Int) ?: R.drawable.cacao,
                             apr = apr?.formatPercentage(),
@@ -748,7 +747,7 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
         else mayaPoolChainPrefixToChain(asset.substringBefore("."))?.logo ?: R.drawable.cacao
     return PositionUiModelDialog(
         logo = logo,
-        ticker = "$assetTicker/CACAO",
+        ticker = "CACAO/${assetTicker.substringBefore("-")}",
         isSelected = false,
         positionKey = asset,
     )
