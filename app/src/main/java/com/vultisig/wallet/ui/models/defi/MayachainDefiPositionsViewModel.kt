@@ -600,7 +600,6 @@ private fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
     }
 
 private fun formatCacaoReward(reward: Double): String {
-    22
     val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
     val cacaoAmount =
         rewardBase.toValue(Coins.MayaChain.CACAO.decimal).setScale(4, RoundingMode.DOWN)
