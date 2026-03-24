@@ -119,7 +119,7 @@ private fun StartScreen(
 
                             Text(
                                 text = stringResource(R.string.home_screen_scan_qr_code),
-                                style = Theme.brockmann.button.medium.regular,
+                                style = Theme.brockmann.button.medium.medium,
                                 color = Theme.v2.colors.text.button.primary,
                             )
                         }
@@ -146,7 +146,7 @@ private fun StartScreen(
 
                             Text(
                                 text = stringResource(R.string.import_seedphrase_import_button),
-                                style = Theme.brockmann.button.medium.regular,
+                                style = Theme.brockmann.button.medium.medium,
                                 color = Theme.v2.colors.variables.textPrimary,
                                 modifier = Modifier.alignByBaseline(),
                             )

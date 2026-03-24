@@ -70,7 +70,7 @@ internal fun CheckForUpdateScreen(
                 text =
                     if (model.isUpdateAvailable) stringResource(R.string.update_available)
                     else stringResource(R.string.app_up_to_date),
-                style = Theme.brockmann.button.medium.medium,
+                style = Theme.brockmann.button.medium.regular,
                 color = Theme.v2.colors.neutrals.n50,
             )
 
