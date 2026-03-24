@@ -511,7 +511,7 @@ constructor(
                     totalPriceLp = MayachainDefiPositionsUiModel.DEFAULT_ZERO_BALANCE,
                     icon = (pool.logo as? Int) ?: R.drawable.cacao,
                     apr = null,
-                    position = "0 $assetTicker / 0 CACAO",
+                    position = "0 CACAO + 0 $assetTicker",
                     positionKey = pool.positionKey,
                 )
             }
@@ -634,7 +634,7 @@ constructor(
                             icon = (pool.logo as? Int) ?: R.drawable.cacao,
                             apr = apr?.formatPercentage(),
                             position =
-                                "${assetAmount.setScale(4, RoundingMode.DOWN).toPlainString()} $assetTicker / ${runeAmount.setScale(4, RoundingMode.DOWN).toPlainString()} CACAO",
+                                "${runeAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetTicker",
                             positionKey = pool.positionKey,
                         )
                     }
