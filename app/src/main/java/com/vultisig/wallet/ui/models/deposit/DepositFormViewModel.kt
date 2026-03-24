@@ -48,6 +48,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
+import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -172,6 +173,7 @@ constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val thorChainApi: ThorChainApi,
     private val mayaChainApi: MayaChainApi,
+    private val mayachainBondRepository: MayachainBondRepository,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
@@ -404,13 +406,7 @@ constructor(
         state.update { it.copy(bondableAssets = emptyList(), selectedBondAsset = "") }
         assetsFieldState.clearText()
         viewModelScope.safeLaunch {
-            val assets =
-                withContext(Dispatchers.IO) {
-                    mayaChainApi
-                        .getMayaNodePools()
-                        .filter { it.status == "Available" && it.bondable }
-                        .map { it.asset }
-                }
+            val assets = withContext(Dispatchers.IO) { mayachainBondRepository.getBondableAssets() }
             val firstAsset = assets.firstOrNull() ?: ""
             state.update { it.copy(bondableAssets = assets, selectedBondAsset = firstAsset) }
             if (firstAsset.isNotEmpty()) {
