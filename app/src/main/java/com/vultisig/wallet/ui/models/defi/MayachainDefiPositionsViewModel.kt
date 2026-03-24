@@ -539,7 +539,7 @@ constructor(
                 }
 
                 if (!chainAccountAddressRepository.isValid(Chain.MayaChain, cacaoCoin.address)) {
-                    Timber.e("CACAO coin address failed validation: ${cacaoCoin.address}")
+                    Timber.e("CACAO coin address failed MayaChain validation")
                     updateModel {
                         it.copy(
                             lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
