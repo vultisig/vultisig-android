@@ -97,13 +97,11 @@ constructor(
     }
 
     private fun observeSelectedChainChanges() {
-        if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
-            state
-                .map { it.selectedChain }
-                .distinctUntilChanged()
-                .onEach { loadAllAssets() }
-                .launchIn(viewModelScope)
-        }
+        state
+            .map { it.selectedChain }
+            .distinctUntilChanged()
+            .onEach { loadAllAssets() }
+            .launchIn(viewModelScope)
     }
 
     fun selectAsset(asset: AssetUiModel) {
@@ -130,29 +128,26 @@ constructor(
     }
 
     private fun loadAllAssets() {
-        // TODO: Enable for Send, Deposit in upcoming update
-        if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
-            viewModelScope.launch {
-                val vault = vaultRepository.get(vaultId) ?: return@launch
-                getChainTokens(state.value.selectedChain, vault)
-                    .catch { Timber.e(it) }
-                    .map { coinList ->
-                        coinList
-                            .filterNot { it.isNativeToken || it.isLpToken }
-                            .map { coin ->
-                                AssetUiModel(
-                                    token = coin,
-                                    logo = getCoinLogo(coin.logo),
-                                    title = coin.ticker,
-                                    subtitle = coin.chain.raw,
-                                    amount = "0",
-                                    value = "0",
-                                    isDisabled = true,
-                                )
-                            }
-                    }
-                    .collect { assets -> allTokens.value = assets }
-            }
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId) ?: return@launch
+            getChainTokens(state.value.selectedChain, vault)
+                .catch { Timber.e(it) }
+                .map { coinList ->
+                    coinList
+                        .filterNot { it.isNativeToken || it.isLpToken }
+                        .map { coin ->
+                            AssetUiModel(
+                                token = coin,
+                                logo = getCoinLogo(coin.logo),
+                                title = coin.ticker,
+                                subtitle = coin.chain.raw,
+                                amount = "0",
+                                value = "0",
+                                isDisabled = true,
+                            )
+                        }
+                }
+                .collect { assets -> allTokens.value = assets }
         }
     }
 
