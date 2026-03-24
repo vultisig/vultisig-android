@@ -505,7 +505,7 @@ constructor(
 
         val placeholderPositions =
             selectedPools.map { pool ->
-                val assetTicker = pool.ticker.substringBefore("/")
+                val assetTicker = pool.ticker.substringBefore("/").substringBefore("-")
                 LpPositionUiModel(
                     titleLp = pool.ticker,
                     totalPriceLp = MayachainDefiPositionsUiModel.DEFAULT_ZERO_BALANCE,
@@ -634,7 +634,7 @@ constructor(
                             icon = (pool.logo as? Int) ?: R.drawable.cacao,
                             apr = apr?.formatPercentage(),
                             position =
-                                "${runeAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetTicker",
+                                "${runeAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetCoinTicker",
                             positionKey = pool.positionKey,
                         )
                     }
