@@ -608,7 +608,13 @@ constructor(
                             pool.positionKey.substringAfter(".").substringAfter("-", "")
                         val assetCoin =
                             vault.coins.find {
-                                it.chain == assetChain && it.ticker == assetCoinTicker
+                                it.chain == assetChain &&
+                                    it.ticker == assetCoinTicker &&
+                                    (assetContractAddress.isEmpty() ||
+                                        it.contractAddress.equals(
+                                            assetContractAddress,
+                                            ignoreCase = true,
+                                        ))
                             }
 
                         val assetFiatValue =
