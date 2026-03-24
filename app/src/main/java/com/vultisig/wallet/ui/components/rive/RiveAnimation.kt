@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -36,21 +37,23 @@ fun RiveAnimation(
         // rive doesn't work in preview
         Spacer(modifier)
     } else {
-        AndroidView(
-            modifier = modifier,
-            factory = { context ->
-                RiveAnimationView(context).also {
-                    it.setRiveResource(
-                        resId = animation,
-                        stateMachineName = stateMachineName,
-                        alignment = alignment,
-                        autoplay = autoPlay,
-                        fit = fit,
-                    )
-                }
-            },
-            update = { view -> onInit(view) },
-        )
+        key(animation) {
+            AndroidView(
+                modifier = modifier,
+                factory = { context ->
+                    RiveAnimationView(context).also {
+                        it.setRiveResource(
+                            resId = animation,
+                            stateMachineName = stateMachineName,
+                            alignment = alignment,
+                            autoplay = autoPlay,
+                            fit = fit,
+                        )
+                    }
+                },
+                update = { view -> onInit(view) },
+            )
+        }
     }
 }
 
