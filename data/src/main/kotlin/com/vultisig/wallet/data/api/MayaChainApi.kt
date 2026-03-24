@@ -35,6 +35,10 @@ import timber.log.Timber
 
 interface MayaChainApi {
 
+    suspend fun getMemberDetails(address: String): MayaMemberDetails
+
+    suspend fun getLpPoolStats(): List<MayaLpPoolStats>
+
     suspend fun getBalance(address: String): List<CosmosBalance>
 
     suspend fun getUnStakeCacaoBalance(address: String): String?
@@ -111,6 +115,26 @@ data class MayaNodePool(
 data class MayaMidgardHealth(@SerialName("lastThorNode") val lastMayaNode: MayaHeightInfo) {
     @Serializable data class MayaHeightInfo(val height: Long, val timestamp: Long)
 }
+
+@Serializable
+data class MayaMemberDetails(
+    @SerialName("pools") val pools: List<MayaMemberPool> = emptyList(),
+)
+
+@Serializable
+data class MayaMemberPool(
+    @SerialName("pool") val pool: String,
+    @SerialName("assetAdded") val assetAdded: String = "0",
+    @SerialName("runeAdded") val runeAdded: String = "0",
+    @SerialName("liquidityUnits") val liquidityUnits: String = "0",
+)
+
+@Serializable
+data class MayaLpPoolStats(
+    @SerialName("asset") val asset: String,
+    @SerialName("annualPercentageRate") val annualPercentageRate: String = "0",
+    @SerialName("status") val status: String,
+)
 
 internal class MayaChainApiImp
 @Inject
@@ -282,6 +306,20 @@ constructor(
         httpClient
             .get("$MAYA_MIDGARD_BASE/health") { header(xClientID, xClientIDValue) }
             .bodyOrThrow<MayaMidgardHealth>()
+
+    override suspend fun getMemberDetails(address: String): MayaMemberDetails =
+        httpClient
+            .get("$MAYA_MIDGARD_BASE/member/$address") { header(xClientID, xClientIDValue) }
+            .bodyOrThrow<MayaMemberDetails>()
+
+    override suspend fun getLpPoolStats(): List<MayaLpPoolStats> =
+        httpClient
+            .get("$MAYA_MIDGARD_BASE/pools") {
+                header(xClientID, xClientIDValue)
+                parameter("status", "available")
+                parameter("period", "30d")
+            }
+            .bodyOrThrow<List<MayaLpPoolStats>>()
 
     override suspend fun getMayaNodePools(): List<MayaNodePool> =
         httpClient

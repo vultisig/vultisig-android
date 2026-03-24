@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.MayaLpPoolStats
+import com.vultisig.wallet.data.api.MayaMemberDetails
 import com.vultisig.wallet.data.api.MayaMidgardHealth
 import com.vultisig.wallet.data.api.MayaMidgardNetworkData
 import com.vultisig.wallet.data.api.MayaNodeInfo
@@ -22,6 +24,10 @@ interface MayachainBondRepository {
     suspend fun getMayaNodePools(): List<MayaNodePool>
 
     suspend fun getBondableAssets(): List<String>
+
+    suspend fun getMemberDetails(address: String): MayaMemberDetails
+
+    suspend fun getLpPoolStats(): List<MayaLpPoolStats>
 
     suspend fun clearCache()
 }
@@ -94,6 +100,24 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
             mayaChainApi.getMayaNodePools().filter { it.bondable }.map { it.asset }
         } catch (e: Exception) {
             Timber.e(e, "Error fetching bondable Maya assets")
+            throw e
+        }
+    }
+
+    override suspend fun getMemberDetails(address: String): MayaMemberDetails {
+        return try {
+            mayaChainApi.getMemberDetails(address)
+        } catch (e: Exception) {
+            Timber.e(e, "Error fetching Maya member details for: $address")
+            throw e
+        }
+    }
+
+    override suspend fun getLpPoolStats(): List<MayaLpPoolStats> {
+        return try {
+            mayaChainApi.getLpPoolStats()
+        } catch (e: Exception) {
+            Timber.e(e, "Error fetching Maya LP pool stats")
             throw e
         }
     }
