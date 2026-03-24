@@ -882,11 +882,12 @@ constructor(
                 }
                 ?.srcAmount
 
-        // For the first flip (or after manual edits), fall back to raw quote decimal.
-        // Using the raw BigDecimal avoids locale-formatted strings (e.g. "3,000.5").
         val newSrcAmount =
             restoredAmount
-                ?: quote?.expectedDstValue?.decimal?.stripTrailingZeros()?.toPlainString()
+                ?: quote
+                    ?.expectedDstValue
+                    ?.decimal
+                    ?.formatFlippedAmount(selectedDst.value?.account?.token?.decimal)
 
         resetQuoteState()
 
@@ -1825,6 +1826,16 @@ constructor(
         private const val ARG_SELECTED_DST_TOKEN_ID = "ARG_SELECTED_DST_TOKEN_ID"
     }
 }
+
+private const val MAX_DISPLAY_DECIMALS = 8
+
+internal fun BigDecimal.formatFlippedAmount(tokenDecimals: Int? = null): String =
+    setScale(
+            (tokenDecimals ?: MAX_DISPLAY_DECIMALS).coerceAtMost(MAX_DISPLAY_DECIMALS),
+            RoundingMode.DOWN,
+        )
+        .stripTrailingZeros()
+        .toPlainString()
 
 internal fun MutableStateFlow<SendSrc?>.updateSrc(
     selectedTokenId: String?,
