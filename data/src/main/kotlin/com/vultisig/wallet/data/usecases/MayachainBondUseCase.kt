@@ -122,7 +122,7 @@ constructor(
 
         val nextChurnHeight = network.nextChurnHeight.toIntOrNull() ?: return null
         val currentHeight = health.lastMayaNode.height
-        val currentTimestamp = health.lastMayaNode.timestamp.toDouble()
+        val currentTimestampMs = health.lastMayaNode.timestamp * 1000L
 
         if (nextChurnHeight <= currentHeight) return null
 
@@ -131,7 +131,7 @@ constructor(
         val remainingBlocks = nextChurnHeight - currentHeight
         val etaSeconds = remainingBlocks * avgBlockTime
 
-        return Date((currentTimestamp * 1000).toLong() + (etaSeconds * 1000).toLong())
+        return Date(currentTimestampMs + (etaSeconds * 1000).toLong())
     }
 
     private fun calculateBondMetricsFromNode(
