@@ -497,6 +497,12 @@ constructor(
         val selectedKeys = model.selectedPositions.toSet()
         val selectedPools = model.lpPositionsDialog.filter { it.positionKey in selectedKeys }
 
+        if (selectedPools.isEmpty()) {
+            loadLpJob?.cancel()
+            updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            return
+        }
+
         val placeholderPositions =
             selectedPools.map { pool ->
                 val assetTicker = pool.ticker.substringBefore("/")
