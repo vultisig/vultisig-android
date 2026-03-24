@@ -484,6 +484,7 @@
     <string name="referral_create_set_expiration_years">Vervaldatum instellen (in jaren)</string>
     <string name="referral_create_registration_fees">Registratiekosten</string>
     <string name="referral_create_cost">Kosten</string>
+    <string name="referral_create_fees_error">Failed to load fees. Please try again.</string>
     <string name="referral_create_create_referral_code">Verwijzingscode maken</string>
     <string name="referral_create_invalid">Ongeldig</string>
     <string name="referral_create_available">Beschikbaar</string>

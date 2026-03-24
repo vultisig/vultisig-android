@@ -261,21 +261,31 @@ private fun ReferralCreateScreen(
 
                     UiSpacer(16.dp)
 
-                    val fees = state.getFees()
+                    if (state.fees is FeesReferral.Error) {
+                        Text(
+                            text = stringResource(R.string.referral_create_fees_error),
+                            color = Theme.v2.colors.alerts.error,
+                            style = Theme.brockmann.body.s.medium,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    } else {
+                        val fees = state.getFees()
 
-                    EstimatedNetworkFee(
-                        title = stringResource(R.string.referral_create_registration_fees),
-                        tokenGas = fees.tokenGas,
-                        fiatGas = fees.tokenPrice,
-                    )
+                        EstimatedNetworkFee(
+                            title = stringResource(R.string.referral_create_registration_fees),
+                            tokenGas = fees.tokenGas,
+                            fiatGas = fees.tokenPrice,
+                        )
 
-                    UiSpacer(16.dp)
+                        UiSpacer(16.dp)
 
-                    EstimatedNetworkFee(
-                        title = stringResource(R.string.referral_create_cost),
-                        tokenGas = fees.costGas,
-                        fiatGas = fees.costPrice,
-                    )
+                        EstimatedNetworkFee(
+                            title = stringResource(R.string.referral_create_cost),
+                            tokenGas = fees.costGas,
+                            fiatGas = fees.costPrice,
+                        )
+                    }
                 }
             },
             bottomBar = {
