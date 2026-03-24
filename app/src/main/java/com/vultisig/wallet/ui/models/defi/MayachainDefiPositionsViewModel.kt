@@ -473,14 +473,10 @@ constructor(
         return try {
             if (amount == BigDecimal.ZERO) return FiatValue(BigDecimal.ZERO, currency.ticker)
             val price =
-                if (contractAddress.isNotEmpty()) {
-                    tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
-                } else {
-                    tokenPriceRepository.getCachedPrice(
-                        tokenId = "$ticker-${chain.id}",
-                        appCurrency = currency,
-                    ) ?: BigDecimal.ZERO
-                }
+                tokenPriceRepository.getCachedPrice(
+                    tokenId = "$ticker-${chain.id}",
+                    appCurrency = currency,
+                ) ?: tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
             FiatValue(
                 value = amount.multiply(price).setScale(2, RoundingMode.DOWN),
                 currency = currency.ticker,
@@ -495,7 +491,19 @@ constructor(
     private fun reloadLpTab() {
         val model = currentModel
         val selectedKeys = model.selectedPositions.toSet()
+        val selectedLpKeys = selectedKeys - MAYA_STATIC_POSITION_KEYS
         val selectedPools = model.lpPositionsDialog.filter { it.positionKey in selectedKeys }
+
+        if (selectedLpKeys.isEmpty()) {
+            loadLpJob?.cancel()
+            updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            return
+        }
+
+        if (model.lpPositionsDialog.isEmpty()) {
+            updateModel { it.copy(lp = it.lp.copy(isLoading = true)) }
+            return
+        }
 
         if (selectedPools.isEmpty()) {
             loadLpJob?.cancel()
