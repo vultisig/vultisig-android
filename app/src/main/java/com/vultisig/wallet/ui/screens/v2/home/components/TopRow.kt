@@ -28,7 +28,7 @@ internal fun TopRow(
 
         VsCircleButton(
             onClick = onOpenHistoryClick,
-            icon = R.drawable.calender_clock,
+            icon = R.drawable.calendar_clock,
             size = VsCircleButtonSize.Small,
             type = VsCircleButtonType.Secondary,
             designType = DesignType.Shined,
