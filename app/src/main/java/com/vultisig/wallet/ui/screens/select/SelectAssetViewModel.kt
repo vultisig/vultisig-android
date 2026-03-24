@@ -93,7 +93,6 @@ constructor(
         )
 
     init {
-        loadAllAssets()
         collectSearchResults()
         observeSelectedChainChanges()
         loadAllAvailableNetworks()
