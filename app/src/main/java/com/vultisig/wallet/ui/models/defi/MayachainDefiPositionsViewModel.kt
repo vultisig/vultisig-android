@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -125,6 +126,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val bondUseCase: MayachainBondUseCase,
     private val mayachainBondRepository: MayachainBondRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val mayaCacaoStakingService: MayaCacaoStakingService,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -503,6 +505,16 @@ constructor(
 
                 if (cacaoCoin.address.isBlank()) {
                     Timber.e("CACAO coin address is blank, cannot fetch LP positions")
+                    updateModel {
+                        it.copy(
+                            lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
+                        )
+                    }
+                    return@safeLaunch
+                }
+
+                if (!chainAccountAddressRepository.isValid(Chain.MayaChain, cacaoCoin.address)) {
+                    Timber.e("CACAO coin address is invalid: ${cacaoCoin.address}")
                     updateModel {
                         it.copy(
                             lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
