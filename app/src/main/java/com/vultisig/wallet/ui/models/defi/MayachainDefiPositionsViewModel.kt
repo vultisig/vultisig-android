@@ -586,11 +586,11 @@ constructor(
 
                         val assetAdded =
                             memberPool?.assetAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
-                        val runeAdded =
+                        val cacaoAdded =
                             memberPool?.runeAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
                         val assetAmount = assetAdded.toValue(10)
-                        val runeAmount = runeAdded.toValue(10)
+                        val cacaoAmount = cacaoAdded.toValue(10)
 
                         val assetChain =
                             mayaPoolChainPrefixToChain(pool.positionKey.substringBefore("."))
@@ -618,7 +618,7 @@ constructor(
                                 FiatValue(BigDecimal.ZERO, currency.ticker)
                             }
                         val cacaoFiatValue =
-                            createFiatValue(runeAmount, Coins.MayaChain.CACAO, currency)
+                            createFiatValue(cacaoAmount, Coins.MayaChain.CACAO, currency)
                         val totalFiatValue =
                             FiatValue(
                                 value = assetFiatValue.value.add(cacaoFiatValue.value),
@@ -633,7 +633,7 @@ constructor(
                             icon = (pool.logo as? Int) ?: R.drawable.cacao,
                             apr = apr?.formatPercentage(),
                             position =
-                                "${runeAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetCoinTicker",
+                                "${cacaoAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetCoinTicker",
                             positionKey = pool.positionKey,
                         )
                     }
