@@ -553,8 +553,8 @@ constructor(
                         val runeAdded =
                             memberPool?.runeAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
-                        val assetAmount = assetAdded.toValue(8).setScale(4, RoundingMode.DOWN)
-                        val runeAmount = runeAdded.toValue(8).setScale(4, RoundingMode.DOWN)
+                        val assetAmount = assetAdded.toValue(10).setScale(4, RoundingMode.DOWN)
+                        val runeAmount = runeAdded.toValue(10).setScale(4, RoundingMode.DOWN)
 
                         val assetChain =
                             mayaPoolChainPrefixToChain(pool.positionKey.substringBefore("."))
