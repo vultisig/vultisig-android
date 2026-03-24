@@ -185,8 +185,12 @@ internal fun SwapScreen(
     val interactionSource = remember { MutableInteractionSource() }
     val isSrcAmountFocused by interactionSource.collectIsFocusedAsState()
 
+    var hasSrcAmountBeenFocused by remember { mutableStateOf(false) }
+
     LaunchedEffect(isSrcAmountFocused) {
-        if (!isSrcAmountFocused) {
+        if (isSrcAmountFocused) {
+            hasSrcAmountBeenFocused = true
+        } else if (hasSrcAmountBeenFocused) {
             onValidateAmount()
         }
     }
