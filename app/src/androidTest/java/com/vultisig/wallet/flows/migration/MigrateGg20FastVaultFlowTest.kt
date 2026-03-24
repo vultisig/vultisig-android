@@ -38,7 +38,6 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
-@Ignore
 @UninstallModules(FastVaultModule::class)
 @HiltAndroidTest
 class MigrateGg20FastVaultFlowTest : CleanTest() {
@@ -67,6 +66,7 @@ class MigrateGg20FastVaultFlowTest : CleanTest() {
         super.setUp()
     }
 
+    @Ignore
     @Test
     fun testMigrationFromGg20() {
         val vaultName = FastVaultKeygenFlow.TEST_VAULT_NAME
