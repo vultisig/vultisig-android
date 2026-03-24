@@ -72,7 +72,10 @@ fun Coin.securedAssetChain(): String {
     return chain.ifEmpty { "THOR" }.uppercase()
 }
 
-/** Returns the symbol from the secured asset denom (e.g., "eth-usdc-0xa0b..." → "USDC-0xA0B86991...") */
+/**
+ * Returns the symbol from the secured asset denom (e.g., "eth-usdc-0xa0b..." →
+ * "USDC-0xA0B86991...")
+ */
 fun Coin.securedAssetSymbol(): String {
     val symbol = contractAddress.substringAfter("-")
     return symbol.ifEmpty { ticker }.uppercase()

@@ -9,11 +9,11 @@ import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.getNotNativeTicker
 import com.vultisig.wallet.data.models.isSecuredAsset
-import com.vultisig.wallet.data.models.securedAssetChain
-import com.vultisig.wallet.data.models.securedAssetSymbol
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
+import com.vultisig.wallet.data.models.securedAssetChain
+import com.vultisig.wallet.data.models.securedAssetSymbol
 import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
@@ -325,7 +325,9 @@ class ThorChainHelper(
         memo: String?,
     ): Cosmos.Message? {
         val isSecured = keysignPayload.coin.isSecuredAsset()
-        val symbol = if (isSecured) keysignPayload.coin.securedAssetSymbol() else getTicker(keysignPayload.coin)
+        val symbol =
+            if (isSecured) keysignPayload.coin.securedAssetSymbol()
+            else getTicker(keysignPayload.coin)
         val assetTicker = getTicker(keysignPayload.coin)
         val chainName =
             if (isSecured && memo?.contains("SECURE-:") == true) {
