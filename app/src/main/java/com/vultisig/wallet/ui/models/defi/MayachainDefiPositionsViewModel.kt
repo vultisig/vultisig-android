@@ -501,6 +501,16 @@ constructor(
                     return@safeLaunch
                 }
 
+                if (cacaoCoin.address.isBlank()) {
+                    Timber.e("CACAO coin address is blank, cannot fetch LP positions")
+                    updateModel {
+                        it.copy(
+                            lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
+                        )
+                    }
+                    return@safeLaunch
+                }
+
                 val (memberDetails, poolStats) =
                     withContext(Dispatchers.IO) {
                         coroutineScope {
@@ -508,6 +518,7 @@ constructor(
                                 try {
                                     mayachainBondRepository.getMemberDetails(cacaoCoin.address)
                                 } catch (e: Exception) {
+                                    if (e is CancellationException) throw e
                                     Timber.e(e, "Failed to fetch Maya member details")
                                     MayaMemberDetails()
                                 }
@@ -516,6 +527,7 @@ constructor(
                                 try {
                                     mayachainBondRepository.getLpPoolStats()
                                 } catch (e: Exception) {
+                                    if (e is CancellationException) throw e
                                     Timber.e(e, "Failed to fetch Maya LP pool stats")
                                     emptyList()
                                 }
