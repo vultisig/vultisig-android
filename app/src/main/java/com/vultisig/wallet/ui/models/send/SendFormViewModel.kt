@@ -829,6 +829,12 @@ constructor(
 
     fun saveGasSettings(settings: GasSettings) {
         gasSettings.value = settings
+        if (settings is GasSettings.UTXO) {
+            val currentSpec = specific.value ?: return
+            val utxoSpec = currentSpec.blockChainSpecific as? BlockChainSpecific.UTXO ?: return
+            specific.value =
+                currentSpec.copy(blockChainSpecific = utxoSpec.copy(byteFee = settings.byteFee))
+        }
     }
 
     fun chooseMaxTokenAmount() {
@@ -2532,26 +2538,19 @@ constructor(
     private fun calculateGasFees() {
         viewModelScope.launch {
             combine(
-                    selectedToken
-                        .filterNotNull()
-                        .combine(addressFieldState.textAsFlow()) { token, dst ->
-                            token to dst.toString()
+                    combine(
+                            selectedToken.filterNotNull(),
+                            addressFieldState.textAsFlow(),
+                            memoFieldState.textAsFlow(),
+                            tokenAmountFieldState.textAsFlow(),
+                            recalculateGasFee.onStart { emit(Unit) },
+                        ) { token, dst, memo, tokenAmount, _ ->
+                            GasFeeInput(token, dst.toString(), memo.toString(), tokenAmount)
                         }
-                        .combine(memoFieldState.textAsFlow()) { (token, dst), memo ->
-                            Triple(token, dst, memo.toString())
-                        }
-                        .combine(tokenAmountFieldState.textAsFlow()) {
-                            (token, dst, memo),
-                            tokenAmountText ->
-                            Triple(token, dst, memo) to tokenAmountText
-                        }
-                        .combine(recalculateGasFee.onStart { emit(Unit) }) { data, _ -> data }
                         .debounce(350)
                         .distinctUntilChanged()
-                        .mapNotNull { (triple, tokenAmount) ->
-                            val (token, dst, memo) = triple
+                        .mapNotNull { (token, dst, memo, tokenAmount) ->
                             val vault = vault ?: return@mapNotNull null
-
                             val tokenAmount = tokenAmount.toString().toBigDecimalOrNull()
 
                             val tokenAmountInt =
@@ -2597,28 +2596,22 @@ constructor(
 
     private fun collectPlanFee() {
         viewModelScope.launch {
-            selectedToken
-                .filterNotNull()
-                .combine(addressFieldState.textAsFlow()) { token, dstAddress ->
-                    token to dstAddress
-                }
-                .combine(tokenAmountFieldState.textAsFlow()) { (token, dstAddress), tokenAmount ->
-                    Triple(token, dstAddress, tokenAmount)
-                }
-                .combine(specific.filterNotNull()) { (token, dstAddress, tokenAmount), specific ->
-                    Triple(token to dstAddress, tokenAmount, specific)
-                }
-                .combine(memoFieldState.textAsFlow()) { (tokenDst, tokenAmount, specific), memo ->
-                    Triple(tokenDst, tokenAmount to specific, memo)
+            combine(
+                    selectedToken.filterNotNull(),
+                    addressFieldState.textAsFlow(),
+                    tokenAmountFieldState.textAsFlow(),
+                    specific.filterNotNull(),
+                    memoFieldState.textAsFlow(),
+                ) { token, dstAddress, tokenAmount, specific, memo ->
+                    PlanFeeInput(token, dstAddress, tokenAmount, specific, memo)
                 }
                 .combine(recalculateGasFee.onStart { emit(Unit) }) { data, _ -> data }
-                .mapNotNull { (tokenDst, amountSpecific, memo) ->
-                    val (token, dstAddress) = tokenDst
-                    val (tokenAmount, specific) = amountSpecific
+                .mapNotNull { (token, dstAddress, tokenAmount, specific, memo) ->
                     try {
                         val chain = token.chain
                         if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) {
                             planFee.value = 1
+                            return@mapNotNull null
                         }
 
                         val vaultId =
@@ -3401,4 +3394,19 @@ private data class AccountValidation(
     val chain: Chain,
     val gasFee: TokenValue,
     val dstAddress: String,
+)
+
+private data class GasFeeInput(
+    val token: Coin,
+    val dst: String,
+    val memo: String,
+    val tokenAmount: CharSequence,
+)
+
+private data class PlanFeeInput(
+    val token: Coin,
+    val dstAddress: CharSequence,
+    val tokenAmount: CharSequence,
+    val specific: BlockChainSpecificAndUtxo,
+    val memo: CharSequence,
 )
