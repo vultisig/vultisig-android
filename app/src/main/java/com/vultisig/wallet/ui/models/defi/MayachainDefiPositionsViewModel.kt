@@ -532,18 +532,8 @@ constructor(
                     return@safeLaunch
                 }
 
-                if (cacaoCoin.address.isBlank()) {
-                    Timber.e("CACAO coin address is blank, cannot fetch LP positions")
-                    updateModel {
-                        it.copy(
-                            lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
-                        )
-                    }
-                    return@safeLaunch
-                }
-
                 if (!chainAccountAddressRepository.isValid(Chain.MayaChain, cacaoCoin.address)) {
-                    Timber.e("CACAO coin address is invalid: ${cacaoCoin.address}")
+                    Timber.e("CACAO coin address failed validation: ${cacaoCoin.address}")
                     updateModel {
                         it.copy(
                             lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
