@@ -154,6 +154,7 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
             onDrag = onDrag,
             onDstLongPressStarted = model::selectDstNetworkPopup,
             onSrcLongPressStarted = model::selectSrcNetworkPopup,
+            onValidateAmount = model::validateAmount,
         )
     }
 }
@@ -177,11 +178,18 @@ internal fun SwapScreen(
     onDragCancel: () -> Unit = {},
     onDstLongPressStarted: (Offset) -> Unit = {},
     onSrcLongPressStarted: (Offset) -> Unit = {},
+    onValidateAmount: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
     val interactionSource = remember { MutableInteractionSource() }
     val isSrcAmountFocused by interactionSource.collectIsFocusedAsState()
+
+    LaunchedEffect(isSrcAmountFocused) {
+        if (!isSrcAmountFocused) {
+            onValidateAmount()
+        }
+    }
 
     val isShowingKeyboard by rememberKeyboardVisibilityAsState()
 
@@ -269,7 +277,6 @@ internal fun SwapScreen(
                                             hintStyle = Theme.brockmann.headings.title2,
                                             lineLimits = TextFieldLineLimits.SingleLine,
                                             interactionSource = interactionSource,
-                                            // TODO onAmountLostFocus
                                             keyboardOptions =
                                                 KeyboardOptions(
                                                     keyboardType = KeyboardType.Number,
