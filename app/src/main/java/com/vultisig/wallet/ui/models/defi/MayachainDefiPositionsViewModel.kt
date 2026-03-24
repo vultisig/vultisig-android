@@ -590,8 +590,8 @@ constructor(
                         val runeAdded =
                             memberPool?.runeAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
-                        val assetAmount = assetAdded.toValue(10).setScale(4, RoundingMode.DOWN)
-                        val runeAmount = runeAdded.toValue(10).setScale(4, RoundingMode.DOWN)
+                        val assetAmount = assetAdded.toValue(10)
+                        val runeAmount = runeAdded.toValue(10)
 
                         val assetChain =
                             mayaPoolChainPrefixToChain(pool.positionKey.substringBefore("."))
@@ -634,7 +634,7 @@ constructor(
                             icon = (pool.logo as? Int) ?: R.drawable.cacao,
                             apr = apr?.formatPercentage(),
                             position =
-                                "${assetAmount.toPlainString()} $assetTicker / ${runeAmount.toPlainString()} CACAO",
+                                "${assetAmount.setScale(4, RoundingMode.DOWN).toPlainString()} $assetTicker / ${runeAmount.setScale(4, RoundingMode.DOWN).toPlainString()} CACAO",
                             positionKey = pool.positionKey,
                         )
                     }
