@@ -536,7 +536,7 @@ constructor(
                         feeServiceComposite.calculateFees(blockchainTransaction)
                     }
                 val gasFee =
-                    if (chain.standard == TokenStandard.UTXO) {
+                    if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
                         val utxoHelper = UtxoHelper.getHelper(_currentVault, srcToken.coinType)
                         val plan = utxoHelper.getBitcoinTransactionPlan(payload)
                         TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeToken)
@@ -943,7 +943,7 @@ constructor(
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
                     val gasFee =
-                        if (chain.standard == TokenStandard.UTXO) {
+                        if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
                             val utxoHelper = UtxoHelper.getHelper(vault, payloadToken.coinType)
                             val plan = utxoHelper.getBitcoinTransactionPlan(payload)
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)

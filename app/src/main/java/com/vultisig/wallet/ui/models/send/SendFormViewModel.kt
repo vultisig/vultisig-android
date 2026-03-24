@@ -2207,7 +2207,6 @@ constructor(
         memo: String?,
     ): Bitcoin.TransactionPlan {
         val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
-        Timber.d("specific: $specific")
         val keysignPayload =
             KeysignPayload(
                 coin = selectedToken,
