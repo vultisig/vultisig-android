@@ -382,11 +382,11 @@ constructor(
         }
     }
 
-    private fun updateTotalFiatValue(bondedRaw: BigInteger) {
+    private fun updateTotalFiatValue(totalRaw: BigInteger) {
         viewModelScope.launch {
             try {
                 val currency = appCurrencyRepository.currency.first()
-                val totalInCacao = bondedRaw.toValue(Coins.MayaChain.CACAO.decimal)
+                val totalInCacao = totalRaw.toValue(Coins.MayaChain.CACAO.decimal)
                 val fiatValue = createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
                 val currencyFormat =
                     withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
