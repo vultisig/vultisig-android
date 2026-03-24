@@ -56,7 +56,7 @@ internal class MayachainBondUseCaseTest {
 
             val nodes = useCase.getActiveNodesRemote(MY_ADDRESS)
 
-            val expectedMs = timestampSeconds * 1000L + (10 * 5.0 * 1000).toLong()
+            val expectedMs = timestampSeconds * 1000L + (10 * BLOCK_TIME_SECONDS * 1000).toLong()
             assertEquals(expectedMs, nodes.single().nextChurn?.time)
         }
 
@@ -116,5 +116,8 @@ internal class MayachainBondUseCaseTest {
     private companion object {
         const val MY_ADDRESS = "maya1testaddress"
         const val NODE_ADDRESS = "maya1nodeaddress"
+
+        // Must match avgBlockTime in MayachainBondUseCase.estimateNextChurnETA
+        const val BLOCK_TIME_SECONDS = 5.0
     }
 }
