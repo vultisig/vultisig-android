@@ -107,8 +107,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
@@ -124,6 +126,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -281,6 +284,9 @@ constructor(
     private var defiType: DeFiNavActions? = null // Default is send, no defi form
 
     private var mscaAddress: String? = null
+
+    private val recalculateGasFee =
+        MutableSharedFlow<Unit>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
@@ -1389,7 +1395,6 @@ constructor(
                     )
 
                 transactionRepository.addTransaction(transaction)
-                advanceGasUiRepository.hideIcon()
 
                 navigator.route(Route.VerifySend(transactionId = transaction.id, vaultId = vaultId))
             } catch (e: InvalidTransactionDataException) {
@@ -2532,6 +2537,7 @@ constructor(
                             tokenAmountText ->
                             Triple(token, dst, memo) to tokenAmountText
                         }
+                        .combine(recalculateGasFee.onStart { emit(Unit) }) { data, _ -> data }
                         .debounce(350)
                         .distinctUntilChanged()
                         .mapNotNull { (triple, tokenAmount) ->
@@ -2583,13 +2589,24 @@ constructor(
 
     private fun collectPlanFee() {
         viewModelScope.launch {
-            combine(
-                    selectedToken.filterNotNull(),
-                    addressFieldState.textAsFlow(),
-                    tokenAmountFieldState.textAsFlow(),
-                    specific.filterNotNull(),
-                    memoFieldState.textAsFlow(),
-                ) { token, dstAddress, tokenAmount, specific, memo ->
+            selectedToken
+                .filterNotNull()
+                .combine(addressFieldState.textAsFlow()) { token, dstAddress ->
+                    token to dstAddress
+                }
+                .combine(tokenAmountFieldState.textAsFlow()) { (token, dstAddress), tokenAmount ->
+                    Triple(token, dstAddress, tokenAmount)
+                }
+                .combine(specific.filterNotNull()) { (token, dstAddress, tokenAmount), specific ->
+                    Triple(token to dstAddress, tokenAmount, specific)
+                }
+                .combine(memoFieldState.textAsFlow()) { (tokenDst, tokenAmount, specific), memo ->
+                    Triple(tokenDst, tokenAmount to specific, memo)
+                }
+                .combine(recalculateGasFee.onStart { emit(Unit) }) { data, _ -> data }
+                .mapNotNull { (tokenDst, amountSpecific, memo) ->
+                    val (token, dstAddress) = tokenDst
+                    val (tokenAmount, specific) = amountSpecific
                     try {
                         val chain = token.chain
                         if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) {
@@ -2659,20 +2676,21 @@ constructor(
                     planFee.filterNotNull(),
                 ) { token, gasFee, gasSettings, planFee ->
                     val chain = token.chain
+                    val evmGasSettings = gasSettings as? GasSettings.Eth
                     val estimatedFee =
                         gasFeeToEstimatedFee(
                             GasFeeParams(
                                 gasLimit =
-                                    if (chain.standard == TokenStandard.EVM) {
-                                        if (gasSettings is GasSettings.Eth) gasSettings.gasLimit
-                                        else BigInteger.valueOf(1)
-                                    } else {
-                                        BigInteger.valueOf(1)
-                                    },
+                                    if (evmGasSettings != null) evmGasSettings.gasLimit
+                                    else BigInteger.valueOf(1),
                                 gasFee =
-                                    if (chain.standard == TokenStandard.UTXO) {
-                                        gasFee.copy(value = BigInteger.valueOf(planFee))
-                                    } else gasFee,
+                                    when {
+                                        chain.standard == TokenStandard.UTXO ->
+                                            gasFee.copy(value = BigInteger.valueOf(planFee))
+                                        evmGasSettings != null ->
+                                            gasFee.copy(value = evmGasSettings.baseFee)
+                                        else -> gasFee
+                                    },
                                 selectedToken = token,
                                 perUnit = true,
                             )
@@ -2709,6 +2727,7 @@ constructor(
                             )
                         specific.value = spec
                         advanceGasUiRepository.updateBlockChainSpecific(spec.blockChainSpecific)
+                        advanceGasUiRepository.showIcon()
                         uiState.update { it.copy(specific = spec) }
                     } catch (e: Exception) {
                         Timber.e(e)
@@ -2953,57 +2972,14 @@ constructor(
     }
 
     fun refreshGasFee() {
-        val token = selectedToken.value ?: return
         viewModelScope.launch {
             uiState.update { it.copy(isRefreshing = true) }
-
-            val gasFee =
-                try {
-                    val chain = token.chain
-                    val tokenAmountInt =
-                        tokenAmountFieldState.text
-                            .toString()
-                            .toBigDecimalOrNull()
-                            ?.movePointRight(token.decimal)
-                            ?.toBigInteger() ?: BigInteger.ZERO
-
-                    val blockchainTransaction =
-                        Transfer(
-                            coin = token,
-                            vault =
-                                VaultData(
-                                    vaultHexChainCode = vault.hexChainCode,
-                                    vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                                ),
-                            amount = tokenAmountInt,
-                            to = addressFieldState.text.toString(),
-                            memo = memoFieldState.text.toString(),
-                            isMax = false,
-                        )
-
-                    val fees =
-                        withContext(Dispatchers.IO) {
-                            feeServiceComposite.calculateFees(blockchainTransaction)
-                        }
-                    val nativeCoin =
-                        withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-
-                    TokenValue(value = fees.amount, token = nativeCoin)
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to refresh gas fee")
-                    uiState.update { it.copy(isRefreshing = false) }
-                    return@launch
-                }
-
-            this@SendFormViewModel.gasFee.value =
-                adjustGasFee(gasFee, gasSettings.value, specific.value)
-
+            recalculateGasFee.emit(Unit)
             // Rapid toggling of isRefreshing can cause the initial true value to be skipped,
             // displaying only the false value in the UI resulting in the swipe refresh being
             // frozen.
             // this line prevent missing true value in these cases.
             delay(100)
-
             uiState.update { it.copy(isRefreshing = false) }
         }
     }
