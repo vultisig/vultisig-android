@@ -56,7 +56,7 @@ constructor(
 
     val state = MutableStateFlow(VaultListUiModel())
 
-    var openType: Route.VaultList.OpenType? = null
+    private var openType: Route.VaultList.OpenType? = null
     private var vaultId: VaultId? = null
     private var reIndexJob: Job? = null
     private var collectVaultsJob: Job? = null

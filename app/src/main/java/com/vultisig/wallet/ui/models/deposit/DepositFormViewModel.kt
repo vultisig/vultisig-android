@@ -496,6 +496,7 @@ constructor(
             when (option) {
                 DepositOption.Switch -> {
                     viewModelScope.launch {
+                        val vaultId = vaultId ?: return@launch
                         try {
                             val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
                             val inboundAddress =
@@ -511,7 +512,6 @@ constructor(
                                 val gaiaAddress = inboundAddress.address
                                 nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
                             }
-                            val vaultId = vaultId ?: return@launch
                             accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect {
                                 addresses ->
                                 thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
