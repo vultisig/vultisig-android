@@ -42,6 +42,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +53,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -70,7 +73,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -88,6 +90,7 @@ import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.send.AddressBookType
 import com.vultisig.wallet.ui.models.send.AmountFraction
+import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
@@ -109,9 +112,23 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
         val viewModel: SendFormViewModel = hiltViewModel()
         val state by viewModel.uiState.collectAsState()
 
+        val addressFocusRequester = remember { FocusRequester() }
+        val amountFocusRequester = remember { FocusRequester() }
+
+        LaunchedEffect(Unit) {
+            viewModel.focusFieldFlow.collect { field ->
+                when (field) {
+                    SendFocusField.ADDRESS -> addressFocusRequester.requestFocus()
+                    SendFocusField.AMOUNT -> amountFocusRequester.requestFocus()
+                }
+            }
+        }
+
         SendFormScreen(
             state = state,
             addressFieldState = viewModel.addressFieldState,
+            addressFocusRequester = addressFocusRequester,
+            amountFocusRequester = amountFocusRequester,
             tokenAmountFieldState = viewModel.tokenAmountFieldState,
             fiatAmountFieldState = viewModel.fiatAmountFieldState,
             memoFieldState = viewModel.memoFieldState,
@@ -168,6 +185,8 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
 private fun SendFormScreen(
     state: SendFormUiModel,
     addressFieldState: TextFieldState,
+    addressFocusRequester: FocusRequester = FocusRequester(),
+    amountFocusRequester: FocusRequester = FocusRequester(),
     tokenAmountFieldState: TextFieldState,
     fiatAmountFieldState: TextFieldState,
     memoFieldState: TextFieldState,
@@ -298,6 +317,8 @@ private fun SendFormScreen(
                         onAssetDragEnd = onAssetDragEnd,
                         onAssetLongPressStarted = onAssetLongPressStarted,
                         addressFieldState = addressFieldState,
+                        addressFocusRequester = addressFocusRequester,
+                        amountFocusRequester = amountFocusRequester,
                         onDstAddressLostFocus = onDstAddressLostFocus,
                         onSetOutputAddress = onSetOutputAddress,
                         onScanDstAddressRequest = onScanDstAddressRequest,
@@ -346,6 +367,8 @@ private fun SendFormContent(
     onAssetDragEnd: () -> Unit,
     onAssetLongPressStarted: (Offset) -> Unit,
     addressFieldState: TextFieldState,
+    addressFocusRequester: FocusRequester,
+    amountFocusRequester: FocusRequester,
     onDstAddressLostFocus: () -> Unit,
     onSetOutputAddress: (String) -> Unit,
     onScanDstAddressRequest: () -> Unit,
@@ -396,6 +419,7 @@ private fun SendFormContent(
             state = state,
             onExpandSection = onExpandSection,
             addressFieldState = addressFieldState,
+            addressFocusRequester = addressFocusRequester,
             onDstAddressLostFocus = onDstAddressLostFocus,
             onSetOutputAddress = onSetOutputAddress,
             onScanDstAddressRequest = onScanDstAddressRequest,
@@ -405,6 +429,7 @@ private fun SendFormContent(
         FoldableAmountWidget(
             state = state,
             addressFieldState = addressFieldState,
+            amountFocusRequester = amountFocusRequester,
             onExpandSection = onExpandSection,
             onGasSettingsClick = onGasSettingsClick,
             tokenAmountFieldState = tokenAmountFieldState,
@@ -439,6 +464,7 @@ private fun SendFormContent(
             state = state,
             onExpandSection = onExpandSection,
             addressFieldState = addressFieldState,
+            addressFocusRequester = addressFocusRequester,
             providerFieldState = providerFieldState,
             onDstAddressLostFocus = onDstAddressLostFocus,
             onSetOutputAddress = onSetOutputAddress,
@@ -452,6 +478,7 @@ private fun SendFormContent(
         FoldableAmountWidget(
             state = state,
             addressFieldState = addressFieldState,
+            amountFocusRequester = amountFocusRequester,
             onExpandSection = onExpandSection,
             onGasSettingsClick = onGasSettingsClick,
             tokenAmountFieldState = tokenAmountFieldState,
@@ -499,6 +526,7 @@ private fun SendFormContent(
         FoldableAmountWidget(
             state = state,
             addressFieldState = addressFieldState,
+            amountFocusRequester = amountFocusRequester,
             onExpandSection = onExpandSection,
             onGasSettingsClick = onGasSettingsClick,
             tokenAmountFieldState = tokenAmountFieldState,
@@ -520,6 +548,7 @@ private fun SendFormContent(
 private fun FoldableAmountWidget(
     state: SendFormUiModel,
     addressFieldState: TextFieldState,
+    amountFocusRequester: FocusRequester = remember { FocusRequester() },
     onExpandSection: (SendSections) -> Unit,
     onGasSettingsClick: () -> Unit,
     tokenAmountFieldState: TextFieldState,
@@ -629,6 +658,7 @@ private fun FoldableAmountWidget(
                             },
                             modifier =
                                 Modifier.width(IntrinsicSize.Min)
+                                    .focusRequester(amountFocusRequester)
                                     .testTag("SendFormScreen.amountField"),
                             decorator = { textField ->
                                 if (primaryFieldState.text.isEmpty()) {
@@ -875,6 +905,7 @@ private fun FoldableDestinationAddressWidget(
     onExpandSection: (SendSections) -> Unit,
     // dst address
     addressFieldState: TextFieldState,
+    addressFocusRequester: FocusRequester = remember { FocusRequester() },
     onDstAddressLostFocus: () -> Unit,
     onSetOutputAddress: (String) -> Unit,
     onScanDstAddressRequest: () -> Unit,
@@ -957,6 +988,7 @@ private fun FoldableDestinationAddressWidget(
             VsTextInputField(
                 textFieldState = addressFieldState,
                 hint = stringResource(R.string.send_to_address_hint),
+                focusRequester = addressFocusRequester,
                 onFocusChanged = {
                     if (!it) {
                         onDstAddressLostFocus()
@@ -1004,6 +1036,7 @@ private fun FoldableBondDestinationAddress(
     onExpandSection: (SendSections) -> Unit,
     // dst address
     addressFieldState: TextFieldState,
+    addressFocusRequester: FocusRequester = remember { FocusRequester() },
     onDstAddressLostFocus: () -> Unit,
     onSetOutputAddress: (String) -> Unit,
     onScanDstAddressRequest: () -> Unit,
@@ -1050,6 +1083,7 @@ private fun FoldableBondDestinationAddress(
             VsTextInputField(
                 textFieldState = addressFieldState,
                 hint = stringResource(R.string.send_to_address_hint),
+                focusRequester = addressFocusRequester,
                 onFocusChanged = {
                     if (!it) {
                         onDstAddressLostFocus()
@@ -1187,19 +1221,20 @@ private fun FoldableAssetWidget(
         Column(
             modifier = Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
         ) {
-            Box(modifier = Modifier.testTag("SendFormScreen.chainSelector")) {
-                ChainSelector(
-                    title = stringResource(R.string.send_from_address),
-                    // TODO selectedChain should not be nullable
-                    //  or default value should be something else
-                    chain = state.selectedCoin?.model?.address?.chain ?: Chain.ThorChain,
-                    onClick = onSelectNetworkRequest,
-                    onDragCancel = onNetworkDragCancel,
-                    onDrag = onNetworkDrag,
-                    onDragStart = onNetworkDragStart,
-                    onDragEnd = onNetworkDragEnd,
-                    onLongPressStarted = onNetworkLongPressStarted,
-                )
+            val chain = state.selectedCoin?.model?.address?.chain
+            if (chain != null) {
+                Box(modifier = Modifier.testTag("SendFormScreen.chainSelector")) {
+                    ChainSelector(
+                        title = stringResource(R.string.send_from_address),
+                        chain = chain,
+                        onClick = onSelectNetworkRequest,
+                        onDragCancel = onNetworkDragCancel,
+                        onDrag = onNetworkDrag,
+                        onDragStart = onNetworkDragStart,
+                        onDragEnd = onNetworkDragEnd,
+                        onLongPressStarted = onNetworkLongPressStarted,
+                    )
+                }
             }
 
             UiSpacer(12.dp)

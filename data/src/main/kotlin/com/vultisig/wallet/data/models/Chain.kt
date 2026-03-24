@@ -57,6 +57,7 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
     Akash("Akash", COSMOS, "uakt"),
     Solana("Solana", SOL, "SOL"),
     Polkadot("Polkadot", SUBSTRATE, "DOT"),
+    Bittensor("Bittensor", SUBSTRATE, "RAO"),
     Sui("Sui", SUI, "SUI"),
     Ton("Ton", TON, "TON"),
     Ripple("Ripple", RIPPLE, "XRP"),
@@ -106,6 +107,7 @@ val Chain.coinType: CoinType
             Chain.Kujira -> CoinType.KUJIRA
             Chain.CronosChain -> CoinType.CRONOSCHAIN
             Chain.Polkadot -> CoinType.POLKADOT
+            Chain.Bittensor -> CoinType.POLKADOT
             Chain.Dydx -> CoinType.DYDX
             Chain.ZkSync -> CoinType.ZKSYNC
             Chain.Sui -> CoinType.SUI
@@ -136,6 +138,7 @@ val Chain.TssKeysignType: TssKeyType
         when (this) {
             Chain.Solana,
             Chain.Polkadot,
+            Chain.Bittensor,
             Chain.Sui,
             Chain.Ton,
             Chain.Cardano -> TssKeyType.EDDSA
@@ -283,6 +286,7 @@ val Chain.isDeFiSupported: Boolean
     get() =
         when (this) {
             Chain.ThorChain,
+            Chain.MayaChain,
             Chain.Ethereum -> true
             else -> false
         }
@@ -339,6 +343,7 @@ fun Chain.swapAssetName(): String {
         Chain.Blast -> "BLAST"
         Chain.CronosChain -> "CRO"
         Chain.Polkadot -> "DOT"
+        Chain.Bittensor -> "TAO"
         Chain.Dydx -> "DYDX"
         Chain.ZkSync -> "ZK"
         Chain.Sui -> "SUI"
@@ -380,6 +385,7 @@ fun Chain.ticker(): String {
         Chain.MayaChain -> "CACAO"
         Chain.CronosChain -> "CRO"
         Chain.Polkadot -> "DOT"
+        Chain.Bittensor -> "TAO"
         Chain.Dydx -> "DYDX"
         Chain.ZkSync -> "ZK"
         Chain.Sui -> "SUI"
@@ -403,6 +409,7 @@ val Chain.hasReaping: Boolean
     get() =
         when (this) {
             Chain.Polkadot,
+            Chain.Bittensor,
             Chain.Ripple -> true
             else -> false
         }

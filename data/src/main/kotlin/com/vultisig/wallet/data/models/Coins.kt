@@ -543,19 +543,6 @@ object Coins {
                 isNativeToken = false,
             )
 
-        val WEWE =
-            Coin(
-                chain = Chain.Base,
-                ticker = "WEWE",
-                logo = "wewe",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x6b9bb36519538e0C073894E964E90172E1c0B41F",
-                isNativeToken = false,
-            )
-
         val cbETH =
             Coin(
                 chain = Chain.Base,
@@ -595,7 +582,7 @@ object Coins {
                 isNativeToken = false,
             )
 
-        val all = listOf(AERO, DAI, ETH, OM, PYTH, SNX, USDC, W, WEWE, cbETH, ezETH, rETH)
+        val all = listOf(AERO, DAI, ETH, OM, PYTH, SNX, USDC, W, cbETH, ezETH, rETH)
     }
 
     object Bitcoin {
@@ -2028,6 +2015,23 @@ object Coins {
         val all = listOf(DOT)
     }
 
+    object Bittensor {
+        val TAO =
+            Coin(
+                chain = Chain.Bittensor,
+                ticker = "TAO",
+                logo = "bittensor",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "bittensor",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+
+        val all = listOf(TAO)
+    }
+
     object Polygon {
         val AVAX =
             Coin(
@@ -2906,6 +2910,7 @@ object Coins {
             Chain.Optimism to Optimism.all,
             Chain.Osmosis to Osmosis.all,
             Chain.Polkadot to Polkadot.all,
+            Chain.Bittensor to Bittensor.all,
             Chain.Polygon to Polygon.all,
             Chain.Ripple to Ripple.all,
             Chain.Solana to Solana.all,

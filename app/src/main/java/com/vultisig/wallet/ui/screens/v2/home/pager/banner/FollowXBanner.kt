@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
+import com.vultisig.wallet.ui.screens.referral.SetBackgroundBanner
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks.TWITTER_ID
 
@@ -34,7 +34,7 @@ internal fun FollowXBanner(onFollowXClick: () -> Unit) {
                     shape = RoundedCornerShape(16.dp),
                 )
     ) {
-        SetBackgoundBanner(backgroundImageResId = R.drawable.follow_banner)
+        SetBackgroundBanner(backgroundImageResId = R.drawable.follow_banner)
 
         Column(modifier = Modifier.padding(all = 24.dp)) {
             Text(

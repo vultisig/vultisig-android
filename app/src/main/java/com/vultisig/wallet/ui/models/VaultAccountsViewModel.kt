@@ -313,19 +313,25 @@ constructor(
                     )
                 }
                 CryptoConnectionType.Defi -> {
-                    // Exception for DeFi providers on home screen
-                    if (account.chainName.equals(Chain.Ethereum.toDefi.raw, true)) {
-                        navigator.route(
-                            Route.ChainDashboard(
-                                route = ChainDashboardRoute.PositionCircle(vaultId = vaultId)
+                    when {
+                        account.chainName.equals(Chain.Ethereum.toDefi.raw, true) ->
+                            navigator.route(
+                                Route.ChainDashboard(
+                                    route = ChainDashboardRoute.PositionCircle(vaultId = vaultId)
+                                )
                             )
-                        )
-                    } else {
-                        navigator.route(
-                            Route.ChainDashboard(
-                                route = ChainDashboardRoute.PositionTokens(vaultId = vaultId)
+                        account.chainName.equals(Chain.MayaChain.raw, true) ->
+                            navigator.route(
+                                Route.ChainDashboard(
+                                    route = ChainDashboardRoute.PositionMaya(vaultId = vaultId)
+                                )
                             )
-                        )
+                        else ->
+                            navigator.route(
+                                Route.ChainDashboard(
+                                    route = ChainDashboardRoute.PositionTokens(vaultId = vaultId)
+                                )
+                            )
                     }
                 }
             }
@@ -470,20 +476,30 @@ constructor(
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun toggleBalanceVisibility() {
+        val vaultId =
+            vaultId
+                ?: run {
+                    Timber.w("toggleBalanceVisibility: vaultId is null, skipping")
+                    return
+                }
         val isBalanceValueVisible = !uiState.value.isBalanceValueVisible
         viewModelScope.launch {
             uiState.update { it.copy(isBalanceValueVisible = isBalanceValueVisible) }
-            balanceVisibilityRepository.setVisibility(vaultId!!, isBalanceValueVisible)
+            balanceVisibilityRepository.setVisibility(vaultId, isBalanceValueVisible)
         }
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun backupVault() {
+        val vaultId =
+            vaultId
+                ?: run {
+                    Timber.w("backupVault: vaultId is null, skipping")
+                    return
+                }
         viewModelScope.launch {
             dismissBackupReminder()
-            navigator.route(Route.BackupPasswordRequest(vaultId!!))
+            navigator.route(Route.BackupPasswordRequest(vaultId))
         }
     }
 

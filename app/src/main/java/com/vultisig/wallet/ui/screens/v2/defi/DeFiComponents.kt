@@ -61,7 +61,7 @@ import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGroupUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
 import com.vultisig.wallet.ui.components.v2.utils.roundToPx
-import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
+import com.vultisig.wallet.ui.screens.referral.SetBackgroundBanner
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
@@ -78,7 +78,7 @@ internal fun BalanceBanner(
     Box(
         modifier =
             Modifier.fillMaxWidth()
-                .height(140.dp)
+                .height(118.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .border(
                     width = 1.dp,
@@ -86,24 +86,16 @@ internal fun BalanceBanner(
                     shape = RoundedCornerShape(16.dp),
                 )
     ) {
-        SetBackgoundBanner(backgroundImageResId = image)
+        SetBackgroundBanner(backgroundImageResId = image)
 
-        Column(modifier = Modifier.padding(start = 16.dp, top = 16.dp)) {
+        Column(modifier = Modifier.padding(start = 16.dp, top = 25.dp)) {
             Text(
                 text = title,
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.l.medium,
             )
 
-            UiSpacer(16.dp)
-
-            Text(
-                text = stringResource(R.string.defi_balance),
-                color = Theme.v2.colors.text.primary,
-                style = Theme.brockmann.supplementary.caption,
-            )
-
-            UiSpacer(12.dp)
+            UiSpacer(6.dp)
 
             if (isLoading) {
                 UiPlaceholderLoader(modifier = Modifier.size(width = 150.dp, height = 32.dp))
@@ -301,6 +293,7 @@ internal fun PositionsSelectionDialog(
     selectedPositions: List<String>,
     bondPositions: List<PositionUiModelDialog> = emptyList(),
     stakePositions: List<PositionUiModelDialog> = emptyList(),
+    lpPositions: List<PositionUiModelDialog> = emptyList(),
     searchTextFieldState: TextFieldState,
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onDoneClick: () -> Unit = {},
@@ -308,63 +301,66 @@ internal fun PositionsSelectionDialog(
 ) {
     val searchQuery = searchTextFieldState.text.toString().lowercase()
 
-    // Update selections with remember to avoid recreation
     val updateBondPositions =
         remember(bondPositions, selectedPositions) {
-            bondPositions.map { it.copy(isSelected = selectedPositions.contains(it.ticker)) }
+            bondPositions.map { it.copy(isSelected = selectedPositions.contains(it.positionKey)) }
         }
 
     val updateStakePositions =
         remember(stakePositions, selectedPositions) {
-            stakePositions.map { it.copy(isSelected = selectedPositions.contains(it.ticker)) }
+            stakePositions.map { it.copy(isSelected = selectedPositions.contains(it.positionKey)) }
         }
 
-    // Filter positions based on search query with remember
+    val updateLpPositions =
+        remember(lpPositions, selectedPositions) {
+            lpPositions.map { it.copy(isSelected = selectedPositions.contains(it.positionKey)) }
+        }
+
     val filteredBondPositions =
         remember(searchQuery, updateBondPositions) {
-            if (searchQuery.isEmpty()) {
-                updateBondPositions
-            } else {
-                updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
-            }
+            if (searchQuery.isEmpty()) updateBondPositions
+            else updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
         }
 
     val filteredStakePositions =
         remember(searchQuery, updateStakePositions) {
-            if (searchQuery.isEmpty()) {
-                updateStakePositions
-            } else {
-                updateStakePositions.filter { it.ticker.lowercase().contains(searchQuery) }
-            }
+            if (searchQuery.isEmpty()) updateStakePositions
+            else updateStakePositions.filter { it.ticker.lowercase().contains(searchQuery) }
+        }
+
+    val filteredLpPositions =
+        remember(searchQuery, updateLpPositions) {
+            if (searchQuery.isEmpty()) updateLpPositions
+            else updateLpPositions.filter { it.ticker.lowercase().contains(searchQuery) }
         }
 
     val groups = mutableListOf<TokenSelectionGroupUiModel<PositionUiModelDialog>>()
 
+    fun buildItems(positions: List<PositionUiModelDialog>) =
+        positions.map { GridTokenUiModel.SingleToken(data = it) }
+
+    fun buildMapper(gridToken: GridTokenUiModel<PositionUiModelDialog>): TokenSelectionGridUiModel {
+        val model =
+            when (gridToken) {
+                is GridTokenUiModel.PairToken<PositionUiModelDialog> -> error("Not supported")
+                is GridTokenUiModel.SingleToken<PositionUiModelDialog> ->
+                    TokenSelectionUiModel.TokenUiSingle(
+                        name = gridToken.data.ticker,
+                        logo = gridToken.data.logo,
+                    )
+            }
+        return TokenSelectionGridUiModel(
+            isChecked = gridToken.data.isSelected,
+            tokenSelectionUiModel = model,
+        )
+    }
+
     if (filteredBondPositions.isNotEmpty()) {
         groups.add(
             TokenSelectionGroupUiModel(
-                title = "Bond",
-                items =
-                    filteredBondPositions.map { position ->
-                        GridTokenUiModel.SingleToken(data = position)
-                    },
-                mapper = { gridToken ->
-                    val tokenSelectionUiModel =
-                        when (gridToken) {
-                            is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
-                                error("Not supported")
-                            is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
-                                TokenSelectionUiModel.TokenUiSingle(
-                                    name = gridToken.data.ticker,
-                                    logo = gridToken.data.logo,
-                                )
-                            }
-                        }
-                    TokenSelectionGridUiModel(
-                        isChecked = gridToken.data.isSelected,
-                        tokenSelectionUiModel = tokenSelectionUiModel,
-                    )
-                },
+                title = stringResource(R.string.defi_bond),
+                items = buildItems(filteredBondPositions),
+                mapper = ::buildMapper,
                 plusUiModel = null,
             )
         )
@@ -373,28 +369,20 @@ internal fun PositionsSelectionDialog(
     if (filteredStakePositions.isNotEmpty()) {
         groups.add(
             TokenSelectionGroupUiModel(
-                title = "Stake",
-                items =
-                    filteredStakePositions.map { position ->
-                        GridTokenUiModel.SingleToken(data = position)
-                    },
-                mapper = { gridToken ->
-                    val tokenSelectionUiModel =
-                        when (gridToken) {
-                            is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
-                                error("Not Supported")
-                            is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
-                                TokenSelectionUiModel.TokenUiSingle(
-                                    name = gridToken.data.ticker,
-                                    logo = gridToken.data.logo,
-                                )
-                            }
-                        }
-                    TokenSelectionGridUiModel(
-                        isChecked = gridToken.data.isSelected,
-                        tokenSelectionUiModel = tokenSelectionUiModel,
-                    )
-                },
+                title = stringResource(R.string.defi_stake),
+                items = buildItems(filteredStakePositions),
+                mapper = ::buildMapper,
+                plusUiModel = null,
+            )
+        )
+    }
+
+    if (filteredLpPositions.isNotEmpty()) {
+        groups.add(
+            TokenSelectionGroupUiModel(
+                title = stringResource(R.string.liquidity_pool),
+                items = buildItems(filteredLpPositions),
+                mapper = ::buildMapper,
                 plusUiModel = null,
             )
         )
@@ -425,7 +413,7 @@ internal fun PositionsSelectionDialog(
             when (uiModel) {
                 is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
                     val position = uiModel.data
-                    onPositionSelectionChange(position.ticker, isSelected)
+                    onPositionSelectionChange(position.positionKey, isSelected)
                 }
 
                 else -> error("Not supported double coin")

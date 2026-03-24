@@ -91,6 +91,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -195,6 +196,8 @@ constructor(
     }
 
     val isLoading = MutableStateFlow(false)
+    private val _isDataLoaded = MutableStateFlow(false)
+    val isDataLoaded: StateFlow<Boolean> = _isDataLoaded
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
     private var transactionHistoryData = MutableStateFlow<TransactionHistoryData?>(null)
@@ -206,36 +209,40 @@ constructor(
     private var resendCooldownJob: Job? = null
     private var lastNotifiedQrData: String = ""
 
+    private var _keysignViewModel: KeysignViewModel? = null
+
     val keysignViewModel: KeysignViewModel
-        get() =
-            KeysignViewModel(
-                vault = _currentVault!!,
-                keysignCommittee = selection.value!!,
-                serverUrl = _serverAddress,
-                sessionId = _sessionID,
-                encryptionKeyHex = _encryptionKeyHex,
-                messagesToSign = messagesToSign,
-                keyType = tssKeysignType,
-                keysignPayload = _keysignPayload,
-                customMessagePayload = customMessagePayload,
-                thorChainApi = thorChainApi,
-                broadcastTx = broadcastTx,
-                evmApiFactory = evmApiFactory,
-                explorerLinkRepository = explorerLinkRepository,
-                sessionApi = sessionApi,
-                navigator = navigator,
-                encryption = encryption,
-                featureFlagApi = featureFlagApi,
-                transactionTypeUiModel = transactionTypeUiModel,
-                pullTssMessages = pullTssMessages,
-                isInitiatingDevice = true,
-                addressBookRepository = addressBookRepository,
-                transactionStatusServiceManager = transactionStatusServiceManager,
-                txStatusConfigurationProvider = txStatusConfigurationProvider,
-                vaultRepository = vaultRepository,
-                transactionHistoryData = transactionHistoryData.value,
-                transactionHistoryRepository = transactionHistoryRepository,
-            )
+        get() = _keysignViewModel ?: createKeysignViewModel().also { _keysignViewModel = it }
+
+    private fun createKeysignViewModel(): KeysignViewModel =
+        KeysignViewModel(
+            vault = _currentVault!!,
+            keysignCommittee = selection.value!!,
+            serverUrl = _serverAddress,
+            sessionId = _sessionID,
+            encryptionKeyHex = _encryptionKeyHex,
+            messagesToSign = messagesToSign,
+            keyType = tssKeysignType,
+            keysignPayload = _keysignPayload,
+            customMessagePayload = customMessagePayload,
+            thorChainApi = thorChainApi,
+            broadcastTx = broadcastTx,
+            evmApiFactory = evmApiFactory,
+            explorerLinkRepository = explorerLinkRepository,
+            sessionApi = sessionApi,
+            navigator = navigator,
+            encryption = encryption,
+            featureFlagApi = featureFlagApi,
+            transactionTypeUiModel = transactionTypeUiModel,
+            pullTssMessages = pullTssMessages,
+            isInitiatingDevice = true,
+            addressBookRepository = addressBookRepository,
+            transactionStatusServiceManager = transactionStatusServiceManager,
+            txStatusConfigurationProvider = txStatusConfigurationProvider,
+            vaultRepository = vaultRepository,
+            transactionHistoryData = transactionHistoryData.value,
+            transactionHistoryRepository = transactionHistoryRepository,
+        )
 
     val uiState = MutableStateFlow(KeysignFlowUiState())
 
@@ -256,6 +263,7 @@ constructor(
         context: Context,
         txType: Route.Keysign.Keysign.TxType,
     ) {
+        _keysignViewModel = null
         try {
             when (txType) {
                 Send -> shareViewModel.loadTransaction(transactionId)
@@ -525,6 +533,7 @@ constructor(
                                 TransactionTypeUiModel.Send(transactionDetailsUiModel)
                         }
                     }
+                    _isDataLoaded.value = true
                 }
             }
         } else {
@@ -536,6 +545,7 @@ constructor(
                             message = customMessagePayload?.message ?: "",
                         )
                 )
+            _isDataLoaded.value = true
         }
     }
 
@@ -686,6 +696,11 @@ constructor(
 
     override fun onCleared() {
         cleanQrAddress()
+        try {
+            context.unregisterReceiver(serviceStartedReceiver)
+        } catch (_: IllegalArgumentException) {
+            // receiver was already unregistered or never registered
+        }
         stopService(context)
         super.onCleared()
     }

@@ -44,6 +44,9 @@ interface VaultDao {
 
     @Query("SELECT COUNT(*) > 0 FROM vault") suspend fun hasVaults(): Boolean
 
+    @Query("SELECT COUNT(*) FROM vault WHERE name = :name AND id != :excludeId")
+    suspend fun countByNameExcluding(name: String, excludeId: String): Int
+
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertVault(vault: VaultEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

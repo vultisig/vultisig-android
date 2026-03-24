@@ -109,6 +109,14 @@ internal interface DepositMemo {
         override fun toString(): String = "POOL+"
     }
 
+    data class AddLiquidity(val pool: String) : DepositMemo {
+        override fun toString(): String = "ADD:$pool"
+    }
+
+    data class RemoveLiquidity(val pool: String, val basisPoints: Int) : DepositMemo {
+        override fun toString(): String = "WITHDRAW:$pool:$basisPoints"
+    }
+
     data class WithdrawPool(val basisPoints: Int) : DepositMemo {
 
         override fun toString(): String = buildString {

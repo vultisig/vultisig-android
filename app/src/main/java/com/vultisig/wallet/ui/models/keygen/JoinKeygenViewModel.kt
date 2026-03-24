@@ -403,8 +403,16 @@ class MediatorServiceDiscoveryListener(
     }
 
     override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
+        val logAddress =
+            if (
+                android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+            ) {
+                serviceInfo?.hostAddresses?.firstOrNull()
+            } else {
+                @Suppress("DEPRECATION") serviceInfo?.host
+            }
         Timber.d(
-            "Service resolved: ${serviceInfo?.serviceName}, address: ${serviceInfo?.host?.address.toString()}, port: ${serviceInfo?.port}"
+            "Service resolved: ${serviceInfo?.serviceName}, address: ${logAddress?.hostAddress}, port: ${serviceInfo?.port}"
         )
 
         serviceInfo?.let { info ->

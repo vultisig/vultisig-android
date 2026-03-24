@@ -110,6 +110,10 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindMayachainBondUseCase(impl: MayachainBondUseCaseImpl): MayachainBondUseCase
+
+    @Binds
+    @Singleton
     fun bindGetGlobalBackupReminderStatus(
         impl: IsGlobalBackupReminderRequiredUseCaseImpl
     ): IsGlobalBackupReminderRequiredUseCase

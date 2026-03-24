@@ -38,6 +38,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -338,7 +340,62 @@ internal fun VaultAccountsScreen(
 @Preview
 @Composable
 private fun PreviewVaultAccountsScreen() {
-    VaultAccountsScreen(state = VaultAccountsUiModel())
+    VaultAccountsScreen(
+        state =
+            VaultAccountsUiModel(
+                vaultName = "Main Vault",
+                totalFiatValue = "$12,345.67",
+                isBalanceValueVisible = true,
+                accounts =
+                    listOf(
+                        AccountUiModel(
+                            model =
+                                Address(
+                                    chain = Chain.Ethereum,
+                                    address = "0xAbCd1234",
+                                    accounts = emptyList(),
+                                ),
+                            chainName = "Ethereum",
+                            logo = R.drawable.ethereum,
+                            address = "0xAbCd1234",
+                            nativeTokenAmount = "0.5 ETH",
+                            fiatAmount = "$1,234.56",
+                            assetsSize = 3,
+                            nativeTokenTicker = "ETH",
+                        ),
+                        AccountUiModel(
+                            model =
+                                Address(
+                                    chain = Chain.Bitcoin,
+                                    address = "bc1qxyz",
+                                    accounts = emptyList(),
+                                ),
+                            chainName = "Bitcoin",
+                            logo = R.drawable.bitcoin,
+                            address = "bc1qxyz",
+                            nativeTokenAmount = "0.1 BTC",
+                            fiatAmount = "$6,500.00",
+                            assetsSize = 1,
+                            nativeTokenTicker = "BTC",
+                        ),
+                        AccountUiModel(
+                            model =
+                                Address(
+                                    chain = Chain.ThorChain,
+                                    address = "thor1abc",
+                                    accounts = emptyList(),
+                                ),
+                            chainName = "THORChain",
+                            logo = R.drawable.rune,
+                            address = "thor1abc",
+                            nativeTokenAmount = "100 RUNE",
+                            fiatAmount = "$400.00",
+                            assetsSize = 1,
+                            nativeTokenTicker = "RUNE",
+                        ),
+                    ),
+            )
+    )
 }
 
 internal object VaultAccountsScreenTags {

@@ -52,7 +52,6 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
-import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
@@ -114,6 +113,8 @@ internal enum class DepositOption {
     UnMerge,
     SecuredAsset,
     WithdrawSecuredAsset,
+    AddLiquidity,
+    RemoveLiquidity,
 }
 
 @Immutable
@@ -150,6 +151,8 @@ internal data class DepositFormUiModel(
     val availableSecuredAssets: List<TokenWithdrawSecureAsset> = emptyList(),
     val selectedSecuredAsset: TokenWithdrawSecureAsset =
         availableSecuredAssets.firstOrNull() ?: TokenWithdrawSecureAsset.EMPTY,
+    val bondableAssets: List<String> = emptyList(),
+    val selectedBondAsset: String = "",
 )
 
 @HiltViewModel
@@ -171,7 +174,6 @@ constructor(
     private val mayaChainApi: MayaChainApi,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
-    private val enableCoin: EnableTokenUseCase,
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
     private val feeServiceComposite: FeeServiceComposite,
     private val vaultRepository: VaultRepository,
@@ -210,13 +212,21 @@ constructor(
     private var addressJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
+    private var lpPoolId: String? = null
 
-    fun loadData(vaultId: String, chainId: String, depositType: String?, bondAddress: String?) {
+    fun loadData(
+        vaultId: String,
+        chainId: String,
+        depositType: String?,
+        bondAddress: String?,
+        poolId: String? = null,
+    ) {
         this.vaultId = vaultId
         val chain = chainId.let(Chain::fromRaw)
         this.chain = chain
         this.depositTypeAction = depositType
         this.bondAddress = bondAddress
+        this.lpPoolId = poolId
 
         val depositOptions =
             when (chain) {
@@ -239,6 +249,8 @@ constructor(
                         DepositOption.Custom,
                         DepositOption.AddCacaoPool,
                         DepositOption.RemoveCacaoPool,
+                        DepositOption.AddLiquidity,
+                        DepositOption.RemoveLiquidity,
                     )
 
                 Chain.Kujira,
@@ -372,21 +384,44 @@ constructor(
     }
 
     private fun setMetadataInfo() {
-        if (!depositTypeAction.isNullOrEmpty()) {
-            val action = parseDepositType(depositTypeAction)
+        val action = depositTypeAction?.takeIf { it.isNotEmpty() } ?: return
+        depositTypeAction = null
 
-            if (action != null) {
-                val depositOption =
-                    when (action) {
-                        DeFiNavActions.UNBOND -> DepositOption.Unbond
+        val depositOption =
+            when (parseDepositType(action)) {
+                DeFiNavActions.BOND -> DepositOption.Bond
+                DeFiNavActions.UNBOND -> DepositOption.Unbond
+                DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
+                DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
+                DeFiNavActions.ADD_LP -> DepositOption.AddLiquidity
+                DeFiNavActions.REMOVE_LP -> DepositOption.RemoveLiquidity
+                else -> DepositOption.Bond
+            }
+        selectDepositOption(depositOption)
+    }
 
-                        else -> DepositOption.Bond
-                    }
-                selectDepositOption(depositOption)
-            } else {
-                Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
+    private fun loadMayaBondableAssets() {
+        state.update { it.copy(bondableAssets = emptyList(), selectedBondAsset = "") }
+        assetsFieldState.clearText()
+        viewModelScope.safeLaunch {
+            val assets =
+                withContext(Dispatchers.IO) {
+                    mayaChainApi
+                        .getMayaNodePools()
+                        .filter { it.status == "Available" && it.bondable }
+                        .map { it.asset }
+                }
+            val firstAsset = assets.firstOrNull() ?: ""
+            state.update { it.copy(bondableAssets = assets, selectedBondAsset = firstAsset) }
+            if (firstAsset.isNotEmpty()) {
+                assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
             }
         }
+    }
+
+    fun selectBondAsset(asset: String) {
+        state.update { it.copy(selectedBondAsset = asset) }
+        assetsFieldState.setTextAndPlaceCursorAtEnd(asset)
     }
 
     private suspend fun updateTokenAmount(
@@ -396,28 +431,26 @@ constructor(
         vaultId: String,
     ) {
         if (account != null) {
-            account.tokenValue?.let { tokenValue ->
+            val tokenValue = account.tokenValue
+            if (tokenValue != null) {
                 val value = mapTokenValueToStringWithUnit(tokenValue)
                 state.update { state -> state.copy(amountError = null, balance = value.asUiText()) }
+            } else {
+                // Account exists in vault but balance not yet loaded — clear stale error and
+                // balance
+                state.update { it.copy(amountError = null, balance = UiText.Empty) }
             }
         } else {
-            val token = findCoin(chain, targetTicker)
-            token?.let {
-                enableCoin(vaultId, token)
-                loadAddress(vaultId, chain)
+            state.update {
+                it.copy(
+                    balance = UiText.Empty,
+                    amountError =
+                        UiText.FormattedText(
+                            R.string.must_be_enabled_before_proceeding,
+                            listOf(targetTicker.orEmpty()),
+                        ),
+                )
             }
-                ?: run {
-                    state.update {
-                        it.copy(
-                            balance = UiText.Empty,
-                            amountError =
-                                UiText.FormattedText(
-                                    R.string.must_be_enabled_before_proceeding,
-                                    listOf(targetTicker.orEmpty()),
-                                ),
-                        )
-                    }
-                }
         }
     }
 
@@ -492,14 +525,34 @@ constructor(
                 }
 
                 DepositOption.Bond,
-                DepositOption.Unbond,
-                DepositOption.Leave ->
+                DepositOption.Unbond -> {
+                    val defaultBondToken =
+                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
+                        else Coins.ThorChain.RUNE
                     state.update {
-                        it.copy(selectedToken = Coins.ThorChain.RUNE, unstakableAmount = null)
+                        it.copy(selectedToken = defaultBondToken, unstakableAmount = null)
                     }
+                    if (chain == Chain.MayaChain) {
+                        loadMayaBondableAssets()
+                    }
+                }
+
+                DepositOption.Leave -> {
+                    val leaveToken =
+                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
+                        else Coins.ThorChain.RUNE
+                    state.update { it.copy(selectedToken = leaveToken, unstakableAmount = null) }
+                }
 
                 DepositOption.RemoveCacaoPool -> {
                     handleRemoveCacaoOption()
+                }
+
+                DepositOption.AddLiquidity,
+                DepositOption.RemoveLiquidity -> {
+                    state.update {
+                        it.copy(selectedToken = Coins.MayaChain.CACAO, unstakableAmount = null)
+                    }
                 }
 
                 DepositOption.WithdrawSecuredAsset -> {
@@ -748,6 +801,8 @@ constructor(
                         DepositOption.UnMerge -> createUnMergeTx()
 
                         DepositOption.RemoveCacaoPool -> createRemoveCacaoPoolTransaction()
+                        DepositOption.AddLiquidity -> createAddLiquidityTransaction()
+                        DepositOption.RemoveLiquidity -> createRemoveLiquidityTransaction()
                         DepositOption.SecuredAsset -> createSecuredAssetTransaction()
                         DepositOption.WithdrawSecuredAsset ->
                             createWithdrawSecuredAssetTransaction()
@@ -1134,6 +1189,113 @@ constructor(
             estimateFeesFiat = estimatedGasFee.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
             operation = OPERATION_WITHDRAW,
+        )
+    }
+
+    private suspend fun createAddLiquidityTransaction(): DepositTransaction {
+        val chain =
+            chain
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
+
+        val poolId =
+            lpPoolId
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
+
+        val address = accountsRepository.loadAddress(vaultId, chain).first()
+        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+
+        val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+        val tokenAmountInt = tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
+
+        val srcAddress = selectedToken.address
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+        val memo = DepositMemo.AddLiquidity(poolId)
+
+        val specific =
+            blockChainSpecificRepository.getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = "",
+            memo = memo.toString(),
+            srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
+            estimatedFees = gasFee,
+            blockChainSpecific = specific.blockChainSpecific,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+        )
+    }
+
+    private suspend fun createRemoveLiquidityTransaction(): DepositTransaction {
+        val chain =
+            chain
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
+
+        val poolId =
+            lpPoolId
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
+
+        val address = accountsRepository.loadAddress(vaultId, chain).first()
+        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+
+        val srcAddress = selectedToken.address
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+
+        val basisPoints = tokenAmountFieldState.text.toString().toIntOrNull()
+
+        validateBasisPoints(basisPoints)?.let { throw InvalidTransactionDataException(it) }
+
+        val memo = DepositMemo.RemoveLiquidity(poolId, basisPoints!! * 100)
+
+        val specific =
+            blockChainSpecificRepository.getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+            )
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = "",
+            memo = memo.toString(),
+            srcTokenValue = TokenValue(value = BigInteger.ZERO, token = selectedToken),
+            estimatedFees = gasFee,
+            blockChainSpecific = specific.blockChainSpecific,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
         )
     }
 
@@ -1698,9 +1860,15 @@ constructor(
 
         val selectedMergeToken = state.value.selectedCoin
         val selectedAccount =
-            address.accounts.first {
+            address.accounts.firstOrNull {
                 it.token.ticker.equals(selectedMergeToken.ticker, ignoreCase = true)
             }
+                ?: throw InvalidTransactionDataException(
+                    UiText.FormattedText(
+                        R.string.must_be_enabled_before_proceeding,
+                        listOf(selectedMergeToken.ticker),
+                    )
+                )
         val selectedToken = selectedAccount.token
 
         val srcAddress = selectedToken.address
@@ -1768,9 +1936,15 @@ constructor(
 
         val selectedMergeToken = state.value.selectedCoin
         val selectedAccount =
-            address.accounts.first {
+            address.accounts.firstOrNull {
                 it.token.ticker.equals(selectedMergeToken.ticker, ignoreCase = true)
             }
+                ?: throw InvalidTransactionDataException(
+                    UiText.FormattedText(
+                        R.string.must_be_enabled_before_proceeding,
+                        listOf(selectedMergeToken.ticker),
+                    )
+                )
         val selectedToken = selectedAccount.token
 
         val srcAddress = selectedToken.address
@@ -1979,10 +2153,6 @@ constructor(
 
     private fun isLpUnitCharsValid(lpUnits: String) =
         lpUnits.toIntOrNull() != null && lpUnits.all { it.isDigit() } && lpUnits.toInt() > 0
-
-    @Deprecated("Use Ruji Staking through DeFi Tab")
-    private fun findCoin(chain: Chain, ticker: String?) =
-        Coins.coins[chain]?.find { it.ticker.equals(ticker, ignoreCase = true) }
 
     fun onSelectSecureAsset(asset: TokenWithdrawSecureAsset) {
         val balance = asset.tokenValue?.let(mapTokenValueToStringWithUnit)

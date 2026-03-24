@@ -26,6 +26,8 @@ internal interface ApiModule {
 
     @Binds @Singleton fun bindPolkadotApi(impl: PolkadotApiImp): PolkadotApi
 
+    @Binds @Singleton fun bindBittensorApi(impl: BittensorApiImp): BittensorApi
+
     @Binds fun bindSessionApi(impl: SessionApiImpl): SessionApi
 
     @Binds @Singleton fun bindCoinGeckoApi(impl: CoinGeckoApiImpl): CoinGeckoApi
@@ -41,8 +43,6 @@ internal interface ApiModule {
     @Binds @Singleton fun bindSolanaApi(impl: SolanaApiImp): SolanaApi
 
     @Binds @Singleton fun bindLiFiChainApi(impl: LiFiChainApiImpl): LiFiChainApi
-
-    @Binds @Singleton fun bindBlowfishApi(impl: BlowfishApiImpl): BlowfishApi
 
     @Binds @Singleton fun bindFeatureFlagApi(impl: FeatureFlagApiImpl): FeatureFlagApi
 

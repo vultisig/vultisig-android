@@ -434,7 +434,10 @@ internal sealed class Route {
         val chainId: String,
         val depositType: String? = null,
         val bondAddress: String? = null,
+        val poolId: String? = null,
     )
+
+    @Serializable data class BondForm(val vaultId: String, val chainId: String)
 
     @Serializable data class Settings(val vaultId: String)
 
@@ -518,6 +521,8 @@ sealed interface ChainDashboardRoute {
     @Serializable data class PositionTokens(val vaultId: String) : ChainDashboardRoute
 
     @Serializable data class PositionCircle(val vaultId: String) : ChainDashboardRoute
+
+    @Serializable data class PositionMaya(val vaultId: String) : ChainDashboardRoute
 }
 
 internal val BackupTypeNavType = createNavType<BackupType>()

@@ -90,30 +90,6 @@ internal sealed class VaultSettingsItem(
             enabled = isEnabled,
         )
 
-    data object Security :
-        VaultSettingsItem(
-            value =
-                SettingsItemUiModel(
-                    title = UiText.StringResource(R.string.vault_settings_security_screen_title),
-                    subTitle = UiText.StringResource(R.string.vault_settings_enable_biometric),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                    leadingIcon = R.drawable.security,
-                ),
-            enabled = false,
-        )
-
-    data object PasswordHint :
-        VaultSettingsItem(
-            value =
-                SettingsItemUiModel(
-                    title = UiText.StringResource(R.string.vault_settings_password_hint),
-                    subTitle = UiText.StringResource(R.string.vault_settings_set_a_password),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                    leadingIcon = R.drawable.pass_hint,
-                ),
-            enabled = false,
-        )
-
     data object BackupVaultShare :
         VaultSettingsItem(
             value =
@@ -226,12 +202,7 @@ constructor(
             ),
             VaultSettingsGroupUiModel(
                 title = UiText.StringResource(R.string.vault_settings_security_screen_title),
-                items =
-                    listOf(
-                        VaultSettingsItem.Security,
-                        VaultSettingsItem.PasswordHint,
-                        VaultSettingsItem.BackupVaultShare,
-                    ),
+                items = listOf(VaultSettingsItem.BackupVaultShare),
             ),
             VaultSettingsGroupUiModel(
                 title = UiText.StringResource(R.string.other),
@@ -375,9 +346,7 @@ constructor(
             VaultSettingsItem.Delete -> navigateToConfirmDeleteScreen()
             VaultSettingsItem.Details -> openDetails()
             is VaultSettingsItem.Migrate -> migrate()
-            VaultSettingsItem.PasswordHint -> Unit
             VaultSettingsItem.Rename -> openRename()
-            VaultSettingsItem.Security -> Unit
             VaultSettingsItem.OnChainSecurity -> navigateToOnChainSecurityScreen()
             is VaultSettingsItem.Reshare -> navigateToReshareStartScreen()
             VaultSettingsItem.Sign -> signMessage()

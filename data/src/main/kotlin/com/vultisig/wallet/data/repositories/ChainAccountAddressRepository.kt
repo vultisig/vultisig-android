@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
 import com.vultisig.wallet.data.crypto.CardanoUtils
@@ -84,6 +85,12 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                     )
                 }
                 val publicKey = PublicKey(eddsaPubKey.hexToByteArray(), PublicKeyType.ED25519)
+                if (chain == Chain.Bittensor) {
+                    // eddsaPubKey is the raw 32-byte ed25519 hex — use first 64 hex chars
+                    val rawKey = BittensorHelper.hexToBytes(eddsaPubKey.take(64))
+                    val address = BittensorHelper.ss58Encode(rawKey)
+                    return Pair(address, eddsaPubKey)
+                }
                 return Pair(chain.coinType.deriveAddressFromPublicKey(publicKey), eddsaPubKey)
             }
         }
@@ -97,6 +104,8 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
             Chain.MayaChain -> AnyAddress.isValidBech32(address, chain.coinType, "maya")
 
             Chain.Sei -> AnyAddress.isValid(address, CoinType.ETHEREUM)
+
+            Chain.Bittensor -> AnyAddress.isValidSS58(address, CoinType.POLKADOT, 42)
 
             else -> chain.coinType.validate(address)
         }

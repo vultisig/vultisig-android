@@ -360,7 +360,7 @@ private fun ReferralRewardsBanner(rewards: String, isLoading: Boolean) {
                     shape = RoundedCornerShape(12.dp),
                 )
     ) {
-        SetBackgoundBanner(backgroundImageResId = R.drawable.referral_data_banner)
+        SetBackgroundBanner(backgroundImageResId = R.drawable.referral_data_banner)
 
         Column(modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp)) {
             UiIcon(
@@ -393,7 +393,7 @@ private fun ReferralRewardsBanner(rewards: String, isLoading: Boolean) {
 }
 
 @Composable
-fun BoxScope.SetBackgoundBanner(backgroundImageResId: Int) {
+fun BoxScope.SetBackgroundBanner(backgroundImageResId: Int) {
     Image(
         painter = painterResource(backgroundImageResId),
         contentDescription = "Referral Banner",

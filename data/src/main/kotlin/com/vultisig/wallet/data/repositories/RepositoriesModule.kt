@@ -160,6 +160,10 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindMayachainBondRepository(impl: MayachainBondRepositoryImpl): MayachainBondRepository
+
+    @Binds
+    @Singleton
     fun bindActiveBondedNodeRepository(
         impl: ActiveBondedNodeRepositoryImpl
     ): ActiveBondedNodeRepository

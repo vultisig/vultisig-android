@@ -36,6 +36,15 @@ internal fun BigInteger.formatAmount(coinType: CoinType, symbol: String? = null)
     return "${rounded.toPlainString()} ${symbol ?: coinType.symbol}"
 }
 
+internal fun BigInteger.formatAmount(decimals: Int, symbol: String): String {
+    if (this == BigInteger.ZERO) {
+        return "0.0 $symbol"
+    }
+    val chainAmount = this.toBigDecimal().divide(java.math.BigDecimal.TEN.pow(decimals))
+    val rounded = chainAmount.setScale(8, RoundingMode.DOWN)
+    return "${rounded.toPlainString()} $symbol"
+}
+
 internal fun Double.formatPercentage(): String {
     return "%.2f%%".format(Locale.US, this * 100)
 }

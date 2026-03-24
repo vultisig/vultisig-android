@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
@@ -20,6 +21,9 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
+import com.vultisig.wallet.data.blockchain.model.Swap
+import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
@@ -78,6 +82,7 @@ constructor(
     private val cosmosApiFactory: CosmosApiFactory,
     private val blockChairApi: BlockChairApi,
     private val polkadotApi: PolkadotApi,
+    private val bittensorApi: BittensorApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
@@ -182,7 +187,29 @@ constructor(
                     val nonce = evmApi.getNonce(address)
 
                     val gasLimitFee = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
-                    val fees = feeServiceComposite.calculateFees(chain, gasLimitFee, isSwap)
+                    val fees =
+                        if (isSwap) {
+                            feeServiceComposite.calculateDefaultFees(
+                                Swap(
+                                    coin = token,
+                                    vault = VaultData("", ""),
+                                    amount = tokenAmountValue ?: BigInteger.ZERO,
+                                    to = dstAddress ?: address,
+                                    callData = "",
+                                    approvalData = null,
+                                )
+                            )
+                        } else {
+                            feeServiceComposite.calculateFees(
+                                Transfer(
+                                    coin = token,
+                                    vault = VaultData("", ""),
+                                    amount = tokenAmountValue ?: BigInteger.ZERO,
+                                    to = address,
+                                    memo = memo,
+                                )
+                            )
+                        }
 
                     val (maxFeePerGas, priorityFeeWei) =
                         when (fees) {
@@ -372,6 +399,28 @@ constructor(
                             val nonceDeferred = async { polkadotApi.getNonce(address) }
                             val blockHeaderDeferred = async { polkadotApi.getBlockHeader() }
                             val genesisHashDeferred = async { polkadotApi.getGenesisBlockHash() }
+
+                            val (specVersion, transactionVersion) = runtimeVersionDeferred.await()
+
+                            BlockChainSpecificAndUtxo(
+                                BlockChainSpecific.Polkadot(
+                                    recentBlockHash = blockHashDeferred.await(),
+                                    nonce = nonceDeferred.await(),
+                                    currentBlockNumber = blockHeaderDeferred.await(),
+                                    specVersion = specVersion.toLong().toUInt(),
+                                    transactionVersion = transactionVersion.toLong().toUInt(),
+                                    genesisHash = genesisHashDeferred.await(),
+                                    gas = gasFee.value.toString().toULong(),
+                                )
+                            )
+                        }
+                    Chain.Bittensor ->
+                        coroutineScope {
+                            val runtimeVersionDeferred = async { bittensorApi.getRuntimeVersion() }
+                            val blockHashDeferred = async { bittensorApi.getBlockHash() }
+                            val nonceDeferred = async { bittensorApi.getNonce(address) }
+                            val blockHeaderDeferred = async { bittensorApi.getBlockHeader() }
+                            val genesisHashDeferred = async { bittensorApi.getGenesisBlockHash() }
 
                             val (specVersion, transactionVersion) = runtimeVersionDeferred.await()
 

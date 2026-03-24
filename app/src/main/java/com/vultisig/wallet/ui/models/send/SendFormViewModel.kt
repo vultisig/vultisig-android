@@ -104,9 +104,11 @@ import javax.inject.Inject
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -123,6 +125,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -207,6 +210,11 @@ internal enum class SendSections {
     BondAddress,
 }
 
+internal enum class SendFocusField {
+    ADDRESS,
+    AMOUNT,
+}
+
 enum class AddressBookType {
     OUTPUT,
     PROVIDER,
@@ -254,6 +262,9 @@ constructor(
     private val args = savedStateHandle.toRoute<Route.Send>()
 
     val uiState = MutableStateFlow(SendFormUiModel())
+
+    private val _focusFieldChannel = Channel<SendFocusField>(Channel.BUFFERED)
+    val focusFieldFlow = _focusFieldChannel.receiveAsFlow()
 
     val addressFieldState = TextFieldState()
     val tokenAmountFieldState = TextFieldState()
@@ -345,7 +356,7 @@ constructor(
         collectMaxAmount()
     }
 
-    @OptIn(FlowPreview::class)
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private fun collectAddress() {
         viewModelScope.launch {
             addressFieldState
@@ -711,6 +722,7 @@ constructor(
 
             uiState.update { it.copy(isAutocompound = checked) }
 
+            val vaultId = vaultId
             if (
                 (defiType == DeFiNavActions.UNSTAKE_TCY ||
                     defiType == DeFiNavActions.UNSTAKE_STCY) && vaultId != null
@@ -720,7 +732,7 @@ constructor(
                 if (checked) {
                     val regularAccounts =
                         accountsRepository
-                            .loadAddresses(vaultId!!)
+                            .loadAddresses(vaultId)
                             .map { addrs -> addrs.flatMap { it.accounts } }
                             .first()
 
@@ -737,7 +749,7 @@ constructor(
                 } else {
                     val defiAccounts =
                         accountsRepository
-                            .loadDeFiAddresses(vaultId!!, false)
+                            .loadDeFiAddresses(vaultId, false)
                             .map { addrs -> addrs.flatMap { it.accounts } }
                             .first()
 
@@ -1105,6 +1117,17 @@ constructor(
     }
 
     fun send() {
+        if (addressFieldState.text.isBlank()) {
+            expandSection(SendSections.Address)
+            _focusFieldChannel.trySend(SendFocusField.ADDRESS)
+            return
+        }
+        if (tokenAmountFieldState.text.isBlank()) {
+            expandSection(SendSections.Amount)
+            _focusFieldChannel.trySend(SendFocusField.AMOUNT)
+            return
+        }
+
         viewModelScope.launch {
             showLoading()
             try {
@@ -2454,6 +2477,10 @@ constructor(
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE -> Coins.Ethereum.USDC
                 DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY
                 DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY
+                DeFiNavActions.STAKE_CACAO,
+                DeFiNavActions.UNSTAKE_CACAO,
+                DeFiNavActions.ADD_LP,
+                DeFiNavActions.REMOVE_LP -> Coins.MayaChain.CACAO
                 null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
             }
 

@@ -8,11 +8,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
@@ -82,11 +82,11 @@ constructor(
             viewModelScope.launch {
                 val vault = vaultRepository.get(args.vaultId) ?: return@launch
                 val total = vault.signers.size
-                val threshold = Utils.getThreshold(total)
+                val position = vault.getVaultPart().coerceAtLeast(1)
                 _title.value =
                     UiText.FormattedText(
                         R.string.vault_setup_save_backup_n_of_n_to_the_cloud,
-                        listOf(threshold, total),
+                        listOf(position, total),
                     )
             }
         }

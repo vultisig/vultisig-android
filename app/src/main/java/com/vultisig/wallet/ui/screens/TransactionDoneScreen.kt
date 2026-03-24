@@ -32,6 +32,7 @@ import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
+import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.screens.send.AddressField
 import com.vultisig.wallet.ui.screens.send.OtherField
 import com.vultisig.wallet.ui.theme.Theme
@@ -55,7 +56,7 @@ internal fun TransactionDoneView(
         applyScaffoldPaddings = true,
         topBar = {
             if (showToolbar) {
-                VsTopAppBar(title = "Overview")
+                VsTopAppBar(title = stringResource(R.string.transaction_done_overview))
             }
         },
         content = {
@@ -89,6 +90,9 @@ internal fun TransactionDoneView(
 
                         is TransactionTypeUiModel.Send ->
                             TransactionDetail(transaction = transactionTypeUiModel.tx)
+
+                        is TransactionTypeUiModel.Swap ->
+                            SwapTransactionDetail(transactionTypeUiModel.swapTransactionUiModel)
 
                         is TransactionTypeUiModel.SignMessage ->
                             CustomMessageDetail(transactionTypeUiModel.model, transactionHash)
@@ -174,6 +178,43 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
             value = depositTransaction.networkFeeTokenValue,
         )
     }
+}
+
+@Composable
+private fun SwapTransactionDetail(swapTransaction: SwapTransactionUiModel) {
+    UiHorizontalDivider()
+
+    OtherField(
+        title = stringResource(R.string.swap_form_from_title),
+        value = "${swapTransaction.src.value} ${swapTransaction.src.token.ticker}",
+    )
+
+    OtherField(
+        title = stringResource(R.string.swap_form_dst_token_title),
+        value = "${swapTransaction.dst.value} ${swapTransaction.dst.token.ticker}",
+    )
+
+    if (swapTransaction.provider.isNotEmpty()) {
+        OtherField(
+            title = stringResource(R.string.swap_screen_provider_title),
+            value = swapTransaction.provider,
+        )
+    }
+
+    OtherField(
+        title = stringResource(R.string.swap_form_estimated_fees_title),
+        value = swapTransaction.providerFee.fiatValue,
+    )
+
+    OtherField(
+        title = stringResource(R.string.verify_transaction_network_fee),
+        value = swapTransaction.networkFeeFormatted,
+    )
+
+    OtherField(
+        title = stringResource(R.string.verify_swap_screen_total_fees),
+        value = swapTransaction.totalFee,
+    )
 }
 
 @Composable

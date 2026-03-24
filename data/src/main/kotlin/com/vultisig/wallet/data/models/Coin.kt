@@ -54,7 +54,7 @@ val Coin.isLpToken: Boolean
         }
 
 fun Coin.allowZeroGas(): Boolean {
-    return this.chain == Chain.Polkadot || this.chain == Chain.Tron
+    return this.chain == Chain.Polkadot || this.chain == Chain.Bittensor || this.chain == Chain.Tron
 }
 
 fun Coin.getNotNativeTicker(): String {

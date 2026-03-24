@@ -50,8 +50,6 @@ import com.vultisig.wallet.ui.models.keygen.StartViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.startScreenAnimations
 
-private const val IS_IMPORT_SEEDPHRASE_ENABLED = true
-
 @Composable
 internal fun StartScreen(model: StartViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
@@ -63,7 +61,6 @@ internal fun StartScreen(model: StartViewModel = hiltViewModel()) {
         onScanQrCodeClick = model::navigateToScanQrCode,
         onImportVaultClick = model::navigateToImportVault,
         onImportSeedphraseClick = model::navigateToImportSeedphrase,
-        isImportSeedphraseEnabled = IS_IMPORT_SEEDPHRASE_ENABLED,
         hasVaults = state.hasVaults,
     )
 }
@@ -77,7 +74,6 @@ private fun StartScreen(
     onImportVaultClick: () -> Unit,
     onImportSeedphraseClick: () -> Unit,
     onBackClick: () -> Unit,
-    isImportSeedphraseEnabled: Boolean = false,
     hasVaults: Boolean = true,
 ) {
     val logoScale = remember { Animatable(0f) }
@@ -181,7 +177,6 @@ private fun StartScreen(
     if (isChooseImportTypeBottomSheetVisible) {
         V2BottomSheet(onDismissRequest = { isChooseImportTypeBottomSheetVisible = false }) {
             ChooseImportTypeBottomSheetContent(
-                isImportSeedphraseEnabled = isImportSeedphraseEnabled,
                 onImportSeedphraseClick = {
                     isChooseImportTypeBottomSheetVisible = false
                     onImportSeedphraseClick()
@@ -197,7 +192,6 @@ private fun StartScreen(
 
 @Composable
 private fun ChooseImportTypeBottomSheetContent(
-    isImportSeedphraseEnabled: Boolean,
     onImportSeedphraseClick: () -> Unit,
     onImportVaultClick: () -> Unit,
 ) {
@@ -212,17 +206,15 @@ private fun ChooseImportTypeBottomSheetContent(
 
         UiSpacer(size = 20.dp)
 
-        if (isImportSeedphraseEnabled) {
-            ChooseImportTypeButton(
-                isNew = true,
-                logo = R.drawable.import_seed,
-                title = stringResource(R.string.start_screen_import_seedphrase),
-                description = stringResource(R.string.start_screen_import_seedphrase_desc),
-                subDescription = null,
-                onClick = onImportSeedphraseClick,
-            )
-            UiSpacer(size = 14.dp)
-        }
+        ChooseImportTypeButton(
+            isNew = true,
+            logo = R.drawable.import_seed,
+            title = stringResource(R.string.start_screen_import_seedphrase),
+            description = stringResource(R.string.start_screen_import_seedphrase_desc),
+            subDescription = null,
+            onClick = onImportSeedphraseClick,
+        )
+        UiSpacer(size = 14.dp)
         ChooseImportTypeButton(
             isNew = false,
             logo = R.drawable.wallet,
@@ -309,11 +301,7 @@ private fun NewBadge(modifier: Modifier = Modifier, starSize: Dp, fontStyle: Tex
 @Composable
 @Preview
 private fun ChooseImportTypeBottomSheetContentPreview() {
-    ChooseImportTypeBottomSheetContent(
-        isImportSeedphraseEnabled = true,
-        onImportVaultClick = {},
-        onImportSeedphraseClick = {},
-    )
+    ChooseImportTypeBottomSheetContent(onImportVaultClick = {}, onImportSeedphraseClick = {})
 }
 
 @Preview

@@ -83,7 +83,7 @@
     <string name="send_amount_currency_hint">Inserir Quantidade</string>
     <string name="send_continue_button">Continuar</string>
     <string name="chain_account_view_swap">TROCAR</string>
-    <string name="chain_account_view_deposit">Depósito</string>
+    <string name="chain_account_view_deposit">DEPOSITAR</string>
     <string name="chain_account_view_send">ENVIAR</string>
     <string name="circle_defi_description">Deposite seu USDC em uma conta Circle e obtenha rendimento. Com segurança dentro do seu cofre Vultisig.</string>
     <string name="circle_defi_control_info">Os fundos permanecem totalmente sob o controle do seu cofre. As contas Circle são autocustodiais e o rendimento é gerado através de tesourarias seguras fora da cadeia.</string>
@@ -112,6 +112,7 @@
     <string name="verify_transaction_consent_address">Estou enviando para o endereço correto</string>
     <string name="verify_transaction_consent_amount">A quantidade está correta</string>
     <string name="transaction_done_title">Concluído</string>
+    <string name="transaction_done_overview">Visão geral</string>
     <string name="transaction_done_complete">Continuar</string>
     <string name="transaction_done_form_title">Transação</string>
     <string name="vault_list_vaults_list">Cofres</string>
@@ -186,7 +187,6 @@
     <string name="join_keysign_discovering_session_id">Descobrindo o ID da sessão</string>
     <string name="join_keysign_discovery_service">Descobrindo o Serviço</string>
     <string name="vault_settings_delete_subtitle">Exclua seu cofre permanentemente.</string>
-    <string name="danger_icon">Ícone de perigo</string>
     <string name="currency_unit_setting_screen_title">Moeda\n</string>
     <string name="share_qr_utils_choose_an_app">Escolha um aplicativo</string>
     <string name="vault_accounts_account_assets">Ativos de %1$s</string>
@@ -213,8 +213,6 @@
     <string name="backup_password_screen_enter_password">Introduza a senha</string>
     <string name="import_file_screen_enter_password_sub">Esta palavra-passe foi definida quando a partilha do cofre foi exportada.</string>
     <string name="import_file_screen_hint_password">Palavra-passe</string>
-    <string name="import_file_screen_ok">OK</string>
-    <string name="import_file_screen_cancel">Cancelar</string>
     <string name="backup_password_screen_permission_required">A permissão de ficheiro é necessária para operações de cópia de segurança.</string>
     <string name="share_qr_screen_permission_required">A permissão de ficheiro é necessária para operações de partilha.</string>
     <string name="token_selection_search_hint">Pesquisa…</string>
@@ -232,6 +230,7 @@
     <string name="share_vault_qr_save">Guardar</string>
     <string name="share_vault_qr_share">Compartilhar</string>
     <string name="deposit_form_node_address_title">Endereço do nó</string>
+    <string name="deposit_form_address_card_title">Endereço</string>
     <string name="deposit_form_provider_title">Fornecedor (opcional)</string>
     <string name="deposit_form_provider_hint">Provedor</string>
     <string name="deposit_form_operator_fee_title">Taxa do Operador (opcional)</string>
@@ -273,7 +272,6 @@
     <string name="verify_transaction_fast_sign_btn_title">Sinal rápido</string>
     <string name="keysign_sign_transaction">Assinar transação</string>
     <string name="keysign_password_title">Palavra-passe</string>
-    <string name="home_screen_import_vault">Importar cofre</string>
     <string name="start_screen_new">NOVO</string>
     <string name="start_screen_import_seedphrase">Importar frase-semente</string>
     <string name="start_screen_import_seedphrase_desc">Introduza-a, crie um cofre, nunca mais olhe para trás.</string>
@@ -298,7 +296,8 @@
     <string name="deposit_error_invalid_lpunits">As unidades LP são inválidas</string>
     <string name="deposit_error_invalid_assets">Os recursos são inválidos</string>
     <string name="deposit_error_has_not_reached_maturity">Este depósito ainda não atingiu o seu prazo de vencimento.</string>
-    <string name="deposit_form_screen_assets">Ativas</string>
+    <string name="deposit_form_screen_assets">Ativo</string>
+    <string name="deposit_form_screen_asset_selection">Seleção de ativos</string>
     <string name="deposit_form_screen_lpunits">Unidades LP</string>
     <string name="join_keysign_error_wrong_vault_share">A mesma partilha do cofre. Por favor, altere a partilha para assinar</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Alterar cofre</string>
@@ -345,7 +344,6 @@
     <string name="push_notification_partial_failure">%1$d de %2$d cofres atualizados, %3$d falharam</string>
     <string name="push_notifications_sent">Notificação enviada com sucesso</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Receba uma notificação quando a sua assinatura for necessária ou um dispositivo solicitar acesso.</string>
-    <string name="enable_push_notifications">Ativar notificações push</string>
     <string name="keysign_notification_channel_name">Solicitações de assinatura</string>
     <string name="keysign_notification_title">Assinar transação</string>
     <string name="keysign_notification_body">Há uma nova solicitação de assinatura aguardando você</string>
@@ -363,7 +361,7 @@
 
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
-    <string name="total_bonded_rune">Total de Rune Vinculado</string>
+    <string name="total_bonded_coin">Total de %s Vinculado</string>
     <string name="bonded_amount">Vinculado: %s</string>
     <string name="bond_to_node">Vincular ao Nó</string>
     <string name="node_address_formatted">Endereço: %s</string>
@@ -390,8 +388,6 @@
     <string name="deposit_option_merge">Merge</string>
     <string name="deposit_option_withdraw_ruji">Sacar RUJI</string>
     <string name="withdraw_amount">Sacar %s</string>
-    <string name="deposit_option_stake_tcy">Stake TCY</string>
-    <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Insira a percentagem para desbloquear</string>
     <string name="scan_qr_screen_title">Digitalize o código QR</string>
     <string name="verify_transaction_function_inputs_title">Entradas de função</string>
@@ -420,23 +416,16 @@
     <string name="reshare_step_generating_ecdsa">Gerando chave ECDSA</string>
     <string name="merge_account_doesnt_exist">O token selecionado não foi encontrado para este endereço</string>
     <string name="keygen_email_error">E-mail incorreto, por favor verifique</string>
-    <string name="deposit_option_stake_ruji">Fazer stake de RUJI</string>
-    <string name="deposit_option_unstake_ruji">Desfazer stake de RUJI</string>
-    <string name="deposit_option_collect_ruji">Coletar recompensas de staking de RUJI</string>
-    <string name="deposit_form_rewards_title">Recompensas Pendentes (Saldo: %1$s)</string>
-    <string name="deposit_form_pending_rewards_hint">Recompensas Pendentes</string>
     <string name="tx_overview_screen_tx_send">Enviar</string>
     <string name="tx_overview_screen_tx_deposit">Depósito</string>
     <string name="swap_error_small_insufficient_funds">Fundos insuficientes</string>
-    <string name="deposit_error_max_amount">Apenas até 100 % podem ser desbloqueados</string>
-    <string name="deposit_option_receive_yrune">Receber yRUNE</string>
-    <string name="deposit_option_receive_ytcy">Receber yTCY</string>
-    <string name="deposit_option_sell_yrune">Vender yRUNE</string>
-    <string name="deposit_option_sell_ytcy">Vender yTCY</string>
     <string name="defi_tab_deposited">Depositado</string>
     <string name="defi_tab_staked">Staking</string>
     <string name="defi_tab_bonded">Vinculado</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">Bond</string>
+    <string name="defi_stake">Stake</string>
+    <string name="liquidity_pool">Pool de liquidez</string>
     <string name="deposit_form_operator_slippage_title">Derrapagem</string>
     <string name="slippage_required_error">A derrapagem é obrigatória</string>
     <string name="slippage_invalid_error">A derrapagem deve estar entre 1 e 100</string>
@@ -472,6 +461,8 @@
     <string name="deposit_error_invalid_destination_address">O endereço de destino é inválido</string>
     <string name="deposit_option_add_cacao_pool">Adicionar ao pool CACAO</string>
     <string name="deposit_option_remove_cacao_pool">Remover do pool CACAO</string>
+    <string name="deposit_option_add_liquidity">Adicionar liquidez</string>
+    <string name="deposit_option_remove_liquidity">Remover liquidez</string>
     <string name="cacaopool_only_cacao_supported">Apenas o token CACAO é suportado neste pool</string>
     <string name="referral_create_info_title">Programa de referência</string>
     <string name="referral_create_info_content">O programa de referência aplica-se a trocas THORChain e é feito com base no melhor esforço. Você precisa registrar um THORName para usar a referência Vultisig. A taxa de registro é de 10 RUNE e 1 RUNE por cada ano, que é paga à rede THORChain.</string>
@@ -542,7 +533,6 @@
     <string name="vultisig_community">Comunidade Vultisig</string>
     <string name="vault_management">Gestão de Cofres</string>
     <string name="other">Outros</string>
-    <string name="unstake_tcy_zero_error">Não é possível anular a aposta se o saldo for inferior a 1</string>
     <string name="check_updates_title">Verificar atualizações</string>
     <string name="update_available">Atualização disponível</string>
     <string name="app_up_to_date">Aplicação atualizada</string>
@@ -576,14 +566,10 @@
     <string name="transaction_type_button_receive">Receber</string>
     <string name="vault_settings_view_vault">Visualizar nome, parte e tipo do cofre</string>
     <string name="vault_settings_biometric_fast">Assinatura biométrica rápida</string>
-    <string name="vault_settings_enable_biometric">Ativar biometria para assinatura rápida</string>
-    <string name="vault_settings_password_hint">Dica de palavra-passe</string>
-    <string name="vault_settings_set_a_password">Defina uma dica de palavra-passe para proteger o seu cofre</string>
     <string name="vault_settings_backup_vault">Fazer backup da Partilha do Cofre</string>
     <string name="vault_settings_back_up_your">Faça o backup da Partilha do Cofre para um dispositivo ou servidor.</string>
     <string name="vault_settings_migrate_gg20">Migrar DKLS do cofre GG20</string>
     <string name="vault_settings_reshare_change">Partilhar novamente, gerir segurança ou assinar mensagens.</string>
-    <string name="vault_backup_summary_start_using_vault">Comece a utilizar o seu Cofre</string>
     <string name="vault_backup_summary_choose_chains">Escolha Correntes</string>
     <string name="transaction_done_form_approve">Aprovar</string>
     <string name="vault_settings_migration_title">Migrar</string>
@@ -601,7 +587,6 @@
     <string name="no_chain_make_sure_that">Certifique-se de que a corrente que procura está ativada.</string>
     <string name="no_chain_customize_chains">Personalizar correntes</string>
     <string name="search_bar_search">Pesquisar</string>
-    <string name="search_bar_cancel">Cancelar</string>
     <string name="chain_selection_select_chains">Selecionar correntes</string>
     <string name="chain_selection_select_defi_chains">Selecionar correntes DeFi</string>
     <string name="chain_selection_no_chains_found">Nenhuma corrente encontrada</string>
@@ -676,7 +661,6 @@
     <string name="address_book_saved_addresses">Endereços Salvos</string>
     <string name="address_book_my_vaults">Meus Cofres</string>
     <string name="address_entry_select">Selecionar</string>
-    <string name="backup_vault_online_storage_is_recommended">O armazenamento online é recomendado e seguro — as partilhas de cofres foram concebidas para isso.</string>
     <string name="deposit_form_enter_asset_hint">Inserir Ativos</string>
     <string name="share_balance_loading">Carregando...</string>
     <string name="custom_token_screen_finding_token">Encontrar o token</string>
@@ -714,23 +698,14 @@
     <string name="keygen_benefit_4_emphasized">Disponível</string>
     <string name="onboarding_intro_preview_part_2">Frases-semente</string>
     <string name="onboarding_intro_back">Voltar</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1">O seu cofre contém %s ações,</string>
-    <string name="onboarding_security_backup_desc_page_1_part_2">Cada dispositivo precisa do seu próprio backup.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_1">Backup</string>
     <string name="migration_onboarding_step_1_text_emphasized">utilizando o protocolo MPC mais rápido do mundo</string>
     <string name="migration_onboarding_step_1_text_end">e assine mais depressa do que nunca</string>
-    <string name="error_view_try_again_button">Tentar Novamente</string>
     <string name="error_view_default_title">Ocorreu um erro</string>
     <string name="error_view_default_description">Um erro ocorreu</string>
     <string name="keygen_benefit_5_template">Não caia novamente em golpes</string>
     <string name="keygen_benefit_5_emphasized">Uma carteira sem semente,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_1">O seu cofre contém 2 ações,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_2">faça backup agora</string>
     <string name="keygen_vault_created_success_part_1">Cofre criado</string>
     <string name="vault_created_success_part_2">Com sucesso</string>
-    <string name="backup_vault_backup_now_button">Fazer backup agora</string>
-    <string name="backup_vault_backup_vault_share_title">Fazer backup do seu cofre partilhado online</string>
-    <string name="backup_vault_topbar_title">Fazer backup do cofre</string>
     <string name="backup_password_request_no_password_action">Fazer backup sem palavra-passe</string>
     <string name="address_bookmark_error_invalid_address">Este endereço não é válido para %s</string>
     <string name="address_bookmark_error_empty_label">A etiqueta não pode estar vazia</string>
@@ -738,15 +713,9 @@
     <string name="send_form_ripple_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta descer abaixo de 1 XRP (Depósito Existente), a conta será desativada (esgotada) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
     <string name="error_invalid_chain">A cadeia é inválida.</string>
     <string name="vault_backup_verifying_pin">Verificando código, aguarde</string>
-    <string name="vault_backup_screen_change_email">Altere o email e reinicie o gerador de chaves.</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_1">É enviado para si para total autogestão!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">Verifique o seu email para confirmar.</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_1">Enviamos a sua nova partilha de servidor!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Verifique o seu email para confirmar</string>
     <string name="select_vault_type_next">Próximo</string>
     <string name="select_vault_type_choose_setup">Selecione Configurar</string>
     <string name="home_screen_scan_qr_code">Leia o QR Code</string>
-    <string name="create_new_vault_screen_create_new_vault">Criar novo cofre</string>
     <string name="onboarding_desc_page_6_part_2">Desbloqueie o seu cofre</string>
     <string name="onboarding_summary_button">Crie o seu cofre</string>
     <string name="keygen_benefit_3_template">Troque os seus tokens favoritos num único cofre</string>
@@ -787,8 +756,6 @@
     <string name="select_vault_type_secure">Proteja</string>
     <string name="select_vault_type_fast">Rápida</string>
     <string name="vault_backup_screen_paste">Cole</string>
-    <string name="enter_backup_screen_title">Introduza o código de 4 dígitos que enviamos por email</string>
-    <string name="enter_backup_screen_desc">Este código confirmará que recebeu a sua ação de partilha do cofre 1 por email</string>
     <string name="vault_backup_error_pin">Erro ao verificar o código. Tente novamente.</string>
     <string name="tx_overview_screen_tx_hash">Hash da transação</string>
     <string name="tx_overview_screen_tx_from">De</string>
@@ -797,8 +764,6 @@
     <string name="keygen_benefit_1_template">Removendo o ponto único de falha</string>
     <string name="keygen_benefit_1_emphasized">Segurança multifator</string>
     <string name="keygen_benefit_2_template">dando controlo total sobre os seus ativos</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_1">A Parte 1 da partilha do cofre será</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_2">Retido pelo servidor.</string>
     <string name="onboarding_summary_check">Li e compreendi o procedimento</string>
     <string name="send_error_invalid_plan_fee">Taxa de plano inválido</string>
     <string name="onboarding_desc_page_3_part_2">no seu cofre estão</string>
@@ -827,13 +792,10 @@
     <string name="peer_discovery_action_next_title">Próximo</string>
     <string name="home_page_no_chains_enabled">Sem cadeias ativadas</string>
     <string name="onboarding_desc_page_3_part_3">uma partilha de cofre</string>
-    <string name="onboarding_security_backup_desc_page_2_part_3">Para garantir o acesso, de preferência</string>
-    <string name="onboarding_security_backup_desc_page_2_part_4">online.</string>
     <string name="select_vault_type_fast_title">Configuração rápida num único dispositivo</string>
     <string name="select_vault_type_fast_desc_1">Apenas 1 dispositivo necessário</string>
     <string name="scan_qr_code_modal_scan_the">Leia o</string>
     <string name="scan_qr_code_modal_qr_code">Código QR</string>
-    <string name="create_new_vault_screen_or">OU</string>
     <string name="tx_overview_screen_title">Concluído</string>
     <string name="fast_vault_password_screen_warning">A palavra-passe não pode ser redefinida ou recuperada</string>
     <string name="referral_top_bar_list">Referência</string>
@@ -858,14 +820,12 @@
     <string name="enter_email_screen_desc">Este email é apenas utilizado para enviar o backup do servidor</string>
     <string name="onboarding_desc_page_6_part_1">Estas ações colaboram para</string>
     <string name="keygen_connecting_with_server_take_a_second">Isto deve demorar apenas um segundo.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_2">Este compartilhamento do cofre</string>
     <string name="function_switch_thorchain_address">Endereço THORChain</string>
     <string name="tx_transaction_successful_screen_title">Transação concluída com sucesso</string>
     <string name="migration_onboarding_step_3_text_end">Ao atualizar</string>
     <string name="migration_onboarding_upgrade_your_vault">Atualize o seu cofre</string>
     <string name="migration_onboarding_upgrade_now">Atualize agora</string>
     <string name="migration_onboarding_step_1_text_start">Atualize este cofre para</string>
-    <string name="onboarding_security_backup_title">Visão geral do cofre</string>
     <string name="onboarding_desc_page_1_part_2">Partilhas do cofre</string>
     <string name="verify_swap_youre_swapping_title">Está a trocar</string>
     <string name="keysign_app_version_text">Versão %1$s (%2$s)</string>
@@ -903,12 +863,10 @@
     <string name="circle_msca_account_created_failed">Falha ao criar conta Circle MSCA. Por favor, tente novamente.</string>
     <string name="circle_usdc_account">Conta Circle USDC</string>
     <string name="withdraw">Retirar</string>
-    <string name="send_form_network_fee">Taxa de rede (automática)</string>
     <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
     <string name="swap_form_referral_discount_bps">Indicação (-%1$d bps)</string>
     <string name="amino_sign">Assinatura Amino</string>
     <string name="amino_direct">Assinatura Direta</string>
-    <string name="import_file_screen_enter_password">Introduza a palavra‑passe da partilha do cofre.</string>
 
     <!-- Transaction Status -->
     <string name="transaction_status_confirmed">Transação confirmada</string>
@@ -940,13 +898,10 @@
     <string name="transaction_history_search_asset_title">Pesquisar ativo</string>
     <string name="transaction_history_search_asset_not_found">Nenhum ativo encontrado</string>
     <string name="transaction_history_clear_filters">Limpar filtros</string>
-    <string name="transaction_status_broadcasted_label">Transmitida</string>
-    <string name="transaction_status_pending_label">Pendente · %1$s</string>
     <string name="transaction_status_confirmed_label">Bem-sucedida</string>
     <string name="transaction_status_failed_label">Erro</string>
     <string name="transaction_status_in_progress_label">Em andamento…</string>
     <string name="transaction_history_to_label">Para</string>
-    <string name="transaction_history_via_label">via %s</string>
     <string name="transaction_history_via_prefix">via</string>
     <string name="transaction_history_min_payout_label">pagamento mín.</string>
     <string name="transaction_history_date_today">Hoje</string>
@@ -965,13 +920,12 @@
     <string name="transaction_history_view_on_explorer">Ver no explorador</string>
 
     <!-- Key Import / Seed Phrase Import -->
-    <string name="home_screen_import_seed_phrase">Importar frase semente</string>
     <string name="import_seedphrase_title">Digite sua frase semente</string>
     <string name="import_seedphrase_subtitle">Digite sua frase de recuperação de 12 ou 24 palavras</string>
     <string name="import_seedphrase_label">Frase semente</string>
     <string name="import_seedphrase_hint">Digite sua frase de recuperação…</string>
     <string name="import_seedphrase_word_count">%1$d / %2$d palavras</string>
-    <string name="import_seedphrase_invalid_word_count">Esperado %2$s palavras, obtido %1$s</string>
+    <string name="import_seedphrase_invalid_word_count">Você inseriu %1$s palavras. A frase semente deve ter 12 ou 24 palavras</string>
     <string name="import_seedphrase_invalid_phrase">Frase semente inválida</string>
     <string name="import_seedphrase_already_imported">Esta frase semente já foi importada</string>
     <string name="import_seedphrase_duplicate_description">Por favor, importe uma frase semente diferente</string>
@@ -996,21 +950,12 @@
     <string name="key_import_chains_customize">Personalizar cadeias</string>
     <string name="key_import_chains_no_active_title">Nenhuma cadeia ativa encontrada</string>
     <string name="key_import_chains_no_active_desc">Não encontramos nenhum saldo. Selecione manualmente as cadeias que deseja importar.</string>
-    <string name="key_import_chains_select_title">Selecionar cadeias (%1$d)</string>
-    <string name="key_import_chains_all">Todas</string>
-    <string name="key_import_chains_none">Nenhuma</string>
     <string name="key_import_chains_get_started">Começar</string>
     <string name="key_import_chains_no_results">Nenhuma cadeia corresponde à sua pesquisa</string>
 
     <string name="key_import_device_count_get_started">Começar</string>
     <string name="vault_count_recommended">Recomendada</string>
 
-    <string name="welcome_preference_title">Que tipo de cofre prefere?</string>
-    <string name="welcome_preference_desc">Escolha entre um cofre pessoal ou partilhe-o com alguém de confiança.</string>
-    <string name="welcome_preference_personal_title">Cofre Pessoal</string>
-    <string name="welcome_preference_shared_title">Cofre Partilhado</string>
-    <string name="welcome_preference_personal_desc">Um cofre para fundos pessoais. Assine transações com os seus próprios dispositivos.</string>
-    <string name="welcome_preference_shared_desc">Co-assine com várias pessoas de confiança (ex. cofres familiares, o seu contabilista, uma combinação…)</string>
     <string name="welcome_preference_devices_title">Quantos dispositivos tem?</string>
     <string name="welcome_fast_and_easy">Rápido &amp; fácil</string>
     <string name="welcome_fast_and_easy_desc">Assine com apenas 1 dispositivo. O nosso servidor seguro assina consigo para segurança multisig. Compatível com plugins.</string>
@@ -1045,7 +990,6 @@
     <string name="password_choose_a_password">Escolha uma palavra-passe</string>
     <string name="password_extra_layer">Se quiser uma camada extra de segurança, escolha uma palavra-passe. A palavra-passe não pode ser recuperada.</string>
     <string name="password_extra_layer_highlight">A palavra-passe não pode ser recuperada.</string>
-    <string name="referral_enter_referral_code">Introduza aqui o seu código de referência. Desfrute de 10% de desconto em cada transação.</string>
     <string name="backup_backups">Cópias de segurança,</string>
     <string name="backup_your_new_recovery_method">o seu novo método de recuperação</string>
     <string name="backup_backups_power_your_vault">As cópias de segurança potenciam o seu cofre. Cada dispositivo tem a sua própria cópia de segurança. Uma cópia sozinha não pode mover fundos, serve apenas para recuperação. Importe e recupere qualquer dispositivo perdido.</string>
@@ -1057,8 +1001,6 @@
     <string name="backup_4_digit_code_received_via_email">Código de 4 dígitos recebido por email</string>
     <string name="backup_this_will_activate_the_co_signer">Isto ativará o co-signatário</string>
     <string name="backup_use_a_different_email">Usar um email diferente</string>
-    <string name="backup_send_to_email">Enviar para %1$s</string>
-    <string name="backup_incorrect_code_try_again">Código incorreto. Tente novamente.</string>
     <string name="backup_save_backup_to_the_cloud">Guardar cópia de segurança na nuvem</string>
     <string name="backup_vault_screen_export_prefix">Exporte este ficheiro de cópia de segurança e guarde-o na nuvem. Está</string>
     <string name="backup_vault_screen_encrypted">encriptado</string>
@@ -1083,36 +1025,11 @@
     <string name="vault_setup_dynamic_device_management">Gestão dinâmica de dispositivos</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">Adicione tantos dispositivos quanto quiser e obtenha segurança de nível institucional.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Construído para equipas e tesourarias</string>
-    <string name="vault_setup_ideal_for_teams_managing_shared_funds">Ideal para equipas que gerem fundos partilhados e cofres de maior valor, que requerem mais signatários.</string>
-    <string name="vault_setup_no_inspiration_desc">Sem inspiração? Pode sempre alterar o nome mais tarde nas definições.</string>
-    <string name="vault_setup_scan_qr_on_your_other_devices">Digitalize o QR nos seus outros dispositivos</string>
-    <string name="vault_setup_on_your_other_device_open_the_app_and_tap_scan_qr">No outro dispositivo, abra a app e toque em "Digitalizar QR" para o conectar.</string>
-    <string name="vault_setup_start_scanning">Começar a digitalizar</string>
-    <string name="vault_setup_waiting_for_devices_to_connect">À espera que os dispositivos se conectem…</string>
-    <string name="vault_setup_waiting_for_device_to_join">À espera que o dispositivo se junte</string>
-    <string name="vault_setup_want_to_create_a_vault_privately">Quer criar um cofre de forma privada?</string>
-    <string name="vault_setup_use_local_mode">Usar modo local</string>
-    <string name="vault_setup_connected">Conectado</string>
-    <string name="vault_setup_local_mode_waiting_on_devices">Modo local, à espera de dispositivos</string>
-    <string name="vault_setup_short_description_of_local_mode">Breve descrição do modo local aqui</string>
-    <string name="vault_setup_not_want_to_use_local_switch_back">Não quer usar o modo local? Volte atrás.</string>
-    <string name="vault_setup_use_standard_mode">Usar modo padrão</string>
-    <string name="vault_setup_review_your_vault_devices">Rever os dispositivos do seu cofre</string>
-    <string name="vault_setup_make_sure_that_these_are_the_correct_devices">Certifique-se de que estes são os dispositivos corretos que adicionou:</string>
-    <string name="vault_setup_backups">Cópias de segurança,</string>
-    <string name="vault_setup_your_new_recovery_method">o seu novo método de recuperação</string>
-    <string name="vault_setup_backups_power_your_vault">As cópias de segurança potenciam o seu cofre. Cada dispositivo tem a sua própria cópia de segurança. Uma cópia sozinha não pode mover fundos, serve apenas para recuperação. Importe e recupere qualquer dispositivo perdido.</string>
     <string name="vault_setup_back_up_each_device">Faça cópia de segurança de cada dispositivo</string>
     <string name="vault_setup_you_ll_create_n_backups_in_total">Irá criar %1$d cópias de segurança no total. Fará isto em cada dispositivo.</string>
-    <string name="vault_setup_store_backups_separately">Guarde as cópias de segurança separadamente</string>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Guarde cada cópia de segurança num serviço de nuvem diferente ou com uma palavra-passe diferente. Se uma for comprometida, os seus fundos ficam seguros.</string>
-    <string name="vault_setup_looks_good">Parece bem</string>
     <string name="vault_setup_i_understand">Percebo</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Guardar cópia de segurança %1$d de %2$d na nuvem</string>
-    <string name="vault_setup_export_this_backup_file_then_save_it_to_the_cloud">Exporte este ficheiro de cópia de segurança e guarde-o na nuvem. Use um serviço de nuvem ou conta diferente para cada cópia. Quando terminar, elimine o ficheiro deste dispositivo.</string>
-    <string name="vault_setup_your_vault_is_ready_to_use">O seu cofre está pronto para utilizar</string>
-    <string name="scanning_qr_troubleshooting_scanning">Com dificuldade em digitalizar? Se o código QR não digitalizar imediatamente: Mova o telemóvel ligeiramente mais perto ou mais longe do ecrã. Certifique-se de que o ecrã está bem iluminado e sem reflexos. Mantenha ambos os dispositivos imóveis por um momento.</string>
-    <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">Com quantas pessoas quer partilhar o cofre?</string>
 
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Backup do servidor</string>
@@ -1146,4 +1063,13 @@
     <string name="add_referral_error_chars">O código de indicação deve conter apenas caracteres alfanuméricos</string>
     <string name="add_referral_error_not_found">Código de indicação não encontrado</string>
     <string name="add_referral_error_network">Falha ao verificar o código de indicação. Tente novamente.</string>
+    <string name="cacao_pool">pool CACAO</string>
+    <string name="staked_ruji_header">Staking RUJI</string>
+    <string name="staked_tcy_header">Staking TCY</string>
+    <string name="staked_ytcy_header">Staking yTCY</string>
+    <string name="staked_yrune_header">Staking yRUNE</string>
+    <string name="compounded_tcy_header">Composto TCY</string>
+    <string name="native_asset">Nativo</string>
+    <string name="invalid_integer_error">Quantidade inteira inválida</string>
+    <string name="empty_lps_field">Campo de Unidades LP vazio</string>
 </resources>

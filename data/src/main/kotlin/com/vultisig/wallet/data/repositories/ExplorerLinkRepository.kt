@@ -59,6 +59,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Kujira -> "https://finder.kujira.network/kaiyo-1/tx/"
 
                 Chain.Polkadot -> "https://assethub-polkadot.subscan.io/extrinsic/"
+                Chain.Bittensor -> "https://taostats.io/extrinsic/"
 
                 else -> "${explorerUrl}tx/"
             }
@@ -95,6 +96,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Solana -> "https://orb.helius.dev/"
                 Chain.ThorChain -> "https://thorchain.net/"
                 Chain.Polkadot -> "https://assethub-polkadot.subscan.io/account/"
+                Chain.Bittensor -> "https://taostats.io/account/"
                 Chain.ZkSync -> "https://explorer.zksync.io/"
                 Chain.Sui -> "https://suiscan.xyz/mainnet/"
                 Chain.Ton -> "https://tonviewer.com/"

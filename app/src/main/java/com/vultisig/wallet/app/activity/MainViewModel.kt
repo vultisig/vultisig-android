@@ -2,9 +2,6 @@ package com.vultisig.wallet.app.activity
 
 import android.content.Context
 import android.net.Uri
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.play.core.appupdate.AppUpdateManager
@@ -72,16 +69,17 @@ constructor(
 
     private val _navigationReady = CompletableDeferred<Unit>()
 
-    private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
-    val isLoading: State<Boolean> = _isLoading
-    private val _isOffline: MutableState<Boolean> = mutableStateOf(false)
-    val isOffline: State<Boolean> = _isOffline
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _isOffline = MutableStateFlow(false)
+    val isOffline: StateFlow<Boolean> = _isOffline.asStateFlow()
 
     private val _startUpdateEvent = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
     val startUpdateEvent = _startUpdateEvent.asSharedFlow()
 
-    private val _startDestination: MutableState<Any> = mutableStateOf(Route.Home())
-    val startDestination: State<Any> = _startDestination
+    private val _startDestination = MutableStateFlow<Any>(Route.Home())
+    val startDestination: StateFlow<Any> = _startDestination.asStateFlow()
 
     private val _foregroundNotification = MutableStateFlow<ForegroundNotificationState?>(null)
     val foregroundNotification: StateFlow<ForegroundNotificationState?> =

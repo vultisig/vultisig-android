@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.vultisig.wallet.data.db.models.ActiveBondedNodeEntity
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,14 @@ interface ActiveBondedNodeDao {
 
     @Query("DELETE FROM active_bonded_nodes WHERE vault_id = :vaultId")
     suspend fun deleteAllByVaultId(vaultId: String)
+
+    @Transaction
+    suspend fun replaceAll(vaultId: String, nodes: List<ActiveBondedNodeEntity>) {
+        deleteAllByVaultId(vaultId)
+        if (nodes.isNotEmpty()) {
+            insertAll(nodes)
+        }
+    }
 
     @Query(
         "DELETE FROM active_bonded_nodes WHERE vault_id = :vaultId AND node_address =:nodeAddress"

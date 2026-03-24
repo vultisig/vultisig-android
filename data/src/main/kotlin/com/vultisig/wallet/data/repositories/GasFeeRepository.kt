@@ -9,14 +9,15 @@ import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper.RECOMMENDED_JETTONS_AMOUNT
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.coinType
@@ -173,6 +174,16 @@ constructor(
 
                         TokenValue(
                             value = PolkadotHelper.DEFAULT_FEE_PLANCKS.toBigInteger(),
+                            unit = chain.feeUnit,
+                            decimals = nativeToken.decimal,
+                        )
+                    }
+
+                    Chain.Bittensor -> {
+                        val nativeToken = tokenRepository.getNativeToken(chain.id)
+
+                        TokenValue(
+                            value = BittensorHelper.DEFAULT_FEE_RAO.toBigInteger(),
                             unit = chain.feeUnit,
                             decimals = nativeToken.decimal,
                         )
@@ -343,14 +354,15 @@ constructor(
         isSwap: Boolean,
         isNativeToken: Boolean,
     ): TokenValue {
-        val defaultGasLimit =
-            when {
-                chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
-                isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
-                else -> DEFAULT_TOKEN_TRANSFER_LIMIT
-            }
-
-        val fees = ethereumFeeService.calculateFees(chain, defaultGasLimit, isSwap, null)
+        val fees =
+            ethereumFeeService.calculateDefaultFees(
+                Transfer(
+                    coin = Coin.EMPTY.copy(chain = chain, isNativeToken = isNativeToken),
+                    vault = VaultData("", ""),
+                    amount = BigInteger.ZERO,
+                    to = "",
+                )
+            )
 
         return TokenValue(
             value = fees.amount,

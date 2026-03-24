@@ -11,7 +11,6 @@
     <string name="push_notification_partial_failure">已更新 %2$d 个金库中的 %1$d 个，%3$d 个失败</string>
     <string name="push_notifications_sent">通知发送成功</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">当需要您的签名或设备请求访问时，您将收到通知。</string>
-    <string name="enable_push_notifications">启用推送通知</string>
     <string name="keysign_notification_channel_name">签名请求</string>
     <string name="keysign_notification_title">签署交易</string>
     <string name="keysign_notification_body">有一个新的签名请求等待您处理</string>
@@ -30,7 +29,7 @@
     <!-- Deposit Options -->
     <string name="deposit_option_bond">绑定</string>
     <string name="deposit_option_unbond">解绑</string>
-    <string name="total_bonded_rune">总绑定 Rune</string>
+    <string name="total_bonded_coin">总绑定 %s</string>
     <string name="bonded_amount">已绑定: %s</string>
     <string name="bond_to_node">绑定到节点</string>
     <string name="node_address_formatted">地址: %s</string>
@@ -52,19 +51,13 @@
     <string name="deposit_option_merge">合并</string>
     <string name="deposit_option_withdraw_ruji">提取 RUJI</string>
     <string name="withdraw_amount">提取 %s</string>
-    <string name="deposit_option_stake_tcy">质押 TCY</string>
-    <string name="deposit_option_unstake_tcy">取消质押 TCY</string>
-    <string name="deposit_option_stake_ruji">质押 RUJI</string>
-    <string name="deposit_option_unstake_ruji">取消质押 RUJI</string>
-    <string name="deposit_option_collect_ruji">收集 RUJI 质押奖励</string>
-    <string name="deposit_option_receive_yrune">铸造 yRUNE</string>
-    <string name="deposit_option_receive_ytcy">铸造 yTCY</string>
-    <string name="deposit_option_sell_yrune">赎回 yRUNE</string>
-    <string name="deposit_option_sell_ytcy">赎回 yTCY</string>
     <string name="defi_tab_deposited">已存入</string>
     <string name="defi_tab_staked">已质押</string>
     <string name="defi_tab_bonded">已绑定</string>
     <string name="defi_tab_lp">LP</string>
+    <string name="defi_bond">绑定</string>
+    <string name="defi_stake">质押</string>
+    <string name="liquidity_pool">流动性池</string>
     <string name="deposit_option_add_cacao_pool">添加到 CACAO 池</string>
 
     <!-- Basic UI -->
@@ -72,7 +65,6 @@
     <string name="token_logo">代币标志</string>
     <string name="tokens">代币</string>
     <string name="keysign">密钥签名</string>
-    <string name="danger_icon">危险图标</string>
     <string name="signing_error_please_try_again_s">签名错误。请重试。%s</string>
     <string name="bottom_warning_msg_keygen_error_screen">请保持设备在同一WiFi网络，确认金库正确并配对设备。\n确保没有其他设备正在运行Vultisig。</string>
     <string name="try_again">重试</string>
@@ -166,9 +158,9 @@
 
     <!-- Chain Account -->
     <string name="chain_account_view_swap">交换</string>
-
-    <string name="chain_account_view_deposit">功能</string>
+    <string name="chain_account_view_deposit">存款</string>
     <string name="chain_account_view_send">发送</string>
+
     <string name="circle_defi_description">将您的 USDC 存入 Circle 账户并赚取收益。安全地存储在您的 Vultisig 保险库中。</string>
     <string name="circle_defi_control_info">资金完全由您的保险库控制。Circle 账户是自托管的，收益通过安全的链下国库产生。</string>
     <string name="usdc_deposit_title">USDC 存款</string>
@@ -226,6 +218,7 @@
 
     <!-- Transaction Done -->
     <string name="transaction_done_title">完成</string>
+    <string name="transaction_done_overview">概览</string>
     <string name="transaction_done_complete">完成</string>
     <string name="transaction_done_form_title">交易</string>
 
@@ -365,8 +358,6 @@
     <string name="backup_password_screen_enter_password">输入密码</string>
     <string name="import_file_screen_enter_password_sub">此密码是在导出共享保险库时设置的。</string>
     <string name="import_file_screen_hint_password">密码</string>
-    <string name="import_file_screen_ok">确定</string>
-    <string name="import_file_screen_cancel">取消</string>
     <string name="backup_password_screen_permission_required">备份操作需要文件权限。</string>
     <string name="share_qr_screen_permission_required">分享操作需要文件权限。</string>
 
@@ -393,7 +384,6 @@
     <!-- Deposit Form -->
     <string name="deposit_form_amount_title">金额（余额：%1$s）</string>
     <string name="deposit_form_shares_title">份额（余额：%1$s）</string>
-    <string name="deposit_form_rewards_title">待处理奖励（余额：%1$s）</string>
 
     <!-- Share Vault QR -->
     <string name="share_vault_qr_title">分享金库二维码</string>
@@ -402,6 +392,7 @@
 
     <!-- Deposit Form -->
     <string name="deposit_form_node_address_title">节点地址</string>
+    <string name="deposit_form_address_card_title">地址</string>
     <string name="deposit_form_provider_title">提供商（可选）</string>
     <string name="deposit_form_provider_hint">提供商</string>
     <string name="deposit_form_operator_fee_title">运营商费用（可选）</string>
@@ -417,7 +408,6 @@
     <string name="deposit_message_deposit_title">%s 存款消息</string>
     <string name="deposit_form_custom_memo_title">自定义备注</string>
     <string name="deposit_form_unstake_percentage_hint">输入要取消质押的百分比</string>
-    <string name="deposit_form_pending_rewards_hint">待处理奖励</string>
 
     <!-- Swap Screen -->
     <string name="swap_screen_same_asset_error_message">源资产和目标资产不能相同。</string>
@@ -507,7 +497,6 @@
     <string name="keysign_password_title">密码</string>
 
     <!-- Home Screen -->
-    <string name="home_screen_import_vault">导入金库</string>
     <string name="start_screen_new">新功能</string>
     <string name="start_screen_import_seedphrase">导入助记词</string>
     <string name="start_screen_import_seedphrase_desc">输入它，创建金库，永不回头。</string>
@@ -551,6 +540,7 @@
     <!-- Deposit Form Screen -->
     <string name="deposit_error_has_not_reached_maturity">这笔存款尚未到期。</string>
     <string name="deposit_form_screen_assets">资产</string>
+    <string name="deposit_form_screen_asset_selection">选择资产</string>
     <string name="deposit_form_screen_lpunits">LP 单位</string>
 
     <!-- Join Keysign Error -->
@@ -642,7 +632,6 @@
     <string name="keygen_connecting_with_server">连接服务器中…</string>
 
     <!-- Vault Settings Migration -->
-    <string name="vault_backup_summary_start_using_vault">开始使用您的金库</string>
     <string name="vault_backup_summary_choose_chains">选择链条</string>
     <string name="transaction_done_form_approve">批准</string>
     <string name="vault_settings_migration_title">迁移</string>
@@ -687,7 +676,6 @@
     <string name="swap_error_small_insufficient_funds">资金不足</string>
 
     <!-- Deposit Error -->
-    <string name="deposit_error_max_amount" formatted="false">只能取消质押最多 100%</string>
 
     <!-- Verify Deposit -->
     <string name="verify_deposit_function_overview">功能概览</string>
@@ -720,6 +708,8 @@
     <string name="deposit_error_destination_address">目标地址不应为空</string>
     <string name="deposit_error_invalid_destination_address">目标地址无效</string>
     <string name="deposit_option_remove_cacao_pool">从 CACAO 池移除</string>
+    <string name="deposit_option_add_liquidity">添加流动性</string>
+    <string name="deposit_option_remove_liquidity">移除流动性</string>
     <string name="cacaopool_only_cacao_supported">池操作仅支持 CACAO 代币</string>
     <string name="referral_create_info_content">推荐计划适用于 THORChain 交换，并尽力而为。您需要注册 THORName 才能使用 Vultisig 推荐。注册费为 10 RUNE，每年 1 RUNE，支付给 THORChain 网络。</string>
     <string name="referral_create_info_title">推荐计划</string>
@@ -792,7 +782,6 @@
     <string name="address_entry_select">选择</string>
 
     <!-- Backup & Import -->
-    <string name="backup_vault_online_storage_is_recommended">推荐使用在线存储且安全 - 金库份额就是为此设计的。</string>
     <string name="import_file_import_your_vault_share">导入您的金库份额</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[支持的文件类型：.dat & .bak & .vult]]></string>
 
@@ -889,7 +878,6 @@
     <string name="other">其他</string>
 
     <!-- Unstake TCY -->
-    <string name="unstake_tcy_zero_error">如果余额低于 1，则无法执行取消质押</string>
 
     <!-- Check Updates -->
     <string name="check_updates_title">检查更新</string>
@@ -944,9 +932,6 @@
     <!-- Vault Settings -->
     <string name="vault_settings_view_vault">查看金库名称、部分和类型</string>
     <string name="vault_settings_biometric_fast">生物识别快速签名</string>
-    <string name="vault_settings_enable_biometric">启用生物识别快速签名</string>
-    <string name="vault_settings_password_hint">密码提示</string>
-    <string name="vault_settings_set_a_password">设置密码提示以保护您的金库</string>
     <string name="vault_settings_backup_vault">备份金库份额</string>
     <string name="vault_settings_back_up_your">将您的金库份额备份到设备或服务器。</string>
     <string name="vault_settings_migrate_gg20">将 GG20 金库迁移到 DKLS</string>
@@ -973,7 +958,6 @@
     <string name="no_chain_make_sure_that">确保您要查找的链已启用。</string>
     <string name="no_chain_customize_chains">自定义区块链</string>
     <string name="search_bar_search">搜索</string>
-    <string name="search_bar_cancel">取消</string>
 
     <!-- Chain Selection -->
     <string name="chain_selection_select_chains">选择区块链</string>
@@ -1050,22 +1034,13 @@
     <string name="keygen_benefit_4_emphasized">可用</string>
     <string name="onboarding_intro_preview_part_2">助记词</string>
     <string name="onboarding_intro_back">返回</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1">您的金库持有 %s 份份额，</string>
-    <string name="onboarding_security_backup_desc_page_1_part_2">每台设备都需要单独备份。</string>
-    <string name="onboarding_security_backup_desc_page_2_part_1">备份</string>
     <string name="migration_onboarding_step_1_text_emphasized">世界上速度最快的 MPC 协议</string>
     <string name="migration_onboarding_step_1_text_end">签名速度前所未有</string>
-    <string name="error_view_try_again_button">重试</string>
     <string name="error_view_default_title">出错了</string>
     <string name="error_view_default_description">发生错误</string>
     <string name="keygen_vault_created_success_part_1">金库已创建</string>
     <string name="vault_created_success_part_2">成功</string>
-    <string name="backup_vault_backup_now_button">立即备份</string>
-    <string name="backup_vault_backup_vault_share_title">在线备份您的金库共享</string>
     <string name="backup_password_request_no_password_action">无需密码备份</string>
-    <string name="backup_vault_topbar_title">备份金库</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_1">您的金库持有 2 份份额，</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_2">立即备份</string>
     <string name="keygen_benefit_5_template">谨防再次上当受骗</string>
     <string name="keygen_benefit_5_emphasized">无种子钱包</string>
     <string name="address_bookmark_error_invalid_address">此地址对 %s 无效</string>
@@ -1074,12 +1049,6 @@
     <string name="send_form_ripple_reaping_warning">请确保账户中留有足够的资金以支付手续费。如果账户余额低于 1 XRP（存量保证金），账户将被停用（清算），剩余资金也将丢失。您可以随时通过存入高于存量保证金的金额来重新激活账户。但是，这无法找回已丢失的资金。</string>
     <string name="error_invalid_chain">链无效</string>
     <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>
-    <string name="vault_backup_screen_change_email">更改邮箱并重启密钥生成器</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_1">已发送给您，供您完全自行保管！</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">检查您的邮箱以进行验证</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_1">我们已向您发送新的服务器共享！</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">检查您的邮箱以进行验证</string>
-    <string name="create_new_vault_screen_create_new_vault">创建一个新金库</string>
     <string name="select_vault_type_next">下一步</string>
     <string name="select_vault_type_choose_setup">选择“设置”</string>
     <string name="home_screen_scan_qr_code">扫描二维码</string>
@@ -1123,8 +1092,6 @@
     <string name="select_vault_type_secure">安全</string>
     <string name="select_vault_type_fast">快速</string>
     <string name="vault_backup_screen_paste">粘贴</string>
-    <string name="enter_backup_screen_title">请输入我们通过电子邮件发送给您的 4 位验证码</string>
-    <string name="enter_backup_screen_desc">此代码将确认您已通过电子邮件收到您的金库份额 1</string>
     <string name="vault_backup_error_pin">验证码出错，请重试</string>
     <string name="tx_overview_screen_tx_hash">交易哈希</string>
     <string name="tx_overview_screen_tx_from">从</string>
@@ -1133,8 +1100,6 @@
     <string name="keygen_benefit_1_template">消除单点故障</string>
     <string name="keygen_benefit_1_emphasized">多重身份验证</string>
     <string name="keygen_benefit_2_template">完全掌控您的资产</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_1">金库共享的第一部分内容如下：</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_2">由服务器持有。</string>
     <string name="onboarding_summary_check">我已阅读并理解该如何操作。</string>
     <string name="send_error_invalid_plan_fee">无效计划费用</string>
     <string name="onboarding_desc_page_3_part_2">存放在您的金库中</string>
@@ -1163,13 +1128,10 @@
     <string name="peer_discovery_action_next_title">下一步</string>
     <string name="home_page_no_chains_enabled">未启用任何链</string>
     <string name="onboarding_desc_page_3_part_3">共享一个金库</string>
-    <string name="onboarding_security_backup_desc_page_2_part_3">为确保访问，最好</string>
-    <string name="onboarding_security_backup_desc_page_2_part_4">在线共享</string>
     <string name="select_vault_type_fast_title">快速单设备设置</string>
     <string name="select_vault_type_fast_desc_1">仅需一台设备</string>
     <string name="scan_qr_code_modal_scan_the">扫描</string>
     <string name="scan_qr_code_modal_qr_code">二维码</string>
-    <string name="create_new_vault_screen_or">或</string>
     <string name="tx_overview_screen_title">完成</string>
     <string name="fast_vault_password_screen_warning">密码无法重置或恢复</string>
     <string name="referral_top_bar_list">推荐</string>
@@ -1194,14 +1156,12 @@
     <string name="onboarding_desc_page_6_part_1">这些共享文件协同工作</string>
     <string name="enter_email_screen_desc">此电子邮件仅用于发送服务器备份</string>
     <string name="keygen_connecting_with_server_take_a_second">这只需几秒钟。</string>
-    <string name="onboarding_security_backup_desc_page_2_part_2">此金库共享</string>
     <string name="function_switch_thorchain_address">THORChain 地址</string>
     <string name="tx_transaction_successful_screen_title">交易成功</string>
     <string name="migration_onboarding_step_3_text_end">升级时</string>
     <string name="migration_onboarding_upgrade_your_vault">升级您的金库</string>
     <string name="migration_onboarding_upgrade_now">立即升级</string>
     <string name="migration_onboarding_step_1_text_start">将此金库升级至</string>
-    <string name="onboarding_security_backup_title">金库概览</string>
     <string name="onboarding_desc_page_1_part_2">金库共享</string>
     <string name="verify_swap_youre_swapping_title">您正在交换</string>
     <string name="keysign_app_version_text">版本 %1$s (%2$s)</string>
@@ -1240,12 +1200,10 @@
     <string name="circle_usdc_account">Circle USDC 账户</string>
     <string name="withdraw">提取</string>
 
-    <string name="send_form_network_fee">网络费用（自动）</string>
     <string name="swap_form_vult_discount_bps">VULT（%1$s -%2$d bps）</string>
     <string name="swap_form_referral_discount_bps">推荐人（-%1$d bps）</string>
     <string name="amino_sign">Amino 签名</string>
     <string name="amino_direct">直接签名</string>
-    <string name="import_file_screen_enter_password">输入共享保险库密码</string>
 
     <string name="transaction_status_confirmed">交易已确认</string>
     <string name="transaction_status_failed">交易失败</string>
@@ -1276,13 +1234,10 @@
     <string name="transaction_history_search_asset_title">搜索资产</string>
     <string name="transaction_history_search_asset_not_found">未找到资产</string>
     <string name="transaction_history_clear_filters">清除筛选</string>
-    <string name="transaction_status_broadcasted_label">已广播</string>
-    <string name="transaction_status_pending_label">待处理 · %1$s</string>
     <string name="transaction_status_confirmed_label">成功</string>
     <string name="transaction_status_failed_label">错误</string>
     <string name="transaction_status_in_progress_label">进行中…</string>
     <string name="transaction_history_to_label">至</string>
-    <string name="transaction_history_via_label">通过 %s</string>
     <string name="transaction_history_via_prefix">通过</string>
     <string name="transaction_history_min_payout_label">最低支付</string>
     <string name="transaction_history_date_today">今天</string>
@@ -1301,13 +1256,12 @@
     <string name="transaction_history_view_on_explorer">在浏览器中查看</string>
 
     <!-- Key Import / Seed Phrase Import -->
-    <string name="home_screen_import_seed_phrase">导入助记词</string>
     <string name="import_seedphrase_title">输入您的助记词</string>
     <string name="import_seedphrase_subtitle">输入您的12或24个单词的恢复短语</string>
     <string name="import_seedphrase_label">助记词</string>
     <string name="import_seedphrase_hint">输入您的恢复短语…</string>
     <string name="import_seedphrase_word_count">%1$d / %2$d 个单词</string>
-    <string name="import_seedphrase_invalid_word_count">预期 %2$s 个单词，实际 %1$s 个</string>
+    <string name="import_seedphrase_invalid_word_count">您输入了 %1$s 个单词。助记词必须是 12 或 24 个单词</string>
     <string name="import_seedphrase_invalid_phrase">无效的助记词</string>
     <string name="import_seedphrase_already_imported">该助记词已被导入</string>
     <string name="import_seedphrase_duplicate_description">请导入其他助记词</string>
@@ -1330,21 +1284,12 @@
     <string name="key_import_chains_customize">自定义链</string>
     <string name="key_import_chains_no_active_title">未发现活跃链</string>
     <string name="key_import_chains_no_active_desc">未找到任何余额。请手动选择您要导入的链。</string>
-    <string name="key_import_chains_select_title">选择链 (%1$d)</string>
-    <string name="key_import_chains_all">全部</string>
-    <string name="key_import_chains_none">无</string>
     <string name="key_import_chains_get_started">开始</string>
     <string name="key_import_chains_no_results">没有与您的搜索匹配的链</string>
 
     <string name="key_import_device_count_get_started">开始</string>
     <string name="vault_count_recommended">推荐</string>
 
-    <string name="welcome_preference_title">您偏好哪种金库类型？</string>
-    <string name="welcome_preference_desc">在个人金库和与您信任的人共享之间进行选择。</string>
-    <string name="welcome_preference_personal_title">个人金库</string>
-    <string name="welcome_preference_shared_title">共享金库</string>
-    <string name="welcome_preference_personal_desc">用于个人资金的金库。使用您自己的设备签署交易。</string>
-    <string name="welcome_preference_shared_desc">与您信任的多人共同签署（例如家庭金库、您的会计师、组合方式…）</string>
     <string name="welcome_preference_devices_title">您有多少台设备？</string>
     <string name="welcome_fast_and_easy">快速 &amp; 简便</string>
     <string name="welcome_fast_and_easy_desc">仅用1台设备签署。我们的安全服务器与您共同签署以实现多签安全。兼容插件。</string>
@@ -1379,7 +1324,6 @@
     <string name="password_choose_a_password">选择密码</string>
     <string name="password_extra_layer">如果您想要额外的安全层，请选择密码。密码无法恢复。</string>
     <string name="password_extra_layer_highlight">密码无法恢复。</string>
-    <string name="referral_enter_referral_code">在此输入您的推荐码。每笔交易享受10%折扣。</string>
     <string name="backup_backups">备份，</string>
     <string name="backup_your_new_recovery_method">您的新恢复方法</string>
     <string name="backup_backups_power_your_vault">备份为您的金库提供动力。每台设备都有自己的备份。单独的备份无法转移资金，仅用于恢复。导入并恢复任何丢失的设备。</string>
@@ -1391,8 +1335,6 @@
     <string name="backup_4_digit_code_received_via_email">通过电子邮件收到的4位数代码</string>
     <string name="backup_this_will_activate_the_co_signer">这将激活共同签署方</string>
     <string name="backup_use_a_different_email">使用不同的电子邮件</string>
-    <string name="backup_send_to_email">发送至 %1$s</string>
-    <string name="backup_incorrect_code_try_again">代码不正确。请再试一次。</string>
     <string name="backup_save_backup_to_the_cloud">将备份保存到云端</string>
     <string name="backup_vault_screen_export_prefix">导出此备份文件，然后保存到云端。它</string>
     <string name="backup_vault_screen_encrypted">已使用</string>
@@ -1417,36 +1359,11 @@
     <string name="vault_setup_dynamic_device_management">动态设备管理</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">添加任意数量的设备，获得机构级安全保障。</string>
     <string name="vault_setup_built_for_teams_and_treasuries">为团队和国库而构建</string>
-    <string name="vault_setup_ideal_for_teams_managing_shared_funds">非常适合管理共享资金和高价值金库的团队，这些金库需要更多签署方。</string>
-    <string name="vault_setup_no_inspiration_desc">没有灵感？您随时可以在设置中更改名称。</string>
-    <string name="vault_setup_scan_qr_on_your_other_devices">在其他设备上扫描二维码</string>
-    <string name="vault_setup_on_your_other_device_open_the_app_and_tap_scan_qr">在您的其他设备上，打开应用并点击"扫描二维码"来连接它。</string>
-    <string name="vault_setup_start_scanning">开始扫描</string>
-    <string name="vault_setup_waiting_for_devices_to_connect">等待设备连接…</string>
-    <string name="vault_setup_waiting_for_device_to_join">等待设备加入</string>
-    <string name="vault_setup_want_to_create_a_vault_privately">想要私下创建金库吗？</string>
-    <string name="vault_setup_use_local_mode">使用本地模式</string>
-    <string name="vault_setup_connected">已连接</string>
-    <string name="vault_setup_local_mode_waiting_on_devices">本地模式，等待设备</string>
-    <string name="vault_setup_short_description_of_local_mode">在本地模式下，设备通过同一局域网连接，无需互联网服务器。</string>
-    <string name="vault_setup_not_want_to_use_local_switch_back">不想使用本地模式？切换回去。</string>
-    <string name="vault_setup_use_standard_mode">使用标准模式</string>
-    <string name="vault_setup_review_your_vault_devices">查看您的金库设备</string>
-    <string name="vault_setup_make_sure_that_these_are_the_correct_devices">请确认这些是您添加的正确设备：</string>
-    <string name="vault_setup_backups">备份，</string>
-    <string name="vault_setup_your_new_recovery_method">您的新恢复方法</string>
-    <string name="vault_setup_backups_power_your_vault">备份为您的金库提供动力。每台设备都有自己的备份。单独的备份无法转移资金，仅用于恢复。导入并恢复任何丢失的设备。</string>
     <string name="vault_setup_back_up_each_device">备份每台设备</string>
     <string name="vault_setup_you_ll_create_n_backups_in_total">您将总共创建 %1$d 份备份。您将在每台设备上执行此操作。</string>
-    <string name="vault_setup_store_backups_separately">分开存储备份</string>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">将每份备份保存在不同的云服务中或使用不同的密码。如果其中一份被泄露，您的资金仍然安全。</string>
-    <string name="vault_setup_looks_good">看起来不错</string>
     <string name="vault_setup_i_understand">我明白了</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">将第 %1$d 份备份（共 %2$d 份）保存到云端</string>
-    <string name="vault_setup_export_this_backup_file_then_save_it_to_the_cloud">导出此备份文件，然后保存到云端。每份备份请使用不同的云服务或账户。完成后，请从此设备删除该文件。</string>
-    <string name="vault_setup_your_vault_is_ready_to_use">您的金库已准备好使用</string>
-    <string name="scanning_qr_troubleshooting_scanning">扫描遇到问题？如果二维码无法立即扫描：将手机稍微靠近或远离屏幕。确保屏幕光线充足且无眩光。让两台设备保持片刻稳定。</string>
-    <string name="vault_setup_with_how_many_people_do_you_want_to_share_the_vault">您想与多少人共享金库？</string>
 
     <!-- Server Backup Screen -->
     <string name="server_backup_title">服务器备份</string>
@@ -1480,4 +1397,13 @@
     <string name="add_referral_error_chars">推荐码只能包含字母和数字</string>
     <string name="add_referral_error_not_found">推荐码未找到</string>
     <string name="add_referral_error_network">检查推荐码失败，请重试。</string>
+    <string name="cacao_pool">CACAO 池</string>
+    <string name="staked_ruji_header">已质押 RUJI</string>
+    <string name="staked_tcy_header">已质押 TCY</string>
+    <string name="staked_ytcy_header">已质押 yTCY</string>
+    <string name="staked_yrune_header">已质押 yRUNE</string>
+    <string name="compounded_tcy_header">已复利 TCY</string>
+    <string name="native_asset">原生</string>
+    <string name="invalid_integer_error">无效的整数数量</string>
+    <string name="empty_lps_field">LP 单位字段为空</string>
 </resources>

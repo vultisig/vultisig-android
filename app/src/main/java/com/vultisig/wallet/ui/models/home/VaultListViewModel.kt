@@ -85,18 +85,18 @@ constructor(
     }
 
     private fun collectTotalVaultAndBalance() {
-
         viewModelScope.launch {
-            val vaults = vaultRepository.getAll()
-            val fiatValues = vaults.mapNotNull { vaultAndBalanceUseCase(it).balanceFiatValue }
+            vaultRepository.getAllAsFlow().collect { vaults ->
+                val fiatValues = vaults.mapNotNull { vaultAndBalanceUseCase(it).balanceFiatValue }
 
-            val totalBalance = fiatValues.reduceOrNull { acc, value -> acc + value }
+                val totalBalance = fiatValues.reduceOrNull { acc, value -> acc + value }
 
-            state.update {
-                it.copy(
-                    totalVaultsCount = vaults.size,
-                    totalBalance = totalBalance?.let { fiatValueToStringMapper(totalBalance) },
-                )
+                state.update {
+                    it.copy(
+                        totalVaultsCount = vaults.size,
+                        totalBalance = totalBalance?.let { fiatValueToStringMapper(totalBalance) },
+                    )
+                }
             }
         }
     }
@@ -190,7 +190,7 @@ constructor(
     private fun collectCurrentVaultAndFolder(vaultId: VaultId) {
         viewModelScope.launch {
             val vaultOrder = vaultOrderRepository.find(name = vaultId)
-            val vault = requireNotNull(vaultRepository.get(vaultId))
+            val vault = vaultRepository.get(vaultId) ?: return@launch
             state.update {
                 it.copy(
                     currentVaultId = vaultId,
