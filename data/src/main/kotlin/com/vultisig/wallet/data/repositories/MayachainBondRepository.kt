@@ -91,7 +91,9 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
 
     override suspend fun getBondableAssets(): List<String> {
         return try {
-            mayaChainApi.getMayaNodePools().filter { it.bondable }.map { it.asset }
+            mayaChainApi.getMayaNodePools()
+                .filter { it.status == "Available" && it.bondable }
+                .map { it.asset }
         } catch (e: Exception) {
             Timber.e(e, "Error fetching bondable Maya assets")
             throw e
