@@ -463,6 +463,35 @@ constructor(
         }
     }
 
+    private suspend fun createFiatValueFromPoolAsset(
+        amount: BigDecimal,
+        chain: Chain,
+        ticker: String,
+        contractAddress: String,
+        currency: AppCurrency,
+    ): FiatValue {
+        return try {
+            if (amount == BigDecimal.ZERO) return FiatValue(BigDecimal.ZERO, currency.ticker)
+            val price =
+                if (contractAddress.isNotEmpty()) {
+                    tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
+                } else {
+                    tokenPriceRepository.getCachedPrice(
+                        tokenId = "$ticker-${chain.id}",
+                        appCurrency = currency,
+                    ) ?: BigDecimal.ZERO
+                }
+            FiatValue(
+                value = amount.multiply(price).setScale(2, RoundingMode.DOWN),
+                currency = currency.ticker,
+            )
+        } catch (t: Throwable) {
+            if (t is CancellationException) throw t
+            Timber.e(t)
+            FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)
+        }
+    }
+
     private fun reloadLpTab() {
         val model = currentModel
         val selectedKeys = model.selectedPositions.toSet()
@@ -572,6 +601,8 @@ constructor(
                             mayaPoolChainPrefixToChain(pool.positionKey.substringBefore("."))
                         val assetCoinTicker =
                             pool.positionKey.substringAfter(".").substringBefore("-")
+                        val assetContractAddress =
+                            pool.positionKey.substringAfter(".").substringAfter("-", "")
                         val assetCoin =
                             vault.coins.find {
                                 it.chain == assetChain && it.ticker == assetCoinTicker
@@ -580,6 +611,14 @@ constructor(
                         val assetFiatValue =
                             if (assetCoin != null) {
                                 createFiatValue(assetAmount, assetCoin, currency)
+                            } else if (assetChain != null) {
+                                createFiatValueFromPoolAsset(
+                                    assetAmount,
+                                    assetChain,
+                                    assetCoinTicker,
+                                    assetContractAddress,
+                                    currency,
+                                )
                             } else {
                                 FiatValue(BigDecimal.ZERO, currency.ticker)
                             }
