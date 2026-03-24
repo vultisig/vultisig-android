@@ -541,21 +541,37 @@ constructor(
                         val runeAdded =
                             memberPool?.runeAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
-                        val assetAmount =
-                            assetAdded
-                                .toValue(Coins.MayaChain.CACAO.decimal)
-                                .setScale(4, RoundingMode.DOWN)
-                        val runeAmount =
-                            runeAdded
-                                .toValue(Coins.MayaChain.CACAO.decimal)
-                                .setScale(4, RoundingMode.DOWN)
+                        val assetAmount = assetAdded.toValue(8).setScale(4, RoundingMode.DOWN)
+                        val runeAmount = runeAdded.toValue(8).setScale(4, RoundingMode.DOWN)
 
-                        val fiatValue = createFiatValue(runeAmount, Coins.MayaChain.CACAO, currency)
+                        val assetChain =
+                            mayaPoolChainPrefixToChain(pool.positionKey.substringBefore("."))
+                        val assetCoinTicker =
+                            pool.positionKey.substringAfter(".").substringBefore("-")
+                        val assetCoin =
+                            vault.coins.find {
+                                it.chain == assetChain && it.ticker == assetCoinTicker
+                            }
+
+                        val assetFiatValue =
+                            if (assetCoin != null) {
+                                createFiatValue(assetAmount, assetCoin, currency)
+                            } else {
+                                FiatValue(BigDecimal.ZERO, currency.ticker)
+                            }
+                        val cacaoFiatValue =
+                            createFiatValue(runeAmount, Coins.MayaChain.CACAO, currency)
+                        val totalFiatValue =
+                            FiatValue(
+                                value = assetFiatValue.value.add(cacaoFiatValue.value),
+                                currency = currency.ticker,
+                            )
+
                         val apr = stats?.annualPercentageRate?.toDoubleOrNull()
 
                         LpPositionUiModel(
                             titleLp = pool.ticker,
-                            totalPriceLp = currencyFormat.format(fiatValue.value),
+                            totalPriceLp = currencyFormat.format(totalFiatValue.value),
                             icon = (pool.logo as? Int) ?: R.drawable.cacao,
                             apr = apr?.formatPercentage(),
                             position =
