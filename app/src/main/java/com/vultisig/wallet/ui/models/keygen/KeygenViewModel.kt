@@ -479,7 +479,7 @@ constructor(
                 )
 
             try {
-                messagePuller.pullMessages(null)
+                messagePuller.pullMessages(null, viewModelScope)
 
                 when (action) {
                     TssAction.KEYGEN,

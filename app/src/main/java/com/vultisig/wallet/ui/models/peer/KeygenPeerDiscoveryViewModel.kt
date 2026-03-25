@@ -68,9 +68,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -621,17 +619,18 @@ constructor(
         MediatorService.start(context, serviceName)
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     private val serviceStartedReceiver: BroadcastReceiver =
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == MediatorService.SERVICE_ACTION) {
                     Timber.d("onReceive: Mediator service started")
-                    launchMediatorSession(
-                        scope = GlobalScope,
-                        onSessionStart = { startSessionWithRetry() },
-                        onDiscovery = { startParticipantDiscovery() },
-                    )
+                    // send a request to local mediator server to start the session
+                    viewModelScope.launch(Dispatchers.IO) {
+                        delay(1000) // back off a second
+                        startSessionWithRetry()
+                    }
+
+                    startParticipantDiscovery()
                 }
             }
         }
