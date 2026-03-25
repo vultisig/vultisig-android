@@ -785,15 +785,16 @@ constructor(
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
             val chainId = chain?.id ?: return@launch
+            val requestId = java.util.UUID.randomUUID().toString()
             navigator.route(
                 Route.AddressBook(
-                    requestId = REQUEST_ADDRESS_ID,
+                    requestId = requestId,
                     chainId = chainId,
                     excludeVaultId = vaultId,
                 )
             )
             val address: AddressBookEntry =
-                requestResultRepository.request(REQUEST_ADDRESS_ID) ?: return@launch
+                requestResultRepository.request(requestId) ?: return@launch
             setNodeAddress(address.address)
         }
     }
@@ -2301,9 +2302,7 @@ constructor(
         return plan
     }
 
-    companion object {
-        private const val REQUEST_ADDRESS_ID = "deposit_request_address_id"
-    }
+    companion object {}
 }
 
 internal data class TokenMergeInfo(val ticker: String, val contract: String) {

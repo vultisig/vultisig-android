@@ -773,11 +773,7 @@ constructor(
             val vaultId = vaultId ?: return@launch
             val selectedChain = selectedTokenValue?.chain ?: return@launch
 
-            val requestId =
-                when (addressType) {
-                    AddressBookType.OUTPUT -> REQUEST_ADDRESS_ID
-                    AddressBookType.PROVIDER -> REQUEST_PROVIDER_ADDRESS_ID
-                }
+            val requestId = java.util.UUID.randomUUID().toString()
 
             navigator.route(
                 Route.AddressBook(
@@ -3348,8 +3344,6 @@ constructor(
 
     companion object {
         private const val GAS_FEE_TIMEOUT_MS = 5_000L
-        private const val REQUEST_ADDRESS_ID = "request_address_id"
-        private const val REQUEST_PROVIDER_ADDRESS_ID = "request_provider_address_id"
     }
 }
 
