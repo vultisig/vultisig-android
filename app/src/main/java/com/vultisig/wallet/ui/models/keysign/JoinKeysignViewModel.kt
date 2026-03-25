@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
-import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
@@ -50,6 +49,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
+import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -188,6 +188,7 @@ constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val tokenRepository: TokenRepository,
+    private val gasFeeRepository: GasFeeRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
     private val vaultRepository: VaultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
@@ -517,18 +518,12 @@ constructor(
                 val chain = srcToken.chain
                 val (nativeTokenAddress, _) =
                     chainAccountAddressRepository.getAddress(nativeToken, _currentVault)
-                val fees =
-                    feeServiceComposite.calculateDefaultFees(
-                        Swap(
-                            coin = nativeToken.copy(address = nativeTokenAddress),
-                            vault = VaultData("", ""),
-                            amount = BigInteger.ZERO,
-                            to = "",
-                            callData = "",
-                            approvalData = null,
-                        )
+                val gasFee =
+                    gasFeeRepository.getGasFee(
+                        chain = chain,
+                        address = nativeTokenAddress,
+                        isSwap = true,
                     )
-                val gasFee = TokenValue(value = fees.amount, token = nativeToken)
                 val estimatedNetworkGasFee: EstimatedGasFee =
                     gasFeeToEstimatedFee(
                         GasFeeParams(

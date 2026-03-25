@@ -47,6 +47,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -162,6 +163,7 @@ constructor(
     private val sendNavigator: Navigator<SendDst>,
     private val requestQrScan: RequestQrScanUseCase,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
+    private val gasFeeRepository: GasFeeRepository,
     private val accountsRepository: AccountsRepository,
     private val isAssetCharsValid: DepositMemoAssetsValidatorUseCase,
     private val requestResultRepository: RequestResultRepository,
@@ -867,17 +869,7 @@ constructor(
         val srcAddress = account.token.address
         val dstAddr = unmergeToken.contract
         val memo = "unmerge:${unmergeToken.denom}:${tokenShares}"
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = account.token,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val specific =
             blockChainSpecificRepository.getSpecific(
@@ -934,17 +926,7 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
         val memo = DepositMemo.DepositPool
 
         val specific =
@@ -1234,17 +1216,7 @@ constructor(
         val tokenAmountInt = tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
 
         val srcAddress = selectedToken.address
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
         val memo = DepositMemo.AddLiquidity(poolId)
 
         val specific =
@@ -1291,17 +1263,7 @@ constructor(
         val selectedToken = address.accounts.first { it.token.isNativeToken }.token
 
         val srcAddress = selectedToken.address
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val basisPoints = tokenAmountFieldState.text.toString().toIntOrNull()
 
@@ -1354,17 +1316,7 @@ constructor(
                 UiText.StringResource(R.string.deposit_error_has_not_reached_maturity)
             )
 
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val basisPoints = tokenAmountFieldState.text.toString().toIntOrNull()
 
@@ -1463,17 +1415,7 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val providerText = providerFieldState.text.toString()
         val provider = providerText.ifBlank { null }
@@ -1590,17 +1532,7 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val providerText = providerFieldState.text.toString()
         val provider = providerText.ifBlank { null }
@@ -1682,17 +1614,7 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val memo = DepositMemo.Leave(nodeAddress = nodeAddress)
 
@@ -1745,17 +1667,7 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val memo = DepositMemo.Custom(memo = customMemoFieldState.text.toString())
 
@@ -1835,17 +1747,7 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val specific =
             blockChainSpecificRepository.getSpecific(
@@ -1905,17 +1807,7 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val dstAddr = mergeToken.contract
 
@@ -1979,17 +1871,7 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val dstAddr = nodeAddressFieldState.text.toString()
 
@@ -2065,17 +1947,7 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        val fees =
-            feeServiceComposite.calculateFees(
-                Transfer(
-                    coin = selectedToken,
-                    vault = VaultData("", ""),
-                    amount = BigInteger.ZERO,
-                    to = "",
-                )
-            )
-        val nativeCoin = tokenRepository.getNativeToken(chain.id)
-        val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val memo =
             DepositMemo.TransferIbc(
