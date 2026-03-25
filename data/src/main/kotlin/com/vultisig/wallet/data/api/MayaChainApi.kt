@@ -314,8 +314,8 @@ constructor(
         httpClient
             .get("$MAYA_MIDGARD_BASE/pools") {
                 header(xClientID, xClientIDValue)
-                parameter("status", "available")
-                parameter("period", "30d")
+                parameter(LP_POOL_STATUS_KEY, LP_POOL_STATUS)
+                parameter(LP_POOL_PERIOD_KEY, LP_POOL_PERIOD)
             }
             .bodyOrThrow<List<MayaLpPoolStats>>()
 
@@ -327,5 +327,9 @@ constructor(
     companion object {
         private const val MAYA_NODE_BASE = "https://mayanode.mayachain.info"
         private const val MAYA_MIDGARD_BASE = "https://midgard.mayachain.info/v2"
+        private const val LP_POOL_STATUS_KEY = "status"
+        private const val LP_POOL_STATUS = "available"
+        private const val LP_POOL_PERIOD_KEY = "period"
+        private const val LP_POOL_PERIOD = "30d"
     }
 }

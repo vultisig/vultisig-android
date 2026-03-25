@@ -597,8 +597,8 @@ constructor(
                         val cacaoAdded =
                             memberPool?.runeAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
-                        val assetAmount = assetAdded.toValue(10)
-                        val cacaoAmount = cacaoAdded.toValue(10)
+                        val assetAmount = assetAdded.toValue(Coins.MayaChain.CACAO.decimal)
+                        val cacaoAmount = cacaoAdded.toValue(Coins.MayaChain.CACAO.decimal)
 
                         val assetChain =
                             mayaPoolChainPrefixToChain(pool.positionKey.substringBefore("."))
