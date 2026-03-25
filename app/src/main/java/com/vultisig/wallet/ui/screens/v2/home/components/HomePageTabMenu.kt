@@ -55,16 +55,6 @@ internal fun HomePageTabMenu(
                     isEnabled = true,
                 )
             }
-            //                tab {
-            //                    HomepageTab(
-            //                        onClick = {
-            //                            onTNFTsClick()
-            //                            state = 1
-            //                        },
-            //                        label = stringResource(R.string.search_bar_nfts),
-            //                        isEnabled = false
-            //                    )
-            //                }
         }
 
         UiSpacer(weight = 1f)
