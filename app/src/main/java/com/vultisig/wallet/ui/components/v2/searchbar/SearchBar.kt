@@ -47,6 +47,7 @@ internal fun SearchBar(
     isInitiallyFocused: Boolean,
     isPasteEnabled: Boolean = false,
     onPasteClick: (String) -> Unit = {},
+    onCancelClick: (() -> Unit)? = null,
 ) {
     var isFocusedState by remember { mutableStateOf(isInitiallyFocused) }
     val focusManager = LocalFocusManager.current
@@ -119,7 +120,18 @@ internal fun SearchBar(
                                 drawableResId = R.drawable.close_circle,
                                 size = 18.dp,
                                 tint = Theme.v2.colors.neutrals.n300,
-                                onClick = { state.clearText() },
+                                onClick = {
+                                    state.clearText()
+                                    onCancelClick?.invoke()
+                                },
+                            )
+                        } else if (onCancelClick != null) {
+                            UiSpacer(size = 8.dp)
+                            UiIcon(
+                                drawableResId = R.drawable.close_circle,
+                                size = 18.dp,
+                                tint = Theme.v2.colors.neutrals.n300,
+                                onClick = onCancelClick,
                             )
                         } else if (isPasteEnabled) {
                             PasteIcon(onPaste = onPasteClick)
