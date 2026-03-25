@@ -866,7 +866,6 @@
     <string name="verify_swap_swap_overview">交换概览</string>
 
     <!-- Settings -->
-    <string name="education_settings_title">Vultisig 教育</string>
     <string name="check_updates_settings_title">检查更新</string>
     <string name="vult_website_settings_title">Vultisig 网站</string>
     <string name="vault">保险库</string>
