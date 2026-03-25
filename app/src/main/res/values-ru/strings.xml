@@ -358,8 +358,8 @@
     <string name="vault_notifications">Уведомления хранилища</string>
     <string name="enable_all">Включить все</string>
 
-    <string name="deposit_option_bond">Бонд</string>
-    <string name="deposit_option_unbond">Анбонд</string>
+    <string name="deposit_option_bond">Привязать</string>
+    <string name="deposit_option_unbond">Отвязать</string>
     <string name="total_bonded_coin">Общая связанная %s</string>
     <string name="bonded_amount">Связано: %s</string>
     <string name="bond_to_node">Привязать к узлу</string>
