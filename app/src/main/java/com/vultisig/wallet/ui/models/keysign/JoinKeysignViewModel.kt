@@ -119,6 +119,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 import vultisig.keysign.v1.KeysignMessage
+import wallet.core.jni.proto.Common.SigningError
 
 sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
@@ -539,6 +540,10 @@ constructor(
                     if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
                         val utxoHelper = UtxoHelper.getHelper(_currentVault, srcToken.coinType)
                         val plan = utxoHelper.getBitcoinTransactionPlan(payload)
+                        if (plan.error != SigningError.OK) {
+                            Timber.e("UTXO plan error: ${plan.error.name}")
+                            throw RuntimeException("Transaction plan failed")
+                        }
                         TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeToken)
                     } else {
                         TokenValue(value = calculatedFee.amount, token = nativeToken)
@@ -946,6 +951,10 @@ constructor(
                         if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
                             val utxoHelper = UtxoHelper.getHelper(vault, payloadToken.coinType)
                             val plan = utxoHelper.getBitcoinTransactionPlan(payload)
+                            if (plan.error != SigningError.OK) {
+                                Timber.e("UTXO plan error: ${plan.error.name}")
+                                throw RuntimeException("Transaction plan failed")
+                            }
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                         } else {
                             TokenValue(value = fees.amount, token = nativeCoin)

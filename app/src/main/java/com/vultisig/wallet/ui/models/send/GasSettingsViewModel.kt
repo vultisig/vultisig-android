@@ -119,14 +119,14 @@ constructor(
     private fun CharSequence.toBigInteger() =
         try {
             BigInteger(toString())
-        } catch (e: Exception) {
+        } catch (e: NumberFormatException) {
             BigInteger.ZERO
         }
 
     private fun String.toBigDecimalOrZero() =
         try {
             toBigDecimal()
-        } catch (e: Exception) {
+        } catch (e: NumberFormatException) {
             java.math.BigDecimal.ZERO
         }
 }

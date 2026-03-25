@@ -112,6 +112,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 internal data class SwapFormUiModel(
     val selectedSrcToken: TokenBalanceUiModel? = null,
@@ -1191,6 +1192,10 @@ constructor(
         val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
 
         val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
+        if (plan.error != SigningError.OK) {
+            Timber.e("UTXO plan error: ${plan.error.name}")
+            throw RuntimeException("Transaction plan failed")
+        }
         return plan
     }
 
