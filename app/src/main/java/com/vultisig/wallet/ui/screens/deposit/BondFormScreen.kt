@@ -315,9 +315,10 @@ private fun MayaBondFormContent(
                 color = Theme.v2.colors.text.primary,
             )
         }
-        UiSpacer(16.dp)
+
         AnimatedVisibility(visible = isAddressExpanded) {
             Column() {
+                UiSpacer(16.dp)
                 UiHorizontalDivider()
                 UiSpacer(16.dp)
                 Text(
