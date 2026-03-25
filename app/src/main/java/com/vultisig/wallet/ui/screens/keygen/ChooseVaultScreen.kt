@@ -214,8 +214,12 @@ private fun ChooseVaultScreen(
                 val borderColor = Theme.v2.colors.border.normal
                 Column(
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(15))
-                        .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(15))
+                        .clip(RoundedCornerShape(15.dp))
+                        .border(
+                            width = 1.dp,
+                            color = borderColor,
+                            shape = RoundedCornerShape(15.dp),
+                        )
                         .background(Theme.v2.colors.backgrounds.tertiary_2),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
@@ -318,7 +322,7 @@ private fun TextAndIcon(
 
 @Preview
 @Composable
-private fun SelectVaultTypeScreenPreview() {
+internal fun SelectVaultTypeScreenPreview() {
     ChooseVaultScreen(
         state = SelectVaultTypeUiModel(vaultType = VaultType.Secure),
         onTabClick = {},

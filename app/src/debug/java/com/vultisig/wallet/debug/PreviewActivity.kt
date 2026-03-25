@@ -3,8 +3,10 @@ package com.vultisig.wallet.debug
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
@@ -24,7 +26,11 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
+import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
+import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
+import com.vultisig.wallet.ui.screens.settings.TierType
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
@@ -54,6 +60,9 @@ class PreviewActivity : ComponentActivity() {
                     "fast_vault_verification" -> FastVaultVerificationPreview()
                     "bond_form_thor" -> BondFormThorPreview()
                     "bond_form_maya" -> BondFormMayaPreview()
+                    "discount_tiers" -> DiscountTiersScreenPreview()
+                    "tier_bottom_sheet" -> TierBottomSheetFullPreview()
+                    "choose_vault" -> SelectVaultTypeScreenPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -193,4 +202,15 @@ private fun SendTxDonePreview() {
                 networkFeeFiatValue = "$6.15",
             ),
     )
+}
+
+@Composable
+private fun TierBottomSheetFullPreview() {
+    androidx.compose.foundation.layout.Box(
+        modifier =
+            Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color(0xFF1A2335)),
+        contentAlignment = androidx.compose.ui.Alignment.BottomCenter,
+    ) {
+        TierDiscountBottomSheetContent(tier = TierType.BRONZE, onContinue = {})
+    }
 }

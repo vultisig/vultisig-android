@@ -463,7 +463,7 @@ private fun formatVultAmount(vultAmount: Int): String {
 
 @Preview(showBackground = true)
 @Composable
-private fun DiscountTiersScreenPreview() {
+internal fun DiscountTiersScreenPreview() {
     MaterialTheme {
         Column(
             modifier = Modifier.fillMaxSize().padding(16.dp),
