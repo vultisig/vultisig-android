@@ -1097,42 +1097,44 @@ constructor(
                 .catch { Timber.e(it) }
                 .collect { (selectedSrc, gasFee) ->
                     this@SwapFormViewModel.gasFee.value = gasFee
-                    val selectedAccount = selectedSrc.account
-                    val chain = selectedAccount.token.chain
-                    val selectedToken = selectedAccount.token
-                    val srcAddress = selectedAccount.token.address
-                    var gasFeeForDisplay = gasFee
-                    if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                        // get the utxos for the sendSrc address and calculate the transaction plan
-                        // to get the accurate fee for swap transaction
-                        val specific =
-                            blockChainSpecificRepository.getSpecific(
-                                chain = selectedToken.chain,
-                                address = selectedToken.address,
-                                token = selectedToken,
-                                gasFee = gasFee,
-                                isSwap = true,
-                                isMaxAmountEnabled = false,
-                                isDeposit = false,
-                            )
-                        val vaultId = vaultId ?: return@collect
-                        val plan =
-                            getBitcoinTransactionPlan(
-                                vaultId,
-                                selectedToken,
-                                srcAddress,
-                                chain.getDustThreshold.add(BigInteger.ONE),
-                                BlockChainSpecificAndUtxo(
-                                    blockChainSpecific =
-                                        BlockChainSpecific.UTXO(byteFee = gasFee.value, true),
-                                    utxos = specific.utxos,
-                                ),
-                                memo = null,
-                            )
-                        gasFeeForDisplay = gasFeeForDisplay.copy(value = plan.fee.toBigInteger())
-                    }
-
                     try {
+                        val selectedAccount = selectedSrc.account
+                        val chain = selectedAccount.token.chain
+                        val selectedToken = selectedAccount.token
+                        val srcAddress = selectedAccount.token.address
+                        var gasFeeForDisplay = gasFee
+                        if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                            // get the utxos for the sendSrc address and calculate the transaction
+                            // plan
+                            // to get the accurate fee for swap transaction
+                            val specific =
+                                blockChainSpecificRepository.getSpecific(
+                                    chain = selectedToken.chain,
+                                    address = selectedToken.address,
+                                    token = selectedToken,
+                                    gasFee = gasFee,
+                                    isSwap = true,
+                                    isMaxAmountEnabled = false,
+                                    isDeposit = false,
+                                )
+                            val vaultId = vaultId ?: return@collect
+                            val plan =
+                                getBitcoinTransactionPlan(
+                                    vaultId,
+                                    selectedToken,
+                                    srcAddress,
+                                    chain.getDustThreshold.add(BigInteger.ONE),
+                                    BlockChainSpecificAndUtxo(
+                                        blockChainSpecific =
+                                            BlockChainSpecific.UTXO(byteFee = gasFee.value, true),
+                                        utxos = specific.utxos,
+                                    ),
+                                    memo = null,
+                                )
+                            gasFeeForDisplay =
+                                gasFeeForDisplay.copy(value = plan.fee.toBigInteger())
+                        }
+
                         val estimatedNetworkFee =
                             gasFeeToEstimatedFee(
                                 GasFeeParams(
