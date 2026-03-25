@@ -1101,4 +1101,5 @@
     <string name="name_vault_import">Uvezeni trezor</string>
     <string name="name_vault_fast">Brzi trezor</string>
     <string name="name_vault_secure">Sigurni trezor</string>
+    <string name="unknown_error">Nepoznata greška</string>
 </resources>
