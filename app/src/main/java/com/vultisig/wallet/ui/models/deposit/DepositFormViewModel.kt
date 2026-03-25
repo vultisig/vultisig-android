@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_T
 import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
@@ -787,7 +788,8 @@ constructor(
                     excludeVaultId = vaultId,
                 )
             )
-            val address = requestResultRepository.request(REQUEST_ADDRESS_ID) ?: return@launch
+            val address: AddressBookEntry =
+                requestResultRepository.request(REQUEST_ADDRESS_ID) ?: return@launch
             setNodeAddress(address.address)
         }
     }
