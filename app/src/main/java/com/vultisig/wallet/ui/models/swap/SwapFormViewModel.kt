@@ -11,12 +11,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
-import com.vultisig.wallet.data.blockchain.model.Eip1559
-import com.vultisig.wallet.data.blockchain.model.GasFees
-import com.vultisig.wallet.data.blockchain.model.Swap
-import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.models.Account
@@ -43,6 +38,7 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
+import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -148,7 +144,7 @@ constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val accountsRepository: AccountsRepository,
-    private val feeServiceComposite: FeeServiceComposite,
+    private val gasFeeRepository: GasFeeRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
@@ -1055,25 +1051,7 @@ constructor(
             selectedSrc
                 .filterNotNull()
                 .map {
-                    val fee =
-                        feeServiceComposite.calculateDefaultFees(
-                            Swap(
-                                coin = it.account.token,
-                                vault = VaultData("", ""),
-                                amount = BigInteger.ZERO,
-                                to = "",
-                                callData = "",
-                                approvalData = null,
-                            )
-                        )
-                    val nativeCoin = tokenRepository.getNativeToken(it.address.chain.id)
-                    val gasFeeValue =
-                        when (fee) {
-                            is GasFees -> fee.price
-                            is Eip1559 -> fee.maxFeePerGas
-                            else -> fee.amount
-                        }
-                    it to TokenValue(value = gasFeeValue, token = nativeCoin)
+                    it to gasFeeRepository.getGasFee(it.address.chain, it.address.address, true)
                 }
                 .catch { Timber.e(it) }
                 .collect { (selectedSrc, gasFee) ->
