@@ -94,6 +94,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
@@ -420,7 +421,18 @@ constructor(
         }
         assetsFieldState.clearText()
         viewModelScope.safeLaunch {
-            val userAddress = address.value?.address ?: return@safeLaunch
+            val userAddress =
+                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                    ?.address
+                    ?: run {
+                        state.update {
+                            it.copy(
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body)
+                            )
+                        }
+                        return@safeLaunch
+                    }
             val poolMap =
                 withContext(Dispatchers.IO) {
                     mayachainBondRepository.getLpBondableAssetsWithUnits(userAddress)
@@ -2337,6 +2349,10 @@ constructor(
 
         val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
         return plan
+    }
+
+    companion object {
+        private const val ADDRESS_AWAIT_TIMEOUT_MS = 5_000L
     }
 }
 
