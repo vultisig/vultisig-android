@@ -640,6 +640,7 @@ private fun MayaBondFormContent(
                                 } else null
                             }
                         if (estimatedBondValue != null) {
+                            UiSpacer(size = 8.dp)
                             Row(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically,
