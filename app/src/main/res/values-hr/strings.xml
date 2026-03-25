@@ -412,7 +412,7 @@
     <string name="keygen_step_preparing_vault">Priprema trezora</string>
     <string name="keygen_step_generating_ecdsa">Generiranje ECDSA ključa</string>
     <string name="reshare_step_generating_eddsa">Generiranje EDDSA ključa</string>
-    <string name="keygen_connecting_with_server">Povezivanje sa serverom...</string>
+    <string name="keygen_connecting_with_server">Povezivanje sa serverom…</string>
     <string name="keygen_step_generating_eddsa">Generiranje EDDSA ključa</string>
     <string name="keygen_step_generating_chain_keys">Generiranje ključeva lanca</string>
     <string name="reshare_step_generating_ecdsa">Generiranje ECDSA ključa</string>
@@ -662,7 +662,7 @@
     <string name="address_book_my_vaults">Moji trezori</string>
     <string name="address_entry_select">Odaberi</string>
     <string name="deposit_form_enter_asset_hint">Unesite resurse</string>
-    <string name="share_balance_loading">Učitavanje...</string>
+    <string name="share_balance_loading">Učitavanje…</string>
     <string name="custom_token_not_found_desc">Mogući razlozi: pogrešan ugovor, nepodržani lanac ili je token uklonjen iz registara.</string>
     <string name="custom_token_screen_finding_token">Pronalaženje tokena</string>
     <string name="retry">Pokušajte ponovno</string>
@@ -729,7 +729,7 @@
     <string name="select_vault_type_secure_desc_3">Osigurajte bilo koju količinu imovine</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver supotpisuje odmah</string>
     <string name="peer_discovery_topbar_title">Skenirajte QR</string>
-    <string name="peer_discovery_waiting_for_devices_action">Čekanje na uređaje...</string>
+    <string name="peer_discovery_waiting_for_devices_action">Čekanje na uređaje…</string>
     <string name="peer_discovery_devices_n_of_n">Uređaji (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Poslano na %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">Niste primili e-poštu?</string>
@@ -872,12 +872,12 @@
     <string name="transaction_status_not_found">Transakcija nije pronađena</string>
     <string name="transaction_status_pending">Transakcija na čekanju…</string>
     <string name="transaction_status_notification_title">Status transakcije</string>
-    <string name="transaction_status_checking_transaction">Provjera transakcije...</string>
+    <string name="transaction_status_checking_transaction">Provjera transakcije…</string>
     <string name="raw_transaction_data">Sirovi podaci o transakciji</string>
     <string name="solana_raw_transaction">Solana Sirova transakcija</string>
 
     <!-- Key Import / Feature Spotlight -->
-    <string name="key_import_spotlight_before_you_start">Prije nego što počnete...</string>
+    <string name="key_import_spotlight_before_you_start">Prije nego što počnete…</string>
     <string name="key_import_spotlight_heading_part1">"Ulazite u novu eru,\n"</string>
     <string name="key_import_spotlight_heading_highlight">"ostavljajući stare fraze za oporavak iza sebe. "</string>
     <string name="key_import_spotlight_heading_part2">Trebat će vam:</string>

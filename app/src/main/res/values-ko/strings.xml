@@ -509,7 +509,7 @@
     <string name="keygen_step_generating_chain_keys">체인 키 생성 중</string>
     <string name="reshare_step_generating_ecdsa">ECDSA 키 생성 중</string>
     <string name="reshare_step_generating_eddsa">EdDSA 키 생성 중</string>
-    <string name="keygen_connecting_with_server">서버에 연결 중...</string>
+    <string name="keygen_connecting_with_server">서버에 연결 중…</string>
     <string name="keygen_connecting_with_server_take_a_second">잠시만 기다려 주세요</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">비공개로 볼트를 생성하시겠습니까?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">로컬 모드로 전환</string>
@@ -813,7 +813,7 @@
     <string name="address_book_my_vaults">내 볼트</string>
     <string name="address_entry_select">선택</string>
     <string name="deposit_form_enter_asset_hint">자산 입력</string>
-    <string name="share_balance_loading">로딩 중...</string>
+    <string name="share_balance_loading">로딩 중…</string>
     <string name="must_be_enabled_before_proceeding">계속하기 전에 %1$s을(를) 활성화해야 합니다.</string>
     <string name="referral_code_removed_successfully">추천 코드가 성공적으로 제거되었습니다</string>
     <string name="referral_code_linked_successfully">추천 코드가 성공적으로 연결되었습니다</string>
@@ -928,13 +928,13 @@
     <string name="transaction_status_not_found">거래를 찾을 수 없음</string>
     <string name="transaction_status_pending">거래 대기 중…</string>
     <string name="transaction_status_notification_title">거래 상태</string>
-    <string name="transaction_status_checking_transaction">거래 확인 중...</string>
+    <string name="transaction_status_checking_transaction">거래 확인 중…</string>
     <string name="raw_transaction_data">원시 거래 데이터</string>
     <string name="solana_raw_transaction">Solana 원시 거래</string>
     <string name="vault_count_recommended">권장</string>
 
     <!-- Key Import / Feature Spotlight -->
-    <string name="key_import_spotlight_before_you_start">시작하기 전에...</string>
+    <string name="key_import_spotlight_before_you_start">시작하기 전에…</string>
     <string name="key_import_spotlight_heading_part1">"새로운 시대에 진입합니다.\n"</string>
     <string name="key_import_spotlight_heading_highlight">"오래된 시드 구문을 뒤로하고. "</string>
     <string name="key_import_spotlight_heading_part2">필요한 것:</string>

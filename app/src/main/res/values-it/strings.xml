@@ -661,7 +661,7 @@
     <string name="address_book_my_vaults">I miei Vault</string>
     <string name="address_entry_select">Seleziona</string>
     <string name="deposit_form_enter_asset_hint">Inserisci risorse</string>
-    <string name="share_balance_loading">Caricamento in corso...</string>
+    <string name="share_balance_loading">Caricamento in corso…</string>
     <string name="custom_token_screen_finding_token">Ricerca del token</string>
     <string name="retry">Riprova</string>
     <string name="custom_token_screen_title">Trova token personalizzato</string>
@@ -878,7 +878,7 @@
     <string name="solana_raw_transaction">Transazioni grezze Solana</string>
 
     <!-- Key Import / Feature Spotlight -->
-    <string name="key_import_spotlight_before_you_start">Prima di iniziare...</string>
+    <string name="key_import_spotlight_before_you_start">Prima di iniziare…</string>
     <string name="key_import_spotlight_heading_part1">"Stai entrando in una nuova era,\n"</string>
     <string name="key_import_spotlight_heading_highlight">"lasciandoti alle spalle le vecchie frasi seed. "</string>
     <string name="key_import_spotlight_heading_part2">Avrai bisogno di:</string>
