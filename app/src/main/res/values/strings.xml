@@ -506,7 +506,7 @@
     <string name="keygen_step_generating_chain_keys">Generating Chain Keys</string>
     <string name="reshare_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="reshare_step_generating_eddsa">Generating EdDSA Key</string>
-    <string name="keygen_connecting_with_server">Connecting with server...</string>
+    <string name="keygen_connecting_with_server">Connecting with server…</string>
     <string name="keygen_connecting_with_server_take_a_second">This should only take a second</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Want to create vault privately?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Switch to local mode</string>
@@ -810,7 +810,7 @@
     <string name="address_book_my_vaults">My Vaults</string>
     <string name="address_entry_select">Select</string>
     <string name="deposit_form_enter_asset_hint">Enter Assets</string>
-    <string name="share_balance_loading">Loading...</string>
+    <string name="share_balance_loading">Loading…</string>
     <string name="must_be_enabled_before_proceeding">%1$s must be enabled before proceeding.</string>
     <string name="referral_code_removed_successfully">Referral code removed successfully</string>
     <string name="referral_code_linked_successfully">Referral code linked successfully</string>
@@ -925,13 +925,13 @@
     <string name="transaction_status_not_found">Transaction not found</string>
     <string name="transaction_status_pending">Transaction pending…</string>
     <string name="transaction_status_notification_title">Transaction Status</string>
-    <string name="transaction_status_checking_transaction">Checking transaction...</string>
+    <string name="transaction_status_checking_transaction">Checking transaction…</string>
     <string name="raw_transaction_data">Raw Transaction Data</string>
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
     <string name="vault_count_recommended">Recommended</string>
 
     <!-- Key Import / Feature Spotlight -->
-    <string name="key_import_spotlight_before_you_start">Before you start...</string>
+    <string name="key_import_spotlight_before_you_start">Before you start…</string>
     <string name="key_import_spotlight_heading_part1">"You are entering a new era,\n"</string>
     <string name="key_import_spotlight_heading_highlight">"leaving old seed phrases behind."</string>
     <string name="key_import_spotlight_heading_part2">You\'ll need:</string>

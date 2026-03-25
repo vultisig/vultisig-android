@@ -661,7 +661,7 @@
     <string name="address_book_my_vaults">Mis bóvedas</string>
     <string name="address_entry_select">Seleccionar</string>
     <string name="deposit_form_enter_asset_hint">Ingresar activos</string>
-    <string name="share_balance_loading">Cargando...</string>
+    <string name="share_balance_loading">Cargando…</string>
     <string name="custom_token_screen_finding_token">Buscando tokens</string>
     <string name="retry">Reintentar</string>
     <string name="custom_token_screen_title">Buscar token personalizado</string>
@@ -728,7 +728,7 @@
     <string name="select_vault_type_secure_desc_3">Protege cualquier cantidad de activos</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver firma automáticamente</string>
     <string name="peer_discovery_topbar_title">Escanear código QR</string>
-    <string name="peer_discovery_waiting_for_devices_action">Esperando dispositivos...</string>
+    <string name="peer_discovery_waiting_for_devices_action">Esperando dispositivos…</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivos (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Enviado a %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">¿No recibiste un correo?</string>
@@ -876,7 +876,7 @@
     <string name="solana_raw_transaction">Transacción sin procesar de Solana</string>
 
     <!-- Key Import / Feature Spotlight -->
-    <string name="key_import_spotlight_before_you_start">Antes de empezar...</string>
+    <string name="key_import_spotlight_before_you_start">Antes de empezar…</string>
     <string name="key_import_spotlight_heading_part1">"Estás entrando en una nueva era,\n"</string>
     <string name="key_import_spotlight_heading_highlight">"dejando atrás las viejas frases semilla. "</string>
     <string name="key_import_spotlight_heading_part2">Necesitarás:</string>

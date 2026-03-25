@@ -664,7 +664,7 @@
     <string name="security_scanner_default_description">此交易已被标记为潜在危险。</string>
     <string name="security_scanner_continue_anyway">仍然继续</string>
     <string name="security_scanner_continue_go_back">返回</string>
-    <string name="security_scanner_powered_by">由...提供支持</string>
+    <string name="security_scanner_powered_by">由…提供支持</string>
     <string name="security_scanner_transaction_scanned_by">交易已扫描</string>
     <string name="security_scanner_transaction_scanning">扫描中…</string>
     <string name="security_scanner_transaction_not_scanned">交易未扫描</string>
@@ -786,7 +786,7 @@
 
     <!-- Deposit & Send -->
     <string name="deposit_form_enter_asset_hint">输入资产</string>
-    <string name="share_balance_loading">加载中...</string>
+    <string name="share_balance_loading">加载中…</string>
     <string name="send_form_balance_available">可用余额：</string>
     <string name="send_form_add_memo">添加备注</string>
     <string name="send_form_enter_memo">输入备注</string>
@@ -1213,7 +1213,7 @@
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
 
     <!-- Key Import / Feature Spotlight -->
-    <string name="key_import_spotlight_before_you_start">在您开始之前...</string>
+    <string name="key_import_spotlight_before_you_start">在您开始之前…</string>
     <string name="key_import_spotlight_heading_part1">"您正在进入一个新时代，\n"</string>
     <string name="key_import_spotlight_heading_highlight">"告别旧的助记词。 "</string>
     <string name="key_import_spotlight_heading_part2">您需要：</string>

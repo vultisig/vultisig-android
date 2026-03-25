@@ -658,7 +658,7 @@
     <string name="address_book_my_vaults">Mijn kluizen</string>
     <string name="address_entry_select">Selecteren</string>
     <string name="deposit_form_enter_asset_hint">Activa invoeren</string>
-    <string name="share_balance_loading">Laden...</string>
+    <string name="share_balance_loading">Laden…</string>
     <string name="custom_token_screen_finding_token">Token vinden</string>
     <string name="retry">Opnieuw proberen</string>
     <string name="custom_token_screen_title">Aangepaste token zoeken</string>
@@ -725,7 +725,7 @@
     <string name="select_vault_type_secure_desc_3">Beveilig elk bedrag aan activa</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver ondertekent direct</string>
     <string name="peer_discovery_topbar_title">QR scannen</string>
-    <string name="peer_discovery_waiting_for_devices_action">Wachten op apparaten...</string>
+    <string name="peer_discovery_waiting_for_devices_action">Wachten op apparaten…</string>
     <string name="peer_discovery_devices_n_of_n">Apparaten (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Verzonden naar %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">Geen email ontvangen?</string>
@@ -868,12 +868,12 @@
     <string name="transaction_status_not_found">Transactie niet gevonden</string>
     <string name="transaction_status_pending">Transactie in behandeling…</string>
     <string name="transaction_status_notification_title">Transactiestatus</string>
-    <string name="transaction_status_checking_transaction">Transactie controleren...</string>
+    <string name="transaction_status_checking_transaction">Transactie controleren…</string>
     <string name="raw_transaction_data">Ruwe transactiegegevens</string>
     <string name="solana_raw_transaction">Solana Ruwe transactie</string>
 
     <!-- Key Import / Feature Spotlight -->
-    <string name="key_import_spotlight_before_you_start">Voordat u begint...</string>
+    <string name="key_import_spotlight_before_you_start">Voordat u begint…</string>
     <string name="key_import_spotlight_heading_part1">"U betreedt een nieuw tijdperk,\n"</string>
     <string name="key_import_spotlight_heading_highlight">"oude herstelzinnen achter u latend. "</string>
     <string name="key_import_spotlight_heading_part2">U heeft nodig:</string>

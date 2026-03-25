@@ -658,7 +658,7 @@
     <string name="address_book_my_vaults">Мои хранилища</string>
     <string name="address_entry_select">Выбрать</string>
     <string name="deposit_form_enter_asset_hint">Введите активы</string>
-    <string name="share_balance_loading">Загрузка...</string>
+    <string name="share_balance_loading">Загрузка…</string>
     <string name="custom_token_screen_finding_token">Поиск токена</string>
     <string name="retry">Повторить попытку</string>
     <string name="custom_token_screen_title">Найти пользовательский токен</string>
@@ -873,7 +873,7 @@
     <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
 
     <!-- Key Import / Feature Spotlight -->
-    <string name="key_import_spotlight_before_you_start">Прежде чем начать...</string>
+    <string name="key_import_spotlight_before_you_start">Прежде чем начать…</string>
     <string name="key_import_spotlight_heading_part1">"Вы вступаете в новую эру,\n"</string>
     <string name="key_import_spotlight_heading_highlight">"оставляя старые сид-фразы позади. "</string>
     <string name="key_import_spotlight_heading_part2">Вам понадобится:</string>
