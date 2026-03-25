@@ -60,7 +60,7 @@
     <string name="vault_tier_unlock_platinum_part1">Разблокировать </string>
     <string name="vault_tier_unlock_platinum_part2">Платиновый</string>
     <string name="vault_tier_unlock_platinum_part3"> уровень</string>
-    <string name="vault_tier_description">Hold $VULT для разблокировки более низких торговых комиссий.</string>
+    <string name="vault_tier_description">Удерживайте $VULT для разблокировки более низких торговых комиссий.</string>
     <string name="vault_tier_bronze_description_part1">Удерживая 1 500 $VULT, вы разблокируете Бронзовый уровень и получите </string>
     <string name="vault_tier_bronze_description_part2">скидку 5 базисных пунктов на торговые комиссии</string>
     <string name="vault_tier_bronze_description_part3"> при всех обменах.</string>
@@ -358,8 +358,8 @@
     <string name="vault_notifications">Уведомления хранилища</string>
     <string name="enable_all">Включить все</string>
 
-    <string name="deposit_option_bond">Bond</string>
-    <string name="deposit_option_unbond">Unbond</string>
+    <string name="deposit_option_bond">Бонд</string>
+    <string name="deposit_option_unbond">Анбонд</string>
     <string name="total_bonded_coin">Общая связанная %s</string>
     <string name="bonded_amount">Связано: %s</string>
     <string name="bond_to_node">Привязать к узлу</string>
@@ -378,13 +378,13 @@
     <string name="next_award">Следующая награда</string>
     <string name="next_payout">Следующая выплата</string>
     <string name="wait_until_node_churned_out">Подождите, пока узел не будет исключен</string>
-    <string name="deposit_option_leave">Leave</string>
-    <string name="deposit_option_stake">Stake</string>
-    <string name="deposit_option_unstake">Unstake</string>
-    <string name="deposit_option_custom">Custom</string>
-    <string name="deposit_option_ibc_transfer">IBC Transfer</string>
-    <string name="deposit_option_switch">Switch</string>
-    <string name="deposit_option_merge">Merge</string>
+    <string name="deposit_option_leave">Покинуть</string>
+    <string name="deposit_option_stake">Стейкинг</string>
+    <string name="deposit_option_unstake">Анстейкинг</string>
+    <string name="deposit_option_custom">Пользовательский</string>
+    <string name="deposit_option_ibc_transfer">IBC-перевод</string>
+    <string name="deposit_option_switch">Переключить</string>
+    <string name="deposit_option_merge">Объединить</string>
     <string name="deposit_option_withdraw_ruji">Вывести RUJI</string>
     <string name="withdraw_amount">Вывести %s</string>
     <string name="deposit_form_unstake_percentage_hint">Введите процент для вывода из стейкинга</string>
