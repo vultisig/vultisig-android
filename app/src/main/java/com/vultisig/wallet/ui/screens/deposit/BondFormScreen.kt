@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.deposit
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,6 +52,8 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.form.BasicFormTextField
 import com.vultisig.wallet.ui.components.library.form.FormTextField
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
@@ -93,7 +97,7 @@ internal fun BondFormScreen(navController: NavController, vaultId: String, chain
         when (route) {
             SendDst.VerifyTransaction.staticRoute ->
                 stringResource(R.string.verify_transaction_screen_title)
-            else -> stringResource(R.string.bond_to_node)
+            else -> stringResource(R.string.bond)
         }
 
     val qrAddress by depositViewModel.addressProvider.address.collectAsState()
@@ -183,6 +187,7 @@ internal fun BondFormContent(
     onScan: () -> Unit = {},
     onDismissError: () -> Unit = {},
     onDeposit: () -> Unit = {},
+    initialAddressExpanded: Boolean = true,
 ) {
     val focusManager = LocalFocusManager.current
     val depositChain = state.depositChain
@@ -213,6 +218,7 @@ internal fun BondFormContent(
                     onSetNodeAddress = onSetNodeAddress,
                     onSelectBondAsset = onSelectBondAsset,
                     onScan = onScan,
+                    initialAddressExpanded = initialAddressExpanded,
                 )
             } else {
                 ThorchainBondFormContent(
@@ -250,6 +256,17 @@ private val cardShape = RoundedCornerShape(12.dp)
 private val inputShape = RoundedCornerShape(12.dp)
 
 @Composable
+private fun Modifier.vsClickableBackground() =
+    border(
+            border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
+            shape = RoundedCornerShape(12.dp),
+        )
+        .background(
+            color = Theme.v2.colors.backgrounds.secondary,
+            shape = RoundedCornerShape(12.dp),
+        )
+
+@Composable
 private fun MayaBondFormContent(
     state: DepositFormUiModel,
     nodeAddressFieldState: TextFieldState,
@@ -261,75 +278,73 @@ private fun MayaBondFormContent(
     onSetNodeAddress: (String) -> Unit,
     onSelectBondAsset: (String) -> Unit,
     onScan: () -> Unit,
+    initialAddressExpanded: Boolean = true,
 ) {
-    var isAddressExpanded by remember { mutableStateOf(true) }
-    var isAssetExpanded by remember { mutableStateOf(state.selectedBondAsset.isEmpty()) }
+    var isAddressExpanded by remember { mutableStateOf(initialAddressExpanded) }
+    var isAssetExpanded by remember { mutableStateOf(false) }
     var isBondAssetListOpen by remember { mutableStateOf(false) }
 
     // Address card
-    TextFieldValidator(errorText = state.nodeAddressError) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(Theme.v2.colors.backgrounds.primary, cardShape)
+                .border(1.dp, Theme.v2.colors.border.normal, cardShape)
+                .padding(horizontal = 12.dp, vertical = 16.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier =
-                Modifier.fillMaxWidth()
-                    .background(Theme.v2.colors.backgrounds.primary, cardShape)
-                    .border(1.dp, Theme.v2.colors.border.normal, cardShape)
-                    .padding(horizontal = 12.dp, vertical = 16.dp),
+                Modifier.fillMaxWidth().clickOnce {
+                    isAddressExpanded = !isAddressExpanded
+                    if (isAddressExpanded) isAssetExpanded = false
+                },
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier =
-                    Modifier.fillMaxWidth().clickOnce {
-                        isAddressExpanded = !isAddressExpanded
-                        if (isAddressExpanded) isAssetExpanded = false
-                    },
-            ) {
+            Text(
+                text = stringResource(R.string.deposit_form_address_card_title),
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        AnimatedVisibility(visible = isAddressExpanded) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                UiHorizontalDivider()
                 Text(
-                    text = stringResource(R.string.deposit_form_address_card_title),
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                    modifier = Modifier.weight(1f),
+                    text = stringResource(R.string.deposit_form_node_address_title),
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
                 )
-            }
-            AnimatedVisibility(visible = isAddressExpanded) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    UiHorizontalDivider()
-                    Text(
-                        text = stringResource(R.string.deposit_form_node_address_title),
-                        style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.v2.colors.text.tertiary,
+                VsTextInputField(
+                    hint = stringResource(R.string.send_to_address_hint),
+                    keyboardType = KeyboardType.Text,
+                    autoCorrectEnabled = false,
+                    imeAction = ImeAction.Next,
+                    textFieldState = nodeAddressFieldState,
+                    onFocusChanged = { isFocused ->
+                        if (!isFocused) {
+                            onNodeAddressLostFocus()
+                            isAddressExpanded = false
+                        }
+                    },
+                    innerState =
+                        if (state.nodeAddressError != null) VsTextInputFieldInnerState.Error
+                        else VsTextInputFieldInnerState.Default,
+                    footNote = state.nodeAddressError?.asString(),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PasteIcon(
+                        modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                        onPaste = onSetNodeAddress,
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .background(Theme.v2.colors.backgrounds.secondary, inputShape)
-                                .border(
-                                    1.dp,
-                                    Theme.v2.colors.variables.bordersExtraLight,
-                                    inputShape,
-                                )
-                                .padding(16.dp),
-                    ) {
-                        BasicFormTextField(
-                            hint = stringResource(R.string.deposit_form_node_address_title),
-                            keyboardType = KeyboardType.Text,
-                            textFieldState = nodeAddressFieldState,
-                            onLostFocus = {
-                                onNodeAddressLostFocus()
-                                isAddressExpanded = false
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                        UiSpacer(size = 8.dp)
-                        UiIcon(
-                            drawableResId = R.drawable.camera,
-                            size = 20.dp,
-                            modifier = Modifier.clickOnce { onScan() },
-                        )
-                        UiSpacer(size = 8.dp)
-                        PasteIcon(onPaste = onSetNodeAddress)
-                    }
+                    UiIcon(
+                        drawableResId = R.drawable.camera,
+                        size = 20.dp,
+                        modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                        onClick = onScan,
+                    )
                 }
             }
         }
@@ -674,6 +689,7 @@ private fun BondFormContentMayaCollapsedPreview() {
                     selectedBondAsset = "CACAO",
                 ),
             nodeAddressFieldState = TextFieldState("maya1abctupwgjwn397w3dx9fqmqgzr"),
+            initialAddressExpanded = true,
             providerFieldState = TextFieldState(),
             operatorFeeFieldState = TextFieldState(),
             tokenAmountFieldState = TextFieldState(),
