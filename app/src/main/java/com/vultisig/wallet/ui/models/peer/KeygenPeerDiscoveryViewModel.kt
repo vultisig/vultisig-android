@@ -109,6 +109,7 @@ enum class NetworkOption {
     Local,
 }
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class KeygenPeerDiscoveryViewModel
 @Inject

@@ -124,6 +124,7 @@ data class KeysignFlowUiState(
     val resendCooldownSeconds: Int = 0,
 )
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class KeysignFlowViewModel
 @Inject

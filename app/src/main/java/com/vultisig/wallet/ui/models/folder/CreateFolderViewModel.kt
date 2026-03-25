@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.folder
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
@@ -50,6 +51,7 @@ internal data class CreateFolderUiModel(
         }
 }
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class CreateFolderViewModel
 @Inject

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keygen
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -48,6 +49,7 @@ internal data class VaultBackupState(
 
 private const val FAST_VAULT_VERIFICATION_SUCCESS_DELAY = 400L
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class FastVaultVerificationViewModel
 @Inject

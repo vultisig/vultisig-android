@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.defi.circle
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -48,6 +49,7 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class CircleDeFiPositionsViewModel
 @Inject

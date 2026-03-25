@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.keygen
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.SavedStateHandle
@@ -95,6 +96,7 @@ internal data class KeygenUiModel(
 
 internal data class KeygenStepUiModel(val title: UiText, val isLoading: Boolean)
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class KeygenViewModel
 @Inject

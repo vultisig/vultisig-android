@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
@@ -54,6 +55,7 @@ internal data class BackupPasswordState(
     val error: UiText? = null,
 )
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class BackupPasswordViewModel
 @Inject

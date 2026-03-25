@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.keygen
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
@@ -78,6 +79,7 @@ internal data class JoinKeygenUiModel(
 
 private class JoinKeygenException(val error: JoinKeygenError) : Exception()
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class JoinKeygenViewModel
 @Inject

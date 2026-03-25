@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.settings
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,6 +22,7 @@ internal data class CheckForUpdateUiModel(
     val currentVersion: String = "",
 )
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class CheckForUpdateViewModel
 @Inject

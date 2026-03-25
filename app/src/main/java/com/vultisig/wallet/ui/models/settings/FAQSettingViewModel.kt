@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.settings
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import com.vultisig.wallet.R
@@ -12,6 +13,7 @@ internal data class FAQSettingUiModel(val questions: List<Faq>)
 
 internal data class Faq(val question: String, val answer: String)
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class FAQSettingViewModel @Inject constructor(@ApplicationContext context: Context) :
     ViewModel() {

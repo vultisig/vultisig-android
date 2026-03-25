@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.settings
 
+import android.annotation.SuppressLint
 import android.app.LocaleManager
 import android.content.Context
 import android.os.Build
@@ -24,6 +25,7 @@ internal data class LanguageSettingUiModel(
     val selectedLanguage: Language = Language(),
 )
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class LanguageSettingViewModel
 @Inject

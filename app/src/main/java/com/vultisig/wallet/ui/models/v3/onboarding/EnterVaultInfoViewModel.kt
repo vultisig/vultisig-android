@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.v3.onboarding
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Patterns
 import androidx.compose.foundation.text.input.TextFieldState
@@ -127,6 +128,7 @@ internal sealed interface EnterVaultInfoEvent {
     object ToggleConfirmPasswordVisibility : EnterVaultInfoEvent
 }
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class EnterVaultInfoViewModel
 @Inject

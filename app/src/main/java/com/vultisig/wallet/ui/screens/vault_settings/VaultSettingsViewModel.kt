@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.vault_settings
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
@@ -171,6 +172,7 @@ internal sealed class VaultSettingsItem(
         )
 }
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal open class VaultSettingsViewModel
 @Inject
