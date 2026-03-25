@@ -1,5 +1,6 @@
 package com.vultisig.wallet.app.activity
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -51,6 +52,7 @@ internal data class ForegroundNotificationState(
     val transactionSummary: String = "",
 )
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class MainViewModel
 @Inject

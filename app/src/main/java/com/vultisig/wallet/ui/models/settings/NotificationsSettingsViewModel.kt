@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.settings
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -39,6 +40,7 @@ internal data class NotificationsSettingsUiState(
     val vaults: List<VaultNotificationUiModel> = emptyList(),
 )
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class NotificationsSettingsViewModel
 @Inject

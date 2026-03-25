@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
@@ -57,6 +58,7 @@ internal data class ImportFileState(
 
 internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*", "text/plain")
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class ImportFileViewModel
 @Inject

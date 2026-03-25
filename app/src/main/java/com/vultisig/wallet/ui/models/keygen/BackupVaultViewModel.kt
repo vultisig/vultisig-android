@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keygen
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class BackupVaultViewModel
 @Inject

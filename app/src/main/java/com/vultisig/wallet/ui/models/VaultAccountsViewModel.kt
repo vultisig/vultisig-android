@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
@@ -115,6 +116,7 @@ internal data class AccountUiModel(
     val isDeFiProvider: Boolean = false,
 )
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class VaultAccountsViewModel
 @Inject

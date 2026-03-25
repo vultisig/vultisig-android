@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.layer.GraphicsLayer
@@ -36,6 +37,7 @@ internal data class TokenAddressQr(
     val qrCode: BitmapPainter? = null,
 )
 
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 internal class TokenAddressQrViewModel
 @Inject
