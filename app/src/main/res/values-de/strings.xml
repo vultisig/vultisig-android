@@ -187,7 +187,7 @@
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_keysign_discovery_service">Service entdecken</string>
     <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft.</string>
-    <string name="currency_unit_setting_screen_title">Währung\n</string>
+    <string name="currency_unit_setting_screen_title">Währung</string>
     <string name="share_qr_utils_choose_an_app">Wählen Sie eine App</string>
     <string name="vault_accounts_account_assets">%1$s Vermögenswerte</string>
     <string name="chain_token_screen_address_copied">%1$s in die Zwischenablage kopiert</string>

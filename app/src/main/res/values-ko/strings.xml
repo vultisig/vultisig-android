@@ -174,7 +174,7 @@
     <string name="settings_screen_share_the_app">앱 공유</string>
     <string name="settings_screen_title">설정</string>
     <string name="language_setting_screen_title">언어</string>
-    <string name="currency_unit_setting_screen_title">통화\n</string>
+    <string name="currency_unit_setting_screen_title">통화</string>
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="verify_transaction_screen_title">확인</string>
     <string name="verify_transaction_from_title">보내는 주소</string>

@@ -119,7 +119,7 @@
     <string name="settings_screen_share_the_app">Compartir La App</string>
     <string name="settings_screen_title">Configuración</string>
     <string name="language_setting_screen_title">Idioma</string>
-    <string name="currency_unit_setting_screen_title">Moneda\n</string>
+    <string name="currency_unit_setting_screen_title">Moneda</string>
     <string name="faq_setting_screen_title">Preguntas Frecuentes</string>
     <string name="verify_transaction_screen_title">Verificar</string>
     <string name="verify_transaction_from_title">De</string>
