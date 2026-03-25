@@ -928,7 +928,34 @@
     <string name="transaction_status_checking_transaction">Checking transaction…</string>
     <string name="raw_transaction_data">Raw Transaction Data</string>
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
+    <string name="solana_instructions_summary">Transaction Instructions Summary</string>
+    <string name="solana_instruction_number">Instruction %1$d</string>
+    <string name="solana_program_name">Program: %1$s</string>
+    <string name="solana_program_id">Program ID: %1$s</string>
+    <string name="solana_accounts_data">Accounts: %1$d | Data length: %2$d bytes</string>
     <string name="vault_count_recommended">Recommended</string>
+
+    <!-- Vault count plural -->
+    <plurals name="vault_count">
+        <item quantity="one">%d Vault</item>
+        <item quantity="other">%d Vaults</item>
+    </plurals>
+
+    <!-- Hardcoded string fixes -->
+    <string name="transaction_failed">Transaction failed</string>
+    <string name="vault_detail_signer">Signer %1$d</string>
+    <string name="deposit_form_lp_units_hint">LP units</string>
+    <string name="staking_transfer">Transfer</string>
+
+    <!-- DeFi position headers -->
+    <string name="defi_header_minted">Minted %1$s</string>
+    <string name="defi_header_compounded">Compounded %1$s</string>
+    <string name="defi_header_staked">Staked %1$s</string>
+
+    <!-- Default vault names -->
+    <string name="name_vault_import">Import Vault</string>
+    <string name="name_vault_fast">Fast Vault</string>
+    <string name="name_vault_secure">Secure Vault</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Before you start…</string>

@@ -874,6 +874,11 @@
     <string name="transaction_status_checking_transaction">Comprobando transacción…</string>
     <string name="raw_transaction_data">Datos de transacciones sin procesar</string>
     <string name="solana_raw_transaction">Transacción sin procesar de Solana</string>
+    <string name="solana_instructions_summary">Resumen de instrucciones de transacción</string>
+    <string name="solana_instruction_number">Instrucción %1$d</string>
+    <string name="solana_program_name">Programa: %1$s</string>
+    <string name="solana_program_id">ID del programa: %1$s</string>
+    <string name="solana_accounts_data">Cuentas: %1$d | Longitud de datos: %2$d bytes</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Antes de empezar…</string>
@@ -941,6 +946,10 @@
     <plurals name="resend_notification_in_seconds">
         <item quantity="one">Reenviar notificación en %d segundo</item>
         <item quantity="other">Reenviar notificación en %d segundos</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="one">%d bóveda</item>
+        <item quantity="other">%d bóvedas</item>
     </plurals>
     <string name="key_import_chains_found_desc">Cada cadena adicional aumenta el tiempo para generar su bóveda y la posibilidad de un tiempo de espera agotado.</string>
     <string name="key_import_chains_continue">Comenzar</string>
@@ -1069,4 +1078,20 @@
     <string name="native_asset">Nativo</string>
     <string name="invalid_integer_error">Cantidad entera inválida</string>
     <string name="empty_lps_field">Campo de Unidades LP vacío</string>
+
+    <!-- Hardcoded string fixes -->
+    <string name="transaction_failed">Transacción fallida</string>
+    <string name="vault_detail_signer">Firmante %1$d</string>
+    <string name="deposit_form_lp_units_hint">Unidades LP</string>
+    <string name="staking_transfer">Transferir</string>
+
+    <!-- DeFi position headers -->
+    <string name="defi_header_minted">Acuñado %1$s</string>
+    <string name="defi_header_compounded">Compuesto %1$s</string>
+    <string name="defi_header_staked">Stakeado %1$s</string>
+
+    <!-- Default vault names -->
+    <string name="name_vault_import">Bóveda importada</string>
+    <string name="name_vault_fast">Bóveda rápida</string>
+    <string name="name_vault_secure">Bóveda segura</string>
 </resources>

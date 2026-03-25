@@ -1211,6 +1211,11 @@
     <string name="transaction_status_checking_transaction">正在检查交易……</string>
     <string name="raw_transaction_data">原始交易数据</string>
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
+    <string name="solana_instructions_summary">交易指令摘要</string>
+    <string name="solana_instruction_number">指令 %1$d</string>
+    <string name="solana_program_name">程序：%1$s</string>
+    <string name="solana_program_id">程序 ID：%1$s</string>
+    <string name="solana_accounts_data">账户：%1$d | 数据长度：%2$d 字节</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">在您开始之前…</string>
@@ -1276,6 +1281,9 @@
     </plurals>
     <plurals name="resend_notification_in_seconds">
         <item quantity="other">%d 秒后重新发送通知</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="other">%d 个保险库</item>
     </plurals>
     <string name="key_import_chains_found_desc">每增加一条链都会增加生成保险库的时间和超时的可能性。</string>
     <string name="key_import_chains_continue">开始</string>
@@ -1404,4 +1412,17 @@
     <string name="native_asset">原生</string>
     <string name="invalid_integer_error">无效的整数数量</string>
     <string name="empty_lps_field">LP 单位字段为空</string>
+
+    <string name="transaction_failed">交易失败</string>
+    <string name="vault_detail_signer">签名者 %1$d</string>
+    <string name="deposit_form_lp_units_hint">LP 单位</string>
+    <string name="staking_transfer">转账</string>
+
+    <string name="defi_header_minted">铸造 %1$s</string>
+    <string name="defi_header_compounded">复利 %1$s</string>
+    <string name="defi_header_staked">质押 %1$s</string>
+
+    <string name="name_vault_import">导入保险库</string>
+    <string name="name_vault_fast">快速保险库</string>
+    <string name="name_vault_secure">安全保险库</string>
 </resources>
