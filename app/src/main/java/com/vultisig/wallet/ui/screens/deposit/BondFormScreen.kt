@@ -57,8 +57,6 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.form.BasicFormTextField
 import com.vultisig.wallet.ui.components.library.form.FormTextField
-import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
-import com.vultisig.wallet.ui.components.library.form.FormTitleCollapsibleTextField
 import com.vultisig.wallet.ui.components.library.form.TextFieldValidator
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
@@ -225,21 +223,6 @@ internal fun BondFormContent(
                     onAddressBookClick = onAddressBookClick,
                     initialAddressExpanded = initialAddressExpanded,
                     initialAssetExpanded = initialAssetExpanded,
-                )
-            } else {
-                ThorchainBondFormContent(
-                    state = state,
-                    nodeAddressFieldState = nodeAddressFieldState,
-                    providerFieldState = providerFieldState,
-                    operatorFeeFieldState = operatorFeeFieldState,
-                    tokenAmountFieldState = tokenAmountFieldState,
-                    onNodeAddressLostFocus = onNodeAddressLostFocus,
-                    onProviderLostFocus = onProviderLostFocus,
-                    onOperatorFeeLostFocus = onOperatorFeeLostFocus,
-                    onTokenAmountLostFocus = onTokenAmountLostFocus,
-                    onSetNodeAddress = onSetNodeAddress,
-                    onSetProvider = onSetProvider,
-                    onScan = onScan,
                 )
             }
 
@@ -590,73 +573,6 @@ private fun MayaBondFormContent(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ThorchainBondFormContent(
-    state: DepositFormUiModel,
-    nodeAddressFieldState: TextFieldState,
-    providerFieldState: TextFieldState,
-    operatorFeeFieldState: TextFieldState,
-    tokenAmountFieldState: TextFieldState,
-    onNodeAddressLostFocus: () -> Unit,
-    onProviderLostFocus: () -> Unit,
-    onOperatorFeeLostFocus: () -> Unit,
-    onTokenAmountLostFocus: () -> Unit,
-    onSetNodeAddress: (String) -> Unit,
-    onSetProvider: (String) -> Unit,
-    onScan: () -> Unit,
-) {
-    // Node address — first
-    FormTextFieldCard(
-        title = stringResource(R.string.deposit_form_node_address_title),
-        hint = stringResource(R.string.deposit_form_node_address_title),
-        keyboardType = KeyboardType.Text,
-        textFieldState = nodeAddressFieldState,
-        onLostFocus = onNodeAddressLostFocus,
-        error = state.nodeAddressError,
-    ) {
-        UiIcon(
-            drawableResId = R.drawable.camera,
-            size = 20.dp,
-            modifier = Modifier.clickOnce { onScan() },
-        )
-        UiSpacer(size = 8.dp)
-        PasteIcon(onPaste = onSetNodeAddress)
-        UiSpacer(size = 8.dp)
-    }
-
-    // Amount
-    FormTextFieldCard(
-        title = stringResource(R.string.deposit_form_amount_title, state.balance.asString()),
-        hint = stringResource(R.string.send_amount_currency_hint),
-        keyboardType = KeyboardType.Number,
-        textFieldState = tokenAmountFieldState,
-        onLostFocus = onTokenAmountLostFocus,
-        error = state.tokenAmountError,
-    )
-
-    // Operator fee
-    FormTextFieldCard(
-        title = stringResource(R.string.deposit_form_operator_fee_title),
-        hint = "0.0",
-        keyboardType = KeyboardType.Number,
-        textFieldState = operatorFeeFieldState,
-        onLostFocus = onOperatorFeeLostFocus,
-        error = state.operatorFeeError,
-    )
-
-    // Provider — collapsible
-    FormTitleCollapsibleTextField(
-        title = stringResource(R.string.deposit_form_provider_title),
-        hint = stringResource(R.string.deposit_form_provider_hint),
-        keyboardType = KeyboardType.Text,
-        textFieldState = providerFieldState,
-        onLostFocus = onProviderLostFocus,
-    ) {
-        PasteIcon(onPaste = onSetProvider)
-        UiSpacer(size = 8.dp)
     }
 }
 
