@@ -1,5 +1,6 @@
 package com.vultisig.wallet.app
 
+import android.annotation.SuppressLint
 import android.app.Application
 import app.rive.runtime.kotlin.core.Rive
 import com.vultisig.wallet.BuildConfig
@@ -7,6 +8,7 @@ import com.vultisig.wallet.data.utils.SharedPrefsMasterKeyInitializer
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
+@SuppressLint("Registered")
 internal open class VsBaseApplication : Application() {
     override fun onCreate() {
         super.onCreate()
