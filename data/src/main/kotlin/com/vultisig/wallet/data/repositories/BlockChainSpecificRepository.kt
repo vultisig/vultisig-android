@@ -187,7 +187,7 @@ constructor(
                                 .increaseByPercent(
                                     50
                                 ) // keep it consistent with how we calculate default gas limit in
-                                  // EthereumFeeService
+                    // EthereumFeeService
 
                     val nonce = evmApi.getNonce(address)
 
