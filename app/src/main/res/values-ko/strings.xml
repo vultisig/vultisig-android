@@ -715,6 +715,7 @@
     <string name="sign_message_continue">계속</string>
     <string name="address_book_empty_description">모든 중요한 주소를 한곳에서 관리하세요.</string>
     <string name="address_book_empty_title">주소록이 비어 있습니다</string>
+    <string name="education_settings_title">Vultisig 교육</string>
     <string name="check_updates_settings_title">업데이트 확인</string>
     <string name="discord" translatable="false">Discord</string>
     <string name="github" translatable="false">Github</string>

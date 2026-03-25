@@ -120,6 +120,8 @@ internal interface RepositoriesModule {
     @Singleton
     fun bindExplorerLinkRepository(impl: ExplorerLinkRepositoryImpl): ExplorerLinkRepository
 
+    @Binds @Singleton fun bindGasFeesRepository(impl: GasFeeRepositoryImpl): GasFeeRepository
+
     @Binds
     @Singleton
     fun bindLastOpenedVaultRepository(
@@ -243,8 +245,6 @@ internal interface RepositoriesModule {
     fun bindNotificationTokenRepository(
         impl: NotificationTokenRepositoryImpl
     ): NotificationTokenRepository
-
-    @Binds @Singleton fun bindGasFeeRepository(impl: GasFeeRepositoryImpl): GasFeeRepository
 }
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class PrettyJson

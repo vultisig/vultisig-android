@@ -522,6 +522,7 @@
     <string name="verify_sign_message_message_sign">Bericht om te ondertekenen</string>
     <string name="address_book_empty_description">Houd al uw belangrijke adressen op één plek bij elkaar.</string>
     <string name="address_book_empty_title">Uw adresboek is leeg</string>
+    <string name="education_settings_title">Vultisig Onderwijs</string>
     <string name="check_updates_settings_title">Controleer op Updates</string>
     <string name="vult_website_settings_title">Vultisig Website</string>
     <string name="vault">Kluis</string>
