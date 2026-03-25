@@ -117,7 +117,7 @@
     <string name="settings_screen_share_the_app">Поделиться приложением</string>
     <string name="settings_screen_title">Настройки</string>
     <string name="language_setting_screen_title">Язык</string>
-    <string name="currency_unit_setting_screen_title">Валюта\n</string>
+    <string name="currency_unit_setting_screen_title">Валюта</string>
     <string name="faq_setting_screen_title">ЧАВО</string>
     <string name="verify_transaction_screen_title">Проверить</string>
     <string name="verify_transaction_from_title">От</string>

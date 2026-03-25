@@ -197,7 +197,7 @@
 
     <!-- Settings Titles -->
     <string name="language_setting_screen_title">语言</string>
-    <string name="currency_unit_setting_screen_title">货币\n</string>
+    <string name="currency_unit_setting_screen_title">货币</string>
     <string name="faq_setting_screen_title">常见问题</string>
 
     <!-- Verify Transaction -->
