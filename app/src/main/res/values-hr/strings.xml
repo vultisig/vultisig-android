@@ -187,7 +187,7 @@
     <string name="join_keysign_discovering_session_id">Otkrivanje ID-a sesije</string>
     <string name="join_keysign_discovery_service">Usluga otkrivanja</string>
     <string name="vault_settings_delete_subtitle">Trajno izbrišite svoj trezor.</string>
-    <string name="currency_unit_setting_screen_title">Valuta\n</string>
+    <string name="currency_unit_setting_screen_title">Valuta</string>
     <string name="share_qr_utils_choose_an_app">Odaberite aplikaciju</string>
     <string name="vault_accounts_account_assets">%1$s sredstva</string>
     <string name="chain_token_screen_address_copied">%1$s kopirano u međuspremnik</string>
