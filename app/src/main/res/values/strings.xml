@@ -43,7 +43,7 @@
     <string name="rewards_screen_title">Rewards</string>
     <string name="active_nodes">Active Nodes</string>
     <string name="next_churn">Next Churn</string>
-    <string name="next_award">Next award</string>
+    <string name="next_award">Next Award</string>
     <string name="next_payout">Next Payout</string>
     <string name="wait_until_node_churned_out">Wait until node is churned out</string>
     <string name="deposit_option_leave">Leave</string>
@@ -152,8 +152,8 @@
     <string name="send_continue_button">Continue</string>
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">Swap</string>
-    <string name="chain_account_view_deposit">DEPOSIT</string>
-    <string name="chain_account_view_send">SEND</string>
+    <string name="chain_account_view_deposit">Deposit</string>
+    <string name="chain_account_view_send">Send</string>
     <string name="vault_settings_error_backup_file">An error occurred</string>
     <string name="vault_settings_success_backup_file">File saved in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">This name already exists</string>
@@ -222,7 +222,7 @@
     <string name="vault_accounts_account_assets">%1$s Assets</string>
     <string name="s_of_s_vault">%1$s-of-%2$s Vault Setup</string>
     <string name="scan_qr_screen_return_vault">Return to Vault</string>
-    <string name="rename_vault_screen_vault_name">Vault name</string>
+    <string name="rename_vault_screen_vault_name">Vault Name</string>
     <string name="faq_settings_q1">What is Vultisig?</string>
     <string name="faq_settings_q2">What are the benefits of using Vultisig?</string>
     <string name="faq_settings_q3">Can I recover my assets if I lose a device?</string>
@@ -250,7 +250,7 @@
     <string name="verify_swap_consent_amount">The swap amount is correct</string>
     <string name="chain_token_screen_address_copied">%1$s copied to clipboard</string>
     <string name="tx_done_address_copied">%1$s copied to clipboard</string>
-    <string name="verify_swap_sign_button">Sign Transaction</string>
+    <string name="verify_swap_sign_button">Sign transaction</string>
     <string name="swap_error_no_amount">Amount must be a positive number</string>
     <string name="naming_vault_screen_invalid_name">Invalid name</string>
     <string name="rename_vault_invalid_name">Invalid name</string>
@@ -405,7 +405,7 @@
     <string name="swap_screen_invalid_no_vault">No vault selected</string>
     <string name="swap_screen_invalid_no_src_error">No source token selected</string>
     <string name="swap_screen_invalid_selected_no_dst">No destination token selected</string>
-    <string name="swap_screen_invalid_zero_token_amount">Token amount cannot be Zero</string>
+    <string name="swap_screen_invalid_zero_token_amount">Token amount cannot be zero</string>
     <string name="swap_screen_invalid_gas_fee_calculation">Gas fee calculation failed</string>
     <string name="swap_screen_invalid_quote_calculation">Quote calculation failed</string>
     <string name="swap_screen_invalid_vault">Transaction will likely fail, vault could not be loaded.</string>
@@ -617,7 +617,7 @@
     <string name="referral_invite_onboarding_2">Earn rewards.</string>
     <string name="referral_invite_onboarding_3">Save on fees.</string>
     <string name="referral_screen_title">Vultisig - Referral</string>
-    <string name="referral_screen_code_hint">Enter Up to 4 characters</string>
+    <string name="referral_screen_code_hint">Enter up to 4 characters</string>
     <string name="referral_create_referral">Create referral</string>
     <string name="referral_save_referral_code">Save referral code</string>
     <string name="referral_or">OR</string>
@@ -850,7 +850,7 @@
     <string name="swap_form_native">Native</string>
     <string name="swap_transaction_overview_approval_tx_hash">Approval Tx Hash</string>
     <string name="swap_transaction_overview_track">Track</string>
-    <string name="token_selection_screen_select_tokens">Select Tokens</string>
+    <string name="token_selection_screen_select_tokens">Select tokens</string>
     <string name="token_selecton_screen_enable_at_least_one">Enable at least one token to view balances and manage positions.</string>
     <string name="transfer_ibc_destination_chain">Destination Chain</string>
     <string name="tx_done_transaction_details">Transaction Details</string>
@@ -873,7 +873,7 @@
     <string name="defi_no_positions_selected_desc">You\'ve disabled all positions for this chain. Enable at least one position to view balances and manage actions.</string>
     <string name="manage_positions">Manage Positions</string>
     <string name="bond_node_state_whitelisted">Whitelisted</string>
-    <string name="bond_node_state_standby">StandBy</string>
+    <string name="bond_node_state_standby">Standby</string>
     <string name="bond_node_state_ready">Ready</string>
     <string name="bond_node_state_active">Active</string>
     <string name="bond_node_state_disabled">Disabled</string>
@@ -983,7 +983,7 @@
     <string name="import_seedphrase_duplicate_description">Please import a different seed phrase</string>
     <string name="import_seedphrase_import_button">Import</string>
     <string name="import_seedphrase_checking">Checking…</string>
-    <string name="key_import_chains_title">Select Chains</string>
+    <string name="key_import_chains_title">Select chains</string>
     <string name="key_import_chains_scanning">Scanning for chains…</string>
     <string name="key_import_chains_scanning_desc">We\'re checking which blockchains have active addresses for your seed phrase.</string>
     <string name="key_import_chains_scanning_desc_highlight">This process can take up to 2 minutes.</string>
@@ -1001,9 +1001,9 @@
     <string name="key_import_chains_customize">Customize chains</string>
     <string name="key_import_chains_no_active_title">No Active Chains Found</string>
     <string name="key_import_chains_no_active_desc">We couldn\'t find any balances. Please select the chains you want to import manually.</string>
-    <string name="key_import_chains_get_started">Get Started</string>
+    <string name="key_import_chains_get_started">Get started</string>
     <string name="key_import_chains_no_results">No chains match your search</string>
-    <string name="key_import_device_count_get_started">Get Started</string>
+    <string name="key_import_device_count_get_started">Get started</string>
 
     <string name="review_vault_devices_title">Review your vault devices</string>
     <string name="review_vault_devices_description">Make sure that these are the correct devices you\'ve added:</string>
