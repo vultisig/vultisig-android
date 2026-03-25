@@ -13,6 +13,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
+import com.vultisig.wallet.data.blockchain.model.Eip1559
+import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
@@ -1065,7 +1067,13 @@ constructor(
                             )
                         )
                     val nativeCoin = tokenRepository.getNativeToken(it.address.chain.id)
-                    it to TokenValue(value = fee.amount, token = nativeCoin)
+                    val gasFeeValue =
+                        when (fee) {
+                            is GasFees -> fee.price
+                            is Eip1559 -> fee.maxFeePerGas
+                            else -> fee.amount
+                        }
+                    it to TokenValue(value = gasFeeValue, token = nativeCoin)
                 }
                 .catch { Timber.e(it) }
                 .collect { (selectedSrc, gasFee) ->
