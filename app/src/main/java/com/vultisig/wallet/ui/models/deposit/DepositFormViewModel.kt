@@ -780,8 +780,8 @@ constructor(
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
             val chainId = chain?.id ?: return@launch
-            navigator.navigate(
-                Destination.AddressBook(
+            navigator.route(
+                Route.AddressBook(
                     requestId = REQUEST_ADDRESS_ID,
                     chainId = chainId,
                     excludeVaultId = vaultId,
