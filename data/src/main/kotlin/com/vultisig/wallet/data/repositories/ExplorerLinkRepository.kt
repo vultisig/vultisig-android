@@ -51,7 +51,9 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             when (this) {
                 Chain.BitcoinCash,
                 Chain.Dash,
+                Chain.Dogecoin,
                 Chain.Litecoin,
+                Chain.Zcash,
                 Chain.Ton,
                 Chain.Tron,
                 Chain.Cardano -> "${explorerUrl}transaction/"
