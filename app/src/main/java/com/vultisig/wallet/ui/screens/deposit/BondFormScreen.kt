@@ -642,22 +642,6 @@ private fun ThorchainBondFormContent(
 
 @Preview(showBackground = true, backgroundColor = 0xFF02122B)
 @Composable
-private fun BondFormContentThorPreview() {
-    OnBoardingComposeTheme {
-        BondFormContent(
-            state = DepositFormUiModel(depositChain = Chain.ThorChain),
-            nodeAddressFieldState = TextFieldState("thor1mtqtupwgjwn397w3dx9fqmqgzr"),
-            providerFieldState = TextFieldState(),
-            operatorFeeFieldState = TextFieldState(),
-            tokenAmountFieldState = TextFieldState(),
-            assetsFieldState = TextFieldState(),
-            lpUnitsFieldState = TextFieldState(),
-        )
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF02122B)
-@Composable
 private fun BondFormContentMayaExpandedPreview() {
     OnBoardingComposeTheme {
         BondFormContent(
