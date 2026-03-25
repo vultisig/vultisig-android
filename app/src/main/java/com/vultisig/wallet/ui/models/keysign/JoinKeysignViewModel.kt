@@ -542,7 +542,6 @@ constructor(
                         val plan = utxoHelper.getBitcoinTransactionPlan(payload)
                         if (plan.error != SigningError.OK) {
                             Timber.e("UTXO plan error: ${plan.error.name}")
-                            throw RuntimeException("Transaction plan failed")
                         }
                         TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeToken)
                     } else {
@@ -953,7 +952,6 @@ constructor(
                             val plan = utxoHelper.getBitcoinTransactionPlan(payload)
                             if (plan.error != SigningError.OK) {
                                 Timber.e("UTXO plan error: ${plan.error.name}")
-                                throw RuntimeException("Transaction plan failed")
                             }
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                         } else {

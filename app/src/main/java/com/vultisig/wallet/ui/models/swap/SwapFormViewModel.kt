@@ -1194,7 +1194,6 @@ constructor(
         val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
         if (plan.error != SigningError.OK) {
             Timber.e("UTXO plan error: ${plan.error.name}")
-            throw RuntimeException("Transaction plan failed")
         }
         return plan
     }
