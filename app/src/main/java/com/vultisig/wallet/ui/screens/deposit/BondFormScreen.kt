@@ -291,12 +291,11 @@ private fun MayaBondFormContent(
 
     // Address card
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier =
             Modifier.fillMaxWidth()
                 .background(Theme.v2.colors.backgrounds.primary, cardShape)
                 .border(1.dp, Theme.v2.colors.border.normal, cardShape)
-                .padding(horizontal = 12.dp, vertical = 16.dp),
+                .padding(horizontal = 12.dp, vertical = 16.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -310,17 +309,19 @@ private fun MayaBondFormContent(
                 text = stringResource(R.string.deposit_form_address_card_title),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
-                modifier = Modifier.weight(1f),
             )
         }
+        UiSpacer(16.dp)
         AnimatedVisibility(visible = isAddressExpanded) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column() {
                 UiHorizontalDivider()
+                UiSpacer(16.dp)
                 Text(
                     text = stringResource(R.string.deposit_form_node_address_title),
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.tertiary,
                 )
+                UiSpacer(8.dp)
                 VsTextInputField(
                     hint = stringResource(R.string.send_to_address_hint),
                     keyboardType = KeyboardType.Text,
@@ -342,6 +343,7 @@ private fun MayaBondFormContent(
                     footNote = state.nodeAddressError?.asString(),
                     modifier = Modifier.fillMaxWidth(),
                 )
+                UiSpacer(16.dp)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PasteIcon(
                         modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
