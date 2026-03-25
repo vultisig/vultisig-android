@@ -4,6 +4,7 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import com.vultisig.wallet.data.common.sha256
 import io.ktor.http.HttpStatusCode
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.json.Json
 import spark.Request
 import spark.Response
@@ -12,7 +13,7 @@ import timber.log.Timber
 
 class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListener {
     private val port = 18080
-    private val cache = mutableMapOf<String, Any>()
+    private val cache = ConcurrentHashMap<String, Any>()
 
     private val service: Service = Service.ignite()
 
