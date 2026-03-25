@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.models
 
-import android.app.Application
+import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
 import androidx.compose.foundation.text.input.TextFieldState
@@ -63,7 +63,7 @@ internal class ImportFileViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    @param:ApplicationContext private val context: Application,
+    @param:ApplicationContext private val context: Context,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val saveVault: SaveVaultUseCase,
     private val parseVaultFromString: ParseVaultFromStringUseCase,

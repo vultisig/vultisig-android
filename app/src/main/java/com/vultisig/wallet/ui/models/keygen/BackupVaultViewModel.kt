@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.models.keygen
 
-import android.app.Application
+import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.lifecycle.SavedStateHandle
@@ -49,7 +49,7 @@ internal class BackupVaultViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    @param:ApplicationContext private val context: Application,
+    @param:ApplicationContext private val context: Context,
     private val vaultRepository: VaultRepository,
     private val createVaultBackupFileName: CreateVaultBackupFileNameUseCase,
     private val isFileExtensionValid: IsVaultBackupFileExtensionValidUseCase,

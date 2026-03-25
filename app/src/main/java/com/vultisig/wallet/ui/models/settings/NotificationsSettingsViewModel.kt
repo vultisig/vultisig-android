@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.models.settings
 
-import android.app.Application
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.isFastVault
@@ -43,7 +43,7 @@ internal data class NotificationsSettingsUiState(
 internal class NotificationsSettingsViewModel
 @Inject
 constructor(
-    @param:ApplicationContext private val context: Application,
+    @param:ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val pushNotificationManager: PushNotificationManager,

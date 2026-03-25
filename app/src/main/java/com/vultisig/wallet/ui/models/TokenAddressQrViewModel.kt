@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-import android.app.Application
 import android.content.Context
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.layer.GraphicsLayer
@@ -46,7 +45,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
-    @param:ApplicationContext private val context: Application,
+    @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
     val args = savedStateHandle.toRoute<Route.AddressQr>()
     val uiState = MutableStateFlow(TokenAddressQr())

@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.models
 
-import android.app.Application
+import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
@@ -119,7 +119,7 @@ internal data class AccountUiModel(
 internal class VaultAccountsViewModel
 @Inject
 constructor(
-    @param:ApplicationContext private val context: Application,
+    @param:ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val requestResultRepository: RequestResultRepository,
