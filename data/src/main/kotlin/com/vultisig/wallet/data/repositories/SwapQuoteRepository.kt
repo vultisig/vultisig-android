@@ -466,13 +466,29 @@ constructor(
             "AAVE",
             "FOX",
             "DPI",
-            "LLD",
+            "SNX",
+            "YFI",
         )
     private val thorBscTokens = listOf("BNB", "USDT", "USDC")
     private val thorAvaxTokens = listOf("AVAX", "USDC", "USDT", "SOL")
+    private val thorBaseTokens = listOf("ETH", "CBBTC", "USDC", "VVV")
     private val mayaEthTokens = listOf("ETH", "USDC", "LLD")
     private val mayaArbTokens =
-        listOf("ETH", "ARB", "WSTETH", "LINK", "PEPE", "WBTC", "GLD", "TGT", "LEO", "YUM", "USDC")
+        listOf(
+            "ETH",
+            "ARB",
+            "WSTETH",
+            "LINK",
+            "PEPE",
+            "WBTC",
+            "GLD",
+            "TGT",
+            "LEO",
+            "YUM",
+            "USDC",
+            "USDT",
+            "DAI",
+        )
 
     private val Coin.swapProviders: Set<SwapProvider>
         get() =
@@ -531,7 +547,10 @@ constructor(
                         )
                     else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
 
-                Chain.Base -> setOf(SwapProvider.LIFI, SwapProvider.THORCHAIN)
+                Chain.Base ->
+                    if (ticker.uppercase() in thorBaseTokens)
+                        setOf(SwapProvider.THORCHAIN, SwapProvider.LIFI)
+                    else setOf(SwapProvider.LIFI)
 
                 Chain.Optimism,
                 Chain.Polygon,
