@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
@@ -27,6 +28,7 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
+import com.vultisig.wallet.ui.screens.referral.ContentRow
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
@@ -63,6 +65,7 @@ class PreviewActivity : ComponentActivity() {
                     "discount_tiers" -> DiscountTiersScreenPreview()
                     "tier_bottom_sheet" -> TierBottomSheetFullPreview()
                     "choose_vault" -> SelectVaultTypeScreenPreview()
+                    "content_row" -> ContentRowPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -202,6 +205,24 @@ private fun SendTxDonePreview() {
                 networkFeeFiatValue = "$6.15",
             ),
     )
+}
+
+@Composable
+private fun ContentRowPreview() {
+    androidx.compose.foundation.layout.Column(
+        modifier = Modifier.padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        ContentRow(text = "ABCD-1234") {
+            UiIcon(drawableResId = com.vultisig.wallet.R.drawable.ic_copy, size = 18.dp)
+        }
+        ContentRow(
+            text =
+                "https://vultisig.com/referral/very-long-referral-code-that-would-definitely-overflow-the-container-width"
+        ) {
+            UiIcon(drawableResId = com.vultisig.wallet.R.drawable.ic_copy, size = 18.dp)
+        }
+    }
 }
 
 @Composable
