@@ -1,6 +1,6 @@
 package com.vultisig.wallet.app.activity
 
-import android.content.Context
+import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -55,7 +55,7 @@ internal data class ForegroundNotificationState(
 internal class MainViewModel
 @Inject
 constructor(
-    @param:ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Application,
     private val navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
