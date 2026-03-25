@@ -212,7 +212,7 @@ fun VsButton(
         if (label != null) {
             AutoSizingText(
                 text = label,
-                style = Theme.brockmann.button.semibold.small,
+                style = Theme.brockmann.button.semibold.medium,
                 color = contentColor,
             )
         }
