@@ -393,7 +393,7 @@ private fun MayaBondFormContent(
                 color = Theme.v2.colors.text.primary,
             )
             if (!isAssetExpanded && state.selectedBondAsset.isNotEmpty()) {
-                UiSpacer(size = 4.dp)
+                UiSpacer(size = 12.dp)
                 TokenLogo(
                     logo = getCoinLogo(state.selectedBondAsset.lowercase()),
                     title = state.selectedBondAsset,
@@ -408,13 +408,13 @@ private fun MayaBondFormContent(
                 )
                 UiSpacer(weight = 1f)
                 UiIcon(
-                    drawableResId = R.drawable.ic_check,
+                    drawableResId = R.drawable.check_3,
                     size = 16.dp,
                     tint = Theme.v2.colors.alerts.success,
                 )
-                UiSpacer(size = 8.dp)
+                UiSpacer(size = 12.dp)
                 UiIcon(
-                    drawableResId = R.drawable.pencil,
+                    drawableResId = R.drawable.ic_edit_pencil,
                     size = 16.dp,
                     modifier =
                         Modifier.clickOnce {
