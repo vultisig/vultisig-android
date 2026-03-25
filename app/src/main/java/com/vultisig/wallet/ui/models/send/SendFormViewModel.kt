@@ -258,7 +258,7 @@ constructor(
     private val feeServiceComposite: FeeServiceComposite,
 ) : ViewModel() {
 
-    private lateinit var vault: Vault
+    private var vault: Vault? = null
     private val args = savedStateHandle.toRoute<Route.Send>()
 
     val uiState = MutableStateFlow(SendFormUiModel())
@@ -867,6 +867,7 @@ constructor(
     }
 
     private suspend fun calculatePercentageWithAccurateFee(percentage: Float): BigDecimal {
+        val vault = vault ?: return BigDecimal.ZERO
         val isMax = percentage == 1f
         val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
         val token = selectedAccount.token
@@ -2538,6 +2539,7 @@ constructor(
                         .distinctUntilChanged()
                         .mapNotNull { (triple, tokenAmount) ->
                             val (token, dst, memo) = triple
+                            val vault = vault ?: return@mapNotNull null
 
                             val tokenAmount = tokenAmount.toString().toBigDecimalOrNull()
 

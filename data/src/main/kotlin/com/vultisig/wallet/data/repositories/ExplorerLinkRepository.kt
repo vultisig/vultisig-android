@@ -103,7 +103,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Osmosis -> "https://www.mintscan.io/osmosis/"
                 Chain.Terra -> "https://www.mintscan.io/terra/"
                 Chain.TerraClassic -> "https://finder.terra.money/classic/"
-                Chain.Noble -> "https://www.mintscan.io/noble"
+                Chain.Noble -> "https://www.mintscan.io/noble/"
                 Chain.Ripple -> "https://xrpscan.com/"
                 Chain.Akash -> "https://www.mintscan.io/akash/"
                 Chain.Tron -> "https://tronscan.org/#/"

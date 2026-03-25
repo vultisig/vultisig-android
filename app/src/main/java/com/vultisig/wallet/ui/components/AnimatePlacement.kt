@@ -14,6 +14,7 @@ import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -32,6 +33,11 @@ private data class AnimatePlacementNodeElement(val lookaheadScope: LookaheadScop
 
     override fun create(): AnimatePlacementModifierNode {
         return AnimatePlacementModifierNode(lookaheadScope)
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "animatePlacement"
+        properties["lookaheadScope"] = lookaheadScope
     }
 }
 

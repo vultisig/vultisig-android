@@ -139,7 +139,7 @@ constructor(
     private val _totalBondedRaw = MutableStateFlow(BigInteger.ZERO)
     private val _totalStakingRaw = MutableStateFlow(BigInteger.ZERO)
 
-    private var observTotalRowJob: Job? = null
+    private var observeTotalRawJob: Job? = null
     private var savedPositionsJob: Job? = null
     private var lpDialogJob: Job? = null
     private var loadBondedJob: Job? = null
@@ -165,8 +165,8 @@ constructor(
         savedPositionsJob = loadSavedPositions()
         lpDialogJob?.cancel()
         lpDialogJob = loadLpPositionsForDialog()
-        observTotalRowJob?.cancel()
-        observTotalRowJob = observeTotalRaw()
+        observeTotalRawJob?.cancel()
+        observeTotalRawJob = observeTotalRaw()
     }
 
     private fun observeTotalRaw(): Job =
@@ -382,11 +382,11 @@ constructor(
         }
     }
 
-    private fun updateTotalFiatValue(bondedRaw: BigInteger) {
+    private fun updateTotalFiatValue(totalRaw: BigInteger) {
         viewModelScope.launch {
             try {
                 val currency = appCurrencyRepository.currency.first()
-                val totalInCacao = bondedRaw.toValue(Coins.MayaChain.CACAO.decimal)
+                val totalInCacao = totalRaw.toValue(Coins.MayaChain.CACAO.decimal)
                 val fiatValue = createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
                 val currencyFormat =
                     withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
@@ -600,7 +600,6 @@ private fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
     }
 
 private fun formatCacaoReward(reward: Double): String {
-    22
     val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
     val cacaoAmount =
         rewardBase.toValue(Coins.MayaChain.CACAO.decimal).setScale(4, RoundingMode.DOWN)

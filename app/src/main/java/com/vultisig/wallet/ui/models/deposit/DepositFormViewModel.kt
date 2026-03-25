@@ -48,6 +48,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
+import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -172,6 +173,7 @@ constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val thorChainApi: ThorChainApi,
     private val mayaChainApi: MayaChainApi,
+    private val mayachainBondRepository: MayachainBondRepository,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
@@ -181,7 +183,7 @@ constructor(
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
 ) : ViewModel() {
 
-    private lateinit var vaultId: String
+    private var vaultId: String? = null
     private var chain: Chain? = null
 
     private var rujiMergeBalances = MutableStateFlow<List<MergeAccount>?>(null)
@@ -404,13 +406,7 @@ constructor(
         state.update { it.copy(bondableAssets = emptyList(), selectedBondAsset = "") }
         assetsFieldState.clearText()
         viewModelScope.safeLaunch {
-            val assets =
-                withContext(Dispatchers.IO) {
-                    mayaChainApi
-                        .getMayaNodePools()
-                        .filter { it.status == "Available" && it.bondable }
-                        .map { it.asset }
-                }
+            val assets = withContext(Dispatchers.IO) { mayachainBondRepository.getBondableAssets() }
             val firstAsset = assets.firstOrNull() ?: ""
             state.update { it.copy(bondableAssets = assets, selectedBondAsset = firstAsset) }
             if (firstAsset.isNotEmpty()) {
@@ -472,6 +468,7 @@ constructor(
         val chain = chain ?: return
 
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val requestId = UUID.randomUUID().toString()
 
             navigator.route(
@@ -499,6 +496,7 @@ constructor(
             when (option) {
                 DepositOption.Switch -> {
                     viewModelScope.launch {
+                        val vaultId = vaultId ?: return@launch
                         try {
                             val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
                             val inboundAddress =
@@ -600,11 +598,14 @@ constructor(
 
     private fun collectSecuredAssetAddresses() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val vault =
+                vaultRepository.get(vaultId)
+                    ?: run {
+                        return@launch
+                    }
             val (thorAddress) =
-                chainAccountAddressRepository.getAddress(
-                    chain = Chain.ThorChain,
-                    vault = vaultRepository.get(vaultId) ?: error("Vault not found"),
-                )
+                chainAccountAddressRepository.getAddress(chain = Chain.ThorChain, vault = vault)
 
             thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
 
@@ -660,6 +661,7 @@ constructor(
         state.update { it.copy(selectedDstChain = chain) }
 
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val address = accountsRepository.loadAddress(vaultId, chain).firstOrNull()
 
             if (address != null) {
@@ -781,6 +783,7 @@ constructor(
     fun deposit() {
         viewModelScope.launch {
             try {
+                val vaultId = vaultId ?: return@launch
                 isLoading = true
                 val depositOption = state.value.depositOption
 
@@ -824,6 +827,8 @@ constructor(
     }
 
     private suspend fun createUnMergeTx(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val unmergeToken = state.value.selectedUnMergeCoin
         val unMergeAccountBalance =
             rujiMergeBalances.value?.firstOrNull {
@@ -900,6 +905,8 @@ constructor(
     }
 
     private suspend fun createAddCacaoPoolTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -907,7 +914,11 @@ constructor(
                 )
 
         val address = accountsRepository.loadAddress(vaultId, chain).first()
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val selectedToken =
+            address.accounts.firstOrNull { it.token.isNativeToken }?.token
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
 
         if (selectedToken.ticker != "CACAO") {
             throw InvalidTransactionDataException(
@@ -958,6 +969,8 @@ constructor(
 
     @OptIn(ExperimentalStdlibApi::class)
     private suspend fun createSecuredAssetTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1083,6 +1096,8 @@ constructor(
     }
 
     private suspend fun createWithdrawSecuredAssetTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1191,6 +1206,8 @@ constructor(
     }
 
     private suspend fun createAddLiquidityTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1204,7 +1221,11 @@ constructor(
                 )
 
         val address = accountsRepository.loadAddress(vaultId, chain).first()
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val selectedToken =
+            address.accounts.firstOrNull { it.token.isNativeToken }?.token
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
 
         val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
 
@@ -1247,6 +1268,8 @@ constructor(
     }
 
     private suspend fun createRemoveLiquidityTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1260,7 +1283,11 @@ constructor(
                 )
 
         val address = accountsRepository.loadAddress(vaultId, chain).first()
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val selectedToken =
+            address.accounts.firstOrNull { it.token.isNativeToken }?.token
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
 
         val srcAddress = selectedToken.address
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
@@ -1298,6 +1325,8 @@ constructor(
     }
 
     private suspend fun createRemoveCacaoPoolTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
 
         val chain =
             chain
@@ -1307,7 +1336,11 @@ constructor(
 
         val address = accountsRepository.loadAddress(vaultId, chain).first()
 
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val selectedToken =
+            address.accounts.firstOrNull { it.token.isNativeToken }?.token
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
 
         val srcAddress = selectedToken.address
 
@@ -1354,6 +1387,8 @@ constructor(
     }
 
     private suspend fun createBondTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1474,10 +1509,12 @@ constructor(
     private fun getSelectedAccount(): Account? {
         val address = address.value ?: return null
         val userSelectedToken = state.value.selectedToken
-        return address.accounts.first { it.token.id == userSelectedToken.id }
+        return address.accounts.firstOrNull { it.token.id == userSelectedToken.id }
     }
 
     private suspend fun createUnbondTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1592,6 +1629,8 @@ constructor(
     }
 
     private suspend fun createLeaveTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1653,6 +1692,8 @@ constructor(
     }
 
     private suspend fun createCustomTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1709,6 +1750,8 @@ constructor(
     }
 
     private suspend fun createTonDepositTransaction(memo: DepositMemo): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1740,7 +1783,11 @@ constructor(
         }
         val address = accountsRepository.loadAddress(vaultId, chain).first()
 
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val selectedToken =
+            address.accounts.firstOrNull { it.token.isNativeToken }?.token
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
 
         val tokenAmountInt =
             tokenAmount.movePointRight(selectedToken.decimal)?.toBigInteger() ?: BigInteger.ONE
@@ -1783,6 +1830,8 @@ constructor(
         createTonDepositTransaction(DepositMemo.Unstake)
 
     private suspend fun createMergeTx(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1844,6 +1893,8 @@ constructor(
     }
 
     private suspend fun createSwitchTx(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1908,6 +1959,8 @@ constructor(
     }
 
     private suspend fun createTransferIbcTx(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
