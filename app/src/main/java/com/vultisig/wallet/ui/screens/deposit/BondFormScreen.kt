@@ -161,6 +161,7 @@ private fun BondFormContent(
         onSetProvider = model::setProvider,
         onSelectBondAsset = model::selectBondAsset,
         onScan = model::scan,
+        onAddressBookClick = model::openAddressBook,
         onDismissError = model::dismissError,
         onDeposit = model::deposit,
     )
@@ -185,6 +186,7 @@ internal fun BondFormContent(
     onSetProvider: (String) -> Unit = {},
     onSelectBondAsset: (String) -> Unit = {},
     onScan: () -> Unit = {},
+    onAddressBookClick: () -> Unit = {},
     onDismissError: () -> Unit = {},
     onDeposit: () -> Unit = {},
     initialAddressExpanded: Boolean = true,
@@ -218,6 +220,7 @@ internal fun BondFormContent(
                     onSetNodeAddress = onSetNodeAddress,
                     onSelectBondAsset = onSelectBondAsset,
                     onScan = onScan,
+                    onAddressBookClick = onAddressBookClick,
                     initialAddressExpanded = initialAddressExpanded,
                 )
             } else {
@@ -278,6 +281,7 @@ private fun MayaBondFormContent(
     onSetNodeAddress: (String) -> Unit,
     onSelectBondAsset: (String) -> Unit,
     onScan: () -> Unit,
+    onAddressBookClick: () -> Unit,
     initialAddressExpanded: Boolean = true,
 ) {
     var isAddressExpanded by remember { mutableStateOf(initialAddressExpanded) }
@@ -348,6 +352,12 @@ private fun MayaBondFormContent(
                         size = 20.dp,
                         modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
                         onClick = onScan,
+                    )
+                    UiIcon(
+                        drawableResId = R.drawable.ic_bookmark,
+                        size = 20.dp,
+                        modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                        onClick = onAddressBookClick,
                     )
                 }
             }

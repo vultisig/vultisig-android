@@ -776,6 +776,22 @@ constructor(
         }
     }
 
+    fun openAddressBook() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainId = chain?.id ?: return@launch
+            navigator.navigate(
+                Destination.AddressBook(
+                    requestId = REQUEST_ADDRESS_ID,
+                    chainId = chainId,
+                    excludeVaultId = vaultId,
+                )
+            )
+            val address = requestResultRepository.request(REQUEST_ADDRESS_ID) ?: return@launch
+            setNodeAddress(address.address)
+        }
+    }
+
     fun dismissError() {
         state.update { it.copy(errorText = null) }
     }
@@ -2277,6 +2293,10 @@ constructor(
 
         val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
         return plan
+    }
+
+    companion object {
+        private const val REQUEST_ADDRESS_ID = "deposit_request_address_id"
     }
 }
 
