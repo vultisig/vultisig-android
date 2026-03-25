@@ -58,6 +58,7 @@ import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.launchMediatorSession
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -626,13 +627,11 @@ constructor(
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == MediatorService.SERVICE_ACTION) {
                     Timber.d("onReceive: Mediator service started")
-                    // send a request to local mediator server to start the session
-                    GlobalScope.launch(Dispatchers.IO) {
-                        delay(1000) // back off a second
-                        startSessionWithRetry()
-                    }
-
-                    startParticipantDiscovery()
+                    launchMediatorSession(
+                        scope = GlobalScope,
+                        onSessionStart = { startSessionWithRetry() },
+                        onDiscovery = { startParticipantDiscovery() },
+                    )
                 }
             }
         }
