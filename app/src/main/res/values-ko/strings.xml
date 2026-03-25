@@ -931,6 +931,11 @@
     <string name="transaction_status_checking_transaction">거래 확인 중…</string>
     <string name="raw_transaction_data">원시 거래 데이터</string>
     <string name="solana_raw_transaction">Solana 원시 거래</string>
+    <string name="solana_instructions_summary">거래 명령어 요약</string>
+    <string name="solana_instruction_number">명령어 %1$d</string>
+    <string name="solana_program_name">프로그램: %1$s</string>
+    <string name="solana_program_id">프로그램 ID: %1$s</string>
+    <string name="solana_accounts_data">계정: %1$d | 데이터 길이: %2$d 바이트</string>
     <string name="vault_count_recommended">권장</string>
 
     <!-- Key Import / Feature Spotlight -->
@@ -996,6 +1001,9 @@
     </plurals>
     <plurals name="resend_notification_in_seconds">
         <item quantity="other">%d초 후 알림 재전송</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="other">볼트 %d개</item>
     </plurals>
     <string name="key_import_chains_found_desc">체인이 추가될수록 볼트 생성 시간이 길어지고 시간 초과 가능성이 높아집니다.</string>
     <string name="key_import_chains_continue">시작하기</string>
@@ -1116,4 +1124,20 @@
     <string name="native_asset">네이티브</string>
     <string name="invalid_integer_error">유효하지 않은 정수 금액</string>
     <string name="empty_lps_field">LP 단위 필드가 비어 있음</string>
+
+    <!-- Hardcoded string fixes -->
+    <string name="transaction_failed">거래 실패</string>
+    <string name="vault_detail_signer">서명자 %1$d</string>
+    <string name="deposit_form_lp_units_hint">LP 단위</string>
+    <string name="staking_transfer">전송</string>
+
+    <!-- DeFi position headers -->
+    <string name="defi_header_minted">발행됨 %1$s</string>
+    <string name="defi_header_compounded">복리 %1$s</string>
+    <string name="defi_header_staked">스테이킹됨 %1$s</string>
+
+    <!-- Default vault names -->
+    <string name="name_vault_import">가져온 볼트</string>
+    <string name="name_vault_fast">빠른 볼트</string>
+    <string name="name_vault_secure">안전한 볼트</string>
 </resources>
