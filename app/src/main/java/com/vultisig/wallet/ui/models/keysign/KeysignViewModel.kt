@@ -54,6 +54,10 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigInteger
 import java.util.Base64
 import kotlin.time.Duration.Companion.seconds
@@ -107,16 +111,22 @@ sealed interface TransactionStatus {
     data class Failed(val cause: UiText) : TransactionStatus
 }
 
-internal class KeysignViewModel(
-    val vault: Vault,
-    private val keysignCommittee: List<String>,
-    private val serverUrl: String,
-    private val sessionId: String,
-    private val encryptionKeyHex: String,
-    private val messagesToSign: List<String>,
-    private val keyType: TssKeyType,
-    private val keysignPayload: KeysignPayload?,
-    private val customMessagePayload: CustomMessagePayload?,
+@HiltViewModel(assistedFactory = KeysignViewModel.Factory::class)
+internal class KeysignViewModel
+@AssistedInject
+constructor(
+    @Assisted val vault: Vault,
+    @Assisted private val keysignCommittee: List<String>,
+    @Assisted private val serverUrl: String,
+    @Assisted private val sessionId: String,
+    @Assisted private val encryptionKeyHex: String,
+    @Assisted private val messagesToSign: List<String>,
+    @Assisted private val keyType: TssKeyType,
+    @Assisted private val keysignPayload: KeysignPayload?,
+    @Assisted private val customMessagePayload: CustomMessagePayload?,
+    @Assisted val transactionTypeUiModel: TransactionTypeUiModel?,
+    @Assisted private val isInitiatingDevice: Boolean,
+    @Assisted private val transactionHistoryData: TransactionHistoryData?,
     private val thorChainApi: ThorChainApi,
     private val evmApiFactory: EvmApiFactory,
     private val broadcastTx: BroadcastTxUseCase,
@@ -125,16 +135,33 @@ internal class KeysignViewModel(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
-    val transactionTypeUiModel: TransactionTypeUiModel?,
     private val pullTssMessages: PullTssMessagesUseCase,
-    private val isInitiatingDevice: Boolean,
     private val addressBookRepository: AddressBookRepository,
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
     private val vaultRepository: VaultRepository,
-    private val transactionHistoryData: TransactionHistoryData?,
     private val transactionHistoryRepository: TransactionHistoryRepository,
 ) : ViewModel() {
+
+    /** Creates [KeysignViewModel] with runtime-provided assisted parameters. */
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            vault: Vault,
+            keysignCommittee: List<String>,
+            serverUrl: String,
+            sessionId: String,
+            encryptionKeyHex: String,
+            messagesToSign: List<String>,
+            keyType: TssKeyType,
+            keysignPayload: KeysignPayload?,
+            customMessagePayload: CustomMessagePayload?,
+            transactionTypeUiModel: TransactionTypeUiModel?,
+            isInitiatingDevice: Boolean,
+            transactionHistoryData: TransactionHistoryData?,
+        ): KeysignViewModel
+    }
+
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
 

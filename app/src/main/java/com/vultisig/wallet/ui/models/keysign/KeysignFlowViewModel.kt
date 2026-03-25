@@ -160,6 +160,7 @@ constructor(
     private val depositTransactionHistoryDataMapper: DepositTransactionHistoryDataMapper,
     private val swapTransactionToHistoryDataMapper: SwapTransactionToHistoryDataMapper,
     private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val keysignViewModelFactory: KeysignViewModel.Factory,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -217,7 +218,7 @@ constructor(
                     return null
                 }
         val keysignCommittee = selection.value
-        return KeysignViewModel(
+        return keysignViewModelFactory.create(
             vault = vault,
             keysignCommittee = keysignCommittee,
             serverUrl = _serverAddress,
@@ -227,23 +228,9 @@ constructor(
             keyType = tssKeysignType,
             keysignPayload = _keysignPayload,
             customMessagePayload = customMessagePayload,
-            thorChainApi = thorChainApi,
-            broadcastTx = broadcastTx,
-            evmApiFactory = evmApiFactory,
-            explorerLinkRepository = explorerLinkRepository,
-            sessionApi = sessionApi,
-            navigator = navigator,
-            encryption = encryption,
-            featureFlagApi = featureFlagApi,
             transactionTypeUiModel = transactionTypeUiModel,
-            pullTssMessages = pullTssMessages,
             isInitiatingDevice = true,
-            addressBookRepository = addressBookRepository,
-            transactionStatusServiceManager = transactionStatusServiceManager,
-            txStatusConfigurationProvider = txStatusConfigurationProvider,
-            vaultRepository = vaultRepository,
             transactionHistoryData = transactionHistoryData.value,
-            transactionHistoryRepository = transactionHistoryRepository,
         )
     }
 
