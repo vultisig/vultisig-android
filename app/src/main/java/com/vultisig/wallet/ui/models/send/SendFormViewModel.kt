@@ -107,10 +107,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
@@ -126,7 +124,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -285,8 +282,7 @@ constructor(
 
     private var mscaAddress: String? = null
 
-    private val recalculateGasFee =
-        MutableSharedFlow<Unit>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val recalculateGasFee = MutableStateFlow(0L)
 
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
@@ -2543,9 +2539,9 @@ constructor(
                             addressFieldState.textAsFlow(),
                             memoFieldState.textAsFlow(),
                             tokenAmountFieldState.textAsFlow(),
-                            recalculateGasFee.onStart { emit(Unit) },
-                        ) { token, dst, memo, tokenAmount, _ ->
-                            GasFeeInput(token, dst.toString(), memo.toString(), tokenAmount)
+                            recalculateGasFee,
+                        ) { token, dst, memo, tokenAmount, nonce ->
+                            GasFeeInput(token, dst.toString(), memo.toString(), tokenAmount, nonce)
                         }
                         .debounce(350)
                         .distinctUntilChanged()
@@ -2605,7 +2601,7 @@ constructor(
                 ) { token, dstAddress, tokenAmount, specific, memo ->
                     PlanFeeInput(token, dstAddress, tokenAmount, specific, memo)
                 }
-                .combine(recalculateGasFee.onStart { emit(Unit) }) { data, _ -> data }
+                .combine(recalculateGasFee) { data, _ -> data }
                 .mapNotNull { (token, dstAddress, tokenAmount, specific, memo) ->
                     try {
                         val chain = token.chain
@@ -2975,7 +2971,7 @@ constructor(
     fun refreshGasFee() {
         viewModelScope.launch {
             uiState.update { it.copy(isRefreshing = true) }
-            recalculateGasFee.emit(Unit)
+            recalculateGasFee.update { it + 1 }
             // Rapid toggling of isRefreshing can cause the initial true value to be skipped,
             // displaying only the false value in the UI resulting in the swipe refresh being
             // frozen.
@@ -3401,6 +3397,7 @@ private data class GasFeeInput(
     val dst: String,
     val memo: String,
     val tokenAmount: CharSequence,
+    val nonce: Long = 0,
 )
 
 private data class PlanFeeInput(
