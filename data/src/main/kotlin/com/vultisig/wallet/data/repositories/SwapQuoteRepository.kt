@@ -549,7 +549,7 @@ constructor(
 
                 Chain.Base ->
                     if (ticker.uppercase() in thorBaseTokens)
-                        setOf(SwapProvider.THORCHAIN, SwapProvider.LIFI)
+                        setOf(SwapProvider.LIFI, SwapProvider.THORCHAIN)
                     else setOf(SwapProvider.LIFI)
 
                 Chain.Optimism,
