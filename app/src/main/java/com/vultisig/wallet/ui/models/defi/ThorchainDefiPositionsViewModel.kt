@@ -158,7 +158,7 @@ constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
 
-    private lateinit var vaultId: String
+    private var vaultId: String? = null
 
     val state = MutableStateFlow(ThorchainDefiPositionsUiModel())
 
@@ -187,6 +187,7 @@ constructor(
 
     private fun loadBalanceVisibility() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val isVisible =
                 withContext(Dispatchers.IO) { balanceVisibilityRepository.getVisibility(vaultId) }
             state.update { it.copy(isBalanceVisible = isVisible) }
@@ -291,6 +292,7 @@ constructor(
 
     private fun loadSavedPositions() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val savedPositions = defiPositionsRepository.getSelectedPositions(vaultId).first()
             state.update {
                 it.copy(
@@ -321,6 +323,7 @@ constructor(
 
             // Load selected positions, if disabled then show nothing
             try {
+                val vaultId = vaultId ?: return@launch
                 val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
                 val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
 
@@ -424,6 +427,7 @@ constructor(
             }
 
             try {
+                val vaultId = vaultId ?: return@launch
                 val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
 
                 val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
@@ -810,6 +814,7 @@ constructor(
 
     fun onPositionSelectionDone() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val selectedPositions = state.value.tempSelectedPositions
 
             launch {
@@ -834,6 +839,7 @@ constructor(
 
     fun onClickBond(nodeAddress: String) {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val vault = vaultRepository.get(vaultId) ?: return@launch
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
@@ -855,6 +861,7 @@ constructor(
 
     fun onClickUnBond(nodeAddress: String) {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val vault = vaultRepository.get(vaultId) ?: return@launch
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
@@ -876,6 +883,7 @@ constructor(
 
     fun bondToNode() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val vault = vaultRepository.get(vaultId) ?: return@launch
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
@@ -896,6 +904,7 @@ constructor(
 
     fun onNavigateToFunctions(defiNavAction: DeFiNavActions) {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             val tokenId =
                 when (defiNavAction) {
                     DeFiNavActions.STAKE_RUJI -> Coins.ThorChain.RUJI.id
@@ -939,6 +948,7 @@ constructor(
 
     fun onClickTransfer() {
         viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
             navigator.route(
                 Route.Send(
                     vaultId = vaultId,
