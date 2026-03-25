@@ -433,7 +433,7 @@ private fun MayaBondFormContent(
         AnimatedVisibility(visible = isAssetExpanded) {
             Column {
                 UiGradientHorizontalDivider()
-                UiSpacer(size = 8.dp)
+                UiSpacer(size = 16.dp)
                 if (state.bondableAssets.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         // Selected chip — always visible; click to open the full list
@@ -441,25 +441,22 @@ private fun MayaBondFormContent(
                             state.selectedBondAsset.ifEmpty { state.bondableAssets.first() }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
                             modifier =
                                 Modifier.clickOnce { isBondAssetListOpen = !isBondAssetListOpen }
                                     .background(
-                                        color = Theme.v2.colors.backgrounds.secondary,
+                                        color = Theme.v2.colors.backgrounds.surface1,
                                         shape = RoundedCornerShape(99.dp),
                                     )
                                     .padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 TokenLogo(
                                     logo = getCoinLogo(displayAsset.lowercase()),
                                     title = displayAsset,
                                     modifier = Modifier.size(36.dp),
                                     errorLogoModifier = Modifier.size(36.dp),
                                 )
+                                UiSpacer(8.dp)
                                 Column {
                                     Text(
                                         text = displayAsset,
@@ -473,6 +470,7 @@ private fun MayaBondFormContent(
                                     )
                                 }
                             }
+                            UiSpacer(4.dp)
                             UiIcon(
                                 drawableResId =
                                     if (isBondAssetListOpen) R.drawable.ic_caret_down
@@ -555,13 +553,14 @@ private fun MayaBondFormContent(
                     }
                 }
                 TextFieldValidator(errorText = state.lpUnitsError) {
-                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Column {
+                        UiSpacer(size = 16.dp)
                         Text(
                             text = stringResource(R.string.deposit_form_screen_lpunits),
                             style = Theme.brockmann.supplementary.footnote,
                             color = Theme.v2.colors.text.tertiary,
                         )
-                        UiSpacer(size = 16.dp)
+                        UiSpacer(size = 8.dp)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier =
