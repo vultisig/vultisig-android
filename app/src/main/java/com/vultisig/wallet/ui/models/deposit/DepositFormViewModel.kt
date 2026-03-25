@@ -599,11 +599,13 @@ constructor(
     private fun collectSecuredAssetAddresses() {
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
+            val vault =
+                vaultRepository.get(vaultId)
+                    ?: run {
+                        return@launch
+                    }
             val (thorAddress) =
-                chainAccountAddressRepository.getAddress(
-                    chain = Chain.ThorChain,
-                    vault = vaultRepository.get(vaultId) ?: error("Vault not found"),
-                )
+                chainAccountAddressRepository.getAddress(chain = Chain.ThorChain, vault = vault)
 
             thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
 
@@ -912,7 +914,11 @@ constructor(
                 )
 
         val address = accountsRepository.loadAddress(vaultId, chain).first()
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val selectedToken =
+            address.accounts.firstOrNull { it.token.isNativeToken }?.token
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
 
         if (selectedToken.ticker != "CACAO") {
             throw InvalidTransactionDataException(
@@ -1200,6 +1206,8 @@ constructor(
     }
 
     private suspend fun createAddLiquidityTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1213,7 +1221,11 @@ constructor(
                 )
 
         val address = accountsRepository.loadAddress(vaultId, chain).first()
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val selectedToken =
+            address.accounts.firstOrNull { it.token.isNativeToken }?.token
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
 
         val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
 
@@ -1256,6 +1268,8 @@ constructor(
     }
 
     private suspend fun createRemoveLiquidityTransaction(): DepositTransaction {
+        val vaultId =
+            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
         val chain =
             chain
                 ?: throw InvalidTransactionDataException(
@@ -1269,7 +1283,11 @@ constructor(
                 )
 
         val address = accountsRepository.loadAddress(vaultId, chain).first()
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val selectedToken =
+            address.accounts.firstOrNull { it.token.isNativeToken }?.token
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
 
         val srcAddress = selectedToken.address
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
@@ -1318,7 +1336,11 @@ constructor(
 
         val address = accountsRepository.loadAddress(vaultId, chain).first()
 
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val selectedToken =
+            address.accounts.firstOrNull { it.token.isNativeToken }?.token
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
 
         val srcAddress = selectedToken.address
 
@@ -1487,7 +1509,7 @@ constructor(
     private fun getSelectedAccount(): Account? {
         val address = address.value ?: return null
         val userSelectedToken = state.value.selectedToken
-        return address.accounts.first { it.token.id == userSelectedToken.id }
+        return address.accounts.firstOrNull { it.token.id == userSelectedToken.id }
     }
 
     private suspend fun createUnbondTransaction(): DepositTransaction {
@@ -1761,7 +1783,11 @@ constructor(
         }
         val address = accountsRepository.loadAddress(vaultId, chain).first()
 
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val selectedToken =
+            address.accounts.firstOrNull { it.token.isNativeToken }?.token
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
 
         val tokenAmountInt =
             tokenAmount.movePointRight(selectedToken.decimal)?.toBigInteger() ?: BigInteger.ONE

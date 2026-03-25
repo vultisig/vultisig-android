@@ -332,8 +332,8 @@ constructor(
 
     private suspend fun scanTransaction() {
         try {
-            val transaction = transaction ?: return
-            val chain = transaction.token.chain
+            val tx = transaction ?: return
+            val chain = tx.token.chain
 
             val isSupported =
                 securityScannerService.getSupportedChainsByFeature().isChainSupported(chain) &&
@@ -344,7 +344,7 @@ constructor(
             uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 
             val securityScannerTransaction =
-                securityScannerService.createSecurityScannerTransaction(transaction)
+                securityScannerService.createSecurityScannerTransaction(tx)
 
             val result =
                 withContext(Dispatchers.IO) {
