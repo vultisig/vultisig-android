@@ -155,6 +155,7 @@ internal data class DepositFormUiModel(
         availableSecuredAssets.firstOrNull() ?: TokenWithdrawSecureAsset.EMPTY,
     val bondableAssets: List<String> = emptyList(),
     val selectedBondAsset: String = "",
+    val availableLpUnits: String? = null,
 )
 
 @HiltViewModel
@@ -199,6 +200,7 @@ constructor(
     val basisPointsFieldState = TextFieldState()
     val lpUnitsFieldState = TextFieldState()
     val assetsFieldState = TextFieldState()
+    private var lpUnitsMap: Map<String, String> = emptyMap()
     val thorAddressFieldState = TextFieldState()
     val rewardsAmountFieldState = TextFieldState()
     val slippageFieldState = TextFieldState()
@@ -404,16 +406,26 @@ constructor(
     }
 
     private fun loadMayaBondableAssets() {
-        state.update { it.copy(bondableAssets = emptyList(), selectedBondAsset = "") }
+        state.update {
+            it.copy(bondableAssets = emptyList(), selectedBondAsset = "", availableLpUnits = null)
+        }
         assetsFieldState.clearText()
         viewModelScope.safeLaunch {
             val userAddress = address.value?.address ?: return@safeLaunch
-            val assets =
+            val assetsWithUnits =
                 withContext(Dispatchers.IO) {
-                    mayachainBondRepository.getLpBondableAssets(userAddress)
+                    mayachainBondRepository.getLpBondableAssetsWithUnits(userAddress)
                 }
+            lpUnitsMap = assetsWithUnits
+            val assets = assetsWithUnits.keys.toList()
             val firstAsset = assets.firstOrNull() ?: ""
-            state.update { it.copy(bondableAssets = assets, selectedBondAsset = firstAsset) }
+            state.update {
+                it.copy(
+                    bondableAssets = assets,
+                    selectedBondAsset = firstAsset,
+                    availableLpUnits = assetsWithUnits[firstAsset],
+                )
+            }
             if (firstAsset.isNotEmpty()) {
                 assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
             }
@@ -421,8 +433,13 @@ constructor(
     }
 
     fun selectBondAsset(asset: String) {
-        state.update { it.copy(selectedBondAsset = asset) }
+        state.update { it.copy(selectedBondAsset = asset, availableLpUnits = lpUnitsMap[asset]) }
         assetsFieldState.setTextAndPlaceCursorAtEnd(asset)
+    }
+
+    fun setMaxLpUnits() {
+        val units = state.value.availableLpUnits ?: return
+        lpUnitsFieldState.setTextAndPlaceCursorAtEnd(units)
     }
 
     private suspend fun updateTokenAmount(

@@ -299,6 +299,7 @@
     <string name="deposit_form_screen_assets">Activo</string>
     <string name="deposit_form_screen_asset_selection">Selección de activos</string>
     <string name="deposit_form_screen_lpunits">Unidades LP</string>
+    <string name="deposit_form_available_lp_units">Unidades LP disponibles</string>
     <string name="join_keysign_error_wrong_vault_share">Misma bóveda compartida. Cambie la compartición para iniciar sesión</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Cambiar bóveda</string>
     <string name="utxo_settings_byte_fee_title">Velocidad de red (sats/vbyte)</string>

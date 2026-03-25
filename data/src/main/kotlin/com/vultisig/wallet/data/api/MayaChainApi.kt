@@ -112,7 +112,11 @@ data class MayaNodePool(
 @Serializable
 data class MayaMemberDetails(@SerialName("pools") val pools: List<MayaMemberPool> = emptyList())
 
-@Serializable data class MayaMemberPool(@SerialName("pool") val pool: String)
+@Serializable
+data class MayaMemberPool(
+    @SerialName("pool") val pool: String,
+    @SerialName("liquidityUnits") val liquidityUnits: String = "0",
+)
 
 @Serializable
 data class MayaMidgardHealth(@SerialName("lastThorNode") val lastMayaNode: MayaHeightInfo) {

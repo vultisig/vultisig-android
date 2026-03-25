@@ -159,6 +159,7 @@ private fun BondFormContent(
         onSetNodeAddress = model::setNodeAddress,
         onSetProvider = model::setProvider,
         onSelectBondAsset = model::selectBondAsset,
+        onSetMaxLpUnits = model::setMaxLpUnits,
         onScan = model::scan,
         onAddressBookClick = model::openAddressBook,
         onDismissError = model::dismissError,
@@ -184,6 +185,7 @@ internal fun BondFormContent(
     onSetNodeAddress: (String) -> Unit = {},
     onSetProvider: (String) -> Unit = {},
     onSelectBondAsset: (String) -> Unit = {},
+    onSetMaxLpUnits: () -> Unit = {},
     onScan: () -> Unit = {},
     onAddressBookClick: () -> Unit = {},
     onDismissError: () -> Unit = {},
@@ -219,6 +221,7 @@ internal fun BondFormContent(
                     onLpUnitsLostFocus = onLpUnitsLostFocus,
                     onSetNodeAddress = onSetNodeAddress,
                     onSelectBondAsset = onSelectBondAsset,
+                    onSetMaxLpUnits = onSetMaxLpUnits,
                     onScan = onScan,
                     onAddressBookClick = onAddressBookClick,
                     initialAddressExpanded = initialAddressExpanded,
@@ -269,6 +272,7 @@ private fun MayaBondFormContent(
     onLpUnitsLostFocus: () -> Unit,
     onSetNodeAddress: (String) -> Unit,
     onSelectBondAsset: (String) -> Unit,
+    onSetMaxLpUnits: () -> Unit,
     onScan: () -> Unit,
     onAddressBookClick: () -> Unit,
     initialAddressExpanded: Boolean = true,
@@ -572,6 +576,36 @@ private fun MayaBondFormContent(
                                 },
                                 modifier = Modifier.weight(1f),
                             )
+                        }
+                        UiSpacer(size = 8.dp)
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.deposit_form_available_lp_units),
+                                style = Theme.brockmann.supplementary.footnote,
+                                color = Theme.v2.colors.text.tertiary,
+                            )
+                            if (state.availableLpUnits != null) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = state.availableLpUnits,
+                                        style = Theme.brockmann.supplementary.footnote,
+                                        color = Theme.v2.colors.text.tertiary,
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.send_screen_max).lowercase(),
+                                        style = Theme.brockmann.supplementary.footnote,
+                                        color = Theme.v2.colors.primary.accent4,
+                                        modifier = Modifier.clickOnce { onSetMaxLpUnits() },
+                                    )
+                                }
+                            }
                         }
                     }
                 }
