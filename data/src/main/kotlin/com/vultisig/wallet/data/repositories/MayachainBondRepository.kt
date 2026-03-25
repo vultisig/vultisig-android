@@ -10,6 +10,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import timber.log.Timber
 
+data class LpBondablePool(
+    val availableUnits: String,
+    val totalPoolLpUnits: Long,
+    val poolCacaoDepth: Long,
+)
+
 interface MayachainBondRepository {
     suspend fun getAllNodes(): List<MayaNodeInfo>
 
@@ -25,7 +31,7 @@ interface MayachainBondRepository {
 
     suspend fun getLpBondableAssets(address: String): List<String>
 
-    suspend fun getLpBondableAssetsWithUnits(address: String): Map<String, String>
+    suspend fun getLpBondableAssetsWithUnits(address: String): Map<String, LpBondablePool>
 
     suspend fun clearCache()
 }
@@ -113,14 +119,16 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
         }
     }
 
-    override suspend fun getLpBondableAssetsWithUnits(address: String): Map<String, String> {
+    override suspend fun getLpBondableAssetsWithUnits(
+        address: String
+    ): Map<String, LpBondablePool> {
         return try {
-            val bondableAssets = getBondableAssets().toSet()
+            val bondablePools = getMayaNodePools().filter { it.bondable }.associateBy { it.asset }
             val memberPools =
                 mayaChainApi
                     .getMemberDetails(address)
                     .pools
-                    .filter { it.pool in bondableAssets }
+                    .filter { it.pool in bondablePools }
                     .associate { it.pool to (it.liquidityUnits.toLongOrNull() ?: 0L) }
             if (memberPools.isEmpty()) return emptyMap()
 
@@ -139,7 +147,14 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
             memberPools
                 .mapValues { (pool, total) -> maxOf(0L, total - (bondedByPool[pool] ?: 0L)) }
                 .filter { (_, available) -> available > 0L }
-                .mapValues { (_, available) -> available.toString() }
+                .mapValues { (asset, available) ->
+                    val nodePool = bondablePools[asset]
+                    LpBondablePool(
+                        availableUnits = available.toString(),
+                        totalPoolLpUnits = nodePool?.lpUnits?.toLongOrNull() ?: 0L,
+                        poolCacaoDepth = nodePool?.balanceCacao?.toLongOrNull() ?: 0L,
+                    )
+                }
         } catch (e: Exception) {
             Timber.e(e, "Error fetching LP bondable assets with units for address: $address")
             throw e

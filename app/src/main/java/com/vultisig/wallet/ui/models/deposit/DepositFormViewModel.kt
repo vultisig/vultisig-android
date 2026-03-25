@@ -156,6 +156,8 @@ internal data class DepositFormUiModel(
     val bondableAssets: List<String> = emptyList(),
     val selectedBondAsset: String = "",
     val availableLpUnits: String? = null,
+    val selectedPoolTotalLpUnits: Long = 0L,
+    val selectedPoolCacaoDepth: Long = 0L,
 )
 
 @HiltViewModel
@@ -200,7 +202,8 @@ constructor(
     val basisPointsFieldState = TextFieldState()
     val lpUnitsFieldState = TextFieldState()
     val assetsFieldState = TextFieldState()
-    private var lpUnitsMap: Map<String, String> = emptyMap()
+    private var lpBondPoolMap: Map<String, com.vultisig.wallet.data.repositories.LpBondablePool> =
+        emptyMap()
     val thorAddressFieldState = TextFieldState()
     val rewardsAmountFieldState = TextFieldState()
     val slippageFieldState = TextFieldState()
@@ -407,23 +410,32 @@ constructor(
 
     private fun loadMayaBondableAssets() {
         state.update {
-            it.copy(bondableAssets = emptyList(), selectedBondAsset = "", availableLpUnits = null)
+            it.copy(
+                bondableAssets = emptyList(),
+                selectedBondAsset = "",
+                availableLpUnits = null,
+                selectedPoolTotalLpUnits = 0L,
+                selectedPoolCacaoDepth = 0L,
+            )
         }
         assetsFieldState.clearText()
         viewModelScope.safeLaunch {
             val userAddress = address.value?.address ?: return@safeLaunch
-            val assetsWithUnits =
+            val poolMap =
                 withContext(Dispatchers.IO) {
                     mayachainBondRepository.getLpBondableAssetsWithUnits(userAddress)
                 }
-            lpUnitsMap = assetsWithUnits
-            val assets = assetsWithUnits.keys.toList()
+            lpBondPoolMap = poolMap
+            val assets = poolMap.keys.toList()
             val firstAsset = assets.firstOrNull() ?: ""
+            val firstPool = poolMap[firstAsset]
             state.update {
                 it.copy(
                     bondableAssets = assets,
                     selectedBondAsset = firstAsset,
-                    availableLpUnits = assetsWithUnits[firstAsset],
+                    availableLpUnits = firstPool?.availableUnits,
+                    selectedPoolTotalLpUnits = firstPool?.totalPoolLpUnits ?: 0L,
+                    selectedPoolCacaoDepth = firstPool?.poolCacaoDepth ?: 0L,
                 )
             }
             if (firstAsset.isNotEmpty()) {
@@ -433,7 +445,15 @@ constructor(
     }
 
     fun selectBondAsset(asset: String) {
-        state.update { it.copy(selectedBondAsset = asset, availableLpUnits = lpUnitsMap[asset]) }
+        val pool = lpBondPoolMap[asset]
+        state.update {
+            it.copy(
+                selectedBondAsset = asset,
+                availableLpUnits = pool?.availableUnits,
+                selectedPoolTotalLpUnits = pool?.totalPoolLpUnits ?: 0L,
+                selectedPoolCacaoDepth = pool?.poolCacaoDepth ?: 0L,
+            )
+        }
         assetsFieldState.setTextAndPlaceCursorAtEnd(asset)
     }
 

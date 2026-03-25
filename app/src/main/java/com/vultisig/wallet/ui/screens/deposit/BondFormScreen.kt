@@ -607,6 +607,57 @@ private fun MayaBondFormContent(
                                 }
                             }
                         }
+                        val lpText = lpUnitsFieldState.text.toString()
+                        val estimatedBondValue =
+                            remember(
+                                lpText,
+                                state.selectedPoolTotalLpUnits,
+                                state.selectedPoolCacaoDepth,
+                            ) {
+                                val lpLong = lpText.toLongOrNull() ?: 0L
+                                if (
+                                    lpLong > 0L &&
+                                        state.selectedPoolTotalLpUnits > 0L &&
+                                        state.selectedPoolCacaoDepth > 0L
+                                ) {
+                                    val ratio =
+                                        lpLong
+                                            .toBigDecimal()
+                                            .divide(
+                                                state.selectedPoolTotalLpUnits.toBigDecimal(),
+                                                10,
+                                                java.math.RoundingMode.HALF_UP,
+                                            )
+                                    val cacao =
+                                        ratio
+                                            .multiply(state.selectedPoolCacaoDepth.toBigDecimal())
+                                            .divide(
+                                                java.math.BigDecimal("10000000000"),
+                                                4,
+                                                java.math.RoundingMode.HALF_UP,
+                                            )
+                                    "${cacao.stripTrailingZeros().toPlainString()} CACAO"
+                                } else null
+                            }
+                        if (estimatedBondValue != null) {
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(
+                                    text =
+                                        stringResource(R.string.deposit_form_estimated_bond_value),
+                                    style = Theme.brockmann.supplementary.footnote,
+                                    color = Theme.v2.colors.text.tertiary,
+                                )
+                                Text(
+                                    text = estimatedBondValue,
+                                    style = Theme.brockmann.supplementary.footnote,
+                                    color = Theme.v2.colors.text.primary,
+                                )
+                            }
+                        }
                     }
                 }
             }

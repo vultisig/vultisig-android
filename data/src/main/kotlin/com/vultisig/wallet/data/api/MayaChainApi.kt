@@ -107,6 +107,8 @@ data class MayaNodePool(
     @SerialName("asset") val asset: String,
     @SerialName("status") val status: String,
     @SerialName("bondable") val bondable: Boolean = false,
+    @SerialName("LP_units") val lpUnits: String = "0",
+    @SerialName("balance_cacao") val balanceCacao: String = "0",
 )
 
 @Serializable

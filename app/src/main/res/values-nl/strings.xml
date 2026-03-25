@@ -299,6 +299,7 @@
     <string name="deposit_form_screen_asset_selection">Activaselectie</string>
     <string name="deposit_form_screen_lpunits">LP-eenheden</string>
     <string name="deposit_form_available_lp_units">Beschikbare LP-eenheden</string>
+    <string name="deposit_form_estimated_bond_value">Geschatte bondwaarde</string>
     <string name="join_keysign_error_wrong_vault_share">Zelfde kluisshare. Verander de share naar sign</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Wijzig kluis</string>
     <string name="utxo_settings_byte_fee_title">Netwerksnelheid (sats/vbyte)</string>

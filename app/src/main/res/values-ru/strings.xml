@@ -299,6 +299,7 @@
     <string name="deposit_form_screen_asset_selection">Выбор актива</string>
     <string name="deposit_form_screen_lpunits">Единицы LP</string>
     <string name="deposit_form_available_lp_units">Доступные единицы LP</string>
+    <string name="deposit_form_estimated_bond_value">Оценочная стоимость залога</string>
     <string name="join_keysign_error_wrong_vault_share">Тот же общий доступ к хранилищу. Пожалуйста, измените общий доступ для подписи</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Изменить хранилище</string>
     <string name="utxo_settings_byte_fee_title">Скорость сети (сат/вбайт)</string>
