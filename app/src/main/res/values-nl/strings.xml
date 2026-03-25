@@ -288,7 +288,7 @@
     <string name="qr_title_join_keysign_description">Kluis: %1$s\nBedrag: %2$s\nAan: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Kluis: %1$s\nVan: %2$s\nAan: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Map heeft minimaal één geselecteerde kluis nodig</string>
-    <string name="import_file_password_hint_text">Voer een hint in</string>
+    <string name="import_file_password_hint_text">Hint: %s</string>
     <string name="scan_qr_upload_from_gallery">Uploaden van\nGalerij</string>
     <string name="no_barcodes_found">Geen barcodes gevonden</string>
     <string name="reshare_start_join_reshare_button">Word lid van Reshare</string>
@@ -522,7 +522,6 @@
     <string name="verify_sign_message_message_sign">Bericht om te ondertekenen</string>
     <string name="address_book_empty_description">Houd al uw belangrijke adressen op één plek bij elkaar.</string>
     <string name="address_book_empty_title">Uw adresboek is leeg</string>
-    <string name="education_settings_title">Vultisig Onderwijs</string>
     <string name="check_updates_settings_title">Controleer op Updates</string>
     <string name="vult_website_settings_title">Vultisig Website</string>
     <string name="vault">Kluis</string>

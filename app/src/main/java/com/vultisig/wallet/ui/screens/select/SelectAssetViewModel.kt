@@ -31,6 +31,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -84,26 +85,25 @@ constructor(
 
     private val allTokens = MutableStateFlow(emptyList<AssetUiModel>())
 
+    private var loadAllAssetsJob: Job? = null
+
     val state =
         MutableStateFlow(
             SelectAssetUiModel(selectedChain = Chain.fromRaw(args.preselectedNetworkId))
         )
 
     init {
-        loadAllAssets()
         collectSearchResults()
         observeSelectedChainChanges()
         loadAllAvailableNetworks()
     }
 
     private fun observeSelectedChainChanges() {
-        if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
-            state
-                .map { it.selectedChain }
-                .distinctUntilChanged()
-                .onEach { loadAllAssets() }
-                .launchIn(viewModelScope)
-        }
+        state
+            .map { it.selectedChain }
+            .distinctUntilChanged()
+            .onEach { loadAllAssets() }
+            .launchIn(viewModelScope)
     }
 
     fun selectAsset(asset: AssetUiModel) {
@@ -130,8 +130,8 @@ constructor(
     }
 
     private fun loadAllAssets() {
-        // TODO: Enable for Send, Deposit in upcoming update
-        if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
+        loadAllAssetsJob?.cancel()
+        loadAllAssetsJob =
             viewModelScope.launch {
                 val vault = vaultRepository.get(vaultId) ?: return@launch
                 getChainTokens(state.value.selectedChain, vault)
@@ -153,7 +153,6 @@ constructor(
                     }
                     .collect { assets -> allTokens.value = assets }
             }
-        }
     }
 
     private fun collectSearchResults() {

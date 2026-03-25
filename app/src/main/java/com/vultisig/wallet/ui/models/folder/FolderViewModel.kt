@@ -40,7 +40,7 @@ constructor(
     private val vaultAndBalanceUseCase: VaultAndBalanceUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
 ) : ViewModel() {
-    private lateinit var folderId: String
+    private var folderId: String? = null
 
     val state = MutableStateFlow(FolderUiModel())
 
@@ -54,6 +54,7 @@ constructor(
 
     private fun collectVaults() =
         viewModelScope.launch {
+            val folderId = folderId ?: return@launch
             getOrderedVaults(folderId).collect { orderedVaults ->
                 val vaultAndBalances = orderedVaults.map { vaultAndBalanceUseCase(it) }
 
@@ -72,6 +73,7 @@ constructor(
 
     private fun getFolder() =
         viewModelScope.launch {
+            val folderId = folderId ?: return@launch
             val folder = folderRepository.getFolder(folderId)
             state.update { it.copy(folder = folder) }
         }
@@ -83,6 +85,7 @@ constructor(
         }
 
     fun onMoveVaults(oldOrder: Int, newOrder: Int) {
+        val folderId = folderId ?: return
         val updatedPositionsList =
             state.value.vaults.toMutableList().apply { add(newOrder, removeAt(oldOrder)) }
         state.update { it.copy(vaults = updatedPositionsList) }

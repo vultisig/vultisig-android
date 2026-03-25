@@ -211,13 +211,25 @@ constructor(
 
     private var _keysignViewModel: KeysignViewModel? = null
 
-    val keysignViewModel: KeysignViewModel
-        get() = _keysignViewModel ?: createKeysignViewModel().also { _keysignViewModel = it }
+    val keysignViewModel: KeysignViewModel?
+        get() = _keysignViewModel ?: createKeysignViewModel()?.also { _keysignViewModel = it }
 
-    private fun createKeysignViewModel(): KeysignViewModel =
-        KeysignViewModel(
-            vault = _currentVault!!,
-            keysignCommittee = selection.value!!,
+    private fun createKeysignViewModel(): KeysignViewModel? {
+        val vault =
+            _currentVault
+                ?: run {
+                    Timber.e("Vault is not set when creating KeysignViewModel")
+                    return null
+                }
+        val keysignCommittee =
+            selection.value
+                ?: run {
+                    Timber.e("Keysign committee is not set when creating KeysignViewModel")
+                    return null
+                }
+        return KeysignViewModel(
+            vault = vault,
+            keysignCommittee = keysignCommittee,
             serverUrl = _serverAddress,
             sessionId = _sessionID,
             encryptionKeyHex = _encryptionKeyHex,
@@ -243,6 +255,7 @@ constructor(
             transactionHistoryData = transactionHistoryData.value,
             transactionHistoryRepository = transactionHistoryRepository,
         )
+    }
 
     val uiState = MutableStateFlow(KeysignFlowUiState())
 
@@ -348,15 +361,14 @@ constructor(
                 )
             } ?: keysignPayload
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun updateKeysignPayload(context: Context) {
         stopParticipantDiscovery()
-        _currentVault
-            ?: run {
-                moveToState(KeysignFlowState.Error("Vault is not set"))
-                return
-            }
-        val vault = _currentVault!!
+        val vault =
+            _currentVault
+                ?: run {
+                    moveToState(KeysignFlowState.Error("Vault is not set"))
+                    return
+                }
 
         if (!isRelayEnabled) {
             startMediatorService(context)
@@ -549,23 +561,24 @@ constructor(
         }
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private val serviceStartedReceiver: BroadcastReceiver =
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == MediatorService.SERVICE_ACTION) {
                     Timber.tag("KeysignFlowViewModel").d("onReceive: Mediator service started")
-                    if (_currentVault == null) {
-                        moveToState(KeysignFlowState.Error("Vault is not set"))
-                        return
-                    }
+                    val vault =
+                        _currentVault
+                            ?: run {
+                                moveToState(KeysignFlowState.Error("Vault is not set"))
+                                return
+                            }
                     // send a request to local mediator server to start the session
                     viewModelScope.launch(Dispatchers.IO) {
                         delay(1000) // back off a second
-                        startSession(_serverAddress, _sessionID, _currentVault!!.localPartyID)
+                        startSession(_serverAddress, _sessionID, vault.localPartyID)
                     }
                     // kick off discovery
-                    startParticipantDiscovery(_currentVault!!)
+                    startParticipantDiscovery(vault)
                 }
             }
         }
@@ -598,7 +611,13 @@ constructor(
             Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
 
             if (!password.isNullOrBlank()) {
-                val vault = _currentVault!!
+                val vault =
+                    _currentVault
+                        ?: run {
+                            Timber.e("Vault is not set when joining keysign in startSession")
+                            moveToState(KeysignFlowState.Error("Vault is not set"))
+                            return
+                        }
                 vultiSignerRepository.joinKeysign(
                     JoinKeysignRequestJson(
                         publicKeyEcdsa = vault.pubKeyECDSA,
@@ -628,7 +647,6 @@ constructor(
         selection.value = selection.value?.minus(participant)
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun moveToState(nextState: KeysignFlowState) {
         try {
             if (nextState == KeysignFlowState.Keysign) {

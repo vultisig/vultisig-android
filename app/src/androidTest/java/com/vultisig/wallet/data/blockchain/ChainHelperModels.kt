@@ -107,6 +107,7 @@ data class BlockchainSpecific(
     @SerialName("SuicheSpecific") val suiSpecific: SuiSpecific? = null,
     @SerialName("MayaSpecific") val mayachainSpecific: MayachainSpecific? = null,
     @SerialName("TronSpecific") val tronSpecific: TronSpecific? = null,
+    @SerialName("CardanoSpecific") val cardanoSpecific: CardanoSpecific? = null,
 )
 
 @Serializable
@@ -244,6 +245,17 @@ data class SuiSpecific(
     @SerialName("reference_gas_price") val referenceGasPrice: String,
     @SerialName("gas_budget") val gasBudget: String,
     @SerialName("coins") val coins: List<SuiCoin>,
+)
+
+/** Cardano blockchain-specific parameters for test fixtures. */
+@Serializable
+data class CardanoSpecific(
+    /** Fee per byte in lovelace. */
+    @SerialName("byte_fee") val byteFee: Long,
+    /** Whether to send the maximum available amount. */
+    @SerialName("send_max_amount") val sendMaxAmount: Boolean = false,
+    /** Transaction time-to-live (slot number). */
+    val ttl: Long,
 )
 
 @Serializable
