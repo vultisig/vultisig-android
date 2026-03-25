@@ -535,8 +535,8 @@ constructor(
 
                 Chain.Optimism,
                 Chain.Polygon,
+                Chain.Mantle -> setOf(SwapProvider.LIFI, SwapProvider.ONEINCH, SwapProvider.KYBER)
                 Chain.ZkSync -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
-                Chain.Mantle -> setOf(SwapProvider.LIFI, SwapProvider.KYBER)
                 Chain.ThorChain -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA)
 
                 Chain.Bitcoin -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA)
