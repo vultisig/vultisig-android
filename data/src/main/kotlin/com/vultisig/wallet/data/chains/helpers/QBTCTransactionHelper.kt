@@ -296,6 +296,7 @@ class QBTCTransactionHelper {
     // Protobuf wire format encoding
 
     private fun protoVarint(fieldNumber: Int, value: Long): List<Byte> {
+        if (value == 0L) return emptyList() // proto3: omit default values
         val result = mutableListOf<Byte>()
         val tag = (fieldNumber shl 3) or 0
         result.addAll(encodeVarint(tag.toLong()))
@@ -304,6 +305,7 @@ class QBTCTransactionHelper {
     }
 
     private fun protoBytes(fieldNumber: Int, data: ByteArray): List<Byte> {
+        if (data.isEmpty()) return emptyList() // proto3: omit empty bytes
         val result = mutableListOf<Byte>()
         val tag = (fieldNumber shl 3) or 2
         result.addAll(encodeVarint(tag.toLong()))
@@ -312,8 +314,10 @@ class QBTCTransactionHelper {
         return result
     }
 
-    private fun protoString(fieldNumber: Int, value: String): List<Byte> =
-        protoBytes(fieldNumber, value.toByteArray(Charsets.UTF_8))
+    private fun protoString(fieldNumber: Int, value: String): List<Byte> {
+        if (value.isEmpty()) return emptyList() // proto3: omit empty strings
+        return protoBytes(fieldNumber, value.toByteArray(Charsets.UTF_8))
+    }
 
     private fun encodeVarint(value: Long): List<Byte> {
         val result = mutableListOf<Byte>()

@@ -176,10 +176,6 @@ constructor(
             state.update { it.copy(error = null) }
 
             try {
-                if (isInitiatingDevice) {
-                    startKeygen()
-                }
-
                 if (action == TssAction.SingleKeygen) {
                     require(vault.pubKeyECDSA.isNotBlank() && vault.pubKeyEDDSA.isNotBlank()) {
                         "SingleKeygen requires an existing vault with ECDSA and EdDSA keys"
