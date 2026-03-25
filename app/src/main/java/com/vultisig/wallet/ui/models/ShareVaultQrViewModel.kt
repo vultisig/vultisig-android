@@ -5,9 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
@@ -77,13 +74,9 @@ constructor(
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
-    private var hasWritePermission by
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            ) == PackageManager.PERMISSION_GRANTED
-        )
+    private var hasWritePermission: Boolean =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+            PackageManager.PERMISSION_GRANTED
 
     private val permissionChannel = Channel<Boolean>()
     val permissionFlow = permissionChannel.receiveAsFlow()

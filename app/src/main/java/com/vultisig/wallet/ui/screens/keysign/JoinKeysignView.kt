@@ -44,7 +44,7 @@ internal fun JoinKeysignView(navController: NavHostController) {
     if (keysignState is KeysignState.KeysignFinished) {
         viewModel.enableNavigationToHome()
     }
-    val state = viewModel.currentState.value
+    val state by viewModel.currentState.collectAsState()
     JoinKeysignScreen(
         isKeySignFinished = keysignState is KeysignState.KeysignFinished,
         onBack = viewModel::navigateToHome,

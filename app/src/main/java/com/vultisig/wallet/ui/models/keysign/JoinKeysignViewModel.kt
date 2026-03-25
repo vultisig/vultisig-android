@@ -3,8 +3,6 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import android.net.nsd.NsdManager
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -225,8 +223,8 @@ constructor(
     private val vaultId: String = args.vaultId
     private val qrBase64: String = args.qr
     private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
-    var currentState: MutableState<JoinKeysignState> =
-        mutableStateOf(JoinKeysignState.DiscoveringSessionID)
+    val currentState: MutableStateFlow<JoinKeysignState> =
+        MutableStateFlow(JoinKeysignState.DiscoveringSessionID)
     private var _localPartyID: String = ""
     private var _sessionID: String = ""
     private var _serviceName: String = ""
