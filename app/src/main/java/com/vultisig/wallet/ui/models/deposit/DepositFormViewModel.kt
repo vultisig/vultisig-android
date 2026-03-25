@@ -407,7 +407,7 @@ constructor(
         state.update { it.copy(bondableAssets = emptyList(), selectedBondAsset = "") }
         assetsFieldState.clearText()
         viewModelScope.safeLaunch {
-            val userAddress = address.filterNotNull().first().address
+            val userAddress = address.value?.address ?: return@safeLaunch
             val assets =
                 withContext(Dispatchers.IO) {
                     mayachainBondRepository.getLpBondableAssets(userAddress)
