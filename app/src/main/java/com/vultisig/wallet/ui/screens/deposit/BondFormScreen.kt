@@ -190,6 +190,7 @@ internal fun BondFormContent(
     onDismissError: () -> Unit = {},
     onDeposit: () -> Unit = {},
     initialAddressExpanded: Boolean = true,
+    initialAssetExpanded: Boolean = false,
 ) {
     val focusManager = LocalFocusManager.current
     val depositChain = state.depositChain
@@ -222,6 +223,7 @@ internal fun BondFormContent(
                     onScan = onScan,
                     onAddressBookClick = onAddressBookClick,
                     initialAddressExpanded = initialAddressExpanded,
+                    initialAssetExpanded = initialAssetExpanded,
                 )
             } else {
                 ThorchainBondFormContent(
@@ -283,10 +285,11 @@ private fun MayaBondFormContent(
     onScan: () -> Unit,
     onAddressBookClick: () -> Unit,
     initialAddressExpanded: Boolean = true,
+    initialAssetExpanded: Boolean = false,
 ) {
     var isAddressExpanded by remember { mutableStateOf(initialAddressExpanded) }
     var isAddressFocused by remember { mutableStateOf(false) }
-    var isAssetExpanded by remember { mutableStateOf(false) }
+    var isAssetExpanded by remember { mutableStateOf(initialAssetExpanded) }
     var isBondAssetListOpen by remember { mutableStateOf(false) }
 
     // Address card
@@ -658,21 +661,23 @@ private fun ThorchainBondFormContent(
 
 @Preview(showBackground = true, backgroundColor = 0xFF02122B)
 @Composable
-private fun BondFormContentMayaExpandedPreview() {
+private fun BondFormContentMayaAssetExpandedPreview() {
     OnBoardingComposeTheme {
         BondFormContent(
             state =
                 DepositFormUiModel(
                     depositChain = Chain.MayaChain,
                     bondableAssets = listOf("CACAO", "RUNE"),
-                    selectedBondAsset = "",
+                    selectedBondAsset = "CACAO",
                 ),
-            nodeAddressFieldState = TextFieldState(""),
+            nodeAddressFieldState = TextFieldState("maya1abctupwgjwn397w3dx9fqmqgzr"),
+            initialAddressExpanded = false,
+            initialAssetExpanded = true,
             providerFieldState = TextFieldState(),
             operatorFeeFieldState = TextFieldState(),
             tokenAmountFieldState = TextFieldState(),
             assetsFieldState = TextFieldState(),
-            lpUnitsFieldState = TextFieldState(),
+            lpUnitsFieldState = TextFieldState("1000"),
         )
     }
 }
