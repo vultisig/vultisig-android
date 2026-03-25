@@ -116,11 +116,11 @@ internal class KeysignViewModel
 @AssistedInject
 constructor(
     @Assisted val vault: Vault,
-    @Assisted private val keysignCommittee: List<String>,
-    @Assisted private val serverUrl: String,
-    @Assisted private val sessionId: String,
-    @Assisted private val encryptionKeyHex: String,
-    @Assisted private val messagesToSign: List<String>,
+    @Assisted("keysignCommittee") private val keysignCommittee: List<String>,
+    @Assisted("serverUrl") private val serverUrl: String,
+    @Assisted("sessionId") private val sessionId: String,
+    @Assisted("encryptionKeyHex") private val encryptionKeyHex: String,
+    @Assisted("messagesToSign") private val messagesToSign: List<String>,
     @Assisted private val keyType: TssKeyType,
     @Assisted private val keysignPayload: KeysignPayload?,
     @Assisted private val customMessagePayload: CustomMessagePayload?,
@@ -148,11 +148,11 @@ constructor(
     interface Factory {
         fun create(
             vault: Vault,
-            keysignCommittee: List<String>,
-            serverUrl: String,
-            sessionId: String,
-            encryptionKeyHex: String,
-            messagesToSign: List<String>,
+            @Assisted("keysignCommittee") keysignCommittee: List<String>,
+            @Assisted("serverUrl") serverUrl: String,
+            @Assisted("sessionId") sessionId: String,
+            @Assisted("encryptionKeyHex") encryptionKeyHex: String,
+            @Assisted("messagesToSign") messagesToSign: List<String>,
             keyType: TssKeyType,
             keysignPayload: KeysignPayload?,
             customMessagePayload: CustomMessagePayload?,
