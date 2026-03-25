@@ -41,7 +41,9 @@ internal fun KeysignScreen(
                     onComplete = viewModel::complete,
                 )
             } else {
-                viewModel.moveToState(Error("Failed to initialize keysign"))
+                LaunchedEffect(viewModel) {
+                    viewModel.moveToState(Error("Failed to initialize keysign"))
+                }
             }
         }
 
