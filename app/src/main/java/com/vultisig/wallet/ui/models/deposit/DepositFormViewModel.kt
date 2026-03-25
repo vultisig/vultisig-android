@@ -2301,8 +2301,6 @@ constructor(
         val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
         return plan
     }
-
-    companion object {}
 }
 
 internal data class TokenMergeInfo(val ticker: String, val contract: String) {
