@@ -116,7 +116,7 @@ constructor(
     private val transactionId: TransactionId = args.transactionId
     private val vaultId: String = args.vaultId
 
-    private lateinit var transaction: Transaction
+    private var transaction: Transaction? = null
 
     val uiState = MutableStateFlow(VerifyTransactionUiModel())
     private val password = MutableStateFlow<String?>(null)
@@ -133,7 +133,7 @@ constructor(
     }
 
     private suspend fun calculateFees(transactionUiModel: TransactionDetailsUiModel) {
-        val tx = transaction
+        val tx = transaction ?: return
         val chain = tx.token.chain
         val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return
 
@@ -292,12 +292,13 @@ constructor(
                         navigator.back()
                         return@launch
                     }
-            val transactionUiModel = mapTransactionToUiModel(transaction)
+            val tx = transaction ?: return@launch
+            val transactionUiModel = mapTransactionToUiModel(tx)
 
             val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
-            val chain = transaction.token.chain
+            val chain = tx.token.chain
             val srcVaultName = allVaults.find { it.id == vaultId }?.name
-            val normalizedDstAddress = normalizeAddressForLookup(transaction.dstAddress)
+            val normalizedDstAddress = normalizeAddressForLookup(tx.dstAddress)
             val dstVaultName =
                 allVaults
                     .firstOrNull { vault ->
@@ -308,13 +309,10 @@ constructor(
                     }
                     ?.name
             val dstInAddressBook =
-                dstVaultName == null &&
-                    addressBookRepository.entryExists(chain.id, transaction.dstAddress)
+                dstVaultName == null && addressBookRepository.entryExists(chain.id, tx.dstAddress)
             val dstAddressBookTitle =
                 if (dstInAddressBook) {
-                    runCatching {
-                            addressBookRepository.getEntry(chain.id, transaction.dstAddress).title
-                        }
+                    runCatching { addressBookRepository.getEntry(chain.id, tx.dstAddress).title }
                         .getOrNull()
                 } else null
 
@@ -334,8 +332,8 @@ constructor(
 
     private suspend fun scanTransaction() {
         try {
-            val transaction = transaction
-            val chain = transaction.token.chain
+            val tx = transaction ?: return
+            val chain = tx.token.chain
 
             val isSupported =
                 securityScannerService.getSupportedChainsByFeature().isChainSupported(chain) &&
@@ -346,7 +344,7 @@ constructor(
             uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 
             val securityScannerTransaction =
-                securityScannerService.createSecurityScannerTransaction(transaction)
+                securityScannerService.createSecurityScannerTransaction(tx)
 
             val result =
                 withContext(Dispatchers.IO) {
