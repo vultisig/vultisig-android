@@ -117,7 +117,7 @@
     <string name="settings_screen_share_the_app">Deel de app</string>
     <string name="settings_screen_title">Instellingen</string>
     <string name="language_setting_screen_title">Taal</string>
-    <string name="currency_unit_setting_screen_title">Valuta\n</string>
+    <string name="currency_unit_setting_screen_title">Valuta</string>
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="verify_transaction_screen_title">Verifiëren</string>
     <string name="verify_transaction_from_title">Van</string>
