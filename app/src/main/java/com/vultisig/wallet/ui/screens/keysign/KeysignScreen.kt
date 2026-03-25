@@ -33,11 +33,16 @@ internal fun KeysignScreen(
         }
 
         is KeysignFlowState.Keysign -> {
-            Keysign(
-                viewModel = viewModel.keysignViewModel,
-                onError = { viewModel.moveToState(Error(it)) },
-                onComplete = viewModel::complete,
-            )
+            val keysignVm = viewModel.keysignViewModel
+            if (keysignVm != null) {
+                Keysign(
+                    viewModel = keysignVm,
+                    onError = { viewModel.moveToState(Error(it)) },
+                    onComplete = viewModel::complete,
+                )
+            } else {
+                viewModel.moveToState(Error("Failed to initialize keysign"))
+            }
         }
 
         is Error -> {

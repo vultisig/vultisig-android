@@ -211,13 +211,22 @@ constructor(
 
     private var _keysignViewModel: KeysignViewModel? = null
 
-    val keysignViewModel: KeysignViewModel
-        get() = _keysignViewModel ?: createKeysignViewModel().also { _keysignViewModel = it }
+    val keysignViewModel: KeysignViewModel?
+        get() = _keysignViewModel ?: createKeysignViewModel()?.also { _keysignViewModel = it }
 
-    private fun createKeysignViewModel(): KeysignViewModel {
-        val vault = _currentVault ?: error("Vault is not set when creating KeysignViewModel")
-        val keysignCommittee = selection.value
-            ?: error("Keysign committee is not set when creating KeysignViewModel")
+    private fun createKeysignViewModel(): KeysignViewModel? {
+        val vault =
+            _currentVault
+                ?: run {
+                    Timber.e("Vault is not set when creating KeysignViewModel")
+                    return null
+                }
+        val keysignCommittee =
+            selection.value
+                ?: run {
+                    Timber.e("Keysign committee is not set when creating KeysignViewModel")
+                    return null
+                }
         return KeysignViewModel(
             vault = vault,
             keysignCommittee = keysignCommittee,
@@ -602,7 +611,13 @@ constructor(
             Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
 
             if (!password.isNullOrBlank()) {
-                val vault = _currentVault ?: return
+                val vault =
+                    _currentVault
+                        ?: run {
+                            Timber.e("Vault is not set when joining keysign in startSession")
+                            moveToState(KeysignFlowState.Error("Vault is not set"))
+                            return
+                        }
                 vultiSignerRepository.joinKeysign(
                     JoinKeysignRequestJson(
                         publicKeyEcdsa = vault.pubKeyECDSA,
