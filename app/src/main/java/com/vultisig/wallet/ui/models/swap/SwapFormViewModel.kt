@@ -1691,7 +1691,10 @@ constructor(
                                     )
 
                                 is SwapException.UnkownSwapError ->
-                                    UiText.DynamicString(e.message ?: "Unknown error")
+                                    UiText.StringResource(R.string.swap_error_quote_failed)
+
+                                is SwapException.HighPriceImpact ->
+                                    UiText.StringResource(R.string.swap_error_high_price_impact)
 
                                 is SwapException.InsufficentSwapAmount ->
                                     UiText.StringResource(R.string.swap_error_amount_too_low)

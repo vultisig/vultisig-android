@@ -322,6 +322,8 @@
     <string name="swap_error_insufficient_source_token">Onvoldoende %1$s saldo om te ruilen</string>
     <string name="swap_error_insufficient_gas_fees">Er is niet genoeg %1$s om de gaskosten te dekken. Vul de wallet aan.</string>
     <string name="swap_error_time_out">Swap-aanvraag is verlopen. Probeer het opnieuw.</string>
+    <string name="swap_error_high_price_impact">De prijsimpact is te hoog. Probeer een kleiner bedrag of een ander tokenpaar.</string>
+    <string name="swap_error_quote_failed">Swap-offerte mislukt. Probeer het opnieuw of pas het bedrag aan.</string>
     <string name="swap_screen_invalid_no_vault">Geen kluis geselecteerd</string>
     <string name="swap_screen_invalid_no_src_error">Geen brontoken geselecteerd</string>
     <string name="swap_screen_invalid_selected_no_dst">Geen bestemmingstoken geselecteerd</string>

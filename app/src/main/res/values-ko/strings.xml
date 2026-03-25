@@ -403,6 +403,8 @@
     <string name="swap_error_insufficient_source_token">스왑할 %1$s 잔액이 부족합니다</string>
     <string name="swap_error_insufficient_gas_fees">가스 수수료를 충당할 %1$s이(가) 부족합니다. 지갑에 자금을 충전해 주세요.</string>
     <string name="swap_error_time_out">스왑 요청 시간이 초과되었습니다. 다시 시도해 주세요</string>
+    <string name="swap_error_high_price_impact">가격 영향이 너무 큽니다. 더 적은 금액이나 다른 토큰 쌍을 시도하세요.</string>
+    <string name="swap_error_quote_failed">스왑 견적에 실패했습니다. 다시 시도하거나 금액을 조정하세요.</string>
     <string name="swap_screen_invalid_no_vault">볼트가 선택되지 않았습니다</string>
     <string name="swap_screen_invalid_no_src_error">출발 토큰이 선택되지 않았습니다</string>
     <string name="swap_screen_invalid_selected_no_dst">도착 토큰이 선택되지 않았습니다</string>

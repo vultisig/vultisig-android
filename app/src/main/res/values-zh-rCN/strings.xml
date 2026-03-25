@@ -593,6 +593,8 @@
     <string name="swap_error_insufficient_source_token">%1$s 余额不足以进行交换</string>
     <string name="swap_error_insufficient_gas_fees">没有足够的 %1$s 来支付 Gas 费用。请为钱包充值。</string>
     <string name="swap_error_time_out">交换请求超时。请重试</string>
+    <string name="swap_error_high_price_impact">价格影响过高。请尝试较小的金额或不同的代币对。</string>
+    <string name="swap_error_quote_failed">兑换报价失败。请重试或调整金额。</string>
 
     <!-- Swap Screen Invalid -->
     <string name="swap_screen_invalid_no_vault">未选择保险库</string>

@@ -323,6 +323,8 @@
     <string name="swap_error_insufficient_source_token">Saldo %1$s insufficiente per lo scambio</string>
     <string name="swap_error_insufficient_gas_fees">Non c\'è abbastanza %1$s per coprire le commissioni del gas. Si prega di finanziare il portafoglio.</string>
     <string name="swap_error_time_out">La richiesta di scambio è scaduta. Riprova.</string>
+    <string name="swap_error_high_price_impact">L\'impatto sul prezzo è troppo alto. Prova con un importo inferiore o una coppia di token diversa.</string>
+    <string name="swap_error_quote_failed">Preventivo di swap fallito. Riprova o modifica l\'importo.</string>
     <string name="swap_screen_invalid_no_vault">Nessun caveau selezionato</string>
     <string name="swap_screen_invalid_no_src_error">Nessun token sorgente selezionato</string>
     <string name="swap_screen_invalid_selected_no_dst">Nessun token di destinazione selezionato</string>

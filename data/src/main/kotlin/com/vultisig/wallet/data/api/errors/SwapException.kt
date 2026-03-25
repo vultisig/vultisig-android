@@ -21,6 +21,8 @@ sealed class SwapException(message: String) : Exception(message) {
 
     class InsufficientFunds(message: String) : SwapException(message)
 
+    class HighPriceImpact(message: String) : SwapException(message)
+
     companion object {
         fun handleSwapException(error: String): SwapException {
             with(error.lowercase()) {
@@ -34,7 +36,7 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("failed to simulate swap: pool") -> SwapRouteNotAvailable(error)
                     contains("failed to simulate handler: pool") -> SwapRouteNotAvailable(error)
                     contains("insufficient funds") -> InsufficientFunds(error)
-                    contains("No available quotes for the requested") ->
+                    contains("no available quotes for the requested") ->
                         SwapRouteNotAvailable(error)
                     contains("amount less than dust threshold: invalid request") ->
                         SmallSwapAmount(error)
@@ -43,6 +45,11 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("trading is halted") -> SwapRouteNotAvailable(error)
                     contains("timeout") -> TimeOut(error)
                     contains("unable to resolve host") -> NetworkConnection(error)
+                    contains("slippage") -> HighPriceImpact(error)
+                    contains("price impact") -> HighPriceImpact(error)
+                    contains("exceeds desired slippage") -> HighPriceImpact(error)
+                    contains("route not profitable") -> HighPriceImpact(error)
+                    contains("slippage tolerance exceeded") -> HighPriceImpact(error)
                     else -> UnkownSwapError(error)
                 }
             }
