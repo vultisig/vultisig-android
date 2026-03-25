@@ -2248,6 +2248,7 @@ constructor(
     }
 
     private suspend fun calculateGasFee(chain: Chain, token: Coin, srcAddress: String): TokenValue {
+        val vaultId = vaultId ?: error("Vault ID not set")
         val vault =
             withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: error("Vault not found")
         val blockchainTransaction =
