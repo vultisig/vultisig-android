@@ -68,6 +68,8 @@ interface MayaChainApi {
     suspend fun getMidgardHealth(): MayaMidgardHealth
 
     suspend fun getMayaNodePools(): List<MayaNodePool>
+
+    suspend fun getMemberDetails(address: String): MayaMemberDetails
 }
 
 @Serializable
@@ -106,6 +108,11 @@ data class MayaNodePool(
     @SerialName("status") val status: String,
     @SerialName("bondable") val bondable: Boolean = false,
 )
+
+@Serializable
+data class MayaMemberDetails(@SerialName("pools") val pools: List<MayaMemberPool> = emptyList())
+
+@Serializable data class MayaMemberPool(@SerialName("pool") val pool: String)
 
 @Serializable
 data class MayaMidgardHealth(@SerialName("lastThorNode") val lastMayaNode: MayaHeightInfo) {
@@ -287,6 +294,11 @@ constructor(
         httpClient
             .get("$MAYA_NODE_BASE/mayachain/pools") { header(xClientID, xClientIDValue) }
             .bodyOrThrow<List<MayaNodePool>>()
+
+    override suspend fun getMemberDetails(address: String): MayaMemberDetails =
+        httpClient
+            .get("$MAYA_MIDGARD_BASE/member/$address") { header(xClientID, xClientIDValue) }
+            .bodyOrThrow<MayaMemberDetails>()
 
     companion object {
         private const val MAYA_NODE_BASE = "https://mayanode.mayachain.info"

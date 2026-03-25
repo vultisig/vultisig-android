@@ -407,7 +407,11 @@ constructor(
         state.update { it.copy(bondableAssets = emptyList(), selectedBondAsset = "") }
         assetsFieldState.clearText()
         viewModelScope.safeLaunch {
-            val assets = withContext(Dispatchers.IO) { mayachainBondRepository.getBondableAssets() }
+            val userAddress = address.filterNotNull().first().address
+            val assets =
+                withContext(Dispatchers.IO) {
+                    mayachainBondRepository.getLpBondableAssets(userAddress)
+                }
             val firstAsset = assets.firstOrNull() ?: ""
             state.update { it.copy(bondableAssets = assets, selectedBondAsset = firstAsset) }
             if (firstAsset.isNotEmpty()) {

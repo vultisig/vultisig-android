@@ -23,6 +23,8 @@ interface MayachainBondRepository {
 
     suspend fun getBondableAssets(): List<String>
 
+    suspend fun getLpBondableAssets(address: String): List<String>
+
     suspend fun clearCache()
 }
 
@@ -94,6 +96,17 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
             getMayaNodePools().filter { it.bondable }.map { it.asset }
         } catch (e: Exception) {
             Timber.e(e, "Error fetching bondable Maya assets")
+            throw e
+        }
+    }
+
+    override suspend fun getLpBondableAssets(address: String): List<String> {
+        return try {
+            val bondableAssets = getBondableAssets().toSet()
+            val lpPools = mayaChainApi.getMemberDetails(address).pools.map { it.pool }.toSet()
+            bondableAssets.intersect(lpPools).toList()
+        } catch (e: Exception) {
+            Timber.e(e, "Error fetching LP bondable assets for address: $address")
             throw e
         }
     }
