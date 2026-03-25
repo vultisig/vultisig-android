@@ -288,7 +288,7 @@
     <string name="qr_title_join_keysign_description">Kluis: %1$s\nBedrag: %2$s\nAan: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Kluis: %1$s\nVan: %2$s\nAan: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Map heeft minimaal één geselecteerde kluis nodig</string>
-    <string name="import_file_password_hint_text">Voer een hint in</string>
+    <string name="import_file_password_hint_text">Hint: %s</string>
     <string name="scan_qr_upload_from_gallery">Uploaden van\nGalerij</string>
     <string name="no_barcodes_found">Geen barcodes gevonden</string>
     <string name="reshare_start_join_reshare_button">Word lid van Reshare</string>
