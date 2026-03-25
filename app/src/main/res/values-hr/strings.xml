@@ -380,8 +380,8 @@
     <string name="next_payout">Sljedeća isplata</string>
     <string name="wait_until_node_churned_out">Pričekajte dok čvor ne bude izbačen</string>
     <string name="deposit_option_leave">Napusti</string>
-    <string name="deposit_option_stake">Staking</string>
-    <string name="deposit_option_unstake">Unstaking</string>
+    <string name="deposit_option_stake">Stake</string>
+    <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Prilagođeno</string>
     <string name="deposit_option_ibc_transfer">IBC prijenos</string>
     <string name="deposit_option_switch">Prebaci</string>

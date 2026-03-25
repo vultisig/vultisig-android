@@ -380,8 +380,8 @@
     <string name="next_payout">Prossimo pagamento</string>
     <string name="wait_until_node_churned_out">Attendi fino a quando il nodo viene espulso</string>
     <string name="deposit_option_leave">Esci</string>
-    <string name="deposit_option_stake">Staking</string>
-    <string name="deposit_option_unstake">Unstaking</string>
+    <string name="deposit_option_stake">Stake</string>
+    <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Personalizzato</string>
     <string name="deposit_option_ibc_transfer">Trasferimento IBC</string>
     <string name="deposit_option_switch">Cambia</string>

@@ -379,8 +379,8 @@
     <string name="next_payout">Следующая выплата</string>
     <string name="wait_until_node_churned_out">Подождите, пока узел не будет исключен</string>
     <string name="deposit_option_leave">Покинуть</string>
-    <string name="deposit_option_stake">Стейкинг</string>
-    <string name="deposit_option_unstake">Анстейкинг</string>
+    <string name="deposit_option_stake">Stake</string>
+    <string name="deposit_option_unstake">Unstake</string>
     <string name="deposit_option_custom">Пользовательский</string>
     <string name="deposit_option_ibc_transfer">IBC-перевод</string>
     <string name="deposit_option_switch">Переключить</string>
