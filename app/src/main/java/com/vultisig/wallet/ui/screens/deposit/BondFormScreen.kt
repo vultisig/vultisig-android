@@ -46,6 +46,7 @@ import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
+import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -376,7 +377,7 @@ private fun MayaBondFormContent(
             Modifier.fillMaxWidth()
                 .background(Theme.v2.colors.backgrounds.primary, cardShape)
                 .border(1.dp, Theme.v2.colors.border.normal, cardShape)
-                .padding(horizontal = 12.dp, vertical = 16.dp),
+                .padding(12.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -431,7 +432,7 @@ private fun MayaBondFormContent(
         }
         AnimatedVisibility(visible = isAssetExpanded) {
             Column {
-                UiHorizontalDivider()
+                UiGradientHorizontalDivider()
                 UiSpacer(size = 8.dp)
                 if (state.bondableAssets.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
