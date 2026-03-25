@@ -464,8 +464,10 @@ constructor(
                 availableLpUnits = pool?.availableUnits,
                 selectedPoolTotalLpUnits = pool?.totalPoolLpUnits ?: 0L,
                 selectedPoolCacaoDepth = pool?.poolCacaoDepth ?: 0L,
+                lpUnitsError = null,
             )
         }
+        lpUnitsFieldState.clearText()
         assetsFieldState.setTextAndPlaceCursorAtEnd(asset)
     }
 
@@ -1533,7 +1535,7 @@ constructor(
                     Bond.Maya(
                         nodeAddress = nodeAddress,
                         providerAddress = provider,
-                        lpUnits = lpUnits.toIntOrNull(),
+                        lpUnits = lpUnits.toLongOrNull(),
                         assets = assets,
                     )
 
@@ -1653,7 +1655,7 @@ constructor(
                         nodeAddress = nodeAddress,
                         providerAddress = provider,
                         assets = assets,
-                        lpUnits = lpUnits.toIntOrNull(),
+                        lpUnits = lpUnits.toLongOrNull(),
                     )
 
                 Chain.ThorChain ->
@@ -2275,7 +2277,7 @@ constructor(
     }
 
     private fun isLpUnitCharsValid(lpUnits: String) =
-        lpUnits.toIntOrNull() != null && lpUnits.all { it.isDigit() } && lpUnits.toInt() > 0
+        lpUnits.toLongOrNull() != null && lpUnits.all { it.isDigit() } && lpUnits.toLong() > 0
 
     fun onSelectSecureAsset(asset: TokenWithdrawSecureAsset) {
         val balance = asset.tokenValue?.let(mapTokenValueToStringWithUnit)
