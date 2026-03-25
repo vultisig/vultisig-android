@@ -173,7 +173,7 @@
     <string name="settings_screen_share_the_app">Share the App</string>
     <string name="settings_screen_title">Settings</string>
     <string name="language_setting_screen_title">Language</string>
-    <string name="currency_unit_setting_screen_title">Currency\n</string>
+    <string name="currency_unit_setting_screen_title">Currency</string>
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="verify_transaction_screen_title">Verify</string>
     <string name="verify_transaction_from_title">From</string>
