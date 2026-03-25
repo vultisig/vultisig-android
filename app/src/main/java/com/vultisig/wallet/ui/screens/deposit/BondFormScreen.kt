@@ -255,6 +255,9 @@ private fun Modifier.vsClickableBackground() =
             shape = RoundedCornerShape(12.dp),
         )
 
+private fun String.toDisplayAsset(): String =
+    substringBefore("-").substringAfterLast("/").substringAfterLast(".")
+
 @Composable
 private fun MayaBondFormContent(
     state: DepositFormUiModel,
@@ -383,14 +386,14 @@ private fun MayaBondFormContent(
             if (!isAssetExpanded && state.selectedBondAsset.isNotEmpty()) {
                 UiSpacer(size = 12.dp)
                 TokenLogo(
-                    logo = getCoinLogo(state.selectedBondAsset.lowercase()),
-                    title = state.selectedBondAsset,
+                    logo = getCoinLogo(state.selectedBondAsset.toDisplayAsset().lowercase()),
+                    title = state.selectedBondAsset.toDisplayAsset(),
                     modifier = Modifier.size(16.dp),
                     errorLogoModifier = Modifier.size(16.dp),
                 )
                 UiSpacer(size = 4.dp)
                 Text(
-                    text = state.selectedBondAsset,
+                    text = state.selectedBondAsset.toDisplayAsset(),
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.tertiary,
                 )
@@ -435,15 +438,15 @@ private fun MayaBondFormContent(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 TokenLogo(
-                                    logo = getCoinLogo(displayAsset.lowercase()),
-                                    title = displayAsset,
+                                    logo = getCoinLogo(displayAsset.toDisplayAsset().lowercase()),
+                                    title = displayAsset.toDisplayAsset(),
                                     modifier = Modifier.size(36.dp),
                                     errorLogoModifier = Modifier.size(36.dp),
                                 )
                                 UiSpacer(8.dp)
                                 Column {
                                     Text(
-                                        text = displayAsset,
+                                        text = displayAsset.toDisplayAsset(),
                                         style = Theme.brockmann.supplementary.caption,
                                         color = Theme.v2.colors.text.primary,
                                     )
@@ -493,14 +496,15 @@ private fun MayaBondFormContent(
                                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         ) {
                                             TokenLogo(
-                                                logo = getCoinLogo(asset.lowercase()),
-                                                title = asset,
+                                                logo =
+                                                    getCoinLogo(asset.toDisplayAsset().lowercase()),
+                                                title = asset.toDisplayAsset(),
                                                 modifier = Modifier.size(36.dp),
                                                 errorLogoModifier = Modifier.size(36.dp),
                                             )
                                             Column {
                                                 Text(
-                                                    text = asset,
+                                                    text = asset.toDisplayAsset(),
                                                     style = Theme.brockmann.supplementary.caption,
                                                     color = Theme.v2.colors.text.primary,
                                                 )
