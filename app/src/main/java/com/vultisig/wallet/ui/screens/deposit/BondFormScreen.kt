@@ -281,6 +281,7 @@ private fun MayaBondFormContent(
     initialAddressExpanded: Boolean = true,
 ) {
     var isAddressExpanded by remember { mutableStateOf(initialAddressExpanded) }
+    var isAddressFocused by remember { mutableStateOf(false) }
     var isAssetExpanded by remember { mutableStateOf(false) }
     var isBondAssetListOpen by remember { mutableStateOf(false) }
 
@@ -323,7 +324,10 @@ private fun MayaBondFormContent(
                     imeAction = ImeAction.Next,
                     textFieldState = nodeAddressFieldState,
                     onFocusChanged = { isFocused ->
-                        if (!isFocused) {
+                        if (isFocused) {
+                            isAddressFocused = true
+                        } else if (isAddressFocused) {
+                            isAddressFocused = false
                             onNodeAddressLostFocus()
                             isAddressExpanded = false
                         }
