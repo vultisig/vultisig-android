@@ -98,8 +98,9 @@ constructor(
                             )
                         }
                     }
-                } catch (_: CancellationException) {
+                } catch (e: CancellationException) {
                     state.update { it.copy(isLoading = false) }
+                    throw e
                 } catch (_: Exception) {
                     state.update {
                         it.copy(
