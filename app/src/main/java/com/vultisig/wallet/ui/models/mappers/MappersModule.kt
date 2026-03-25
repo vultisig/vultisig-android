@@ -20,12 +20,6 @@ internal interface MappersModule {
 
     @Binds
     @Singleton
-    fun bindZeroValueCurrencyToStringMapper(
-        impl: ZeroValueCurrencyToStringMapperImpl
-    ): ZeroValueCurrencyToStringMapper
-
-    @Binds
-    @Singleton
     fun bindAccountToTokenBalanceUiModelMapper(
         impl: AccountToTokenBalanceUiModelMapperImpl
     ): AccountToTokenBalanceUiModelMapper
@@ -45,12 +39,6 @@ internal interface MappersModule {
     fun bindTokenValueToDecimalUiStringMapper(
         impl: TokenValueToDecimalUiStringMapperImpl
     ): TokenValueToDecimalUiStringMapper
-
-    @Binds
-    @Singleton
-    fun bindFiatValueToValueStringMapper(
-        impl: FiatValueToValueStringMapperImpl
-    ): FiatValueToValueStringMapper
 
     @Binds
     @Singleton
