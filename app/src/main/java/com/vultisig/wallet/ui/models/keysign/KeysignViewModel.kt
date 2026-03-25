@@ -57,7 +57,6 @@ import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigInteger
 import java.util.Base64
 import kotlin.time.Duration.Companion.seconds
@@ -111,7 +110,6 @@ sealed interface TransactionStatus {
     data class Failed(val cause: UiText) : TransactionStatus
 }
 
-@HiltViewModel(assistedFactory = KeysignViewModel.Factory::class)
 internal class KeysignViewModel
 @AssistedInject
 constructor(
