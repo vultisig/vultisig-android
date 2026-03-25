@@ -154,8 +154,8 @@
     <string name="chain_account_view_swap">Swap</string>
     <string name="chain_account_view_deposit">DEPOSIT</string>
     <string name="chain_account_view_send">SEND</string>
-    <string name="vault_settings_error_backup_file">an error occurred</string>
-    <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
+    <string name="vault_settings_error_backup_file">An error occurred</string>
+    <string name="vault_settings_success_backup_file">File saved in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">This name already exists</string>
     <string name="send_screen_max">MAX</string>
     <string name="ok">OK</string>
@@ -264,7 +264,7 @@
     <string name="swap_screen_provider_title">Provider</string>
     <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>
     <string name="swap_form_provider_mayachain" translatable="false">MayaChain</string>
-    <string name="swap_form_minimum_amount">"Swap amount too small. Recommended amount %1$s %2$s "</string>
+    <string name="swap_form_minimum_amount">"Swap amount too small. Recommended amount %1$s %2$s"</string>
     <string name="swap_for_provider_1inch" translatable="false">1Inch</string>
     <string name="swap_for_provider_kyber" translatable="false">Kyber</string>
     <string name="swap_for_provider_li_fi" translatable="false">LI.FI</string>
@@ -305,7 +305,7 @@
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
     <string name="deposit_form_unstake_percentage_hint">Enter percentage to unstake</string>
-    <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same. </string>
+    <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same.</string>
     <string name="address_book_toolbar_title">Address Book</string>
     <string name="address_book_settings_title">Address Book</string>
     <string name="referral_code_settings_title">Referral Code</string>
@@ -623,7 +623,7 @@
     <string name="referral_or">OR</string>
     <string name="referral_create_code_and_earn">Create your own code and earn\u0020</string>
     <string name="referral_on_referred_swaps">\u0020on referred swaps</string>
-    <string name="referral_save">Save\u0020</string>
+    <string name="referral_save">Save</string>
     <string name="referral_add_referral">\u0020on swaps - Add a Referral</string>
     <string name="referral_edit_referred">Edit referred code</string>
     <string name="referral_edit_referral">Edit referral</string>
@@ -755,7 +755,7 @@
     <string name="share_sheet_more">More</string>
     <string name="x_twitter" translatable="false">X (Twitter)</string>
     <string name="vult" translatable="false">$VULT</string>
-    <string name="error_saving_qr_code">Failed to save QR code . %1$s</string>
+    <string name="error_saving_qr_code">Failed to save QR code. %1$s</string>
     <string name="transaction_type_button_buy">Buy</string>
     <string name="transaction_type_button_receive">Receive</string>
     <string name="vault_settings_view_vault">View vault name, part and type</string>
@@ -844,7 +844,7 @@
     <string name="send_form_est_network_fee">Network Fee</string>
     <string name="send_form_minimum_send_amount_is_requires_this">Minimum send amount is %1$s %2$s. %3$s requires this to prevent spam.</string>
     <string name="minimum_send_amount_is_ada">Minimum send amount is %1$s ADA. Cardano requires this to prevent spam.</string>
-    <string name="insufficient_balance_try_send">Insufficient balance.  Try \'Send Max\' to send %1$s ADA instead.</string>
+    <string name="insufficient_balance_try_send">Insufficient balance. Try \'Send Max\' to send %1$s ADA instead.</string>
     <string name="insufficient_balance_ada">Insufficient balance (%1$s ADA). You need more ADA to complete this transaction.</string>
     <string name="this_amount_would_leave_too_little_change">This amount would leave too little change. 💡 Try \'Send Max\' (%1$s ADA) to avoid this issue.</string>
     <string name="swap_form_native">Native</string>
@@ -854,7 +854,7 @@
     <string name="token_selecton_screen_enable_at_least_one">Enable at least one token to view balances and manage positions.</string>
     <string name="transfer_ibc_destination_chain">Destination Chain</string>
     <string name="tx_done_transaction_details">Transaction Details</string>
-    <string name="vault_confirmation_vault_upgraded">"Vault upgraded "</string>
+    <string name="vault_confirmation_vault_upgraded">"Vault upgraded"</string>
     <string name="vault_confirmation_well_done">Well done.</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">You’re ready to use a new wallet standard.</string>
     <string name="vault_detail_vault_info">Vault Info</string>
@@ -894,7 +894,7 @@
 
     <!-- Bond Form -->
     <string name="bond_node_address">Node Address</string>
-    <string name="bond_operator_fees_basis_point">Operator-fees (Basis Points)</string>
+    <string name="bond_operator_fees_basis_point">Operator fees (basis points)</string>
     <string name="bond_provider_optional">Provider (Optional)</string>
 
     <string name="deposit_option_withdraw_secured">Withdraw Secured Asset</string>
@@ -933,7 +933,7 @@
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Before you start...</string>
     <string name="key_import_spotlight_heading_part1">"You are entering a new era,\n"</string>
-    <string name="key_import_spotlight_heading_highlight">"leaving old seed phrases behind. "</string>
+    <string name="key_import_spotlight_heading_highlight">"leaving old seed phrases behind."</string>
     <string name="key_import_spotlight_heading_part2">You\'ll need:</string>
     <string name="key_import_spotlight_seedphrase_title">Your seedphrase</string>
     <string name="key_import_spotlight_seedphrase_desc">Enter it, create a vault, never look back</string>
@@ -985,7 +985,7 @@
     <string name="import_seedphrase_checking">Checking…</string>
     <string name="key_import_chains_title">Select Chains</string>
     <string name="key_import_chains_scanning">Scanning for chains…</string>
-    <string name="key_import_chains_scanning_desc">We\'re checking which blockchains have active addresses for your seed phrase.\u0020</string>
+    <string name="key_import_chains_scanning_desc">We\'re checking which blockchains have active addresses for your seed phrase.</string>
     <string name="key_import_chains_scanning_desc_highlight">This process can take up to 2 minutes.</string>
     <string name="key_import_chains_select_manually">Select chains manually</string>
     <plurals name="key_import_chains_found_title">
