@@ -24,6 +24,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
 import com.vultisig.wallet.ui.models.keygen.VerifyPinState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
+import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
@@ -35,6 +36,7 @@ import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
+import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
@@ -46,6 +48,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.UpgradeBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.container.HomePagePagerContainer
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
+import com.vultisig.wallet.ui.utils.UiText
 
 class PreviewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,6 +72,8 @@ class PreviewActivity : ComponentActivity() {
                     "choose_vault" -> SelectVaultTypeScreenPreview()
                     "content_row" -> ContentRowPreview()
                     "solana_display" -> SolanaDisplayPreview()
+                    "swap_error_before" -> SwapErrorBeforePreview()
+                    "swap_error" -> SwapErrorPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -345,4 +350,29 @@ private fun TierBottomSheetFullPreview() {
     ) {
         TierDiscountBottomSheetContent(tier = TierType.BRONZE, onContinue = {})
     }
+}
+
+@Composable
+private fun SwapErrorBeforePreview() {
+    SwapScreen(
+        state =
+            SwapFormUiModel(
+                formError =
+                    UiText.DynamicString(
+                        "ExactOutRoute: slippage tolerance exceeded; inputAmount 542891003 is higher than the desired 502212966"
+                    ),
+                isSwapDisabled = true,
+            ),
+        srcAmountTextFieldState = TextFieldState("1000"),
+    )
+}
+
+@Composable
+private fun SwapErrorPreview() {
+    val errorMessage = "Price impact is too high. Try a smaller amount or a different token pair."
+    SwapScreen(
+        state =
+            SwapFormUiModel(formError = UiText.DynamicString(errorMessage), isSwapDisabled = true),
+        srcAmountTextFieldState = TextFieldState("1000"),
+    )
 }
