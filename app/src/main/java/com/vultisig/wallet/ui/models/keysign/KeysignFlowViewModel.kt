@@ -322,7 +322,9 @@ constructor(
             updateTransactionUiModel(keysignPayload, customMessagePayload, txType)
         } catch (e: Exception) {
             Timber.e(e)
-            moveToState(Error(e.message.toString().asUiText()))
+            moveToState(
+                Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
+            )
         }
     }
 
@@ -681,7 +683,9 @@ constructor(
             currentState.update { nextState }
         } catch (e: Exception) {
             isLoading.value = false
-            moveToState(Error(e.message.toString().asUiText()))
+            moveToState(
+                Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
+            )
         }
     }
 
