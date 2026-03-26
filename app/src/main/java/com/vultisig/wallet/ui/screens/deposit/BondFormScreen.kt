@@ -56,7 +56,6 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.form.BasicFormTextField
-import com.vultisig.wallet.ui.components.library.form.FormTextField
 import com.vultisig.wallet.ui.components.library.form.TextFieldValidator
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
@@ -148,13 +147,11 @@ private fun BondFormContent(
         providerFieldState = model.providerFieldState,
         operatorFeeFieldState = model.operatorFeeFieldState,
         tokenAmountFieldState = model.tokenAmountFieldState,
-        assetsFieldState = model.assetsFieldState,
         lpUnitsFieldState = model.lpUnitsFieldState,
         onNodeAddressLostFocus = model::validateNodeAddress,
         onProviderLostFocus = model::validateProvider,
         onOperatorFeeLostFocus = model::validateOperatorFee,
         onTokenAmountLostFocus = model::validateTokenAmount,
-        onAssetsLostFocus = model::validateAssets,
         onLpUnitsLostFocus = model::validateLpUnits,
         onSetNodeAddress = model::setNodeAddress,
         onSetProvider = model::setProvider,
@@ -174,13 +171,11 @@ internal fun BondFormContent(
     providerFieldState: TextFieldState,
     operatorFeeFieldState: TextFieldState,
     tokenAmountFieldState: TextFieldState,
-    assetsFieldState: TextFieldState,
     lpUnitsFieldState: TextFieldState,
     onNodeAddressLostFocus: () -> Unit = {},
     onProviderLostFocus: () -> Unit = {},
     onOperatorFeeLostFocus: () -> Unit = {},
     onTokenAmountLostFocus: () -> Unit = {},
-    onAssetsLostFocus: () -> Unit = {},
     onLpUnitsLostFocus: () -> Unit = {},
     onSetNodeAddress: (String) -> Unit = {},
     onSetProvider: (String) -> Unit = {},
@@ -214,10 +209,8 @@ internal fun BondFormContent(
                 MayaBondFormContent(
                     state = state,
                     nodeAddressFieldState = nodeAddressFieldState,
-                    assetsFieldState = assetsFieldState,
                     lpUnitsFieldState = lpUnitsFieldState,
                     onNodeAddressLostFocus = onNodeAddressLostFocus,
-                    onAssetsLostFocus = onAssetsLostFocus,
                     onLpUnitsLostFocus = onLpUnitsLostFocus,
                     onSetNodeAddress = onSetNodeAddress,
                     onSelectBondAsset = onSelectBondAsset,
@@ -265,10 +258,8 @@ private fun String.toDisplayAsset(): String =
 private fun MayaBondFormContent(
     state: DepositFormUiModel,
     nodeAddressFieldState: TextFieldState,
-    assetsFieldState: TextFieldState,
     lpUnitsFieldState: TextFieldState,
     onNodeAddressLostFocus: () -> Unit,
-    onAssetsLostFocus: () -> Unit,
     onLpUnitsLostFocus: () -> Unit,
     onSetNodeAddress: (String) -> Unit,
     onSelectBondAsset: (String) -> Unit,
@@ -329,7 +320,6 @@ private fun MayaBondFormContent(
                         } else if (isAddressFocused) {
                             isAddressFocused = false
                             onNodeAddressLostFocus()
-                            isAddressExpanded = false
                         }
                     },
                     innerState =
@@ -531,18 +521,6 @@ private fun MayaBondFormContent(
                             }
                         }
                     }
-                } else {
-                    TextFieldValidator(errorText = state.assetsError) {
-                        FormTextField(
-                            hint = stringResource(R.string.deposit_form_enter_asset_hint),
-                            keyboardType = KeyboardType.Text,
-                            textFieldState = assetsFieldState,
-                            onLostFocus = {
-                                onAssetsLostFocus()
-                                isAssetExpanded = false
-                            },
-                        )
-                    }
                 }
                 TextFieldValidator(errorText = state.lpUnitsError) {
                     Column {
@@ -683,7 +661,6 @@ private fun BondFormContentMayaAssetExpandedPreview() {
             providerFieldState = TextFieldState(),
             operatorFeeFieldState = TextFieldState(),
             tokenAmountFieldState = TextFieldState(),
-            assetsFieldState = TextFieldState(),
             lpUnitsFieldState = TextFieldState("1000"),
         )
     }
@@ -705,7 +682,6 @@ private fun BondFormContentMayaCollapsedPreview() {
             providerFieldState = TextFieldState(),
             operatorFeeFieldState = TextFieldState(),
             tokenAmountFieldState = TextFieldState(),
-            assetsFieldState = TextFieldState(),
             lpUnitsFieldState = TextFieldState("1000"),
         )
     }
