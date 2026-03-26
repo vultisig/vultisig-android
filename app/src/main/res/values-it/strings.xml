@@ -1101,4 +1101,7 @@
     <string name="name_vault_fast">Cassaforte rapida</string>
     <string name="name_vault_secure">Cassaforte sicura</string>
     <string name="unknown_error">Errore sconosciuto</string>
+    <string name="key_import_error_title">Key Import Failed</string>
+    <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
+    <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>
 </resources>

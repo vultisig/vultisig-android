@@ -1144,4 +1144,7 @@
     <string name="name_vault_fast">빠른 볼트</string>
     <string name="name_vault_secure">안전한 볼트</string>
     <string name="unknown_error">알 수 없는 오류</string>
+    <string name="key_import_error_title">Key Import Failed</string>
+    <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
+    <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>
 </resources>
