@@ -76,7 +76,6 @@ import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Swap
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
-import com.vultisig.wallet.ui.utils.launchMediatorSession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
@@ -160,6 +159,7 @@ constructor(
     private val depositTransactionHistoryDataMapper: DepositTransactionHistoryDataMapper,
     private val swapTransactionToHistoryDataMapper: SwapTransactionToHistoryDataMapper,
     private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val keysignViewModelFactory: KeysignViewModel.Factory,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -217,7 +217,7 @@ constructor(
                     return null
                 }
         val keysignCommittee = selection.value
-        return KeysignViewModel(
+        return keysignViewModelFactory.create(
             vault = vault,
             keysignCommittee = keysignCommittee,
             serverUrl = _serverAddress,
@@ -227,23 +227,9 @@ constructor(
             keyType = tssKeysignType,
             keysignPayload = _keysignPayload,
             customMessagePayload = customMessagePayload,
-            thorChainApi = thorChainApi,
-            broadcastTx = broadcastTx,
-            evmApiFactory = evmApiFactory,
-            explorerLinkRepository = explorerLinkRepository,
-            sessionApi = sessionApi,
-            navigator = navigator,
-            encryption = encryption,
-            featureFlagApi = featureFlagApi,
             transactionTypeUiModel = transactionTypeUiModel,
-            pullTssMessages = pullTssMessages,
             isInitiatingDevice = true,
-            addressBookRepository = addressBookRepository,
-            transactionStatusServiceManager = transactionStatusServiceManager,
-            txStatusConfigurationProvider = txStatusConfigurationProvider,
-            vaultRepository = vaultRepository,
             transactionHistoryData = transactionHistoryData.value,
-            transactionHistoryRepository = transactionHistoryRepository,
         )
     }
 
@@ -562,13 +548,12 @@ constructor(
                                 moveToState(KeysignFlowState.Error("Vault is not set"))
                                 return
                             }
-                    launchMediatorSession(
-                        scope = viewModelScope,
-                        onSessionStart = {
-                            startSession(_serverAddress, _sessionID, vault.localPartyID)
-                        },
-                        onDiscovery = { startParticipantDiscovery(vault) },
-                    )
+                    // send a request to local mediator server to start the session
+                    viewModelScope.launch(Dispatchers.IO) {
+                        startSessionWithRetry(_serverAddress, _sessionID, vault.localPartyID)
+                    }
+                    // kick off discovery
+                    startParticipantDiscovery(vault)
                 }
             }
         }
@@ -624,6 +609,56 @@ constructor(
             }
         } catch (e: Exception) {
             Timber.tag("KeysignFlowViewModel").e("startSession: ${e.stackTraceToString()}")
+        }
+    }
+
+    private suspend fun startSessionWithRetry(
+        serverAddr: String,
+        sessionID: String,
+        localPartyID: String,
+    ) {
+        var delayMs = 200L
+        repeat(4) { attempt ->
+            try {
+                Timber.tag("KeysignFlowViewModel")
+                    .d("startSessionWithRetry: Attempt ${attempt + 1}")
+                sessionApi.startSession(serverAddr, sessionID, listOf(localPartyID))
+                Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
+                if (!password.isNullOrBlank()) {
+                    val vault =
+                        _currentVault
+                            ?: run {
+                                Timber.e("Vault is not set when joining keysign in startSession")
+                                moveToState(KeysignFlowState.Error("Vault is not set"))
+                                return
+                            }
+                    vultiSignerRepository.joinKeysign(
+                        JoinKeysignRequestJson(
+                            publicKeyEcdsa = vault.pubKeyECDSA,
+                            messages = messagesToSign,
+                            sessionId = sessionID,
+                            hexEncryptionKey = _encryptionKeyHex,
+                            derivePath =
+                                (_keysignPayload?.coin?.coinType ?: CoinType.ETHEREUM)
+                                    .derivationPath(),
+                            isEcdsa = tssKeysignType == TssKeyType.ECDSA,
+                            password = password,
+                            chain = _keysignPayload?.coin?.chain?.name ?: "",
+                        )
+                    )
+                }
+                return
+            } catch (e: Exception) {
+                Timber.tag("KeysignFlowViewModel")
+                    .e(e, "startSessionWithRetry: Attempt ${attempt + 1} failed")
+                if (attempt < 3) {
+                    delay(delayMs)
+                    delayMs *= 2
+                } else {
+                    Timber.tag("KeysignFlowViewModel").e("All attempts to start session failed")
+                    moveToState(KeysignFlowState.Error("Failed to start session"))
+                }
+            }
         }
     }
 
