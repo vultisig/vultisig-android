@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,7 +65,7 @@ fun VsCenterHighlightCarousel(
     var isProgrammaticScroll by remember { mutableStateOf(false) }
 
     // Track the last selected index to detect re-selection
-    var lastSelectedIndex by remember { mutableStateOf(-1) }
+    var lastSelectedIndex by remember { mutableIntStateOf(-1) }
 
     // Trigger selection when scrolling stops or user release
     LaunchedEffect(listState, chains) {
