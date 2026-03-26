@@ -189,7 +189,6 @@ internal fun BondFormContent(
     initialAssetExpanded: Boolean = false,
 ) {
     val focusManager = LocalFocusManager.current
-    val depositChain = state.depositChain
 
     if (state.errorText != null) {
         UiAlertDialog(
@@ -205,22 +204,20 @@ internal fun BondFormContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(all = 16.dp).verticalScroll(rememberScrollState()),
         ) {
-            if (depositChain == Chain.MayaChain) {
-                MayaBondFormContent(
-                    state = state,
-                    nodeAddressFieldState = nodeAddressFieldState,
-                    lpUnitsFieldState = lpUnitsFieldState,
-                    onNodeAddressLostFocus = onNodeAddressLostFocus,
-                    onLpUnitsLostFocus = onLpUnitsLostFocus,
-                    onSetNodeAddress = onSetNodeAddress,
-                    onSelectBondAsset = onSelectBondAsset,
-                    onSetMaxLpUnits = onSetMaxLpUnits,
-                    onScan = onScan,
-                    onAddressBookClick = onAddressBookClick,
-                    initialAddressExpanded = initialAddressExpanded,
-                    initialAssetExpanded = initialAssetExpanded,
-                )
-            }
+            MayaBondFormContent(
+                state = state,
+                nodeAddressFieldState = nodeAddressFieldState,
+                lpUnitsFieldState = lpUnitsFieldState,
+                onNodeAddressLostFocus = onNodeAddressLostFocus,
+                onLpUnitsLostFocus = onLpUnitsLostFocus,
+                onSetNodeAddress = onSetNodeAddress,
+                onSelectBondAsset = onSelectBondAsset,
+                onSetMaxLpUnits = onSetMaxLpUnits,
+                onScan = onScan,
+                onAddressBookClick = onAddressBookClick,
+                initialAddressExpanded = initialAddressExpanded,
+                initialAssetExpanded = initialAssetExpanded,
+            )
 
             UiSpacer(size = 80.dp)
         }
