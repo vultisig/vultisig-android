@@ -80,14 +80,7 @@ internal data class VsTypography(
     @Immutable data class Button(val medium: ButtonStyle, val semibold: ButtonStyle)
 
     @Immutable
-    data class ButtonStyle(
-        // Todo Migrate large and small usages to regular and medium
-        val small: TextStyle,
-        val large: TextStyle,
-        val semibold: TextStyle,
-        val regular: TextStyle,
-        val medium: TextStyle,
-    )
+    data class ButtonStyle(val semibold: TextStyle, val regular: TextStyle, val medium: TextStyle)
 
     companion object {
 
@@ -252,14 +245,6 @@ internal data class VsTypography(
                     Button(
                         medium =
                             ButtonStyle(
-                                large =
-                                    TextStyle(
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 16.sp,
-                                        lineHeight = 20.sp,
-                                        fontFamily = fontFamily,
-                                        lineHeightStyle = lineHeightStyle,
-                                    ),
                                 semibold =
                                     TextStyle(
                                         fontWeight = FontWeight.Medium,
@@ -281,28 +266,12 @@ internal data class VsTypography(
                                         fontWeight = FontWeight.Medium,
                                         fontSize = 16.sp,
                                         lineHeight = 20.sp,
-                                        fontFamily = fontFamily,
-                                        lineHeightStyle = lineHeightStyle,
-                                    ),
-                                small =
-                                    TextStyle(
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 14.sp,
-                                        lineHeight = 18.sp,
                                         fontFamily = fontFamily,
                                         lineHeightStyle = lineHeightStyle,
                                     ),
                             ),
                         semibold =
                             ButtonStyle(
-                                large =
-                                    TextStyle(
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 16.sp,
-                                        lineHeight = 20.sp,
-                                        fontFamily = fontFamily,
-                                        lineHeightStyle = lineHeightStyle,
-                                    ),
                                 semibold =
                                     TextStyle(
                                         fontWeight = FontWeight.SemiBold,
@@ -324,14 +293,6 @@ internal data class VsTypography(
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 16.sp,
                                         lineHeight = 20.sp,
-                                        fontFamily = fontFamily,
-                                        lineHeightStyle = lineHeightStyle,
-                                    ),
-                                small =
-                                    TextStyle(
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 14.sp,
-                                        lineHeight = 18.sp,
                                         fontFamily = fontFamily,
                                         lineHeightStyle = lineHeightStyle,
                                     ),

@@ -462,12 +462,15 @@ internal fun ContentRow(text: String, icon: @Composable () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
+            modifier = Modifier.weight(1f),
             text = text,
             color = Theme.v2.colors.text.primary,
             style = Theme.brockmann.body.m.regular,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        UiSpacer(12.dp)
 
         icon()
     }

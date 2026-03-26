@@ -27,7 +27,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
     override fun getSwapProgressLink(tx: String, payload: SwapPayload?): String? =
         when (payload) {
-            is SwapPayload.ThorChain -> "https://thorchain.net/tx/$tx"
+            is SwapPayload.ThorChain -> "https://runescan.io/tx/${tx.removePrefix("0x")}"
             is SwapPayload.MayaChain ->
                 "https://www.explorer.mayachain.info/tx/${tx.removePrefix("0x")}"
             is SwapPayload.EVM -> {
@@ -51,7 +51,9 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             when (this) {
                 Chain.BitcoinCash,
                 Chain.Dash,
+                Chain.Dogecoin,
                 Chain.Litecoin,
+                Chain.Zcash,
                 Chain.Ton,
                 Chain.Tron,
                 Chain.Cardano -> "${explorerUrl}transaction/"
@@ -94,7 +96,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Optimism -> "https://optimistic.etherscan.io/"
                 Chain.Polygon -> "https://polygonscan.com/"
                 Chain.Solana -> "https://orb.helius.dev/"
-                Chain.ThorChain -> "https://thorchain.net/"
+                Chain.ThorChain -> "https://runescan.io/"
                 Chain.Polkadot -> "https://assethub-polkadot.subscan.io/account/"
                 Chain.Bittensor -> "https://taostats.io/account/"
                 Chain.ZkSync -> "https://explorer.zksync.io/"
@@ -103,13 +105,13 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Osmosis -> "https://www.mintscan.io/osmosis/"
                 Chain.Terra -> "https://www.mintscan.io/terra/"
                 Chain.TerraClassic -> "https://finder.terra.money/classic/"
-                Chain.Noble -> "https://www.mintscan.io/noble"
+                Chain.Noble -> "https://www.mintscan.io/noble/"
                 Chain.Ripple -> "https://xrpscan.com/"
                 Chain.Akash -> "https://www.mintscan.io/akash/"
                 Chain.Tron -> "https://tronscan.org/#/"
-                Chain.Zcash -> "https://blockexplorer.one/zcash/mainnet/"
+                Chain.Zcash -> "https://blockchair.com/zcash/"
                 Chain.Cardano -> "https://cardanoscan.io/"
-                Chain.Mantle -> "https://explorer.mantle.xyz/"
+                Chain.Mantle -> "https://mantlescan.xyz/"
                 Chain.Sei -> "https://seiscan.io/"
                 Chain.Hyperliquid -> "https://liquidscan.io/"
             }

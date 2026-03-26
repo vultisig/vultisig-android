@@ -6,16 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.blockchain.FeeServiceComposite
-import com.vultisig.wallet.data.blockchain.model.Transfer
-import com.vultisig.wallet.data.blockchain.model.VaultData
-import com.vultisig.wallet.data.models.GasFeeParams
-import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
-import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.repositories.AddressBookRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -23,7 +16,6 @@ import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
-import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -37,7 +29,6 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -106,9 +97,6 @@ constructor(
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
     private val addressBookRepository: AddressBookRepository,
-    private val feeServiceComposite: FeeServiceComposite,
-    private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCase,
-    private val tokenRepository: TokenRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VerifySend>()
@@ -116,7 +104,7 @@ constructor(
     private val transactionId: TransactionId = args.transactionId
     private val vaultId: String = args.vaultId
 
-    private lateinit var transaction: Transaction
+    private var transaction: Transaction? = null
 
     val uiState = MutableStateFlow(VerifyTransactionUiModel())
     private val password = MutableStateFlow<String?>(null)
@@ -130,53 +118,6 @@ constructor(
         loadFastSign()
         loadTransaction()
         loadPassword()
-    }
-
-    private suspend fun calculateFees(transactionUiModel: TransactionDetailsUiModel) {
-        val tx = transaction
-        val chain = tx.token.chain
-        val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return
-
-        val blockchainTransaction =
-            Transfer(
-                coin = tx.token,
-                vault =
-                    VaultData(
-                        vaultHexChainCode = vault.hexChainCode,
-                        vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                    ),
-                amount = tx.tokenValue.value,
-                to = tx.dstAddress,
-                memo = tx.memo,
-                isMax = false,
-            )
-
-        try {
-            val fees =
-                withContext(Dispatchers.IO) {
-                    feeServiceComposite.calculateFees(blockchainTransaction)
-                }
-            val nativeCoin =
-                withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-            val fromGas =
-                GasFeeParams(
-                    gasLimit = BigInteger.ONE,
-                    gasFee = TokenValue(value = fees.amount, token = nativeCoin),
-                    selectedToken = tx.token,
-                )
-            val uiFeeModel = gasFeeToEstimate(fromGas)
-            val updateTx =
-                transactionUiModel.copy(
-                    networkFeeTokenValue = uiFeeModel.formattedTokenValue,
-                    networkFeeFiatValue = uiFeeModel.formattedFiatValue,
-                )
-
-            uiState.update { it.copy(isLoadingFees = false, transaction = updateTx) }
-        } catch (t: Throwable) {
-            Timber.e(t, "Error calculating fees")
-
-            uiState.update { it.copy(isLoadingFees = false) }
-        }
     }
 
     fun checkConsentAddress(checked: Boolean) {
@@ -292,12 +233,13 @@ constructor(
                         navigator.back()
                         return@launch
                     }
-            val transactionUiModel = mapTransactionToUiModel(transaction)
+            val tx = transaction ?: return@launch
+            val transactionUiModel = mapTransactionToUiModel(tx)
 
             val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
-            val chain = transaction.token.chain
+            val chain = tx.token.chain
             val srcVaultName = allVaults.find { it.id == vaultId }?.name
-            val normalizedDstAddress = normalizeAddressForLookup(transaction.dstAddress)
+            val normalizedDstAddress = normalizeAddressForLookup(tx.dstAddress)
             val dstVaultName =
                 allVaults
                     .firstOrNull { vault ->
@@ -308,13 +250,10 @@ constructor(
                     }
                     ?.name
             val dstInAddressBook =
-                dstVaultName == null &&
-                    addressBookRepository.entryExists(chain.id, transaction.dstAddress)
+                dstVaultName == null && addressBookRepository.entryExists(chain.id, tx.dstAddress)
             val dstAddressBookTitle =
                 if (dstInAddressBook) {
-                    runCatching {
-                            addressBookRepository.getEntry(chain.id, transaction.dstAddress).title
-                        }
+                    runCatching { addressBookRepository.getEntry(chain.id, tx.dstAddress).title }
                         .getOrNull()
                 } else null
 
@@ -325,17 +264,16 @@ constructor(
                     dstAddressBookTitle = dstAddressBookTitle,
                 )
 
-            uiState.update { it.copy(transaction = namedUiModel, isLoadingFees = true) }
+            uiState.update { it.copy(transaction = namedUiModel) }
 
-            calculateFees(namedUiModel)
             scanTransaction()
         }
     }
 
     private suspend fun scanTransaction() {
         try {
-            val transaction = transaction
-            val chain = transaction.token.chain
+            val tx = transaction ?: return
+            val chain = tx.token.chain
 
             val isSupported =
                 securityScannerService.getSupportedChainsByFeature().isChainSupported(chain) &&
@@ -346,7 +284,7 @@ constructor(
             uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 
             val securityScannerTransaction =
-                securityScannerService.createSecurityScannerTransaction(transaction)
+                securityScannerService.createSecurityScannerTransaction(tx)
 
             val result =
                 withContext(Dispatchers.IO) {

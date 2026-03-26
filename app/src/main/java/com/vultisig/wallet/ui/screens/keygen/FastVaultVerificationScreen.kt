@@ -175,7 +175,7 @@ internal fun FastVaultVerificationScreen(
                     ) {
                         Text(
                             text = stringResource(R.string.vault_backup_screen_paste),
-                            style = Theme.brockmann.button.medium.small,
+                            style = Theme.brockmann.button.medium.medium,
                             color =
                                 if (hasClipContent) Theme.v2.colors.text.button.primary
                                 else Theme.v2.colors.text.button.disabled,

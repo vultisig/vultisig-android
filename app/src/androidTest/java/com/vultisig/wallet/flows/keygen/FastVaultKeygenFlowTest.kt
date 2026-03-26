@@ -18,7 +18,6 @@ import org.junit.Test
 
 @UninstallModules(FastVaultModule::class)
 @HiltAndroidTest
-@Ignore
 class FastVaultKeygenFlowTest : CleanTest() {
 
     @get:Rule(order = LAST_ORDER_INDEX + 1) val intents = IntentsRule()
@@ -43,6 +42,7 @@ class FastVaultKeygenFlowTest : CleanTest() {
         super.setUp()
     }
 
+    @Ignore
     @Test
     fun testDklsKeygenStartingFromOnboarding() {
         isDklsEnabled = true
@@ -50,6 +50,7 @@ class FastVaultKeygenFlowTest : CleanTest() {
         FastVaultKeygenFlow(compose).execute()
     }
 
+    @Ignore
     @Test
     fun testGg20KeygenStartingFromOnboarding() {
         isDklsEnabled = false

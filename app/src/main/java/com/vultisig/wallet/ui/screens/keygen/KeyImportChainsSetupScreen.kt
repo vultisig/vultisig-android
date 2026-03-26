@@ -247,7 +247,7 @@ private fun ActiveChainsContent(
             UiSpacer(8.dp)
             Text(
                 text = stringResource(R.string.key_import_chains_customize),
-                style = Theme.brockmann.button.medium.small,
+                style = Theme.brockmann.button.medium.medium,
                 color = Theme.v2.colors.text.primary,
             )
         }

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keygen
 
+import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -21,6 +22,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +46,7 @@ constructor(
     private val isNameLengthValid: IsVaultNameValid,
     private val generateUniqueName: GenerateUniqueName,
     private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VaultInfo.Name>()
@@ -80,9 +83,11 @@ constructor(
             withContext(Dispatchers.IO) {
                 val baseName =
                     when {
-                        args.tssAction == TssAction.KeyImport -> "Import Vault"
-                        args.vaultType == VaultType.Fast -> "Fast Vault"
-                        else -> "Secure Vault"
+                        args.tssAction == TssAction.KeyImport ->
+                            context.getString(R.string.name_vault_import)
+                        args.vaultType == VaultType.Fast ->
+                            context.getString(R.string.name_vault_fast)
+                        else -> context.getString(R.string.name_vault_secure)
                     }
 
                 generateUniqueName(baseName, vaultNamesList)

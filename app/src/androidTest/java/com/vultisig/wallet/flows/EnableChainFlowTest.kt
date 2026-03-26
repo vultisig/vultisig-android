@@ -10,7 +10,6 @@ import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
-@Ignore
 class EnableChainFlowTest : VaultTest() {
 
     @Before
@@ -18,6 +17,7 @@ class EnableChainFlowTest : VaultTest() {
         super.setUp()
     }
 
+    @Ignore
     @Test
     fun testEnableThenDisableChain() {
 

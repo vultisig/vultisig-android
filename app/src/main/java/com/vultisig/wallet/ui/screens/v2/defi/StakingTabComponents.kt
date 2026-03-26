@@ -211,7 +211,7 @@ internal fun StakingWidget(
 
         if (state.canTransfer) {
             VsButton(
-                label = "Transfer",
+                label = stringResource(R.string.staking_transfer),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onClickTransfer,
                 state = VsButtonState.Enabled,

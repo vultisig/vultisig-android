@@ -44,7 +44,7 @@ internal fun JoinKeysignView(navController: NavHostController) {
     if (keysignState is KeysignState.KeysignFinished) {
         viewModel.enableNavigationToHome()
     }
-    val state = viewModel.currentState.value
+    val state by viewModel.currentState.collectAsState()
     JoinKeysignScreen(
         isKeySignFinished = keysignState is KeysignState.KeysignFinished,
         onBack = viewModel::navigateToHome,
@@ -144,13 +144,14 @@ internal fun JoinKeysignView(navController: NavHostController) {
             }
 
             is Error -> {
+                val error = state as Error
                 val errorLabel: String
                 val buttonText: String
                 val infoText: String?
-                when (state.errorType) {
+                when (error.errorType) {
                     is JoinKeysignError.WrongVaultShare,
                     is JoinKeysignError.WrongVault -> {
-                        errorLabel = state.errorType.message.asString()
+                        errorLabel = error.errorType.message.asString()
                         buttonText =
                             stringResource(
                                 R.string.join_keysign_error_wrong_vault_share_try_again_button
@@ -162,7 +163,7 @@ internal fun JoinKeysignView(navController: NavHostController) {
                         errorLabel =
                             stringResource(
                                 R.string.signing_error_please_try_again_s,
-                                state.errorType.message.asString(),
+                                error.errorType.message.asString(),
                             )
                         buttonText = stringResource(R.string.try_again)
                         infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen)

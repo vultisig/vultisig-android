@@ -157,7 +157,7 @@ private fun NoAddressView(onAddAddressClick: () -> Unit) {
     ) {
         Text(
             text = stringResource(R.string.address_book_empty_title),
-            style = Theme.brockmann.button.semibold.large,
+            style = Theme.brockmann.button.semibold.regular,
             color = Theme.v2.colors.neutrals.n50,
             textAlign = TextAlign.Center,
         )

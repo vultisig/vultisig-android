@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.navigation
 
 import android.os.Bundle
+import androidx.annotation.Keep
 import androidx.navigation.NavType
 import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.SendDeeplinkData
@@ -98,6 +99,7 @@ internal sealed class Route {
         val consolidateEvm: Boolean = false,
         val showAllChains: Boolean = false,
     ) {
+        @Keep
         @Serializable
         enum class Filters {
             SwapAvailable,
@@ -180,6 +182,7 @@ internal sealed class Route {
             val password: String? = null,
             val txType: TxType,
         ) {
+            @Keep
             @Serializable
             enum class TxType {
                 Send,
@@ -205,6 +208,7 @@ internal sealed class Route {
 
     object VaultInfo {
 
+        @Keep
         @Serializable
         enum class VaultType {
             Fast,

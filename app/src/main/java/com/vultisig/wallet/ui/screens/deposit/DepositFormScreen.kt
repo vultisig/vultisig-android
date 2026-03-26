@@ -435,7 +435,7 @@ internal fun DepositFormScreen(
 
                             FormTextFieldCard(
                                 title = stringResource(R.string.deposit_form_screen_lpunits),
-                                hint = "LP units",
+                                hint = stringResource(R.string.deposit_form_lp_units_hint),
                                 keyboardType = KeyboardType.Number,
                                 textFieldState = lpUnitsFieldState,
                                 onLostFocus = onLpUnitsLostFocus,

@@ -27,7 +27,6 @@ import com.vultisig.wallet.ui.models.settings.SettingsItem.TermsOfService
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Twitter
 import com.vultisig.wallet.ui.models.settings.SettingsItem.VaultSetting
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Vult
-import com.vultisig.wallet.ui.models.settings.SettingsItem.VultisigEducation
 import com.vultisig.wallet.ui.models.settings.SettingsItem.VultisigWebsite
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -115,17 +114,6 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                 leadingIcon = R.drawable.faq,
                 trailingIcon = R.drawable.ic_small_caret_right,
             )
-        )
-
-    data object VultisigEducation :
-        SettingsItem(
-            value =
-                SettingsItemUiModel(
-                    leadingIcon = R.drawable.vult_education,
-                    title = UiText.StringResource(R.string.education_settings_title),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                ),
-            enabled = false,
         )
 
     data object CheckForUpdates :
@@ -272,7 +260,7 @@ constructor(
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.support),
-                        items = listOf(Faq, VultisigEducation, CheckForUpdates, ShareTheApp),
+                        items = listOf(Faq, CheckForUpdates, ShareTheApp),
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.vultisig_community),
@@ -321,10 +309,6 @@ constructor(
             Twitter -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TWITTER))
             VaultSetting -> {
                 viewModelScope.launch { navigator.route(Route.VaultSettings(vaultId)) }
-            }
-
-            VultisigEducation -> {
-                // TODO: Implement education section navigation
             }
 
             DiscountTiers -> {

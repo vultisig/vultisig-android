@@ -3,23 +3,20 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import android.net.nsd.NsdManager
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.EvmApiFactory
-import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
-import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.normalizeMessageFormat
@@ -47,22 +44,16 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
-import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.isChainSupported
-import com.vultisig.wallet.data.services.TransactionStatusServiceManager
-import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
-import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
@@ -119,6 +110,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 import vultisig.keysign.v1.KeysignMessage
+import wallet.core.jni.proto.Common.SigningError
 
 sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
@@ -189,32 +181,22 @@ constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val tokenRepository: TokenRepository,
-    private val gasFeeRepository: GasFeeRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
     private val vaultRepository: VaultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val mapKeysignMessageFromProto: KeysignMessageFromProtoMapper,
     private val protoBuf: ProtoBuf,
-    private val thorChainApi: ThorChainApi,
-    private val evmApiFactory: EvmApiFactory,
-    private val explorerLinkRepository: ExplorerLinkRepository,
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
-    private val encryption: Encryption,
-    private val featureFlagApi: FeatureFlagApi,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val routerApi: RouterApi,
-    private val pullTssMessages: PullTssMessagesUseCase,
-    private val broadcastTx: BroadcastTxUseCase,
     private val fourByteRepository: FourByteRepository,
     private val securityScannerService: SecurityScannerContract,
     private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
-    private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
-    private val transactionStatusServiceManager: TransactionStatusServiceManager,
-    private val transactionHistoryRepository: TransactionHistoryRepository,
     private val resolveProviderUseCase: ResolveProviderUseCase,
+    private val keysignViewModelFactory: KeysignViewModel.Factory,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -226,8 +208,8 @@ constructor(
     private val vaultId: String = args.vaultId
     private val qrBase64: String = args.qr
     private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
-    var currentState: MutableState<JoinKeysignState> =
-        mutableStateOf(JoinKeysignState.DiscoveringSessionID)
+    val currentState: MutableStateFlow<JoinKeysignState> =
+        MutableStateFlow(JoinKeysignState.DiscoveringSessionID)
     private var _localPartyID: String = ""
     private var _sessionID: String = ""
     private var _serviceName: String = ""
@@ -254,7 +236,7 @@ constructor(
 
     val keysignViewModel: KeysignViewModel
         get() =
-            KeysignViewModel(
+            keysignViewModelFactory.create(
                 vault = _currentVault,
                 keysignCommittee = _keysignCommittee,
                 serverUrl = _serverAddress,
@@ -263,24 +245,10 @@ constructor(
                 messagesToSign = messagesToSign,
                 keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
                 keysignPayload = _keysignPayload,
-                broadcastTx = broadcastTx,
-                thorChainApi = thorChainApi,
-                evmApiFactory = evmApiFactory,
-                explorerLinkRepository = explorerLinkRepository,
-                sessionApi = sessionApi,
-                navigator = navigator,
-                transactionTypeUiModel = transactionTypeUiModel,
-                encryption = encryption,
-                featureFlagApi = featureFlagApi,
-                pullTssMessages = pullTssMessages,
                 customMessagePayload = customMessagePayload,
+                transactionTypeUiModel = transactionTypeUiModel,
                 isInitiatingDevice = false,
-                addressBookRepository = addressBookRepository,
-                transactionStatusServiceManager = transactionStatusServiceManager,
-                txStatusConfigurationProvider = txStatusConfigurationProvider,
-                vaultRepository = vaultRepository,
                 transactionHistoryData = transactionHistoryData,
-                transactionHistoryRepository = transactionHistoryRepository,
             )
 
     val verifyUiModel =
@@ -519,22 +487,38 @@ constructor(
                 val chain = srcToken.chain
                 val (nativeTokenAddress, _) =
                     chainAccountAddressRepository.getAddress(nativeToken, _currentVault)
-                val gasFee =
-                    gasFeeRepository.getGasFee(
-                        chain = chain,
-                        address = nativeTokenAddress,
-                        isSwap = true,
+                val blockchainTransaction =
+                    Swap(
+                        coin = srcToken,
+                        vault =
+                            VaultData(
+                                vaultHexPublicKey = _currentVault.getPubKeyByChain(chain),
+                                vaultHexChainCode = _currentVault.hexChainCode,
+                            ),
+                        amount = swapPayload.srcTokenValue.value,
+                        to = nativeTokenAddress,
+                        callData = "",
+                        approvalData = null,
                     )
+                val calculatedFee =
+                    withContext(Dispatchers.IO) {
+                        feeServiceComposite.calculateFees(blockchainTransaction)
+                    }
+                val gasFee =
+                    if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                        val utxoHelper = UtxoHelper.getHelper(_currentVault, srcToken.coinType)
+                        val plan = utxoHelper.getBitcoinTransactionPlan(payload)
+                        if (plan.error != SigningError.OK) {
+                            Timber.e("UTXO plan error: ${plan.error.name}")
+                        }
+                        TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeToken)
+                    } else {
+                        TokenValue(value = calculatedFee.amount, token = nativeToken)
+                    }
                 val estimatedNetworkGasFee: EstimatedGasFee =
                     gasFeeToEstimatedFee(
                         GasFeeParams(
-                            gasLimit =
-                                if (chain.standard == TokenStandard.EVM) {
-                                    (payload.blockChainSpecific as BlockChainSpecific.Ethereum)
-                                        .gasLimit
-                                } else {
-                                    BigInteger.valueOf(1)
-                                },
+                            gasLimit = BigInteger.valueOf(1),
                             gasFee = gasFee,
                             selectedToken = srcToken,
                         )
@@ -560,7 +544,7 @@ constructor(
                         // if swapFee is not null then it provider is Lifi otherwise 1inch
                         val value =
                             if (
-                                !oneInchSwapTxJson.swapFee.isNullOrEmpty() &&
+                                oneInchSwapTxJson.swapFee.isNotEmpty() &&
                                     oneInchSwapTxJson.swapFee.toBigIntegerOrNull() != null
                             ) {
                                 oneInchSwapTxJson.swapFee.toBigInteger()
@@ -823,6 +807,7 @@ constructor(
                         is BlockChainSpecific.THORChain,
                         is BlockChainSpecific.Ethereum,
                         is BlockChainSpecific.UTXO -> Unit
+
                         else ->
                             error(
                                 "BlockChainSpecific ${payload.blockChainSpecific} is not supported"
@@ -929,7 +914,17 @@ constructor(
                         }
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-                    val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+                    val gasFee =
+                        if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                            val utxoHelper = UtxoHelper.getHelper(vault, payloadToken.coinType)
+                            val plan = utxoHelper.getBitcoinTransactionPlan(payload)
+                            if (plan.error != SigningError.OK) {
+                                Timber.e("UTXO plan error: ${plan.error.name}")
+                            }
+                            TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
+                        } else {
+                            TokenValue(value = fees.amount, token = nativeCoin)
+                        }
 
                     val totalGasAndFee =
                         gasFeeToEstimatedFee(

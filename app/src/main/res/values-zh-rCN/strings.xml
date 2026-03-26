@@ -4,11 +4,11 @@
     <string name="notifications">通知</string>
     <string name="push_notifications">推送通知</string>
     <string name="push_notifications_failed">推送通知失败</string>
-    <string name="push_notification_vault_not_found">未找到金库</string>
-    <string name="push_notification_error_vault_not_supported">金库不支持通知</string>
+    <string name="push_notification_vault_not_found">未找到保险库</string>
+    <string name="push_notification_error_vault_not_supported">保险库不支持通知</string>
     <string name="push_notification_error_token_not_available">无法获取通知令牌</string>
     <string name="push_notification_error_api_failure">无法更新通知注册</string>
-    <string name="push_notification_partial_failure">已更新 %2$d 个金库中的 %1$d 个，%3$d 个失败</string>
+    <string name="push_notification_partial_failure">已更新 %2$d 个保险库中的 %1$d 个，%3$d 个失败</string>
     <string name="push_notifications_sent">通知发送成功</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">当需要您的签名或设备请求访问时，您将收到通知。</string>
     <string name="keysign_notification_channel_name">签名请求</string>
@@ -19,11 +19,11 @@
     <string name="notification_banner_send_summary">发送 %1$s</string>
     <string name="notifications_intro_enable">启用</string>
     <string name="notifications_are_here">通知已到来</string>
-    <string name="notifications_description">当另一台设备请求加入您的金库或需要您的签名时，接收通知。</string>
-    <string name="choose_vaults_for_notifications">选择接收通知的金库</string>
+    <string name="notifications_description">当另一台设备请求加入您的保险库或需要您的签名时，接收通知。</string>
+    <string name="choose_vaults_for_notifications">选择接收通知的保险库</string>
     <string name="notifications_vault_sheet_subtitle">您可以在系统设置中管理通知。</string>
     <string name="not_now">暂不</string>
-    <string name="vault_notifications">金库通知</string>
+    <string name="vault_notifications">保险库通知</string>
     <string name="enable_all">全部启用</string>
 
     <!-- Deposit Options -->
@@ -66,18 +66,18 @@
     <string name="tokens">代币</string>
     <string name="keysign">密钥签名</string>
     <string name="signing_error_please_try_again_s">签名错误。请重试。%s</string>
-    <string name="bottom_warning_msg_keygen_error_screen">请保持设备在同一WiFi网络，确认金库正确并配对设备。\n确保没有其他设备正在运行Vultisig。</string>
+    <string name="bottom_warning_msg_keygen_error_screen">请保持设备在同一WiFi网络，确认保险库正确并配对设备。\n确保没有其他设备正在运行Vultisig。</string>
     <string name="try_again">重试</string>
 
     <!-- Vault Settings -->
-    <string name="vault_settings_title">金库设置</string>
+    <string name="vault_settings_title">保险库设置</string>
     <string name="vault_settings_details_title">详情</string>
     <string name="vault_settings_rename_title">重命名</string>
-    <string name="vault_settings_rename_subtitle">编辑您的金库名称</string>
+    <string name="vault_settings_rename_subtitle">编辑您的保险库名称</string>
     <string name="vault_settings_reshare_title">重新分享</string>
-    <string name="vault_settings_reshare_subtitle">与新委员会重新分享金库</string>
+    <string name="vault_settings_reshare_subtitle">与新委员会重新分享保险库</string>
     <string name="vault_settings_delete_title">删除</string>
-    <string name="vault_settings_delete_subtitle">永久删除您的金库。</string>
+    <string name="vault_settings_delete_subtitle">永久删除您的保险库。</string>
     <string name="vault_settings_security_title">链上安全</string>
     <string name="vault_settings_security_subtitle">管理您的链上安全</string>
     <string name="vault_settings_discounts">$VULT 折扣等级</string>
@@ -136,7 +136,7 @@
     <string name="vault_tier_ultimate_description_part2">完全免除 Vultisig 费用</string>
     <string name="vault_tier_ultimate_description_part3">在所有交换中。</string>
     <!-- Keysign & Join -->
-    <string name="join_keysign_missing_required_vault">您没有密钥签名所需的金库</string>
+    <string name="join_keysign_missing_required_vault">您没有密钥签名所需的保险库</string>
     <string name="join_keysign_discovery_service">发现服务中</string>
     <string name="join_keysign_waiting_keysign_start">等待密钥签名开始。</string>
 
@@ -187,6 +187,7 @@
     <string name="send_error_invalid_operator_fee">运营商费用必须是0到10000基点之间的有效数字</string>
     <string name="send_error_max_shares">金额不应超过余额</string>
     <string name="send_error_insufficient_balance">资金不足</string>
+    <string name="send_error_msca_not_deployed">MSCA账户尚未部署，请重试</string>
     <string name="send_error_insufficient_native_balance_with_fees">%1$s 余额不足</string>
 
     <!-- Settings Screen -->
@@ -197,7 +198,7 @@
 
     <!-- Settings Titles -->
     <string name="language_setting_screen_title">语言</string>
-    <string name="currency_unit_setting_screen_title">货币\n</string>
+    <string name="currency_unit_setting_screen_title">货币</string>
     <string name="faq_setting_screen_title">常见问题</string>
 
     <!-- Verify Transaction -->
@@ -223,15 +224,15 @@
     <string name="transaction_done_form_title">交易</string>
 
     <!-- Vault List -->
-    <string name="vault_list_vaults_list">金库</string>
+    <string name="vault_list_vaults_list">保险库</string>
 
     <!-- Import File -->
     <string name="import_file_screen_title">导入</string>
-    <string name="import_file_screen_duplicate_vault">金库重复</string>
+    <string name="import_file_screen_duplicate_vault">保险库重复</string>
 
     <!-- Create New Vault -->
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
-    <string name="create_new_vault_screen_secure_crypto_vault">安全加密金库</string>
+    <string name="create_new_vault_screen_secure_crypto_vault">安全加密保险库</string>
 
     <!-- Generating Key -->
     <string name="generating_key_screen_keygen_failed">密钥生成失败</string>
@@ -240,7 +241,7 @@
     <string name="feature_item_learn_more">了解更多</string>
 
     <!-- Vault Detail -->
-    <string name="vault_detail_screen_vault_name">金库名称</string>
+    <string name="vault_detail_screen_vault_name">保险库名称</string>
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA 密钥已复制</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA 密钥已复制</string>
 
@@ -248,7 +249,7 @@
     <string name="welcome_screen_skip">跳过</string>
 
     <!-- Keysign Screen -->
-    <string name="keysign_screen_preparing_vault">准备金库…</string>
+    <string name="keysign_screen_preparing_vault">准备保险库…</string>
     <string name="keysign_screen_signing_with_ecdsa">使用 ECDSA 签名…</string>
     <string name="keysign_screen_signing_with_eddsa">使用 EdDSA 签名…</string>
     <string name="keysign_screen_keysign_finished">密钥签名完成！</string>
@@ -258,26 +259,26 @@
     <string name="successfully_scanned_barcode">成功扫描条形码：%1$s</string>
 
     <!-- Vault Settings Delete -->
-    <string name="vault_settings_delete_vault_caution1">我知道金库将被永久删除</string>
+    <string name="vault_settings_delete_vault_caution1">我知道保险库将被永久删除</string>
     <string name="vault_settings_delete_vault_caution2">我知道我可能会失去资金</string>
-    <string name="vault_settings_delete_vault_caution3">我已经备份了金库</string>
-    <string name="vault_settings_delete_vault_name">金库名称：</string>
-    <string name="vault_settings_delete_vault_value">金库价值：</string>
+    <string name="vault_settings_delete_vault_caution3">我已经备份了保险库</string>
+    <string name="vault_settings_delete_vault_name">保险库名称：</string>
+    <string name="vault_settings_delete_vault_value">保险库价值：</string>
     <string name="vault_settings_delete_vault_id">设备 ID：</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA 密钥：</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA 密钥：</string>
 
     <!-- Confirm Delete -->
-    <string name="confirm_delete_permanent_delete_message">您正在永久删除您的金库</string>
-    <string name="confirm_delete_delete_vault">删除金库</string>
+    <string name="confirm_delete_permanent_delete_message">您正在永久删除您的保险库</string>
+    <string name="confirm_delete_delete_vault">删除保险库</string>
 
     <!-- Vault Accounts -->
     <string name="vault_accounts_account_assets">%1$s 资产</string>
-    <string name="s_of_s_vault">%1$s of %2$s 金库设置</string>
-    <string name="scan_qr_screen_return_vault">返回金库</string>
+    <string name="s_of_s_vault">%1$s/%2$s 保险库设置</string>
+    <string name="scan_qr_screen_return_vault">返回保险库</string>
 
     <!-- Rename Vault -->
-    <string name="rename_vault_screen_vault_name">金库名称</string>
+    <string name="rename_vault_screen_vault_name">保险库名称</string>
 
     <!-- FAQ Settings -->
     <string name="faq_settings_q1">什么是 Vultisig？</string>
@@ -288,7 +289,7 @@
     <string name="faq_settings_q6">Vultisig 支持哪些加密货币？</string>
     <string name="faq_settings_a1">它是一个基于 MPC 技术的安全、多重认证钱包，用于管理数字资产。交易需要多个设备的批准。</string>
     <string name="faq_settings_a2">Vultisig 通过多设备认证提供增强的安全性，支持许多区块链，易于恢复选项，无需助记词或用户跟踪。</string>
-    <string name="faq_settings_a3">是的，只要您在创建金库时保存并可以访问您的备份。您可以在新设备上导入这些备份以重新获得对资产的访问权限。</string>
+    <string name="faq_settings_a3">是的，只要您在创建保险库时保存并可以访问您的备份。您可以在新设备上导入这些备份以重新获得对资产的访问权限。</string>
     <string name="faq_settings_a4">Vultisig 安全地存储和管理数字资产。所有操作，如发送或交换，都需要设备阈值来签署交易。</string>
     <string name="faq_settings_a5">Vultisig 免费使用。只有标准网络费用适用于发送。对于交换和桥接，有 0.5%（50 基点）的费用。</string>
     <string name="faq_settings_a6">Vultisig 支持主要的加密货币和代币，目前有超过 30 个链及其代币可用。</string>
@@ -303,7 +304,7 @@
     <string name="transaction_type_button_swap">交换</string>
     <string name="swap_form_gas_title">网络费用</string>
     <string name="swap_form_total_fees_title">总费用</string>
-    <string name="swap_form_vault">金库</string>
+    <string name="swap_form_vault">保险库</string>
     <string name="swap_form_min_pay">最小支付</string>
     <string name="swap_form_on_chain">在</string>
 
@@ -329,7 +330,7 @@
     <!-- Naming Vault -->
     <string name="naming_vault_screen_invalid_name">无效名称</string>
     <string name="rename_vault_invalid_name">无效名称</string>
-    <string name="vault_name_too_long_error">金库名称太长</string>
+    <string name="vault_name_too_long_error">保险库名称太长</string>
 
     <!-- Swap Form -->
     <string name="swap_form_invalid_amount">无效金额</string>
@@ -386,7 +387,7 @@
     <string name="deposit_form_shares_title">份额（余额：%1$s）</string>
 
     <!-- Share Vault QR -->
-    <string name="share_vault_qr_title">分享金库二维码</string>
+    <string name="share_vault_qr_title">分享保险库二维码</string>
     <string name="share_vault_qr_save">保存</string>
     <string name="share_vault_qr_share">分享</string>
 
@@ -446,8 +447,8 @@
     <string name="vault_settings_error_extension_backup_file">不支持的扩展名。备份失败。支持的文件扩展名：%s</string>
 
     <!-- Reshare -->
-    <string name="reshare_start_screen_title">重新分享您的金库</string>
-    <string name="reshare_start_screen_body">重新分享可用于刷新、扩展或减少金库中的设备数量。</string>
+    <string name="reshare_start_screen_title">重新分享您的保险库</string>
+    <string name="reshare_start_screen_body">重新分享可用于刷新、扩展或减少保险库中的设备数量。</string>
     <string name="reshare_start_screen_warning">对于所有重新分享操作，始终需要设备阈值。</string>
     <string name="reshare_start_screen_start_reshare">开始重新分享</string>
 
@@ -487,7 +488,7 @@
 
     <!-- Signing Errors -->
     <string name="signing_error_insufficient_funds">没有足够的燃料来支付交易费用。\n请为钱包充值。</string>
-    <string name="signing_error_mixed_reshare">混合重新分享签名。\n请使用相同重新分享周期的金库份额。</string>
+    <string name="signing_error_mixed_reshare">混合重新分享签名。\n请使用相同重新分享周期的保险库份额。</string>
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_fast_sign_btn_title">快速签名</string>
@@ -499,29 +500,29 @@
     <!-- Home Screen -->
     <string name="start_screen_new">新功能</string>
     <string name="start_screen_import_seedphrase">导入助记词</string>
-    <string name="start_screen_import_seedphrase_desc">输入它，创建金库，永不回头。</string>
-    <string name="start_screen_import_vault_share">导入金库份额</string>
-    <string name="start_screen_import_vault_share_desc">使用金库份额恢复您的金库。</string>
+    <string name="start_screen_import_seedphrase_desc">输入它，创建保险库，永不回头。</string>
+    <string name="start_screen_import_vault_share">导入保险库份额</string>
+    <string name="start_screen_import_vault_share_desc">使用保险库份额恢复您的保险库。</string>
     <string name="start_screen_import_vault_share_file_types">支持的文件类型：.bak &amp; .vult</string>
-    <string name="start_screen_recover_or_convert">恢复您的金库或将助记词转换为金库</string>
+    <string name="start_screen_recover_or_convert">恢复您的保险库或将助记词转换为保险库</string>
 
     <!-- Keysign Password -->
     <string name="keysign_password_incorrect_password">密码不正确</string>
 
     <!-- Vault List -->
-    <string name="vault_list_part_n_of_t">部分 %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">份额 %1$d-of-%2$d</string>
+    <string name="vault_list_part_n_of_t">份额 %1$d/%2$d</string>
+    <string name="vault_part_n_of_t">份额 %1$d/%2$d</string>
 
     <!-- QR Titles -->
     <string name="qr_title_join_keygen">加入密钥生成</string>
     <string name="qr_title_join_keysign">加入密钥签名</string>
     <string name="qr_title_join_swap_keysign">加入交换</string>
-    <string name="qr_title_join_keygen_description">扫描设备以加入\n金库生成</string>
-    <string name="qr_title_join_keysign_description">金库：%1$s\n金额：%2$s\n至：%3$s</string>
-    <string name="qr_title_join_keysign_swap_description">金库：%1$s\n从：%2$s\n至：%3$s</string>
+    <string name="qr_title_join_keygen_description">扫描设备以加入\n保险库生成</string>
+    <string name="qr_title_join_keysign_description">保险库：%1$s\n金额：%2$s\n至：%3$s</string>
+    <string name="qr_title_join_keysign_swap_description">保险库：%1$s\n从：%2$s\n至：%3$s</string>
 
     <!-- Error Folder -->
-    <string name="error_folder_must_have_at_least_one_vault">文件夹需要至少一个选定的金库</string>
+    <string name="error_folder_must_have_at_least_one_vault">文件夹需要至少一个选定的保险库</string>
 
     <!-- Import File Password -->
     <string name="import_file_password_hint_text">提示：%s</string>
@@ -544,19 +545,19 @@
     <string name="deposit_form_screen_lpunits">LP 单位</string>
 
     <!-- Join Keysign Error -->
-    <string name="join_keysign_error_wrong_vault_share">相同的金库份额。请更改份额以签名</string>
-    <string name="join_keysign_error_wrong_vault_share_try_again_button">更改金库</string>
+    <string name="join_keysign_error_wrong_vault_share">相同的保险库份额。请更改份额以签名</string>
+    <string name="join_keysign_error_wrong_vault_share_try_again_button">更改保险库</string>
 
     <!-- ETH Gas Settings -->
     <string name="utxo_settings_byte_fee_title">网络费率（sats/vbyte）</string>
     <string name="eth_gas_settings_gas_limit_title">燃料限制</string>
 
     <!-- Vault Details Screen -->
-    <string name="vault_details_screen_vault_part">金库份额</string>
-    <string name="vault_details_screen_vault_type">金库类型</string>
-    <string name="vault_settings_delete_vault_part">金库份额：</string>
+    <string name="vault_details_screen_vault_part">保险库份额</string>
+    <string name="vault_details_screen_vault_type">保险库类型</string>
+    <string name="vault_settings_delete_vault_part">保险库份额：</string>
     <string name="vault_password_hint_to_long">提示太长</string>
-    <string name="vault_details_screen_vault_part_desc">份额 %1$s-of-%2$s</string>
+    <string name="vault_details_screen_vault_part_desc">份额 %1$s/%2$s</string>
 
     <!-- Settings Screen -->
 
@@ -564,14 +565,14 @@
     <string name="do_not_remind_me_again">不再提醒我</string>
 
     <!-- Monthly Backup Reminder -->
-    <string name="monthly_backup_reminder_title">不要忘记备份您的金库份额并验证完整性。</string>
+    <string name="monthly_backup_reminder_title">不要忘记备份您的保险库份额并验证完整性。</string>
 
     <!-- Transaction Complete -->
     <string name="transaction_complete_screen_title">交易完成</string>
 
 
     <!-- Join Keysign -->
-    <string name="join_keysign_wrong_vault">选择了错误的金库</string>
+    <string name="join_keysign_wrong_vault">选择了错误的保险库</string>
 
     <!-- Verify Swap Screen -->
     <string name="verify_swap_screen_total_fees">最大总费用</string>
@@ -593,15 +594,17 @@
     <string name="swap_error_insufficient_source_token">%1$s 余额不足以进行交换</string>
     <string name="swap_error_insufficient_gas_fees">没有足够的 %1$s 来支付 Gas 费用。请为钱包充值。</string>
     <string name="swap_error_time_out">交换请求超时。请重试</string>
+    <string name="swap_error_high_price_impact">价格影响过高。请尝试较小的金额或不同的代币对。</string>
+    <string name="swap_error_quote_failed">兑换报价失败。请重试或调整金额。</string>
 
     <!-- Swap Screen Invalid -->
-    <string name="swap_screen_invalid_no_vault">未选择金库</string>
+    <string name="swap_screen_invalid_no_vault">未选择保险库</string>
     <string name="swap_screen_invalid_no_src_error">未选择源代币</string>
     <string name="swap_screen_invalid_selected_no_dst">未选择目标代币</string>
     <string name="swap_screen_invalid_zero_token_amount">代币金额不能为零</string>
     <string name="swap_screen_invalid_gas_fee_calculation">燃料费计算失败</string>
     <string name="swap_screen_invalid_quote_calculation">报价计算失败</string>
-    <string name="swap_screen_invalid_vault">交易可能失败，无法加载金库。</string>
+    <string name="swap_screen_invalid_vault">交易可能失败，无法加载保险库。</string>
 
     <!-- Edit Address -->
     <string name="edit_address_title">编辑地址</string>
@@ -623,7 +626,7 @@
     <string name="verify_sign_message_message_sign">要签名的消息</string>
 
     <!-- Keygen -->
-    <string name="keygen_step_preparing_vault">准备金库</string>
+    <string name="keygen_step_preparing_vault">准备保险库</string>
     <string name="keygen_step_generating_ecdsa">生成 ECDSA 密钥</string>
     <string name="keygen_step_generating_eddsa">生成 EdDSA 密钥</string>
     <string name="keygen_step_generating_chain_keys">生成链密钥</string>
@@ -664,7 +667,7 @@
     <string name="security_scanner_default_description">此交易已被标记为潜在危险。</string>
     <string name="security_scanner_continue_anyway">仍然继续</string>
     <string name="security_scanner_continue_go_back">返回</string>
-    <string name="security_scanner_powered_by">由...提供支持</string>
+    <string name="security_scanner_powered_by">由…提供支持</string>
     <string name="security_scanner_transaction_scanned_by">交易已扫描</string>
     <string name="security_scanner_transaction_scanning">扫描中…</string>
     <string name="security_scanner_transaction_not_scanned">交易未扫描</string>
@@ -685,7 +688,7 @@
     <string name="verify_deposit_sign_transaction">签署交易</string>
 
     <!-- Referral -->
-    <string name="referral_invite_sheet_description">分享您的独特推荐代码邀请朋友。他们获得折扣，他们交易越多，您赚得越多 - 直接发送到您的金库</string>
+    <string name="referral_invite_sheet_description">分享您的独特推荐代码邀请朋友。他们获得折扣，他们交易越多，您赚得越多 - 直接发送到您的保险库</string>
     <string name="referral_invite_next">下一步</string>
     <string name="referral_screen_title">Vultisig - 推荐链接</string>
     <string name="referral_screen_code_hint">输入最多 4 个字符</string>
@@ -741,9 +744,9 @@
     <string name="referral_use_code_title">使用推荐代码 - 节省 5 基点</string>
     <string name="referral_use_code_description">使用朋友的代码并节省交换费用。</string>
     <string name="referral_not_found">还没有推荐</string>
-    <string name="referral_cta">将您的金库变成奖励机器。立即创建您的推荐并开始赚钱</string>
+    <string name="referral_cta">将您的保险库变成奖励机器。立即创建您的推荐并开始赚钱</string>
     <string name="referral_view_title">您的推荐</string>
-    <string name="referral_view_selected_vault">已选择金库</string>
+    <string name="referral_view_selected_vault">已选择保险库</string>
     <string name="referral_view_your_referral_code">您的推荐代码</string>
     <string name="referral_view_edit_referral">编辑推荐</string>
     <string name="referral_view_your_friend_referral">您朋友的推荐代码</string>
@@ -753,7 +756,7 @@
     <string name="referral_view_on_swaps">现在在交换上</string>
 
     <!-- TCY Auto Compound -->
-    <string name="referral_top_bar_list_vaults">金库</string>
+    <string name="referral_top_bar_list_vaults">保险库</string>
     <string name="tcy_auto_compound_enable_title">启用自动复利</string>
     <string name="tcy_auto_compound_enable_subtitle">自动复利您的 TCY 奖励</string>
     <string name="tcy_auto_compound_unstake_title">取消质押自动复利 TCY</string>
@@ -778,16 +781,16 @@
     <string name="address_book_empty_title">您的地址簿为空</string>
     <string name="home_page_no_chain_enabled_desc">您已禁用所有链。请确保至少启用一条链。</string>
     <string name="address_book_saved_addresses">已保存的地址</string>
-    <string name="address_book_my_vaults">我的金库</string>
+    <string name="address_book_my_vaults">我的保险库</string>
     <string name="address_entry_select">选择</string>
 
     <!-- Backup & Import -->
-    <string name="import_file_import_your_vault_share">导入您的金库份额</string>
+    <string name="import_file_import_your_vault_share">导入您的保险库份额</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[支持的文件类型：.dat & .bak & .vult]]></string>
 
     <!-- Deposit & Send -->
     <string name="deposit_form_enter_asset_hint">输入资产</string>
-    <string name="share_balance_loading">加载中...</string>
+    <string name="share_balance_loading">加载中…</string>
     <string name="send_form_balance_available">可用余额：</string>
     <string name="send_form_add_memo">添加备注</string>
     <string name="send_form_enter_memo">输入备注</string>
@@ -818,21 +821,21 @@
     <string name="gas_settings_priority_fee_gwei">优先费用（GWEI）</string>
 
     <!-- Keygen & Keysign -->
-    <string name="join_key_gen_vault_with_duplicate_name_exists">存在重复名称的金库</string>
+    <string name="join_key_gen_vault_with_duplicate_name_exists">存在重复名称的保险库</string>
     <string name="join_key_gen_unknown_tssaction">未知的 TSS 操作</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">等待其他设备加入</string>
-    <string name="join_key_gen_your_vault_will_start_generating">您的金库将在您在主设备上完成设置后开始生成</string>
+    <string name="join_key_gen_your_vault_will_start_generating">您的保险库将在您在主设备上完成设置后开始生成</string>
     <string name="join_key_sign_wrong_signing_library_type">错误的签名库类型</string>
     <string name="key_gen_discovery_no_connection_available">无可用连接</string>
     <string name="key_gen_discovery_enable_wifi">请启用 WiFi 或移动网络以签署交易</string>
-    <string name="keygen_screen_upgrading_vault">升级金库中</string>
+    <string name="keygen_screen_upgrading_vault">升级保险库中</string>
     <string name="keysign_password_enter_your_password">输入您的密码</string>
 
     <!-- Migration -->
     <string name="migration_password_enter_your_password_to_unlock">输入您的密码以解锁服务器份额并开始升级</string>
 
     <!-- Vault Names -->
-    <string name="name_vault_vault_with_this_name_already_exists">已存在此名称的金库</string>
+    <string name="name_vault_vault_with_this_name_already_exists">已存在此名称的保险库</string>
 
     <!-- Errors -->
     <string name="error_loading_information">加载信息时出错</string>
@@ -853,12 +856,12 @@
     <string name="tx_done_transaction_details">交易详情</string>
 
     <!-- Vault Confirmation -->
-    <string name="vault_confirmation_vault_upgraded">金库已升级</string>
+    <string name="vault_confirmation_vault_upgraded">保险库已升级</string>
     <string name="vault_confirmation_well_done">做得好。</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">您已准备好使用新的钱包标准。</string>
 
     <!-- Vault Details -->
-    <string name="vault_detail_vault_info">金库信息</string>
+    <string name="vault_detail_vault_info">保险库信息</string>
     <string name="vault_details_keys">密钥</string>
     <string name="vault_password_biometeric_enable_biometrics_fast_signing">启用生物识别快速签名</string>
 
@@ -867,14 +870,13 @@
     <string name="verify_swap_swap_overview">交换概览</string>
 
     <!-- Settings -->
-    <string name="education_settings_title">Vultisig 教育</string>
     <string name="check_updates_settings_title">检查更新</string>
     <string name="vult_website_settings_title">Vultisig 网站</string>
-    <string name="vault">金库</string>
+    <string name="vault">保险库</string>
     <string name="general">通用</string>
     <string name="support">支持</string>
     <string name="vultisig_community">Vultisig 社区</string>
-    <string name="vault_management">金库管理</string>
+    <string name="vault_management">保险库管理</string>
     <string name="other">其他</string>
 
     <!-- Unstake TCY -->
@@ -886,7 +888,7 @@
     <string name="update">更新</string>
 
     <!-- Share Vault QR -->
-    <string name="share_vault_qr_info">此二维码允许您分享金库的只读版本</string>
+    <string name="share_vault_qr_info">此二维码允许您分享保险库的只读版本</string>
 
     <!-- Add Address -->
     <string name="add_address_title_label">标签</string>
@@ -898,26 +900,26 @@
     <string name="backup_password_request_title">您想用密码加密您的备份吗？</string>
     <string name="backup_password_request_caution_encrypt_desc">如果您选择添加密码，这将用于加密备份文件。</string>
     <string name="backup_password_request_highlight_encrypt">加密</string>
-    <string name="backup_password_request_caution_cannot_reset_desc">记住：如果您忘记金库密码，它无法重置或恢复。</string>
+    <string name="backup_password_request_caution_cannot_reset_desc">记住：如果您忘记保险库密码，它无法重置或恢复。</string>
     <string name="backup_password_request_highlight_cannot">无法</string>
-    <string name="backup_password_request_caution_secure_without_desc">默认情况下，您的备份无需额外密码即可安全，因为您将金库份额存储在不同位置。</string>
+    <string name="backup_password_request_caution_secure_without_desc">默认情况下，您的备份无需额外密码即可安全，因为您将保险库份额存储在不同位置。</string>
     <string name="backup_password_request_highlight_secure_without">无需即可安全</string>
 
     <!-- Backup Select Vaults -->
-    <string name="backup_select_vaults_title">选择要备份的金库</string>
-    <string name="backup_select_vaults_subtitle">选择是只备份此金库还是应用中的所有金库。</string>
-    <string name="backup_this_vault_only">仅此金库</string>
-    <string name="backup_all_vaults">所有金库</string>
+    <string name="backup_select_vaults_title">选择要备份的保险库</string>
+    <string name="backup_select_vaults_subtitle">选择是只备份此保险库还是应用中的所有保险库。</string>
+    <string name="backup_this_vault_only">仅此保险库</string>
+    <string name="backup_all_vaults">所有保险库</string>
 
     <!-- More -->
     <string name="more">+%1$d 更多</string>
 
     <!-- Backup Choose Method -->
     <string name="backup_choose_method_title">选择备份方法</string>
-    <string name="backup_device_desc">存储此设备的金库份额。</string>
+    <string name="backup_device_desc">存储此设备的保险库份额。</string>
     <string name="backup_device_title">设备备份</string>
     <string name="backup_server_title">服务器备份</string>
-    <string name="backup_server_desc">再次请求服务器金库份额。</string>
+    <string name="backup_server_desc">再次请求服务器保险库份额。</string>
 
     <!-- Share Sheet -->
     <string name="share_sheet_more">更多</string>
@@ -930,11 +932,11 @@
     <string name="transaction_type_button_receive">接收</string>
 
     <!-- Vault Settings -->
-    <string name="vault_settings_view_vault">查看金库名称、部分和类型</string>
+    <string name="vault_settings_view_vault">查看保险库名称、部分和类型</string>
     <string name="vault_settings_biometric_fast">生物识别快速签名</string>
-    <string name="vault_settings_backup_vault">备份金库份额</string>
-    <string name="vault_settings_back_up_your">将您的金库份额备份到设备或服务器。</string>
-    <string name="vault_settings_migrate_gg20">将 GG20 金库迁移到 DKLS</string>
+    <string name="vault_settings_backup_vault">备份保险库份额</string>
+    <string name="vault_settings_back_up_your">将您的保险库份额备份到设备或服务器。</string>
+    <string name="vault_settings_migrate_gg20">将 GG20 保险库迁移到 DKLS</string>
     <string name="vault_settings_reshare_change">重新分享、管理安全性或签署消息。</string>
 
     <!-- Transaction -->
@@ -946,7 +948,7 @@
 
     <!-- Upgrade Banner -->
     <string name="upgrade_banner_sign_faster">比以往更快地签名</string>
-    <string name="upgrade_banner_upgrade_your">立即升级您的金库</string>
+    <string name="upgrade_banner_upgrade_your">立即升级您的保险库</string>
     <string name="upgrade_banner_upgrade_now">立即升级</string>
 
     <!-- Home -->
@@ -980,14 +982,14 @@
 
     <!-- Add Folder -->
     <string name="add_folder_title">添加文件夹</string>
-    <string name="add_folder_list_title">选择金库</string>
-    <string name="add_folder_active_vaults">活动金库</string>
+    <string name="add_folder_list_title">选择保险库</string>
+    <string name="add_folder_active_vaults">活动保险库</string>
     <string name="add_folder_available_vaults">可用</string>
     <string name="add_folder_edit_folder_title">编辑文件夹</string>
 
     <!-- Vault List -->
     <string name="vault_list_add_folder">添加文件夹</string>
-    <string name="vault_list_edit_vaults_header">编辑金库</string>
+    <string name="vault_list_edit_vaults_header">编辑保险库</string>
 
     <!-- Token Details -->
     <string name="token_details_bottom_sheet_price">价格</string>
@@ -1020,16 +1022,16 @@
     <string name="fast_vault_password_screen_error">密码不匹配</string>
     <string name="fast_vault_password_screen_next">下一步</string>
     <string name="fast_vault_password_hint_screen_title">添加可选提示</string>
-    <string name="migration_onboarding_step_2_text_start">您将创建新的金库份额备份，</string>
+    <string name="migration_onboarding_step_2_text_start">您将创建新的保险库份额备份，</string>
     <string name="migration_onboarding_step_2_text_end">像以前一样存放</string>
     <string name="migration_onboarding_step_3_text_start">确保</string>
     <string name="migration_onboarding_step_3_text_emphasize">所有初始设备均已到位</string>
     <string name="select_vault_type_secure_title">终极安全保障</string>
     <string name="select_vault_type_secure_desc_1">多设备安全防护</string>
     <string name="select_vault_type_secure_desc_2">随时可通过设备备份访问</string>
-    <string name="onboarding_desc_page_4_part_1">即使密码丢失也能恢复您的金库</string>
+    <string name="onboarding_desc_page_4_part_1">即使密码丢失也能恢复您的保险库</string>
     <string name="onboarding_desc_page_4_part_2">如果设备丢失或损坏</string>
-    <string name="onboarding_desc_page_5_part_1">务必备份每个金库共享文件夹。</string>
+    <string name="onboarding_desc_page_5_part_1">务必备份每个保险库共享文件夹。</string>
     <string name="keygen_benefit_4_template">支持 Android、iOS、macOS 和 Windows 系统</string>
     <string name="keygen_benefit_4_emphasized">可用</string>
     <string name="onboarding_intro_preview_part_2">助记词</string>
@@ -1038,7 +1040,7 @@
     <string name="migration_onboarding_step_1_text_end">签名速度前所未有</string>
     <string name="error_view_default_title">出错了</string>
     <string name="error_view_default_description">发生错误</string>
-    <string name="keygen_vault_created_success_part_1">金库已创建</string>
+    <string name="keygen_vault_created_success_part_1">保险库已创建</string>
     <string name="vault_created_success_part_2">成功</string>
     <string name="backup_password_request_no_password_action">无需密码备份</string>
     <string name="keygen_benefit_5_template">谨防再次上当受骗</string>
@@ -1052,11 +1054,11 @@
     <string name="select_vault_type_next">下一步</string>
     <string name="select_vault_type_choose_setup">选择“设置”</string>
     <string name="home_screen_scan_qr_code">扫描二维码</string>
-    <string name="onboarding_desc_page_6_part_2">解锁您的金库</string>
-    <string name="onboarding_summary_button">创建您的金库</string>
-    <string name="keygen_benefit_3_template">在一个金库中兑换您喜爱的所有代币</string>
+    <string name="onboarding_desc_page_6_part_2">解锁您的保险库</string>
+    <string name="onboarding_summary_button">创建您的保险库</string>
+    <string name="keygen_benefit_3_template">在一个保险库中兑换您喜爱的所有代币</string>
     <string name="keygen_benefit_3_emphasized">跨链</string>
-    <string name="upgrade_banner_title">立即升级您的金库</string>
+    <string name="upgrade_banner_title">立即升级您的保险库</string>
     <string name="deposit_form_custom_memo_optional_title">自定义备注（可选）</string>
     <string name="home_defi_portfolio">DeFi 投资组合</string>
     <string name="backup_password_request_with_password_action">使用密码</string>
@@ -1077,7 +1079,7 @@
     <string name="onboarding_desc_page_3_part_1">每台设备</string>
     <string name="referral_invite_onboarding_1">邀请好友。</string>
     <string name="referral_invite_onboarding_2">赚取奖励。</string>
-    <string name="fast_vault_name_screen_desc">您随时可以在设置中重命名您的金库</string>
+    <string name="fast_vault_name_screen_desc">您随时可以在设置中重命名您的保险库</string>
     <string name="enter_email_screen_title">请输入您的电子邮件地址</string>
     <string name="enter_email_screen_hint">邮箱</string>
     <string name="swap_screen_invalid_specific_and_utxo">特定计算失败</string>
@@ -1102,7 +1104,7 @@
     <string name="keygen_benefit_2_template">完全掌控您的资产</string>
     <string name="onboarding_summary_check">我已阅读并理解该如何操作。</string>
     <string name="send_error_invalid_plan_fee">无效计划费用</string>
-    <string name="onboarding_desc_page_3_part_2">存放在您的金库中</string>
+    <string name="onboarding_desc_page_3_part_2">存放在您的保险库中</string>
     <string name="transfer_ibc_function_memo_title">备注</string>
     <string name="tx_overview_screen_tx_to">至</string>
     <string name="tx_overview_screen_tx_memo">备注</string>
@@ -1113,13 +1115,13 @@
     <string name="fast_vault_password_screen_hint_title">更多信息</string>
     <string name="peer_discovery_local_mode_hint">您处于本地模式</string>
     <string name="peer_discovery_recommended_devices_hint">使用其他设备扫描二维码。建议设置 3 台设备，2 台也足够。</string>
-    <string name="review_vault_devices_title">检查您的金库设备</string>
+    <string name="review_vault_devices_title">检查您的保险库设备</string>
     <string name="review_vault_devices_description">请确认这些是您添加的正确设备:</string>
     <string name="review_vault_devices_looks_good">看起来不错</string>
     <string name="review_vault_devices_something_wrong">有些不对</string>
     <string name="review_vault_devices_this_device_label">%1$s（此设备）</string>
     <string name="review_vault_devices_device_index">设备 %1$d</string>
-    <string name="fast_vault_name_screen_title">为您的金库命名</string>
+    <string name="fast_vault_name_screen_title">为您的保险库命名</string>
     <string name="tx_overview_screen_tx_network">网络</string>
     <string name="fast_vault_password_screen_reenter_password_hint">重新输入密码</string>
     <string name="fast_vault_name_screen_next">下一步</string>
@@ -1127,7 +1129,7 @@
     <string name="scan_qr_code_modal_next">下一步</string>
     <string name="peer_discovery_action_next_title">下一步</string>
     <string name="home_page_no_chains_enabled">未启用任何链</string>
-    <string name="onboarding_desc_page_3_part_3">共享一个金库</string>
+    <string name="onboarding_desc_page_3_part_3">共享一个保险库</string>
     <string name="select_vault_type_fast_title">快速单设备设置</string>
     <string name="select_vault_type_fast_desc_1">仅需一台设备</string>
     <string name="scan_qr_code_modal_scan_the">扫描</string>
@@ -1150,7 +1152,7 @@
     <string name="onboarding_desc_page_2_part_1">它们是</string>
     <string name="onboarding_desc_page_2_part_2">拆分为多个部分</string>
     <string name="select_vault_type_fast_desc_2">储存资金以备日常使用</string>
-    <string name="peer_discovery_switch_network_mode_want_to_sign_privately">想创建私密金库？</string>
+    <string name="peer_discovery_switch_network_mode_want_to_sign_privately">想创建私密保险库？</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">切换至本地模式</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">切换回网络模式</string>
     <string name="onboarding_desc_page_6_part_1">这些共享文件协同工作</string>
@@ -1159,10 +1161,10 @@
     <string name="function_switch_thorchain_address">THORChain 地址</string>
     <string name="tx_transaction_successful_screen_title">交易成功</string>
     <string name="migration_onboarding_step_3_text_end">升级时</string>
-    <string name="migration_onboarding_upgrade_your_vault">升级您的金库</string>
+    <string name="migration_onboarding_upgrade_your_vault">升级您的保险库</string>
     <string name="migration_onboarding_upgrade_now">立即升级</string>
-    <string name="migration_onboarding_step_1_text_start">将此金库升级至</string>
-    <string name="onboarding_desc_page_1_part_2">金库共享</string>
+    <string name="migration_onboarding_step_1_text_start">将此保险库升级至</string>
+    <string name="onboarding_desc_page_1_part_2">保险库共享</string>
     <string name="verify_swap_youre_swapping_title">您正在交换</string>
     <string name="keysign_app_version_text">版本 %1$s (%2$s)</string>
     <string name="lp_position">仓位</string>
@@ -1189,7 +1191,7 @@
     <string name="target_asset">目标资产：%1$s-%2$s</string>
     <string name="thor_address">Thor 地址</string>
     <string name="operation">操作</string>
-    <string name="thorchain_address_not_found_in_vault">您的金库中未找到 THORChain 地址。请确保您的金库中拥有 RUNE。</string>
+    <string name="thorchain_address_not_found_in_vault">您的保险库中未找到 THORChain 地址。请确保您的保险库中拥有 RUNE。</string>
     <string name="deposit_error_not_secured_asset">所选资产并非安全资产，因此无法处理。</string>
     <string name="keysign_password_hide_hint">隐藏提示</string>
     <string name="keysign_password_show_hint">显示提示</string>
@@ -1213,14 +1215,19 @@
     <string name="transaction_status_checking_transaction">正在检查交易……</string>
     <string name="raw_transaction_data">原始交易数据</string>
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
+    <string name="solana_instructions_summary">交易指令摘要</string>
+    <string name="solana_instruction_number">指令 %1$d</string>
+    <string name="solana_program_name">程序：%1$s</string>
+    <string name="solana_program_id">程序 ID：%1$s</string>
+    <string name="solana_accounts_data">账户：%1$d | 数据长度：%2$d 字节</string>
 
     <!-- Key Import / Feature Spotlight -->
-    <string name="key_import_spotlight_before_you_start">在您开始之前...</string>
+    <string name="key_import_spotlight_before_you_start">在您开始之前…</string>
     <string name="key_import_spotlight_heading_part1">"您正在进入一个新时代，\n"</string>
     <string name="key_import_spotlight_heading_highlight">"告别旧的助记词。 "</string>
     <string name="key_import_spotlight_heading_part2">您需要：</string>
     <string name="key_import_spotlight_seedphrase_title">您的助记词</string>
-    <string name="key_import_spotlight_seedphrase_desc">输入它，创建金库，永不回头</string>
+    <string name="key_import_spotlight_seedphrase_desc">输入它，创建保险库，永不回头</string>
     <string name="key_import_spotlight_device_title">至少一台设备</string>
     <string name="key_import_spotlight_device_desc">任何能运行 Vultisig 的设备都可以。</string>
     <string name="key_import_spotlight_get_started">开始</string>
@@ -1230,7 +1237,7 @@
     <string name="transaction_history_tab_send">发送</string>
     <string name="transaction_history_tab_swap">交换</string>
     <string name="transaction_history_empty_title">暂无交易记录</string>
-    <string name="transaction_history_empty_desc">您尚未从此金库进行任何兑换、发送或审批。</string>
+    <string name="transaction_history_empty_desc">您尚未从此保险库进行任何兑换、发送或审批。</string>
     <string name="transaction_history_search_asset_title">搜索资产</string>
     <string name="transaction_history_search_asset_not_found">未找到资产</string>
     <string name="transaction_history_clear_filters">清除筛选</string>
@@ -1279,7 +1286,10 @@
     <plurals name="resend_notification_in_seconds">
         <item quantity="other">%d 秒后重新发送通知</item>
     </plurals>
-    <string name="key_import_chains_found_desc">每增加一条链都会增加生成金库的时间和超时的可能性。</string>
+    <plurals name="vault_count">
+        <item quantity="other">%d 个保险库</item>
+    </plurals>
+    <string name="key_import_chains_found_desc">每增加一条链都会增加生成保险库的时间和超时的可能性。</string>
     <string name="key_import_chains_continue">开始</string>
     <string name="key_import_chains_customize">自定义链</string>
     <string name="key_import_chains_no_active_title">未发现活跃链</string>
@@ -1305,12 +1315,12 @@
     <string name="welcome_maximum_security">最高安全性</string>
     <string name="welcome_maximum_security_desc">最高安全级别，非常适合国库或DAO。签署交易至少需要3台设备。</string>
     <string name="welcome_maximum_security_highlight">至少需要3台设备。</string>
-    <string name="vault_setup_your_vault_setup">您的金库设置</string>
-    <string name="vault_setup_fast_vault">快速金库</string>
-    <string name="vault_setup_secure_vault">安全金库</string>
+    <string name="vault_setup_your_vault_setup">您的保险库设置</string>
+    <string name="vault_setup_fast_vault">快速保险库</string>
+    <string name="vault_setup_secure_vault">安全保险库</string>
     <string name="vault_setup_2_device_setup">2设备设置</string>
     <string name="vault_setup_3_device_setup">3设备设置</string>
-    <string name="vault_setup_4plus_device_vault">4+设备金库</string>
+    <string name="vault_setup_4plus_device_vault">4+设备保险库</string>
     <string name="vault_setup_1_device_signing">单设备签署</string>
     <string name="vault_setup_1_device_signing_desc">随时随地用一台设备便捷签署。非常适合日常交易或小额交易。</string>
     <string name="vault_setup_fast_and_secure_setup">快速安全设置</string>
@@ -1318,7 +1328,7 @@
     <string name="vault_setup_multisig_with_one_device">单设备多签</string>
     <string name="vault_setup_multisig_with_one_device_desc">共同签署方永远无法发起交易；只能协助签署。</string>
     <string name="vault_setup_no_inspiration">没有灵感？您随时可以在设置中更改名称。</string>
-    <string name="naming_saving_vault">正在保存金库</string>
+    <string name="naming_saving_vault">正在保存保险库</string>
     <string name="email_enter_your_email">输入您的电子邮件</string>
     <string name="email_only_used_once">此邮件仅用于发送您的备份文件，Vultisig不存储任何数据。</string>
     <string name="password_choose_a_password">选择密码</string>
@@ -1326,7 +1336,7 @@
     <string name="password_extra_layer_highlight">密码无法恢复。</string>
     <string name="backup_backups">备份，</string>
     <string name="backup_your_new_recovery_method">您的新恢复方法</string>
-    <string name="backup_backups_power_your_vault">备份为您的金库提供动力。每台设备都有自己的备份。单独的备份无法转移资金，仅用于恢复。导入并恢复任何丢失的设备。</string>
+    <string name="backup_backups_power_your_vault">备份为您的保险库提供动力。每台设备都有自己的备份。单独的备份无法转移资金，仅用于恢复。导入并恢复任何丢失的设备。</string>
     <string name="backup_own_keyword">自己</string>
     <string name="backup_your_device_is_the_driver">您的设备是主驱动</string>
     <string name="backup_device_backup_and_password_are_key">设备备份和密码是关键。服务器只负责共同签署，备份可被请求。</string>
@@ -1338,13 +1348,13 @@
     <string name="backup_save_backup_to_the_cloud">将备份保存到云端</string>
     <string name="backup_vault_screen_export_prefix">导出此备份文件，然后保存到云端。它</string>
     <string name="backup_vault_screen_encrypted">已使用</string>
-    <string name="backup_vault_screen_password_suffix">之前设置的密码加密，用于解锁您的金库。</string>
+    <string name="backup_vault_screen_password_suffix">之前设置的密码加密，用于解锁您的保险库。</string>
     <string name="backup_vault_screen_cloud_tip">每份备份请使用不同的云服务或账户。完成后，请从此设备删除该文件。</string>
     <string name="backup_vault_screen_save_backup">保存备份</string>
-    <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">导出此备份文件，然后保存到云端。它使用之前设置的密码加密以解锁您的金库。每份备份请使用不同的云服务或账户。完成后，请从此设备删除该文件。</string>
+    <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">导出此备份文件，然后保存到云端。它使用之前设置的密码加密以解锁您的保险库。每份备份请使用不同的云服务或账户。完成后，请从此设备删除该文件。</string>
     <string name="backup_i_understand_how_to_save_this_backup">我了解如何保存此备份</string>
     <string name="backup_congrats">恭喜！</string>
-    <string name="backup_your_vault_is_ready_to_use">您的金库已准备好使用</string>
+    <string name="backup_your_vault_is_ready_to_use">您的保险库已准备好使用</string>
     <string name="backup_you_re_all_set">一切就绪！您掌控每一笔交易。</string>
     <string name="backup_go_to_wallet">前往钱包</string>
     <string name="vault_setup_2_device_signing">双设备签署</string>
@@ -1355,7 +1365,7 @@
     <string name="vault_setup_perfect_balance_desc">适合大多数用户的完美平衡。2个签署方和1个备份设备。无压力存储资产。</string>
     <string name="vault_setup_perfect_for_users_with_only_2_devices">仅有2台设备的用户的完美设置。</string>
     <string name="vault_setup_3_device_or_more_signing">3台或更多设备签署</string>
-    <string name="vault_setup_3_device_or_more_signing_desc">金库需要67%的设备来签署交易。可以有任意数量的签署方。</string>
+    <string name="vault_setup_3_device_or_more_signing_desc">保险库需要67%的设备来签署交易。可以有任意数量的签署方。</string>
     <string name="vault_setup_dynamic_device_management">动态设备管理</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">添加任意数量的设备，获得机构级安全保障。</string>
     <string name="vault_setup_built_for_teams_and_treasuries">为团队和国库而构建</string>
@@ -1368,10 +1378,10 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">服务器备份</string>
     <string name="server_backup_email_label">邮箱</string>
-    <string name="server_backup_email_description">输入接收金库份额的电子邮件地址。</string>
+    <string name="server_backup_email_description">输入接收保险库份额的电子邮件地址。</string>
     <string name="server_backup_email_error">电子邮件不正确，请检查</string>
     <string name="server_backup_password_label">密码</string>
-    <string name="server_backup_password_description">输入您创建此金库时设置的密码。</string>
+    <string name="server_backup_password_description">输入您创建此保险库时设置的密码。</string>
     <string name="server_backup_name_label">名称</string>
     <string name="server_backup_get_started">备份</string>
     <string name="server_backup_success_title">备份份额已发送！</string>
@@ -1406,4 +1416,17 @@
     <string name="native_asset">原生</string>
     <string name="invalid_integer_error">无效的整数数量</string>
     <string name="empty_lps_field">LP 单位字段为空</string>
+
+    <string name="transaction_failed">交易失败</string>
+    <string name="vault_detail_signer">签名者 %1$d</string>
+    <string name="deposit_form_lp_units_hint">LP 单位</string>
+    <string name="staking_transfer">转账</string>
+
+    <string name="defi_header_minted">铸造 %1$s</string>
+    <string name="defi_header_compounded">复利 %1$s</string>
+    <string name="defi_header_staked">质押 %1$s</string>
+
+    <string name="name_vault_import">导入保险库</string>
+    <string name="name_vault_fast">快速保险库</string>
+    <string name="name_vault_secure">安全保险库</string>
 </resources>

@@ -17,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -290,7 +291,7 @@ internal fun VaultInfo(vaultName: String, vaultCounts: Int, totalBalance: String
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "$vaultCounts Vault${if (vaultCounts != 1) "s" else ""}",
+                text = pluralStringResource(R.plurals.vault_count, vaultCounts, vaultCounts),
                 style = Theme.brockmann.supplementary.footnote,
                 color = Theme.v2.colors.text.tertiary,
             )

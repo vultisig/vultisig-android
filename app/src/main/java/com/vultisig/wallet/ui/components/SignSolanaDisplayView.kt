@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
@@ -101,7 +102,7 @@ private fun InstructionsSummarySection(signSolana: SignSolana) {
     if (allInstructions.isNotEmpty()) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "Transaction Instructions Summary",
+                text = stringResource(R.string.solana_instructions_summary),
                 style = Theme.brockmann.button.medium.regular,
                 color = Theme.v2.colors.text.primary,
                 fontSize = 13.sp,
@@ -130,7 +131,7 @@ private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstructio
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "Instruction ${index + 1}",
+                text = stringResource(R.string.solana_instruction_number, index + 1),
                 style = Theme.brockmann.button.medium.regular,
                 color = Theme.v2.colors.text.primary,
                 fontSize = 10.sp,
@@ -148,23 +149,31 @@ private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstructio
 
         instruction.programName?.let { name ->
             Text(
-                text = "Program: $name",
+                text = stringResource(R.string.solana_program_name, name),
                 style = Theme.brockmann.button.medium.medium,
                 color = Theme.v2.colors.neutrals.n100,
                 fontSize = 10.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
 
         Text(
-            text = "Program ID: ${instruction.programId}",
+            text = stringResource(R.string.solana_program_id, instruction.programId),
             color = Theme.v2.colors.neutrals.n100,
             style = Theme.brockmann.button.medium.medium,
             fontSize = 10.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
 
         Text(
             text =
-                "Accounts: ${instruction.accountsCount} | Data length: ${instruction.dataLength} bytes",
+                stringResource(
+                    R.string.solana_accounts_data,
+                    instruction.accountsCount,
+                    instruction.dataLength,
+                ),
             color = Theme.v2.colors.neutrals.n100,
             style = Theme.brockmann.button.medium.medium,
             fontSize = 10.sp,

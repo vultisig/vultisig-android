@@ -67,9 +67,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -261,6 +259,8 @@ constructor(
         discoverParticipantsJob?.cancel()
         viewModelScope.launch {
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
+            val keygenCommittee = listOf(localPartyId) + state.value.selectedDevices
+            sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
 
             navigator.route(
                 Route.Keygen.Generating(
@@ -270,7 +270,7 @@ constructor(
                     localPartyId = localPartyId,
                     vaultName = vaultName,
                     hexChainCode = hexChainCode,
-                    keygenCommittee = listOf(localPartyId) + state.value.selectedDevices,
+                    keygenCommittee = keygenCommittee,
                     encryptionKeyHex = encryptionKeyHex,
                     isInitiatingDevice = true,
                     libType =
@@ -618,14 +618,13 @@ constructor(
         MediatorService.start(context, serviceName)
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     private val serviceStartedReceiver: BroadcastReceiver =
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == MediatorService.SERVICE_ACTION) {
                     Timber.d("onReceive: Mediator service started")
                     // send a request to local mediator server to start the session
-                    GlobalScope.launch(Dispatchers.IO) {
+                    viewModelScope.launch(Dispatchers.IO) {
                         delay(1000) // back off a second
                         startSessionWithRetry()
                     }
