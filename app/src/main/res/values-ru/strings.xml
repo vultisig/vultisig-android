@@ -871,6 +871,11 @@
     <string name="transaction_status_checking_transaction">Проверка транзакции…</string>
     <string name="raw_transaction_data">Исходные данные транзакции</string>
     <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
+    <string name="solana_instructions_summary">Сводка инструкций транзакции</string>
+    <string name="solana_instruction_number">Инструкция %1$d</string>
+    <string name="solana_program_name">Программа: %1$s</string>
+    <string name="solana_program_id">ID программы: %1$s</string>
+    <string name="solana_accounts_data">Аккаунты: %1$d | Размер данных: %2$d байт</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Прежде чем начать…</string>
@@ -942,6 +947,12 @@
         <item quantity="few">Повторно отправить уведомление через %d секунды</item>
         <item quantity="many">Повторно отправить уведомление через %d секунд</item>
         <item quantity="other">Повторно отправить уведомление через %d секунд</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="one">%d хранилище</item>
+        <item quantity="few">%d хранилища</item>
+        <item quantity="many">%d хранилищ</item>
+        <item quantity="other">%d хранилищ</item>
     </plurals>
     <string name="key_import_chains_found_desc">Каждая дополнительная сеть увеличивает время создания хранилища и вероятность тайм-аута.</string>
     <string name="key_import_chains_continue">Начать</string>
@@ -1070,4 +1081,17 @@
     <string name="native_asset">Нативный</string>
     <string name="invalid_integer_error">Недопустимое целое число</string>
     <string name="empty_lps_field">Пустое поле Единицы LP</string>
+
+    <string name="transaction_failed">Транзакция не удалась</string>
+    <string name="vault_detail_signer">Подписант %1$d</string>
+    <string name="deposit_form_lp_units_hint">Единицы LP</string>
+    <string name="staking_transfer">Перевести</string>
+
+    <string name="defi_header_minted">Выпущено %1$s</string>
+    <string name="defi_header_compounded">Капитализировано %1$s</string>
+    <string name="defi_header_staked">Застейкано %1$s</string>
+
+    <string name="name_vault_import">Импортированное хранилище</string>
+    <string name="name_vault_fast">Быстрое хранилище</string>
+    <string name="name_vault_secure">Безопасное хранилище</string>
 </resources>

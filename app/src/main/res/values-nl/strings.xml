@@ -871,6 +871,11 @@
     <string name="transaction_status_checking_transaction">Transactie controleren…</string>
     <string name="raw_transaction_data">Ruwe transactiegegevens</string>
     <string name="solana_raw_transaction">Solana Ruwe transactie</string>
+    <string name="solana_instructions_summary">Overzicht transactie-instructies</string>
+    <string name="solana_instruction_number">Instructie %1$d</string>
+    <string name="solana_program_name">Programma: %1$s</string>
+    <string name="solana_program_id">Programma-ID: %1$s</string>
+    <string name="solana_accounts_data">Accounts: %1$d | Gegevenslengte: %2$d bytes</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Voordat u begint…</string>
@@ -938,6 +943,10 @@
     <plurals name="resend_notification_in_seconds">
         <item quantity="one">Melding opnieuw sturen in %d seconde</item>
         <item quantity="other">Melding opnieuw sturen in %d seconden</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="one">%d kluis</item>
+        <item quantity="other">%d kluizen</item>
     </plurals>
     <string name="key_import_chains_found_desc">Elke extra keten verlengt de tijd die nodig is om uw kluis te genereren en de kans op een time-out.</string>
     <string name="key_import_chains_continue">Aan de slag</string>
@@ -1066,4 +1075,17 @@
     <string name="native_asset">Native</string>
     <string name="invalid_integer_error">Ongeldig geheel getal</string>
     <string name="empty_lps_field">Leeg LP-eenheden-veld</string>
+
+    <string name="transaction_failed">Transactie mislukt</string>
+    <string name="vault_detail_signer">Ondertekenaar %1$d</string>
+    <string name="deposit_form_lp_units_hint">LP-eenheden</string>
+    <string name="staking_transfer">Overdragen</string>
+
+    <string name="defi_header_minted">Gemint %1$s</string>
+    <string name="defi_header_compounded">Samengesteld %1$s</string>
+    <string name="defi_header_staked">Gestaked %1$s</string>
+
+    <string name="name_vault_import">Geïmporteerde kluis</string>
+    <string name="name_vault_fast">Snelle kluis</string>
+    <string name="name_vault_secure">Veilige kluis</string>
 </resources>

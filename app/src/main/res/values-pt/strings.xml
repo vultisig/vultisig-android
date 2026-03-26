@@ -875,6 +875,11 @@
    <string name="transaction_status_checking_transaction">A verificar transação…</string>
     <string name="raw_transaction_data">Dados brutos de transação</string>
     <string name="solana_raw_transaction">Transação bruta de Solana</string>
+    <string name="solana_instructions_summary">Resumo das instruções da transação</string>
+    <string name="solana_instruction_number">Instrução %1$d</string>
+    <string name="solana_program_name">Programa: %1$s</string>
+    <string name="solana_program_id">ID do programa: %1$s</string>
+    <string name="solana_accounts_data">Contas: %1$d | Tamanho dos dados: %2$d bytes</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Antes de começar…</string>
@@ -942,6 +947,10 @@
     <plurals name="resend_notification_in_seconds">
         <item quantity="one">Reenviar notificação em %d segundo</item>
         <item quantity="other">Reenviar notificação em %d segundos</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="one">%d cofre</item>
+        <item quantity="other">%d cofres</item>
     </plurals>
     <string name="key_import_chains_found_desc">Cada cadeia adicional aumenta o tempo para gerar seu cofre e a possibilidade de o tempo limite ser atingido.</string>
     <string name="key_import_chains_continue">Começar</string>
@@ -1070,4 +1079,17 @@
     <string name="native_asset">Nativo</string>
     <string name="invalid_integer_error">Quantidade inteira inválida</string>
     <string name="empty_lps_field">Campo de Unidades LP vazio</string>
+
+    <string name="transaction_failed">Transação falhada</string>
+    <string name="vault_detail_signer">Signatário %1$d</string>
+    <string name="deposit_form_lp_units_hint">Unidades LP</string>
+    <string name="staking_transfer">Transferir</string>
+
+    <string name="defi_header_minted">Mintado %1$s</string>
+    <string name="defi_header_compounded">Composto %1$s</string>
+    <string name="defi_header_staked">Staked %1$s</string>
+
+    <string name="name_vault_import">Cofre importado</string>
+    <string name="name_vault_fast">Cofre rápido</string>
+    <string name="name_vault_secure">Cofre seguro</string>
 </resources>

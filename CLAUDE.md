@@ -236,6 +236,7 @@ When the user says "implement all ui-mismatch issues" or "fix all tickets":
   - `values-es/strings.xml` (Spanish)
   - `values-hr/strings.xml` (Croatian)
   - `values-it/strings.xml` (Italian)
+  - `values-ko/strings.xml` (Korean)
   - `values-nl/strings.xml` (Dutch)
   - `values-pt/strings.xml` (Portuguese)
   - `values-ru/strings.xml` (Russian)
@@ -254,6 +255,7 @@ When a screen, composable, or UI component is removed from the app, **all resour
   - `values-es/strings.xml` (Spanish)
   - `values-hr/strings.xml` (Croatian)
   - `values-it/strings.xml` (Italian)
+  - `values-ko/strings.xml` (Korean)
   - `values-nl/strings.xml` (Dutch)
   - `values-pt/strings.xml` (Portuguese)
   - `values-ru/strings.xml` (Russian)
@@ -288,7 +290,7 @@ When deleting a screen, go through this checklist:
 4. ✅ Remove the `composable<Route.X>` block and import from `NavGraph.kt`
 5. ✅ Remove the menu/settings item, list entry, and click handler (if applicable)
 6. ✅ Delete all exclusively-used drawable resources
-7. ✅ Remove all associated string keys from **all 9** locale `strings.xml` files
+7. ✅ Remove all associated string keys from **all 10** locale `strings.xml` files
 8. ✅ Remove orphaned XML comment blocks in strings files
 9. ✅ Grep the entire codebase to confirm no remaining references to the deleted screen, route, strings, or drawables
 

@@ -876,6 +876,11 @@
     <string name="transaction_status_checking_transaction">Verifica della transazione in corso…</string>
     <string name="raw_transaction_data">Dati grezzi sulle transazioni</string>
     <string name="solana_raw_transaction">Transazioni grezze Solana</string>
+    <string name="solana_instructions_summary">Riepilogo istruzioni della transazione</string>
+    <string name="solana_instruction_number">Istruzione %1$d</string>
+    <string name="solana_program_name">Programma: %1$s</string>
+    <string name="solana_program_id">ID programma: %1$s</string>
+    <string name="solana_accounts_data">Account: %1$d | Dimensione dati: %2$d byte</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Prima di iniziare…</string>
@@ -944,6 +949,10 @@
         <item quantity="one">Reinvia notifica in %d secondo</item>
         <item quantity="many">Reinvia notifica in %d secondi</item>
         <item quantity="other">Reinvia notifica in %d secondi</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="one">%d cassaforte</item>
+        <item quantity="other">%d casseforti</item>
     </plurals>
     <string name="key_import_chains_found_desc">Ogni catena aggiuntiva aumenta il tempo per generare il tuo vault e la possibilità di un timeout.</string>
     <string name="key_import_chains_continue">Inizia</string>
@@ -1072,4 +1081,20 @@
     <string name="native_asset">Nativo</string>
     <string name="invalid_integer_error">Importo intero non valido</string>
     <string name="empty_lps_field">Campo Unità LP vuoto</string>
+
+    <!-- Hardcoded string fixes -->
+    <string name="transaction_failed">Transazione fallita</string>
+    <string name="vault_detail_signer">Firmatario %1$d</string>
+    <string name="deposit_form_lp_units_hint">Unità LP</string>
+    <string name="staking_transfer">Trasferisci</string>
+
+    <!-- DeFi position headers -->
+    <string name="defi_header_minted">Coniato %1$s</string>
+    <string name="defi_header_compounded">Capitalizzato %1$s</string>
+    <string name="defi_header_staked">In staking %1$s</string>
+
+    <!-- Default vault names -->
+    <string name="name_vault_import">Cassaforte importata</string>
+    <string name="name_vault_fast">Cassaforte rapida</string>
+    <string name="name_vault_secure">Cassaforte sicura</string>
 </resources>

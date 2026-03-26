@@ -274,11 +274,11 @@
     <string name="keysign_password_title">Passwort</string>
     <string name="start_screen_new">NEU</string>
     <string name="start_screen_import_seedphrase">Seed-Phrase importieren</string>
-    <string name="start_screen_import_seedphrase_desc">Gib sie ein, erstelle einen Tresor, schau nie zurück.</string>
+    <string name="start_screen_import_seedphrase_desc">Geben Sie sie ein, erstellen Sie einen Tresor, schauen Sie nie zurück.</string>
     <string name="start_screen_import_vault_share">Vault-Share importieren</string>
-    <string name="start_screen_import_vault_share_desc">Verwende einen Vault-Share, um deinen Tresor wiederherzustellen.</string>
+    <string name="start_screen_import_vault_share_desc">Verwenden Sie einen Vault-Share, um Ihren Tresor wiederherzustellen.</string>
     <string name="start_screen_import_vault_share_file_types">Unterstützte Dateitypen: .bak &amp; .vult</string>
-    <string name="start_screen_recover_or_convert">Stelle deinen Tresor wieder her oder konvertiere deine Seed-Phrase in einen Tresor</string>
+    <string name="start_screen_recover_or_convert">Stellen Sie Ihren Tresor wieder her oder konvertieren Sie Ihre Seed-Phrase in einen Tresor</string>
     <string name="keysign_password_incorrect_password">Das Passwort ist falsch</string>
     <string name="vault_list_part_n_of_t">Teilen %1$d-of-%2$d</string>
     <string name="vault_part_n_of_t">Teilen %1$d-von-%2$d</string>
@@ -438,7 +438,7 @@
     <string name="verify_deposit_network">Netzwerk</string>
     <string name="verify_deposit_hold_paired">Gedrückt halten für gekoppelte Signatur</string>
     <string name="verify_deposit_sign_transaction">Transaktion signieren</string>
-    <string name="referral_invite_sheet_description">Teile deinen einzigartigen Empfehlungscode, um Freunde einzuladen. Sie erhalten einen Rabatt und je mehr sie handeln, desto mehr verdienst du – direkt in deinen Tresor geliefert.</string>
+    <string name="referral_invite_sheet_description">Teilen Sie Ihren einzigartigen Empfehlungscode, um Freunde einzuladen. Sie erhalten einen Rabatt und je mehr sie handeln, desto mehr verdienen Sie – direkt in Ihren Tresor geliefert.</string>
     <string name="referral_create_referral">Empfehlung erstellen</string>
     <string name="referral_save_referral_code">Empfehlungscode speichern</string>
     <string name="referral_invite_onboarding_3">Gebühren sparen.</string>
@@ -501,11 +501,11 @@
     <string name="tcy_auto_compound_enable_subtitle">Automatische Zinseszinsen für Ihre TCY-Prämien</string>
     <string name="tcy_auto_compound_unstake_title">Automatische Zinseszinsen für TCY deaktivieren</string>
     <string name="tcy_auto_compound_unstake_subtitle">Automatische Zinseszinsen für TCY-Einzahlungen deaktivieren</string>
-    <string name="referral_view_title">Deine Empfehlung</string>
+    <string name="referral_view_title">Ihre Empfehlung</string>
     <string name="referral_view_selected_vault">Tresor ausgewählt</string>
-    <string name="referral_view_your_referral_code">Dein Empfehlungscode</string>
+    <string name="referral_view_your_referral_code">Ihr Empfehlungscode</string>
     <string name="referral_view_edit_referral">Empfehlung bearbeiten</string>
-    <string name="referral_view_your_friend_referral">Empfehlungscode deines Freundes</string>
+    <string name="referral_view_your_friend_referral">Empfehlungscode Ihres Freundes</string>
     <string name="referral_view_collected_rewards">Gesammelte Belohnungen</string>
     <string name="referral_view_add_friend">Freundesempfehlung hinzufügen</string>
     <string name="referral_view_save">Speichern</string>
@@ -561,7 +561,7 @@
     <string name="share_sheet_more">Mehr</string>
 
     <string name="referral_not_found">Noch keine Empfehlung</string>
-    <string name="referral_cta">Verwandle dein Vault in eine Belohnungsmaschine. Erstelle jetzt deine Empfehlung und beginne zu verdienen</string>
+    <string name="referral_cta">Verwandeln Sie Ihr Vault in eine Belohnungsmaschine. Erstellen Sie jetzt Ihre Empfehlung und beginnen Sie zu verdienen</string>
     <string name="error_saving_qr_code">QR-Code konnte nicht gespeichert werden. %1$s</string>
     <string name="transaction_type_button_buy">Kaufen</string>
     <string name="transaction_type_button_receive">Erhalten</string>
@@ -717,7 +717,7 @@
     <string name="select_vault_type_next">Weiter</string>
     <string name="select_vault_type_choose_setup">Wähle „Einrichtung“</string>
     <string name="home_screen_scan_qr_code">QR-Code scannen</string>
-    <string name="onboarding_desc_page_6_part_2">Öffne deinen Tresor</string>
+    <string name="onboarding_desc_page_6_part_2">Öffnen Sie Ihren Tresor</string>
     <string name="onboarding_summary_button">Tresor erstellen</string>
     <string name="keygen_benefit_3_template">Tauschen Sie Ihre bevorzugten Token in einem einzigen Tresor</string>
     <string name="keygen_benefit_3_emphasized">Chainübergreifend</string>
@@ -779,7 +779,7 @@
     <string name="peer_discovery_local_mode_hint">Sie befinden sich im lokalen Modus.</string>
     <string name="peer_discovery_recommended_devices_hint">QR-Code mit einem anderen Gerät scannen. Einrichtung mit 3 Geräten empfohlen, 2 Geräte reichen aus.</string>
     <string name="review_vault_devices_title">Vault-Geräte überprüfen</string>
-    <string name="review_vault_devices_description">Stell sicher, dass dies die richtigen Geräte sind, die du hinzugefügt hast:</string>
+    <string name="review_vault_devices_description">Stellen Sie sicher, dass dies die richtigen Geräte sind, die Sie hinzugefügt haben:</string>
     <string name="review_vault_devices_looks_good">Sieht gut aus</string>
     <string name="review_vault_devices_something_wrong">Etwas stimmt nicht</string>
     <string name="review_vault_devices_this_device_label">%1$s (Dieses Gerät)</string>
@@ -824,7 +824,7 @@
     <string name="function_switch_thorchain_address">THORChain-Adresse</string>
     <string name="tx_transaction_successful_screen_title">Transaktion erfolgreich</string>
     <string name="migration_onboarding_step_3_text_end">Beim Upgrade</string>
-    <string name="migration_onboarding_upgrade_your_vault">Verbessere deinen Tresor</string>
+    <string name="migration_onboarding_upgrade_your_vault">Verbessern Sie Ihren Tresor</string>
     <string name="migration_onboarding_upgrade_now">Jetzt upgraden</string>
     <string name="migration_onboarding_step_1_text_start">Verbessere diesen Tresor auf die</string>
     <string name="onboarding_desc_page_1_part_2">Tresorfreigaben</string>
@@ -876,6 +876,11 @@
     <string name="transaction_status_checking_transaction">Transaktion wird geprüft…</string>
     <string name="raw_transaction_data">Rohdaten der Transaktion</string>
     <string name="solana_raw_transaction">Solana-Rohdaten der Transaktion</string>
+    <string name="solana_instructions_summary">Transaktionsanweisungen – Übersicht</string>
+    <string name="solana_instruction_number">Anweisung %1$d</string>
+    <string name="solana_program_name">Programm: %1$s</string>
+    <string name="solana_program_id">Programm-ID: %1$s</string>
+    <string name="solana_accounts_data">Konten: %1$d | Datenlänge: %2$d Bytes</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Bevor Sie beginnen…</string>
@@ -943,6 +948,10 @@
     <plurals name="resend_notification_in_seconds">
         <item quantity="one">Benachrichtigung in %d Sekunde erneut senden</item>
         <item quantity="other">Benachrichtigung in %d Sekunden erneut senden</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="one">%d Tresor</item>
+        <item quantity="other">%d Tresore</item>
     </plurals>
     <string name="key_import_chains_found_desc">Jede zusätzliche Blockchain erhöht die Zeit zur Erstellung Ihres Tresors und die Möglichkeit eines Timeouts.</string>
     <string name="key_import_chains_continue">Loslegen</string>
@@ -1071,4 +1080,20 @@
     <string name="native_asset">Nativ</string>
     <string name="invalid_integer_error">Ungültige Ganzzahl</string>
     <string name="empty_lps_field">Leeres LP-Einheiten-Feld</string>
+
+    <!-- Hardcoded string fixes -->
+    <string name="transaction_failed">Transaktion fehlgeschlagen</string>
+    <string name="vault_detail_signer">Unterzeichner %1$d</string>
+    <string name="deposit_form_lp_units_hint">LP-Einheiten</string>
+    <string name="staking_transfer">Übertragen</string>
+
+    <!-- DeFi position headers -->
+    <string name="defi_header_minted">Geprägt %1$s</string>
+    <string name="defi_header_compounded">Aufgezinst %1$s</string>
+    <string name="defi_header_staked">Gestakt %1$s</string>
+
+    <!-- Default vault names -->
+    <string name="name_vault_import">Import-Tresor</string>
+    <string name="name_vault_fast">Schneller Tresor</string>
+    <string name="name_vault_secure">Sicherer Tresor</string>
 </resources>
