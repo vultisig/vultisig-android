@@ -654,6 +654,9 @@ constructor(
                 if (attempt < 3) {
                     delay(delayMs)
                     delayMs *= 2
+                } else {
+                    Timber.tag("KeysignFlowViewModel").e("All attempts to start session failed")
+                    moveToState(KeysignFlowState.Error("Failed to start session"))
                 }
             }
         }
