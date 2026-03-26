@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.keygen.SchnorrKeygen
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainPublicKey
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
@@ -25,6 +26,7 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.isFastVault
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ChainImportSetting
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
@@ -119,6 +121,7 @@ constructor(
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
     private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Keygen.Generating>()
@@ -668,6 +671,15 @@ constructor(
             existingVault.pubKeyMLDSA = vault.pubKeyMLDSA
             existingVault.keyshares = vault.keyshares
             saveVault(existingVault, true)
+
+            // Auto-enable QBTC chain after MLDSA key generation
+            val qbtcToken = Coins.Qbtc.QBTC
+            val (address, pubKey) =
+                chainAccountAddressRepository.getAddress(qbtcToken, existingVault)
+            vaultRepository.addTokenToVault(
+                vaultId,
+                qbtcToken.copy(address = address, hexPublicKey = pubKey),
+            )
         } else {
             val shouldOverrideVault = isReshareMode || action == TssAction.Migrate
 
