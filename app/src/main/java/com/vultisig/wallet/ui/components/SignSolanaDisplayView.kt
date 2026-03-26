@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
@@ -152,6 +153,8 @@ private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstructio
                 style = Theme.brockmann.button.medium.medium,
                 color = Theme.v2.colors.neutrals.n100,
                 fontSize = 10.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
 
@@ -160,6 +163,8 @@ private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstructio
             color = Theme.v2.colors.neutrals.n100,
             style = Theme.brockmann.button.medium.medium,
             fontSize = 10.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
 
         Text(
