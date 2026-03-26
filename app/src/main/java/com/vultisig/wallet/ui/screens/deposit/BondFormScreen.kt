@@ -325,6 +325,9 @@ private fun MayaBondFormContent(
                         } else if (isAddressFocused) {
                             isAddressFocused = false
                             onNodeAddressLostFocus()
+                            if (state.nodeAddressError == null) {
+                                isAddressExpanded = false
+                            }
                         }
                     },
                     innerState =
