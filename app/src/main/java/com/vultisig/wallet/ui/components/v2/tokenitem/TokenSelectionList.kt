@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -176,7 +175,6 @@ private fun GridTitle(title: String) {
         text = title,
         style = Theme.brockmann.supplementary.caption,
         color = Theme.v2.colors.text.primary,
-        modifier = Modifier.widthIn(max = 74.dp),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )

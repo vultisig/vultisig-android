@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -132,7 +131,6 @@ internal fun GridPlus(modifier: Modifier = Modifier, model: GridPlusUiModel) {
             text = model.title,
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.primary,
-            modifier = Modifier.widthIn(max = 74.dp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -277,7 +275,6 @@ private fun TokenUiGridName(token: TokenUiSingle) {
         text = token.name,
         style = Theme.brockmann.supplementary.caption,
         color = Theme.v2.colors.text.primary,
-        modifier = Modifier.widthIn(max = 74.dp),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
@@ -292,7 +289,6 @@ private fun TokenUiGridName(
         text = mapper(tokens),
         style = Theme.brockmann.supplementary.caption,
         color = Theme.v2.colors.text.primary,
-        modifier = Modifier.widthIn(max = 74.dp),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
