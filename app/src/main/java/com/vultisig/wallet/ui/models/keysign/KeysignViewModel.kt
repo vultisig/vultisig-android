@@ -315,6 +315,8 @@ internal class KeysignViewModel(
                 currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
             }
             isNavigateToHome = true
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e)
             currentState.value = KeysignState.Error(e.message ?: "Unknown error")
