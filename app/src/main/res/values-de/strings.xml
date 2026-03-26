@@ -1100,7 +1100,7 @@
     <string name="name_vault_fast">Schneller Tresor</string>
     <string name="name_vault_secure">Sicherer Tresor</string>
     <string name="unknown_error">Unbekannter Fehler</string>
-    <string name="key_import_error_title">Key Import Failed</string>
-    <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
-    <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>
+    <string name="key_import_error_title">Schlüsselimport fehlgeschlagen</string>
+    <string name="key_import_error_description">Der Tresor konnte nicht aus der Seed-Phrase importiert werden. Bitte überprüfen Sie Ihre Seed-Phrase und versuchen Sie es erneut.</string>
+    <string name="key_import_error_no_mnemonic_description">Keine Seed-Phrase gefunden. Bitte geben Sie Ihre Seed-Phrase erneut ein und versuchen Sie es noch einmal.</string>
 </resources>
