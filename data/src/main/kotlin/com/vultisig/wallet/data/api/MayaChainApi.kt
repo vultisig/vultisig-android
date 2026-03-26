@@ -123,7 +123,7 @@ data class MayaMemberDetails(@SerialName("pools") val pools: List<MayaMemberPool
 data class MayaMemberPool(
     @SerialName("pool") val pool: String,
     @SerialName("assetAdded") val assetAdded: String = "0",
-    @SerialName("runeAdded") val runeAdded: String = "0",
+    @SerialName("runeAdded") val cacaoAdded: String = "0",
     @SerialName("liquidityUnits") val liquidityUnits: String = "0",
 )
 

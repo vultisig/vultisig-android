@@ -595,7 +595,7 @@ constructor(
                         val assetAdded =
                             memberPool?.assetAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
                         val cacaoAdded =
-                            memberPool?.runeAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
+                            memberPool?.cacaoAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
                         val assetAmount = assetAdded.toValue(Coins.MayaChain.CACAO.decimal)
                         val cacaoAmount = cacaoAdded.toValue(Coins.MayaChain.CACAO.decimal)
