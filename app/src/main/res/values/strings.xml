@@ -1036,6 +1036,9 @@
     <string name="key_import_chains_get_started">Get started</string>
     <string name="key_import_chains_no_results">No chains match your search</string>
     <string name="key_import_device_count_get_started">Get started</string>
+    <string name="key_import_error_title">Key Import Failed</string>
+    <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
+    <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>
 
     <string name="review_vault_devices_title">Review your vault devices</string>
     <string name="review_vault_devices_description">Make sure that these are the correct devices you\'ve added:</string>
@@ -1147,4 +1150,5 @@
     <string name="native_asset">Native</string>
     <string name="invalid_integer_error">Invalid integer amount</string>
     <string name="empty_lps_field">Empty LP units field</string>
+    <string name="unknown_error">Unknown error</string>
 </resources>

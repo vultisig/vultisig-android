@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keysign
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.KeysignVerify
@@ -54,6 +55,10 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
+import com.vultisig.wallet.ui.utils.or
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import java.math.BigInteger
 import java.util.Base64
 import kotlin.time.Duration.Companion.seconds
@@ -83,7 +88,7 @@ internal sealed class KeysignState {
 
     data class KeysignFinished(val transactionStatus: TransactionStatus) : KeysignState()
 
-    data class Error(val errorMessage: String) : KeysignState()
+    data class Error(val errorMessage: UiText) : KeysignState()
 }
 
 internal sealed interface TransactionTypeUiModel {
@@ -107,16 +112,21 @@ sealed interface TransactionStatus {
     data class Failed(val cause: UiText) : TransactionStatus
 }
 
-internal class KeysignViewModel(
-    val vault: Vault,
-    private val keysignCommittee: List<String>,
-    private val serverUrl: String,
-    private val sessionId: String,
-    private val encryptionKeyHex: String,
-    private val messagesToSign: List<String>,
-    private val keyType: TssKeyType,
-    private val keysignPayload: KeysignPayload?,
-    private val customMessagePayload: CustomMessagePayload?,
+internal class KeysignViewModel
+@AssistedInject
+constructor(
+    @Assisted val vault: Vault,
+    @Assisted("keysignCommittee") private val keysignCommittee: List<String>,
+    @Assisted("serverUrl") private val serverUrl: String,
+    @Assisted("sessionId") private val sessionId: String,
+    @Assisted("encryptionKeyHex") private val encryptionKeyHex: String,
+    @Assisted("messagesToSign") private val messagesToSign: List<String>,
+    @Assisted private val keyType: TssKeyType,
+    @Assisted private val keysignPayload: KeysignPayload?,
+    @Assisted private val customMessagePayload: CustomMessagePayload?,
+    @Assisted val transactionTypeUiModel: TransactionTypeUiModel?,
+    @Assisted private val isInitiatingDevice: Boolean,
+    @Assisted private val transactionHistoryData: TransactionHistoryData?,
     private val thorChainApi: ThorChainApi,
     private val evmApiFactory: EvmApiFactory,
     private val broadcastTx: BroadcastTxUseCase,
@@ -125,16 +135,33 @@ internal class KeysignViewModel(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
-    val transactionTypeUiModel: TransactionTypeUiModel?,
     private val pullTssMessages: PullTssMessagesUseCase,
-    private val isInitiatingDevice: Boolean,
     private val addressBookRepository: AddressBookRepository,
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
     private val vaultRepository: VaultRepository,
-    private val transactionHistoryData: TransactionHistoryData?,
     private val transactionHistoryRepository: TransactionHistoryRepository,
 ) : ViewModel() {
+
+    /** Creates [KeysignViewModel] with runtime-provided assisted parameters. */
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            vault: Vault,
+            @Assisted("keysignCommittee") keysignCommittee: List<String>,
+            @Assisted("serverUrl") serverUrl: String,
+            @Assisted("sessionId") sessionId: String,
+            @Assisted("encryptionKeyHex") encryptionKeyHex: String,
+            @Assisted("messagesToSign") messagesToSign: List<String>,
+            keyType: TssKeyType,
+            keysignPayload: KeysignPayload?,
+            customMessagePayload: CustomMessagePayload?,
+            transactionTypeUiModel: TransactionTypeUiModel?,
+            isInitiatingDevice: Boolean,
+            transactionHistoryData: TransactionHistoryData?,
+        ): KeysignViewModel
+    }
+
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
 
@@ -215,80 +242,13 @@ internal class KeysignViewModel(
     }
 
     private suspend fun startKeysignDkls() {
-        try {
-            if (keysignPayload == null && customMessagePayload == null) {
-                error("Keysign payload is null")
-            }
-            when (keyType) {
-                TssKeyType.ECDSA -> {
-                    currentState.value = KeysignState.KeysignECDSA
-
-                    val dkls =
-                        DKLSKeysign(
-                            vault = vault,
-                            keysignCommittee = keysignCommittee,
-                            mediatorURL = serverUrl,
-                            sessionID = sessionId,
-                            encryptionKeyHex = encryptionKeyHex,
-                            messageToSign = messagesToSign,
-                            chainPath =
-                                this.keysignPayload?.coin?.coinType?.compatibleDerivationPath()
-                                    ?: DEFAULT_ETHEREUM_DERIVATION_PATH,
-                            isInitiateDevice = isInitiatingDevice,
-                            sessionApi = sessionApi,
-                            encryption = encryption,
-                        )
-
-                    dkls.keysignWithRetry()
-
-                    this.signatures += dkls.signatures
-                    if (signatures.isEmpty()) {
-                        error("Failed to sign transaction, signatures empty")
-                    }
-                    calculateCustomMessageSignature(this.signatures.values.first())
-                }
-
-                TssKeyType.EDDSA -> {
-                    currentState.value = KeysignState.KeysignEdDSA
-
-                    val schnorr =
-                        SchnorrKeysign(
-                            vault = vault,
-                            keysignCommittee = keysignCommittee,
-                            mediatorURL = serverUrl,
-                            sessionID = sessionId,
-                            encryptionKeyHex = encryptionKeyHex,
-                            messageToSign = messagesToSign,
-                            isInitiateDevice = isInitiatingDevice,
-                            sessionApi = sessionApi,
-                            encryption = encryption,
-                        )
-
-                    schnorr.keysignWithRetry()
-
-                    this.signatures += schnorr.signatures
-
-                    if (signatures.isEmpty()) {
-                        error("Failed to sign transaction, signatures empty")
-                    }
-                }
-            }
-
-            Timber.d("All messages signed, broadcasting transaction")
-            if (!skipBroadcast()) {
-                broadcastTransaction()
-                checkThorChainTxResult()
-            }
-            if (customMessagePayload != null) {
-                // For custom message signing, we consider the flow complete after signing without
-                // broadcasting
-                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
-            }
-            isNavigateToHome = true
-        } catch (e: Exception) {
-            Timber.e(e)
-            currentState.value = KeysignState.Error(e.message ?: "Unknown error")
-        }
+        startKeysignCore(
+            ecdsaPublicKeyOverride = null,
+            eddsaPublicKeyOverride = null,
+            chainPath =
+                keysignPayload?.coin?.coinType?.compatibleDerivationPath()
+                    ?: DEFAULT_ETHEREUM_DERIVATION_PATH,
+        )
     }
 
     /**
@@ -297,22 +257,28 @@ internal class KeysignViewModel(
      * signing (chainPath = "").
      */
     private suspend fun startKeysignKeyImport() {
+        val chain = keysignPayload?.coin?.chain
+        startKeysignCore(
+            ecdsaPublicKeyOverride =
+                if (chain != null) vault.getEcdsaSigningKey(chain).publicKey else vault.pubKeyECDSA,
+            eddsaPublicKeyOverride =
+                if (chain != null) vault.getEddsaSigningKey(chain) else vault.pubKeyEDDSA,
+            chainPath = "",
+        )
+    }
+
+    private suspend fun startKeysignCore(
+        ecdsaPublicKeyOverride: String?,
+        eddsaPublicKeyOverride: String?,
+        chainPath: String,
+    ) {
         try {
             if (keysignPayload == null && customMessagePayload == null) {
                 error("Keysign payload is null")
             }
-            val chain = keysignPayload?.coin?.chain
-
             when (keyType) {
                 TssKeyType.ECDSA -> {
                     currentState.value = KeysignState.KeysignECDSA
-
-                    val ecdsaKey =
-                        if (chain != null) {
-                            vault.getEcdsaSigningKey(chain).publicKey
-                        } else {
-                            vault.pubKeyECDSA
-                        }
 
                     val dkls =
                         DKLSKeysign(
@@ -322,9 +288,9 @@ internal class KeysignViewModel(
                             sessionID = sessionId,
                             encryptionKeyHex = encryptionKeyHex,
                             messageToSign = messagesToSign,
-                            chainPath = "",
+                            chainPath = chainPath,
                             isInitiateDevice = isInitiatingDevice,
-                            publicKeyOverride = ecdsaKey,
+                            publicKeyOverride = ecdsaPublicKeyOverride,
                             sessionApi = sessionApi,
                             encryption = encryption,
                         )
@@ -341,13 +307,6 @@ internal class KeysignViewModel(
                 TssKeyType.EDDSA -> {
                     currentState.value = KeysignState.KeysignEdDSA
 
-                    val eddsaKey =
-                        if (chain != null) {
-                            vault.getEddsaSigningKey(chain)
-                        } else {
-                            vault.pubKeyEDDSA
-                        }
-
                     val schnorr =
                         SchnorrKeysign(
                             vault = vault,
@@ -357,7 +316,7 @@ internal class KeysignViewModel(
                             encryptionKeyHex = encryptionKeyHex,
                             messageToSign = messagesToSign,
                             isInitiateDevice = isInitiatingDevice,
-                            publicKeyOverride = eddsaKey,
+                            publicKeyOverride = eddsaPublicKeyOverride,
                             sessionApi = sessionApi,
                             encryption = encryption,
                         )
@@ -383,9 +342,11 @@ internal class KeysignViewModel(
                 currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
             }
             isNavigateToHome = true
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e)
-            currentState.value = KeysignState.Error(e.message ?: "Unknown error")
+            currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
         }
     }
 
@@ -436,7 +397,7 @@ internal class KeysignViewModel(
             pullTssMessagesJob?.cancel()
         } catch (e: Exception) {
             Timber.e(e)
-            currentState.value = KeysignState.Error(e.message ?: "Unknown error")
+            currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
         }
     }
 

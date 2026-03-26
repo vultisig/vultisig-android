@@ -3,18 +3,13 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import android.net.nsd.NsdManager
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.EvmApiFactory
-import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
-import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
@@ -49,27 +44,20 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.isChainSupported
-import com.vultisig.wallet.data.services.TransactionStatusServiceManager
-import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
-import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
-import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
-import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
@@ -195,26 +183,17 @@ constructor(
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val mapKeysignMessageFromProto: KeysignMessageFromProtoMapper,
     private val protoBuf: ProtoBuf,
-    private val thorChainApi: ThorChainApi,
-    private val evmApiFactory: EvmApiFactory,
-    private val explorerLinkRepository: ExplorerLinkRepository,
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
-    private val encryption: Encryption,
-    private val featureFlagApi: FeatureFlagApi,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val routerApi: RouterApi,
-    private val pullTssMessages: PullTssMessagesUseCase,
-    private val broadcastTx: BroadcastTxUseCase,
     private val fourByteRepository: FourByteRepository,
     private val securityScannerService: SecurityScannerContract,
     private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
-    private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
-    private val transactionStatusServiceManager: TransactionStatusServiceManager,
-    private val transactionHistoryRepository: TransactionHistoryRepository,
     private val resolveProviderUseCase: ResolveProviderUseCase,
+    private val keysignViewModelFactory: KeysignViewModel.Factory,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -226,8 +205,8 @@ constructor(
     private val vaultId: String = args.vaultId
     private val qrBase64: String = args.qr
     private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
-    var currentState: MutableState<JoinKeysignState> =
-        mutableStateOf(JoinKeysignState.DiscoveringSessionID)
+    val currentState: MutableStateFlow<JoinKeysignState> =
+        MutableStateFlow(JoinKeysignState.DiscoveringSessionID)
     private var _localPartyID: String = ""
     private var _sessionID: String = ""
     private var _serviceName: String = ""
@@ -254,7 +233,7 @@ constructor(
 
     val keysignViewModel: KeysignViewModel
         get() =
-            KeysignViewModel(
+            keysignViewModelFactory.create(
                 vault = _currentVault,
                 keysignCommittee = _keysignCommittee,
                 serverUrl = _serverAddress,
@@ -263,24 +242,10 @@ constructor(
                 messagesToSign = messagesToSign,
                 keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
                 keysignPayload = _keysignPayload,
-                broadcastTx = broadcastTx,
-                thorChainApi = thorChainApi,
-                evmApiFactory = evmApiFactory,
-                explorerLinkRepository = explorerLinkRepository,
-                sessionApi = sessionApi,
-                navigator = navigator,
-                transactionTypeUiModel = transactionTypeUiModel,
-                encryption = encryption,
-                featureFlagApi = featureFlagApi,
-                pullTssMessages = pullTssMessages,
                 customMessagePayload = customMessagePayload,
+                transactionTypeUiModel = transactionTypeUiModel,
                 isInitiatingDevice = false,
-                addressBookRepository = addressBookRepository,
-                transactionStatusServiceManager = transactionStatusServiceManager,
-                txStatusConfigurationProvider = txStatusConfigurationProvider,
-                vaultRepository = vaultRepository,
                 transactionHistoryData = transactionHistoryData,
-                transactionHistoryRepository = transactionHistoryRepository,
             )
 
     val verifyUiModel =

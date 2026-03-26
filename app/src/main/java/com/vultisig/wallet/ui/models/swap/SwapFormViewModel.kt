@@ -78,6 +78,7 @@ import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.or
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
@@ -89,6 +90,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -833,7 +835,9 @@ constructor(
                     val account = accountsRepository.loadAccount(vaultId, result.token)
                     updateAccountInAddresses(account)
                     uiState.update { it.copy(isLoading = false) }
-                } catch (_: Throwable) {
+                } catch (e: Throwable) {
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to load account for token")
                     uiState.update { it.copy(isLoading = false) }
                     return
                 }

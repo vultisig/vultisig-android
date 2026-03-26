@@ -16,7 +16,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.graphics.createBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.asFlow
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.common.Utils
@@ -44,9 +43,11 @@ internal fun KeysignPeerDiscovery(
     val activity = LocalContext.current
     val uiModel by viewModel.uiState.collectAsState()
 
-    val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
+    val selectionState by viewModel.selection.collectAsState()
     val participants = viewModel.participants.collectAsState(initial = emptyList()).value
     val isDataLoaded by viewModel.isDataLoaded.collectAsState()
+    val keysignMessage by viewModel.keysignMessage.collectAsState()
+    val networkOption by viewModel.networkOption.collectAsState()
     val context = LocalContext.current.applicationContext
 
     LaunchedEffect(txType) {
@@ -86,7 +87,7 @@ internal fun KeysignPeerDiscovery(
         }
     }
     LaunchedEffect(key1 = viewModel.selection, vault, isDataLoaded) {
-        viewModel.selection.asFlow().collect { newList ->
+        viewModel.selection.collect { newList ->
             if (!isDataLoaded) return@collect
             if (vault.signers.isEmpty()) {
                 Timber.e("Vault signers size is 0")
@@ -99,9 +100,9 @@ internal fun KeysignPeerDiscovery(
         }
     }
 
-    LaunchedEffect(viewModel.keysignMessage.value) {
-        if (viewModel.keysignMessage.value.isNotEmpty()) {
-            sharedViewModel.loadQrPainter(viewModel.keysignMessage.value)
+    LaunchedEffect(keysignMessage) {
+        if (keysignMessage.isNotEmpty()) {
+            sharedViewModel.loadQrPainter(keysignMessage)
         }
     }
 
@@ -125,7 +126,7 @@ internal fun KeysignPeerDiscovery(
         selectionState = selectionState,
         participants = participants,
         bitmapPainter = uiModel.qrBitmapPainter,
-        networkPromptOption = viewModel.networkOption.value,
+        networkPromptOption = networkOption,
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, context) },
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },

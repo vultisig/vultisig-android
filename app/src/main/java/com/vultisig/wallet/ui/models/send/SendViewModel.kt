@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.models.send
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,7 +31,7 @@ constructor(
 ) : ViewModel() {
     val dst = sendNavigator.destination
     val isKeysignFinished = MutableStateFlow(false)
-    val currentVault: MutableState<Vault?> = mutableStateOf(null)
+    val currentVault: MutableStateFlow<Vault?> = MutableStateFlow(null)
 
     private val vaultId = savedStateHandle.toRoute<Route.SignMessage>().vaultId
 

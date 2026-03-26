@@ -20,8 +20,8 @@ android {
         applicationId = "com.vultisig.wallet"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 35
-        versionCode = 97
-        versionName = "1.0.97"
+        versionCode = 98
+        versionName = "1.0.98"
 
         testInstrumentationRunner = "com.vultisig.wallet.util.HiltTestRunner"
 
@@ -45,6 +45,7 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "/META-INF/LICENSE*.md"
+            excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }
         jniLibs { keepDebugSymbols += "**/*.so" }
     }
@@ -136,7 +137,7 @@ dependencies {
     implementation(libs.play.update)
     implementation(libs.play.review)
     implementation(libs.androidx.work.ktx)
-    implementation(libs.bcprov.jdk15on)
+    implementation(libs.bcprov.jdk18on)
 
     // animation
     implementation(libs.lottie.compose)

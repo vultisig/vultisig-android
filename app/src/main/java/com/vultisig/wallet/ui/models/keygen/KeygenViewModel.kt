@@ -50,6 +50,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.or
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -479,7 +480,7 @@ constructor(
                 )
 
             try {
-                messagePuller.pullMessages(null)
+                messagePuller.pullMessages(null, viewModelScope)
 
                 when (action) {
                     TssAction.KEYGEN,
@@ -712,7 +713,7 @@ constructor(
             } else {
                 ErrorUiModel(
                     title = UiText.StringResource(R.string.generating_key_screen_keygen_failed),
-                    description = UiText.DynamicString(e.message ?: "Unknown error"),
+                    description = e.message or R.string.unknown_error,
                 )
             }
         }
@@ -730,7 +731,7 @@ constructor(
                 if (isThresholdError) {
                     UiText.StringResource(R.string.threshold_error)
                 } else {
-                    UiText.DynamicString(e.message ?: "Unknown error")
+                    e.message or R.string.unknown_error
                 },
         )
     }

@@ -12,7 +12,10 @@
     <issue id="IconMissingDensityFolder" severity="ignore" />
     <issue id="IconXmlAndPng" severity="ignore" />
     <issue id="ImplicitSamInstance" severity="error" />
-    <issue id="InvalidPackage" severity="warning" />
+    <issue id="InvalidPackage" severity="warning">
+        <ignore path="**/jetty*" />
+        <ignore path="**/ktor-utils-jvm*" />
+    </issue>
     <issue id="KotlinPropertyAccess" severity="warning" />
     <issue id="ModifierParameter" severity="error" />
     <issue id="NewerVersionAvailable" severity="warning" />
