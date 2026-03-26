@@ -302,33 +302,50 @@ constructor(
             if (args.action == TssAction.KeyImport && hexChainCode.isEmpty()) {
                 val mnemonic = keyImportRepository.get()?.mnemonic
                 if (mnemonic == null) {
+                    Timber.w("KeyImport: no mnemonic found in repository")
                     state.update {
                         it.copy(
                             error =
                                 ErrorUiModel(
-                                    title =
-                                        UiText.StringResource(R.string.error_view_default_title),
+                                    title = UiText.StringResource(R.string.key_import_error_title),
                                     description =
                                         UiText.StringResource(
-                                            R.string.error_view_default_description
+                                            R.string.key_import_error_no_mnemonic_description
                                         ),
                                 )
                         )
                     }
                     return@launch
                 }
-                val masterKeys = extractMasterKeys(mnemonic)
+                val masterKeys =
+                    try {
+                        extractMasterKeys(mnemonic)
+                    } catch (e: Exception) {
+                        Timber.e(e, "KeyImport: failed to extract master keys")
+                        state.update {
+                            it.copy(
+                                error =
+                                    ErrorUiModel(
+                                        title =
+                                            UiText.StringResource(R.string.key_import_error_title),
+                                        description =
+                                            UiText.StringResource(
+                                                R.string.key_import_error_description
+                                            ),
+                                    )
+                            )
+                        }
+                        return@launch
+                    }
                 if (masterKeys == null) {
+                    Timber.w("KeyImport: extractMasterKeys returned null")
                     state.update {
                         it.copy(
                             error =
                                 ErrorUiModel(
-                                    title =
-                                        UiText.StringResource(R.string.error_view_default_title),
+                                    title = UiText.StringResource(R.string.key_import_error_title),
                                     description =
-                                        UiText.StringResource(
-                                            R.string.error_view_default_description
-                                        ),
+                                        UiText.StringResource(R.string.key_import_error_description),
                                 )
                         )
                     }
