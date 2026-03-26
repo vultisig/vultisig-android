@@ -11,9 +11,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
+import com.vultisig.wallet.data.blockchain.model.Swap
+import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -29,21 +33,25 @@ import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.getDustThreshold
+import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
-import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertBpsToFiatUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
@@ -81,6 +89,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -103,6 +112,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import timber.log.Timber
+import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 internal data class SwapFormUiModel(
     val selectedSrcToken: TokenBalanceUiModel? = null,
@@ -144,7 +155,8 @@ constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val accountsRepository: AccountsRepository,
-    private val gasFeeRepository: GasFeeRepository,
+    private val feeServiceComposite: FeeServiceComposite,
+    private val vaultRepository: VaultRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
@@ -822,7 +834,9 @@ constructor(
                     val account = accountsRepository.loadAccount(vaultId, result.token)
                     updateAccountInAddresses(account)
                     uiState.update { it.copy(isLoading = false) }
-                } catch (_: Throwable) {
+                } catch (e: Throwable) {
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to load account for token")
                     uiState.update { it.copy(isLoading = false) }
                     return
                 }
@@ -1051,31 +1065,90 @@ constructor(
         viewModelScope.launch {
             selectedSrc
                 .filterNotNull()
-                .map {
-                    it to gasFeeRepository.getGasFee(it.address.chain, it.address.address, true)
+                .map { sendSrc ->
+                    val chain = sendSrc.address.chain
+                    val selectedToken = sendSrc.account.token
+                    val vaultId = vaultId ?: return@map null
+                    val vault = vaultRepository.get(vaultId) ?: return@map null
+
+                    val blockchainTransaction =
+                        Swap(
+                            coin = selectedToken,
+                            vault =
+                                VaultData(
+                                    vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                                    vaultHexChainCode = vault.hexChainCode,
+                                ),
+                            amount = BigInteger.ZERO,
+                            to = sendSrc.address.address,
+                            callData = "",
+                            approvalData = null,
+                            isMax = false,
+                        )
+
+                    val fee =
+                        withContext(Dispatchers.IO) {
+                            feeServiceComposite.calculateFees(blockchainTransaction)
+                        }
+
+                    val nativeCoin =
+                        withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+
+                    sendSrc to TokenValue(value = fee.amount, token = nativeCoin)
                 }
+                .filterNotNull()
                 .catch { Timber.e(it) }
                 .collect { (selectedSrc, gasFee) ->
                     this@SwapFormViewModel.gasFee.value = gasFee
-                    val selectedAccount = selectedSrc.account
-                    val chain = selectedAccount.token.chain
-                    val selectedToken = selectedAccount.token
-                    val srcAddress = selectedAccount.token.address
                     try {
-                        val spec = getSpecificAndUtxo(selectedToken, srcAddress, gasFee)
+                        val selectedAccount = selectedSrc.account
+                        val chain = selectedAccount.token.chain
+                        val selectedToken = selectedAccount.token
+                        val srcAddress = selectedAccount.token.address
+                        var gasFeeForDisplay = gasFee
+                        if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                            // get the utxos for the sendSrc address and calculate the transaction
+                            // plan
+                            // to get the accurate fee for swap transaction
+                            val specific =
+                                blockChainSpecificRepository.getSpecific(
+                                    chain = selectedToken.chain,
+                                    address = selectedToken.address,
+                                    token = selectedToken,
+                                    gasFee = gasFee,
+                                    isSwap = true,
+                                    isMaxAmountEnabled = false,
+                                    isDeposit = false,
+                                )
+                            val vaultId = vaultId ?: return@collect
+                            val plan =
+                                getBitcoinTransactionPlan(
+                                    vaultId,
+                                    selectedToken,
+                                    srcAddress,
+                                    chain.getDustThreshold.add(BigInteger.ONE),
+                                    BlockChainSpecificAndUtxo(
+                                        blockChainSpecific =
+                                            BlockChainSpecific.UTXO(byteFee = gasFee.value, true),
+                                        utxos = specific.utxos,
+                                    ),
+                                    memo = null,
+                                )
+                            gasFeeForDisplay =
+                                gasFeeForDisplay.copy(value = plan.fee.toBigInteger())
+                        }
 
                         val estimatedNetworkFee =
                             gasFeeToEstimatedFee(
                                 GasFeeParams(
                                     gasLimit =
-                                        if (chain.standard == TokenStandard.EVM) {
-                                            (spec.blockChainSpecific as BlockChainSpecific.Ethereum)
-                                                .gasLimit
-                                        } else {
-                                            BigInteger.valueOf(1)
-                                        },
-                                    gasFee = gasFee,
+                                        BigInteger.valueOf(
+                                            1
+                                        ), // gasFee is the total fee for swap transaction , it is
+                                    // not the unit price
+                                    gasFee = gasFeeForDisplay,
                                     selectedToken = selectedToken,
+                                    perUnit = true,
                                 )
                             )
 
@@ -1096,6 +1169,38 @@ constructor(
                     }
                 }
         }
+    }
+
+    private suspend fun getBitcoinTransactionPlan(
+        vaultId: String,
+        selectedToken: Coin,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        specific: BlockChainSpecificAndUtxo,
+        memo: String?,
+    ): Bitcoin.TransactionPlan {
+        val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
+        val keysignPayload =
+            KeysignPayload(
+                coin = selectedToken,
+                toAddress = dstAddress,
+                toAmount = tokenAmountInt,
+                blockChainSpecific = specific.blockChainSpecific,
+                memo = memo,
+                vaultPublicKeyECDSA = vault.pubKeyECDSA,
+                vaultLocalPartyID = vault.localPartyID,
+                utxos = specific.utxos,
+                libType = vault.libType,
+                wasmExecuteContractPayload = null,
+            )
+
+        val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
+
+        val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
+        if (plan.error != SigningError.OK) {
+            Timber.e("UTXO plan error: ${plan.error.name}")
+        }
+        return plan
     }
 
     private fun collectTotalFee() {
@@ -1589,7 +1694,10 @@ constructor(
                                     )
 
                                 is SwapException.UnkownSwapError ->
-                                    UiText.DynamicString(e.message ?: "Unknown error")
+                                    UiText.StringResource(R.string.swap_error_quote_failed)
+
+                                is SwapException.HighPriceImpact ->
+                                    UiText.StringResource(R.string.swap_error_high_price_impact)
 
                                 is SwapException.InsufficentSwapAmount ->
                                     UiText.StringResource(R.string.swap_error_amount_too_low)

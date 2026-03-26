@@ -212,7 +212,7 @@ interface KyberSwapQuoteResponseJsonSerializer : DefaultSerializer<KyberSwapQuot
 class KyberSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val json: Json) :
     KyberSwapQuoteResponseJsonSerializer {
     override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor("KyberSwapQouteResponseJsonSerializer")
+        buildClassSerialDescriptor("KyberSwapQuoteResponseJsonSerializer")
 
     override fun deserialize(decoder: Decoder): KyberSwapQuoteDeserialized {
         val input = decoder as JsonDecoder

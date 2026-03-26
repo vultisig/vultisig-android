@@ -6,8 +6,7 @@ import com.vultisig.wallet.data.common.decrypt
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -29,10 +28,9 @@ class TssMessagePuller(
     private val appliedMessageKeys = mutableSetOf<String>()
 
     // start pulling messages from the server
-    @OptIn(DelicateCoroutinesApi::class)
-    fun pullMessages(messageID: String?) {
+    fun pullMessages(messageID: String?, scope: CoroutineScope) {
         this.job =
-            GlobalScope.launch {
+            scope.launch {
                 while (isActive) {
                     fetchMessages(messageID)
                     delay(1.seconds)

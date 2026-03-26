@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models
 
+import androidx.annotation.Keep
 import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import kotlinx.serialization.Serializable
@@ -30,6 +31,7 @@ data class SigningKey(val publicKey: String, val chainCode: String)
 
 data class ChainPublicKey(val chain: String, val publicKey: String, val isEddsa: Boolean)
 
+@Keep
 @Serializable
 enum class SigningLibType {
     DKLS,

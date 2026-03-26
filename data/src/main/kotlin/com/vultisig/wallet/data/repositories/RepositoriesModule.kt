@@ -120,8 +120,6 @@ internal interface RepositoriesModule {
     @Singleton
     fun bindExplorerLinkRepository(impl: ExplorerLinkRepositoryImpl): ExplorerLinkRepository
 
-    @Binds @Singleton fun bindGasFeesRepository(impl: GasFeeRepositoryImpl): GasFeeRepository
-
     @Binds
     @Singleton
     fun bindLastOpenedVaultRepository(

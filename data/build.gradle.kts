@@ -98,7 +98,7 @@ dependencies {
     implementation(libs.wallet.core)
 
     // encryption
-    implementation(libs.bcprov.jdk15on)
+    implementation(libs.bcprov.jdk18on)
 
     // other
     implementation(libs.okhttp)

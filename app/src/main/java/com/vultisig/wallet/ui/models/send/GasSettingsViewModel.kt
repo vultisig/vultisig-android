@@ -4,8 +4,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.blockchain.utxo.UtxoFeeService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
@@ -36,7 +36,7 @@ internal class GasSettingsViewModel
 @Inject
 constructor(
     private val evmApiFactory: EvmApiFactory,
-    private val blockChairApi: BlockChairApi,
+    private val utxoFeeService: UtxoFeeService,
     private val convertWeiToGwei: ConvertWeiToGweiUseCase,
     private val convertGweiToWei: ConvertGweiToWeiUseCase,
 ) : ViewModel() {
@@ -68,14 +68,7 @@ constructor(
     }
 
     private fun loadEthData(chain: Chain, spec: BlockChainSpecific.Ethereum) {
-        val gasLimit =
-            if (gasLimitState.text.isEmpty()) {
-                spec.gasLimit
-            } else {
-                gasLimitState.text.toString().toBigInteger()
-            }
-
-        gasLimitState.setTextAndPlaceCursorAtEnd(gasLimit.toString())
+        gasLimitState.setTextAndPlaceCursorAtEnd(spec.gasLimit.toString())
 
         viewModelScope.launch {
             val evmApi = evmApiFactory.createEvmApi(chain)
@@ -95,9 +88,8 @@ constructor(
         viewModelScope.launch {
             if (byteFeeState.text.toBigInteger() > BigInteger.ZERO) return@launch
             try {
-                val stats = blockChairApi.getBlockChairStats(chain)
-                val byte = stats.multiply(BigInteger("5")).divide(BigInteger("2"))
-                byteFeeState.setTextAndPlaceCursorAtEnd(byte.toString())
+                val byteFee = utxoFeeService.getDefaultGasFee(chain)
+                byteFeeState.setTextAndPlaceCursorAtEnd(byteFee.toString())
             } catch (e: Exception) {
                 Timber.e(e)
             }
@@ -106,12 +98,16 @@ constructor(
 
     fun save(): GasSettings {
         return when (state.value.chainSpecific) {
-            is BlockChainSpecific.Ethereum ->
+            is BlockChainSpecific.Ethereum -> {
+                val baseFeeWei =
+                    convertGweiToWei(baseFeeState.text.toString().toBigDecimalOrZero())
+                        .toBigInteger()
                 GasSettings.Eth(
-                    baseFee = baseFeeState.text.toString().toBigInteger(),
+                    baseFee = baseFeeWei,
                     priorityFee = priorityFeeState.text.toString().toBigInteger(),
                     gasLimit = gasLimitState.text.toString().toBigInteger(),
                 )
+            }
 
             is BlockChainSpecific.UTXO ->
                 GasSettings.UTXO(byteFee = byteFeeState.text.toString().toBigInteger())
@@ -123,7 +119,14 @@ constructor(
     private fun CharSequence.toBigInteger() =
         try {
             BigInteger(toString())
-        } catch (e: Exception) {
+        } catch (e: NumberFormatException) {
             BigInteger.ZERO
+        }
+
+    private fun String.toBigDecimalOrZero() =
+        try {
+            toBigDecimal()
+        } catch (e: NumberFormatException) {
+            java.math.BigDecimal.ZERO
         }
 }

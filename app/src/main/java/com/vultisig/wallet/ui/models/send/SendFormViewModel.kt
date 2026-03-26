@@ -62,7 +62,6 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
-import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -243,7 +242,6 @@ constructor(
     appCurrencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tokenPriceRepository: TokenPriceRepository,
-    private val gasFeeRepository: GasFeeRepository,
     private val transactionRepository: TransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val requestResultRepository: RequestResultRepository,
@@ -283,6 +281,8 @@ constructor(
     private var defiType: DeFiNavActions? = null // Default is send, no defi form
 
     private var mscaAddress: String? = null
+
+    private val recalculateGasFee = MutableStateFlow(0L)
 
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
@@ -825,6 +825,12 @@ constructor(
 
     fun saveGasSettings(settings: GasSettings) {
         gasSettings.value = settings
+        if (settings is GasSettings.UTXO) {
+            val currentSpec = specific.value ?: return
+            val utxoSpec = currentSpec.blockChainSpecific as? BlockChainSpecific.UTXO ?: return
+            specific.value =
+                currentSpec.copy(blockChainSpecific = utxoSpec.copy(byteFee = settings.byteFee))
+        }
     }
 
     fun chooseMaxTokenAmount() {
@@ -1089,9 +1095,7 @@ constructor(
                         dstAddress =
                             mscaAddress
                                 ?: throw InvalidTransactionDataException(
-                                    UiText.DynamicString(
-                                        "MSCA account not deployed yet, please try again"
-                                    )
+                                    UiText.StringResource(R.string.send_error_msca_not_deployed)
                                 ),
                         memo = memo,
                         srcTokenValue = TokenValue(value = BigInteger.ZERO, token = nativeCoin),
@@ -1340,22 +1344,30 @@ constructor(
                     }
                 }
 
+                val evmGasSettings = gasSettings.value as? GasSettings.Eth
                 val totalGasAndFee =
                     gasFeeToEstimatedFee(
                         GasFeeParams(
-                            gasLimit = BigInteger.valueOf(1),
+                            gasLimit =
+                                if (evmGasSettings != null) evmGasSettings.gasLimit
+                                else BigInteger.valueOf(1),
                             gasFee =
-                                if (chain.standard == TokenStandard.UTXO) {
-                                    val plan =
-                                        planFee.value
-                                            ?: throw InvalidTransactionDataException(
-                                                UiText.StringResource(
-                                                    R.string.send_error_invalid_plan_fee
+                                when {
+                                    chain.standard == TokenStandard.UTXO -> {
+                                        val plan =
+                                            planFee.value
+                                                ?: throw InvalidTransactionDataException(
+                                                    UiText.StringResource(
+                                                        R.string.send_error_invalid_plan_fee
+                                                    )
                                                 )
-                                            )
-                                    if (plan > 0) gasFee.copy(value = BigInteger.valueOf(plan))
-                                    else gasFee
-                                } else gasFee,
+                                        if (plan > 0) gasFee.copy(value = BigInteger.valueOf(plan))
+                                        else gasFee
+                                    }
+                                    evmGasSettings != null ->
+                                        gasFee.copy(value = evmGasSettings.baseFee)
+                                    else -> gasFee
+                                },
                             selectedToken = selectedToken,
                         )
                     )
@@ -1391,7 +1403,6 @@ constructor(
                     )
 
                 transactionRepository.addTransaction(transaction)
-                advanceGasUiRepository.hideIcon()
 
                 navigator.route(Route.VerifySend(transactionId = transaction.id, vaultId = vaultId))
             } catch (e: InvalidTransactionDataException) {
@@ -2209,7 +2220,6 @@ constructor(
         memo: String?,
     ): Bitcoin.TransactionPlan {
         val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
-
         val keysignPayload =
             KeysignPayload(
                 coin = selectedToken,
@@ -2522,25 +2532,19 @@ constructor(
     private fun calculateGasFees() {
         viewModelScope.launch {
             combine(
-                    selectedToken
-                        .filterNotNull()
-                        .combine(addressFieldState.textAsFlow()) { token, dst ->
-                            token to dst.toString()
-                        }
-                        .combine(memoFieldState.textAsFlow()) { (token, dst), memo ->
-                            Triple(token, dst, memo.toString())
-                        }
-                        .combine(tokenAmountFieldState.textAsFlow()) {
-                            (token, dst, memo),
-                            tokenAmountText ->
-                            Triple(token, dst, memo) to tokenAmountText
+                    combine(
+                            selectedToken.filterNotNull(),
+                            addressFieldState.textAsFlow(),
+                            memoFieldState.textAsFlow(),
+                            tokenAmountFieldState.textAsFlow(),
+                            recalculateGasFee,
+                        ) { token, dst, memo, tokenAmount, nonce ->
+                            GasFeeInput(token, dst.toString(), memo.toString(), tokenAmount, nonce)
                         }
                         .debounce(350)
                         .distinctUntilChanged()
-                        .mapNotNull { (triple, tokenAmount) ->
-                            val (token, dst, memo) = triple
+                        .mapNotNull { (token, dst, memo, tokenAmount) ->
                             val vault = vault ?: return@mapNotNull null
-
                             val tokenAmount = tokenAmount.toString().toBigDecimalOrNull()
 
                             val tokenAmountInt =
@@ -2593,10 +2597,15 @@ constructor(
                     specific.filterNotNull(),
                     memoFieldState.textAsFlow(),
                 ) { token, dstAddress, tokenAmount, specific, memo ->
+                    PlanFeeInput(token, dstAddress, tokenAmount, specific, memo)
+                }
+                .combine(recalculateGasFee) { data, _ -> data }
+                .mapNotNull { (token, dstAddress, tokenAmount, specific, memo) ->
                     try {
                         val chain = token.chain
                         if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) {
                             planFee.value = 1
+                            return@mapNotNull null
                         }
 
                         val vaultId =
@@ -2662,20 +2671,21 @@ constructor(
                     planFee.filterNotNull(),
                 ) { token, gasFee, gasSettings, planFee ->
                     val chain = token.chain
+                    val evmGasSettings = gasSettings as? GasSettings.Eth
                     val estimatedFee =
                         gasFeeToEstimatedFee(
                             GasFeeParams(
                                 gasLimit =
-                                    if (chain.standard == TokenStandard.EVM) {
-                                        if (gasSettings is GasSettings.Eth) gasSettings.gasLimit
-                                        else BigInteger.valueOf(1)
-                                    } else {
-                                        BigInteger.valueOf(1)
-                                    },
+                                    if (evmGasSettings != null) evmGasSettings.gasLimit
+                                    else BigInteger.valueOf(1),
                                 gasFee =
-                                    if (chain.standard == TokenStandard.UTXO) {
-                                        gasFee.copy(value = BigInteger.valueOf(planFee))
-                                    } else gasFee,
+                                    when {
+                                        chain.standard == TokenStandard.UTXO ->
+                                            gasFee.copy(value = BigInteger.valueOf(planFee))
+                                        evmGasSettings != null ->
+                                            gasFee.copy(value = evmGasSettings.baseFee)
+                                        else -> gasFee
+                                    },
                                 selectedToken = token,
                                 perUnit = true,
                             )
@@ -2712,6 +2722,7 @@ constructor(
                             )
                         specific.value = spec
                         advanceGasUiRepository.updateBlockChainSpecific(spec.blockChainSpecific)
+                        advanceGasUiRepository.showIcon()
                         uiState.update { it.copy(specific = spec) }
                     } catch (e: Exception) {
                         Timber.e(e)
@@ -2956,33 +2967,14 @@ constructor(
     }
 
     fun refreshGasFee() {
-        val srcAddress = selectedToken.value ?: return
         viewModelScope.launch {
             uiState.update { it.copy(isRefreshing = true) }
-
-            val gasFee =
-                try {
-                    gasFeeRepository.getGasFee(
-                        chain = srcAddress.chain,
-                        address = srcAddress.address,
-                        isNativeToken = srcAddress.isNativeToken,
-                        to = addressFieldState.text.toString(),
-                        memo = memoFieldState.text.toString(),
-                    )
-                } catch (e: Exception) {
-                    uiState.update { it.copy(isRefreshing = false) }
-                    return@launch
-                }
-
-            this@SendFormViewModel.gasFee.value =
-                adjustGasFee(gasFee, gasSettings.value, specific.value)
-
+            recalculateGasFee.update { it + 1 }
             // Rapid toggling of isRefreshing can cause the initial true value to be skipped,
             // displaying only the false value in the UI resulting in the swipe refresh being
             // frozen.
             // this line prevent missing true value in these cases.
             delay(100)
-
             uiState.update { it.copy(isRefreshing = false) }
         }
     }
@@ -3396,4 +3388,20 @@ private data class AccountValidation(
     val chain: Chain,
     val gasFee: TokenValue,
     val dstAddress: String,
+)
+
+private data class GasFeeInput(
+    val token: Coin,
+    val dst: String,
+    val memo: String,
+    val tokenAmount: CharSequence,
+    val nonce: Long = 0,
+)
+
+private data class PlanFeeInput(
+    val token: Coin,
+    val dstAddress: CharSequence,
+    val tokenAmount: CharSequence,
+    val specific: BlockChainSpecificAndUtxo,
+    val memo: CharSequence,
 )

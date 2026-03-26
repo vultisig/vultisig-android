@@ -167,6 +167,7 @@
     <string name="send_error_invalid_operator_fee">Operator fee must be a valid number between 0 and 10000 basis points</string>
     <string name="send_error_max_shares">Amount should not exceed balance</string>
     <string name="send_error_insufficient_balance">Insufficient funds</string>
+    <string name="send_error_msca_not_deployed">MSCA account not deployed yet, please try again</string>
     <string name="send_error_insufficient_native_balance_with_fees">Insufficient %1$s balance</string>
     <string name="settings_screen_language">Language</string>
     <string name="settings_screen_currency">Currency</string>
@@ -402,6 +403,8 @@
     <string name="swap_error_insufficient_source_token">Insufficient %1$s balance to swap</string>
     <string name="swap_error_insufficient_gas_fees">Not enough %1$s to cover gas fees. Please fund the wallet.</string>
     <string name="swap_error_time_out">Swap request timed out. Please try again</string>
+    <string name="swap_error_high_price_impact">Price impact is too high. Try a smaller amount or a different token pair.</string>
+    <string name="swap_error_quote_failed">Swap quote failed. Please try again or adjust the amount.</string>
     <string name="swap_screen_invalid_no_vault">No vault selected</string>
     <string name="swap_screen_invalid_no_src_error">No source token selected</string>
     <string name="swap_screen_invalid_selected_no_dst">No destination token selected</string>
@@ -506,7 +509,7 @@
     <string name="keygen_step_generating_chain_keys">Generating Chain Keys</string>
     <string name="reshare_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="reshare_step_generating_eddsa">Generating EdDSA Key</string>
-    <string name="keygen_connecting_with_server">Connecting with server...</string>
+    <string name="keygen_connecting_with_server">Connecting with server…</string>
     <string name="keygen_connecting_with_server_take_a_second">This should only take a second</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Want to create vault privately?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Switch to local mode</string>
@@ -810,7 +813,7 @@
     <string name="address_book_my_vaults">My Vaults</string>
     <string name="address_entry_select">Select</string>
     <string name="deposit_form_enter_asset_hint">Enter Assets</string>
-    <string name="share_balance_loading">Loading...</string>
+    <string name="share_balance_loading">Loading…</string>
     <string name="must_be_enabled_before_proceeding">%1$s must be enabled before proceeding.</string>
     <string name="referral_code_removed_successfully">Referral code removed successfully</string>
     <string name="referral_code_linked_successfully">Referral code linked successfully</string>
@@ -925,13 +928,40 @@
     <string name="transaction_status_not_found">Transaction not found</string>
     <string name="transaction_status_pending">Transaction pending…</string>
     <string name="transaction_status_notification_title">Transaction Status</string>
-    <string name="transaction_status_checking_transaction">Checking transaction...</string>
+    <string name="transaction_status_checking_transaction">Checking transaction…</string>
     <string name="raw_transaction_data">Raw Transaction Data</string>
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
+    <string name="solana_instructions_summary">Transaction Instructions Summary</string>
+    <string name="solana_instruction_number">Instruction %1$d</string>
+    <string name="solana_program_name">Program: %1$s</string>
+    <string name="solana_program_id">Program ID: %1$s</string>
+    <string name="solana_accounts_data">Accounts: %1$d | Data length: %2$d bytes</string>
     <string name="vault_count_recommended">Recommended</string>
 
+    <!-- Vault count plural -->
+    <plurals name="vault_count">
+        <item quantity="one">%d Vault</item>
+        <item quantity="other">%d Vaults</item>
+    </plurals>
+
+    <!-- Hardcoded string fixes -->
+    <string name="transaction_failed">Transaction failed</string>
+    <string name="vault_detail_signer">Signer %1$d</string>
+    <string name="deposit_form_lp_units_hint">LP units</string>
+    <string name="staking_transfer">Transfer</string>
+
+    <!-- DeFi position headers -->
+    <string name="defi_header_minted">Minted %1$s</string>
+    <string name="defi_header_compounded">Compounded %1$s</string>
+    <string name="defi_header_staked">Staked %1$s</string>
+
+    <!-- Default vault names -->
+    <string name="name_vault_import">Import Vault</string>
+    <string name="name_vault_fast">Fast Vault</string>
+    <string name="name_vault_secure">Secure Vault</string>
+
     <!-- Key Import / Feature Spotlight -->
-    <string name="key_import_spotlight_before_you_start">Before you start...</string>
+    <string name="key_import_spotlight_before_you_start">Before you start…</string>
     <string name="key_import_spotlight_heading_part1">"You are entering a new era,\n"</string>
     <string name="key_import_spotlight_heading_highlight">"leaving old seed phrases behind."</string>
     <string name="key_import_spotlight_heading_part2">You\'ll need:</string>

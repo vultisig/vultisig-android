@@ -55,7 +55,7 @@
     <string name="vault_tier_unlock_platinum_part1">Desbloquear Nivel </string>
     <string name="vault_tier_unlock_platinum_part2">Platino</string>
     <string name="vault_tier_unlock_platinum_part3"></string>
-    <string name="vault_tier_description">Hold $VULT para desbloquear tarifas de trading más bajas.</string>
+    <string name="vault_tier_description">Mantener $VULT para desbloquear tarifas de trading más bajas.</string>
     <string name="vault_tier_bronze_description_part1">Al mantener 1,500 $VULT, desbloquearás el Nivel Bronce y recibirás un </string>
     <string name="vault_tier_bronze_description_part2">descuento de 5 bps en las tarifas de trading</string>
     <string name="vault_tier_bronze_description_part3"> en todos los intercambios.</string>
@@ -113,6 +113,7 @@
     <string name="send_error_no_amount">La cantidad debe ser un número positivo</string>
     <string name="send_error_invalid_operator_fee">La comisión del operador debe ser un número válido entre 0 y 10000 puntos base</string>
     <string name="send_error_insufficient_balance">Fondos insuficientes</string>
+    <string name="send_error_msca_not_deployed">La cuenta MSCA aún no está desplegada, por favor inténtelo de nuevo</string>
     <string name="send_error_insufficient_native_balance_with_fees">Saldo de %1$s insuficiente</string>
     <string name="settings_screen_language">Idioma</string>
     <string name="settings_screen_currency">Moneda</string>
@@ -323,6 +324,8 @@
     <string name="swap_error_insufficient_source_token">Saldo de %1$s insuficiente para intercambiar</string>
     <string name="swap_error_insufficient_gas_fees">No hay suficiente %1$s para cubrir las comisiones de gas. Por favor, cargue la billetera.</string>
     <string name="swap_error_time_out">Se agotó el tiempo de espera de la solicitud de intercambio. Inténtalo de nuevo</string>
+    <string name="swap_error_high_price_impact">El impacto en el precio es demasiado alto. Prueba con un monto menor o un par de tokens diferente.</string>
+    <string name="swap_error_quote_failed">La cotización del swap falló. Inténtalo de nuevo o ajusta el monto.</string>
     <string name="swap_screen_invalid_no_vault">No se ha seleccionado ninguna bóveda</string>
     <string name="swap_screen_invalid_no_src_error">No se ha seleccionado ningún token de origen</string>
     <string name="swap_screen_invalid_selected_no_dst">No se ha seleccionado ningún token de destino</string>
@@ -379,13 +382,13 @@
     <string name="next_award">Próxima recompensa</string>
     <string name="next_payout">Próximo Pago</string>
     <string name="wait_until_node_churned_out">Espere hasta que el nodo sea expulsado</string>
-    <string name="deposit_option_leave">Leave</string>
+    <string name="deposit_option_leave">Salir</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
-    <string name="deposit_option_custom">Custom</string>
-    <string name="deposit_option_ibc_transfer">IBC Transfer</string>
-    <string name="deposit_option_switch">Switch</string>
-    <string name="deposit_option_merge">Merge</string>
+    <string name="deposit_option_custom">Personalizado</string>
+    <string name="deposit_option_ibc_transfer">Transferencia IBC</string>
+    <string name="deposit_option_switch">Cambiar</string>
+    <string name="deposit_option_merge">Fusionar</string>
     <string name="deposit_option_withdraw_ruji">Retirar RUJI</string>
     <string name="withdraw_amount">Retirar %s</string>
     <string name="deposit_form_unstake_percentage_hint">Ingrese el porcentaje a desbloquear</string>
@@ -661,7 +664,7 @@
     <string name="address_book_my_vaults">Mis bóvedas</string>
     <string name="address_entry_select">Seleccionar</string>
     <string name="deposit_form_enter_asset_hint">Ingresar activos</string>
-    <string name="share_balance_loading">Cargando...</string>
+    <string name="share_balance_loading">Cargando…</string>
     <string name="custom_token_screen_finding_token">Buscando tokens</string>
     <string name="retry">Reintentar</string>
     <string name="custom_token_screen_title">Buscar token personalizado</string>
@@ -728,7 +731,7 @@
     <string name="select_vault_type_secure_desc_3">Protege cualquier cantidad de activos</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver firma automáticamente</string>
     <string name="peer_discovery_topbar_title">Escanear código QR</string>
-    <string name="peer_discovery_waiting_for_devices_action">Esperando dispositivos...</string>
+    <string name="peer_discovery_waiting_for_devices_action">Esperando dispositivos…</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivos (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Enviado a %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">¿No recibiste un correo?</string>
@@ -874,9 +877,14 @@
     <string name="transaction_status_checking_transaction">Comprobando transacción…</string>
     <string name="raw_transaction_data">Datos de transacciones sin procesar</string>
     <string name="solana_raw_transaction">Transacción sin procesar de Solana</string>
+    <string name="solana_instructions_summary">Resumen de instrucciones de transacción</string>
+    <string name="solana_instruction_number">Instrucción %1$d</string>
+    <string name="solana_program_name">Programa: %1$s</string>
+    <string name="solana_program_id">ID del programa: %1$s</string>
+    <string name="solana_accounts_data">Cuentas: %1$d | Longitud de datos: %2$d bytes</string>
 
     <!-- Key Import / Feature Spotlight -->
-    <string name="key_import_spotlight_before_you_start">Antes de empezar...</string>
+    <string name="key_import_spotlight_before_you_start">Antes de empezar…</string>
     <string name="key_import_spotlight_heading_part1">"Estás entrando en una nueva era,\n"</string>
     <string name="key_import_spotlight_heading_highlight">"dejando atrás las viejas frases semilla. "</string>
     <string name="key_import_spotlight_heading_part2">Necesitarás:</string>
@@ -941,6 +949,10 @@
     <plurals name="resend_notification_in_seconds">
         <item quantity="one">Reenviar notificación en %d segundo</item>
         <item quantity="other">Reenviar notificación en %d segundos</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="one">%d bóveda</item>
+        <item quantity="other">%d bóvedas</item>
     </plurals>
     <string name="key_import_chains_found_desc">Cada cadena adicional aumenta el tiempo para generar su bóveda y la posibilidad de un tiempo de espera agotado.</string>
     <string name="key_import_chains_continue">Comenzar</string>
@@ -1069,4 +1081,20 @@
     <string name="native_asset">Nativo</string>
     <string name="invalid_integer_error">Cantidad entera inválida</string>
     <string name="empty_lps_field">Campo de Unidades LP vacío</string>
+
+    <!-- Hardcoded string fixes -->
+    <string name="transaction_failed">Transacción fallida</string>
+    <string name="vault_detail_signer">Firmante %1$d</string>
+    <string name="deposit_form_lp_units_hint">Unidades LP</string>
+    <string name="staking_transfer">Transferir</string>
+
+    <!-- DeFi position headers -->
+    <string name="defi_header_minted">Acuñado %1$s</string>
+    <string name="defi_header_compounded">Compuesto %1$s</string>
+    <string name="defi_header_staked">Stakeado %1$s</string>
+
+    <!-- Default vault names -->
+    <string name="name_vault_import">Bóveda importada</string>
+    <string name="name_vault_fast">Bóveda rápida</string>
+    <string name="name_vault_secure">Bóveda segura</string>
 </resources>

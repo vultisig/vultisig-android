@@ -346,17 +346,19 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
         if (jsonObject.error != null) {
             val message = jsonObject.error.message
             if (
-                message.contains("known") ||
-                    message.contains("already known") ||
-                    message.contains("Transaction is temporarily banned") ||
-                    message.contains("nonce too low: next nonce") ||
-                    message.contains("nonce too low. allowed nonce range:") ||
-                    message.contains("transaction already exists") ||
-                    message.contains("nonce too low: address") || // this message happens on layer 2
-                    message.contains("tx already in mempool") ||
-                    message.contains("existing tx") ||
-                    message.contains("tx already exists in cache") ||
-                    message.contains("code=10055")
+                message.contains(ERROR_KNOWN) ||
+                    message.contains(ERROR_ALREADY_KNOWN) ||
+                    message.contains(ERROR_TEMPORARILY_BANNED) ||
+                    message.contains(ERROR_NONCE_TOO_LOW_NEXT) ||
+                    message.contains(ERROR_NONCE_TOO_LOW_RANGE) ||
+                    message.contains(ERROR_TX_ALREADY_EXISTS) ||
+                    message.contains(
+                        ERROR_NONCE_TOO_LOW_ADDRESS
+                    ) || // this message happens on layer 2
+                    message.contains(ERROR_TX_IN_MEMPOOL) ||
+                    message.contains(ERROR_EXISTING_TX) ||
+                    message.contains(ERROR_TX_IN_CACHE) ||
+                    message.contains(ERROR_CODE_10055)
             ) {
                 // even the server returns an error , but this still consider as success
                 return Numeric.hexStringToByteArray(signedTransaction).toKeccak256()
@@ -548,5 +550,17 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
         private const val FETCH_RESOLVER_PREFIX = "0x0178b8bf"
         private const val FETCH_ADDRESS_PREFIX = "0x3b3b57de"
         private const val ENS_REGISTRY_ADDRESS = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
+
+        private const val ERROR_KNOWN = "known"
+        private const val ERROR_ALREADY_KNOWN = "already known"
+        private const val ERROR_TEMPORARILY_BANNED = "Transaction is temporarily banned"
+        private const val ERROR_NONCE_TOO_LOW_NEXT = "nonce too low: next nonce"
+        private const val ERROR_NONCE_TOO_LOW_RANGE = "nonce too low. allowed nonce range:"
+        private const val ERROR_TX_ALREADY_EXISTS = "transaction already exists"
+        private const val ERROR_NONCE_TOO_LOW_ADDRESS = "nonce too low: address"
+        private const val ERROR_TX_IN_MEMPOOL = "tx already in mempool"
+        private const val ERROR_EXISTING_TX = "existing tx"
+        private const val ERROR_TX_IN_CACHE = "tx already exists in cache"
+        private const val ERROR_CODE_10055 = "code=10055"
     }
 }
