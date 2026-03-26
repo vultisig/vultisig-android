@@ -1102,7 +1102,7 @@
     <string name="name_vault_fast">Brzi trezor</string>
     <string name="name_vault_secure">Sigurni trezor</string>
     <string name="unknown_error">Nepoznata greška</string>
-    <string name="key_import_error_title">Key Import Failed</string>
-    <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
-    <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>
+    <string name="key_import_error_title">Uvoz Ključa Nije Uspio</string>
+    <string name="key_import_error_description">Nije moguće uvesti trezor iz seed fraze. Provjerite svoju seed frazu i pokušajte ponovo.</string>
+    <string name="key_import_error_no_mnemonic_description">Nije pronađena seed fraza. Molimo unesite ponovo svoju seed frazu i pokušajte ponovo.</string>
 </resources>
