@@ -136,7 +136,7 @@ private fun SuccessTransaction(
                     TransactionPending()
                 } else if (isTransactionFailed) {
                     ErrorWaves(
-                        title = "Transaction failed",
+                        title = stringResource(R.string.transaction_failed),
                         errorState = ErrorState.CRITICAL,
                         modifier = Modifier.offset(y = (20).dp),
                     )

@@ -179,6 +179,7 @@
     <string name="send_from_invalid_amount">Nevažeći iznos</string>
     <string name="insufficient_utxos_error">Nedovoljno dostupnih UTXO-a za pokrivanje odabranog iznosa. Molimo dodajte više sredstava ili smanjite iznos koji šaljete</string>
     <string name="send_error_insufficient_balance">Nedostatna sredstva</string>
+    <string name="send_error_msca_not_deployed">MSCA račun još nije raspoređen, molimo pokušajte ponovo</string>
     <string name="send_error_insufficient_native_balance_with_fees">Nedovoljno %1$s salda</string>
     <string name="verify_swap_agree_receive_amount">Slažem se s minimalnim iznosom koji ću dobiti</string>
     <string name="vault_settings_success_backup_file">datoteka spremljena u Downloads/%1$s</string>
@@ -325,6 +326,8 @@
     <string name="swap_error_insufficient_source_token">Nedovoljno %1$s salda za zamjenu</string>
     <string name="swap_error_insufficient_gas_fees">Nema dovoljno %1$s za pokrivanje naknada za gas. Molimo uplatite novčanik.</string>
     <string name="swap_error_time_out">Zahtjev za zamjenu je istekao. Molimo pokušajte ponovno</string>
+    <string name="swap_error_high_price_impact">Utjecaj na cijenu je prevelik. Pokušajte s manjim iznosom ili drugim parom tokena.</string>
+    <string name="swap_error_quote_failed">Ponuda za zamjenu nije uspjela. Pokušajte ponovno ili prilagodite iznos.</string>
     <string name="swap_screen_invalid_no_vault">Trezor nije odabran</string>
     <string name="swap_screen_invalid_no_src_error">Nije odabran izvorni token</string>
     <string name="swap_screen_invalid_selected_no_dst">Nije odabran odredišni token</string>
@@ -877,6 +880,11 @@
     <string name="transaction_status_checking_transaction">Provjera transakcije…</string>
     <string name="raw_transaction_data">Sirovi podaci o transakciji</string>
     <string name="solana_raw_transaction">Solana Sirova transakcija</string>
+    <string name="solana_instructions_summary">Sažetak uputa transakcije</string>
+    <string name="solana_instruction_number">Uputa %1$d</string>
+    <string name="solana_program_name">Program: %1$s</string>
+    <string name="solana_program_id">ID programa: %1$s</string>
+    <string name="solana_accounts_data">Računi: %1$d | Duljina podataka: %2$d bajtova</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Prije nego što počnete…</string>
@@ -946,6 +954,11 @@
         <item quantity="one">Ponovno pošalji obavijest za %d sekundu</item>
         <item quantity="few">Ponovno pošalji obavijest za %d sekunde</item>
         <item quantity="other">Ponovno pošalji obavijest za %d sekundi</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="one">%d trezor</item>
+        <item quantity="few">%d trezora</item>
+        <item quantity="other">%d trezora</item>
     </plurals>
     <string name="key_import_chains_found_desc">Svaki dodatni lanac povećava vrijeme za generiranje vašeg trezora i mogućnost isteka vremena.</string>
     <string name="key_import_chains_continue">Započni</string>
@@ -1074,4 +1087,20 @@
     <string name="native_asset">Izvorno</string>
     <string name="invalid_integer_error">Nevažeći cijeli broj</string>
     <string name="empty_lps_field">Prazno polje LP jedinice</string>
+
+    <!-- Hardcoded string fixes -->
+    <string name="transaction_failed">Transakcija neuspjela</string>
+    <string name="vault_detail_signer">Potpisnik %1$d</string>
+    <string name="deposit_form_lp_units_hint">LP jedinice</string>
+    <string name="staking_transfer">Prijenos</string>
+
+    <!-- DeFi position headers -->
+    <string name="defi_header_minted">Mintano %1$s</string>
+    <string name="defi_header_compounded">Složeno %1$s</string>
+    <string name="defi_header_staked">Stakano %1$s</string>
+
+    <!-- Default vault names -->
+    <string name="name_vault_import">Uvezeni trezor</string>
+    <string name="name_vault_fast">Brzi trezor</string>
+    <string name="name_vault_secure">Sigurni trezor</string>
 </resources>

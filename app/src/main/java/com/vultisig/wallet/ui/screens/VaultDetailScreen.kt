@@ -142,7 +142,7 @@ private fun VaultDetailScreen(
                         state.deviceList.forEachIndexed { index, it ->
                             DeviceItem(
                                 modifier = Modifier.fillMaxHeight().weight(0.5f),
-                                order = "Signer ${index + 1}",
+                                order = stringResource(R.string.vault_detail_signer, index + 1),
                                 name = it.name,
                                 isThisDevice = it.isThisDevice,
                             )

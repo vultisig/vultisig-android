@@ -179,6 +179,7 @@
     <string name="send_from_invalid_amount">Montante inválido</string>
     <string name="insufficient_utxos_error">UTXOs disponíveis insuficientes para cobrir o valor selecionado. Por favor, adicione mais fundos ou reduza o valor que está enviando</string>
     <string name="send_error_insufficient_balance">Compartilhe o aplicativo</string>
+    <string name="send_error_msca_not_deployed">Conta MSCA ainda não implantada, tente novamente</string>
     <string name="send_error_insufficient_native_balance_with_fees">Saldo de %1$s insuficiente</string>
     <string name="verify_swap_agree_receive_amount">Concordo com o valor mínimo que receberei</string>
     <string name="vault_settings_success_backup_file">arquivo salvo em Downloads/%1$s</string>
@@ -325,6 +326,8 @@
     <string name="swap_error_insufficient_source_token">Saldo de %1$s insuficiente para trocar</string>
     <string name="swap_error_insufficient_gas_fees">Não há %1$s suficiente para cobrir as taxas de gás. Por favor, financie a carteira.</string>
     <string name="swap_error_time_out">A solicitação de troca expirou. Por favor tente novamente</string>
+    <string name="swap_error_high_price_impact">O impacto no preço é muito alto. Tente um valor menor ou um par de tokens diferente.</string>
+    <string name="swap_error_quote_failed">Cotação do swap falhou. Tente novamente ou ajuste o valor.</string>
     <string name="swap_screen_invalid_no_vault">Nenhum cofre selecionado</string>
     <string name="swap_screen_invalid_no_src_error">Nenhum token de origem selecionado</string>
     <string name="swap_screen_invalid_selected_no_dst">Nenhum token de destino selecionado</string>
@@ -877,6 +880,11 @@
    <string name="transaction_status_checking_transaction">A verificar transação…</string>
     <string name="raw_transaction_data">Dados brutos de transação</string>
     <string name="solana_raw_transaction">Transação bruta de Solana</string>
+    <string name="solana_instructions_summary">Resumo das instruções da transação</string>
+    <string name="solana_instruction_number">Instrução %1$d</string>
+    <string name="solana_program_name">Programa: %1$s</string>
+    <string name="solana_program_id">ID do programa: %1$s</string>
+    <string name="solana_accounts_data">Contas: %1$d | Tamanho dos dados: %2$d bytes</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Antes de começar…</string>
@@ -944,6 +952,10 @@
     <plurals name="resend_notification_in_seconds">
         <item quantity="one">Reenviar notificação em %d segundo</item>
         <item quantity="other">Reenviar notificação em %d segundos</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="one">%d cofre</item>
+        <item quantity="other">%d cofres</item>
     </plurals>
     <string name="key_import_chains_found_desc">Cada cadeia adicional aumenta o tempo para gerar seu cofre e a possibilidade de o tempo limite ser atingido.</string>
     <string name="key_import_chains_continue">Começar</string>
@@ -1072,4 +1084,17 @@
     <string name="native_asset">Nativo</string>
     <string name="invalid_integer_error">Quantidade inteira inválida</string>
     <string name="empty_lps_field">Campo de Unidades LP vazio</string>
+
+    <string name="transaction_failed">Transação falhada</string>
+    <string name="vault_detail_signer">Signatário %1$d</string>
+    <string name="deposit_form_lp_units_hint">Unidades LP</string>
+    <string name="staking_transfer">Transferir</string>
+
+    <string name="defi_header_minted">Mintado %1$s</string>
+    <string name="defi_header_compounded">Composto %1$s</string>
+    <string name="defi_header_staked">Staked %1$s</string>
+
+    <string name="name_vault_import">Cofre importado</string>
+    <string name="name_vault_fast">Cofre rápido</string>
+    <string name="name_vault_secure">Cofre seguro</string>
 </resources>

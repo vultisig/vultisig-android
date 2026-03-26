@@ -627,24 +627,24 @@ constructor(
 
                                 val canTransfer = coin.ticker.contains("stcy", ignoreCase = true)
 
-                                val header =
+                                val headerResId =
                                     if (supportsMint) {
-                                        "Minted"
+                                        R.string.defi_header_minted
                                     } else if (
                                         defaultPosition.coin.id.equals(
                                             Coins.ThorChain.sTCY.id,
                                             true,
                                         )
                                     ) {
-                                        "Compounded"
+                                        R.string.defi_header_compounded
                                     } else {
-                                        "Staked"
+                                        R.string.defi_header_staked
                                     }
                                 val position =
                                     StakePositionUiModel(
                                         coin = defaultPosition.coin,
                                         stakeAssetHeader =
-                                            UiText.DynamicString("$header ${coin.ticker}"),
+                                            UiText.FormattedText(headerResId, listOf(coin.ticker)),
                                         stakedAmountDisplay =
                                             "${stakeAmount.toPlainString()} ${coin.ticker}",
                                         stakeAmount = stakeAmount,

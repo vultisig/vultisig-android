@@ -72,6 +72,8 @@ import tss.ServiceImpl
 import tss.Tss
 import vultisig.keysign.v1.CustomMessagePayload
 
+private const val DEFAULT_ETHEREUM_DERIVATION_PATH = "m/44'/60'/0'/0/0"
+
 internal sealed class KeysignState {
     data object CreatingInstance : KeysignState()
 
@@ -231,7 +233,7 @@ internal class KeysignViewModel(
                             messageToSign = messagesToSign,
                             chainPath =
                                 this.keysignPayload?.coin?.coinType?.compatibleDerivationPath()
-                                    ?: "m/44'/60'/0'/0/0",
+                                    ?: DEFAULT_ETHEREUM_DERIVATION_PATH,
                             isInitiateDevice = isInitiatingDevice,
                             sessionApi = sessionApi,
                             encryption = encryption,
@@ -478,7 +480,8 @@ internal class KeysignViewModel(
             keysignReq.keysignCommitteeKeys = keysignCommittee.joinToString(",")
             keysignReq.messageToSign = Base64.getEncoder().encodeToString(message.toHexBytes())
             keysignReq.derivePath =
-                keysignPayload?.coin?.coinType?.compatibleDerivationPath() ?: "m/44'/60'/0'/0/0"
+                keysignPayload?.coin?.coinType?.compatibleDerivationPath()
+                    ?: DEFAULT_ETHEREUM_DERIVATION_PATH
 
             val keysignResp =
                 when (keyType) {

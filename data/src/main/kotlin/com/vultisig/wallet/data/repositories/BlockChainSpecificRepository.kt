@@ -35,9 +35,9 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.Numeric.max
+import com.vultisig.wallet.data.utils.increaseByPercent
 import java.math.BigInteger
 import javax.inject.Inject
-import kotlin.collections.plus
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -60,7 +60,7 @@ interface BlockChainSpecificRepository {
         chain: Chain,
         address: String,
         token: Coin,
-        gasFee: TokenValue, // Deprecated
+        gasFee: TokenValue,
         isSwap: Boolean,
         isMaxAmountEnabled: Boolean,
         isDeposit: Boolean,
@@ -163,7 +163,7 @@ constructor(
                     val defaultGasLimit =
                         when {
                             isSwap -> DEFAULT_SWAP_LIMIT
-                            chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER // TODO: Review Arb
+                            chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
                             token.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
                             else -> DEFAULT_TOKEN_TRANSFER_LIMIT
                         }
@@ -177,12 +177,17 @@ constructor(
                                 memo = memo,
                             )
                         else
-                            evmApi.estimateGasForERC20Transfer(
-                                senderAddress = token.address,
-                                recipientAddress = address,
-                                contractAddress = token.contractAddress,
-                                value = tokenAmountValue ?: BigInteger.ZERO,
-                            )
+                            evmApi
+                                .estimateGasForERC20Transfer(
+                                    senderAddress = token.address,
+                                    recipientAddress = address,
+                                    contractAddress = token.contractAddress,
+                                    value = tokenAmountValue ?: BigInteger.ZERO,
+                                )
+                                .increaseByPercent(
+                                    50
+                                ) // keep it consistent with how we calculate default gas limit in
+                    // EthereumFeeService
 
                     val nonce = evmApi.getNonce(address)
 

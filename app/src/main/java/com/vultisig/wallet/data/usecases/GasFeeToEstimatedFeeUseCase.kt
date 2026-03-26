@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.usecases
 
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
@@ -44,8 +43,6 @@ constructor(
             when {
                 chain.standard == TokenStandard.EVM ->
                     tokenValue.copy(unit = nativeToken.ticker, decimals = nativeToken.decimal)
-
-                chain == Chain.Bitcoin && from.perUnit -> tokenValue.copy(unit = chain.feeUnit)
 
                 else -> tokenValue.copy(unit = nativeToken.ticker)
             }

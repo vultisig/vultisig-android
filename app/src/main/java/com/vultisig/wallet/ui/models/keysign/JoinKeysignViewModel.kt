@@ -16,10 +16,12 @@ import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.normalizeMessageFormat
@@ -49,7 +51,6 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
-import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -118,6 +119,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 import vultisig.keysign.v1.KeysignMessage
+import wallet.core.jni.proto.Common.SigningError
 
 sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
@@ -188,7 +190,6 @@ constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val tokenRepository: TokenRepository,
-    private val gasFeeRepository: GasFeeRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
     private val vaultRepository: VaultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
@@ -518,22 +519,38 @@ constructor(
                 val chain = srcToken.chain
                 val (nativeTokenAddress, _) =
                     chainAccountAddressRepository.getAddress(nativeToken, _currentVault)
-                val gasFee =
-                    gasFeeRepository.getGasFee(
-                        chain = chain,
-                        address = nativeTokenAddress,
-                        isSwap = true,
+                val blockchainTransaction =
+                    Swap(
+                        coin = srcToken,
+                        vault =
+                            VaultData(
+                                vaultHexPublicKey = _currentVault.getPubKeyByChain(chain),
+                                vaultHexChainCode = _currentVault.hexChainCode,
+                            ),
+                        amount = swapPayload.srcTokenValue.value,
+                        to = nativeTokenAddress,
+                        callData = "",
+                        approvalData = null,
                     )
+                val calculatedFee =
+                    withContext(Dispatchers.IO) {
+                        feeServiceComposite.calculateFees(blockchainTransaction)
+                    }
+                val gasFee =
+                    if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                        val utxoHelper = UtxoHelper.getHelper(_currentVault, srcToken.coinType)
+                        val plan = utxoHelper.getBitcoinTransactionPlan(payload)
+                        if (plan.error != SigningError.OK) {
+                            Timber.e("UTXO plan error: ${plan.error.name}")
+                        }
+                        TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeToken)
+                    } else {
+                        TokenValue(value = calculatedFee.amount, token = nativeToken)
+                    }
                 val estimatedNetworkGasFee: EstimatedGasFee =
                     gasFeeToEstimatedFee(
                         GasFeeParams(
-                            gasLimit =
-                                if (chain.standard == TokenStandard.EVM) {
-                                    (payload.blockChainSpecific as BlockChainSpecific.Ethereum)
-                                        .gasLimit
-                                } else {
-                                    BigInteger.valueOf(1)
-                                },
+                            gasLimit = BigInteger.valueOf(1),
                             gasFee = gasFee,
                             selectedToken = srcToken,
                         )
@@ -559,7 +576,7 @@ constructor(
                         // if swapFee is not null then it provider is Lifi otherwise 1inch
                         val value =
                             if (
-                                !oneInchSwapTxJson.swapFee.isNullOrEmpty() &&
+                                oneInchSwapTxJson.swapFee.isNotEmpty() &&
                                     oneInchSwapTxJson.swapFee.toBigIntegerOrNull() != null
                             ) {
                                 oneInchSwapTxJson.swapFee.toBigInteger()
@@ -822,6 +839,7 @@ constructor(
                         is BlockChainSpecific.THORChain,
                         is BlockChainSpecific.Ethereum,
                         is BlockChainSpecific.UTXO -> Unit
+
                         else ->
                             error(
                                 "BlockChainSpecific ${payload.blockChainSpecific} is not supported"
@@ -928,7 +946,17 @@ constructor(
                         }
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-                    val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
+                    val gasFee =
+                        if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                            val utxoHelper = UtxoHelper.getHelper(vault, payloadToken.coinType)
+                            val plan = utxoHelper.getBitcoinTransactionPlan(payload)
+                            if (plan.error != SigningError.OK) {
+                                Timber.e("UTXO plan error: ${plan.error.name}")
+                            }
+                            TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
+                        } else {
+                            TokenValue(value = fees.amount, token = nativeCoin)
+                        }
 
                     val totalGasAndFee =
                         gasFeeToEstimatedFee(

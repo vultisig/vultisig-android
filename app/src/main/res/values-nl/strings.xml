@@ -111,6 +111,7 @@
     <string name="send_error_no_amount">Het bedrag moet een positief getal zijn</string>
     <string name="send_error_invalid_operator_fee">Operatorkosten moeten een geldig getal tussen 0 en 10000 basispunten zijn</string>
     <string name="send_error_insufficient_balance">Onvoldoende saldo</string>
+    <string name="send_error_msca_not_deployed">MSCA-account nog niet geïmplementeerd, probeer het opnieuw</string>
     <string name="send_error_insufficient_native_balance_with_fees">Onvoldoende %1$s saldo</string>
     <string name="settings_screen_language">Taal</string>
     <string name="settings_screen_currency">Valuta</string>
@@ -324,6 +325,8 @@
     <string name="swap_error_insufficient_source_token">Onvoldoende %1$s saldo om te ruilen</string>
     <string name="swap_error_insufficient_gas_fees">Er is niet genoeg %1$s om de gaskosten te dekken. Vul de wallet aan.</string>
     <string name="swap_error_time_out">Swap-aanvraag is verlopen. Probeer het opnieuw.</string>
+    <string name="swap_error_high_price_impact">De prijsimpact is te hoog. Probeer een kleiner bedrag of een ander tokenpaar.</string>
+    <string name="swap_error_quote_failed">Swap-offerte mislukt. Probeer het opnieuw of pas het bedrag aan.</string>
     <string name="swap_screen_invalid_no_vault">Geen kluis geselecteerd</string>
     <string name="swap_screen_invalid_no_src_error">Geen brontoken geselecteerd</string>
     <string name="swap_screen_invalid_selected_no_dst">Geen bestemmingstoken geselecteerd</string>
@@ -873,6 +876,11 @@
     <string name="transaction_status_checking_transaction">Transactie controleren…</string>
     <string name="raw_transaction_data">Ruwe transactiegegevens</string>
     <string name="solana_raw_transaction">Solana Ruwe transactie</string>
+    <string name="solana_instructions_summary">Overzicht transactie-instructies</string>
+    <string name="solana_instruction_number">Instructie %1$d</string>
+    <string name="solana_program_name">Programma: %1$s</string>
+    <string name="solana_program_id">Programma-ID: %1$s</string>
+    <string name="solana_accounts_data">Accounts: %1$d | Gegevenslengte: %2$d bytes</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Voordat u begint…</string>
@@ -940,6 +948,10 @@
     <plurals name="resend_notification_in_seconds">
         <item quantity="one">Melding opnieuw sturen in %d seconde</item>
         <item quantity="other">Melding opnieuw sturen in %d seconden</item>
+    </plurals>
+    <plurals name="vault_count">
+        <item quantity="one">%d kluis</item>
+        <item quantity="other">%d kluizen</item>
     </plurals>
     <string name="key_import_chains_found_desc">Elke extra keten verlengt de tijd die nodig is om uw kluis te genereren en de kans op een time-out.</string>
     <string name="key_import_chains_continue">Aan de slag</string>
@@ -1068,4 +1080,17 @@
     <string name="native_asset">Native</string>
     <string name="invalid_integer_error">Ongeldig geheel getal</string>
     <string name="empty_lps_field">Leeg LP-eenheden-veld</string>
+
+    <string name="transaction_failed">Transactie mislukt</string>
+    <string name="vault_detail_signer">Ondertekenaar %1$d</string>
+    <string name="deposit_form_lp_units_hint">LP-eenheden</string>
+    <string name="staking_transfer">Overdragen</string>
+
+    <string name="defi_header_minted">Gemint %1$s</string>
+    <string name="defi_header_compounded">Samengesteld %1$s</string>
+    <string name="defi_header_staked">Gestaked %1$s</string>
+
+    <string name="name_vault_import">Geïmporteerde kluis</string>
+    <string name="name_vault_fast">Snelle kluis</string>
+    <string name="name_vault_secure">Veilige kluis</string>
 </resources>
