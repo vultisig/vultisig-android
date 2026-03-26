@@ -136,7 +136,7 @@ dependencies {
     implementation(libs.play.update)
     implementation(libs.play.review)
     implementation(libs.androidx.work.ktx)
-    implementation(libs.bcprov.jdk15on)
+    implementation(libs.bcprov.jdk18on)
 
     // animation
     implementation(libs.lottie.compose)
