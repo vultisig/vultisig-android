@@ -1095,9 +1095,7 @@ constructor(
                         dstAddress =
                             mscaAddress
                                 ?: throw InvalidTransactionDataException(
-                                    UiText.DynamicString(
-                                        "MSCA account not deployed yet, please try again"
-                                    )
+                                    UiText.StringResource(R.string.send_error_msca_not_deployed)
                                 ),
                         memo = memo,
                         srcTokenValue = TokenValue(value = BigInteger.ZERO, token = nativeCoin),
