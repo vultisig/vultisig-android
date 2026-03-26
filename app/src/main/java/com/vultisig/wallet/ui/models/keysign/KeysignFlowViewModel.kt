@@ -632,7 +632,7 @@ constructor(
                         _currentVault
                             ?: run {
                                 Timber.e("Vault is not set when joining keysign in startSession")
-                                moveToState(KeysignFlowState.Error("Vault is not set"))
+                                moveToState(KeysignFlowState.Error("Vault is not set".asUiText()))
                                 return
                             }
                     vultiSignerRepository.joinKeysign(
@@ -659,7 +659,7 @@ constructor(
                     delayMs *= 2
                 } else {
                     Timber.tag("KeysignFlowViewModel").e("All attempts to start session failed")
-                    moveToState(KeysignFlowState.Error("Failed to start session"))
+                    moveToState(KeysignFlowState.Error("Failed to start session".asUiText()))
                 }
             }
         }
