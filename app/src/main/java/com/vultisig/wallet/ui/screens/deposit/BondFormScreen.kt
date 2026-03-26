@@ -421,111 +421,126 @@ private fun MayaBondFormContent(
                 UiGradientHorizontalDivider()
                 UiSpacer(size = 16.dp)
                 if (state.bondableAssets.isNotEmpty()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // Selected chip — always visible; click to open the full list
-                        val displayAsset =
-                            state.selectedBondAsset.ifEmpty { state.bondableAssets.first() }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier =
-                                Modifier.clickOnce { isBondAssetListOpen = !isBondAssetListOpen }
-                                    .background(
-                                        color = Theme.v2.colors.backgrounds.surface1,
-                                        shape = RoundedCornerShape(99.dp),
+                    TextFieldValidator(errorText = state.assetsError) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Selected chip — always visible; click to open the full list
+                            val displayAsset =
+                                state.selectedBondAsset.ifEmpty { state.bondableAssets.first() }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier =
+                                    Modifier.clickOnce {
+                                            isBondAssetListOpen = !isBondAssetListOpen
+                                        }
+                                        .background(
+                                            color = Theme.v2.colors.backgrounds.surface1,
+                                            shape = RoundedCornerShape(99.dp),
+                                        )
+                                        .padding(
+                                            start = 6.dp,
+                                            end = 12.dp,
+                                            top = 6.dp,
+                                            bottom = 6.dp,
+                                        ),
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    TokenLogo(
+                                        logo =
+                                            getCoinLogo(displayAsset.toDisplayAsset().lowercase()),
+                                        title = displayAsset.toDisplayAsset(),
+                                        modifier = Modifier.size(36.dp),
+                                        errorLogoModifier = Modifier.size(36.dp),
                                     )
-                                    .padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                TokenLogo(
-                                    logo = getCoinLogo(displayAsset.toDisplayAsset().lowercase()),
-                                    title = displayAsset.toDisplayAsset(),
-                                    modifier = Modifier.size(36.dp),
-                                    errorLogoModifier = Modifier.size(36.dp),
-                                )
-                                UiSpacer(8.dp)
-                                Column {
-                                    Text(
-                                        text = displayAsset.toDisplayAsset(),
-                                        style = Theme.brockmann.supplementary.caption,
-                                        color = Theme.v2.colors.text.primary,
-                                    )
-                                    Text(
-                                        text =
-                                            displayAsset.toDisplayChain()
-                                                ?: stringResource(R.string.swap_form_native),
-                                        style = Theme.brockmann.supplementary.captionSmall,
-                                        color = Theme.v2.colors.text.tertiary,
-                                    )
+                                    UiSpacer(8.dp)
+                                    Column {
+                                        Text(
+                                            text = displayAsset.toDisplayAsset(),
+                                            style = Theme.brockmann.supplementary.caption,
+                                            color = Theme.v2.colors.text.primary,
+                                        )
+                                        Text(
+                                            text =
+                                                displayAsset.toDisplayChain()
+                                                    ?: stringResource(R.string.swap_form_native),
+                                            style = Theme.brockmann.supplementary.captionSmall,
+                                            color = Theme.v2.colors.text.tertiary,
+                                        )
+                                    }
                                 }
+                                UiSpacer(4.dp)
+                                UiIcon(
+                                    drawableResId =
+                                        if (isBondAssetListOpen) R.drawable.ic_caret_down
+                                        else R.drawable.ic_chevron_right_small,
+                                    size = 20.dp,
+                                    tint = Theme.v2.colors.text.primary,
+                                )
                             }
-                            UiSpacer(4.dp)
-                            UiIcon(
-                                drawableResId =
-                                    if (isBondAssetListOpen) R.drawable.ic_caret_down
-                                    else R.drawable.ic_chevron_right_small,
-                                size = 20.dp,
-                                tint = Theme.v2.colors.text.primary,
-                            )
-                        }
 
-                        // Full list — visible only when chip is tapped
-                        AnimatedVisibility(visible = isBondAssetListOpen) {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                state.bondableAssets.forEach { asset ->
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        modifier =
-                                            Modifier.clickOnce {
-                                                    onSelectBondAsset(asset)
-                                                    isBondAssetListOpen = false
-                                                    isAssetExpanded = false
-                                                }
-                                                .background(
-                                                    color = Theme.v2.colors.backgrounds.secondary,
-                                                    shape = RoundedCornerShape(99.dp),
-                                                )
-                                                .padding(
-                                                    start = 6.dp,
-                                                    end = 12.dp,
-                                                    top = 6.dp,
-                                                    bottom = 6.dp,
-                                                ),
-                                    ) {
+                            // Full list — visible only when chip is tapped
+                            AnimatedVisibility(visible = isBondAssetListOpen) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    state.bondableAssets.forEach { asset ->
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            modifier =
+                                                Modifier.clickOnce {
+                                                        onSelectBondAsset(asset)
+                                                        isBondAssetListOpen = false
+                                                        isAssetExpanded = false
+                                                    }
+                                                    .background(
+                                                        color =
+                                                            Theme.v2.colors.backgrounds.secondary,
+                                                        shape = RoundedCornerShape(99.dp),
+                                                    )
+                                                    .padding(
+                                                        start = 6.dp,
+                                                        end = 12.dp,
+                                                        top = 6.dp,
+                                                        bottom = 6.dp,
+                                                    ),
                                         ) {
-                                            TokenLogo(
-                                                logo =
-                                                    getCoinLogo(asset.toDisplayAsset().lowercase()),
-                                                title = asset.toDisplayAsset(),
-                                                modifier = Modifier.size(36.dp),
-                                                errorLogoModifier = Modifier.size(36.dp),
-                                            )
-                                            Column {
-                                                Text(
-                                                    text = asset.toDisplayAsset(),
-                                                    style = Theme.brockmann.supplementary.caption,
-                                                    color = Theme.v2.colors.text.primary,
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            ) {
+                                                TokenLogo(
+                                                    logo =
+                                                        getCoinLogo(
+                                                            asset.toDisplayAsset().lowercase()
+                                                        ),
+                                                    title = asset.toDisplayAsset(),
+                                                    modifier = Modifier.size(36.dp),
+                                                    errorLogoModifier = Modifier.size(36.dp),
                                                 )
-                                                Text(
-                                                    text =
-                                                        asset.toDisplayChain()
-                                                            ?: stringResource(
-                                                                R.string.swap_form_native
-                                                            ),
-                                                    style =
-                                                        Theme.brockmann.supplementary.captionSmall,
-                                                    color = Theme.v2.colors.text.tertiary,
-                                                )
+                                                Column {
+                                                    Text(
+                                                        text = asset.toDisplayAsset(),
+                                                        style =
+                                                            Theme.brockmann.supplementary.caption,
+                                                        color = Theme.v2.colors.text.primary,
+                                                    )
+                                                    Text(
+                                                        text =
+                                                            asset.toDisplayChain()
+                                                                ?: stringResource(
+                                                                    R.string.swap_form_native
+                                                                ),
+                                                        style =
+                                                            Theme.brockmann.supplementary
+                                                                .captionSmall,
+                                                        color = Theme.v2.colors.text.tertiary,
+                                                    )
+                                                }
                                             }
+                                            UiIcon(
+                                                drawableResId = R.drawable.ic_chevron_right_small,
+                                                size = 20.dp,
+                                                tint = Theme.v2.colors.text.primary,
+                                            )
                                         }
-                                        UiIcon(
-                                            drawableResId = R.drawable.ic_chevron_right_small,
-                                            size = 20.dp,
-                                            tint = Theme.v2.colors.text.primary,
-                                        )
                                     }
                                 }
                             }
