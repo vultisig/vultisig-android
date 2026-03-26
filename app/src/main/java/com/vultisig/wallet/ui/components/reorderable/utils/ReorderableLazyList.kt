@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.components.reorderable.utils
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.Orientation
@@ -32,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 
-@SuppressLint("UnrememberedMutableState")
 @Composable
 fun rememberReorderableLazyListState(
     lazyListState: LazyListState,
@@ -66,7 +64,7 @@ fun rememberReorderableLazyListState(
             top = with(density) { scrollThresholdPadding.calculateTopPadding().toPx() },
             bottom = with(density) { scrollThresholdPadding.calculateBottomPadding().toPx() },
         )
-    val orientation by derivedStateOf { lazyListState.layoutInfo.orientation }
+    val orientation by remember { derivedStateOf { lazyListState.layoutInfo.orientation } }
     val state =
         remember(
             scope,
