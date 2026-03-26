@@ -15,9 +15,12 @@ import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.common.fileName
 import com.vultisig.wallet.data.common.isValidZipFile
 import com.vultisig.wallet.data.common.processZip
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
@@ -68,6 +71,8 @@ constructor(
     private val saveVault: SaveVaultUseCase,
     private val parseVaultFromString: ParseVaultFromStringUseCase,
     private val discoverToken: DiscoverTokenUseCase,
+    private val vaultRepository: VaultRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.ImportVault>()
@@ -160,6 +165,16 @@ constructor(
         saveVault(adjustedVault, false)
         vaultDataStoreRepository.setBackupStatus(adjustedVault.id, true)
         discoverToken(adjustedVault.id, null)
+
+        if (adjustedVault.pubKeyMLDSA.isNotBlank()) {
+            val qbtcToken = Coins.Qbtc.QBTC
+            val (address, pubKey) =
+                chainAccountAddressRepository.getAddress(qbtcToken, adjustedVault)
+            vaultRepository.addTokenToVault(
+                adjustedVault.id,
+                qbtcToken.copy(address = address, hexPublicKey = pubKey),
+            )
+        }
         if (uiModel.value.isZip == true) {
             val updatedZipOutput =
                 uiModel.value.zipOutputs.filter { it.content != uiModel.value.fileContent }
