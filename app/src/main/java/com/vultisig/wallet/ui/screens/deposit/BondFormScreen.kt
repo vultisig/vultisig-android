@@ -254,6 +254,11 @@ private fun Modifier.vsClickableBackground() =
 private fun String.toDisplayAsset(): String =
     substringBefore("-").substringAfterLast("/").substringAfterLast(".")
 
+private fun String.toDisplayChain(): String? {
+    val withoutSuffix = substringBefore("-")
+    return if ('.' in withoutSuffix) withoutSuffix.substringBefore(".") else null
+}
+
 @Composable
 private fun MayaBondFormContent(
     state: DepositFormUiModel,
@@ -445,7 +450,9 @@ private fun MayaBondFormContent(
                                         color = Theme.v2.colors.text.primary,
                                     )
                                     Text(
-                                        text = stringResource(R.string.swap_form_native),
+                                        text =
+                                            displayAsset.toDisplayChain()
+                                                ?: stringResource(R.string.swap_form_native),
                                         style = Theme.brockmann.supplementary.captionSmall,
                                         color = Theme.v2.colors.text.tertiary,
                                     )
@@ -504,7 +511,10 @@ private fun MayaBondFormContent(
                                                 )
                                                 Text(
                                                     text =
-                                                        stringResource(R.string.swap_form_native),
+                                                        asset.toDisplayChain()
+                                                            ?: stringResource(
+                                                                R.string.swap_form_native
+                                                            ),
                                                     style =
                                                         Theme.brockmann.supplementary.captionSmall,
                                                     color = Theme.v2.colors.text.tertiary,
