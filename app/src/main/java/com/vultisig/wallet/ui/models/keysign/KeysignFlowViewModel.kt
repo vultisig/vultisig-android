@@ -76,7 +76,6 @@ import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Swap
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
-import com.vultisig.wallet.ui.utils.launchMediatorSession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
