@@ -19,6 +19,7 @@ import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.utils.VsUriHandler
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun KeysignView(
@@ -48,7 +49,7 @@ internal fun KeysignView(
             is KeysignState.Error ->
                 stringResource(
                     id = R.string.keysign_screen_error_please_try_again,
-                    state.errorMessage,
+                    state.errorMessage.asString(),
                 )
         }
 
