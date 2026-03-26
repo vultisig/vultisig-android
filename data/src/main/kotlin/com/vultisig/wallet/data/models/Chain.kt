@@ -357,7 +357,7 @@ fun Chain.swapAssetName(): String {
         Chain.Tron -> "TRON"
         Chain.Zcash -> "ZEC"
         Chain.Cardano -> "ADA"
-        Chain.Mantle -> "MNT"
+        Chain.Mantle -> "MANTLE"
         Chain.Sei -> "SEI"
         Chain.Hyperliquid -> "HYPE"
     }
