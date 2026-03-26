@@ -50,7 +50,8 @@ constructor(
                     insertedVault.chainPublicKeys.mapNotNull { cpk ->
                         try {
                             Chain.fromRaw(cpk.chain)
-                        } catch (_: Exception) {
+                        } catch (e: Exception) {
+                            Timber.e(e, "Failed to parse chain from key import")
                             null
                         }
                     }
