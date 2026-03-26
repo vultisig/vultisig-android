@@ -9,12 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -173,17 +168,17 @@ constructor(
     private var _currentVault: Vault? = null
     private var _keysignPayload: KeysignPayload? = null
     private var customMessagePayload: CustomMessagePayload? = null
-    private val _keysignMessage: MutableState<String> = mutableStateOf("")
+    private val _keysignMessage: MutableStateFlow<String> = MutableStateFlow("")
     private var messagesToSign = emptyList<String>()
 
     val currentState: MutableStateFlow<KeysignFlowState> =
         MutableStateFlow(KeysignFlowState.PeerDiscovery)
-    val selection = MutableLiveData<List<String>>()
-    val keysignMessage: MutableState<String>
+    val selection = MutableStateFlow<List<String>>(emptyList())
+    val keysignMessage: MutableStateFlow<String>
         get() = _keysignMessage
 
     val participants = MutableStateFlow<List<String>>(emptyList())
-    val networkOption: MutableState<NetworkOption> = mutableStateOf(NetworkOption.Internet)
+    val networkOption: MutableStateFlow<NetworkOption> = MutableStateFlow(NetworkOption.Internet)
 
     private val args = savedStateHandle.toRoute<Route.Keysign.Keysign>()
     private val password = args.password
@@ -192,9 +187,8 @@ constructor(
     val isFastSign: Boolean
         get() = !password.isNullOrBlank()
 
-    private val isRelayEnabled by derivedStateOf {
-        networkOption.value == NetworkOption.Internet || isFastSign
-    }
+    private val isRelayEnabled: Boolean
+        get() = networkOption.value == NetworkOption.Internet || isFastSign
 
     val isLoading = MutableStateFlow(false)
     private val _isDataLoaded = MutableStateFlow(false)
@@ -222,12 +216,7 @@ constructor(
                     Timber.e("Vault is not set when creating KeysignViewModel")
                     return null
                 }
-        val keysignCommittee =
-            selection.value
-                ?: run {
-                    Timber.e("Keysign committee is not set when creating KeysignViewModel")
-                    return null
-                }
+        val keysignCommittee = selection.value
         return KeysignViewModel(
             vault = vault,
             keysignCommittee = keysignCommittee,
@@ -639,13 +628,13 @@ constructor(
     }
 
     fun addParticipant(participant: String) {
-        val currentList = selection.value ?: emptyList()
+        val currentList = selection.value
         if (currentList.contains(participant)) return
         selection.value = currentList + participant
     }
 
     fun removeParticipant(participant: String) {
-        selection.value = selection.value?.minus(participant)
+        selection.value = selection.value - participant
     }
 
     fun moveToState(nextState: KeysignFlowState) {
@@ -697,7 +686,7 @@ constructor(
     private suspend fun startKeysign() {
         withContext(Dispatchers.IO) {
             try {
-                val keygenCommittee = selection.value ?: emptyList()
+                val keygenCommittee = selection.value
                 sessionApi.startWithCommittee(_serverAddress, _sessionID, keygenCommittee)
                 Timber.d("Keysign started")
             } catch (e: Exception) {
