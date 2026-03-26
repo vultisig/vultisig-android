@@ -60,12 +60,20 @@ fun Coin.getNotNativeTicker(): String {
     return this.ticker.uppercase().removePrefix("X/")
 }
 
+// THORChain-side: is this coin a secured asset token on THORChain itself
 fun Coin.isSecuredAsset(): Boolean {
     if (chain != Chain.ThorChain) return false
     if (isNativeToken) return false
     if (contractAddress.startsWith("x/", ignoreCase = true)) return false
     val parts = contractAddress.split("-", limit = 2)
     return parts.size == 2 && parts[0].isNotBlank() && parts[1].isNotBlank()
+}
+
+// Source-chain side: can this coin be deposited into THORChain as a SECURE+ asset
+fun Coin.isSecuredAssetEligible(): Boolean {
+    val eligibleTickers = listOf("BTC", "ETH", "BCH", "LTC", "DOGE", "AVAX", "BNB")
+    return eligibleTickers.contains(ticker.uppercase()) &&
+        (isNativeToken || contractAddress == "${ticker.lowercase()}-${ticker.lowercase()}")
 }
 
 fun Coin.securedAssetChain(): String {
