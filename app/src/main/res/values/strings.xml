@@ -403,6 +403,8 @@
     <string name="swap_error_insufficient_source_token">Insufficient %1$s balance to swap</string>
     <string name="swap_error_insufficient_gas_fees">Not enough %1$s to cover gas fees. Please fund the wallet.</string>
     <string name="swap_error_time_out">Swap request timed out. Please try again</string>
+    <string name="swap_error_high_price_impact">Price impact is too high. Try a smaller amount or a different token pair.</string>
+    <string name="swap_error_quote_failed">Swap quote failed. Please try again or adjust the amount.</string>
     <string name="swap_screen_invalid_no_vault">No vault selected</string>
     <string name="swap_screen_invalid_no_src_error">No source token selected</string>
     <string name="swap_screen_invalid_selected_no_dst">No destination token selected</string>

@@ -323,6 +323,8 @@
     <string name="swap_error_insufficient_source_token">Недостаточный баланс %1$s для обмена</string>
     <string name="swap_error_insufficient_gas_fees">Недостаточно %1$s для оплаты комиссии за газ. Пожалуйста, пополните кошелек.</string>
     <string name="swap_error_time_out">Запрос на обмен истек. Попробуйте еще раз</string>
+    <string name="swap_error_high_price_impact">Влияние на цену слишком высокое. Попробуйте меньшую сумму или другую пару токенов.</string>
+    <string name="swap_error_quote_failed">Не удалось получить котировку. Попробуйте снова или измените сумму.</string>
     <string name="swap_screen_invalid_no_vault">Хранилище не выбрано</string>
     <string name="swap_screen_invalid_no_src_error">Исходный токен не выбран</string>
     <string name="swap_screen_invalid_selected_no_dst">Токен назначения не выбран</string>
