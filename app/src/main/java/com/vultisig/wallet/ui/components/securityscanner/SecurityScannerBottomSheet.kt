@@ -92,7 +92,7 @@ fun SecurityScannerBottomSheetContent(
     ) {
         Icon(
             painter = painterResource(contentStyle.image),
-            contentDescription = "Warning",
+            contentDescription = null,
             tint = contentStyle.imageColor,
             modifier = Modifier.size(24.dp),
         )
@@ -127,7 +127,7 @@ fun SecurityScannerBottomSheetContent(
 
                 Image(
                     painter = painterResource(id = getSecurityScannerLogo(securityScannerProvider)),
-                    contentDescription = "Provider Logo",
+                    contentDescription = null,
                     modifier = Modifier.height(16.dp),
                 )
             }

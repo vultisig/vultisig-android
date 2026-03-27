@@ -57,7 +57,7 @@ fun OnRampScreen(navController: NavController, viewModel: OnRampViewModel = hilt
         ) {
             Image(
                 painter = painterResource(id = R.drawable.banxa_logo),
-                contentDescription = "Banxa Logo",
+                contentDescription = null,
                 modifier = Modifier.size(120.dp),
             )
 

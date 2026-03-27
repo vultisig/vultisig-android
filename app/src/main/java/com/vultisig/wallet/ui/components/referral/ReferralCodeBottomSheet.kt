@@ -56,7 +56,7 @@ internal fun ReferralCodeBottomSheetContent(onContinue: () -> Unit) {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Image(
                 painter = painterResource(id = R.drawable.referralcodeiphone),
-                contentDescription = "ReferralImage",
+                contentDescription = null,
                 modifier = Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(24.dp)),
             )
         }
