@@ -52,7 +52,6 @@ internal fun VaultBackupOnboardingScreen(
     onEvent: (VaultBackupOnboardingEvent) -> Unit,
 ) {
     V3Scaffold(
-        onBackClick = { onEvent(VaultBackupOnboardingEvent.Back) },
         applyDefaultPaddings = false,
         content = {
             Column(modifier = Modifier.fillMaxSize()) {
