@@ -40,7 +40,6 @@ import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -466,15 +465,7 @@ constructor(
                                 val isApprovalRequired =
                                     allowance != null && allowance < srcTokenValue.value
 
-                                val srcFiatValue =
-                                    convertTokenValueToFiat(
-                                        srcToken,
-                                        srcTokenValue,
-                                        AppCurrency.USD,
-                                    )
-
-                                val isAffiliate =
-                                    srcFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                                val isAffiliate = true
 
                                 RegularSwapTransaction(
                                     id = UUID.randomUUID().toString(),
@@ -539,15 +530,7 @@ constructor(
                                 val isApprovalRequired =
                                     allowance != null && allowance < srcTokenValue.value
 
-                                val srcFiatValue =
-                                    convertTokenValueToFiat(
-                                        srcToken,
-                                        srcTokenValue,
-                                        AppCurrency.USD,
-                                    )
-
-                                val isAffiliate =
-                                    srcFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                                val isAffiliate = true
 
                                 val regularSwapTransaction =
                                     RegularSwapTransaction(
@@ -1306,12 +1289,7 @@ constructor(
                         when (provider) {
                             SwapProvider.MAYA,
                             SwapProvider.THORCHAIN -> {
-                                val srcUsdFiatValue =
-                                    convertTokenValueToFiat(srcToken, tokenValue, AppCurrency.USD)
-
-                                val isAffiliate =
-                                    srcUsdFiatValue.value >=
-                                        AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                                val isAffiliate = true
 
                                 val (quote, recommendedMinAmountToken) =
                                     if (provider == SwapProvider.MAYA) {
@@ -1401,11 +1379,6 @@ constructor(
                             }
 
                             SwapProvider.KYBER -> {
-                                val srcUsdFiatValue =
-                                    convertTokenValueToFiat(srcToken, tokenValue, AppCurrency.USD)
-                                val isAffiliate =
-                                    srcUsdFiatValue.value >=
-                                        AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
                                 val swapQuote =
                                     getCachedQuoteOrFetch(
                                         srcToken.id,
@@ -1418,7 +1391,7 @@ constructor(
                                                 srcToken = srcToken,
                                                 dstToken = dstToken,
                                                 tokenValue = tokenValue,
-                                                isAffiliate = isAffiliate,
+                                                affiliateBps = vultBPSDiscount ?: 0,
                                             )
                                         val expectedDstValue =
                                             TokenValue(
@@ -1480,12 +1453,7 @@ constructor(
                             }
 
                             SwapProvider.ONEINCH -> {
-                                val srcUsdFiatValue =
-                                    convertTokenValueToFiat(srcToken, tokenValue, AppCurrency.USD)
-
-                                val isAffiliate =
-                                    srcUsdFiatValue.value >=
-                                        AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                                val isAffiliate = true
 
                                 val swapQuote =
                                     getCachedQuoteOrFetch(
@@ -1927,7 +1895,6 @@ constructor(
     }
 
     companion object {
-        const val AFFILIATE_FEE_USD_THRESHOLD = 100
         const val ETH_GAS_LIMIT: Long = 40_000
         const val ARB_GAS_LIMIT: Long = 400_000
 

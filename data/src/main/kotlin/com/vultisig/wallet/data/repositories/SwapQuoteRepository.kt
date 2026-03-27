@@ -48,7 +48,7 @@ interface SwapQuoteRepository {
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-        isAffiliate: Boolean,
+        affiliateBps: Int,
     ): EVMSwapQuoteJson
 
     suspend fun getOneInchSwapQuote(
@@ -131,7 +131,7 @@ constructor(
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-        isAffiliate: Boolean,
+        affiliateBps: Int,
     ): EVMSwapQuoteJson {
         val kyberSwapQuote =
             kyberApi.getSwapQuote(
@@ -140,7 +140,7 @@ constructor(
                 dstTokenContractAddress = dstToken.contractAddress,
                 amount = tokenValue.value.toString(),
                 srcAddress = srcToken.address,
-                isAffiliate = isAffiliate,
+                affiliateBps = affiliateBps,
             )
         when (kyberSwapQuote) {
             is KyberSwapQuoteDeserialized.Error ->
@@ -157,7 +157,7 @@ constructor(
                             routeSummary = kyberSwapQuote.result.data.routeSummary,
                             from = srcToken.address,
                             enableGasEstimation = true,
-                            isAffiliate = isAffiliate,
+                            affiliateBps = affiliateBps,
                         ),
                 )
             }

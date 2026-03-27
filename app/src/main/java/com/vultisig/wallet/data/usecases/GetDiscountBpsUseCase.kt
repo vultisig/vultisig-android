@@ -124,6 +124,7 @@ constructor(
                 SwapProvider.MAYA,
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
+                SwapProvider.KYBER,
             )
     }
 }

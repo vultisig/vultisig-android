@@ -81,6 +81,10 @@ data class KyberSwapBuildRequest(
     val enableGasEstimation: Boolean,
     val source: String,
     val ignoreCappedSlippage: Boolean,
+    val feeAmount: Int? = null,
+    val chargeFeeBy: String? = null,
+    val isInBps: Boolean? = null,
+    val feeReceiver: String? = null,
 )
 
 @Serializable

@@ -14,7 +14,6 @@ import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -33,7 +32,7 @@ interface KyberApi {
         dstTokenContractAddress: String,
         amount: String,
         srcAddress: String,
-        isAffiliate: Boolean,
+        affiliateBps: Int,
     ): KyberSwapQuoteDeserialized
 
     suspend fun getKyberSwapQuote(
@@ -41,7 +40,7 @@ interface KyberApi {
         routeSummary: KyberSwapRouteResponse.RouteSummary,
         from: String,
         enableGasEstimation: Boolean,
-        isAffiliate: Boolean,
+        affiliateBps: Int,
     ): KyberSwapQuoteJson
 }
 
@@ -60,7 +59,7 @@ constructor(
         dstTokenContractAddress: String,
         amount: String,
         srcAddress: String,
-        isAffiliate: Boolean,
+        affiliateBps: Int,
     ): KyberSwapQuoteDeserialized {
         try {
             val sourceAddress = srcTokenContractAddress.ifEmpty { NULL_ADDRESS }
@@ -77,12 +76,12 @@ constructor(
                             append("saveGas", "false")
                             append("gasInclude", "true")
                             append("slippageTolerance", SLIPPAGE_TOLERANCE.toString())
-                            append("isAffiliate", isAffiliate.toString())
-                            parameter("sourceIdentifier", if (isAffiliate) CLIENT_ID else null)
-                            parameter(
-                                "referrerAddress",
-                                if (isAffiliate) REFERRER_ADDRESS else null,
-                            )
+                            if (affiliateBps > 0) {
+                                append("feeAmount", affiliateBps.toString())
+                                append("chargeFeeBy", "currency_out")
+                                append("isInBps", "true")
+                                append("feeReceiver", REFERRER_ADDRESS)
+                            }
                         }
 
                         headers {
@@ -122,7 +121,7 @@ constructor(
         routeSummary: KyberSwapRouteResponse.RouteSummary,
         from: String,
         enableGasEstimation: Boolean,
-        isAffiliate: Boolean,
+        affiliateBps: Int,
     ): KyberSwapQuoteJson {
 
         try {
@@ -135,8 +134,11 @@ constructor(
                     deadline = (System.currentTimeMillis() / 1000L + 1200).toInt(),
                     enableGasEstimation = enableGasEstimation,
                     source = CLIENT_ID,
-                    referral = if (isAffiliate) REFERRER_ADDRESS else null,
                     ignoreCappedSlippage = false,
+                    feeAmount = if (affiliateBps > 0) affiliateBps else null,
+                    chargeFeeBy = if (affiliateBps > 0) "currency_out" else null,
+                    isInBps = if (affiliateBps > 0) true else null,
+                    feeReceiver = if (affiliateBps > 0) REFERRER_ADDRESS else null,
                 )
 
             val response =
@@ -160,7 +162,7 @@ constructor(
                     routeSummary = routeSummary,
                     from = from,
                     enableGasEstimation = false,
-                    isAffiliate = isAffiliate,
+                    affiliateBps = affiliateBps,
                 )
             }
             if (!response.status.isSuccess()) {
