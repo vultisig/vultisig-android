@@ -1391,7 +1391,12 @@ constructor(
                                                 srcToken = srcToken,
                                                 dstToken = dstToken,
                                                 tokenValue = tokenValue,
-                                                affiliateBps = vultBPSDiscount ?: 0,
+                                                affiliateBps =
+                                                    maxOf(
+                                                        0,
+                                                        KYBER_AFFILIATE_FEE_BPS -
+                                                            (vultBPSDiscount ?: 0),
+                                                    ),
                                             )
                                         val expectedDstValue =
                                             TokenValue(
@@ -1897,6 +1902,7 @@ constructor(
     companion object {
         const val ETH_GAS_LIMIT: Long = 40_000
         const val ARB_GAS_LIMIT: Long = 400_000
+        private const val KYBER_AFFILIATE_FEE_BPS = 50
 
         private const val ARG_SELECTED_SRC_TOKEN_ID = "ARG_SELECTED_SRC_TOKEN_ID"
         private const val ARG_SELECTED_DST_TOKEN_ID = "ARG_SELECTED_DST_TOKEN_ID"

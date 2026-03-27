@@ -184,6 +184,8 @@ constructor(
                     data = response.data.data,
                     value = response.data.transactionValue,
                     gasPrice = gasPrice,
+                    swapFee = routeSummary.extraFee?.feeAmount ?: "0",
+                    swapFeeTokenContract = routeSummary.tokenOut,
                 ),
         )
     }
