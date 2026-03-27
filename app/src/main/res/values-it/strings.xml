@@ -146,8 +146,6 @@
     <string name="swap_form_vault">Cassaforte</string>
     <string name="swap_form_min_pay">pagamento min.</string>
     <string name="chain_account_view_swap">SCAMBIA</string>
-    <string name="chain_account_view_deposit">DEPOSITA</string>
-    <string name="chain_account_view_send">INVIA</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">FIRMANDO CON CHIAVE EdDSA…</string>
     <string name="signing_error_please_try_again_s">Errore di Firma. Per favore, riprova.%s</string>
@@ -683,7 +681,6 @@
     <string name="bond_node_state_active">Attivo</string>
     <string name="bond_node_state_disabled">Disabilitato</string>
     <string name="bond_node_state_unknown">Sconosciuto</string>
-    <string name="defi_balance">Saldo</string>
     <string name="vault_ceil_active">Attivo</string>
     <string name="fast_vault_password_screen_error">Le password non corrispondono</string>
     <string name="fast_vault_password_screen_next">Avanti</string>
@@ -1083,9 +1080,6 @@
     <string name="staked_ytcy_header">Staking yTCY</string>
     <string name="staked_yrune_header">Staking yRUNE</string>
     <string name="compounded_tcy_header">Composto TCY</string>
-    <string name="native_asset">Nativo</string>
-    <string name="invalid_integer_error">Importo intero non valido</string>
-    <string name="empty_lps_field">Campo Unità LP vuoto</string>
 
     <!-- Hardcoded string fixes -->
     <string name="transaction_failed">Transazione fallita</string>

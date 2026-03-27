@@ -158,8 +158,6 @@
 
     <!-- Chain Account -->
     <string name="chain_account_view_swap">交换</string>
-    <string name="chain_account_view_deposit">存款</string>
-    <string name="chain_account_view_send">发送</string>
 
     <string name="circle_defi_description">将您的 USDC 存入 Circle 账户并赚取收益。安全地存储在您的 Vultisig 保险库中。</string>
     <string name="circle_defi_control_info">资金完全由您的保险库控制。Circle 账户是自托管的，收益通过安全的链下国库产生。</string>
@@ -1018,7 +1016,6 @@
     <string name="bond_node_state_active">活跃</string>
     <string name="bond_node_state_disabled">已禁用</string>
     <string name="bond_node_state_unknown">未知</string>
-    <string name="defi_balance">余额</string>
     <string name="vault_ceil_active">已激活</string>
     <string name="fast_vault_password_screen_error">密码不匹配</string>
     <string name="fast_vault_password_screen_next">下一步</string>
@@ -1414,9 +1411,6 @@
     <string name="staked_ytcy_header">已质押 yTCY</string>
     <string name="staked_yrune_header">已质押 yRUNE</string>
     <string name="compounded_tcy_header">已复利 TCY</string>
-    <string name="native_asset">原生</string>
-    <string name="invalid_integer_error">无效的整数数量</string>
-    <string name="empty_lps_field">LP 单位字段为空</string>
 
     <string name="transaction_failed">交易失败</string>
     <string name="vault_detail_signer">签名者 %1$d</string>

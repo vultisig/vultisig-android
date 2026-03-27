@@ -144,8 +144,6 @@
     <string name="tokens">Tokeni</string>
     <string name="transaction_type_button_swap">Zamijeni</string>
     <string name="chain_account_view_swap">ZAMIJENI</string>
-    <string name="chain_account_view_deposit">UPLATI</string>
-    <string name="chain_account_view_send">POŠALJI</string>
     <string name="keysign_screen_signing_with_ecdsa">POTPISIVANJE KORISTEĆI ECDSA KLJUČ…</string>
     <string name="keysign_screen_signing_with_eddsa">POTPISIVANJE KORISTEĆI EdDSA KLJUČ…</string>
     <string name="signing_error_please_try_again_s">Greška pri prijavi. Molimo pokušajte ponovno. %s</string>
@@ -684,7 +682,6 @@
     <string name="bond_node_state_active">Aktivan</string>
     <string name="bond_node_state_disabled">Onemogućen</string>
     <string name="bond_node_state_unknown">Nepoznat</string>
-    <string name="defi_balance">Stanje</string>
     <string name="vault_ceil_active">Aktivno</string>
     <string name="fast_vault_password_screen_error">Lozinke se ne podudaraju</string>
     <string name="fast_vault_password_screen_next">Sljedeće</string>
@@ -1084,9 +1081,6 @@
     <string name="staked_ytcy_header">Uloženo yTCY</string>
     <string name="staked_yrune_header">Uloženo yRUNE</string>
     <string name="compounded_tcy_header">Složeno TCY</string>
-    <string name="native_asset">Izvorno</string>
-    <string name="invalid_integer_error">Nevažeći cijeli broj</string>
-    <string name="empty_lps_field">Prazno polje LP jedinice</string>
 
     <!-- Hardcoded string fixes -->
     <string name="transaction_failed">Transakcija neuspjela</string>
