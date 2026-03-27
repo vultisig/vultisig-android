@@ -587,13 +587,34 @@ constructor(
                         val memberPool = memberPoolMap[pool.positionKey]
                         val stats = poolStatsMap[pool.positionKey]
 
-                        val assetAdded =
-                            memberPool?.assetAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
-                        val cacaoAdded =
-                            memberPool?.cacaoAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
+                        val liquidityUnits =
+                            memberPool?.liquidityUnits?.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                        val totalPoolUnits = stats?.units?.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                        val poolAssetDepth =
+                            stats?.assetDepth?.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                        val poolCacaoDepth =
+                            stats?.cacaoDepth?.toBigDecimalOrNull() ?: BigDecimal.ZERO
 
-                        val assetAmount = assetAdded.toValue(8)
-                        val cacaoAmount = cacaoAdded.toValue(10)
+                        val (assetAmount, cacaoAmount) =
+                            if (totalPoolUnits > BigDecimal.ZERO) {
+                                val share =
+                                    liquidityUnits.divide(totalPoolUnits, 18, RoundingMode.HALF_UP)
+                                val asset =
+                                    poolAssetDepth
+                                        .multiply(share)
+                                        .divide(BigDecimal.TEN.pow(8), 18, RoundingMode.HALF_UP)
+                                val cacao =
+                                    poolCacaoDepth
+                                        .multiply(share)
+                                        .divide(BigDecimal.TEN.pow(10), 18, RoundingMode.HALF_UP)
+                                Pair(asset, cacao)
+                            } else {
+                                val assetAdded =
+                                    memberPool?.assetAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
+                                val cacaoAdded =
+                                    memberPool?.cacaoAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
+                                Pair(assetAdded.toValue(8), cacaoAdded.toValue(10))
+                            }
 
                         val assetChain =
                             mayaPoolChainPrefixToChain(pool.positionKey.substringBefore("."))

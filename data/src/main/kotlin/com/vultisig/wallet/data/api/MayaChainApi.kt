@@ -134,6 +134,9 @@ data class MayaLpPoolStats(
     @SerialName("asset") val asset: String,
     @SerialName("annualPercentageRate") val annualPercentageRate: String = "0",
     @SerialName("status") val status: String,
+    @SerialName("assetDepth") val assetDepth: String = "0",
+    @SerialName("runeDepth") val cacaoDepth: String = "0",
+    @SerialName("units") val units: String = "0",
 )
 
 internal class MayaChainApiImp
