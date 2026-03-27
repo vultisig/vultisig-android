@@ -480,7 +480,7 @@
     <string name="referral_create_set_expiration_years">Establecer vencimiento (en años)</string>
     <string name="referral_create_registration_fees">Tarifas de registro</string>
     <string name="referral_create_cost">Costo</string>
-    <string name="referral_create_fees_error">Failed to load fees. Please try again.</string>
+    <string name="referral_create_fees_error">Error al cargar las tarifas. Inténtelo de nuevo.</string>
     <string name="referral_create_create_referral_code">Crear código de referido</string>
     <string name="referral_create_invalid">Inválido</string>
     <string name="referral_create_available">Disponible</string>

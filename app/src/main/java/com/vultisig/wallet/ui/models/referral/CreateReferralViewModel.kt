@@ -244,6 +244,7 @@ constructor(
     }
 
     private suspend fun updateFormattedDate(toAdd: Int) {
+        if (nativeRuneFees == null) return
         val formattedDate = getFormattedDateByAdding(toAdd.toLong())
         val newFees = withContext(Dispatchers.IO) { calculateFees(toAdd) }
 

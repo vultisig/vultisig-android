@@ -725,7 +725,7 @@
     <string name="referral_create_set_expiration_years">设置到期（年）</string>
     <string name="referral_create_registration_fees">注册费</string>
     <string name="referral_create_cost">成本</string>
-    <string name="referral_create_fees_error">Failed to load fees. Please try again.</string>
+    <string name="referral_create_fees_error">加载费用失败，请重试。</string>
     <string name="referral_create_create_referral_code">创建推荐代码</string>
     <string name="referral_create_invalid">无效</string>
     <string name="referral_create_available">可用</string>
