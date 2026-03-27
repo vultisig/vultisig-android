@@ -125,6 +125,7 @@ constructor(
     ): KyberSwapQuoteJson {
 
         try {
+            val hasFee = affiliateBps > 0
             val request =
                 KyberSwapBuildRequest(
                     routeSummary = routeSummary,
@@ -135,10 +136,10 @@ constructor(
                     enableGasEstimation = enableGasEstimation,
                     source = CLIENT_ID,
                     ignoreCappedSlippage = false,
-                    feeAmount = if (affiliateBps > 0) affiliateBps else null,
-                    chargeFeeBy = if (affiliateBps > 0) "currency_out" else null,
-                    isInBps = if (affiliateBps > 0) true else null,
-                    feeReceiver = if (affiliateBps > 0) REFERRER_ADDRESS else null,
+                    feeAmount = if (hasFee) affiliateBps else null,
+                    chargeFeeBy = if (hasFee) "currency_out" else null,
+                    isInBps = if (hasFee) true else null,
+                    feeReceiver = if (hasFee) REFERRER_ADDRESS else null,
                 )
 
             val response =

@@ -184,7 +184,14 @@ constructor(
                     data = response.data.data,
                     value = response.data.transactionValue,
                     gasPrice = gasPrice,
-                    swapFee = routeSummary.extraFee?.feeAmount ?: "0",
+                    swapFee =
+                        routeSummary.extraFee?.let { fee ->
+                            if (fee.isInBps) {
+                                (routeSummary.amountOut.toBigInteger() *
+                                        fee.feeAmount.toBigInteger() / 10000.toBigInteger())
+                                    .toString()
+                            } else fee.feeAmount
+                        } ?: "0",
                     swapFeeTokenContract = routeSummary.tokenOut,
                 ),
         )

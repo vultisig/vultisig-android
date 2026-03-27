@@ -526,20 +526,18 @@ constructor(
             }
 
             TokenStandard.TRC20 -> {
-                val (specific, chainParameters) =
-                    coroutineScope {
-                        val specificDeferred = async { tronApi.getSpecific() }
-                        val chainParamsDeferred = async { tronApi.getChainParameters() }
-                        specificDeferred.await() to chainParamsDeferred.await()
-                    }
+                val specific = tronApi.getSpecific()
+                val energyPrice =
+                    try {
+                        tronApi.getChainParameters().energyFee.takeIf { it > 0L }
+                    } catch (_: Exception) {
+                        null
+                    } ?: ENERGY_TO_SUN_FACTOR.toLong()
                 val now = Clock.System.now()
                 val expiration = now + 1.hours
                 val rawData = specific.blockHeader.rawData
 
                 val recipientAddressHex = Numeric.toHexString(Base58.decode(dstAddress ?: address))
-
-                val energyPrice =
-                    chainParameters.energyFee.takeIf { it > 0L } ?: ENERGY_TO_SUN_FACTOR.toLong()
 
                 val estimation =
                     TRON_DEFAULT_ESTIMATION_FEE.takeIf { token.isNativeToken }

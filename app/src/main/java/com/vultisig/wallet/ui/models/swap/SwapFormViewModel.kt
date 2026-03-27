@@ -1403,20 +1403,44 @@ constructor(
                                                 value = apiQuote.dstAmount.toBigInteger(),
                                                 token = dstToken,
                                             )
+                                        val gasFees =
+                                            apiQuote.tx.gasPrice.toBigInteger() *
+                                                (apiQuote.tx.gas.takeIf { it != 0L }
+                                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
+                                                    .toBigInteger()
+                                        val (feeAmount, feeCoin) =
+                                            try {
+                                                if (apiQuote.tx.swapFeeTokenContract.isNotEmpty()) {
+                                                    val tokenContract =
+                                                        apiQuote.tx.swapFeeTokenContract
+                                                    val chainId = srcNativeToken.chain.id
+                                                    val amount = apiQuote.tx.swapFee.toBigInteger()
+                                                    val coinAndFiatValue =
+                                                        searchToken(chainId, tokenContract)
+                                                            ?: error("Can't find token or price")
+                                                    val newNativeAmount =
+                                                        convertTokenToTokenUseCase
+                                                            .convertTokenToToken(
+                                                                amount,
+                                                                coinAndFiatValue,
+                                                                srcNativeToken,
+                                                            )
+                                                    Pair(newNativeAmount, srcNativeToken)
+                                                } else {
+                                                    Pair(gasFees, srcNativeToken)
+                                                }
+                                            } catch (t: Throwable) {
+                                                Timber.e(t)
+                                                Pair(gasFees, srcNativeToken)
+                                            }
+                                        val updatedTx =
+                                            apiQuote.tx.copy(swapFee = feeAmount.toString())
                                         val tokenFees =
-                                            TokenValue(
-                                                value =
-                                                    apiQuote.tx.gasPrice.toBigInteger() *
-                                                        (apiQuote.tx.gas.takeIf { it != 0L }
-                                                                ?: EvmHelper
-                                                                    .DEFAULT_ETH_SWAP_GAS_UNIT)
-                                                            .toBigInteger(),
-                                                token = srcNativeToken,
-                                            )
+                                            TokenValue(value = feeAmount, token = feeCoin)
                                         SwapQuote.OneInch(
                                             expectedDstValue = expectedDstValue,
                                             fees = tokenFees,
-                                            data = apiQuote,
+                                            data = apiQuote.copy(tx = updatedTx),
                                             expiredAt = Clock.System.now() + expiredAfter,
                                             provider = provider.getSwapProviderId(),
                                         )
