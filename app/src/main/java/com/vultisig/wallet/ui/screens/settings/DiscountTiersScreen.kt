@@ -87,7 +87,7 @@ internal fun DiscountTiersScreen(model: DiscountTiersViewModel = hiltViewModel()
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.tiers_header),
-                    contentDescription = "Provider Logo",
+                    contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.matchParentSize(),
                 )

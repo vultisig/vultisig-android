@@ -88,7 +88,7 @@ internal fun ErrorWaves(
                             ErrorState.WARNING -> R.drawable.error_warning
                         }
                 ),
-            contentDescription = "Warning",
+            contentDescription = null,
             modifier =
                 Modifier.size(24.dp).drawBehind {
                     drawCircle(

@@ -302,7 +302,7 @@ internal fun PeerDiscoveryScreen(
                                     drawableResId = R.drawable.enlarge,
                                     size = 20.dp,
                                     tint = Theme.v2.colors.text.primary,
-                                    contentDescription = "Enlarge QR code",
+                                    contentDescription = null,
                                 )
                             }
                         }
@@ -498,7 +498,7 @@ private fun QrCodeContainer(
             if (qrCode != null) {
                 Image(
                     painter = qrCode,
-                    contentDescription = "QR",
+                    contentDescription = null,
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.fillMaxWidth(),
                 )
