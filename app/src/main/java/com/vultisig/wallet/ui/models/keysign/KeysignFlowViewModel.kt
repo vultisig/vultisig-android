@@ -723,7 +723,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to update keysign payload")
-                moveToState(Error(e.message ?: "Failed to update keysign payload"))
+                moveToState(KeysignFlowState.Error((e.message ?: "Failed to update keysign payload").asUiText()))
             }
         ) {
             withContext(Dispatchers.IO) { updateKeysignPayload(context) }
