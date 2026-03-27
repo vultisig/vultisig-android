@@ -16,6 +16,8 @@ import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.performHaptic
 import com.vultisig.wallet.ui.utils.showReviewPopUp
 
@@ -42,7 +44,7 @@ internal fun KeysignScreen(
                 )
             } else {
                 LaunchedEffect(viewModel) {
-                    viewModel.moveToState(Error("Failed to initialize keysign"))
+                    viewModel.moveToState(Error("Failed to initialize keysign".asUiText()))
                 }
             }
         }
@@ -56,7 +58,7 @@ internal fun KeysignScreen(
 @Composable
 private fun Keysign(
     viewModel: KeysignViewModel,
-    onError: (String) -> Unit,
+    onError: (UiText) -> Unit,
     onComplete: () -> Unit,
     onKeysignFinished: (() -> Unit)? = null,
 ) {

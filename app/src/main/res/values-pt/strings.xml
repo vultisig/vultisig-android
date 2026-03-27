@@ -300,6 +300,8 @@
     <string name="deposit_form_screen_assets">Ativo</string>
     <string name="deposit_form_screen_asset_selection">Seleção de ativos</string>
     <string name="deposit_form_screen_lpunits">Unidades LP</string>
+    <string name="deposit_form_available_lp_units">Unidades LP disponíveis</string>
+    <string name="deposit_form_estimated_bond_value">Valor estimado do bond</string>
     <string name="join_keysign_error_wrong_vault_share">A mesma partilha do cofre. Por favor, altere a partilha para assinar</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Alterar cofre</string>
     <string name="utxo_settings_byte_fee_title">Taxa de rede (sats/vbyte)</string>
@@ -1096,4 +1098,8 @@
     <string name="name_vault_import">Cofre importado</string>
     <string name="name_vault_fast">Cofre rápido</string>
     <string name="name_vault_secure">Cofre seguro</string>
+    <string name="unknown_error">Erro desconhecido</string>
+    <string name="key_import_error_title">Importação de Chave Falhou</string>
+    <string name="key_import_error_description">Não é possível importar o cofre a partir da frase-semente. Verifique sua frase-semente e tente novamente.</string>
+    <string name="key_import_error_no_mnemonic_description">Nenhuma frase-semente encontrada. Por favor, insira novamente sua frase-semente e tente novamente.</string>
 </resources>

@@ -380,6 +380,8 @@
     <string name="deposit_form_screen_assets">자산</string>
     <string name="deposit_form_screen_asset_selection">자산 선택</string>
     <string name="deposit_form_screen_lpunits">LP 유닛</string>
+    <string name="deposit_form_available_lp_units">사용 가능한 LP 유닛</string>
+    <string name="deposit_form_estimated_bond_value">예상 본드 가치</string>
     <string name="join_keysign_error_wrong_vault_share">동일한 볼트 공유입니다. 서명할 공유를 변경해 주세요</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">볼트 변경</string>
     <string name="utxo_settings_byte_fee_title">네트워크 수수료율 (sats/vbyte)</string>
@@ -1144,4 +1146,8 @@
     <string name="name_vault_import">가져온 볼트</string>
     <string name="name_vault_fast">빠른 볼트</string>
     <string name="name_vault_secure">안전한 볼트</string>
+    <string name="unknown_error">알 수 없는 오류</string>
+    <string name="key_import_error_title">키 가져오기 실패</string>
+    <string name="key_import_error_description">시드 문구에서 볼트를 가져올 수 없습니다. 시드 문구를 확인하고 다시 시도하세요.</string>
+    <string name="key_import_error_no_mnemonic_description">시드 문구를 찾을 수 없습니다. 시드 문구를 다시 입력하고 다시 시도하세요.</string>
 </resources>

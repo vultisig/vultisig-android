@@ -543,6 +543,8 @@
     <string name="deposit_form_screen_assets">资产</string>
     <string name="deposit_form_screen_asset_selection">选择资产</string>
     <string name="deposit_form_screen_lpunits">LP 单位</string>
+    <string name="deposit_form_available_lp_units">可用 LP 单位</string>
+    <string name="deposit_form_estimated_bond_value">预计质押价值</string>
 
     <!-- Join Keysign Error -->
     <string name="join_keysign_error_wrong_vault_share">相同的保险库份额。请更改份额以签名</string>
@@ -1429,4 +1431,8 @@
     <string name="name_vault_import">导入保险库</string>
     <string name="name_vault_fast">快速保险库</string>
     <string name="name_vault_secure">安全保险库</string>
+    <string name="unknown_error">未知错误</string>
+    <string name="key_import_error_title">密钥导入失败</string>
+    <string name="key_import_error_description">无法从助记词导入钱包。请检查您的助记词并重试。</string>
+    <string name="key_import_error_no_mnemonic_description">未找到助记词。请重新输入您的助记词并重试。</string>
 </resources>

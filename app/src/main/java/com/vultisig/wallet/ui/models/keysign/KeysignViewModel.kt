@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keysign
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.KeysignVerify
@@ -54,6 +55,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
+import com.vultisig.wallet.ui.utils.or
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -86,7 +88,7 @@ internal sealed class KeysignState {
 
     data class KeysignFinished(val transactionStatus: TransactionStatus) : KeysignState()
 
-    data class Error(val errorMessage: String) : KeysignState()
+    data class Error(val errorMessage: UiText) : KeysignState()
 }
 
 internal sealed interface TransactionTypeUiModel {
@@ -344,7 +346,7 @@ constructor(
             throw e
         } catch (e: Exception) {
             Timber.e(e)
-            currentState.value = KeysignState.Error(e.message ?: "Unknown error")
+            currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
         }
     }
 
@@ -395,7 +397,7 @@ constructor(
             pullTssMessagesJob?.cancel()
         } catch (e: Exception) {
             Timber.e(e)
-            currentState.value = KeysignState.Error(e.message ?: "Unknown error")
+            currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
         }
     }
 

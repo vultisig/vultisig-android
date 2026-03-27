@@ -76,6 +76,7 @@ import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Swap
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
@@ -103,7 +104,7 @@ internal sealed class KeysignFlowState {
 
     data object Keysign : KeysignFlowState()
 
-    data class Error(val errorMessage: String) : KeysignFlowState()
+    data class Error(val errorMessage: UiText) : KeysignFlowState()
 }
 
 @Immutable
@@ -261,7 +262,7 @@ constructor(
                 Sign -> shareViewModel.loadSignMessageTx(transactionId)
             }
             if (!shareViewModel.hasAllData) {
-                moveToState(Error("Keysign information not available"))
+                moveToState(Error("Keysign information not available".asUiText()))
                 return
             }
 
@@ -321,7 +322,9 @@ constructor(
             updateTransactionUiModel(keysignPayload, customMessagePayload, txType)
         } catch (e: Exception) {
             Timber.e(e)
-            moveToState(Error(e.message.toString()))
+            moveToState(
+                Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
+            )
         }
     }
 
@@ -342,7 +345,7 @@ constructor(
         val vault =
             _currentVault
                 ?: run {
-                    moveToState(KeysignFlowState.Error("Vault is not set"))
+                    moveToState(KeysignFlowState.Error("Vault is not set".asUiText()))
                     return
                 }
 
@@ -545,7 +548,7 @@ constructor(
                     val vault =
                         _currentVault
                             ?: run {
-                                moveToState(KeysignFlowState.Error("Vault is not set"))
+                                moveToState(KeysignFlowState.Error("Vault is not set".asUiText()))
                                 return
                             }
                     // send a request to local mediator server to start the session
@@ -590,7 +593,7 @@ constructor(
                     _currentVault
                         ?: run {
                             Timber.e("Vault is not set when joining keysign in startSession")
-                            moveToState(KeysignFlowState.Error("Vault is not set"))
+                            moveToState(KeysignFlowState.Error("Vault is not set".asUiText()))
                             return
                         }
                 vultiSignerRepository.joinKeysign(
@@ -629,7 +632,7 @@ constructor(
                         _currentVault
                             ?: run {
                                 Timber.e("Vault is not set when joining keysign in startSession")
-                                moveToState(KeysignFlowState.Error("Vault is not set"))
+                                moveToState(KeysignFlowState.Error("Vault is not set".asUiText()))
                                 return
                             }
                     vultiSignerRepository.joinKeysign(
@@ -656,7 +659,7 @@ constructor(
                     delayMs *= 2
                 } else {
                     Timber.tag("KeysignFlowViewModel").e("All attempts to start session failed")
-                    moveToState(KeysignFlowState.Error("Failed to start session"))
+                    moveToState(KeysignFlowState.Error("Failed to start session".asUiText()))
                 }
             }
         }
@@ -680,7 +683,9 @@ constructor(
             currentState.update { nextState }
         } catch (e: Exception) {
             isLoading.value = false
-            moveToState(Error(e.message.toString()))
+            moveToState(
+                Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
+            )
         }
     }
 

@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_T
 import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
@@ -92,6 +93,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
@@ -153,6 +155,9 @@ internal data class DepositFormUiModel(
         availableSecuredAssets.firstOrNull() ?: TokenWithdrawSecureAsset.EMPTY,
     val bondableAssets: List<String> = emptyList(),
     val selectedBondAsset: String = "",
+    val availableLpUnits: String? = null,
+    val selectedPoolTotalLpUnits: Long = 0L,
+    val selectedPoolCacaoDepth: Long = 0L,
 )
 
 @HiltViewModel
@@ -196,6 +201,8 @@ constructor(
     val basisPointsFieldState = TextFieldState()
     val lpUnitsFieldState = TextFieldState()
     val assetsFieldState = TextFieldState()
+    private var lpBondPoolMap: Map<String, com.vultisig.wallet.data.repositories.LpBondablePool> =
+        emptyMap()
     val thorAddressFieldState = TextFieldState()
     val rewardsAmountFieldState = TextFieldState()
     val slippageFieldState = TextFieldState()
@@ -401,12 +408,46 @@ constructor(
     }
 
     private fun loadMayaBondableAssets() {
-        state.update { it.copy(bondableAssets = emptyList(), selectedBondAsset = "") }
+        state.update {
+            it.copy(
+                bondableAssets = emptyList(),
+                selectedBondAsset = "",
+                availableLpUnits = null,
+                selectedPoolTotalLpUnits = 0L,
+                selectedPoolCacaoDepth = 0L,
+            )
+        }
         assetsFieldState.clearText()
         viewModelScope.safeLaunch {
-            val assets = withContext(Dispatchers.IO) { mayachainBondRepository.getBondableAssets() }
+            val userAddress =
+                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                    ?.address
+                    ?: run {
+                        state.update {
+                            it.copy(
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body)
+                            )
+                        }
+                        return@safeLaunch
+                    }
+            val poolMap =
+                withContext(Dispatchers.IO) {
+                    mayachainBondRepository.getLpBondableAssetsWithUnits(userAddress)
+                }
+            lpBondPoolMap = poolMap
+            val assets = poolMap.keys.toList()
             val firstAsset = assets.firstOrNull() ?: ""
-            state.update { it.copy(bondableAssets = assets, selectedBondAsset = firstAsset) }
+            val firstPool = poolMap[firstAsset]
+            state.update {
+                it.copy(
+                    bondableAssets = assets,
+                    selectedBondAsset = firstAsset,
+                    availableLpUnits = firstPool?.availableUnits,
+                    selectedPoolTotalLpUnits = firstPool?.totalPoolLpUnits ?: 0L,
+                    selectedPoolCacaoDepth = firstPool?.poolCacaoDepth ?: 0L,
+                )
+            }
             if (firstAsset.isNotEmpty()) {
                 assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
             }
@@ -414,8 +455,23 @@ constructor(
     }
 
     fun selectBondAsset(asset: String) {
-        state.update { it.copy(selectedBondAsset = asset) }
+        val pool = lpBondPoolMap[asset]
+        state.update {
+            it.copy(
+                selectedBondAsset = asset,
+                availableLpUnits = pool?.availableUnits,
+                selectedPoolTotalLpUnits = pool?.totalPoolLpUnits ?: 0L,
+                selectedPoolCacaoDepth = pool?.poolCacaoDepth ?: 0L,
+                lpUnitsError = null,
+            )
+        }
+        lpUnitsFieldState.clearText()
         assetsFieldState.setTextAndPlaceCursorAtEnd(asset)
+    }
+
+    fun setMaxLpUnits() {
+        val units = state.value.availableLpUnits ?: return
+        lpUnitsFieldState.setTextAndPlaceCursorAtEnd(units)
     }
 
     private suspend fun updateTokenAmount(
@@ -773,6 +829,24 @@ constructor(
             if (!qr.isNullOrBlank()) {
                 nodeAddressFieldState.setTextAndPlaceCursorAtEnd(qr)
             }
+        }
+    }
+
+    fun openAddressBook() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainId = chain?.id ?: return@launch
+            val requestId = java.util.UUID.randomUUID().toString()
+            navigator.route(
+                Route.AddressBook(
+                    requestId = requestId,
+                    chainId = chainId,
+                    excludeVaultId = vaultId,
+                )
+            )
+            val address: AddressBookEntry =
+                requestResultRepository.request(requestId) ?: return@launch
+            setNodeAddress(address.address)
         }
     }
 
@@ -1461,7 +1535,7 @@ constructor(
                     Bond.Maya(
                         nodeAddress = nodeAddress,
                         providerAddress = provider,
-                        lpUnits = lpUnits.toIntOrNull(),
+                        lpUnits = lpUnits.toLongOrNull(),
                         assets = assets,
                     )
 
@@ -1581,7 +1655,7 @@ constructor(
                         nodeAddress = nodeAddress,
                         providerAddress = provider,
                         assets = assets,
-                        lpUnits = lpUnits.toIntOrNull(),
+                        lpUnits = lpUnits.toLongOrNull(),
                     )
 
                 Chain.ThorChain ->
@@ -2203,7 +2277,7 @@ constructor(
     }
 
     private fun isLpUnitCharsValid(lpUnits: String) =
-        lpUnits.toIntOrNull() != null && lpUnits.all { it.isDigit() } && lpUnits.toInt() > 0
+        lpUnits.toLongOrNull() != null && lpUnits.all { it.isDigit() } && lpUnits.toLong() > 0
 
     fun onSelectSecureAsset(asset: TokenWithdrawSecureAsset) {
         val balance = asset.tokenValue?.let(mapTokenValueToStringWithUnit)
@@ -2299,6 +2373,10 @@ constructor(
 
         val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
         return plan
+    }
+
+    companion object {
+        private const val ADDRESS_AWAIT_TIMEOUT_MS = 5_000L
     }
 }
 
