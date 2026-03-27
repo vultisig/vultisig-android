@@ -109,15 +109,17 @@ data class MayaNodePool(
     @SerialName("asset") val asset: String,
     @SerialName("status") val status: String,
     @SerialName("bondable") val bondable: Boolean = false,
+    @SerialName("LP_units") val lpUnits: String = "0",
+    @SerialName("balance_cacao") val balanceCacao: String = "0",
 )
+
+@Serializable
+data class MayaMemberDetails(@SerialName("pools") val pools: List<MayaMemberPool> = emptyList())
 
 @Serializable
 data class MayaMidgardHealth(@SerialName("lastThorNode") val lastMayaNode: MayaHeightInfo) {
     @Serializable data class MayaHeightInfo(val height: Long, val timestamp: Long)
 }
-
-@Serializable
-data class MayaMemberDetails(@SerialName("pools") val pools: List<MayaMemberPool> = emptyList())
 
 @Serializable
 data class MayaMemberPool(

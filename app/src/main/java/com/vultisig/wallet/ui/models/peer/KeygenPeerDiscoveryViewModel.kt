@@ -673,10 +673,7 @@ constructor(
                 if (intent.action == MediatorService.SERVICE_ACTION) {
                     Timber.d("onReceive: Mediator service started")
                     // send a request to local mediator server to start the session
-                    viewModelScope.launch(Dispatchers.IO) {
-                        delay(1000) // back off a second
-                        startSessionWithRetry()
-                    }
+                    viewModelScope.launch(Dispatchers.IO) { startSessionWithRetry() }
 
                     startParticipantDiscovery()
                 }
@@ -710,6 +707,15 @@ constructor(
                 }
             }
         }
+    }
+
+    override fun onCleared() {
+        try {
+            context.unregisterReceiver(serviceStartedReceiver)
+        } catch (_: IllegalArgumentException) {
+            // Already unregistered
+        }
+        super.onCleared()
     }
 
     private suspend fun isSessionStarted(): Boolean {
