@@ -1095,4 +1095,8 @@
     <string name="name_vault_import">Cofre importado</string>
     <string name="name_vault_fast">Cofre rápido</string>
     <string name="name_vault_secure">Cofre seguro</string>
+    <string name="unknown_error">Erro desconhecido</string>
+    <string name="key_import_error_title">Importação de Chave Falhou</string>
+    <string name="key_import_error_description">Não é possível importar o cofre a partir da frase-semente. Verifique sua frase-semente e tente novamente.</string>
+    <string name="key_import_error_no_mnemonic_description">Nenhuma frase-semente encontrada. Por favor, insira novamente sua frase-semente e tente novamente.</string>
 </resources>

@@ -1091,4 +1091,8 @@
     <string name="name_vault_import">Geïmporteerde kluis</string>
     <string name="name_vault_fast">Snelle kluis</string>
     <string name="name_vault_secure">Veilige kluis</string>
+    <string name="unknown_error">Onbekende fout</string>
+    <string name="key_import_error_title">Sleutelimport Mislukt</string>
+    <string name="key_import_error_description">Kan kluis niet importeren vanuit de zaadzin. Controleer uw zaadzin en probeer het opnieuw.</string>
+    <string name="key_import_error_no_mnemonic_description">Geen zaadzin gevonden. Voer uw zaadzin opnieuw in en probeer het opnieuw.</string>
 </resources>

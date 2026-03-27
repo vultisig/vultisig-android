@@ -1097,4 +1097,8 @@
     <string name="name_vault_import">Bóveda importada</string>
     <string name="name_vault_fast">Bóveda rápida</string>
     <string name="name_vault_secure">Bóveda segura</string>
+    <string name="unknown_error">Error desconocido</string>
+    <string name="key_import_error_title">Importación de Clave Fallida</string>
+    <string name="key_import_error_description">No se puede importar la billetera desde la frase semilla. Por favor, verifique su frase semilla e inténtelo de nuevo.</string>
+    <string name="key_import_error_no_mnemonic_description">No se encontró frase semilla. Por favor, vuelva a ingresar su frase semilla e inténtelo de nuevo.</string>
 </resources>

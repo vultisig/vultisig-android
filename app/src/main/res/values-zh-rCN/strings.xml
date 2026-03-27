@@ -1428,4 +1428,8 @@
     <string name="name_vault_import">导入保险库</string>
     <string name="name_vault_fast">快速保险库</string>
     <string name="name_vault_secure">安全保险库</string>
+    <string name="unknown_error">未知错误</string>
+    <string name="key_import_error_title">密钥导入失败</string>
+    <string name="key_import_error_description">无法从助记词导入钱包。请检查您的助记词并重试。</string>
+    <string name="key_import_error_no_mnemonic_description">未找到助记词。请重新输入您的助记词并重试。</string>
 </resources>

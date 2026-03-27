@@ -1097,4 +1097,8 @@
     <string name="name_vault_import">Импортированное хранилище</string>
     <string name="name_vault_fast">Быстрое хранилище</string>
     <string name="name_vault_secure">Безопасное хранилище</string>
+    <string name="unknown_error">Неизвестная ошибка</string>
+    <string name="key_import_error_title">Ошибка импорта ключа</string>
+    <string name="key_import_error_description">Не удалось импортировать хранилище из seed-фразы. Пожалуйста, проверьте вашу seed-фразу и попробуйте снова.</string>
+    <string name="key_import_error_no_mnemonic_description">Seed-фраза не найдена. Пожалуйста, введите заново вашу seed-фразу и попробуйте снова.</string>
 </resources>

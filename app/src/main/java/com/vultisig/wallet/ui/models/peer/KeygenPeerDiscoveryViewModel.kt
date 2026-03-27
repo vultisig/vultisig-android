@@ -125,7 +125,7 @@ constructor(
     private val qrHelperModalRepository: QrHelperModalRepository,
     private val vaultRepository: VaultRepository,
     private val keyImportRepository: KeyImportRepository,
-    extractMasterKeys: ExtractMasterKeysUseCase,
+    private val extractMasterKeys: ExtractMasterKeysUseCase,
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
     private val networkUtils: NetworkUtils,
@@ -148,17 +148,11 @@ constructor(
     private val encryptionKeyHex = Utils.encryptionKeyHex
 
     // For KeyImport, derive the BIP32 chain code from the mnemonic so the vault can
-    // derive addresses for chains not explicitly imported. For other actions, use a random hex.
+    // derive addresses for chains not explicitly imported. Extraction happens in loadData()
+    // so failures surface as a UI error state rather than crashing ViewModel construction.
+    // For other actions, use a random hex immediately.
     private var hexChainCode: String =
-        if (args.action == TssAction.KeyImport) {
-            val mnemonic =
-                keyImportRepository.get()?.mnemonic
-                    ?: error("KeyImport requires a mnemonic in KeyImportRepository")
-            extractMasterKeys(mnemonic)?.hexChainCode
-                ?: error("Failed to extract master chaincode from mnemonic for KeyImport")
-        } else {
-            Utils.encryptionKeyHex
-        }
+        if (args.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
     private var localPartyId = Utils.deviceName(context)
     private val vaultName: String = args.vaultName
     private var libType = SigningLibType.GG20
@@ -305,6 +299,61 @@ constructor(
             return
         }
         viewModelScope.launch {
+            if (args.action == TssAction.KeyImport && hexChainCode.isEmpty()) {
+                val mnemonic = keyImportRepository.get()?.mnemonic
+                if (mnemonic == null) {
+                    Timber.w("KeyImport: no mnemonic found in repository")
+                    state.update {
+                        it.copy(
+                            error =
+                                ErrorUiModel(
+                                    title = UiText.StringResource(R.string.key_import_error_title),
+                                    description =
+                                        UiText.StringResource(
+                                            R.string.key_import_error_no_mnemonic_description
+                                        ),
+                                )
+                        )
+                    }
+                    return@launch
+                }
+                val masterKeys =
+                    try {
+                        extractMasterKeys(mnemonic)
+                    } catch (e: Exception) {
+                        Timber.e(e, "KeyImport: failed to extract master keys")
+                        state.update {
+                            it.copy(
+                                error =
+                                    ErrorUiModel(
+                                        title =
+                                            UiText.StringResource(R.string.key_import_error_title),
+                                        description =
+                                            UiText.StringResource(
+                                                R.string.key_import_error_description
+                                            ),
+                                    )
+                            )
+                        }
+                        return@launch
+                    }
+                if (masterKeys == null) {
+                    Timber.w("KeyImport: extractMasterKeys returned null")
+                    state.update {
+                        it.copy(
+                            error =
+                                ErrorUiModel(
+                                    title = UiText.StringResource(R.string.key_import_error_title),
+                                    description =
+                                        UiText.StringResource(R.string.key_import_error_description),
+                                )
+                        )
+                    }
+                    return@launch
+                }
+                hexChainCode = masterKeys.hexChainCode
+            }
+
             setupLibType()
 
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
