@@ -592,7 +592,7 @@ constructor(
                         val cacaoAdded =
                             memberPool?.cacaoAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
-                        val assetAmount = assetAdded.toValue(10)
+                        val assetAmount = assetAdded.toValue(8)
                         val cacaoAmount = cacaoAdded.toValue(10)
 
                         val assetChain =
