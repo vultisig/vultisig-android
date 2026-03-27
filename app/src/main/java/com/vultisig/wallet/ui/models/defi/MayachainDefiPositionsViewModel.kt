@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.MayaMemberDetails
 import com.vultisig.wallet.data.api.MayaNodePool
 import com.vultisig.wallet.data.blockchain.maya.MayaCacaoStakingService
 import com.vultisig.wallet.data.models.Chain
@@ -15,6 +16,7 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -46,6 +48,8 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -122,6 +126,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val bondUseCase: MayachainBondUseCase,
     private val mayachainBondRepository: MayachainBondRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val mayaCacaoStakingService: MayaCacaoStakingService,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -144,6 +149,7 @@ constructor(
     private var lpDialogJob: Job? = null
     private var loadBondedJob: Job? = null
     private var loadStakingJob: Job? = null
+    private var loadLpJob: Job? = null
 
     private val currentModel: MayachainDefiPositionsUiModel
         get() =
@@ -255,11 +261,7 @@ constructor(
                                 fullAddress = node.node.address,
                                 status = node.node.state.fromApiStatus(),
                                 apy = node.apy.formatPercentage(),
-                                bondedAmount =
-                                    node.amount.formatAmount(
-                                        Coins.MayaChain.CACAO.decimal,
-                                        cacaoSymbol,
-                                    ),
+                                bondedAmount = node.amount.formatAmount(10, cacaoSymbol),
                                 nextAward = formatCacaoReward(node.nextReward),
                                 nextChurn = node.nextChurn.formatDate(),
                             )
@@ -267,8 +269,7 @@ constructor(
 
                     val totalBondedRaw =
                         activeNodes.fold(BigInteger.ZERO) { acc, node -> acc + node.amount }
-                    val totalBonded =
-                        totalBondedRaw.formatAmount(Coins.MayaChain.CACAO.decimal, cacaoSymbol)
+                    val totalBonded = totalBondedRaw.formatAmount(10, cacaoSymbol)
 
                     val bondedPrice = calculateBondedFiatPrice(totalBondedRaw)
 
@@ -348,7 +349,7 @@ constructor(
                 }
                 .collect { details ->
                     _totalStakingRaw.value = details.stakeAmount
-                    val stakeAmount = details.stakeAmount.toValue(Coins.MayaChain.CACAO.decimal)
+                    val stakeAmount = details.stakeAmount.toValue(10)
                     val stakedFiat = calculateStakingFiatPrice(stakeAmount)
                     val position =
                         StakePositionUiModel(
@@ -386,7 +387,7 @@ constructor(
         viewModelScope.launch {
             try {
                 val currency = appCurrencyRepository.currency.first()
-                val totalInCacao = totalRaw.toValue(Coins.MayaChain.CACAO.decimal)
+                val totalInCacao = totalRaw.toValue(10)
                 val fiatValue = createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
                 val currencyFormat =
                     withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
@@ -420,7 +421,7 @@ constructor(
 
     private suspend fun calculateBondedFiatPrice(totalBondedRaw: BigInteger): String {
         return try {
-            val totalInCacao = totalBondedRaw.toValue(Coins.MayaChain.CACAO.decimal)
+            val totalInCacao = totalBondedRaw.toValue(10)
             val currency = appCurrencyRepository.currency.first()
             val fiatValue = createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
             val currencyFormat =
@@ -457,23 +458,220 @@ constructor(
         }
     }
 
+    private suspend fun createFiatValueFromPoolAsset(
+        amount: BigDecimal,
+        chain: Chain,
+        ticker: String,
+        contractAddress: String,
+        currency: AppCurrency,
+    ): FiatValue {
+        return try {
+            if (amount == BigDecimal.ZERO) return FiatValue(BigDecimal.ZERO, currency.ticker)
+            val price =
+                tokenPriceRepository.getCachedPrice(
+                    tokenId = "$ticker-${chain.id}",
+                    appCurrency = currency,
+                ) ?: tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
+            FiatValue(
+                value = amount.multiply(price).setScale(2, RoundingMode.DOWN),
+                currency = currency.ticker,
+            )
+        } catch (t: Throwable) {
+            if (t is CancellationException) throw t
+            Timber.e(t)
+            FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)
+        }
+    }
+
     private fun reloadLpTab() {
         val model = currentModel
         val selectedKeys = model.selectedPositions.toSet()
+        val selectedLpKeys = selectedKeys - MAYA_STATIC_POSITION_KEYS
         val selectedPools = model.lpPositionsDialog.filter { it.positionKey in selectedKeys }
-        val lpPositions =
+
+        if (selectedLpKeys.isEmpty()) {
+            loadLpJob?.cancel()
+            updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            return
+        }
+
+        if (model.lpPositionsDialog.isEmpty()) {
+            updateModel { it.copy(lp = it.lp.copy(isLoading = true)) }
+            return
+        }
+
+        if (selectedPools.isEmpty()) {
+            loadLpJob?.cancel()
+            updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            return
+        }
+
+        val placeholderPositions =
             selectedPools.map { pool ->
-                val assetTicker = pool.ticker.substringBefore("/")
+                val assetTicker = pool.ticker.substringAfter("/")
                 LpPositionUiModel(
-                    titleLp = pool.ticker,
+                    titleLp = "${pool.ticker} Pool",
                     totalPriceLp = MayachainDefiPositionsUiModel.DEFAULT_ZERO_BALANCE,
                     icon = (pool.logo as? Int) ?: R.drawable.cacao,
                     apr = null,
-                    position = "0 $assetTicker / 0 CACAO",
+                    position = "0 CACAO + 0 $assetTicker",
                     positionKey = pool.positionKey,
                 )
             }
-        updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = lpPositions)) }
+        updateModel {
+            it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholderPositions))
+        }
+
+        loadLpJob?.cancel()
+        loadLpJob =
+            viewModelScope.safeLaunch {
+                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+                val cacaoCoin =
+                    vault?.coins?.find {
+                        it.ticker == Coins.MayaChain.CACAO.ticker && it.chain == Chain.MayaChain
+                    }
+
+                if (cacaoCoin == null) {
+                    Timber.e("Vault does not have CACAO coin for LP positions")
+                    updateModel {
+                        it.copy(
+                            lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
+                        )
+                    }
+                    return@safeLaunch
+                }
+
+                if (!chainAccountAddressRepository.isValid(Chain.MayaChain, cacaoCoin.address)) {
+                    Timber.e("CACAO coin address failed MayaChain validation")
+                    updateModel {
+                        it.copy(
+                            lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
+                        )
+                    }
+                    return@safeLaunch
+                }
+
+                val (memberDetails, poolStats) =
+                    withContext(Dispatchers.IO) {
+                        coroutineScope {
+                            val memberDeferred = async {
+                                try {
+                                    mayachainBondRepository.getMemberDetails(cacaoCoin.address)
+                                } catch (e: Exception) {
+                                    if (e is CancellationException) throw e
+                                    Timber.e(e, "Failed to fetch Maya member details")
+                                    MayaMemberDetails()
+                                }
+                            }
+                            val statsDeferred = async {
+                                try {
+                                    mayachainBondRepository.getLpPoolStats()
+                                } catch (e: Exception) {
+                                    if (e is CancellationException) throw e
+                                    Timber.e(e, "Failed to fetch Maya LP pool stats")
+                                    emptyList()
+                                }
+                            }
+                            Pair(memberDeferred.await(), statsDeferred.await())
+                        }
+                    }
+
+                val memberPoolMap = memberDetails.pools.associateBy { it.pool }
+                val poolStatsMap = poolStats.associateBy { it.asset }
+                val currency = appCurrencyRepository.currency.first()
+                val currencyFormat =
+                    withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+
+                val lpPositions =
+                    selectedPools.map { pool ->
+                        val memberPool = memberPoolMap[pool.positionKey]
+                        val stats = poolStatsMap[pool.positionKey]
+
+                        val liquidityUnits =
+                            memberPool?.liquidityUnits?.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                        val totalPoolUnits = stats?.units?.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                        val poolAssetDepth =
+                            stats?.assetDepth?.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                        val poolCacaoDepth =
+                            stats?.cacaoDepth?.toBigDecimalOrNull() ?: BigDecimal.ZERO
+
+                        val (assetAmount, cacaoAmount) =
+                            if (totalPoolUnits > BigDecimal.ZERO) {
+                                val share =
+                                    liquidityUnits.divide(totalPoolUnits, 18, RoundingMode.HALF_UP)
+                                val asset =
+                                    poolAssetDepth
+                                        .multiply(share)
+                                        .divide(BigDecimal.TEN.pow(8), 18, RoundingMode.HALF_UP)
+                                val cacao =
+                                    poolCacaoDepth
+                                        .multiply(share)
+                                        .divide(BigDecimal.TEN.pow(10), 18, RoundingMode.HALF_UP)
+                                Pair(asset, cacao)
+                            } else {
+                                val assetAdded =
+                                    memberPool?.assetAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
+                                val cacaoAdded =
+                                    memberPool?.cacaoAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
+                                Pair(assetAdded.toValue(8), cacaoAdded.toValue(10))
+                            }
+
+                        val assetChain =
+                            mayaPoolChainPrefixToChain(pool.positionKey.substringBefore("."))
+                        val assetCoinTicker =
+                            pool.positionKey.substringAfter(".").substringBefore("-")
+                        val assetContractAddress =
+                            pool.positionKey.substringAfter(".").substringAfter("-", "")
+                        val assetCoin =
+                            vault.coins.find {
+                                it.chain == assetChain &&
+                                    it.ticker == assetCoinTicker &&
+                                    (assetContractAddress.isEmpty() ||
+                                        it.contractAddress.equals(
+                                            assetContractAddress,
+                                            ignoreCase = true,
+                                        ))
+                            }
+
+                        val assetFiatValue =
+                            if (assetCoin != null) {
+                                createFiatValue(assetAmount, assetCoin, currency)
+                            } else if (assetChain != null) {
+                                createFiatValueFromPoolAsset(
+                                    assetAmount,
+                                    assetChain,
+                                    assetCoinTicker,
+                                    assetContractAddress,
+                                    currency,
+                                )
+                            } else {
+                                FiatValue(BigDecimal.ZERO, currency.ticker)
+                            }
+                        val cacaoFiatValue =
+                            createFiatValue(cacaoAmount, Coins.MayaChain.CACAO, currency)
+                        val totalFiatValue =
+                            FiatValue(
+                                value = assetFiatValue.value.add(cacaoFiatValue.value),
+                                currency = currency.ticker,
+                            )
+
+                        val apr = stats?.annualPercentageRate?.toDoubleOrNull()
+
+                        LpPositionUiModel(
+                            titleLp = "${pool.ticker} Pool",
+                            totalPriceLp = currencyFormat.format(totalFiatValue.value),
+                            icon = (pool.logo as? Int) ?: R.drawable.cacao,
+                            apr = apr?.formatPercentage(),
+                            position =
+                                "${cacaoAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetCoinTicker",
+                            positionKey = pool.positionKey,
+                        )
+                    }
+
+                updateModel {
+                    it.copy(lp = LpTabUiModel(isLoading = false, positions = lpPositions))
+                }
+            }
     }
 
     fun onTabSelected(tab: DeFiTab) {
@@ -579,7 +777,7 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
         else mayaPoolChainPrefixToChain(asset.substringBefore("."))?.logo ?: R.drawable.cacao
     return PositionUiModelDialog(
         logo = logo,
-        ticker = "$assetTicker/CACAO",
+        ticker = "CACAO/${assetTicker.substringBefore("-")}",
         isSelected = false,
         positionKey = asset,
     )
@@ -601,7 +799,6 @@ private fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
 
 private fun formatCacaoReward(reward: Double): String {
     val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
-    val cacaoAmount =
-        rewardBase.toValue(Coins.MayaChain.CACAO.decimal).setScale(4, RoundingMode.DOWN)
+    val cacaoAmount = rewardBase.toValue(10).setScale(4, RoundingMode.DOWN)
     return "${cacaoAmount.toPlainString()} ${Coins.MayaChain.CACAO.ticker}"
 }
