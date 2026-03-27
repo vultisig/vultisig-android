@@ -14,7 +14,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateUniqueName
@@ -140,8 +139,9 @@ constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val deviceCount: Int =
-        savedStateHandle.toRoute<Route.EnterVaultInfo>().count.coerceIn(1, 4)
+    private val vaultInfoArgs = savedStateHandle.toRoute<Route.EnterVaultInfo>()
+    private val deviceCount: Int = vaultInfoArgs.count.coerceIn(1, 4)
+    private val tssAction = vaultInfoArgs.tssAction
     val isSecureVault = deviceCount != 1
 
     private val passwordDelegate = PasswordViewModelDelegate()
@@ -464,7 +464,7 @@ constructor(
             if (isSecureVault) {
                 navigator.route(
                     Route.Keygen.PeerDiscovery(
-                        action = TssAction.KEYGEN,
+                        action = tssAction,
                         vaultName = name,
                         deviceCount = deviceCount,
                     )
@@ -472,7 +472,7 @@ constructor(
             } else {
                 navigator.route(
                     Route.Keygen.PeerDiscovery(
-                        action = TssAction.KEYGEN,
+                        action = tssAction,
                         vaultName = name,
                         email = email,
                         password = password,

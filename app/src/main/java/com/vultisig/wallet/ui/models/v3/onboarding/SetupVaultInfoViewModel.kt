@@ -42,7 +42,9 @@ internal class SetupVaultInfoViewModel
 @Inject
 constructor(private val navigator: Navigator<Destination>, savedStateHandle: SavedStateHandle) :
     ViewModel() {
-    private val deviceCount = savedStateHandle.toRoute<Route.SetupVaultInfo>().count
+    private val args = savedStateHandle.toRoute<Route.SetupVaultInfo>()
+    private val deviceCount = args.count
+    private val tssAction = args.tssAction
     private val _uiState = MutableStateFlow(SetupVaultInfoUiState())
     val uiState = _uiState.asStateFlow()
 
@@ -99,7 +101,9 @@ constructor(private val navigator: Navigator<Destination>, savedStateHandle: Sav
     }
 
     private fun next() {
-        viewModelScope.launch { navigator.route(Route.EnterVaultInfo(count = deviceCount)) }
+        viewModelScope.launch {
+            navigator.route(Route.EnterVaultInfo(count = deviceCount, tssAction = tssAction))
+        }
     }
 
     private fun back() {
