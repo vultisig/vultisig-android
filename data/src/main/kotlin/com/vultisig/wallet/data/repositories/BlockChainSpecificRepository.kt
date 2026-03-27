@@ -41,6 +41,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
@@ -548,7 +549,14 @@ constructor(
 
                             val totalEnergy = triggerResult.energyUsed + triggerResult.energyPenalty
                             val energyPrice =
-                                runCatching { tronApi.getChainParameters().energyFee }.getOrNull()?.takeIf { it > 0 } ?: 280L
+                                try {
+                                    tronApi.getChainParameters().energyFee.takeIf { it > 0 }
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (e: Exception) {
+                                    Timber.w(e, "Failed to fetch Tron energy price, using fallback")
+                                    null
+                                } ?: 280L
                             totalEnergy * energyPrice
                         }
 
