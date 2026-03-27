@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.ui.models.v3.onboarding.ChooseDeviceCountViewModel.Companion.Tips
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -80,20 +79,7 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
     private fun next() {
         viewModelScope.launch {
             val count = _uiState.value.deviceCount
-            if (args.tssAction == TssAction.KeyImport) {
-                val vaultType =
-                    if (count == 1) Route.VaultInfo.VaultType.Fast
-                    else Route.VaultInfo.VaultType.Secure
-                navigator.route(
-                    Route.VaultInfo.Name(
-                        vaultType = vaultType,
-                        tssAction = TssAction.KeyImport,
-                        deviceCount = count,
-                    )
-                )
-            } else {
-                navigator.route(Route.SetupVaultInfo(count = count))
-            }
+            navigator.route(Route.SetupVaultInfo(count = count, tssAction = args.tssAction))
         }
     }
 
