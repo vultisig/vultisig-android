@@ -261,11 +261,7 @@ constructor(
                                 fullAddress = node.node.address,
                                 status = node.node.state.fromApiStatus(),
                                 apy = node.apy.formatPercentage(),
-                                bondedAmount =
-                                    node.amount.formatAmount(
-                                        Coins.MayaChain.CACAO.decimal,
-                                        cacaoSymbol,
-                                    ),
+                                bondedAmount = node.amount.formatAmount(10, cacaoSymbol),
                                 nextAward = formatCacaoReward(node.nextReward),
                                 nextChurn = node.nextChurn.formatDate(),
                             )
@@ -273,8 +269,7 @@ constructor(
 
                     val totalBondedRaw =
                         activeNodes.fold(BigInteger.ZERO) { acc, node -> acc + node.amount }
-                    val totalBonded =
-                        totalBondedRaw.formatAmount(Coins.MayaChain.CACAO.decimal, cacaoSymbol)
+                    val totalBonded = totalBondedRaw.formatAmount(10, cacaoSymbol)
 
                     val bondedPrice = calculateBondedFiatPrice(totalBondedRaw)
 
@@ -354,7 +349,7 @@ constructor(
                 }
                 .collect { details ->
                     _totalStakingRaw.value = details.stakeAmount
-                    val stakeAmount = details.stakeAmount.toValue(Coins.MayaChain.CACAO.decimal)
+                    val stakeAmount = details.stakeAmount.toValue(10)
                     val stakedFiat = calculateStakingFiatPrice(stakeAmount)
                     val position =
                         StakePositionUiModel(
@@ -392,7 +387,7 @@ constructor(
         viewModelScope.launch {
             try {
                 val currency = appCurrencyRepository.currency.first()
-                val totalInCacao = totalRaw.toValue(Coins.MayaChain.CACAO.decimal)
+                val totalInCacao = totalRaw.toValue(10)
                 val fiatValue = createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
                 val currencyFormat =
                     withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
@@ -426,7 +421,7 @@ constructor(
 
     private suspend fun calculateBondedFiatPrice(totalBondedRaw: BigInteger): String {
         return try {
-            val totalInCacao = totalBondedRaw.toValue(Coins.MayaChain.CACAO.decimal)
+            val totalInCacao = totalBondedRaw.toValue(10)
             val currency = appCurrencyRepository.currency.first()
             val fiatValue = createFiatValue(totalInCacao, Coins.MayaChain.CACAO, currency)
             val currencyFormat =
@@ -597,8 +592,8 @@ constructor(
                         val cacaoAdded =
                             memberPool?.cacaoAdded?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
-                        val assetAmount = assetAdded.toValue(Coins.MayaChain.CACAO.decimal)
-                        val cacaoAmount = cacaoAdded.toValue(Coins.MayaChain.CACAO.decimal)
+                        val assetAmount = assetAdded.toValue(10)
+                        val cacaoAmount = cacaoAdded.toValue(10)
 
                         val assetChain =
                             mayaPoolChainPrefixToChain(pool.positionKey.substringBefore("."))
@@ -783,7 +778,6 @@ private fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
 
 private fun formatCacaoReward(reward: Double): String {
     val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()
-    val cacaoAmount =
-        rewardBase.toValue(Coins.MayaChain.CACAO.decimal).setScale(4, RoundingMode.DOWN)
+    val cacaoAmount = rewardBase.toValue(10).setScale(4, RoundingMode.DOWN)
     return "${cacaoAmount.toPlainString()} ${Coins.MayaChain.CACAO.ticker}"
 }
