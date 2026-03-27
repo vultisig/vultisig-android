@@ -556,7 +556,7 @@
     <string name="vault_details_screen_vault_part">保险库份额</string>
     <string name="vault_details_screen_vault_type">保险库类型</string>
     <string name="vault_settings_delete_vault_part">保险库份额：</string>
-    <string name="vault_password_hint_to_long">提示太长</string>
+    <string name="vault_password_hint_too_long">提示太长</string>
     <string name="vault_details_screen_vault_part_desc">份额 %1$s/%2$s</string>
 
     <!-- Settings Screen -->
@@ -704,7 +704,7 @@
     <string name="referral_edit_referral">编辑推荐</string>
     <string name="referral_external_linked">推荐代码成功链接</string>
     <string name="referral_external_not_linked">推荐代码不存在</string>
-    <string name="referral_external_not_failed">检查推荐代码失败</string>
+    <string name="referral_external_link_failed">检查推荐代码失败</string>
     <string name="referral_onboarding_title">推荐</string>
     <string name="referral_onboarding_get_started">开始</string>
     <string name="offline">您已离线</string>
@@ -846,7 +846,7 @@
 
     <!-- Token Selection -->
     <string name="token_selection_screen_select_tokens">选择代币</string>
-    <string name="token_selecton_screen_enable_at_least_one">启用至少一个代币以查看余额和管理仓位。</string>
+    <string name="token_selection_screen_enable_at_least_one">启用至少一个代币以查看余额和管理仓位。</string>
 
     <!-- Transfer -->
     <string name="transfer_ibc_destination_chain">目标链</string>
@@ -862,7 +862,7 @@
     <!-- Vault Details -->
     <string name="vault_detail_vault_info">保险库信息</string>
     <string name="vault_details_keys">密钥</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">启用生物识别快速签名</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">启用生物识别快速签名</string>
 
     <!-- Verify -->
     <string name="verify_send_send_overview">发送概览</string>
@@ -1063,7 +1063,7 @@
     <string name="backup_password_topbar_title">密码</string>
     <string name="function_transfer_ibc_dst_address_input_title">目标地址</string>
     <string name="vault_backup_screen_email_sent_to">已发送至 %s。</string>
-    <string name="vault_backup_screen_donot_recieve_email">未收到邮件？</string>
+    <string name="vault_backup_screen_donot_receive_email">未收到邮件？</string>
     <string name="select_vault_type_secure_desc_3">保护任意金额的资产</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver 立即联合签名</string>
     <string name="peer_discovery_topbar_title">扫描二维码</string>
@@ -1173,8 +1173,8 @@
     <string name="enable_at_least_one_position">请至少启用一个仓位以查看余额和管理仓位。</string>
     <string name="bandwidth">带宽</string>
     <string name="energy">能量</string>
-    <string name="bandwidth_dec">在 TRON 上进行所有交易都需要带宽点数 (Bandwidth Points)，包括标准代币发送和智能合约交互。每位 TRON 用户每天可获得 600 个免费带宽点数，大约可以完成两次基本发送。此外，您可以通过质押 TRX 来赚取额外的带宽点数，增加您的每日余额，从而支持更多交易。如果您拥有足够的带宽点数，则可以发送代币、质押 TRX 或与智能合约交互，而无需支付 TRX 作为 Gas 费用。</string>
-    <string name="energy_dec">更复杂的操作（例如与智能合约交互，如代币互换或 dApp 交易）则需要能量 (Energy)。与带宽不同，能量并非免费提供——您需要质押 TRX 才能获得能量。（更高级的用户还可以通过 JustLend 或 Tronify 的能量租赁市场等租赁机制来获取能量）。然而，拥有能量可以显著降低甚至消除智能合约交互的 Gas 费用，因此对于经常使用 TRON dApp 的用户来说，能量非常宝贵。</string>
+    <string name="bandwidth_desc">在 TRON 上进行所有交易都需要带宽点数 (Bandwidth Points)，包括标准代币发送和智能合约交互。每位 TRON 用户每天可获得 600 个免费带宽点数，大约可以完成两次基本发送。此外，您可以通过质押 TRX 来赚取额外的带宽点数，增加您的每日余额，从而支持更多交易。如果您拥有足够的带宽点数，则可以发送代币、质押 TRX 或与智能合约交互，而无需支付 TRX 作为 Gas 费用。</string>
+    <string name="energy_desc">更复杂的操作（例如与智能合约交互，如代币互换或 dApp 交易）则需要能量 (Energy)。与带宽不同，能量并非免费提供——您需要质押 TRX 才能获得能量。（更高级的用户还可以通过 JustLend 或 Tronify 的能量租赁市场等租赁机制来获取能量）。然而，拥有能量可以显著降低甚至消除智能合约交互的 Gas 费用，因此对于经常使用 TRON dApp 的用户来说，能量非常宝贵。</string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">节点地址</string>
