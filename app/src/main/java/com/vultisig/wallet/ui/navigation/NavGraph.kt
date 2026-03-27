@@ -137,7 +137,6 @@ import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
 import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
 import kotlin.reflect.typeOf
 
-@Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @ExperimentalAnimationApi
 @Composable
 internal fun SetupNavGraph(navController: NavHostController, startDestination: Any) {

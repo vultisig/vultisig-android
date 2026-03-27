@@ -356,7 +356,6 @@ constructor(
         return flag
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun signAndBroadcast() {
         Timber.d("Start to SignAndBroadcast")
         currentState.value = KeysignState.CreatingInstance
@@ -374,13 +373,14 @@ constructor(
                     encryption,
                     isEncryptionGcm,
                 )
-            tssInstance =
+            val tssService =
                 Tss.newService(tssMessenger, localStateAccessor, false)
                     ?: error("Failed to create TSS instance")
+            tssInstance = tssService
 
             messagesToSign.forEach { message ->
                 Timber.d("signing message: $message")
-                signMessageWithRetry(tssInstance!!, message, 1)
+                signMessageWithRetry(tssService, message, 1)
             }
 
             Timber.d("All messages signed, broadcasting transaction")
@@ -431,7 +431,7 @@ constructor(
                             hexEncryptionKey = encryptionKeyHex,
                             isEncryptionGcm = isEncryptionGcm,
                             messageId = msgHash,
-                            service = tssInstance!!,
+                            service = service,
                         )
                         .collect()
                 }

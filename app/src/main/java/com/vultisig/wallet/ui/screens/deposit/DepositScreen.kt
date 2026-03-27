@@ -91,7 +91,6 @@ internal fun DepositScreen(
     )
 }
 
-@Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
 private fun DepositScreen(
     navHostController: NavHostController,
