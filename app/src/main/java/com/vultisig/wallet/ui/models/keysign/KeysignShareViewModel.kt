@@ -103,11 +103,12 @@ constructor(
         customMessagePayload = dto.payload
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     suspend fun loadSwapTransaction(transactionId: TransactionId) {
         val transaction = swapTransactionRepository.getTransaction(transactionId)
 
-        val vault = vaultRepository.get(transaction.vaultId)!!
+        val vault =
+            vaultRepository.get(transaction.vaultId)
+                ?: error("Vault not found: ${transaction.vaultId}")
 
         val pubKeyECDSA = vault.pubKeyECDSA
         val srcToken = transaction.srcToken
@@ -160,11 +161,12 @@ constructor(
     private fun Coin.adjustBitcoinCashAddressFormat() =
         copy(address = address.replace("bitcoincash:", ""))
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     suspend fun loadDepositTransaction(transactionId: TransactionId) {
         val transaction = depositTransaction.getTransaction(transactionId)
 
-        val vault = vaultRepository.get(transaction.vaultId)!!
+        val vault =
+            vaultRepository.get(transaction.vaultId)
+                ?: error("Vault not found: ${transaction.vaultId}")
 
         val pubKeyECDSA = vault.pubKeyECDSA
         val srcToken = transaction.srcToken
