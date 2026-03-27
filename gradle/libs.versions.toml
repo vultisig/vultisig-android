@@ -1,6 +1,6 @@
 [versions]
 browser = "1.8.0"
-compileSdk = "36"
+compileSdk = "35"
 ktorClientMock = "3.0.3"
 lottieCompose = "6.7.1"
 minSdk = "26"

@@ -548,7 +548,7 @@ constructor(
 
                             val totalEnergy = triggerResult.energyUsed + triggerResult.energyPenalty
                             val energyPrice =
-                                tronApi.getChainParameters().energyFee.takeIf { it > 0 } ?: 280L
+                                runCatching { tronApi.getChainParameters().energyFee }.getOrNull()?.takeIf { it > 0 } ?: 280L
                             totalEnergy * energyPrice
                         }
 
