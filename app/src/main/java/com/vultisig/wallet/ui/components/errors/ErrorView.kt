@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -35,33 +36,36 @@ internal fun ErrorView(
     errorState: ErrorState = ErrorState.WARNING,
     buttonText: String = stringResource(R.string.try_again),
     onButtonClick: () -> Unit,
+    onBack: (() -> Unit)? = null,
 ) {
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .background(Theme.v2.colors.backgrounds.primary)
-                .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        UiSpacer(weight = 1f)
+    V3Scaffold(onBackClick = onBack, applyDefaultPaddings = false) {
+        Column(
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .background(Theme.v2.colors.backgrounds.primary)
+                    .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            UiSpacer(weight = 1f)
 
-        ErrorWaves(title = title, description = description, errorState = errorState)
+            ErrorWaves(title = title, description = description, errorState = errorState)
 
-        UiSpacer(30.dp)
-        VsButton(
-            variant = VsButtonVariant.Secondary,
-            label = buttonText,
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onButtonClick,
-        )
+            UiSpacer(30.dp)
+            VsButton(
+                variant = VsButtonVariant.Secondary,
+                label = buttonText,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onButtonClick,
+            )
 
-        UiSpacer(weight = 1f)
+            UiSpacer(weight = 1f)
 
-        AppVersionText()
+            AppVersionText()
 
-        UiSpacer(size = 50.dp)
+            UiSpacer(size = 50.dp)
+        }
     }
 }
 

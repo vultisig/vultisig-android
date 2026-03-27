@@ -9,7 +9,11 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun KeysignErrorScreen(errorMessage: UiText = UiText.Empty, tryAgain: () -> Unit) {
+internal fun KeysignErrorScreen(
+    errorMessage: UiText = UiText.Empty,
+    tryAgain: () -> Unit,
+    onBack: (() -> Unit)? = null,
+) {
     val errorMessageString = errorMessage.asString()
     val errorLabel: String
     val infoText: String?
@@ -38,6 +42,7 @@ internal fun KeysignErrorScreen(errorMessage: UiText = UiText.Empty, tryAgain: (
         buttonText = stringResource(R.string.try_again),
         description = infoText,
         onButtonClick = tryAgain,
+        onBack = onBack,
     )
 }
 
