@@ -485,9 +485,11 @@ internal sealed class Route {
 
     @Serializable data class ChainDashboard(val route: ChainDashboardRoute)
 
-    @Serializable data class EnterVaultInfo(val count: Int)
+    @Serializable
+    data class EnterVaultInfo(val count: Int, val tssAction: TssAction = TssAction.KEYGEN)
 
-    @Serializable data class SetupVaultInfo(val count: Int)
+    @Serializable
+    data class SetupVaultInfo(val count: Int, val tssAction: TssAction = TssAction.KEYGEN)
 
     @Serializable data class ChooseVaultCount(val tssAction: TssAction = TssAction.KEYGEN)
 

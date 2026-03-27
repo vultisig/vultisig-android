@@ -92,8 +92,6 @@
     <string name="send_amount_currency_hint">Voer bedrag in</string>
     <string name="send_continue_button">Doorgaan</string>
     <string name="chain_account_view_swap">WISSELEN</string>
-    <string name="chain_account_view_deposit">STORTEN</string>
-    <string name="chain_account_view_send">VERZENDEN</string>
     <string name="circle_defi_description">Stort je USDC op een Circle-account en verdien rendement. Veilig binnen je Vultisig-kluis.</string>
     <string name="circle_defi_control_info">Fondsen blijven volledig onder controle van je kluis. Circle-accounts zijn zelfbeheerd en rendement wordt gegenereerd via veilige off-chain schatkisten.</string>
     <string name="usdc_deposit_title">USDC-storting</string>
@@ -681,7 +679,6 @@
     <string name="bond_node_state_active">Actief</string>
     <string name="bond_node_state_disabled">Uitgeschakeld</string>
     <string name="bond_node_state_unknown">Onbekend</string>
-    <string name="defi_balance">Saldo</string>
     <string name="vault_ceil_active">Actief</string>
     <string name="fast_vault_password_screen_error">Wachtwoorden komen niet overeen</string>
     <string name="fast_vault_password_screen_next">Volgende</string>
@@ -1078,9 +1075,6 @@
     <string name="staked_ytcy_header">Gestaked yTCY</string>
     <string name="staked_yrune_header">Gestaked yRUNE</string>
     <string name="compounded_tcy_header">Samengesteld TCY</string>
-    <string name="native_asset">Native</string>
-    <string name="invalid_integer_error">Ongeldig geheel getal</string>
-    <string name="empty_lps_field">Leeg LP-eenheden-veld</string>
 
     <string name="transaction_failed">Transactie mislukt</string>
     <string name="vault_detail_signer">Ondertekenaar %1$d</string>

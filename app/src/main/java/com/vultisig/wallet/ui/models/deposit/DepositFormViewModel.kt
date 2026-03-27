@@ -37,6 +37,7 @@ import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.isSecuredAsset
+import com.vultisig.wallet.data.models.isSecuredAssetEligible
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
@@ -1061,7 +1062,7 @@ constructor(
 
         val selectedToken = selectedAccount.token
 
-        if (!selectedAccount.token.isSecuredAsset()) {
+        if (!selectedAccount.token.isSecuredAssetEligible()) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.deposit_error_not_secured_asset)
             )

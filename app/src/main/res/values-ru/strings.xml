@@ -92,8 +92,6 @@
     <string name="send_amount_currency_hint">Введите сумму</string>
     <string name="send_continue_button">Продолжить</string>
     <string name="chain_account_view_swap">ОБМЕН</string>
-    <string name="chain_account_view_deposit">ДЕПОЗИТ</string>
-    <string name="chain_account_view_send">ОТПРАВИТЬ</string>
     <string name="circle_defi_description">Внесите свой USDC на счет Circle и получайте доход. Безопасно в вашем хранилище Vultisig.</string>
     <string name="circle_defi_control_info">Средства остаются полностью под контролем вашего хранилища. Счета Circle являются самостоятельными, а доход генерируется через безопасные внесетевые казначейства.</string>
     <string name="usdc_deposit_title">Депозит USDC</string>
@@ -681,7 +679,6 @@
     <string name="bond_node_state_active">Активен</string>
     <string name="bond_node_state_disabled">Отключен</string>
     <string name="bond_node_state_unknown">Неизвестно</string>
-    <string name="defi_balance">Баланс</string>
     <string name="vault_ceil_active">Активен</string>
     <string name="fast_vault_password_screen_error">Пароли не совпадают</string>
     <string name="fast_vault_password_screen_next">Далее</string>
@@ -1084,9 +1081,6 @@
     <string name="staked_ytcy_header">Стейкинг yTCY</string>
     <string name="staked_yrune_header">Стейкинг yRUNE</string>
     <string name="compounded_tcy_header">Реинвестировано TCY</string>
-    <string name="native_asset">Нативный</string>
-    <string name="invalid_integer_error">Недопустимое целое число</string>
-    <string name="empty_lps_field">Пустое поле Единицы LP</string>
 
     <string name="transaction_failed">Транзакция не удалась</string>
     <string name="vault_detail_signer">Подписант %1$d</string>
