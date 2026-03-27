@@ -10,21 +10,30 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +41,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
@@ -44,12 +55,14 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.referral.AddReferralBottomSheet
 import com.vultisig.wallet.ui.components.referral.AddReferralHeaderButton
 import com.vultisig.wallet.ui.components.v2.modifiers.shinedBottom
+import com.vultisig.wallet.ui.components.v2.utils.roundToPx
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.v3.onboarding.EnterVaultInfoEvent
 import com.vultisig.wallet.ui.models.v3.onboarding.EnterVaultInfoUiState
 import com.vultisig.wallet.ui.models.v3.onboarding.EnterVaultInfoViewModel
 import com.vultisig.wallet.ui.models.v3.onboarding.StepState
 import com.vultisig.wallet.ui.models.v3.onboarding.StepType
+import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -84,6 +97,9 @@ internal fun EnterVaultInfoScreen(
 
     BackHandler { onEvent(EnterVaultInfoEvent.Back) }
 
+    var hintBoxOffset by remember { mutableIntStateOf(0) }
+    val scaffoldVerticalPadding = V3Scaffold.PADDING_VERTICAL.roundToPx()
+
     V3Scaffold(
         onBackClick = { onEvent(EnterVaultInfoEvent.Back) },
         actions = { AddReferralHeaderButton(hasReferral = hasReferral, onClick = onReferralClick) },
@@ -100,6 +116,7 @@ internal fun EnterVaultInfoScreen(
                 color = Theme.v2.colors.text.primary,
             )
             UiSpacer(size = 12.dp)
+            val infoIconId = "info_icon"
             val descText = uiState.activeStep.description.asString()
             val descHighlight = uiState.activeStep.descriptionHighlight?.asString()
             val descAnnotated = buildAnnotatedString {
@@ -118,12 +135,43 @@ internal fun EnterVaultInfoScreen(
                 } else {
                     append(descText)
                 }
+                if (uiState.activeStep.showInfoIcon) {
+                    append(" ")
+                    appendInlineContent(infoIconId, "[i]")
+                }
             }
             Text(
                 text = descAnnotated,
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.body.s.medium,
                 textAlign = TextAlign.Center,
+                inlineContent =
+                    if (uiState.activeStep.showInfoIcon)
+                        mapOf(
+                            infoIconId to
+                                InlineTextContent(
+                                    placeholder =
+                                        Placeholder(
+                                            width = 16.sp,
+                                            height = 16.sp,
+                                            placeholderVerticalAlign =
+                                                PlaceholderVerticalAlign.Center,
+                                        )
+                                ) {
+                                    UiIcon(
+                                        drawableResId = R.drawable.circleinfo,
+                                        size = 16.dp,
+                                        tint = Theme.v2.colors.text.tertiary,
+                                        onClick = { onEvent(EnterVaultInfoEvent.ShowMoreInfo) },
+                                    )
+                                }
+                        )
+                    else emptyMap(),
+                modifier =
+                    Modifier.onGloballyPositioned { position ->
+                        hintBoxOffset =
+                            position.boundsInParent().bottom.toInt() + scaffoldVerticalPadding
+                    },
             )
             UiSpacer(size = 24.dp)
 
@@ -190,6 +238,16 @@ internal fun EnterVaultInfoScreen(
                 onEvent(EnterVaultInfoEvent.Next)
             }
         }
+
+        HintBox(
+            title = "",
+            message = stringResource(R.string.fast_vault_password_screen_hint),
+            offset = IntOffset(x = 0, y = hintBoxOffset),
+            pointerAlignment = Alignment.End,
+            onDismissClick = { onEvent(EnterVaultInfoEvent.HideMoreInfo) },
+            modifier = Modifier.padding(horizontal = 16.dp),
+            isVisible = uiState.isMoreInfoVisible,
+        )
     }
 }
 
@@ -253,7 +311,8 @@ private fun EnterVaultInfoScreenPreview() {
                         StepType.Email to StepState.InProgress,
                         StepType.Password to StepState.Inactive,
                     ),
-                activeStep = StepType.Email,
+                activeStep = StepType.Password,
+                isMoreInfoVisible = true,
             ),
         onEvent = {},
     )

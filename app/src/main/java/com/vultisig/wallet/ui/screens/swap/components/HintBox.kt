@@ -162,21 +162,23 @@ private fun HintBoxPopupContent(
                     )
                     .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            Row {
-                Text(
-                    text = title,
-                    style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.inverse,
-                )
-                UiSpacer(weight = 1f)
-                UiIcon(
-                    drawableResId = R.drawable.x,
-                    size = 16.dp,
-                    tint = Theme.v2.colors.text.button.disabled,
-                )
-            }
+            if (title.isNotEmpty()) {
+                Row {
+                    Text(
+                        text = title,
+                        style = Theme.brockmann.body.m.medium,
+                        color = Theme.v2.colors.text.inverse,
+                    )
+                    UiSpacer(weight = 1f)
+                    UiIcon(
+                        drawableResId = R.drawable.x,
+                        size = 16.dp,
+                        tint = Theme.v2.colors.text.button.disabled,
+                    )
+                }
 
-            UiSpacer(size = 2.dp)
+                UiSpacer(size = 2.dp)
+            }
 
             Text(
                 text = message,

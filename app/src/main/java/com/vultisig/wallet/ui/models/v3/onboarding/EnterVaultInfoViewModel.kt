@@ -50,6 +50,7 @@ enum class StepType(
     val logo: Int,
     val isPassword: Boolean,
     val descriptionHighlight: UiText? = null,
+    val showInfoIcon: Boolean = false,
 ) {
     Name(
         title = StringResource(R.string.fast_vault_name_screen_title),
@@ -69,6 +70,7 @@ enum class StepType(
         logo = R.drawable.center_lock,
         isPassword = true,
         descriptionHighlight = StringResource(R.string.password_extra_layer_highlight),
+        showInfoIcon = true,
     ),
 }
 
@@ -111,6 +113,7 @@ internal data class EnterVaultInfoUiState(
     val innerState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
+    val isMoreInfoVisible: Boolean = false,
 )
 
 internal sealed interface EnterVaultInfoEvent {
@@ -125,6 +128,10 @@ internal sealed interface EnterVaultInfoEvent {
     object TogglePasswordVisibility : EnterVaultInfoEvent
 
     object ToggleConfirmPasswordVisibility : EnterVaultInfoEvent
+
+    object ShowMoreInfo : EnterVaultInfoEvent
+
+    object HideMoreInfo : EnterVaultInfoEvent
 }
 
 @HiltViewModel
@@ -276,6 +283,9 @@ constructor(
             EnterVaultInfoEvent.ClearConfirmInput -> clearConfirmInput()
             EnterVaultInfoEvent.TogglePasswordVisibility -> togglePasswordVisibility()
             EnterVaultInfoEvent.ToggleConfirmPasswordVisibility -> toggleConfirmPasswordVisibility()
+            EnterVaultInfoEvent.ShowMoreInfo -> uiState.update { it.copy(isMoreInfoVisible = true) }
+            EnterVaultInfoEvent.HideMoreInfo ->
+                uiState.update { it.copy(isMoreInfoVisible = false) }
         }
     }
 
