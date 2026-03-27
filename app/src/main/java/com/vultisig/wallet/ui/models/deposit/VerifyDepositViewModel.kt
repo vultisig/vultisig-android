@@ -131,27 +131,31 @@ constructor(
     }
 
     private fun keysign(keysignInitType: KeysignInitType) {
+        val txId = transactionId ?: return
+        val vault = vaultId ?: return
         viewModelScope.launch {
             launchKeysign(
                 keysignInitType,
-                transactionId!!,
+                txId,
                 password.value,
                 Route.Keysign.Keysign.TxType.Deposit,
-                vaultId!!,
+                vault,
             )
         }
     }
 
     private fun loadPassword() {
+        val vault = vaultId ?: return
         viewModelScope.launch {
             password.value =
-                withContext(Dispatchers.IO) { vaultPasswordRepository.getPassword(vaultId!!) }
+                withContext(Dispatchers.IO) { vaultPasswordRepository.getPassword(vault) }
         }
     }
 
     private fun loadFastSign() {
+        val vault = vaultId ?: return
         viewModelScope.launch {
-            val hasFastSign = withContext(Dispatchers.IO) { isVaultHasFastSignById(vaultId!!) }
+            val hasFastSign = withContext(Dispatchers.IO) { isVaultHasFastSignById(vault) }
             state.update { it.copy(hasFastSign = hasFastSign) }
         }
     }

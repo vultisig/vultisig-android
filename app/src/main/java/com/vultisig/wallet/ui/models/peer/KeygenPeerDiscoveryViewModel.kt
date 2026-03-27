@@ -709,6 +709,15 @@ constructor(
         }
     }
 
+    override fun onCleared() {
+        try {
+            context.unregisterReceiver(serviceStartedReceiver)
+        } catch (_: IllegalArgumentException) {
+            // Already unregistered
+        }
+        super.onCleared()
+    }
+
     private suspend fun isSessionStarted(): Boolean {
         return try {
             sessionApi.getParticipants(serverUrl, sessionId).isNotEmpty()
