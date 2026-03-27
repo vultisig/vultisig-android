@@ -547,7 +547,9 @@ constructor(
                                 )
 
                             val totalEnergy = triggerResult.energyUsed + triggerResult.energyPenalty
-                            totalEnergy * ENERGY_TO_SUN_FACTOR
+                            val energyPrice =
+                                tronApi.getChainParameters().energyFee.takeIf { it > 0 } ?: 280L
+                            totalEnergy * energyPrice
                         }
 
                 BlockChainSpecificAndUtxo(
@@ -569,7 +571,5 @@ constructor(
 
     companion object {
         private const val TON_WALLET_STATE_UNINITIALIZED = "uninit"
-
-        private const val ENERGY_TO_SUN_FACTOR = 280
     }
 }
