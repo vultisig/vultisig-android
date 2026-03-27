@@ -166,7 +166,6 @@ private fun BondFormThorPreview() {
         providerFieldState = TextFieldState(),
         operatorFeeFieldState = TextFieldState("2000"),
         tokenAmountFieldState = TextFieldState("500"),
-        assetsFieldState = TextFieldState(),
         lpUnitsFieldState = TextFieldState(),
     )
 }
@@ -184,7 +183,6 @@ private fun BondFormMayaPreview() {
         providerFieldState = TextFieldState(),
         operatorFeeFieldState = TextFieldState(),
         tokenAmountFieldState = TextFieldState(),
-        assetsFieldState = TextFieldState(),
         lpUnitsFieldState = TextFieldState("0"),
     )
 }
