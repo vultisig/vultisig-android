@@ -83,8 +83,6 @@
     <string name="send_amount_currency_hint">Inserir Quantidade</string>
     <string name="send_continue_button">Continuar</string>
     <string name="chain_account_view_swap">TROCAR</string>
-    <string name="chain_account_view_deposit">DEPOSITAR</string>
-    <string name="chain_account_view_send">ENVIAR</string>
     <string name="circle_defi_description">Deposite seu USDC em uma conta Circle e obtenha rendimento. Com segurança dentro do seu cofre Vultisig.</string>
     <string name="circle_defi_control_info">Os fundos permanecem totalmente sob o controle do seu cofre. As contas Circle são autocustodiais e o rendimento é gerado através de tesourarias seguras fora da cadeia.</string>
     <string name="usdc_deposit_title">Depósito USDC</string>
@@ -682,7 +680,6 @@
     <string name="bond_node_state_active">Ativo</string>
     <string name="bond_node_state_disabled">Desabilitado</string>
     <string name="bond_node_state_unknown">Desconhecido</string>
-    <string name="defi_balance">Saldo</string>
     <string name="vault_ceil_active">Ativo</string>
     <string name="fast_vault_password_screen_error">As palavras‑passe não coincidem</string>
     <string name="fast_vault_password_screen_next">Próximo</string>
@@ -1081,9 +1078,6 @@
     <string name="staked_ytcy_header">Staking yTCY</string>
     <string name="staked_yrune_header">Staking yRUNE</string>
     <string name="compounded_tcy_header">Composto TCY</string>
-    <string name="native_asset">Nativo</string>
-    <string name="invalid_integer_error">Quantidade inteira inválida</string>
-    <string name="empty_lps_field">Campo de Unidades LP vazio</string>
 
     <string name="transaction_failed">Transação falhada</string>
     <string name="vault_detail_signer">Signatário %1$d</string>

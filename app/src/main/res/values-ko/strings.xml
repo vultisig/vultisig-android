@@ -153,8 +153,6 @@
     <string name="send_continue_button">계속</string>
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">스왑</string>
-    <string name="chain_account_view_deposit">입금</string>
-    <string name="chain_account_view_send">보내기</string>
     <string name="vault_settings_error_backup_file">오류가 발생했습니다</string>
     <string name="vault_settings_success_backup_file">Downloads/%1$s에 파일 저장됨</string>
     <string name="vault_edit_this_name_already_exist">이 이름은 이미 존재합니다</string>
@@ -886,7 +884,6 @@
     <string name="bond_node_state_active">활성</string>
     <string name="bond_node_state_disabled">비활성</string>
     <string name="bond_node_state_unknown">알 수 없음</string>
-    <string name="defi_balance">잔액</string>
     <string name="lp_position">포지션</string>
     <string name="add">추가</string>
     <string name="remove">제거</string>
@@ -1126,9 +1123,6 @@
     <string name="staked_ytcy_header">스테이킹된 yTCY</string>
     <string name="staked_yrune_header">스테이킹된 yRUNE</string>
     <string name="compounded_tcy_header">복리 TCY</string>
-    <string name="native_asset">네이티브</string>
-    <string name="invalid_integer_error">유효하지 않은 정수 금액</string>
-    <string name="empty_lps_field">LP 단위 필드가 비어 있음</string>
 
     <!-- Hardcoded string fixes -->
     <string name="transaction_failed">거래 실패</string>

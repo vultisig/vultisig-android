@@ -85,8 +85,6 @@
     <string name="send_amount_currency_hint">Menge eingeben</string>
     <string name="send_continue_button">Fortfahren</string>
     <string name="chain_account_view_swap">TAUSCHEN</string>
-    <string name="chain_account_view_deposit">EINZAHLEN</string>
-    <string name="chain_account_view_send">SENDEN</string>
     <string name="circle_defi_description">Zahlen Sie Ihr USDC auf ein Circle-Konto ein und erzielen Sie Rendite. Sicher in Ihrem Vultisig-Tresor.</string>
     <string name="circle_defi_control_info">Die Mittel bleiben vollständig unter der Kontrolle Ihres Tresors. Circle-Konten sind selbstverwaltet und Erträge werden durch sichere Off-Chain-Treasuries generiert.</string>
     <string name="usdc_deposit_title">USDC-Einzahlung</string>
@@ -685,7 +683,6 @@
     <string name="bond_node_state_active">Aktiv</string>
     <string name="bond_node_state_disabled">Deaktiviert</string>
     <string name="bond_node_state_unknown">Unbekannt</string>
-    <string name="defi_balance">Guthaben</string>
     <string name="vault_ceil_active">Aktiv</string>
     <string name="fast_vault_password_screen_error">Passwörter stimmen nicht überein</string>
     <string name="fast_vault_password_screen_next">Weiter</string>
@@ -1082,9 +1079,6 @@
     <string name="staked_ytcy_header">Gestaked yTCY</string>
     <string name="staked_yrune_header">Gestaked yRUNE</string>
     <string name="compounded_tcy_header">Reinvestiert TCY</string>
-    <string name="native_asset">Nativ</string>
-    <string name="invalid_integer_error">Ungültige Ganzzahl</string>
-    <string name="empty_lps_field">Leeres LP-Einheiten-Feld</string>
 
     <!-- Hardcoded string fixes -->
     <string name="transaction_failed">Transaktion fehlgeschlagen</string>
