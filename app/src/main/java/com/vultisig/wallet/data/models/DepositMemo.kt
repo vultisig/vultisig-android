@@ -7,7 +7,7 @@ internal interface DepositMemo {
     sealed interface Bond : DepositMemo {
         data class Maya(
             val nodeAddress: String,
-            val lpUnits: Int?,
+            val lpUnits: Long?,
             val assets: String,
             val providerAddress: String?,
         ) : Bond {
@@ -59,7 +59,7 @@ internal interface DepositMemo {
             val nodeAddress: String,
             val providerAddress: String?,
             val assets: String,
-            val lpUnits: Int?,
+            val lpUnits: Long?,
         ) : Unbond {
 
             override fun toString(): String = buildString {
