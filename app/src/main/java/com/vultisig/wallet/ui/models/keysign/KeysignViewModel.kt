@@ -17,7 +17,6 @@ import com.vultisig.wallet.data.db.models.TransactionStatus.BROADCASTED
 import com.vultisig.wallet.data.db.models.TransactionType
 import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.MldsaKeysign
-import com.vultisig.wallet.data.keygen.MldsaKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CommonTransactionHistoryData
