@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.components.errors
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +26,10 @@ import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.v3.V3Scaffold
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -38,13 +42,9 @@ internal fun ErrorView(
     onButtonClick: () -> Unit,
     onBack: (() -> Unit)? = null,
 ) {
-    V3Scaffold(onBackClick = onBack, applyDefaultPaddings = false) {
+    Box(modifier = modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
         Column(
-            modifier =
-                modifier
-                    .fillMaxSize()
-                    .background(Theme.v2.colors.backgrounds.primary)
-                    .padding(horizontal = 24.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -65,6 +65,17 @@ internal fun ErrorView(
             AppVersionText()
 
             UiSpacer(size = 50.dp)
+        }
+
+        if (onBack != null) {
+            VsCircleButton(
+                modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+                onClick = onBack,
+                size = VsCircleButtonSize.Small,
+                type = VsCircleButtonType.Secondary,
+                designType = DesignType.Shined,
+                icon = R.drawable.ic_caret_left,
+            )
         }
     }
 }
