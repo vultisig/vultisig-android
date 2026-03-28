@@ -184,8 +184,8 @@ private fun HintBoxPopupContent(
 
             Text(
                 text = message,
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.inverse,
+                style = Theme.satoshi.price.bodyS,
             )
         }
 
