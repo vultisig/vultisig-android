@@ -1,23 +1,12 @@
 package com.vultisig.wallet.data.crypto
 
-import java.security.Security
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class QbtcHelperTest {
-
-    companion object {
-        @JvmStatic
-        @BeforeAll
-        fun setupProvider() {
-            Security.addProvider(BouncyCastleProvider())
-        }
-    }
 
     @Test
     fun `deriveAddress returns valid bech32 address with qbtc prefix`() {
@@ -83,7 +72,7 @@ class QbtcHelperTest {
 
     @Test
     fun `deriveAddress throws for invalid hex`() {
-        assertThrows<Exception> { QbtcHelper.deriveAddress("not-valid-hex") }
+        assertThrows<IllegalArgumentException> { QbtcHelper.deriveAddress("not-valid-hex") }
     }
 
     @Test
