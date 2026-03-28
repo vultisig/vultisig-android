@@ -184,9 +184,7 @@ constructor(
     fun continueWithServerVaultWarning() {
         state.update { it.copy(showServerVaultExistsWarning = false) }
         val name = nameFieldState.text.toString()
-        viewModelScope.launch {
-            navigator.route(Route.VaultInfo.Email(name, args.tssAction))
-        }
+        viewModelScope.launch { navigator.route(Route.VaultInfo.Email(name, args.tssAction)) }
     }
 
     fun clearInput() {
