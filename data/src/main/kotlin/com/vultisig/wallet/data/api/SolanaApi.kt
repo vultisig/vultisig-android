@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.SPLTokenRequestJson
 import com.vultisig.wallet.data.api.models.SolanaBalanceJson
 import com.vultisig.wallet.data.api.models.SolanaFeeForMessageResponse
-import com.vultisig.wallet.data.api.models.SolanaFeeObjectJson
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectRespJson
 import com.vultisig.wallet.data.api.models.SolanaMinimumBalanceForRentExemptionJson
 import com.vultisig.wallet.data.api.models.SolanaRpcResponseJson
@@ -52,8 +51,6 @@ interface SolanaApi {
     suspend fun getMinimumBalanceForRentExemption(): BigInteger
 
     suspend fun getRecentBlockHash(): String
-
-    suspend fun getHighPriorityFee(account: String): String
 
     suspend fun getMedianPriorityFee(account: String): BigInteger
 
@@ -147,34 +144,6 @@ constructor(
             return ""
         }
         return rpcResp.result?.value?.blockHash ?: error("getRecentBlockHash error")
-    }
-
-    @Deprecated("Perform proper calculation in fee service once decouple from helper")
-    override suspend fun getHighPriorityFee(account: String): String {
-        try {
-            val payload =
-                RpcPayload(
-                    jsonrpc = "2.0",
-                    method = "getRecentPrioritizationFees",
-                    params = buildJsonArray { addJsonArray { add(account) } },
-                    id = 1,
-                )
-            val response = httpClient.post(rpcEndpoint) { setBody(payload) }
-            val responseContent = response.bodyAsText()
-            Timber.d(responseContent)
-            val rpcResp = response.body<SolanaFeeObjectRespJson>()
-
-            if (rpcResp.error != null) {
-                Timber.d("get high priority fee  error: ${rpcResp.error}")
-                return ""
-            }
-            val fees: List<SolanaFeeObjectJson> =
-                rpcResp.result ?: error("getHighPriorityFee error")
-            return fees.maxOf { it.prioritizationFee }.toString()
-        } catch (e: Exception) {
-            Timber.tag("SolanaApiImp").e("Error getting high priority fee: ${e.message}")
-        }
-        return "0"
     }
 
     override suspend fun getMedianPriorityFee(account: String): BigInteger {
