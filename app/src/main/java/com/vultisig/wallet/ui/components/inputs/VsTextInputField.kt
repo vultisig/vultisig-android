@@ -192,18 +192,14 @@ internal fun VsTextInputField(
                     )
 
                     if (textFieldState.text.isNotEmpty()) {
-                        if (trailingIcon != null) {
+                        if (trailingIcon != null && onTrailingIconClick != null) {
                             UiSpacer(8.dp)
                             Icon(
                                 painter = painterResource(trailingIcon),
                                 tint = Theme.v2.colors.text.button.primary,
                                 contentDescription = null,
                                 modifier =
-                                    Modifier.width(20.dp)
-                                        .clickOnce(
-                                            onClick = onTrailingIconClick ?: {},
-                                            enabled = onTrailingIconClick != null,
-                                        ),
+                                    Modifier.width(20.dp).clickOnce(onClick = onTrailingIconClick),
                             )
                         }
                         Icon(
@@ -267,18 +263,14 @@ internal fun VsTextInputField(
                             )
                         }
 
-                        if (trailingIcon != null) {
+                        if (trailingIcon != null && onTrailingIconClick != null) {
                             UiSpacer(8.dp)
                             Icon(
                                 painter = painterResource(trailingIcon),
                                 tint = Theme.v2.colors.text.button.primary,
                                 contentDescription = null,
                                 modifier =
-                                    Modifier.width(20.dp)
-                                        .clickOnce(
-                                            onClick = onTrailingIconClick ?: {},
-                                            enabled = onTrailingIconClick != null,
-                                        ),
+                                    Modifier.width(20.dp).clickOnce(onClick = onTrailingIconClick),
                             )
                         }
 
