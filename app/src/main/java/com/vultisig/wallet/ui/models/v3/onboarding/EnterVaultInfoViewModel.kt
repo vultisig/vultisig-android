@@ -203,8 +203,11 @@ constructor(
     private fun generateVaultName() {
         viewModelScope.launch {
             vaultNamesList = vaultRepository.getAll().map { it.name }
+            val currentName = nameTextFieldState.text.toString()
+            val takenNames =
+                if (currentName.isNotEmpty()) vaultNamesList + currentName else vaultNamesList
             val proposeName =
-                generateUniqueName(context.getString(R.string.naming_saving_vault), vaultNamesList)
+                generateUniqueName(context.getString(R.string.naming_saving_vault), takenNames)
             nameTextFieldState.setTextAndPlaceCursorAtEnd(proposeName)
         }
     }
