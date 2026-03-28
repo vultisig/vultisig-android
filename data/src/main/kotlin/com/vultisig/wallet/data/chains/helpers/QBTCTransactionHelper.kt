@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import java.security.MessageDigest
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -19,7 +18,8 @@ class QBTCTransactionHelper {
         // This is the actual on-chain ID; the network launched with this name
         private const val CHAIN_ID = "qbtc-testnet"
         private const val DENOM = "qbtc"
-        private const val GAS_LIMIT = 200_000L
+        // Higher than typical Cosmos chains — ML-DSA-44 signatures are ~2.4 KB
+        internal const val GAS_LIMIT = 300_000L
         private const val PUB_KEY_TYPE_URL = "/cosmos.crypto.mldsa.PubKey"
         private const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"
         private const val MSG_IBC_TRANSFER_TYPE_URL = "/ibc.applications.transfer.v1.MsgTransfer"

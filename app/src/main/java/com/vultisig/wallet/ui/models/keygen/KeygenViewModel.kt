@@ -300,15 +300,39 @@ constructor(
                 KeyShare(pubKey = keyshareEddsa.pubKey, keyShare = keyshareEddsa.keyshare),
             )
 
-        // Preserve existing MLDSA keyshare during ReShare/Migrate
-        if (vault.pubKeyMLDSA.isNotBlank()) {
-            val existingMldsaShare = vault.keyshares.find { it.pubKey == vault.pubKeyMLDSA }
-            if (existingMldsaShare != null) {
-                newKeyshares.add(existingMldsaShare)
+        vault.keyshares = newKeyshares
+
+        // Generate MLDSA (post-quantum) key alongside ECDSA/EdDSA during initial keygen.
+        // Reshare/Migrate do not support MLDSA yet — vaults with MLDSA keys are blocked
+        // from reshare at the UI level (VaultSettingsViewModel).
+        if (action == TssAction.KEYGEN) {
+            updateStep(KeygenState.KeygenMLDSA)
+
+            val mldsaKeygen =
+                MldsaKeygen(
+                    localPartyId = vault.localPartyID,
+                    keygenCommittee = keygenCommittee,
+                    mediatorURL = serverUrl,
+                    sessionID = sessionId,
+                    encryptionKeyHex = encryptionKeyHex,
+                    isInitiateDevice = isInitiatingDevice,
+                    encryption = encryption,
+                    sessionApi = sessionApi,
+                )
+
+            mldsaKeygen.mldsaKeygenWithRetry(0)
+
+            val mldsaKeyshare = mldsaKeygen.keyshare
+            if (mldsaKeyshare != null) {
+                vault.pubKeyMLDSA = mldsaKeyshare.pubKey
+                vault.keyshares +=
+                    KeyShare(pubKey = mldsaKeyshare.pubKey, keyShare = mldsaKeyshare.keyshare)
+            } else {
+                // Non-fatal: vault works for all non-QBTC chains without MLDSA.
+                // User can generate MLDSA later via Settings → Dilithium Keygen.
+                Timber.w("MLDSA keygen produced no keyshare, skipping")
             }
         }
-
-        vault.keyshares = newKeyshares
 
         if (action == TssAction.Migrate) {
             vault.libType = SigningLibType.DKLS

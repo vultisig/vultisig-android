@@ -134,7 +134,7 @@ internal fun SendTxOverviewScreen(
                     tx.token.value.isNotEmpty() &&
                         try {
                             tx.token.value.toBigInteger() > BigInteger.ZERO
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             false
                         }
                 ) {
@@ -236,16 +236,23 @@ internal fun TxDetails(
                 modifier = Modifier.widthIn(max = 100.dp),
             )
 
-            CopyIcon(textToCopy = link, size = 12.dp, onCopyCompleted = onTxHashCopied)
-
-            UiSpacer(4.dp)
-
-            UiIcon(
-                drawableResId = R.drawable.ic_square_arrow_top_right,
-                size = 16.dp,
-                tint = Theme.v2.colors.text.primary,
-                onClick = { uriHandler.openUri(link) },
+            // Copy explorer URL when available, fall back to raw hash (e.g. QBTC has no explorer)
+            CopyIcon(
+                textToCopy = link.ifEmpty { hash },
+                size = 12.dp,
+                onCopyCompleted = onTxHashCopied,
             )
+
+            if (link.isNotEmpty()) {
+                UiSpacer(4.dp)
+
+                UiIcon(
+                    drawableResId = R.drawable.ic_square_arrow_top_right,
+                    size = 16.dp,
+                    tint = Theme.v2.colors.text.primary,
+                    onClick = { uriHandler.openUri(link) },
+                )
+            }
         }
     }
 }

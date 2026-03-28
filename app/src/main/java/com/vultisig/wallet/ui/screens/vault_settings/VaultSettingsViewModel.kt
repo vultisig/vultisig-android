@@ -267,8 +267,9 @@ constructor(
             hasFastSign = isVaultHasFastSignById(vaultId) && vault?.signers?.count() == 2
             val hasPassword = vaultPasswordRepository.getPassword(vaultId) != null
             val hasMldsaKey =
-                vault?.pubKeyMLDSA?.isNotBlank() == true &&
-                    vault?.keyshares?.any { it.pubKey == vault.pubKeyMLDSA } == true
+                vault != null &&
+                    vault.pubKeyMLDSA.isNotBlank() &&
+                    vault.keyshares.any { it.pubKey == vault.pubKeyMLDSA }
             val supportsDilithiumKeygen = vault != null && vault.libType != SigningLibType.KeyImport
 
             val newItems =
@@ -285,8 +286,9 @@ constructor(
 
                                     is VaultSettingsItem.Migrate ->
                                         it.copy(isEnabled = hasMigration)
+                                    // Reshare not supported for MLDSA vaults yet
                                     is VaultSettingsItem.Reshare ->
-                                        it.copy(isEnabled = !hasFastSign)
+                                        it.copy(isEnabled = !hasFastSign && !hasMldsaKey)
                                     is VaultSettingsItem.DilithiumKeygen ->
                                         it.copy(isEnabled = supportsDilithiumKeygen && !hasMldsaKey)
                                     else -> it

@@ -15,15 +15,21 @@ interface ExplorerLinkRepository {
 
 internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRepository {
 
-    override fun getTransactionLink(chain: Chain, transactionHash: String): String =
-        if (chain == Chain.ThorChain) {
-            "${chain.transactionExplorerUrl}${transactionHash.removePrefix("0x")}"
-        } else {
-            "${chain.transactionExplorerUrl}$transactionHash"
+    override fun getTransactionLink(chain: Chain, transactionHash: String): String {
+        chain.explorerUrl.ifEmpty {
+            return ""
         }
+        val hash =
+            if (chain == Chain.ThorChain) transactionHash.removePrefix("0x") else transactionHash
+        return "${chain.transactionExplorerUrl}$hash"
+    }
 
-    override fun getAddressLink(chain: Chain, address: String): String =
-        "${chain.blockExplorerUrl}$address"
+    override fun getAddressLink(chain: Chain, address: String): String {
+        chain.explorerUrl.ifEmpty {
+            return ""
+        }
+        return "${chain.blockExplorerUrl}$address"
+    }
 
     override fun getSwapProgressLink(tx: String, payload: SwapPayload?): String? =
         when (payload) {
@@ -114,6 +120,6 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Mantle -> "https://mantlescan.xyz/"
                 Chain.Sei -> "https://seiscan.io/"
                 Chain.Hyperliquid -> "https://liquidscan.io/"
-                Chain.Qbtc -> "https://explorer.qbtc.network/"
+                Chain.Qbtc -> "" // no public explorer yet
             }
 }

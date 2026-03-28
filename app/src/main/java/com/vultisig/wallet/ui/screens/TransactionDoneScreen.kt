@@ -133,13 +133,15 @@ private fun TxLinkAndHash(
             style = Theme.brockmann.headings.subtitle,
         )
 
-        CopyIcon(textToCopy = transactionLink)
+        CopyIcon(textToCopy = transactionLink.ifEmpty { transactionHash })
 
-        UiIcon(
-            drawableResId = R.drawable.ic_link,
-            size = 20.dp,
-            onClick = { onUriClick(transactionLink) },
-        )
+        if (transactionLink.isNotEmpty()) {
+            UiIcon(
+                drawableResId = R.drawable.ic_link,
+                size = 20.dp,
+                onClick = { onUriClick(transactionLink) },
+            )
+        }
     }
     Text(
         text = transactionHash,

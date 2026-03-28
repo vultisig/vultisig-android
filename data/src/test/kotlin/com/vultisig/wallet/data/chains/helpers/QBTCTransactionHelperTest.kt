@@ -325,6 +325,11 @@ class QBTCTransactionHelperTest {
     }
 
     @Test
+    fun `gas limit is 300000 for large MLDSA signatures`() {
+        assertEquals(300_000L, QBTCTransactionHelper.GAS_LIMIT)
+    }
+
+    @Test
     fun `unspecified transaction type equals default`() {
         assertEquals(
             helper.getPreSignedImageHash(

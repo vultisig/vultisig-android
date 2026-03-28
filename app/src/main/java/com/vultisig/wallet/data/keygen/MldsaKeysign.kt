@@ -38,223 +38,291 @@ import kotlinx.coroutines.delay
 import timber.log.Timber
 import tss.KeysignResponse
 
+/**
+ * ML-DSA-44 (Dilithium) multi-party keysign.
+ *
+ * Coordinates a threshold signing session between [keysignCommittee] members via the relay
+ * [mediatorURL]. Each message hash in [messageToSign] is signed sequentially with automatic retry
+ * on transient protocol failures.
+ */
 class MldsaKeysign(
-    val keysignCommittee: List<String>,
-    val mediatorURL: String,
-    val sessionID: String,
-    val messageToSign: List<String>,
-    val vault: Vault,
-    val encryptionKeyHex: String,
-    val isInitiateDevice: Boolean,
+    private val keysignCommittee: List<String>,
+    private val mediatorURL: String,
+    private val sessionID: String,
+    private val messageToSign: List<String>,
+    private val vault: Vault,
+    private val encryptionKeyHex: String,
+    private val isInitiateDevice: Boolean,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
 ) {
-    val localPartyID: String = vault.localPartyID
-    val publicKeyMldsa: String = vault.pubKeyMLDSA
+    private val localPartyID: String = vault.localPartyID
+    private val publicKeyMldsa: String = vault.pubKeyMLDSA
+
     private var messenger: TssMessenger? = null
-    private val cache = mutableMapOf<String, Any>()
+    /** Deduplicates already-applied inbound messages by composite key. */
+    private val appliedMessages = mutableSetOf<String>()
+
     val signatures = mutableMapOf<String, KeysignResponse>()
 
-    private fun getKeyshareString(): String? {
-        for (ks in vault.keyshares) {
-            if (ks.pubKey == publicKeyMldsa) {
-                return ks.keyShare
-            }
-        }
-        return null
+    /** Signs all [messageToSign] hashes sequentially, retrying each on failure. */
+    suspend fun keysignWithRetry() {
+        messageToSign.forEach { keysignOneMessage(attempt = 0, messageToSign = it) }
     }
 
-    @Throws(Exception::class)
-    private fun getKeyshareBytes(): ByteArray {
-        val localKeyshare = getKeyshareString() ?: error("fail to get local MLDSA keyshare")
-        return Base64.decode(localKeyshare)
-    }
+    /**
+     * Signs a single message hash with retry.
+     *
+     * The initiating device creates and uploads the setup message on the first attempt; on retries
+     * (or for non-initiating devices) the existing one is downloaded. The protocol then exchanges
+     * messages via the mediator until the signature is produced.
+     */
+    private suspend fun keysignOneMessage(attempt: Int, messageToSign: String) {
+        appliedMessages.clear()
+        val msgHash = messageToSign.md5()
 
-    @Throws(Exception::class)
-    private fun getMldsaKeyshareID(): ByteArray {
-        val buf = tss_buffer()
-        val keyShareBytes = getKeyshareBytes()
-        val keyshareSlice = keyShareBytes.toGoSlice()
-        val h = Handle()
-        try {
-            val result = mldsa_keyshare_from_bytes(keyshareSlice, h)
-            if (result != LIB_OK) {
-                error("fail to create MLDSA keyshare handle from bytes, $result")
-            }
-            val keyIDResult = mldsa_keyshare_key_id(h, buf)
-            if (keyIDResult != LIB_OK) {
-                error("fail to get key id from MLDSA keyshare: $keyIDResult")
-            }
-            return BufferUtilJNI.get_bytes_from_tss_buffer(buf)
-        } finally {
-            mldsa_keyshare_free(h)
-            h.delete()
-            tss_buffer_free(buf)
-        }
-    }
-
-    @Throws(Exception::class)
-    private fun getMldsaKeysignSetupMessage(message: String): ByteArray {
-        val buf = tss_buffer()
-        try {
-            val keyIdArr = getMldsaKeyshareID()
-            val keyIdSlice = keyIdArr.toGoSlice()
-            val byteArray = DklsHelper.arrayToBytes(keysignCommittee)
-            val ids = byteArray.toGoSlice()
-            val decodedMsgData = message.hexToByteArray()
-            val msgSlice = decodedMsgData.toGoSlice()
-            val err =
-                mldsa_sign_setupmsg_new(
-                    MldsaSecurityLevel.MlDsa44,
-                    keyIdSlice,
-                    null,
-                    msgSlice,
-                    ids,
-                    buf,
+        messenger =
+            TssMessenger(
+                    mediatorURL,
+                    sessionID,
+                    encryptionKeyHex,
+                    sessionApi,
+                    CoroutineScope(Dispatchers.IO),
+                    encryption,
+                    true,
                 )
-            if (err != LIB_OK) {
-                error("fail to setup MLDSA keysign message, error: $err")
-            }
-            return BufferUtilJNI.get_bytes_from_tss_buffer(buf)
-        } finally {
-            tss_buffer_free(buf)
-        }
-    }
+                .also { it.setMessageID(msgHash) }
 
-    @Throws(Exception::class)
-    private fun decodeMessage(setupMsg: ByteArray): String {
-        val buf = tss_buffer()
         try {
-            val setupMsgSlice = setupMsg.toGoSlice()
-            val result = mldsa_decode_message(setupMsgSlice, buf)
-            if (result != LIB_OK) {
-                error("fail to extract message from MLDSA setup message: $result")
+            Timber.d(
+                "MLDSA keysign attempt=%d, isInitiate=%b, msgHash=%s, " +
+                    "sessionID=%s, committee=%s, localParty=%s",
+                attempt,
+                isInitiateDevice,
+                msgHash,
+                sessionID,
+                keysignCommittee,
+                localPartyID,
+            )
+
+            val setupMsg = obtainSetupMessage(attempt, messageToSign, msgHash)
+            verifySetupMessage(setupMsg, messageToSign)
+            executeSigningProtocol(setupMsg, msgHash, messageToSign)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to sign message (%s)", messageToSign)
+            if (attempt < MAX_PROTOCOL_RETRIES) {
+                keysignOneMessage(attempt + 1, messageToSign)
+            } else {
+                throw e
             }
-            return BufferUtilJNI.get_bytes_from_tss_buffer(buf).toHexString()
-        } finally {
-            tss_buffer_free(buf)
         }
     }
 
-    private fun getOutboundMessageReceiver(
-        handle: Handle,
-        message: go_slice,
-        idx: Long,
+    /**
+     * The initiating device creates a fresh setup message on the first attempt and uploads it to
+     * the mediator. Non-initiating devices (or retries) download and decrypt the existing one.
+     */
+    private suspend fun obtainSetupMessage(
+        attempt: Int,
+        messageToSign: String,
+        msgHash: String,
+    ): ByteArray =
+        if (isInitiateDevice && attempt == 0) {
+            createAndUploadSetupMessage(messageToSign, msgHash)
+        } else {
+            downloadSetupMessage(msgHash)
+        }
+
+    private suspend fun createAndUploadSetupMessage(
+        messageToSign: String,
+        msgHash: String,
     ): ByteArray {
-        val bufReceiver = tss_buffer()
-        try {
-            val receiverResult =
-                mldsa_sign_session_message_receiver(handle, message, idx, bufReceiver)
-            if (receiverResult != LIB_OK) {
-                Timber.d("fail to get receiver message, error: $receiverResult")
-                return byteArrayOf()
-            }
-            return BufferUtilJNI.get_bytes_from_tss_buffer(bufReceiver)
-        } finally {
-            tss_buffer_free(bufReceiver)
+        val setupMsg = getMldsaKeysignSetupMessage(messageToSign)
+        Timber.d("MLDSA setup message created, size=%d, uploading…", setupMsg.size)
+        sessionApi.uploadSetupMessage(
+            serverUrl = mediatorURL,
+            sessionId = sessionID,
+            message =
+                Base64.encode(
+                    encryption.encrypt(
+                        Base64.encodeToByteArray(setupMsg),
+                        Numeric.hexStringToByteArray(encryptionKeyHex),
+                    )
+                ),
+            messageId = msgHash,
+        )
+        return setupMsg
+    }
+
+    private suspend fun downloadSetupMessage(msgHash: String): ByteArray {
+        val encrypted = sessionApi.getSetupMessage(mediatorURL, sessionID, msgHash)
+        val decrypted =
+            encryption.decrypt(
+                Base64.decode(encrypted),
+                Numeric.hexStringToByteArray(encryptionKeyHex),
+            ) ?: error("fail to decrypt MLDSA keysign setup message")
+        return Base64.decode(decrypted)
+    }
+
+    private fun verifySetupMessage(setupMsg: ByteArray, expectedMessage: String) {
+        val decoded = decodeMessage(setupMsg)
+        check(decoded == expectedMessage) {
+            "Setup message mismatch: expected $expectedMessage, got $decoded"
         }
     }
 
-    private fun getMldsaOutboundMessage(handle: Handle): Pair<mldsa_error, ByteArray> {
-        val buf = tss_buffer()
+    /**
+     * Runs the MPC signing rounds: loads keyshare, creates session from setup, exchanges messages
+     * with peers until the protocol completes, then finalizes the signature.
+     */
+    private suspend fun executeSigningProtocol(
+        setupMsg: ByteArray,
+        msgHash: String,
+        messageToSign: String,
+    ) {
+        val session = Handle()
+        val keyshareHandle = Handle()
         try {
-            val result = mldsa_sign_session_output_message(handle, buf)
-            if (result != LIB_OK) {
-                Timber.d("fail to get outbound message: $result")
-                return Pair(result, byteArrayOf())
-            }
-            return Pair(result, BufferUtilJNI.get_bytes_from_tss_buffer(buf))
-        } finally {
-            tss_buffer_free(buf)
-        }
-    }
-
-    private fun processMldsaOutboundMessage(handle: Handle) {
-        while (true) {
-            val (result, outboundMessage) = getMldsaOutboundMessage(handle)
-            if (result != LIB_OK) {
-                Timber.d("fail to get outbound message, $result")
-            }
-            if (outboundMessage.isEmpty()) {
-                return
-            }
-            val message = outboundMessage.toGoSlice()
-            val encodedOutboundMessage = Base64.encode(outboundMessage)
-            for (i in keysignCommittee.indices) {
-                val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
-                if (receiverArray.isEmpty()) {
-                    break
-                }
-                val receiverString = String(receiverArray, Charsets.UTF_8)
-                Timber.d(
-                    "sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}"
+            mldsa_keyshare_from_bytes(getKeyshareBytes().toGoSlice(), keyshareHandle)
+                .check("load keyshare")
+            mldsa_sign_session_from_setup(
+                    MldsaSecurityLevel.MlDsa44,
+                    setupMsg.toGoSlice(),
+                    localPartyID.toByteArray().toGoSlice(),
+                    keyshareHandle,
+                    session,
                 )
-                messenger?.send(localPartyID, receiverString, encodedOutboundMessage)
+                .check("create sign session")
+
+            drainOutbound(session)
+            if (pollInbound(session, msgHash)) {
+                drainOutbound(session)
+                // finish can fail transiently (LIB_ABORT_PROTOCOL_PARTY_*) — retry is inside
+                val sig = finishSignSession(session)
+                reportSignature(msgHash, messageToSign, sig)
+            }
+        } finally {
+            mldsa_sign_session_free(session)
+            session.delete()
+            mldsa_keyshare_free(keyshareHandle)
+            keyshareHandle.delete()
+        }
+    }
+
+    private suspend fun reportSignature(msgHash: String, messageToSign: String, sig: ByteArray) {
+        val resp =
+            KeysignResponse().apply {
+                msg = messageToSign
+                derSignature = sig.toHexString()
+            }
+        KeysignVerify(mediatorURL, sessionID, sessionApi)
+            .markLocalPartyKeysignComplete(msgHash, resp)
+        signatures[messageToSign] = resp
+    }
+
+    /**
+     * Extracts the final signature from the completed session.
+     *
+     * The native library can return transient `LIB_ABORT_PROTOCOL` errors, so the call is retried
+     * up to [FINISH_MAX_RETRIES] times.
+     */
+    private suspend fun finishSignSession(handle: Handle): ByteArray =
+        retryWithDelay(FINISH_MAX_RETRIES, FINISH_RETRY_DELAY_MS) {
+            withTssBuffer { buf ->
+                mldsa_sign_session_finish(handle, buf).check("finish sign session")
+                BufferUtilJNI.get_bytes_from_tss_buffer(buf)
+            }
+        }
+
+    /** Drains all pending outbound messages and routes them to committee peers. */
+    private fun drainOutbound(handle: Handle) {
+        while (true) {
+            val (result, payload) = readOutboundMessage(handle)
+            if (result != LIB_OK) Timber.d("outbound message error: %s", result)
+            if (payload.isEmpty()) return
+
+            val encoded = Base64.encode(payload)
+            val slice = payload.toGoSlice()
+            for (i in keysignCommittee.indices) {
+                val receiver = getOutboundReceiver(handle, slice, i.toLong())
+                if (receiver.isEmpty()) break
+                val receiverId = String(receiver, Charsets.UTF_8)
+                Timber.d(
+                    "sending from %s to %s, length=%d",
+                    localPartyID,
+                    receiverId,
+                    encoded.length,
+                )
+                messenger?.send(localPartyID, receiverId, encoded)
             }
         }
     }
 
-    private suspend fun pullInboundMessages(handle: Handle, messageID: String): Boolean {
-        Timber.d("start pulling inbound messages for MLDSA keysign")
+    /**
+     * Polls the mediator for inbound messages until the protocol completes or [INBOUND_TIMEOUT_MS]
+     * elapses.
+     *
+     * @return `true` when the signing protocol has finished successfully.
+     */
+    private suspend fun pollInbound(handle: Handle, messageID: String): Boolean {
+        val deadline = System.currentTimeMillis() + INBOUND_TIMEOUT_MS
 
-        val start = System.nanoTime()
-        while (true) {
+        while (System.currentTimeMillis() < deadline) {
             try {
                 val msgs =
                     sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
-
                 if (msgs.isNotEmpty()) {
-                    if (processInboundMessage(handle, msgs, messageID)) {
-                        return true
-                    }
+                    if (applyInboundMessages(handle, msgs, messageID)) return true
                 } else {
-                    delay(100)
+                    delay(POLL_INTERVAL_MS)
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")
-                delay(100)
-            }
-
-            val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
-            if (elapsedTime > 60) {
-                error("timeout: MLDSA keysign did not finish within 60 seconds")
+                delay(POLL_INTERVAL_MS)
             }
         }
+        error("timeout: MLDSA keysign did not finish within ${INBOUND_TIMEOUT_MS / 1000}s")
     }
 
-    private suspend fun processInboundMessage(
+    /**
+     * Decrypts and applies each inbound message to the session.
+     *
+     * @return `true` when the native library signals that signing is complete.
+     */
+    private suspend fun applyInboundMessages(
         handle: Handle,
         msgs: List<Message>,
         messageID: String,
     ): Boolean {
-        val sortedMsgs = msgs.sortedBy { it.sequenceNo }
-        for (msg in sortedMsgs) {
-            val key = "$sessionID-$localPartyID-$messageID-${msg.hash}"
-            if (cache[key] != null) {
-                Timber.d("message with key: $key has been applied before")
-                continue
-            }
-            Timber.d("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
-            val decryptedBody =
+        for (msg in msgs.sortedBy { it.sequenceNo }) {
+            val cacheKey = "$sessionID-$localPartyID-$messageID-${msg.hash}"
+            if (!appliedMessages.add(cacheKey)) continue
+
+            Timber.d("Got message from: %s, to: %s, key: %s", msg.from, msg.to, cacheKey)
+
+            val decrypted =
                 encryption.decrypt(
                     Base64.decode(msg.body),
                     Numeric.hexStringToByteArray(encryptionKeyHex),
                 ) ?: error("fail to decrypt message body")
-            val decodedMsg = Base64.decode(decryptedBody)
-            val decryptedBodySlice = decodedMsg.toGoSlice()
+
+            // JNI out-param: set to non-zero when the protocol is complete
             val isFinished = intArrayOf(0)
-            val result = mldsa_sign_session_input_message(handle, decryptedBodySlice, isFinished)
-            if (result != LIB_OK) {
-                error("fail to apply message to MLDSA, $result")
-            }
-            cache[key] = Any()
+            mldsa_sign_session_input_message(
+                    handle,
+                    Base64.decode(decrypted).toGoSlice(),
+                    isFinished,
+                )
+                .check("apply inbound message")
+
             deleteMessageFromServer(msg.hash, messageID)
-            processMldsaOutboundMessage(handle)
-            if (isFinished[0] != 0) {
-                return true
-            }
+            drainOutbound(handle)
+
+            if (isFinished[0] != 0) return true
         }
         return false
     }
@@ -263,140 +331,90 @@ class MldsaKeysign(
         sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyID, hash, messageID)
     }
 
-    private suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
-        this.cache.clear()
-        val msgHash = messageToSign.md5()
-        val localMessenger =
-            TssMessenger(
-                mediatorURL,
-                sessionID,
-                encryptionKeyHex,
-                sessionApi,
-                CoroutineScope(Dispatchers.IO),
-                encryption,
-                true,
-            )
-        localMessenger.setMessageID(msgHash)
-        messenger = localMessenger
+    /** Finds the MLDSA keyshare matching [publicKeyMldsa] in the vault. */
+    private fun getKeyshareBytes(): ByteArray {
+        val keyshare =
+            vault.keyshares.firstOrNull { it.pubKey == publicKeyMldsa }?.keyShare
+                ?: error("no MLDSA keyshare for pubKey ${publicKeyMldsa.take(16)}…")
+        return Base64.decode(keyshare)
+    }
+
+    /** Extracts the key ID from the local MLDSA keyshare (needed for setup messages). */
+    private fun getMldsaKeyshareID(): ByteArray {
+        val keyshareSlice = getKeyshareBytes().toGoSlice()
+        val handle = Handle()
+        val buf = tss_buffer()
         try {
-            val keysignSetupMsg: ByteArray
-
-            Timber.d(
-                "MLDSA keysign attempt=$attempt, isInitiate=$isInitiateDevice, msgHash=$msgHash, sessionID=$sessionID, committee=$keysignCommittee, localParty=$localPartyID"
-            )
-
-            if (isInitiateDevice && attempt == 0) {
-                keysignSetupMsg = getMldsaKeysignSetupMessage(messageToSign)
-                Timber.d("MLDSA setup message created, size=${keysignSetupMsg.size}, uploading...")
-
-                sessionApi.uploadSetupMessage(
-                    serverUrl = mediatorURL,
-                    sessionId = sessionID,
-                    message =
-                        Base64.encode(
-                            encryption.encrypt(
-                                Base64.encodeToByteArray(keysignSetupMsg),
-                                Numeric.hexStringToByteArray(encryptionKeyHex),
-                            )
-                        ),
-                    messageId = msgHash,
-                )
-            } else {
-                keysignSetupMsg =
-                    sessionApi
-                        .getSetupMessage(mediatorURL, sessionID, msgHash)
-                        .let {
-                            encryption.decrypt(
-                                Base64.decode(it),
-                                Numeric.hexStringToByteArray(encryptionKeyHex),
-                            ) ?: error("fail to decrypt MLDSA keysign setup message")
-                        }
-                        .let { Base64.decode(it) }
-            }
-
-            val signingMsg = decodeMessage(keysignSetupMsg)
-            if (signingMsg != messageToSign) {
-                error("message doesn't match ($messageToSign) vs ($signingMsg)")
-            }
-            val decodedSetupMsg = keysignSetupMsg.toGoSlice()
-            val handler = Handle()
-            val keyshareHandle = Handle()
-            try {
-                val localPartyIDArr = localPartyID.toByteArray()
-                val localPartySlice = localPartyIDArr.toGoSlice()
-                val keyShareBytes = getKeyshareBytes()
-                val keyshareSlice = keyShareBytes.toGoSlice()
-                val result = mldsa_keyshare_from_bytes(keyshareSlice, keyshareHandle)
-                if (result != LIB_OK) {
-                    error("fail to create MLDSA keyshare handle from bytes, $result")
-                }
-                val sessionResult =
-                    mldsa_sign_session_from_setup(
-                        MldsaSecurityLevel.MlDsa44,
-                        decodedSetupMsg,
-                        localPartySlice,
-                        keyshareHandle,
-                        handler,
-                    )
-                if (sessionResult != LIB_OK) {
-                    error(
-                        "fail to create MLDSA sign session from setup message, error: $sessionResult"
-                    )
-                }
-                processMldsaOutboundMessage(handler)
-                val isFinished = pullInboundMessages(handler, msgHash)
-                if (isFinished) {
-                    processMldsaOutboundMessage(handler)
-                    val sig = mldsaSignSessionFinish(handler)
-                    val resp = KeysignResponse()
-                    resp.msg = messageToSign
-                    // MLDSA signature is stored as raw bytes in hex
-                    resp.derSignature = sig.toHexString()
-                    val keySignVerify = KeysignVerify(mediatorURL, sessionID, sessionApi)
-                    keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
-                    signatures[messageToSign] = resp
-                }
-            } finally {
-                mldsa_sign_session_free(handler)
-                handler.delete()
-                mldsa_keyshare_free(keyshareHandle)
-                keyshareHandle.delete()
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.e("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
-            if (attempt < 3) {
-                keysignOneMessageWithRetry(attempt + 1, messageToSign)
-            } else {
-                throw e
-            }
+            mldsa_keyshare_from_bytes(keyshareSlice, handle).check("load keyshare")
+            mldsa_keyshare_key_id(handle, buf).check("get keyshare ID")
+            return BufferUtilJNI.get_bytes_from_tss_buffer(buf)
+        } finally {
+            mldsa_keyshare_free(handle)
+            handle.delete()
+            tss_buffer_free(buf)
         }
     }
 
-    @Throws(Exception::class)
-    private fun mldsaSignSessionFinish(handle: Handle): ByteArray {
+    /** Builds the keysign setup message that the initiating device distributes. */
+    private fun getMldsaKeysignSetupMessage(message: String): ByteArray = withTssBuffer { buf ->
+        mldsa_sign_setupmsg_new(
+                MldsaSecurityLevel.MlDsa44,
+                getMldsaKeyshareID().toGoSlice(),
+                null,
+                message.hexToByteArray().toGoSlice(),
+                DklsHelper.arrayToBytes(keysignCommittee).toGoSlice(),
+                buf,
+            )
+            .check("create keysign setup message")
+        BufferUtilJNI.get_bytes_from_tss_buffer(buf)
+    }
+
+    /** Extracts the hex-encoded message hash from a setup message for verification. */
+    private fun decodeMessage(setupMsg: ByteArray): String = withTssBuffer { buf ->
+        mldsa_decode_message(setupMsg.toGoSlice(), buf).check("decode setup message")
+        BufferUtilJNI.get_bytes_from_tss_buffer(buf).toHexString()
+    }
+
+    private fun getOutboundReceiver(handle: Handle, message: go_slice, idx: Long): ByteArray =
+        withTssBuffer { buf ->
+            val result = mldsa_sign_session_message_receiver(handle, message, idx, buf)
+            if (result != LIB_OK) byteArrayOf() else BufferUtilJNI.get_bytes_from_tss_buffer(buf)
+        }
+
+    private fun readOutboundMessage(handle: Handle): Pair<mldsa_error, ByteArray> =
+        withTssBuffer { buf ->
+            val result = mldsa_sign_session_output_message(handle, buf)
+            if (result != LIB_OK) result to byteArrayOf()
+            else result to BufferUtilJNI.get_bytes_from_tss_buffer(buf)
+        }
+
+    /** Allocates a [tss_buffer], runs [block], and guarantees cleanup via `finally`. */
+    private inline fun <T> withTssBuffer(block: (tss_buffer) -> T): T {
         val buf = tss_buffer()
         try {
-            val result = mldsa_sign_session_finish(handle, buf)
-            if (result != LIB_OK) {
-                error("fail to get MLDSA keysign signature $result")
-            }
-            return BufferUtilJNI.get_bytes_from_tss_buffer(buf)
+            return block(buf)
         } finally {
             tss_buffer_free(buf)
         }
     }
 
-    suspend fun keysignWithRetry() {
-        for (msg in messageToSign) {
-            keysignOneMessageWithRetry(0, msg)
-        }
+    /** Throws [IllegalStateException] with a descriptive message if this is not [LIB_OK]. */
+    private fun mldsa_error.check(operation: String) {
+        if (this != LIB_OK) error("MLDSA $operation failed: $this")
     }
 
     private fun ByteArray.toGoSlice(): go_slice {
         val slice = go_slice()
         BufferUtilJNI.set_bytes_on_go_slice(slice, this)
         return slice
+    }
+
+    companion object {
+        internal const val FINISH_MAX_RETRIES = 3
+        internal const val FINISH_RETRY_DELAY_MS = 1000L
+
+        private const val MAX_PROTOCOL_RETRIES = 3
+        private const val INBOUND_TIMEOUT_MS = 60_000L
+        private const val POLL_INTERVAL_MS = 100L
     }
 }

@@ -15,6 +15,7 @@ class CosmosFeeService : FeeService {
         val chain = transaction.coin.chain
         val gasLimit =
             when (chain) {
+                Chain.Qbtc, // ML-DSA-44 signatures are ~2.4 KB, needs more gas
                 Chain.Terra,
                 Chain.TerraClassic,
                 Chain.Osmosis -> 300000L
