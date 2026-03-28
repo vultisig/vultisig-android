@@ -98,6 +98,9 @@ private fun PointerShapeDown(
     }
 }
 
+// Note: HintBox uses Modifier.offset (not Popup), so it participates in normal Z-order.
+// Callers must place HintBox as the last child in its parent Box to ensure it renders
+// on top of siblings. A future migration to Popup would remove this constraint.
 @Composable
 internal fun HintBox(
     modifier: Modifier = Modifier,
