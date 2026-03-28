@@ -162,10 +162,12 @@ constructor(
 
         val price = tokenPriceRepository.getCachedPrice(coin.id, currency)
 
+        val priceValue = price ?: BigDecimal.ZERO
+
         val fiatValue =
-            if (tokenValue != null && price != null) {
+            if (tokenValue != null) {
                 FiatValue(
-                    tokenValue.decimal.multiply(price).setScale(2, RoundingMode.DOWN),
+                    tokenValue.decimal.multiply(priceValue).setScale(2, RoundingMode.DOWN),
                     currency.ticker,
                 )
             } else {
@@ -174,9 +176,7 @@ constructor(
 
         return TokenBalanceAndPrice(
             tokenBalance = TokenBalance(tokenValue = tokenValue, fiatValue = fiatValue),
-            price =
-                if (price != null) FiatValue(price.setScale(2, RoundingMode.DOWN), currency.ticker)
-                else null,
+            price = FiatValue(priceValue.setScale(2, RoundingMode.DOWN), currency.ticker),
         )
     }
 
@@ -470,6 +470,13 @@ constructor(
                                         listCosmosBalance.find { it.hasValidDenom(coin) }
                                     }
 
+                                balance?.amount?.toBigInteger() ?: 0.toBigInteger()
+                            }
+
+                            Chain.Qbtc -> {
+                                val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
+                                val balances = cosmosApi.getBalance(address)
+                                val balance = balances.find { it.denom == "qbtc" }
                                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
                             }
 

@@ -81,6 +81,8 @@
     <string name="vault_settings_rename_subtitle">볼트 이름 수정</string>
     <string name="vault_settings_reshare_title">재공유</string>
     <string name="vault_settings_reshare_subtitle">새로운 구성원과 볼트 재공유</string>
+    <string name="vault_settings_dilithium_keygen_title">QBTC 활성화</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">QBTC 체인을 활성화하기 위한 키 생성</string>
     <string name="vault_settings_delete_title">삭제</string>
     <string name="vault_settings_delete_subtitle">볼트를 영구적으로 삭제합니다.</string>
     <string name="vault_settings_security_title">온체인 보안</string>
@@ -205,6 +207,7 @@
     <string name="keysign_screen_preparing_vault">볼트 준비 중…</string>
     <string name="keysign_screen_signing_with_ecdsa">ECDSA로 서명 중…</string>
     <string name="keysign_screen_signing_with_eddsa">EdDSA로 서명 중…</string>
+    <string name="keysign_screen_signing_with_mldsa">MLDSA로 서명 중…</string>
     <string name="keysign_screen_keysign_finished">서명 완료!</string>
     <string name="keysign_screen_error_please_try_again">오류! 다시 시도해 주세요. %1$s</string>
     <string name="successfully_scanned_barcode">바코드 스캔 성공: %1$s</string>
@@ -509,6 +512,7 @@
     <string name="keygen_step_preparing_vault">볼트 준비 중</string>
     <string name="keygen_step_generating_ecdsa">ECDSA 키 생성 중</string>
     <string name="keygen_step_generating_eddsa">EdDSA 키 생성 중</string>
+    <string name="keygen_step_generating_mldsa">MLDSA 키 생성 중</string>
     <string name="keygen_step_generating_chain_keys">체인 키 생성 중</string>
     <string name="reshare_step_generating_ecdsa">ECDSA 키 생성 중</string>
     <string name="reshare_step_generating_eddsa">EdDSA 키 생성 중</string>

@@ -7,6 +7,8 @@
     <string name="vault_settings_rename_subtitle">Modifica il nome della tua cassaforte</string>
     <string name="vault_settings_reshare_title">Ricondividi</string>
     <string name="vault_settings_reshare_subtitle">Ricondividi la cassaforte con un nuovo comitato</string>
+    <string name="vault_settings_dilithium_keygen_title">Abilita QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Genera chiave per abilitare la catena QBTC</string>
     <string name="vault_settings_delete_title">Elimina</string>
     <string name="vault_settings_security_title">Sicurezza On-chain</string>
     <string name="vault_settings_security_subtitle">Gestisci la tua sicurezza on-chain</string>
@@ -148,6 +150,7 @@
     <string name="chain_account_view_swap">SCAMBIA</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">FIRMANDO CON CHIAVE EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">FIRMANDO CON CHIAVE MLDSA…</string>
     <string name="signing_error_please_try_again_s">Errore di Firma. Per favore, riprova.%s</string>
     <string name="faq_settings_q1">Che cos\'è Vultisig?</string>
     <string name="vault_list_vaults_list">Cassaforti</string>
@@ -417,6 +420,7 @@
     <string name="reshare_step_generating_eddsa">Generazione della chiave EdDSA</string>
     <string name="keygen_connecting_with_server">Connessione con il server…</string>
     <string name="keygen_step_generating_eddsa">Generazione della chiave EdDSA</string>
+    <string name="keygen_step_generating_mldsa">Generazione della chiave MLDSA</string>
     <string name="keygen_step_generating_chain_keys">Generazione delle chiavi della catena</string>
     <string name="reshare_step_generating_ecdsa">Generazione della chiave ECDSA</string>
     <string name="merge_account_doesnt_exist">Il token selezionato non è stato trovato per questo indirizzo</string>

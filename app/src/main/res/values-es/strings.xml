@@ -10,6 +10,8 @@
     <string name="vault_settings_rename_subtitle">Editar el nombre de tu bóveda</string>
     <string name="vault_settings_reshare_title">Recompartir</string>
     <string name="vault_settings_reshare_subtitle">Recompartir bóveda con un nuevo comité</string>
+    <string name="vault_settings_dilithium_keygen_title">Habilitar QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generar clave para habilitar la cadena QBTC</string>
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="swap_form_on_chain">en</string>
     <string name="select_asset_title">Seleccionar activo</string>
@@ -147,6 +149,7 @@
     <string name="keysign_screen_preparing_vault">PREPARANDO BÓVEDA..</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO USANDO CLAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">FIRMANDO USANDO CLAVE EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">FIRMANDO USANDO CLAVE MLDSA…</string>
     <string name="keysign_screen_keysign_finished">¡Keysign terminado!</string>
     <string name="keysign_screen_error_please_try_again">Error! Por favor, inténtalo de nuevo. %1$s</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado con éxito: %1$s</string>
@@ -415,6 +418,7 @@
     <string name="keygen_step_preparing_vault">Preparando la bóveda</string>
     <string name="keygen_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="keygen_step_generating_eddsa">Generación de clave EdDSA</string>
+    <string name="keygen_step_generating_mldsa">Generación de clave MLDSA</string>
     <string name="keygen_step_generating_chain_keys">Generación de claves de cadena</string>
     <string name="keygen_connecting_with_server">Conectando con el servidor…</string>
     <string name="reshare_step_generating_ecdsa">Generación de clave ECDSA</string>

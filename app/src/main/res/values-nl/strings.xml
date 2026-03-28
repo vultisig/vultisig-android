@@ -17,6 +17,8 @@
     <string name="vault_settings_rename_subtitle">Wijzig uw kluisnaam</string>
     <string name="vault_settings_reshare_title">Opnieuw delen</string>
     <string name="vault_settings_reshare_subtitle">Deel de kluis opnieuw met een nieuwe commissie</string>
+    <string name="vault_settings_dilithium_keygen_title">QBTC inschakelen</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Genereer sleutel om de QBTC-blockchain in te schakelen</string>
     <string name="vault_settings_delete_title">Verwijderen</string>
     <string name="vault_settings_delete_subtitle">Verwijder uw kluis permanent.</string>
     <string name="vault_settings_security_title">On-chain beveiliging</string>
@@ -147,6 +149,7 @@
     <string name="keysign_screen_preparing_vault">Kluis voorbereiden…</string>
     <string name="keysign_screen_signing_with_ecdsa">Ondertekenen met ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">Ondertekenen met EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">Ondertekenen met MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign voltooid!</string>
     <string name="keysign_screen_error_please_try_again">Fout! Probeer het opnieuw. %1$s</string>
     <string name="successfully_scanned_barcode">Barcode succesvol gescand: %1$s</string>
@@ -414,6 +417,7 @@
     <string name="reshare_step_generating_eddsa">EdDSA-sleutel genereren</string>
     <string name="keygen_connecting_with_server">Verbinding met server maken…</string>
     <string name="keygen_step_generating_eddsa">EDDSA-sleutel genereren</string>
+    <string name="keygen_step_generating_mldsa">MLDSA-sleutel genereren</string>
     <string name="keygen_step_generating_chain_keys">Ketensleutels genereren</string>
     <string name="reshare_step_generating_ecdsa">ECDSA-sleutel genereren</string>
     <string name="merge_account_doesnt_exist">Geselecteerde token niet gevonden voor dit adres</string>
