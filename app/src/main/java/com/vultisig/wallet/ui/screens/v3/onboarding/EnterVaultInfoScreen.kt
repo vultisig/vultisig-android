@@ -308,8 +308,8 @@ private fun EnterVaultInfoScreenPreview() {
                 stepAndStates =
                     mapOf(
                         StepType.Name to StepState.Done,
-                        StepType.Email to StepState.InProgress,
-                        StepType.Password to StepState.Inactive,
+                        StepType.Email to StepState.Done,
+                        StepType.Password to StepState.InProgress,
                     ),
                 activeStep = StepType.Password,
                 isMoreInfoVisible = true,

@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -111,18 +110,21 @@ internal fun HintBox(
     pointerOffset: DpOffset = DpOffset.Zero,
     onDismissClick: () -> Unit,
 ) {
-    AnimatedVisibility(visible = isVisible, enter = fadeIn(), exit = fadeOut()) {
-        Popup(offset = offset, onDismissRequest = null) {
-            HintBoxPopupContent(
-                modifier = modifier,
-                title = title,
-                message = message,
-                isPointerOnTop = isPointerTriangleOnTop,
-                pointerAlignment = pointerAlignment,
-                pointerOffset = pointerOffset,
-                onDismissClick = onDismissClick,
-            )
-        }
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(),
+        exit = fadeOut(),
+        modifier = Modifier.offset { offset },
+    ) {
+        HintBoxPopupContent(
+            modifier = modifier,
+            title = title,
+            message = message,
+            isPointerOnTop = isPointerTriangleOnTop,
+            pointerAlignment = pointerAlignment,
+            pointerOffset = pointerOffset,
+            onDismissClick = onDismissClick,
+        )
     }
 }
 
@@ -201,8 +203,6 @@ private fun HintBoxPopupContent(
 @Preview
 @Composable
 private fun HintBoxTopPointerPreview() {
-    // In preview mode, the popup displays an unwanted background that's not visible in the actual
-    // app.
     HintBox(
         modifier = Modifier.width(250.dp),
         title = "Insufficient funds",
@@ -216,8 +216,6 @@ private fun HintBoxTopPointerPreview() {
 @Preview
 @Composable
 private fun HintBoxDownPointerPreview() {
-    // In preview mode, the popup displays an unwanted background that's not visible in the actual
-    // app.
     HintBox(
         modifier = Modifier.width(250.dp),
         title = "Insufficient funds",
