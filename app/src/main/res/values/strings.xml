@@ -668,6 +668,7 @@
     <string name="referral_create_set_expiration_years">Set Expiration (in years)</string>
     <string name="referral_create_registration_fees">Registration Fees</string>
     <string name="referral_create_cost">Cost</string>
+    <string name="referral_create_fees_error">Failed to load fees. Please try again.</string>
     <string name="referral_create_create_referral_code">Create referral code</string>
     <string name="referral_create_invalid">Invalid</string>
     <string name="referral_create_available">Available</string>

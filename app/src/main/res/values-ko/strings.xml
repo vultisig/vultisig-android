@@ -671,6 +671,7 @@
     <string name="referral_create_set_expiration_years">만료 기간 설정 (년 단위)</string>
     <string name="referral_create_registration_fees">등록 수수료</string>
     <string name="referral_create_cost">비용</string>
+    <string name="referral_create_fees_error">수수료를 불러오지 못했습니다. 다시 시도해 주세요.</string>
     <string name="referral_create_create_referral_code">추천 코드 생성</string>
     <string name="referral_create_invalid">유효하지 않음</string>
     <string name="referral_create_available">사용 가능</string>

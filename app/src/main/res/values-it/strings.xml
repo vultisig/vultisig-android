@@ -480,6 +480,7 @@
     <string name="referral_create_set_expiration_years">Imposta scadenza (in anni)</string>
     <string name="referral_create_registration_fees">Commissioni di registrazione</string>
     <string name="referral_create_cost">Costo</string>
+    <string name="referral_create_fees_error">Impossibile caricare le commissioni. Riprova.</string>
     <string name="referral_create_create_referral_code">Crea codice referral</string>
     <string name="referral_create_invalid">Non valido</string>
     <string name="referral_create_available">Disponibile</string>

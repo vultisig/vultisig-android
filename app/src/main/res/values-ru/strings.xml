@@ -477,6 +477,7 @@
     <string name="referral_create_set_expiration_years">Установить срок действия (в годах)</string>
     <string name="referral_create_registration_fees">Регистрационные сборы</string>
     <string name="referral_create_cost">Стоимость</string>
+    <string name="referral_create_fees_error">Не удалось загрузить комиссии. Попробуйте ещё раз.</string>
     <string name="referral_create_create_referral_code">Создать реферальный код</string>
     <string name="referral_create_invalid">Недействительный</string>
     <string name="referral_create_available">Доступен</string>
