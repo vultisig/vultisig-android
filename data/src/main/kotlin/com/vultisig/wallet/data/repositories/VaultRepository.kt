@@ -17,6 +17,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 
 interface VaultRepository {
 
@@ -141,26 +142,31 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
             resharePrefix = vault.vault.resharePrefix,
             keyshares = vault.keyShares.map { KeyShare(it.pubKey, it.keyShare) },
             coins =
-                vault.coins.map { it ->
-                    val chain = Chain.fromRaw(it.chain)
-                    Coin(
-                        chain = chain,
-                        ticker = it.ticker,
-                        logo =
-                            it.logo.takeIf { it.isNotBlank() }
-                                ?: tokenRepository.getToken(it.id)?.logo
-                                ?: "",
-                        address = it.address,
-                        decimal = it.decimals,
-                        hexPublicKey = it.hexPublicKey,
-                        priceProviderID = it.priceProviderID,
-                        contractAddress = it.contractAddress,
-                        isNativeToken =
-                            when (chain) {
-                                Chain.MayaChain -> it.ticker == "CACAO"
-                                else -> it.contractAddress.isBlank()
-                            },
-                    )
+                vault.coins.mapNotNull { it ->
+                    try {
+                        val chain = Chain.fromRaw(it.chain)
+                        Coin(
+                            chain = chain,
+                            ticker = it.ticker,
+                            logo =
+                                it.logo.takeIf { it.isNotBlank() }
+                                    ?: tokenRepository.getToken(it.id)?.logo
+                                    ?: "",
+                            address = it.address,
+                            decimal = it.decimals,
+                            hexPublicKey = it.hexPublicKey,
+                            priceProviderID = it.priceProviderID,
+                            contractAddress = it.contractAddress,
+                            isNativeToken =
+                                when (chain) {
+                                    Chain.MayaChain -> it.ticker == "CACAO"
+                                    else -> it.contractAddress.isBlank()
+                                },
+                        )
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to map coin ${it.id} on chain ${it.chain}, skipping")
+                        null
+                    }
                 },
             chainPublicKeys =
                 vault.chainPublicKeys.map {

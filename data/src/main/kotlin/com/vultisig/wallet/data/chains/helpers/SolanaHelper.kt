@@ -47,7 +47,9 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                 .setSender(keysignPayload.coin.address)
                 .setPriorityFeePrice(
                     Solana.PriorityFeePrice.newBuilder()
-                        .setPrice(solanaSpecific.priorityFee.toLong())
+                        .setPrice(
+                            maxOf(solanaSpecific.priorityFee.toLong(), SOLANA_PRIORITY_FEE_PRICE)
+                        )
                         .build()
                 )
                 .setPriorityFeeLimit(
