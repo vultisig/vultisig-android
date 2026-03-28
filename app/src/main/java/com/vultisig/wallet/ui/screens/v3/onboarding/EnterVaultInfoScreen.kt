@@ -34,12 +34,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -55,6 +53,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.referral.AddReferralBottomSheet
 import com.vultisig.wallet.ui.components.referral.AddReferralHeaderButton
 import com.vultisig.wallet.ui.components.v2.modifiers.shinedBottom
+import com.vultisig.wallet.ui.components.v2.texts.highlightedText
 import com.vultisig.wallet.ui.components.v2.utils.roundToPx
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.v3.onboarding.EnterVaultInfoEvent
@@ -119,28 +118,26 @@ internal fun EnterVaultInfoScreen(
             val infoIconId = "info_icon"
             val descText = uiState.activeStep.description.asString()
             val descHighlight = uiState.activeStep.descriptionHighlight?.asString()
-            val descAnnotated = buildAnnotatedString {
-                val highlight = descHighlight
-                val start = if (highlight != null) descText.indexOf(highlight) else -1
-                if (start >= 0 && highlight != null) {
-                    append(descText.substring(0, start))
-                    withStyle(
-                        SpanStyle(
-                            color = Theme.v2.colors.neutrals.n50,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    ) {
-                        append(highlight)
-                    }
-                    append(descText.substring(start + highlight.length))
-                } else {
-                    append(descText)
-                }
+            val baseAnnotated =
+                highlightedText(
+                    mainText = descText,
+                    highlightedWords = listOfNotNull(descHighlight),
+                    mainTextStyle = Theme.brockmann.body.s.medium,
+                    mainTextColor = Theme.v2.colors.text.tertiary,
+                    highlightTextStyle =
+                        Theme.brockmann.body.s.medium.copy(fontWeight = FontWeight.Bold),
+                    highlightTextColor = Theme.v2.colors.neutrals.n50,
+                )
+            val descAnnotated =
                 if (uiState.activeStep.showInfoIcon) {
-                    append(" ")
-                    appendInlineContent(infoIconId, "[i]")
+                    buildAnnotatedString {
+                        append(baseAnnotated)
+                        append(" ")
+                        appendInlineContent(infoIconId, "[i]")
+                    }
+                } else {
+                    baseAnnotated
                 }
-            }
             Text(
                 text = descAnnotated,
                 color = Theme.v2.colors.text.tertiary,
