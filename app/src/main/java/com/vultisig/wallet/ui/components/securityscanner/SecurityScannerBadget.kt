@@ -78,7 +78,7 @@ private fun ScanStatusContentWithLogo(
 ) {
     Icon(
         imageVector = image,
-        contentDescription = image.name,
+        contentDescription = null,
         tint = imageColor,
         modifier = Modifier.size(16.dp),
     )
@@ -95,7 +95,7 @@ private fun ScanStatusContentWithLogo(
 
     Image(
         painter = painterResource(id = getSecurityScannerLogo(providerLogoId)),
-        contentDescription = "Provider Logo",
+        contentDescription = null,
         modifier = Modifier.height(16.dp),
     )
 }

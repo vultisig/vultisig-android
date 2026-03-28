@@ -148,7 +148,7 @@ fun ResourceCard(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.circleinfo),
-                            contentDescription = "info",
+                            contentDescription = null,
                             tint = colors.text.tertiary,
                         )
                     }
@@ -165,7 +165,7 @@ fun ResourceCard(
                 ) {
                     Image(
                         painter = painterResource(state.icon),
-                        contentDescription = "${state.title} icon",
+                        contentDescription = null,
                         modifier = Modifier.size(16.dp),
                         contentScale = ContentScale.Fit,
                     )
@@ -264,7 +264,7 @@ fun BandwidthEnergyContent() {
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.tron_mono),
-                            contentDescription = "Tron Logo",
+                            contentDescription = null,
                             modifier = Modifier.size(20.dp),
                             tint = colors.neutrals.n50,
                         )

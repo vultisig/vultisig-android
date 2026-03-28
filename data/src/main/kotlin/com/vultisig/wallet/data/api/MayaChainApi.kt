@@ -35,6 +35,10 @@ import timber.log.Timber
 
 interface MayaChainApi {
 
+    suspend fun getMemberDetails(address: String): MayaMemberDetails
+
+    suspend fun getLpPoolStats(): List<MayaLpPoolStats>
+
     suspend fun getBalance(address: String): List<CosmosBalance>
 
     suspend fun getUnStakeCacaoBalance(address: String): String?
@@ -68,8 +72,6 @@ interface MayaChainApi {
     suspend fun getMidgardHealth(): MayaMidgardHealth
 
     suspend fun getMayaNodePools(): List<MayaNodePool>
-
-    suspend fun getMemberDetails(address: String): MayaMemberDetails
 }
 
 @Serializable
@@ -115,15 +117,27 @@ data class MayaNodePool(
 data class MayaMemberDetails(@SerialName("pools") val pools: List<MayaMemberPool> = emptyList())
 
 @Serializable
+data class MayaMidgardHealth(@SerialName("lastThorNode") val lastMayaNode: MayaHeightInfo) {
+    @Serializable data class MayaHeightInfo(val height: Long, val timestamp: Long)
+}
+
+@Serializable
 data class MayaMemberPool(
     @SerialName("pool") val pool: String,
+    @SerialName("assetAdded") val assetAdded: String = "0",
+    @SerialName("runeAdded") val cacaoAdded: String = "0",
     @SerialName("liquidityUnits") val liquidityUnits: String = "0",
 )
 
 @Serializable
-data class MayaMidgardHealth(@SerialName("lastThorNode") val lastMayaNode: MayaHeightInfo) {
-    @Serializable data class MayaHeightInfo(val height: Long, val timestamp: Long)
-}
+data class MayaLpPoolStats(
+    @SerialName("asset") val asset: String,
+    @SerialName("annualPercentageRate") val annualPercentageRate: String = "0",
+    @SerialName("status") val status: String,
+    @SerialName("assetDepth") val assetDepth: String = "0",
+    @SerialName("runeDepth") val cacaoDepth: String = "0",
+    @SerialName("units") val units: String = "0",
+)
 
 internal class MayaChainApiImp
 @Inject
@@ -296,18 +310,31 @@ constructor(
             .get("$MAYA_MIDGARD_BASE/health") { header(xClientID, xClientIDValue) }
             .bodyOrThrow<MayaMidgardHealth>()
 
-    override suspend fun getMayaNodePools(): List<MayaNodePool> =
-        httpClient
-            .get("$MAYA_NODE_BASE/mayachain/pools") { header(xClientID, xClientIDValue) }
-            .bodyOrThrow<List<MayaNodePool>>()
-
     override suspend fun getMemberDetails(address: String): MayaMemberDetails =
         httpClient
             .get("$MAYA_MIDGARD_BASE/member/$address") { header(xClientID, xClientIDValue) }
             .bodyOrThrow<MayaMemberDetails>()
 
+    override suspend fun getLpPoolStats(): List<MayaLpPoolStats> =
+        httpClient
+            .get("$MAYA_MIDGARD_BASE/pools") {
+                header(xClientID, xClientIDValue)
+                parameter(LP_POOL_STATUS_KEY, LP_POOL_STATUS)
+                parameter(LP_POOL_PERIOD_KEY, LP_POOL_PERIOD)
+            }
+            .bodyOrThrow<List<MayaLpPoolStats>>()
+
+    override suspend fun getMayaNodePools(): List<MayaNodePool> =
+        httpClient
+            .get("$MAYA_NODE_BASE/mayachain/pools") { header(xClientID, xClientIDValue) }
+            .bodyOrThrow<List<MayaNodePool>>()
+
     companion object {
         private const val MAYA_NODE_BASE = "https://mayanode.mayachain.info"
         private const val MAYA_MIDGARD_BASE = "https://midgard.mayachain.info/v2"
+        private const val LP_POOL_STATUS_KEY = "status"
+        private const val LP_POOL_STATUS = "available"
+        private const val LP_POOL_PERIOD_KEY = "period"
+        private const val LP_POOL_PERIOD = "30d"
     }
 }
