@@ -154,17 +154,20 @@ constructor(
     }
 
     private suspend fun checkServerVaultAndProceed(name: String) {
-        val mnemonic = keyImportRepository.get()?.mnemonic ?: run {
-            navigator.route(Route.VaultInfo.Email(name, args.tssAction))
-            return
-        }
+        val mnemonic =
+            keyImportRepository.get()?.mnemonic
+                ?: run {
+                    navigator.route(Route.VaultInfo.Email(name, args.tssAction))
+                    return
+                }
 
         state.update { it.copy(isLoading = true) }
-        val existsOnServer = try {
-            checkServerVaultExists(mnemonic)
-        } catch (_: Exception) {
-            false
-        }
+        val existsOnServer =
+            try {
+                checkServerVaultExists(mnemonic)
+            } catch (_: Exception) {
+                false
+            }
         state.update { it.copy(isLoading = false) }
 
         if (existsOnServer) {
