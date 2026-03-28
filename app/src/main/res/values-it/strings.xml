@@ -307,7 +307,7 @@
     <string name="vault_details_screen_vault_part">Condividi del caveau</string>
     <string name="vault_details_screen_vault_type">Tipo di caveau</string>
     <string name="vault_settings_delete_vault_part">Condividi del caveau:</string>
-    <string name="vault_password_hint_to_long">Il suggerimento è troppo lungo</string>
+    <string name="vault_password_hint_too_long">Il suggerimento è troppo lungo</string>
     <string name="vault_details_screen_vault_part_desc">Condividi %1$s-di-%2$s</string>
     <string name="do_not_remind_me_again">Non ricordarmelo più</string>
     <string name="monthly_backup_reminder_title">Non dimenticare di eseguire il backup delle condivisioni del vault e di verificarne la completezza.</string>
@@ -454,7 +454,7 @@
     <string name="referral_edit_referral">Modifica referral</string>
     <string name="referral_external_linked">Codice referral collegato con successo</string>
     <string name="referral_external_not_linked">Il codice referral non esiste</string>
-    <string name="referral_external_not_failed">Impossibile verificare il codice referral</string>
+    <string name="referral_external_link_failed">Impossibile verificare il codice referral</string>
     <string name="referral_invite_next">Avanti</string>
     <string name="referral_code_settings_title">Codice referral</string>
     <string name="referral_screen_title">Vultisig - Referral</string>
@@ -611,10 +611,10 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Sei pronto a utilizzare un nuovo standard di portafoglio.</string>
     <string name="vault_detail_vault_info">Informazioni sul Vault</string>
     <string name="vault_details_keys">Chiavi</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Abilita Firma Rapida Biometrica</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">Abilita Firma Rapida Biometrica</string>
     <string name="verify_send_send_overview">Invia panoramica</string>
     <string name="verify_swap_swap_overview">Scambia panoramica</string>
-    <string name="token_selecton_screen_enable_at_least_one">Abilita almeno un token per visualizzare i saldi e gestire le posizioni.</string>
+    <string name="token_selection_screen_enable_at_least_one">Abilita almeno un token per visualizzare i saldi e gestire le posizioni.</string>
     <string name="transfer_ibc_destination_chain">Catena di destinazione</string>
     <string name="tx_done_transaction_details">Dettagli della transazione</string>
     <string name="vault_confirmation_vault_upgraded">Vault aggiornato</string>
@@ -733,7 +733,7 @@
     <string name="peer_discovery_waiting_for_devices_action">In attesa dei dispositivi…</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivi (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Inviato a %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email">Non hai ricevuto un\'email?</string>
+    <string name="vault_backup_screen_donot_receive_email">Non hai ricevuto un\'email?</string>
     <string name="onboarding_desc_page_5_part_2">separatamente in un</string>
     <string name="onboarding_desc_page_5_part_3">Posizione diversa</string>
     <string name="scan_qr_code_modal_annotation">Scarica Vultisig sugli altri tuoi dispositivi e seleziona \"Scansiona codice QR\".</string>
@@ -838,8 +838,8 @@
     <string name="enable_at_least_one_position">Abilita almeno una posizione per visualizzare i saldi e gestire le posizioni.</string>
     <string name="bandwidth">Larghezza di banda</string>
     <string name="energy">Energia</string>
-    <string name="bandwidth_dec">I Punti di Larghezza di Banda sono necessari per ogni transazione su TRON, inclusi sia gli invii di token standard che le interazioni con gli smart contract. Ogni utente TRON riceve 600 Punti di Larghezza di Banda gratuiti al giorno, che possono coprire circa due invii base. Inoltre, puoi guadagnare Punti di Larghezza di Banda extra facendo staking di TRX, aumentando il tuo saldo giornaliero per supportare più transazioni. Se hai abbastanza Punti di Larghezza di Banda, puoi inviare token, fare staking di TRX o interagire con gli smart contract senza pagare TRX in commissioni del gas.</string>
-    <string name="energy_dec">Necessari per azioni più complesse, come l\'interazione con gli smart contract (ad esempio, swap o transazioni dApp). A differenza della Larghezza di Banda, l\'Energia non viene fornita gratuitamente: è necessario fare staking di TRX per guadagnarla. (Gli utenti più esperti possono anche acquisire Energia tramite meccanismi di leasing come JustLend o i mercati di noleggio dell\'energia di Tronify). Tuttavia, avere Energia può ridurre significativamente o addirittura eliminare le commissioni del gas per le interazioni con gli smart contract, rendendo l\'Energia preziosa per coloro che utilizzano frequentemente le dApp TRON.</string>
+    <string name="bandwidth_desc">I Punti di Larghezza di Banda sono necessari per ogni transazione su TRON, inclusi sia gli invii di token standard che le interazioni con gli smart contract. Ogni utente TRON riceve 600 Punti di Larghezza di Banda gratuiti al giorno, che possono coprire circa due invii base. Inoltre, puoi guadagnare Punti di Larghezza di Banda extra facendo staking di TRX, aumentando il tuo saldo giornaliero per supportare più transazioni. Se hai abbastanza Punti di Larghezza di Banda, puoi inviare token, fare staking di TRX o interagire con gli smart contract senza pagare TRX in commissioni del gas.</string>
+    <string name="energy_desc">Necessari per azioni più complesse, come l\'interazione con gli smart contract (ad esempio, swap o transazioni dApp). A differenza della Larghezza di Banda, l\'Energia non viene fornita gratuitamente: è necessario fare staking di TRX per guadagnarla. (Gli utenti più esperti possono anche acquisire Energia tramite meccanismi di leasing come JustLend o i mercati di noleggio dell\'energia di Tronify). Tuttavia, avere Energia può ridurre significativamente o addirittura eliminare le commissioni del gas per le interazioni con gli smart contract, rendendo l\'Energia preziosa per coloro che utilizzano frequentemente le dApp TRON.</string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">Indirizzo del Nodo</string>

@@ -307,7 +307,7 @@
     <string name="vault_details_screen_vault_part">Tresorteil</string>
     <string name="vault_details_screen_vault_type">Tresortyp</string>
     <string name="vault_settings_delete_vault_part">Tresorteil:</string>
-    <string name="vault_password_hint_to_long">Der Hinweis ist zu lang</string>
+    <string name="vault_password_hint_too_long">Der Hinweis ist zu lang</string>
     <string name="vault_details_screen_vault_part_desc">Teilen %1$s-von-%2$s</string>
     <string name="do_not_remind_me_again">Erinnere mich nicht mehr daran</string>
     <string name="monthly_backup_reminder_title">Vergessen Sie nicht, Ihre Tresorfreigaben zu sichern und die Vollständigkeit zu überprüfen.</string>
@@ -454,7 +454,7 @@
     <string name="referral_edit_referral">Empfehlung bearbeiten</string>
     <string name="referral_external_linked">Referral-Code erfolgreich verknüpft</string>
     <string name="referral_external_not_linked">Referral-Code existiert nicht</string>
-    <string name="referral_external_not_failed">Fehler beim Überprüfen des Referral-Codes</string>
+    <string name="referral_external_link_failed">Fehler beim Überprüfen des Referral-Codes</string>
     <string name="referral_invite_next">Weiter</string>
     <string name="referral_code_settings_title">Empfehlungscode</string>
     <string name="referral_screen_title">Vultisig – Empfehlung</string>
@@ -613,10 +613,10 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Sie sind bereit für den neuen Wallet-Standard.</string>
     <string name="vault_detail_vault_info">Tresorinformationen</string>
     <string name="vault_details_keys">Schlüssel</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Biometrische Schnellsignatur aktivieren</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">Biometrische Schnellsignatur aktivieren</string>
     <string name="verify_send_send_overview">Sendeübersicht</string>
     <string name="verify_swap_swap_overview">Tauschübersicht</string>
-    <string name="token_selecton_screen_enable_at_least_one">Aktivieren Sie mindestens einen Token, um Salden anzuzeigen und Positionen zu verwalten.</string>
+    <string name="token_selection_screen_enable_at_least_one">Aktivieren Sie mindestens einen Token, um Salden anzuzeigen und Positionen zu verwalten.</string>
     <string name="transfer_ibc_destination_chain">Zielkette</string>
     <string name="tx_done_transaction_details">Transaktionsdetails</string>
     <string name="vault_confirmation_vault_upgraded">Tresor aktualisiert</string>
@@ -735,7 +735,7 @@
     <string name="peer_discovery_waiting_for_devices_action">Geräte werden angefordert…</string>
     <string name="peer_discovery_devices_n_of_n">Geräte (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">An %s gesendet.</string>
-    <string name="vault_backup_screen_donot_recieve_email">Keine E-Mail erhalten?</string>
+    <string name="vault_backup_screen_donot_receive_email">Keine E-Mail erhalten?</string>
     <string name="onboarding_desc_page_5_part_2">separat in einem</string>
     <string name="onboarding_desc_page_5_part_3">Anderer Standort</string>
     <string name="scan_qr_code_modal_annotation">Laden Sie Vultisig auf Ihre anderen Geräte herunter und wählen Sie „QR-Code scannen“.</string>
@@ -840,8 +840,8 @@
     <string name="enable_at_least_one_position">Aktivieren Sie mindestens eine Position, um Salden anzuzeigen und Positionen zu verwalten.</string>
     <string name="bandwidth">Bandbreite</string>
     <string name="energy">Energie</string>
-    <string name="bandwidth_dec">Bandbreitenpunkte werden für jede Transaktion auf TRON benötigt, sowohl für Standard-Token-Sendungen als auch für Smart-Contract-Interaktionen. Jeder TRON-Nutzer erhält täglich 600 kostenlose Bandbreitenpunkte, was für etwa zwei einfache Sendungen ausreicht. Zusätzlich können Sie durch das Staking von TRX weitere Bandbreitenpunkte verdienen und so Ihr tägliches Guthaben erhöhen, um mehr Transaktionen zu ermöglichen. Mit genügend Bandbreitenpunkten können Sie Token senden, TRX staken oder mit Smart Contracts interagieren, ohne TRX an Gasgebühren zahlen zu müssen.</string>
-    <string name="energy_dec">Energie wird für komplexere Aktionen benötigt, wie z. B. die Interaktion mit Smart Contracts (z. B. Swaps oder dApp-Transaktionen). Im Gegensatz zu Bandbreite ist Energie nicht kostenlos – Sie müssen TRX staken, um Energie zu erhalten. (Fortgeschrittene Nutzer können Energie auch über Leasing-Mechanismen wie JustLend oder die Energie-Mietmärkte von Tronify erwerben.) Energie kann die Gasgebühren für Smart-Contract-Interaktionen jedoch deutlich reduzieren oder sogar eliminieren und ist daher besonders wertvoll für Nutzer, die häufig TRON-dApps verwenden.</string>
+    <string name="bandwidth_desc">Bandbreitenpunkte werden für jede Transaktion auf TRON benötigt, sowohl für Standard-Token-Sendungen als auch für Smart-Contract-Interaktionen. Jeder TRON-Nutzer erhält täglich 600 kostenlose Bandbreitenpunkte, was für etwa zwei einfache Sendungen ausreicht. Zusätzlich können Sie durch das Staking von TRX weitere Bandbreitenpunkte verdienen und so Ihr tägliches Guthaben erhöhen, um mehr Transaktionen zu ermöglichen. Mit genügend Bandbreitenpunkten können Sie Token senden, TRX staken oder mit Smart Contracts interagieren, ohne TRX an Gasgebühren zahlen zu müssen.</string>
+    <string name="energy_desc">Energie wird für komplexere Aktionen benötigt, wie z. B. die Interaktion mit Smart Contracts (z. B. Swaps oder dApp-Transaktionen). Im Gegensatz zu Bandbreite ist Energie nicht kostenlos – Sie müssen TRX staken, um Energie zu erhalten. (Fortgeschrittene Nutzer können Energie auch über Leasing-Mechanismen wie JustLend oder die Energie-Mietmärkte von Tronify erwerben.) Energie kann die Gasgebühren für Smart-Contract-Interaktionen jedoch deutlich reduzieren oder sogar eliminieren und ist daher besonders wertvoll für Nutzer, die häufig TRON-dApps verwenden.</string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">Knotenadresse</string>
