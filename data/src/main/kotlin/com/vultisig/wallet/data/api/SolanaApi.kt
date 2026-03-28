@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.api.models.SplResponseJson
 import com.vultisig.wallet.data.api.models.SplTokenInfo
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.utils.postRpc
+import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
@@ -53,6 +54,8 @@ interface SolanaApi {
     suspend fun getRecentBlockHash(): String
 
     suspend fun getHighPriorityFee(account: String): String
+
+    suspend fun getMedianPriorityFee(account: String): BigInteger
 
     suspend fun broadcastTransaction(tx: String): String?
 
@@ -172,6 +175,32 @@ constructor(
             Timber.tag("SolanaApiImp").e("Error getting high priority fee: ${e.message}")
         }
         return "0"
+    }
+
+    override suspend fun getMedianPriorityFee(account: String): BigInteger {
+        val fallback = SOLANA_PRIORITY_FEE_PRICE.toBigInteger()
+        return try {
+            val payload =
+                RpcPayload(
+                    jsonrpc = "2.0",
+                    method = "getRecentPrioritizationFees",
+                    params = buildJsonArray { addJsonArray { add(account) } },
+                    id = 1,
+                )
+            val rpcResp =
+                httpClient.post(rpcEndpoint) { setBody(payload) }.body<SolanaFeeObjectRespJson>()
+            val nonZeroFees =
+                rpcResp.result
+                    ?.map { it.prioritizationFee }
+                    ?.filter { it > BigInteger.ZERO }
+                    ?.sorted()
+                    .orEmpty()
+            val median = if (nonZeroFees.isEmpty()) fallback else nonZeroFees[nonZeroFees.size / 2]
+            maxOf(median, fallback)
+        } catch (e: Exception) {
+            Timber.tag("SolanaApiImp").e("Error getting median priority fee: ${e.message}")
+            fallback
+        }
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
