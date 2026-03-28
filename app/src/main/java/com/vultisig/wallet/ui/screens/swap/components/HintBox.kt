@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -98,9 +99,8 @@ private fun PointerShapeDown(
     }
 }
 
-// Note: HintBox uses Modifier.offset (not Popup), so it participates in normal Z-order.
-// Callers must place HintBox as the last child in its parent Box to ensure it renders
-// on top of siblings. A future migration to Popup would remove this constraint.
+// Note: HintBox uses Modifier.offset (not Popup). zIndex(Float.MAX_VALUE) ensures it
+// always renders on top of siblings regardless of declaration order in its parent Box.
 @Composable
 internal fun HintBox(
     modifier: Modifier = Modifier,
@@ -117,7 +117,7 @@ internal fun HintBox(
         visible = isVisible,
         enter = fadeIn(),
         exit = fadeOut(),
-        modifier = Modifier.offset { offset },
+        modifier = Modifier.zIndex(Float.MAX_VALUE).offset { offset },
     ) {
         HintBoxPopupContent(
             modifier = modifier,
