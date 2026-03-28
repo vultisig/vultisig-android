@@ -8,8 +8,6 @@ class ExplorerLinkRepositoryImplTest {
 
     private val repository = ExplorerLinkRepositoryImpl()
 
-    // region QBTC explorer links
-
     @Test
     fun `QBTC transaction link is empty when explorer does not exist`() {
         val link = repository.getTransactionLink(Chain.Qbtc, "ABCDEF123456")
@@ -21,10 +19,6 @@ class ExplorerLinkRepositoryImplTest {
         val link = repository.getAddressLink(Chain.Qbtc, "qbtc1someaddress")
         assertTrue(link.isBlank(), "QBTC address link should be blank, was: $link")
     }
-
-    // endregion
-
-    // region Other chains have valid explorer links
 
     @Test
     fun `Bitcoin transaction link contains tx hash`() {
@@ -57,15 +51,10 @@ class ExplorerLinkRepositoryImplTest {
         assertTrue(!link.contains("0x"))
     }
 
-    // endregion
-
-    // region All chains produce non-crashing links
-
     @Test
     fun `all chains produce transaction links without throwing`() {
         for (chain in Chain.entries) {
             val link = repository.getTransactionLink(chain, "test_hash")
-            // QBTC is expected empty; all others should be non-empty URLs
             if (chain != Chain.Qbtc) {
                 assertTrue(
                     link.isNotEmpty(),
@@ -84,6 +73,4 @@ class ExplorerLinkRepositoryImplTest {
             }
         }
     }
-
-    // endregion
 }
