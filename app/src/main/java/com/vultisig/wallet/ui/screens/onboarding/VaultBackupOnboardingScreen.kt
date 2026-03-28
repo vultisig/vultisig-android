@@ -105,7 +105,7 @@ internal fun VaultBackupOnboardingScreen(
                     )
                     UiSpacer(size = 32.dp)
 
-                    uiState.tips.forEach { (title, description, logo) ->
+                    uiState.tips.forEachIndexed { index, (title, description, logo) ->
                         Row {
                             UiIcon(
                                 drawableResId = logo,
@@ -129,7 +129,9 @@ internal fun VaultBackupOnboardingScreen(
                                 )
                             }
                         }
-                        UiSpacer(size = 16.dp)
+                        if (index < uiState.tips.lastIndex) {
+                            UiSpacer(size = 16.dp)
+                        }
                     }
                 }
             }
