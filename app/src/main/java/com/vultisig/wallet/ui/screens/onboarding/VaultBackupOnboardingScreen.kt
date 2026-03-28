@@ -74,7 +74,8 @@ internal fun VaultBackupOnboardingScreen(
 
                 Column(
                     modifier =
-                        Modifier.padding(
+                        Modifier.weight(1f)
+                            .padding(
                                 horizontal = V3Scaffold.PADDING_HORIZONTAL,
                                 vertical = V3Scaffold.PADDING_VERTICAL,
                             )

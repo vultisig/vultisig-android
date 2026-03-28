@@ -120,8 +120,9 @@ internal fun EnterVaultInfoScreen(
             val descText = uiState.activeStep.description.asString()
             val descHighlight = uiState.activeStep.descriptionHighlight?.asString()
             val descAnnotated = buildAnnotatedString {
-                val start = if (descHighlight != null) descText.indexOf(descHighlight) else -1
-                if (start >= 0) {
+                val highlight = descHighlight
+                val start = if (highlight != null) descText.indexOf(highlight) else -1
+                if (start >= 0 && highlight != null) {
                     append(descText.substring(0, start))
                     withStyle(
                         SpanStyle(
@@ -129,9 +130,9 @@ internal fun EnterVaultInfoScreen(
                             fontWeight = FontWeight.Bold,
                         )
                     ) {
-                        append(descHighlight)
+                        append(highlight)
                     }
-                    append(descText.substring(start + descHighlight!!.length))
+                    append(descText.substring(start + highlight.length))
                 } else {
                     append(descText)
                 }
