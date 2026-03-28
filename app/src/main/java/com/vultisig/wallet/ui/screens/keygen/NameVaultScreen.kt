@@ -113,6 +113,8 @@ private fun NameVaultScreen(
     onBackClick: () -> Unit,
 ) {
 
+    val canProceed = state.isNextButtonEnabled && !state.isLoading
+
     V2Scaffold(
         title = null,
         onBackClick = onBackClick,
@@ -124,9 +126,7 @@ private fun NameVaultScreen(
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 24.dp)
                         .testTag("NameVaultScreen.continue"),
-                state =
-                    if (state.isNextButtonEnabled && !state.isLoading) VsButtonState.Enabled
-                    else VsButtonState.Disabled,
+                state = if (canProceed) VsButtonState.Enabled else VsButtonState.Disabled,
                 onClick = onNextClick,
             )
         },
@@ -152,7 +152,7 @@ private fun NameVaultScreen(
                 focusRequester = focusRequester,
                 footNote = state.errorMessage?.asString(),
                 imeAction = ImeAction.Go,
-                onKeyboardAction = { onNextClick() },
+                onKeyboardAction = { if (canProceed) onNextClick() },
                 modifier =
                     Modifier.fillMaxSize().wrapContentHeight().testTag("NameVaultScreen.nameField"),
             )
