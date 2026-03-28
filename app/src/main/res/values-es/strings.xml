@@ -635,6 +635,10 @@
     <string name="send_form_add_memo">Añadir MEMO</string>
     <string name="send_form_enter_memo">Ingresar Memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Ya existe una bóveda con este nombre.</string>
+    <string name="name_vault_server_exists_warning_title">La bóveda rápida ya existe</string>
+    <string name="name_vault_server_exists_warning_message">Ya existe una bóveda rápida con esta frase semilla en otro dispositivo. Crear una nueva bóveda rápida reemplazará la parte del servidor y hará que la bóveda existente quede inutilizable. Considere usar una bóveda segura en su lugar.</string>
+    <string name="name_vault_server_exists_warning_continue">Continuar</string>
+    <string name="name_vault_server_exists_warning_back">Volver</string>
     <string name="referral_create_status">Estado</string>
     <string name="referral_create_unknown">Desconocido</string>
     <string name="referral_code_cannot_be_empty">El código de referencia no puede estar vacío.</string>

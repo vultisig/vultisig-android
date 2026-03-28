@@ -637,6 +637,10 @@
     <string name="send_form_add_memo">Memo hinzufügen</string>
     <string name="send_form_enter_memo">Memo eingeben</string>
     <string name="name_vault_vault_with_this_name_already_exists">Ein Tresor mit diesem Namen ist bereits vorhanden.</string>
+    <string name="name_vault_server_exists_warning_title">Schneller Tresor existiert bereits</string>
+    <string name="name_vault_server_exists_warning_message">Ein schneller Tresor mit dieser Seed-Phrase existiert bereits auf einem anderen Gerät. Das Erstellen eines neuen schnellen Tresors ersetzt den Server-Anteil und macht den bestehenden Tresor unbrauchbar. Erwägen Sie stattdessen einen sicheren Tresor.</string>
+    <string name="name_vault_server_exists_warning_continue">Weiter</string>
+    <string name="name_vault_server_exists_warning_back">Zurück</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Unbekannt</string>
     <string name="referral_code_cannot_be_empty">Der Empfehlungscode darf nicht leer sein.</string>
