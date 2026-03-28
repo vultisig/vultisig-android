@@ -862,8 +862,8 @@ constructor(
                         is KeygenState.KeygenEdDSA ->
                             if (libType == SigningLibType.KeyImport) 0.50f else 0.50f
 
-                        is KeygenState.KeygenMLDSA -> 0.75f
-                        is KeygenState.KeygenChains -> 0.75f
+                        is KeygenState.KeygenMLDSA -> 0.66f
+                        is KeygenState.KeygenChains -> 0.83f
                         is KeygenState.ReshareECDSA -> 0.33f
                         is KeygenState.ReshareEdDSA -> 0.66f
                         is KeygenState.Success -> 1f

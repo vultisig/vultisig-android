@@ -57,7 +57,7 @@ class QBTCTransactionHelper {
         val bodyBytes = buildTxBody(keysignPayload)
         val authInfoBytes = buildAuthInfo(keysignPayload)
 
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoBytes(1, bodyBytes))
         result.addAll(protoBytes(2, authInfoBytes))
         result.addAll(protoString(3, CHAIN_ID))
@@ -68,11 +68,11 @@ class QBTCTransactionHelper {
     private fun buildTxBody(keysignPayload: KeysignPayload): ByteArray {
         val cosmosSpecific =
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
-                ?: error("Invalid blockChainSpecific")
+                ?: error("Invalid blockChainSpecific for QBTC")
 
         val (anyMsg, memo) = buildMessageAny(keysignPayload, cosmosSpecific)
 
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoBytes(1, anyMsg))
         if (!memo.isNullOrEmpty()) {
             result.addAll(protoString(2, memo))
@@ -116,7 +116,7 @@ class QBTCTransactionHelper {
         val coinDenom =
             if (keysignPayload.coin.isNativeToken) DENOM else keysignPayload.coin.contractAddress
 
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoString(1, keysignPayload.coin.address))
         result.addAll(protoString(2, keysignPayload.toAddress))
         result.addAll(protoBytes(3, buildCoin(coinDenom, keysignPayload.toAmount.toString())))
@@ -153,7 +153,7 @@ class QBTCTransactionHelper {
 
         val token = buildCoin(tokenDenom, keysignPayload.toAmount.toString())
 
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoString(1, "transfer"))
         result.addAll(protoString(2, sourceChannel))
         result.addAll(protoBytes(3, token))
@@ -174,16 +174,14 @@ class QBTCTransactionHelper {
     }
 
     private fun buildMsgVote(keysignPayload: KeysignPayload): ByteArray {
-        val voteStr =
-            keysignPayload.memo?.removePrefix("QBTC_VOTE:")?.removePrefix("DYDX_VOTE:")
-                ?: error("Vote requires memo")
+        val voteStr = keysignPayload.memo?.removePrefix("QBTC_VOTE:") ?: error("Vote requires memo")
         val parts = voteStr.split(":")
         require(parts.size == 2) { "Invalid vote memo format, expected OPTION:PROPOSAL_ID" }
 
         val option = voteOptionValue(parts[0])
         val proposalId = parts[1].toLongOrNull() ?: error("Invalid proposal ID")
 
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoVarint(1, proposalId))
         result.addAll(protoString(2, keysignPayload.coin.address))
         result.addAll(protoVarint(3, option))
@@ -203,14 +201,14 @@ class QBTCTransactionHelper {
     // Common builders
 
     private fun wrapAny(typeUrl: String, value: ByteArray): ByteArray {
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoString(1, typeUrl))
         result.addAll(protoBytes(2, value))
         return result.toByteArray()
     }
 
     private fun buildCoin(denom: String, amount: String): ByteArray {
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoString(1, denom))
         result.addAll(protoString(2, amount))
         return result.toByteArray()
@@ -219,13 +217,13 @@ class QBTCTransactionHelper {
     private fun buildAuthInfo(keysignPayload: KeysignPayload): ByteArray {
         val cosmosSpecific =
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
-                ?: error("Invalid blockChainSpecific")
+                ?: error("Invalid blockChainSpecific for QBTC")
         val pubKeyBytes = keysignPayload.coin.hexPublicKey.hexToByteArray()
 
         val signerInfo = buildSignerInfo(pubKeyBytes, cosmosSpecific.sequence.toLong())
         val feeBytes = buildFee(cosmosSpecific.gas.toLong())
 
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoBytes(1, signerInfo))
         result.addAll(protoBytes(2, feeBytes))
         return result.toByteArray()
@@ -235,7 +233,7 @@ class QBTCTransactionHelper {
         val pubKeyAny = buildPubKeyAny(pubKeyBytes)
         val modeInfo = buildModeInfo()
 
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoBytes(1, pubKeyAny))
         result.addAll(protoBytes(2, modeInfo))
         result.addAll(protoVarint(3, sequence))
@@ -243,26 +241,26 @@ class QBTCTransactionHelper {
     }
 
     private fun buildPubKeyAny(pubKeyBytes: ByteArray): ByteArray {
-        val innerValue = ByteArray(0).toMutableList()
+        val innerValue = mutableListOf<Byte>()
         innerValue.addAll(protoBytes(1, pubKeyBytes))
 
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoString(1, PUB_KEY_TYPE_URL))
         result.addAll(protoBytes(2, innerValue.toByteArray()))
         return result.toByteArray()
     }
 
     private fun buildModeInfo(): ByteArray {
-        val single = ByteArray(0).toMutableList()
+        val single = mutableListOf<Byte>()
         single.addAll(protoVarint(1, 1)) // SIGN_MODE_DIRECT
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoBytes(1, single.toByteArray()))
         return result.toByteArray()
     }
 
     private fun buildFee(gasAmount: Long): ByteArray {
         val coinBytes = buildCoin(DENOM, gasAmount.toString())
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoBytes(1, coinBytes))
         result.addAll(protoVarint(2, GAS_LIMIT))
         return result.toByteArray()
@@ -273,7 +271,7 @@ class QBTCTransactionHelper {
         authInfoBytes: ByteArray,
         signatureBytes: ByteArray,
     ): ByteArray {
-        val result = ByteArray(0).toMutableList()
+        val result = mutableListOf<Byte>()
         result.addAll(protoBytes(1, bodyBytes))
         result.addAll(protoBytes(2, authInfoBytes))
         result.addAll(protoBytes(3, signatureBytes))
