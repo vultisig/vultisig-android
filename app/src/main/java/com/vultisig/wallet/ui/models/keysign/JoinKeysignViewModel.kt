@@ -1218,7 +1218,6 @@ constructor(
             }
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun checkKeygenStarted(): Boolean {
         try {
             this._keysignCommittee = sessionApi.checkCommittee(_serverAddress, _sessionID)
@@ -1227,15 +1226,18 @@ constructor(
             if (this._keysignCommittee.contains(_localPartyID)) {
                 when {
                     _keysignPayload != null -> {
+                        val payload = _keysignPayload ?: error("keysignPayload unexpectedly null")
                         messagesToSign =
                             SigningHelper.getKeysignMessages(
-                                payload = _keysignPayload!!,
+                                payload = payload,
                                 vault = _currentVault,
                             )
                     }
 
                     customMessagePayload != null -> {
-                        messagesToSign = SigningHelper.getKeysignMessages(customMessagePayload!!)
+                        val payload =
+                            customMessagePayload ?: error("customMessagePayload unexpectedly null")
+                        messagesToSign = SigningHelper.getKeysignMessages(payload)
                     }
 
                     else -> {

@@ -50,7 +50,11 @@ internal fun KeysignScreen(
         }
 
         is Error -> {
-            KeysignErrorScreen(errorMessage = state.errorMessage, tryAgain = viewModel::tryAgain)
+            KeysignErrorScreen(
+                errorMessage = state.errorMessage,
+                tryAgain = viewModel::tryAgain,
+                onBack = viewModel::back,
+            )
         }
     }
 }

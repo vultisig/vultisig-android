@@ -104,7 +104,11 @@ internal fun KeysignView(
             }
 
             is KeysignState.Error -> {
-                KeysignErrorScreen(errorMessage = state.errorMessage, tryAgain = onBack)
+                KeysignErrorScreen(
+                    errorMessage = state.errorMessage,
+                    tryAgain = onBack,
+                    onBack = onBack,
+                )
             }
 
             else -> {
