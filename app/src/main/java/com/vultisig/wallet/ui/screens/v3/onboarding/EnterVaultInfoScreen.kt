@@ -240,7 +240,6 @@ internal fun EnterVaultInfoScreen(
         }
 
         HintBox(
-            title = "",
             message = stringResource(R.string.fast_vault_password_screen_hint),
             offset = IntOffset(x = 0, y = hintBoxOffset),
             pointerAlignment = Alignment.End,

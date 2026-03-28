@@ -103,7 +103,7 @@ internal fun HintBox(
     modifier: Modifier = Modifier,
     isVisible: Boolean,
     isPointerTriangleOnTop: Boolean = true,
-    title: String,
+    title: String? = null,
     message: String,
     offset: IntOffset,
     pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
@@ -131,7 +131,7 @@ internal fun HintBox(
 @Composable
 private fun HintBoxPopupContent(
     modifier: Modifier = Modifier,
-    title: String,
+    title: String? = null,
     message: String,
     isPointerOnTop: Boolean,
     pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
@@ -164,7 +164,7 @@ private fun HintBoxPopupContent(
                     )
                     .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            if (title.isNotEmpty()) {
+            if (!title.isNullOrEmpty()) {
                 Row {
                     Text(
                         text = title,
