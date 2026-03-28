@@ -299,7 +299,7 @@ constructor(
 
     private fun clearInput() {
         when (uiState.value.activeStep) {
-            StepType.Name -> nameTextFieldState.clearText()
+            StepType.Name -> viewModelScope.launch { generateVaultName() }
             StepType.Email -> emailTextFieldState.clearText()
             StepType.Password -> passwordTextFieldState.clearText()
         }

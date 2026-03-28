@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.models.keygen
 
 import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -144,7 +143,7 @@ constructor(
     }
 
     fun clearInput() {
-        nameFieldState.clearText()
+        viewModelScope.launch { generateVaultName() }
     }
 
     fun back() {
