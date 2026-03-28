@@ -319,7 +319,7 @@ constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            uiState.update { it.copy(activeStep = newStep) }
+            uiState.update { it.copy(activeStep = newStep, isMoreInfoVisible = false) }
         }
     }
 
@@ -340,7 +340,7 @@ constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            uiState.update { it.copy(activeStep = newStep) }
+            uiState.update { it.copy(activeStep = newStep, isMoreInfoVisible = false) }
         }
     }
 
