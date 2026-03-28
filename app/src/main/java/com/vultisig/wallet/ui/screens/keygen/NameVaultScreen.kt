@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -53,6 +55,45 @@ internal fun NameVaultScreen(model: NameVaultViewModel = hiltViewModel()) {
         onBackClick = model::back,
     )
 
+    if (state.showServerVaultExistsWarning) {
+        AlertDialog(
+            containerColor = Theme.v2.colors.backgrounds.secondary,
+            onDismissRequest = model::dismissServerVaultWarning,
+            title = {
+                Text(
+                    text = stringResource(R.string.name_vault_server_exists_warning_title),
+                    color = Theme.v2.colors.neutrals.n100,
+                    style = Theme.montserrat.heading5,
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.name_vault_server_exists_warning_message),
+                    color = Theme.v2.colors.neutrals.n100,
+                    style = Theme.montserrat.body2,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = model::continueWithServerVaultWarning) {
+                    Text(
+                        text = stringResource(R.string.name_vault_server_exists_warning_continue),
+                        color = Theme.v2.colors.neutrals.n100,
+                        style = Theme.montserrat.body3,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = model::dismissServerVaultWarning) {
+                    Text(
+                        text = stringResource(R.string.name_vault_server_exists_warning_back),
+                        color = Theme.v2.colors.neutrals.n100,
+                        style = Theme.montserrat.body3,
+                    )
+                }
+            },
+        )
+    }
+
     if (showReferralSheet) {
         AddReferralBottomSheet(
             onApply = { _ -> showReferralSheet = false },
@@ -84,7 +125,7 @@ private fun NameVaultScreen(
                         .padding(horizontal = 16.dp, vertical = 24.dp)
                         .testTag("NameVaultScreen.continue"),
                 state =
-                    if (state.isNextButtonEnabled) VsButtonState.Enabled
+                    if (state.isNextButtonEnabled && !state.isLoading) VsButtonState.Enabled
                     else VsButtonState.Disabled,
                 onClick = onNextClick,
             )
