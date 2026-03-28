@@ -33,6 +33,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -52,7 +53,7 @@ interface SolanaApi {
 
     suspend fun getRecentBlockHash(): String
 
-    suspend fun getMedianPriorityFee(account: String): BigInteger
+    suspend fun getMedianPriorityFee(accounts: List<String>): BigInteger
 
     suspend fun broadcastTransaction(tx: String): String?
 
@@ -146,18 +147,18 @@ constructor(
         return rpcResp.result?.value?.blockHash ?: error("getRecentBlockHash error")
     }
 
-    override suspend fun getMedianPriorityFee(account: String): BigInteger {
+    override suspend fun getMedianPriorityFee(accounts: List<String>): BigInteger {
         val fallback = SOLANA_PRIORITY_FEE_PRICE.toBigInteger()
         return try {
-            val payload =
-                RpcPayload(
-                    jsonrpc = "2.0",
-                    method = "getRecentPrioritizationFees",
-                    params = buildJsonArray { addJsonArray { add(account) } },
-                    id = 1,
-                )
             val rpcResp =
-                httpClient.post(rpcEndpoint) { setBody(payload) }.body<SolanaFeeObjectRespJson>()
+                httpClient.postRpc<SolanaFeeObjectRespJson>(
+                    url = rpcEndpoint,
+                    method = "getRecentPrioritizationFees",
+                    params = buildJsonArray { addJsonArray { accounts.forEach { add(it) } } },
+                )
+            rpcResp.error?.let {
+                Timber.tag("SolanaApiImp").w("getRecentPrioritizationFees RPC error: %s", it)
+            }
             val nonZeroFees =
                 rpcResp.result
                     ?.map { it.prioritizationFee }
@@ -165,9 +166,11 @@ constructor(
                     ?.sorted()
                     .orEmpty()
             val median = if (nonZeroFees.isEmpty()) fallback else nonZeroFees[nonZeroFees.size / 2]
-            maxOf(median, fallback)
+            maxOf(median, fallback).coerceAtMost(MAX_PRIORITY_FEE_PRICE.toBigInteger())
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Timber.tag("SolanaApiImp").e("Error getting median priority fee: ${e.message}")
+            Timber.tag("SolanaApiImp").e(e, "Error getting median priority fee")
             fallback
         }
     }
@@ -391,5 +394,8 @@ constructor(
         private const val TOKEN_PROGRAM_ID_2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
         private const val ENCODING_SPL_REQUEST_PARAM = "jsonParsed"
         private const val DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION = 165
+        // 100x the floor — caps priority fee at ~0.01 SOL per tx to prevent overpayment
+        // during congestion spikes or compromised RPC proxy
+        private const val MAX_PRIORITY_FEE_PRICE = 100_000_000L
     }
 }
