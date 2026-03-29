@@ -155,8 +155,7 @@ private fun BiometricFastSignBottomSheetContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text =
-                stringResource(R.string.vault_password_biometeric_enable_biometrics_fast_signing),
+            text = stringResource(R.string.vault_password_biometric_enable_biometrics_fast_signing),
             style = Theme.brockmann.headings.subtitle,
             color = Theme.v2.colors.text.primary,
         )

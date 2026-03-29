@@ -22,6 +22,8 @@
     <string name="vault_settings_security_screen_title_switch">Управление безопасностью в сети</string>
     <string name="vault_settings_security_screen_title_content">Вы можете отключить защиту в режиме реального времени, предоставляемую Blockaid.</string>
     <string name="vault_settings_reshare_subtitle">Повторное совместное использование хранилища с новым комитетом</string>
+    <string name="vault_settings_dilithium_keygen_title">Включить QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Сгенерировать ключ для включения сети QBTC</string>
     <string name="vault_settings_delete_title">Удалить</string>
     <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда.</string>
     <string name="vault_settings_security_title">Безопасность в сети</string>
@@ -147,6 +149,7 @@
     <string name="keysign_screen_preparing_vault">Подготовка хранилища…</string>
     <string name="keysign_screen_signing_with_ecdsa">Подписание с использованием ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">Подписание с использованием EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">Подписание с использованием MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Подписание ключа завершено!</string>
     <string name="keysign_screen_error_please_try_again">Ошибка! Пожалуйста, попробуйте снова. %1$s</string>
     <string name="successfully_scanned_barcode">Штрихкод успешно отсканирован: %1$s</string>
@@ -306,7 +309,7 @@
     <string name="vault_details_screen_vault_part">Доля хранилища</string>
     <string name="vault_details_screen_vault_type">Тип хранилища</string>
     <string name="vault_settings_delete_vault_part">Доля хранилища:</string>
-    <string name="vault_password_hint_to_long">Подсказка слишком длинная</string>
+    <string name="vault_password_hint_too_long">Подсказка слишком длинная</string>
     <string name="vault_details_screen_vault_part_desc">Доля %1$s-из-%2$s</string>
     <string name="do_not_remind_me_again">Не напоминай мне больше</string>
     <string name="monthly_backup_reminder_title">Не забудьте сделать резервную копию общих ресурсов хранилища и проверить их полноту.</string>
@@ -414,6 +417,7 @@
     <string name="reshare_step_generating_eddsa">Генерация ключа EdDSA</string>
     <string name="keygen_connecting_with_server">Подключение к серверу…</string>
     <string name="keygen_step_generating_eddsa">Генерация ключа EdDSA</string>
+    <string name="keygen_step_generating_mldsa">Генерация ключа MLDSA</string>
     <string name="keygen_step_generating_chain_keys">Генерация ключей сетей</string>
     <string name="reshare_step_generating_ecdsa">Генерация ключа ECDSA</string>
     <string name="merge_account_doesnt_exist">Выбранный токен не найден для этого адреса</string>
@@ -451,7 +455,7 @@
     <string name="referral_edit_referral">Редактировать приглашение</string>
     <string name="referral_external_linked">Реферальный код успешно привязан</string>
     <string name="referral_external_not_linked">Реферальный код не существует</string>
-    <string name="referral_external_not_failed">Не удалось проверить реферальный код</string>
+    <string name="referral_external_link_failed">Не удалось проверить реферальный код</string>
     <string name="referral_invite_next">Далее</string>
     <string name="referral_code_settings_title">Реферальный код</string>
     <string name="referral_screen_title">Vultisig — Реферал</string>
@@ -608,10 +612,10 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Вы готовы использовать новый стандарт кошелька.</string>
     <string name="vault_detail_vault_info">Информация о хранилище</string>
     <string name="vault_details_keys">Ключи</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Включить быструю биометрическую подпись</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">Включить быструю биометрическую подпись</string>
     <string name="verify_send_send_overview">Отправить обзор</string>
     <string name="verify_swap_swap_overview">Обзор обмена</string>
-    <string name="token_selecton_screen_enable_at_least_one">Включите хотя бы один токен для просмотра балансов и управления позициями.</string>
+    <string name="token_selection_screen_enable_at_least_one">Включите хотя бы один токен для просмотра балансов и управления позициями.</string>
     <string name="transfer_ibc_destination_chain">Сеть назначения</string>
     <string name="tx_done_transaction_details">Детали транзакции</string>
     <string name="vault_confirmation_vault_upgraded">Хранилище обновлено</string>
@@ -734,7 +738,7 @@
     <string name="peer_discovery_waiting_for_devices_action">Ожидание устройств…</string>
     <string name="peer_discovery_devices_n_of_n">Устройства (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Отправлено %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email">Не получили письмо?</string>
+    <string name="vault_backup_screen_donot_receive_email">Не получили письмо?</string>
     <string name="onboarding_desc_page_5_part_2">отдельно в</string>
     <string name="onboarding_desc_page_5_part_3">Другое местоположение</string>
     <string name="scan_qr_code_modal_annotation">Скачайте Vultisig на другие устройства и выберите «Сканировать QR-код».</string>
@@ -839,8 +843,8 @@
     <string name="enable_at_least_one_position">Включите хотя бы одну позицию для просмотра балансов и управления позициями.</string>
     <string name="bandwidth">пропускная способность</string>
     <string name="energy">энергия</string>
-    <string name="bandwidth_dec">Баллы пропускной способности требуются для каждой транзакции на TRON, включая как стандартные отправки токенов, так и взаимодействия со смарт-контрактами. Каждый пользователь TRON получает 600 бесплатных баллов пропускной способности в день, которых хватает примерно на две базовые отправки. Кроме того, вы можете заработать дополнительные баллы пропускной способности, делая ставки TRX и увеличивая свой дневной баланс для поддержки большего количества транзакций. Если у вас достаточно баллов пропускной способности, вы можете отправлять токены, делать ставки TRX или взаимодействовать со смарт-контрактами, не платя TRX в виде комиссий за газ.</string>
-    <string name="energy_dec">Требуется для более сложных действий, таких как взаимодействие со смарт-контрактами (например, свопы или транзакции dApp). В отличие от пропускной способности, энергия не предоставляется бесплатно — вам нужно делать ставки TRX, чтобы заработать энергию. (Более продвинутые пользователи также могут приобретать энергию через механизмы лизинга, такие как JustLend или рынки аренды энергии Tronify). Однако наличие Energy может значительно снизить или даже устранить комиссию за газ при взаимодействии со смарт-контрактами, что делает Energy ценным для тех, кто часто использует приложения TRON dApps.</string>
+    <string name="bandwidth_desc">Баллы пропускной способности требуются для каждой транзакции на TRON, включая как стандартные отправки токенов, так и взаимодействия со смарт-контрактами. Каждый пользователь TRON получает 600 бесплатных баллов пропускной способности в день, которых хватает примерно на две базовые отправки. Кроме того, вы можете заработать дополнительные баллы пропускной способности, делая ставки TRX и увеличивая свой дневной баланс для поддержки большего количества транзакций. Если у вас достаточно баллов пропускной способности, вы можете отправлять токены, делать ставки TRX или взаимодействовать со смарт-контрактами, не платя TRX в виде комиссий за газ.</string>
+    <string name="energy_desc">Требуется для более сложных действий, таких как взаимодействие со смарт-контрактами (например, свопы или транзакции dApp). В отличие от пропускной способности, энергия не предоставляется бесплатно — вам нужно делать ставки TRX, чтобы заработать энергию. (Более продвинутые пользователи также могут приобретать энергию через механизмы лизинга, такие как JustLend или рынки аренды энергии Tronify). Однако наличие Energy может значительно снизить или даже устранить комиссию за газ при взаимодействии со смарт-контрактами, что делает Energy ценным для тех, кто часто использует приложения TRON dApps.</string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">Адрес Узла</string>

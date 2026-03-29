@@ -10,6 +10,8 @@
     <string name="vault_settings_rename_subtitle">Editar el nombre de tu bóveda</string>
     <string name="vault_settings_reshare_title">Recompartir</string>
     <string name="vault_settings_reshare_subtitle">Recompartir bóveda con un nuevo comité</string>
+    <string name="vault_settings_dilithium_keygen_title">Habilitar QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generar clave para habilitar la cadena QBTC</string>
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="swap_form_on_chain">en</string>
     <string name="select_asset_title">Seleccionar activo</string>
@@ -147,6 +149,7 @@
     <string name="keysign_screen_preparing_vault">PREPARANDO BÓVEDA..</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO USANDO CLAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">FIRMANDO USANDO CLAVE EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">FIRMANDO USANDO CLAVE MLDSA…</string>
     <string name="keysign_screen_keysign_finished">¡Keysign terminado!</string>
     <string name="keysign_screen_error_please_try_again">Error! Por favor, inténtalo de nuevo. %1$s</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado con éxito: %1$s</string>
@@ -307,7 +310,7 @@
     <string name="vault_details_screen_vault_part">Compartir de la bóveda</string>
     <string name="vault_details_screen_vault_type">Tipo de bóveda</string>
     <string name="vault_settings_delete_vault_part">Compartir de la bóveda:</string>
-    <string name="vault_password_hint_to_long">La pista es demasiado larga</string>
+    <string name="vault_password_hint_too_long">La pista es demasiado larga</string>
     <string name="vault_details_screen_vault_part_desc">Compartir %1$s-de-%2$s</string>
     <string name="do_not_remind_me_again">No me lo recuerdes otra vez</string>
     <string name="monthly_backup_reminder_title">No olvides hacer una copia de seguridad de tus recursos compartidos de bóveda y verificar que estén completos.</string>
@@ -415,6 +418,7 @@
     <string name="keygen_step_preparing_vault">Preparando la bóveda</string>
     <string name="keygen_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="keygen_step_generating_eddsa">Generación de clave EdDSA</string>
+    <string name="keygen_step_generating_mldsa">Generación de clave MLDSA</string>
     <string name="keygen_step_generating_chain_keys">Generación de claves de cadena</string>
     <string name="keygen_connecting_with_server">Conectando con el servidor…</string>
     <string name="reshare_step_generating_ecdsa">Generación de clave ECDSA</string>
@@ -454,7 +458,7 @@
     <string name="referral_edit_referral">Editar referencia</string>
     <string name="referral_external_linked">Código de referido vinculado con éxito</string>
     <string name="referral_external_not_linked">El código de referido no existe</string>
-    <string name="referral_external_not_failed">Error al verificar el código de referido</string>
+    <string name="referral_external_link_failed">Error al verificar el código de referido</string>
     <string name="referral_invite_next">Siguiente</string>
     <string name="referral_code_settings_title">Código de referido</string>
     <string name="referral_screen_title">Vultisig - Referidos</string>
@@ -611,10 +615,10 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Listo para usar un nuevo estándar de billetera.</string>
     <string name="vault_detail_vault_info">Información de la bóveda</string>
     <string name="vault_details_keys">Claves</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Habilitar la firma rápida biométrica</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">Habilitar la firma rápida biométrica</string>
     <string name="verify_send_send_overview">Enviar resumen</string>
     <string name="verify_swap_swap_overview">Resumen de intercambio</string>
-    <string name="token_selecton_screen_enable_at_least_one">Habilite al menos un token para ver saldos y gestionar posiciones.</string>
+    <string name="token_selection_screen_enable_at_least_one">Habilite al menos un token para ver saldos y gestionar posiciones.</string>
     <string name="transfer_ibc_destination_chain">Cadena de destino</string>
     <string name="tx_done_transaction_details">Detalles de la transacción</string>
     <string name="vault_confirmation_vault_upgraded">Bóveda mejorada</string>
@@ -737,7 +741,7 @@
     <string name="peer_discovery_waiting_for_devices_action">Esperando dispositivos…</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivos (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Enviado a %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email">¿No recibiste un correo?</string>
+    <string name="vault_backup_screen_donot_receive_email">¿No recibiste un correo?</string>
     <string name="onboarding_desc_page_5_part_2">por separado en un</string>
     <string name="onboarding_desc_page_5_part_3">Otra ubicación</string>
     <string name="scan_qr_code_modal_annotation">Descarga Vultisig en tus otros dispositivos y selecciona «Escanear código QR».</string>
@@ -842,8 +846,8 @@
     <string name="enable_at_least_one_position">Habilite al menos una posición para ver saldos y gestionar posiciones.</string>
     <string name="bandwidth">Ancho de banda</string>
     <string name="energy">Energía</string>
-    <string name="bandwidth_dec">Se requieren Puntos de Ancho de Banda para cada transacción en TRON, incluyendo tanto los envíos de tokens estándar como las interacciones con contratos inteligentes. Cada usuario de TRON recibe 600 Puntos de Ancho de Banda gratuitos al día, que pueden cubrir aproximadamente dos envíos básicos. Además, puedes ganar Puntos de Ancho de Banda adicionales al hacer staking de TRX, lo que aumenta tu saldo diario para soportar más transacciones. Si tienes suficientes Puntos de Ancho de Banda, puedes enviar tokens, hacer staking de TRX o interactuar con contratos inteligentes sin pagar TRX en comisiones de gas.</string>
-    <string name="energy_dec">Se requiere para acciones más complejas, como interactuar con contratos inteligentes (por ejemplo, swaps o transacciones de dApps). A diferencia del Ancho de Banda, la Energía no es gratuita; necesitas hacer staking de TRX para obtenerla. (Los usuarios más avanzados también pueden adquirir Energía mediante mecanismos de leasing como JustLend o los mercados de alquiler de Energía de Tronify). Sin embargo, tener Energía puede reducir significativamente o incluso eliminar las comisiones de gas para las interacciones con contratos inteligentes, lo que la hace valiosa para quienes usan dApps de TRON con frecuencia.</string>
+    <string name="bandwidth_desc">Se requieren Puntos de Ancho de Banda para cada transacción en TRON, incluyendo tanto los envíos de tokens estándar como las interacciones con contratos inteligentes. Cada usuario de TRON recibe 600 Puntos de Ancho de Banda gratuitos al día, que pueden cubrir aproximadamente dos envíos básicos. Además, puedes ganar Puntos de Ancho de Banda adicionales al hacer staking de TRX, lo que aumenta tu saldo diario para soportar más transacciones. Si tienes suficientes Puntos de Ancho de Banda, puedes enviar tokens, hacer staking de TRX o interactuar con contratos inteligentes sin pagar TRX en comisiones de gas.</string>
+    <string name="energy_desc">Se requiere para acciones más complejas, como interactuar con contratos inteligentes (por ejemplo, swaps o transacciones de dApps). A diferencia del Ancho de Banda, la Energía no es gratuita; necesitas hacer staking de TRX para obtenerla. (Los usuarios más avanzados también pueden adquirir Energía mediante mecanismos de leasing como JustLend o los mercados de alquiler de Energía de Tronify). Sin embargo, tener Energía puede reducir significativamente o incluso eliminar las comisiones de gas para las interacciones con contratos inteligentes, lo que la hace valiosa para quienes usan dApps de TRON con frecuencia.</string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">Dirección del Nodo</string>

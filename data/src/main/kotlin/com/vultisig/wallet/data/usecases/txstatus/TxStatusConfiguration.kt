@@ -53,6 +53,7 @@ internal class TxStatusConfigurationProviderImpl @Inject constructor() :
             Chain.Bittensor to TxStatusConfiguration(3, 5 * 60),
             Chain.Ripple to TxStatusConfiguration(2, 5 * 60),
             Chain.Tron to TxStatusConfiguration(2, 5 * 60),
+            Chain.Qbtc to TxStatusConfiguration(3, 5 * 60),
         )
 
     override fun supportTxStatus(chain: Chain): Boolean {
