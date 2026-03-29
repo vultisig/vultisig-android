@@ -314,14 +314,9 @@ constructor(
                 tokenList.find { it.chain == Chain.MayaChain && it.isNativeToken }
                     ?: return@supervisorScope
 
-            val cacaoPrice =
-                getCachedPrice(cacaoToken.id, AppCurrency.USD) ?: return@supervisorScope
+            val userCurrency = appCurrencyRepository.currency.first()
+            val cacaoPrice = getCachedPrice(cacaoToken.id, userCurrency) ?: return@supervisorScope
             if (cacaoPrice <= BigDecimal.ZERO) return@supervisorScope
-
-            val tickerUsd = AppCurrency.USD.ticker.lowercase()
-            val tetherPrice =
-                if (currency.equals(tickerUsd, ignoreCase = true)) BigDecimal.ONE
-                else fetchTetherPrice()
 
             val tokenIdToPrices =
                 mayaTokens
@@ -341,9 +336,8 @@ constructor(
                                 balanceAsset.divide(assetDecimals, 8, RoundingMode.HALF_UP)
                             val priceInCacao =
                                 normalizedCacao.divide(normalizedAsset, 8, RoundingMode.HALF_UP)
-                            val priceUsd = priceInCacao * cacaoPrice
 
-                            token.id to mapOf(currency to priceUsd * tetherPrice)
+                            token.id to mapOf(currency to priceInCacao * cacaoPrice)
                         } catch (e: Exception) {
                             Timber.e(e, "Failed to fetch Maya pool price for ${token.ticker}")
                             null
