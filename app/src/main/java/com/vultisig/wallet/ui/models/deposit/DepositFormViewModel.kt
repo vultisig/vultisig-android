@@ -4,7 +4,6 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -85,9 +84,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -302,16 +299,6 @@ constructor(
         }
 
         loadAddress(vaultId, chain)
-
-        if (chain == Chain.MayaChain) {
-            viewModelScope.launch {
-                snapshotFlow { nodeAddressFieldState.text.toString() }
-                    .drop(1)
-                    .distinctUntilChanged()
-                    .debounce(500)
-                    .collect { validateNodeAddress() }
-            }
-        }
 
         address
             .filterNotNull()
@@ -859,6 +846,7 @@ constructor(
 
     fun setNodeAddress(address: String) {
         nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address)
+        validateNodeAddress()
     }
 
     private fun setSlippage(slippage: String) {
