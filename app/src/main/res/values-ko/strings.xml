@@ -9,7 +9,6 @@
     <string name="push_notification_error_token_not_available">알림 토큰을 가져오지 못했습니다</string>
     <string name="push_notification_error_api_failure">알림 등록 업데이트에 실패했습니다</string>
     <plurals name="push_notification_partial_failure">
-        <item quantity="one">%1$d / %2$d 볼트 업데이트됨, %3$d 실패</item>
         <item quantity="other">%1$d / %2$d 볼트 업데이트됨, %3$d 실패</item>
     </plurals>
     <string name="push_notifications_sent">알림이 성공적으로 전송되었습니다</string>
