@@ -752,8 +752,38 @@ constructor(
     }
 
     fun validateNodeAddress() {
-        val errorText = validateDstAddress(nodeAddressFieldState.text.toString())
-        state.update { it.copy(nodeAddressError = errorText) }
+        val nodeAddress = nodeAddressFieldState.text.toString()
+        val errorText = validateDstAddress(nodeAddress)
+        if (errorText != null) {
+            state.update { it.copy(nodeAddressError = errorText) }
+            return
+        }
+        if (chain == Chain.MayaChain && state.value.depositOption == DepositOption.Bond) {
+            viewModelScope.safeLaunch { checkNodeWhitelist(nodeAddress) }
+        } else {
+            state.update { it.copy(nodeAddressError = null) }
+        }
+    }
+
+    private suspend fun checkNodeWhitelist(nodeAddress: String) {
+        try {
+            val userAddress = address.value?.address ?: return
+            val nodeInfo = mayachainBondRepository.getNodeDetails(nodeAddress)
+            val isWhitelisted =
+                nodeInfo.bondProviders.providers.any { it.bondAddress == userAddress }
+            if (!isWhitelisted) {
+                state.update {
+                    it.copy(
+                        nodeAddressError =
+                            UiText.StringResource(R.string.bond_not_whitelisted_error)
+                    )
+                }
+            } else {
+                state.update { it.copy(nodeAddressError = null) }
+            }
+        } catch (_: Exception) {
+            state.update { it.copy(nodeAddressError = null) }
+        }
     }
 
     fun validateTokenAmount() {
@@ -816,6 +846,7 @@ constructor(
 
     fun setNodeAddress(address: String) {
         nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address)
+        validateNodeAddress()
     }
 
     private fun setSlippage(slippage: String) {

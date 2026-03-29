@@ -228,7 +228,9 @@ internal fun BondFormContent(
                 focusManager.clearFocus()
                 onDeposit()
             },
-            state = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
+            state =
+                if (state.isLoading || state.nodeAddressError != null) VsButtonState.Disabled
+                else VsButtonState.Enabled,
             modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(all = 16.dp),
         )
     }
@@ -275,6 +277,12 @@ private fun MayaBondFormContent(
     var isAddressFocused by remember { mutableStateOf(false) }
     var isAssetExpanded by remember { mutableStateOf(initialAssetExpanded) }
     var isBondAssetListOpen by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.nodeAddressError) {
+        if (state.nodeAddressError != null) {
+            isAddressExpanded = true
+        }
+    }
 
     // Address card
     Column(
