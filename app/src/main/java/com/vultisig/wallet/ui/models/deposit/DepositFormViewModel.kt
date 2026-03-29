@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -84,7 +85,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -299,6 +302,16 @@ constructor(
         }
 
         loadAddress(vaultId, chain)
+
+        if (chain == Chain.MayaChain) {
+            viewModelScope.launch {
+                snapshotFlow { nodeAddressFieldState.text.toString() }
+                    .drop(1)
+                    .distinctUntilChanged()
+                    .debounce(500)
+                    .collect { validateNodeAddress() }
+            }
+        }
 
         address
             .filterNotNull()
@@ -752,8 +765,38 @@ constructor(
     }
 
     fun validateNodeAddress() {
-        val errorText = validateDstAddress(nodeAddressFieldState.text.toString())
-        state.update { it.copy(nodeAddressError = errorText) }
+        val nodeAddress = nodeAddressFieldState.text.toString()
+        val errorText = validateDstAddress(nodeAddress)
+        if (errorText != null) {
+            state.update { it.copy(nodeAddressError = errorText) }
+            return
+        }
+        if (chain == Chain.MayaChain && state.value.depositOption == DepositOption.Bond) {
+            viewModelScope.safeLaunch { checkNodeWhitelist(nodeAddress) }
+        } else {
+            state.update { it.copy(nodeAddressError = null) }
+        }
+    }
+
+    private suspend fun checkNodeWhitelist(nodeAddress: String) {
+        try {
+            val userAddress = address.value?.address ?: return
+            val nodeInfo = mayachainBondRepository.getNodeDetails(nodeAddress)
+            val isWhitelisted =
+                nodeInfo.bondProviders.providers.any { it.bondAddress == userAddress }
+            if (!isWhitelisted) {
+                state.update {
+                    it.copy(
+                        nodeAddressError =
+                            UiText.StringResource(R.string.bond_not_whitelisted_error)
+                    )
+                }
+            } else {
+                state.update { it.copy(nodeAddressError = null) }
+            }
+        } catch (_: Exception) {
+            state.update { it.copy(nodeAddressError = null) }
+        }
     }
 
     fun validateTokenAmount() {

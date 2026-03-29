@@ -276,6 +276,12 @@ private fun MayaBondFormContent(
     var isAssetExpanded by remember { mutableStateOf(initialAssetExpanded) }
     var isBondAssetListOpen by remember { mutableStateOf(false) }
 
+    LaunchedEffect(state.nodeAddressError) {
+        if (state.nodeAddressError != null) {
+            isAddressExpanded = true
+        }
+    }
+
     // Address card
     Column(
         modifier =
