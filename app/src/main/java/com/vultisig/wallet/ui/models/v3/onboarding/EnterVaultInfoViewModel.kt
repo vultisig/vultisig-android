@@ -16,7 +16,6 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.KeyImportRepository
-import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CheckServerVaultExistsUseCase
 import com.vultisig.wallet.data.usecases.GenerateUniqueName
@@ -140,7 +139,6 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val isNameLengthValid: IsVaultNameValid,
     private val generateUniqueName: GenerateUniqueName,
-    private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
     private val keyImportRepository: KeyImportRepository,
     private val checkServerVaultExists: CheckServerVaultExistsUseCase,
     @ApplicationContext private val context: Context,
