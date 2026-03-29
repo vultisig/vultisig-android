@@ -317,7 +317,7 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
     ) {
         Image(
             painter = painterResource(id = R.drawable.referral_friend_banner),
-            contentDescription = "Provider Logo",
+            contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.matchParentSize(),
         )
@@ -396,7 +396,7 @@ private fun ReferralRewardsBanner(rewards: String, isLoading: Boolean) {
 fun BoxScope.SetBackgroundBanner(backgroundImageResId: Int) {
     Image(
         painter = painterResource(backgroundImageResId),
-        contentDescription = "Referral Banner",
+        contentDescription = null,
         contentScale = ContentScale.Crop,
         modifier = Modifier.matchParentSize(),
     )
@@ -439,7 +439,7 @@ fun VaultItem(name: String, onVaultClicked: () -> Unit) {
 
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = "click_referral_vault",
+            contentDescription = null,
             tint = Theme.v2.colors.text.primary,
             modifier = Modifier.size(20.dp),
         )
@@ -494,7 +494,7 @@ internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
 
         Image(
             painter = painterResource(id = R.drawable.referral_question),
-            contentDescription = "Empty Logo",
+            contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(38.dp),
         )

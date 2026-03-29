@@ -81,6 +81,7 @@ class SchnorrKeygen(
                     TssAction.KeyImport -> schnorr_keygen_session_output_message(handle, buf)
 
                     TssAction.ReShare -> schnorr_qc_session_output_message(handle, buf)
+                    TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
                 }
             if (result != LIB_OK) {
                 Timber.d("fail to get outbound message: $result")
@@ -109,6 +110,7 @@ class SchnorrKeygen(
 
                     TssAction.ReShare ->
                         schnorr_qc_session_message_receiver(handle, message, idx, bufReceiver)
+                    TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
                 }
             if (receiverResult != LIB_OK) {
                 Timber.d("fail to get receiver message, error: $receiverResult")
@@ -204,6 +206,7 @@ class SchnorrKeygen(
 
                     TssAction.ReShare ->
                         schnorr_qc_session_input_message(handle, decryptedBodySlice, isFinished)
+                    TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
                 }
             if (result != LIB_OK) {
                 Timber.d("fail to apply message to schnorr, $result")
@@ -349,6 +352,7 @@ class SchnorrKeygen(
                 }
 
                 TssAction.ReShare -> error("This method shouldn't be used with $action")
+                TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
             }
 
             processSchnorrOutboundMessage(handler)

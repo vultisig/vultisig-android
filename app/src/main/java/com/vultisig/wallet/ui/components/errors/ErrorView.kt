@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.components.errors
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,10 @@ import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -35,33 +40,43 @@ internal fun ErrorView(
     errorState: ErrorState = ErrorState.WARNING,
     buttonText: String = stringResource(R.string.try_again),
     onButtonClick: () -> Unit,
+    onBack: (() -> Unit)? = null,
 ) {
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .background(Theme.v2.colors.backgrounds.primary)
-                .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        UiSpacer(weight = 1f)
+    Box(modifier = modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            UiSpacer(weight = 1f)
 
-        ErrorWaves(title = title, description = description, errorState = errorState)
+            ErrorWaves(title = title, description = description, errorState = errorState)
 
-        UiSpacer(30.dp)
-        VsButton(
-            variant = VsButtonVariant.Secondary,
-            label = buttonText,
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onButtonClick,
-        )
+            UiSpacer(30.dp)
+            VsButton(
+                variant = VsButtonVariant.Secondary,
+                label = buttonText,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onButtonClick,
+            )
 
-        UiSpacer(weight = 1f)
+            UiSpacer(weight = 1f)
 
-        AppVersionText()
+            AppVersionText()
 
-        UiSpacer(size = 50.dp)
+            UiSpacer(size = 50.dp)
+        }
+
+        if (onBack != null) {
+            VsCircleButton(
+                modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+                onClick = onBack,
+                size = VsCircleButtonSize.Small,
+                type = VsCircleButtonType.Secondary,
+                designType = DesignType.Shined,
+                icon = R.drawable.ic_caret_left,
+            )
+        }
     }
 }
 
@@ -88,7 +103,7 @@ internal fun ErrorWaves(
                             ErrorState.WARNING -> R.drawable.error_warning
                         }
                 ),
-            contentDescription = "Warning",
+            contentDescription = null,
             modifier =
                 Modifier.size(24.dp).drawBehind {
                     drawCircle(

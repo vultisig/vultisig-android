@@ -90,15 +90,9 @@ constructor(
     fun changeEmail() {
         viewModelScope.launch {
             navigator.route(
-                route =
-                    Route.VaultInfo.Email(
-                        name = args.vaultName,
-                        action = args.tssAction,
-                        vaultId = args.vaultId,
-                        password = null,
-                    ),
+                route = Route.EnterVaultInfo(count = 1, tssAction = args.tssAction),
                 opts =
-                    NavigationOptions(popUpToRoute = Route.VaultInfo.Email::class, inclusive = true),
+                    NavigationOptions(popUpToRoute = Route.EnterVaultInfo::class, inclusive = true),
             )
         }
     }

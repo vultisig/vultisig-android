@@ -44,6 +44,8 @@ internal fun KeysignView(
                 stringResource(id = R.string.keysign_screen_signing_with_ecdsa)
             is KeysignState.KeysignEdDSA ->
                 stringResource(id = R.string.keysign_screen_signing_with_eddsa)
+            is KeysignState.KeysignMLDSA ->
+                stringResource(id = R.string.keysign_screen_signing_with_mldsa)
             is KeysignState.KeysignFinished ->
                 stringResource(id = R.string.keysign_screen_keysign_finished)
             is KeysignState.Error ->
@@ -104,7 +106,11 @@ internal fun KeysignView(
             }
 
             is KeysignState.Error -> {
-                KeysignErrorScreen(errorMessage = state.errorMessage, tryAgain = onBack)
+                KeysignErrorScreen(
+                    errorMessage = state.errorMessage,
+                    tryAgain = onBack,
+                    onBack = onBack,
+                )
             }
 
             else -> {

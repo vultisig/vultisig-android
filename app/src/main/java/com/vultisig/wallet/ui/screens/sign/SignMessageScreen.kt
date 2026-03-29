@@ -26,7 +26,6 @@ import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
 import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
 
-@Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
 internal fun SignMessageScreen(
     navController: NavController,

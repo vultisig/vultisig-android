@@ -17,6 +17,8 @@
     <string name="vault_settings_rename_subtitle">Wijzig uw kluisnaam</string>
     <string name="vault_settings_reshare_title">Opnieuw delen</string>
     <string name="vault_settings_reshare_subtitle">Deel de kluis opnieuw met een nieuwe commissie</string>
+    <string name="vault_settings_dilithium_keygen_title">QBTC inschakelen</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Genereer sleutel om de QBTC-blockchain in te schakelen</string>
     <string name="vault_settings_delete_title">Verwijderen</string>
     <string name="vault_settings_delete_subtitle">Verwijder uw kluis permanent.</string>
     <string name="vault_settings_security_title">On-chain beveiliging</string>
@@ -92,8 +94,6 @@
     <string name="send_amount_currency_hint">Voer bedrag in</string>
     <string name="send_continue_button">Doorgaan</string>
     <string name="chain_account_view_swap">WISSELEN</string>
-    <string name="chain_account_view_deposit">STORTEN</string>
-    <string name="chain_account_view_send">VERZENDEN</string>
     <string name="circle_defi_description">Stort je USDC op een Circle-account en verdien rendement. Veilig binnen je Vultisig-kluis.</string>
     <string name="circle_defi_control_info">Fondsen blijven volledig onder controle van je kluis. Circle-accounts zijn zelfbeheerd en rendement wordt gegenereerd via veilige off-chain schatkisten.</string>
     <string name="usdc_deposit_title">USDC-storting</string>
@@ -149,6 +149,7 @@
     <string name="keysign_screen_preparing_vault">Kluis voorbereiden…</string>
     <string name="keysign_screen_signing_with_ecdsa">Ondertekenen met ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">Ondertekenen met EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">Ondertekenen met MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign voltooid!</string>
     <string name="keysign_screen_error_please_try_again">Fout! Probeer het opnieuw. %1$s</string>
     <string name="successfully_scanned_barcode">Barcode succesvol gescand: %1$s</string>
@@ -299,6 +300,8 @@
     <string name="deposit_form_screen_assets">Activa</string>
     <string name="deposit_form_screen_asset_selection">Activaselectie</string>
     <string name="deposit_form_screen_lpunits">LP-eenheden</string>
+    <string name="deposit_form_available_lp_units">Beschikbare LP-eenheden</string>
+    <string name="deposit_form_estimated_bond_value">Geschatte bondwaarde</string>
     <string name="join_keysign_error_wrong_vault_share">Zelfde kluisshare. Verander de share naar sign</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Wijzig kluis</string>
     <string name="utxo_settings_byte_fee_title">Netwerksnelheid (sats/vbyte)</string>
@@ -306,7 +309,7 @@
     <string name="vault_details_screen_vault_part">Kluisgedeelte</string>
     <string name="vault_details_screen_vault_type">Kluistype</string>
     <string name="vault_settings_delete_vault_part">Kluisgedeelte:</string>
-    <string name="vault_password_hint_to_long">De hint is te lang</string>
+    <string name="vault_password_hint_too_long">De hint is te lang</string>
     <string name="vault_details_screen_vault_part_desc">Delen %1$s-van-%2$s</string>
     <string name="do_not_remind_me_again">Herinner me er niet meer aan</string>
     <string name="monthly_backup_reminder_title">Vergeet niet een back-up te maken van uw kluisshares en de volledigheid ervan te verifiëren.</string>
@@ -414,6 +417,7 @@
     <string name="reshare_step_generating_eddsa">EdDSA-sleutel genereren</string>
     <string name="keygen_connecting_with_server">Verbinding met server maken…</string>
     <string name="keygen_step_generating_eddsa">EDDSA-sleutel genereren</string>
+    <string name="keygen_step_generating_mldsa">MLDSA-sleutel genereren</string>
     <string name="keygen_step_generating_chain_keys">Ketensleutels genereren</string>
     <string name="reshare_step_generating_ecdsa">ECDSA-sleutel genereren</string>
     <string name="merge_account_doesnt_exist">Geselecteerde token niet gevonden voor dit adres</string>
@@ -451,7 +455,7 @@
     <string name="referral_edit_referral">Bewerk verwijzing</string>
     <string name="referral_external_linked">Referralcode succesvol gekoppeld</string>
     <string name="referral_external_not_linked">Referralcode bestaat niet</string>
-    <string name="referral_external_not_failed">Controleren van referralcode mislukt</string>
+    <string name="referral_external_link_failed">Controleren van referralcode mislukt</string>
     <string name="referral_invite_next">Volgende</string>
     <string name="referral_code_settings_title">Referralcode</string>
     <string name="referral_screen_title">Vultisig - Verwijzingen</string>
@@ -608,10 +612,10 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Je bent klaar om een ​​nieuwe walletstandaard te gebruiken.</string>
     <string name="vault_detail_vault_info">Kluisinfo</string>
     <string name="vault_details_keys">Sleutels</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Snelle ondertekening met biometrie inschakelen</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">Snelle ondertekening met biometrie inschakelen</string>
     <string name="verify_send_send_overview">Overzicht verzenden</string>
     <string name="verify_swap_swap_overview">Overzicht uitwisselen</string>
-    <string name="token_selecton_screen_enable_at_least_one">Schakel minimaal één token in om saldo\'s te bekijken en posities te beheren.</string>
+    <string name="token_selection_screen_enable_at_least_one">Schakel minimaal één token in om saldo\'s te bekijken en posities te beheren.</string>
     <string name="transfer_ibc_destination_chain">Bestemmingsketen</string>
     <string name="tx_done_transaction_details">Transactiegegevens</string>
     <string name="vault_confirmation_vault_upgraded">Vault geüpgraded</string>
@@ -678,7 +682,6 @@
     <string name="bond_node_state_active">Actief</string>
     <string name="bond_node_state_disabled">Uitgeschakeld</string>
     <string name="bond_node_state_unknown">Onbekend</string>
-    <string name="defi_balance">Saldo</string>
     <string name="vault_ceil_active">Actief</string>
     <string name="fast_vault_password_screen_error">Wachtwoorden komen niet overeen</string>
     <string name="fast_vault_password_screen_next">Volgende</string>
@@ -731,7 +734,7 @@
     <string name="peer_discovery_waiting_for_devices_action">Wachten op apparaten…</string>
     <string name="peer_discovery_devices_n_of_n">Apparaten (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Verzonden naar %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email">Geen email ontvangen?</string>
+    <string name="vault_backup_screen_donot_receive_email">Geen email ontvangen?</string>
     <string name="onboarding_desc_page_5_part_2">Afzonderlijk in een</string>
     <string name="onboarding_desc_page_5_part_3">Andere locatie</string>
     <string name="scan_qr_code_modal_annotation">Download Vultisig op je andere apparaat(en) en selecteer \'QR-code scannen\'</string>
@@ -836,8 +839,8 @@
     <string name="enable_at_least_one_position">Schakel ten minste één positie in om saldi te bekijken en posities te beheren.</string>
     <string name="bandwidth">Bandbreedte</string>
     <string name="energy">Energie</string>
-    <string name="bandwidth_dec">Bandbreedtepunten zijn vereist voor elke transactie op TRON, inclusief zowel standaard tokenverzendingen als interacties met smart contracts. Elke TRON-gebruiker ontvangt 600 gratis bandbreedtepunten per dag, goed voor ongeveer twee basisverzendingen. Daarnaast kunt u extra bandbreedtepunten verdienen door TRX te staken, waardoor uw dagelijkse saldo toeneemt en u meer transacties kunt ondersteunen. Als u voldoende bandbreedtepunten heeft, kunt u tokens verzenden, TRX staken of met smart contracts werken zonder TRX aan gaskosten te betalen.</string>
-    <string name="energy_dec">Vereist voor complexere acties, zoals interactie met smart contracts (bijv. swaps of dApp-transacties). In tegenstelling tot bandbreedte wordt energie niet gratis verstrekt: u moet TRX staken om energie te verdienen. (Meer gevorderde gebruikers kunnen ook energie verkrijgen via leasemechanismen zoals JustLend of de Energy Rental Markets van Tronify). Met Energy kunt u de gaskosten voor interacties met slimme contracten echter aanzienlijk verlagen of zelfs elimineren. Dit maakt Energy waardevol voor mensen die regelmatig TRON dApps gebruiken.</string>
+    <string name="bandwidth_desc">Bandbreedtepunten zijn vereist voor elke transactie op TRON, inclusief zowel standaard tokenverzendingen als interacties met smart contracts. Elke TRON-gebruiker ontvangt 600 gratis bandbreedtepunten per dag, goed voor ongeveer twee basisverzendingen. Daarnaast kunt u extra bandbreedtepunten verdienen door TRX te staken, waardoor uw dagelijkse saldo toeneemt en u meer transacties kunt ondersteunen. Als u voldoende bandbreedtepunten heeft, kunt u tokens verzenden, TRX staken of met smart contracts werken zonder TRX aan gaskosten te betalen.</string>
+    <string name="energy_desc">Vereist voor complexere acties, zoals interactie met smart contracts (bijv. swaps of dApp-transacties). In tegenstelling tot bandbreedte wordt energie niet gratis verstrekt: u moet TRX staken om energie te verdienen. (Meer gevorderde gebruikers kunnen ook energie verkrijgen via leasemechanismen zoals JustLend of de Energy Rental Markets van Tronify). Met Energy kunt u de gaskosten voor interacties met slimme contracten echter aanzienlijk verlagen of zelfs elimineren. Dit maakt Energy waardevol voor mensen die regelmatig TRON dApps gebruiken.</string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">Node-adres</string>
@@ -1075,9 +1078,6 @@
     <string name="staked_ytcy_header">Gestaked yTCY</string>
     <string name="staked_yrune_header">Gestaked yRUNE</string>
     <string name="compounded_tcy_header">Samengesteld TCY</string>
-    <string name="native_asset">Native</string>
-    <string name="invalid_integer_error">Ongeldig geheel getal</string>
-    <string name="empty_lps_field">Leeg LP-eenheden-veld</string>
 
     <string name="transaction_failed">Transactie mislukt</string>
     <string name="vault_detail_signer">Ondertekenaar %1$d</string>

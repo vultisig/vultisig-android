@@ -70,7 +70,7 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
         val isNextAvailable = hint.isNotEmpty()
 
         val errorMessage =
-            if (!isHintValid(hint)) UiText.StringResource(R.string.vault_password_hint_to_long)
+            if (!isHintValid(hint)) UiText.StringResource(R.string.vault_password_hint_too_long)
             else null
 
         state.update { it.copy(isNextAvailable = isNextAvailable, errorMessage = errorMessage) }

@@ -140,13 +140,15 @@ internal fun ChainTokensScreen(
                         type = VsCircleButtonType.Secondary,
                         designType = DesignType.Shined,
                     )
-                    VsCircleButton(
-                        onClick = { uriHandler.openUri(uiModel.explorerURL) },
-                        size = VsCircleButtonSize.Small,
-                        icon = R.drawable.explor,
-                        type = VsCircleButtonType.Secondary,
-                        designType = DesignType.Shined,
-                    )
+                    if (uiModel.explorerURL.isNotEmpty()) {
+                        VsCircleButton(
+                            onClick = { uriHandler.openUri(uiModel.explorerURL) },
+                            size = VsCircleButtonSize.Small,
+                            icon = R.drawable.explor,
+                            type = VsCircleButtonType.Secondary,
+                            designType = DesignType.Shined,
+                        )
+                    }
                 }
 
                 UiSpacer(size = 10.dp)

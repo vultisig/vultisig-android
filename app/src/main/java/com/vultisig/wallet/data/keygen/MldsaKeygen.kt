@@ -231,12 +231,12 @@ class MldsaKeygen(
                                     Numeric.hexStringToByteArray(encryptionKeyHex),
                                 )
                             ),
-                        messageId = "mldsa",
+                        messageId = null,
                     )
                 } else {
                     keygenSetupMsg =
                         sessionApi
-                            .getSetupMessage(mediatorURL, sessionID, "mldsa")
+                            .getSetupMessage(mediatorURL, sessionID, null)
                             .let {
                                 encryption.decrypt(
                                     Base64.decode(it),

@@ -148,7 +148,7 @@ fun ResourceCard(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.circleinfo),
-                            contentDescription = "info",
+                            contentDescription = null,
                             tint = colors.text.tertiary,
                         )
                     }
@@ -165,7 +165,7 @@ fun ResourceCard(
                 ) {
                     Image(
                         painter = painterResource(state.icon),
-                        contentDescription = "${state.title} icon",
+                        contentDescription = null,
                         modifier = Modifier.size(16.dp),
                         contentScale = ContentScale.Fit,
                     )
@@ -264,7 +264,7 @@ fun BandwidthEnergyContent() {
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.tron_mono),
-                            contentDescription = "Tron Logo",
+                            contentDescription = null,
                             modifier = Modifier.size(20.dp),
                             tint = colors.neutrals.n50,
                         )
@@ -294,7 +294,7 @@ fun BandwidthEnergyContent() {
 
                 BandwidthEnergyItem(
                     title = R.string.bandwidth,
-                    description = R.string.bandwidth_dec,
+                    description = R.string.bandwidth_desc,
                     accentColor = colors.alerts.success,
                     containerBg = colors.backgrounds.surface4,
                     icon = R.drawable.bandwidth,
@@ -305,7 +305,7 @@ fun BandwidthEnergyContent() {
 
                 BandwidthEnergyItem(
                     title = R.string.energy,
-                    description = R.string.energy_dec,
+                    description = R.string.energy_desc,
                     accentColor = colors.alerts.warning,
                     containerBg = colors.backgrounds.surface3,
                     icon = R.drawable.energy,

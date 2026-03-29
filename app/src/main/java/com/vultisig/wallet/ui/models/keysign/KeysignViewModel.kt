@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.db.models.TransactionStatus.BROADCASTED
 import com.vultisig.wallet.data.db.models.TransactionType
 import com.vultisig.wallet.data.keygen.DKLSKeysign
+import com.vultisig.wallet.data.keygen.MldsaKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CommonTransactionHistoryData
@@ -85,6 +86,8 @@ internal sealed class KeysignState {
     data object KeysignECDSA : KeysignState()
 
     data object KeysignEdDSA : KeysignState()
+
+    data object KeysignMLDSA : KeysignState()
 
     data class KeysignFinished(val transactionStatus: TransactionStatus) : KeysignState()
 
@@ -329,6 +332,38 @@ constructor(
                         error("Failed to sign transaction, signatures empty")
                     }
                 }
+
+                TssKeyType.MLDSA -> {
+                    currentState.value = KeysignState.KeysignMLDSA
+
+                    Timber.d(
+                        "MLDSA keysign: pubKeyMLDSA=%s..., keyshares=%s, isInitiating=%b",
+                        vault.pubKeyMLDSA.take(20),
+                        vault.keyshares.map { it.pubKey.take(20) },
+                        isInitiatingDevice,
+                    )
+
+                    val mldsa =
+                        MldsaKeysign(
+                            keysignCommittee = keysignCommittee,
+                            mediatorURL = serverUrl,
+                            sessionID = sessionId,
+                            messageToSign = messagesToSign,
+                            vault = vault,
+                            encryptionKeyHex = encryptionKeyHex,
+                            isInitiateDevice = isInitiatingDevice,
+                            sessionApi = sessionApi,
+                            encryption = encryption,
+                        )
+
+                    mldsa.keysignWithRetry()
+
+                    this.signatures += mldsa.signatures
+
+                    if (signatures.isEmpty()) {
+                        error("Failed to sign transaction, signatures empty")
+                    }
+                }
             }
 
             Timber.d("All messages signed, broadcasting transaction")
@@ -356,7 +391,6 @@ constructor(
         return flag
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun signAndBroadcast() {
         Timber.d("Start to SignAndBroadcast")
         currentState.value = KeysignState.CreatingInstance
@@ -374,13 +408,14 @@ constructor(
                     encryption,
                     isEncryptionGcm,
                 )
-            tssInstance =
+            val tssService =
                 Tss.newService(tssMessenger, localStateAccessor, false)
                     ?: error("Failed to create TSS instance")
+            tssInstance = tssService
 
             messagesToSign.forEach { message ->
                 Timber.d("signing message: $message")
-                signMessageWithRetry(tssInstance!!, message, 1)
+                signMessageWithRetry(tssService, message, 1)
             }
 
             Timber.d("All messages signed, broadcasting transaction")
@@ -431,7 +466,7 @@ constructor(
                             hexEncryptionKey = encryptionKeyHex,
                             isEncryptionGcm = isEncryptionGcm,
                             messageId = msgHash,
-                            service = tssInstance!!,
+                            service = service,
                         )
                         .collect()
                 }
@@ -456,6 +491,10 @@ constructor(
                         keysignReq.pubKey = vault.pubKeyEDDSA
                         currentState.value = KeysignState.KeysignEdDSA
                         service.keysignEdDSA(keysignReq)
+                    }
+
+                    TssKeyType.MLDSA -> {
+                        error("MLDSA is not supported in legacy TSS signing")
                     }
                 }
             if (keysignResp.r.isNullOrEmpty() || keysignResp.s.isNullOrEmpty()) {

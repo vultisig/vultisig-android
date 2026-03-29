@@ -10,6 +10,8 @@
     <string name="vault_settings_rename_subtitle">Editar o nome do seu cofre</string>
     <string name="vault_settings_reshare_title">Recompartilhar</string>
     <string name="vault_settings_reshare_subtitle">Recompartilhar cofre com um novo comitê</string>
+    <string name="vault_settings_dilithium_keygen_title">Ativar QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Gerar chave para ativar a blockchain QBTC</string>
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_security_title">Segurança On-chain</string>
     <string name="vault_settings_security_subtitle">Gerencie sua segurança on-chain</string>
@@ -83,8 +85,6 @@
     <string name="send_amount_currency_hint">Inserir Quantidade</string>
     <string name="send_continue_button">Continuar</string>
     <string name="chain_account_view_swap">TROCAR</string>
-    <string name="chain_account_view_deposit">DEPOSITAR</string>
-    <string name="chain_account_view_send">ENVIAR</string>
     <string name="circle_defi_description">Deposite seu USDC em uma conta Circle e obtenha rendimento. Com segurança dentro do seu cofre Vultisig.</string>
     <string name="circle_defi_control_info">Os fundos permanecem totalmente sob o controle do seu cofre. As contas Circle são autocustodiais e o rendimento é gerado através de tesourarias seguras fora da cadeia.</string>
     <string name="usdc_deposit_title">Depósito USDC</string>
@@ -126,6 +126,7 @@
     <string name="keysign_screen_preparing_vault">PREPARANDO COFRE…</string>
     <string name="keysign_screen_signing_with_ecdsa">ASSINANDO USANDO CHAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">ASSINANDO USANDO CHAVE EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">ASSINANDO USANDO CHAVE MLDSA…</string>
     <string name="vault_settings_delete_vault_caution1">Estou ciente de que o cofre será excluído permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Estou ciente de que posso perder fundos</string>
     <string name="vault_settings_delete_vault_caution3">Fiz um backup do cofre</string>
@@ -300,6 +301,8 @@
     <string name="deposit_form_screen_assets">Ativo</string>
     <string name="deposit_form_screen_asset_selection">Seleção de ativos</string>
     <string name="deposit_form_screen_lpunits">Unidades LP</string>
+    <string name="deposit_form_available_lp_units">Unidades LP disponíveis</string>
+    <string name="deposit_form_estimated_bond_value">Valor estimado do bond</string>
     <string name="join_keysign_error_wrong_vault_share">A mesma partilha do cofre. Por favor, altere a partilha para assinar</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Alterar cofre</string>
     <string name="utxo_settings_byte_fee_title">Taxa de rede (sats/vbyte)</string>
@@ -307,7 +310,7 @@
     <string name="vault_details_screen_vault_part">Compartilhar do cofre</string>
     <string name="vault_details_screen_vault_type">Tipo de cofre</string>
     <string name="vault_settings_delete_vault_part">Compartilhar do cofre:</string>
-    <string name="vault_password_hint_to_long">A dica é demasiado longa</string>
+    <string name="vault_password_hint_too_long">A dica é demasiado longa</string>
     <string name="vault_details_screen_vault_part_desc">Compartilhar %1$s-de-%2$s</string>
     <string name="do_not_remind_me_again">Não me lembre outra vez</string>
     <string name="monthly_backup_reminder_title">Não se esqueça de fazer uma cópia de segurança das partilhas do cofre e verificar se estão completas.</string>
@@ -415,6 +418,7 @@
     <string name="reshare_step_generating_eddsa">Gerando chave EdDSA</string>
     <string name="keygen_connecting_with_server">A ligar ao servidor…</string>
     <string name="keygen_step_generating_eddsa">Gerando chave EDDSA</string>
+    <string name="keygen_step_generating_mldsa">Gerando chave MLDSA</string>
     <string name="keygen_step_generating_chain_keys">Gerando chaves de cadeia</string>
     <string name="reshare_step_generating_ecdsa">Gerando chave ECDSA</string>
     <string name="merge_account_doesnt_exist">O token selecionado não foi encontrado para este endereço</string>
@@ -452,7 +456,7 @@
     <string name="referral_edit_referral">Editar referência</string>
     <string name="referral_external_linked">Código de referência vinculado com sucesso</string>
     <string name="referral_external_not_linked">O código de referência não existe</string>
-    <string name="referral_external_not_failed">Falha ao verificar o código de referência</string>
+    <string name="referral_external_link_failed">Falha ao verificar o código de referência</string>
     <string name="referral_invite_next">Próximo</string>
     <string name="referral_code_settings_title">Código de referência</string>
     <string name="referral_screen_title">Vultisig - Indicações</string>
@@ -610,10 +614,10 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Está pronto para usar um novo padrão de carteira.</string>
     <string name="vault_detail_vault_info">Informações do Cofre</string>
     <string name="vault_details_keys">Chaves</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Ativar Assinatura Rápida por Biometria</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">Ativar Assinatura Rápida por Biometria</string>
     <string name="verify_send_send_overview">Enviar visão geral</string>
     <string name="verify_swap_swap_overview">Visão geral da troca</string>
-    <string name="token_selecton_screen_enable_at_least_one">Ative pelo menos um token para visualizar saldos e gerir posições.</string>
+    <string name="token_selection_screen_enable_at_least_one">Ative pelo menos um token para visualizar saldos e gerir posições.</string>
     <string name="transfer_ibc_destination_chain">Cadeia de Destino</string>
     <string name="tx_done_transaction_details">Detalhes da Transação</string>
     <string name="vault_confirmation_vault_upgraded">Cofre atualizado</string>
@@ -680,7 +684,6 @@
     <string name="bond_node_state_active">Ativo</string>
     <string name="bond_node_state_disabled">Desabilitado</string>
     <string name="bond_node_state_unknown">Desconhecido</string>
-    <string name="defi_balance">Saldo</string>
     <string name="vault_ceil_active">Ativo</string>
     <string name="fast_vault_password_screen_error">As palavras‑passe não coincidem</string>
     <string name="fast_vault_password_screen_next">Próximo</string>
@@ -733,7 +736,7 @@
     <string name="peer_discovery_waiting_for_devices_action">Aguarda dispositivos…</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivos (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Enviado para %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email">Não recebeu um email?</string>
+    <string name="vault_backup_screen_donot_receive_email">Não recebeu um email?</string>
     <string name="onboarding_desc_page_5_part_2">separadamente num</string>
     <string name="onboarding_desc_page_5_part_3">Local diferente</string>
     <string name="scan_qr_code_modal_annotation">Transfira o Vultisig para os seus outros dispositivos e selecione \'Escanear código QR\'</string>
@@ -838,8 +841,8 @@
     <string name="enable_at_least_one_position">Ative pelo menos uma posição para visualizar saldos e gerenciar posições.</string>
     <string name="bandwidth">Largura de banda</string>
     <string name="energy">Energia</string>
-    <string name="bandwidth_dec">Os Pontos de Largura de Banda (Bandwidth Points) são necessários para todas as transações na TRON, incluindo envios de tokens padrão e interações com contratos inteligentes. Cada utilizador da TRON recebe 600 Pontos de Largura de Banda gratuitos por dia, o que pode cobrir aproximadamente dois envios básicos. Além disso, pode ganhar Pontos de Largura de Banda extra ao fazer staking de TRX, aumentando o seu saldo diário para suportar mais transações. Se tiver Pontos de Largura de Banda suficientes, pode enviar tokens, fazer staking de TRX ou interagir com contratos inteligentes sem pagar TRX em taxas de gás.</string>
-    <string name="energy_dec">A Energia (Energy) é necessária para ações mais complexas, como interagir com contratos inteligentes (por exemplo, swaps ou transações de dApps). Ao contrário da Largura de Banda, a Energia não é gratuita — é necessário fazer staking de TRX para ganhar Energia. (Os utilizadores mais avançados também podem adquirir Energia através de mecanismos de leasing, como o JustLend ou os mercados de aluguer de Energia da Tronify). No entanto, ter Energia pode reduzir significativamente ou mesmo eliminar as taxas de gás para interações com contratos inteligentes, tornando-a valiosa para aqueles que utilizam dApps da TRON com frequência.</string>
+    <string name="bandwidth_desc">Os Pontos de Largura de Banda (Bandwidth Points) são necessários para todas as transações na TRON, incluindo envios de tokens padrão e interações com contratos inteligentes. Cada utilizador da TRON recebe 600 Pontos de Largura de Banda gratuitos por dia, o que pode cobrir aproximadamente dois envios básicos. Além disso, pode ganhar Pontos de Largura de Banda extra ao fazer staking de TRX, aumentando o seu saldo diário para suportar mais transações. Se tiver Pontos de Largura de Banda suficientes, pode enviar tokens, fazer staking de TRX ou interagir com contratos inteligentes sem pagar TRX em taxas de gás.</string>
+    <string name="energy_desc">A Energia (Energy) é necessária para ações mais complexas, como interagir com contratos inteligentes (por exemplo, swaps ou transações de dApps). Ao contrário da Largura de Banda, a Energia não é gratuita — é necessário fazer staking de TRX para ganhar Energia. (Os utilizadores mais avançados também podem adquirir Energia através de mecanismos de leasing, como o JustLend ou os mercados de aluguer de Energia da Tronify). No entanto, ter Energia pode reduzir significativamente ou mesmo eliminar as taxas de gás para interações com contratos inteligentes, tornando-a valiosa para aqueles que utilizam dApps da TRON com frequência.</string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">Endereço do Nó</string>
@@ -1079,9 +1082,6 @@
     <string name="staked_ytcy_header">Staking yTCY</string>
     <string name="staked_yrune_header">Staking yRUNE</string>
     <string name="compounded_tcy_header">Composto TCY</string>
-    <string name="native_asset">Nativo</string>
-    <string name="invalid_integer_error">Quantidade inteira inválida</string>
-    <string name="empty_lps_field">Campo de Unidades LP vazio</string>
 
     <string name="transaction_failed">Transação falhada</string>
     <string name="vault_detail_signer">Signatário %1$d</string>

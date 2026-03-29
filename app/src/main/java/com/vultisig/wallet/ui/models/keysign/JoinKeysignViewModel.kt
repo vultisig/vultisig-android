@@ -34,7 +34,7 @@ import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.getSwapProviderId
-import com.vultisig.wallet.data.models.isSecuredAsset
+import com.vultisig.wallet.data.models.isSecuredAssetEligible
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -793,7 +793,7 @@ constructor(
                         is BlockChainSpecific.THORChain -> specific.isDeposit
                         else -> {
                             val memoUpper = payload.memo?.uppercase()
-                            payload.coin.isSecuredAsset() &&
+                            payload.coin.isSecuredAssetEligible() &&
                                 (memoUpper?.contains("SECURE+:") == true)
                         }
                     }
@@ -1224,7 +1224,6 @@ constructor(
             }
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun checkKeygenStarted(): Boolean {
         try {
             this._keysignCommittee = sessionApi.checkCommittee(_serverAddress, _sessionID)
@@ -1233,15 +1232,18 @@ constructor(
             if (this._keysignCommittee.contains(_localPartyID)) {
                 when {
                     _keysignPayload != null -> {
+                        val payload = _keysignPayload ?: error("keysignPayload unexpectedly null")
                         messagesToSign =
                             SigningHelper.getKeysignMessages(
-                                payload = _keysignPayload!!,
+                                payload = payload,
                                 vault = _currentVault,
                             )
                     }
 
                     customMessagePayload != null -> {
-                        messagesToSign = SigningHelper.getKeysignMessages(customMessagePayload!!)
+                        val payload =
+                            customMessagePayload ?: error("customMessagePayload unexpectedly null")
+                        messagesToSign = SigningHelper.getKeysignMessages(payload)
                     }
 
                     else -> {

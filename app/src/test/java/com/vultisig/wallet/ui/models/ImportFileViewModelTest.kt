@@ -9,7 +9,9 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
@@ -46,6 +48,8 @@ internal class ImportFileViewModelTest {
     private lateinit var saveVault: SaveVaultUseCase
     private lateinit var parseVaultFromString: ParseVaultFromStringUseCase
     private lateinit var discoverToken: DiscoverTokenUseCase
+    private lateinit var vaultRepository: VaultRepository
+    private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
 
     @BeforeEach
     fun setUp() {
@@ -58,6 +62,8 @@ internal class ImportFileViewModelTest {
         saveVault = mockk(relaxed = true)
         parseVaultFromString = mockk(relaxed = true)
         discoverToken = mockk(relaxed = true)
+        vaultRepository = mockk(relaxed = true)
+        chainAccountAddressRepository = mockk(relaxed = true)
     }
 
     @AfterEach
@@ -81,6 +87,8 @@ internal class ImportFileViewModelTest {
                 saveVault = saveVault,
                 parseVaultFromString = parseVaultFromString,
                 discoverToken = discoverToken,
+                vaultRepository = vaultRepository,
+                chainAccountAddressRepository = chainAccountAddressRepository,
             )
         vm.uiModel.value =
             ImportFileState(fileName = fileName, fileContent = fileContent, isZip = false)

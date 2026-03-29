@@ -108,6 +108,12 @@ For keygen/keysign testing with multiple emulators:
 - Minimize recomposition by using stable parameters
 - Use `@Composable` naming convention (PascalCase)
 
+### Code Style
+- Never use `// region` / `// endregion` comments — they are IDE noise and not idiomatic Kotlin
+- Use Timber format specifiers (`%s`, `%d`) instead of string templates in log calls
+- Use `_` for unused catch variables: `catch (_: Exception)`
+- Use `require`/`check`/`error` for preconditions, not raw exceptions
+
 ### Design & Figma Workflow
 
 **Figma source of truth**: https://www.figma.com/design/puB2fsVpPrBx3Sup7gaa3v/Vultisig-App

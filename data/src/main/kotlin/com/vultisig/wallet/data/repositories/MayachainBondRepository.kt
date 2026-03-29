@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.MayaLpPoolStats
+import com.vultisig.wallet.data.api.MayaMemberDetails
 import com.vultisig.wallet.data.api.MayaMidgardHealth
 import com.vultisig.wallet.data.api.MayaMidgardNetworkData
 import com.vultisig.wallet.data.api.MayaNodeInfo
@@ -9,6 +11,12 @@ import com.vultisig.wallet.data.utils.SimpleCache
 import javax.inject.Inject
 import javax.inject.Singleton
 import timber.log.Timber
+
+data class LpBondablePool(
+    val availableUnits: String,
+    val totalPoolLpUnits: Long,
+    val poolCacaoDepth: Long,
+)
 
 interface MayachainBondRepository {
     suspend fun getAllNodes(): List<MayaNodeInfo>
@@ -22,6 +30,14 @@ interface MayachainBondRepository {
     suspend fun getMayaNodePools(): List<MayaNodePool>
 
     suspend fun getBondableAssets(): List<String>
+
+    suspend fun getLpBondableAssets(address: String): List<String>
+
+    suspend fun getLpBondableAssetsWithUnits(address: String): Map<String, LpBondablePool>
+
+    suspend fun getMemberDetails(address: String): MayaMemberDetails
+
+    suspend fun getLpPoolStats(): List<MayaLpPoolStats>
 
     suspend fun clearCache()
 }
@@ -94,6 +110,77 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
             getMayaNodePools().filter { it.bondable }.map { it.asset }
         } catch (e: Exception) {
             Timber.e(e, "Error fetching bondable Maya assets")
+            throw e
+        }
+    }
+
+    override suspend fun getLpBondableAssets(address: String): List<String> {
+        return try {
+            val bondableAssets = getBondableAssets().toSet()
+            val lpPools = mayaChainApi.getMemberDetails(address).pools.map { it.pool }.toSet()
+            bondableAssets.intersect(lpPools).toList()
+        } catch (e: Exception) {
+            Timber.e(e, "Error fetching LP bondable assets for address: $address")
+            throw e
+        }
+    }
+
+    override suspend fun getLpBondableAssetsWithUnits(
+        address: String
+    ): Map<String, LpBondablePool> {
+        return try {
+            val bondablePools = getMayaNodePools().filter { it.bondable }.associateBy { it.asset }
+            val memberPools =
+                mayaChainApi
+                    .getMemberDetails(address)
+                    .pools
+                    .filter { it.pool in bondablePools }
+                    .associate { it.pool to (it.liquidityUnits.toLongOrNull() ?: 0L) }
+            if (memberPools.isEmpty()) return emptyMap()
+
+            val bondedByPool = mutableMapOf<String, Long>()
+            for (node in getAllNodes()) {
+                for (provider in node.bondProviders.providers) {
+                    if (provider.bondAddress == address) {
+                        for ((pool, units) in provider.pools) {
+                            bondedByPool[pool] =
+                                (bondedByPool[pool] ?: 0L) + (units.toLongOrNull() ?: 0L)
+                        }
+                    }
+                }
+            }
+
+            memberPools
+                .mapValues { (pool, total) -> maxOf(0L, total - (bondedByPool[pool] ?: 0L)) }
+                .filter { (_, available) -> available > 0L }
+                .mapValues { (asset, available) ->
+                    val nodePool = bondablePools[asset]
+                    LpBondablePool(
+                        availableUnits = available.toString(),
+                        totalPoolLpUnits = nodePool?.lpUnits?.toLongOrNull() ?: 0L,
+                        poolCacaoDepth = nodePool?.balanceCacao?.toLongOrNull() ?: 0L,
+                    )
+                }
+        } catch (e: Exception) {
+            Timber.e(e, "Error fetching LP bondable assets with units for address: $address")
+            throw e
+        }
+    }
+
+    override suspend fun getMemberDetails(address: String): MayaMemberDetails {
+        return try {
+            mayaChainApi.getMemberDetails(address)
+        } catch (e: Exception) {
+            Timber.e(e, "Error fetching Maya member details for: $address")
+            throw e
+        }
+    }
+
+    override suspend fun getLpPoolStats(): List<MayaLpPoolStats> {
+        return try {
+            mayaChainApi.getLpPoolStats()
+        } catch (e: Exception) {
+            Timber.e(e, "Error fetching Maya LP pool stats")
             throw e
         }
     }

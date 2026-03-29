@@ -10,7 +10,6 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
-import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -26,8 +25,6 @@ internal data class VaultBackupOnboardingUiModel(
 
 sealed interface VaultBackupOnboardingEvent {
     object Next : VaultBackupOnboardingEvent
-
-    object Back : VaultBackupOnboardingEvent
 }
 
 data class VaultBackupOnboardingTip(val title: UiText, val description: UiText, val logo: Int)
@@ -72,7 +69,6 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
 
     fun onEvent(event: VaultBackupOnboardingEvent) {
         when (event) {
-            VaultBackupOnboardingEvent.Back -> back()
             VaultBackupOnboardingEvent.Next -> next()
         }
     }
@@ -105,10 +101,6 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
                 }
             }
         }
-    }
-
-    private fun back() {
-        viewModelScope.launch { navigator.back() }
     }
 
     companion object {
