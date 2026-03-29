@@ -233,14 +233,15 @@ private fun PushNotificationError.toStringRes(): Int =
         is PushNotificationError.TokenNotAvailable ->
             R.string.push_notification_error_token_not_available
         is PushNotificationError.ApiFailure -> R.string.push_notification_error_api_failure
-        is PushNotificationError.PartialFailure -> R.string.push_notification_partial_failure
+        is PushNotificationError.PartialFailure -> R.string.push_notification_error_api_failure
     }
 
 fun pushNotificationErrorMessage(e: Throwable, context: Context): String {
     val err = e as? PushNotificationError
     return if (err is PushNotificationError.PartialFailure) {
-        context.getString(
-            R.string.push_notification_partial_failure,
+        context.resources.getQuantityString(
+            R.plurals.push_notification_partial_failure,
+            err.failureCount,
             err.successCount,
             err.successCount + err.failureCount,
             err.failureCount,

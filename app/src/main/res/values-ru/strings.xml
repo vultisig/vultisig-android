@@ -346,7 +346,12 @@
     <string name="push_notification_error_vault_not_supported">Хранилище не поддерживает уведомления</string>
     <string name="push_notification_error_token_not_available">Не удалось получить токен уведомления</string>
     <string name="push_notification_error_api_failure">Не удалось обновить регистрацию уведомлений</string>
-    <string name="push_notification_partial_failure">Обновлено %1$d из %2$d хранилищ, %3$d не удалось</string>
+    <plurals name="push_notification_partial_failure">
+        <item quantity="one">Обновлено %1$d из %2$d хранилищ, %3$d не удалось</item>
+        <item quantity="few">Обновлено %1$d из %2$d хранилищ, %3$d не удалось</item>
+        <item quantity="many">Обновлено %1$d из %2$d хранилищ, %3$d не удалось</item>
+        <item quantity="other">Обновлено %1$d из %2$d хранилищ, %3$d не удалось</item>
+    </plurals>
     <string name="push_notifications_sent">Уведомление успешно отправлено</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Получайте уведомления, когда требуется ваша подпись или устройство запрашивает доступ.</string>
     <string name="keysign_notification_channel_name">Запросы на подписание</string>
@@ -557,7 +562,12 @@
     <string name="backup_select_vaults_subtitle">Выберите, нужно ли создавать резервную копию только этого хранилища или всех хранилищ в вашем приложении.</string>
     <string name="backup_this_vault_only">Только это хранилище</string>
     <string name="backup_all_vaults">Все хранилища</string>
-    <string name="more">Ещё +%1$d</string>
+    <plurals name="more">
+        <item quantity="one">Ещё +%1$d</item>
+        <item quantity="few">Ещё +%1$d</item>
+        <item quantity="many">Ещё +%1$d</item>
+        <item quantity="other">Ещё +%1$d</item>
+    </plurals>
     <string name="backup_choose_method_title">Выберите способ резервного копирования</string>
     <string name="backup_device_desc">Сохраните общий ресурс хранилища этого устройства.</string>
     <string name="backup_device_title">Резервное копирование устройства</string>
@@ -643,7 +653,12 @@
     <string name="referral_create_status">Статус</string>
     <string name="referral_create_unknown">Неизвестно</string>
     <string name="referral_code_cannot_be_empty">Реферальный код не может быть пустым</string>
-    <string name="referral_code_can_be_up_to_characters">Реферальный код может содержать до %1$d символов</string>
+    <plurals name="referral_code_can_be_up_to_characters">
+        <item quantity="one">Реферальный код может содержать до %1$d символов</item>
+        <item quantity="few">Реферальный код может содержать до %1$d символов</item>
+        <item quantity="many">Реферальный код может содержать до %1$d символов</item>
+        <item quantity="other">Реферальный код может содержать до %1$d символов</item>
+    </plurals>
     <string name="key_gen_discovery_no_connection_available">Нет доступного соединения</string>
     <string name="key_gen_discovery_enable_wifi">Включите Wi-Fi или мобильное подключение для подписания транзакции.</string>
     <string name="keygen_screen_upgrading_vault">Обновление хранилища</string>
@@ -715,7 +730,12 @@
     <string name="backup_password_request_no_password_action">Резервное копирование без пароля</string>
     <string name="address_bookmark_error_invalid_address">Этот адрес недействителен для %s.</string>
     <string name="address_bookmark_error_empty_label">Метка не может быть пустой</string>
-    <string name="address_bookmark_error_invalid_label">Метка должна содержать от 1 до %d символов</string>
+    <plurals name="address_bookmark_error_invalid_label">
+        <item quantity="one">Метка должна содержать от 1 до %d символов</item>
+        <item quantity="few">Метка должна содержать от 1 до %d символов</item>
+        <item quantity="many">Метка должна содержать от 1 до %d символов</item>
+        <item quantity="other">Метка должна содержать от 1 до %d символов</item>
+    </plurals>
     <string name="send_form_ripple_reaping_warning">Убедитесь, что у вас достаточно средств для покрытия комиссий. Если баланс счёта опустится ниже 1 XRP (экзистенциальный депозит), счёт будет деактивирован (списан), а все оставшиеся средства будут потеряны. Вы можете в любое время повторно активировать адрес, внеся новый депозит, превышающий экзистенциальный депозит. Однако это не вернёт потерянные средства.</string>
     <string name="error_invalid_chain">Сеть недействительна</string>
     <string name="vault_backup_verifying_pin">Подтверждение кода, пожалуйста, подождите.</string>
@@ -885,7 +905,12 @@
     <string name="solana_instruction_number">Инструкция %1$d</string>
     <string name="solana_program_name">Программа: %1$s</string>
     <string name="solana_program_id">ID программы: %1$s</string>
-    <string name="solana_accounts_data">Аккаунты: %1$d | Размер данных: %2$d байт</string>
+    <plurals name="solana_accounts_data">
+        <item quantity="one">Аккаунты: %1$d | Размер данных: %2$d байт</item>
+        <item quantity="few">Аккаунты: %1$d | Размер данных: %2$d байт</item>
+        <item quantity="many">Аккаунты: %1$d | Размер данных: %2$d байт</item>
+        <item quantity="other">Аккаунты: %1$d | Размер данных: %2$d байт</item>
+    </plurals>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Прежде чем начать…</string>
@@ -933,7 +958,12 @@
     <string name="import_seedphrase_subtitle">Введите вашу фразу восстановления из 12 или 24 слов</string>
     <string name="import_seedphrase_label">Сид-фраза</string>
     <string name="import_seedphrase_hint">Введите вашу фразу восстановления…</string>
-    <string name="import_seedphrase_word_count">%1$d / %2$d слов</string>
+    <plurals name="import_seedphrase_word_count">
+        <item quantity="one">%1$d / %2$d слов</item>
+        <item quantity="few">%1$d / %2$d слов</item>
+        <item quantity="many">%1$d / %2$d слов</item>
+        <item quantity="other">%1$d / %2$d слов</item>
+    </plurals>
     <string name="import_seedphrase_invalid_word_count">Вы ввели %1$s слов. Сид-фраза должна содержать 12 или 24 слова</string>
     <string name="import_seedphrase_invalid_phrase">Недействительная сид-фраза</string>
     <string name="import_seedphrase_already_imported">Эта сид-фраза уже была импортирована</string>
@@ -1045,7 +1075,12 @@
     <string name="vault_setup_add_as_many_devices_as_you_want">Добавляйте столько устройств, сколько хотите, и получите безопасность институционального уровня.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Создано для команд и казначейств</string>
     <string name="vault_setup_back_up_each_device">Создайте резервную копию каждого устройства</string>
-    <string name="vault_setup_you_ll_create_n_backups_in_total">Вы создадите %1$d резервных копий всего. Вы сделаете это на каждом устройстве.</string>
+    <plurals name="vault_setup_you_ll_create_n_backups_in_total">
+        <item quantity="one">Вы создадите %1$d резервных копий всего. Вы сделаете это на каждом устройстве.</item>
+        <item quantity="few">Вы создадите %1$d резервных копий всего. Вы сделаете это на каждом устройстве.</item>
+        <item quantity="many">Вы создадите %1$d резервных копий всего. Вы сделаете это на каждом устройстве.</item>
+        <item quantity="other">Вы создадите %1$d резервных копий всего. Вы сделаете это на каждом устройстве.</item>
+    </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Сохраняйте каждую резервную копию в другом облачном сервисе или с другим паролем. Если одна будет скомпрометирована, ваши средства останутся в безопасности.</string>
     <string name="vault_setup_i_understand">Я понимаю</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Сохранить резервную копию %1$d из %2$d в облаке</string>
