@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.models.getEddsaSigningKey
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -144,6 +145,7 @@ constructor(
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
     private val vaultRepository: VaultRepository,
     private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val balanceRepository: BalanceRepository,
 ) : ViewModel() {
 
     /** Creates [KeysignViewModel] with runtime-provided assisted parameters. */
@@ -564,6 +566,7 @@ constructor(
             txLink.value = explorerLinkRepository.getTransactionLink(chain, txHash)
             swapProgressLink.value =
                 explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
+            balanceRepository.invalidateBalance(payload.coin.address, payload.coin)
             saveTransactionHistory(txHash, chain)
             if (txStatusConfigurationProvider.supportTxStatus(chain)) {
                 startForegroundPolling(txHash, chain)
