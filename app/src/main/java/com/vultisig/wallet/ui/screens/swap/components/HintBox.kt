@@ -195,8 +195,9 @@ private fun HintBoxPopupContent(
             Text(
                 text = message,
                 color =
-                    if (textColor != Color.Unspecified) textColor else Theme.v2.colors.text.inverse,
-                style = if (textStyle != TextStyle.Default) textStyle else Theme.satoshi.price.bodyS,
+                    if (textColor != Color.Unspecified) textColor
+                    else Theme.v2.colors.text.tertiary,
+                style = if (textStyle != TextStyle.Default) Theme.brockmann.supplementary.footnote,
             )
         }
 
