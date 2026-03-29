@@ -566,7 +566,8 @@ constructor(
             txLink.value = explorerLinkRepository.getTransactionLink(chain, txHash)
             swapProgressLink.value =
                 explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
-            balanceRepository.invalidateBalance(payload.coin.address, payload.coin)
+            runCatching { balanceRepository.invalidateBalance(payload.coin.address, payload.coin) }
+                .onFailure { Timber.e(it, "Failed to invalidate balance cache after broadcast") }
             saveTransactionHistory(txHash, chain)
             if (txStatusConfigurationProvider.supportTxStatus(chain)) {
                 startForegroundPolling(txHash, chain)
