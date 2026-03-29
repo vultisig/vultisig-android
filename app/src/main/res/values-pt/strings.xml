@@ -347,7 +347,10 @@
     <string name="push_notification_error_vault_not_supported">O cofre não suporta notificações</string>
     <string name="push_notification_error_token_not_available">Falha ao obter token de notificação</string>
     <string name="push_notification_error_api_failure">Falha ao atualizar registo de notificações</string>
-    <string name="push_notification_partial_failure">%1$d de %2$d cofres atualizados, %3$d falharam</string>
+    <plurals name="push_notification_partial_failure">
+        <item quantity="one">%1$d de %2$d cofres atualizados, %3$d falharam</item>
+        <item quantity="other">%1$d de %2$d cofres atualizados, %3$d falharam</item>
+    </plurals>
     <string name="push_notifications_sent">Notificação enviada com sucesso</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Receba uma notificação quando a sua assinatura for necessária ou um dispositivo solicitar acesso.</string>
     <string name="keysign_notification_channel_name">Solicitações de assinatura</string>
@@ -556,7 +559,10 @@
     <string name="backup_select_vaults_subtitle">Escolha se pretende fazer cópias de segurança apenas deste cofre ou de todos os cofres da sua aplicação.</string>
     <string name="backup_this_vault_only">Apenas este cofre</string>
     <string name="backup_all_vaults">Todos os cofres</string>
-    <string name="more">+%1$d a mais</string>
+    <plurals name="more">
+        <item quantity="one">+%1$d a mais</item>
+        <item quantity="other">+%1$d a mais</item>
+    </plurals>
     <string name="backup_choose_method_title">Escolher método de cópia de segurança</string>
     <string name="backup_device_desc">Armazenar a partilha do cofre deste dispositivo.</string>
     <string name="backup_device_title">Backup do dispositivo</string>
@@ -645,7 +651,10 @@
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Desconhecido</string>
     <string name="referral_code_cannot_be_empty">O código de indicação não pode estar vazio</string>
-    <string name="referral_code_can_be_up_to_characters">O código de indicação pode ter até %1$d caracteres</string>
+    <plurals name="referral_code_can_be_up_to_characters">
+        <item quantity="one">O código de indicação pode ter até %1$d caracteres</item>
+        <item quantity="other">O código de indicação pode ter até %1$d caracteres</item>
+    </plurals>
     <string name="key_gen_discovery_no_connection_available">Sem ligação disponível.</string>
     <string name="key_gen_discovery_enable_wifi">Ative o Wi-Fi ou o telemóvel para assinar a transação.</string>
     <string name="keygen_screen_upgrading_vault">Atualizando o cofre</string>
@@ -717,7 +726,10 @@
     <string name="backup_password_request_no_password_action">Fazer backup sem palavra-passe</string>
     <string name="address_bookmark_error_invalid_address">Este endereço não é válido para %s</string>
     <string name="address_bookmark_error_empty_label">A etiqueta não pode estar vazia</string>
-    <string name="address_bookmark_error_invalid_label">A etiqueta deve ter entre 1 e %d caracteres</string>
+    <plurals name="address_bookmark_error_invalid_label">
+        <item quantity="one">A etiqueta deve ter entre 1 e %d caracteres</item>
+        <item quantity="other">A etiqueta deve ter entre 1 e %d caracteres</item>
+    </plurals>
     <string name="send_form_ripple_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta descer abaixo de 1 XRP (Depósito Existente), a conta será desativada (esgotada) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
     <string name="error_invalid_chain">A cadeia é inválida.</string>
     <string name="vault_backup_verifying_pin">Verificando código, aguarde</string>
@@ -889,7 +901,10 @@
     <string name="solana_instruction_number">Instrução %1$d</string>
     <string name="solana_program_name">Programa: %1$s</string>
     <string name="solana_program_id">ID do programa: %1$s</string>
-    <string name="solana_accounts_data">Contas: %1$d | Tamanho dos dados: %2$d bytes</string>
+    <plurals name="solana_accounts_data">
+        <item quantity="one">Contas: %1$d | Tamanho dos dados: %2$d bytes</item>
+        <item quantity="other">Contas: %1$d | Tamanho dos dados: %2$d bytes</item>
+    </plurals>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Antes de começar…</string>
@@ -937,7 +952,10 @@
     <string name="import_seedphrase_subtitle">Digite sua frase de recuperação de 12 ou 24 palavras</string>
     <string name="import_seedphrase_label">Frase semente</string>
     <string name="import_seedphrase_hint">Digite sua frase de recuperação…</string>
-    <string name="import_seedphrase_word_count">%1$d / %2$d palavras</string>
+    <plurals name="import_seedphrase_word_count">
+        <item quantity="one">%1$d / %2$d palavras</item>
+        <item quantity="other">%1$d / %2$d palavras</item>
+    </plurals>
     <string name="import_seedphrase_invalid_word_count">Você inseriu %1$s palavras. A frase semente deve ter 12 ou 24 palavras</string>
     <string name="import_seedphrase_invalid_phrase">Frase semente inválida</string>
     <string name="import_seedphrase_already_imported">Esta frase semente já foi importada</string>
@@ -1043,7 +1061,10 @@
     <string name="vault_setup_add_as_many_devices_as_you_want">Adicione tantos dispositivos quanto quiser e obtenha segurança de nível institucional.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Construído para equipas e tesourarias</string>
     <string name="vault_setup_back_up_each_device">Faça cópia de segurança de cada dispositivo</string>
-    <string name="vault_setup_you_ll_create_n_backups_in_total">Irá criar %1$d cópias de segurança no total. Fará isto em cada dispositivo.</string>
+    <plurals name="vault_setup_you_ll_create_n_backups_in_total">
+        <item quantity="one">Irá criar %1$d cópias de segurança no total. Fará isto em cada dispositivo.</item>
+        <item quantity="other">Irá criar %1$d cópias de segurança no total. Fará isto em cada dispositivo.</item>
+    </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Guarde cada cópia de segurança num serviço de nuvem diferente ou com uma palavra-passe diferente. Se uma for comprometida, os seus fundos ficam seguros.</string>
     <string name="vault_setup_i_understand">Percebo</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Guardar cópia de segurança %1$d de %2$d na nuvem</string>

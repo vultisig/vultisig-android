@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import com.vultisig.wallet.ui.utils.UiText.DynamicString
 import com.vultisig.wallet.ui.utils.UiText.FormattedText
+import com.vultisig.wallet.ui.utils.UiText.PluralText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 
 sealed class UiText {
@@ -13,6 +14,12 @@ sealed class UiText {
     data class StringResource(val resId: Int) : UiText()
 
     data class FormattedText(val resId: Int, val formatArgs: List<Any>) : UiText()
+
+    data class PluralText(
+        val resId: Int,
+        val quantity: Int,
+        val formatArgs: List<Any> = emptyList(),
+    ) : UiText()
 
     companion object {
         val Empty: DynamicString = DynamicString("")
@@ -32,6 +39,8 @@ fun UiText.asString(): String {
         is DynamicString -> text
         is StringResource -> context.getString(resId)
         is FormattedText -> context.getString(resId, *formatArgs.toTypedArray())
+        is PluralText ->
+            context.resources.getQuantityString(resId, quantity, *formatArgs.toTypedArray())
     }
 }
 
@@ -40,6 +49,8 @@ fun UiText.asString(context: Context): String {
         is DynamicString -> text
         is StringResource -> context.getString(resId)
         is FormattedText -> context.getString(resId, formatArgs)
+        is PluralText ->
+            context.resources.getQuantityString(resId, quantity, *formatArgs.toTypedArray())
     }
 }
 
