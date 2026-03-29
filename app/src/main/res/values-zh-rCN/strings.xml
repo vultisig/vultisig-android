@@ -839,6 +839,10 @@
 
     <!-- Vault Names -->
     <string name="name_vault_vault_with_this_name_already_exists">已存在此名称的保险库</string>
+    <string name="name_vault_server_exists_warning_title">快速保险库已存在</string>
+    <string name="name_vault_server_exists_warning_message">使用此助记词的快速保险库已存在于服务器上。创建新的快速保险库将替换服务器份额，并使现有保险库无法使用。请考虑使用安全保险库。</string>
+    <string name="name_vault_server_exists_warning_continue">继续</string>
+    <string name="name_vault_server_exists_warning_back">返回</string>
 
     <!-- Errors -->
     <string name="error_loading_information">加载信息时出错</string>

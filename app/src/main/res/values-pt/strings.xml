@@ -638,6 +638,10 @@
     <string name="send_form_add_memo">Adicionar MEMO</string>
     <string name="send_form_enter_memo">Inserir memorando</string>
     <string name="name_vault_vault_with_this_name_already_exists">O cofre com este nome já existe.</string>
+    <string name="name_vault_server_exists_warning_title">O cofre rápido já existe</string>
+    <string name="name_vault_server_exists_warning_message">Já existe um cofre rápido com esta frase-semente no servidor. Criar um novo cofre rápido substituirá a partilha do servidor e tornará o cofre existente inutilizável. Considere usar um cofre seguro em vez disso.</string>
+    <string name="name_vault_server_exists_warning_continue">Continuar</string>
+    <string name="name_vault_server_exists_warning_back">Voltar</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Desconhecido</string>
     <string name="referral_code_cannot_be_empty">O código de indicação não pode estar vazio</string>

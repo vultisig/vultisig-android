@@ -639,6 +639,10 @@
     <string name="send_form_add_memo">Aggiungi MEMO</string>
     <string name="send_form_enter_memo">Inserisci Memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Esiste già un Vault con questo nome</string>
+    <string name="name_vault_server_exists_warning_title">Il vault veloce esiste già</string>
+    <string name="name_vault_server_exists_warning_message">Un vault veloce con questa frase seed esiste già sul server. La creazione di un nuovo vault veloce sostituirà la condivisione del server e renderà inutilizzabile il vault esistente. Considera invece l\'utilizzo di un vault sicuro.</string>
+    <string name="name_vault_server_exists_warning_continue">Continua</string>
+    <string name="name_vault_server_exists_warning_back">Indietro</string>
     <string name="referral_create_status">Stato</string>
     <string name="referral_create_unknown">Sconosciuto</string>
     <string name="referral_code_cannot_be_empty">Il codice di riferimento non può essere vuoto</string>

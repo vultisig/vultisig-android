@@ -640,6 +640,10 @@
     <string name="send_form_add_memo">Dodaj MEMO</string>
     <string name="send_form_enter_memo">Unesi memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Trezor s ovim nazivom već postoji</string>
+    <string name="name_vault_server_exists_warning_title">Brzi trezor već postoji</string>
+    <string name="name_vault_server_exists_warning_message">Brzi trezor s ovom frazom za oporavak već postoji na serveru. Stvaranje novog brzog trezora zamijenit će serverski udio i učiniti postojeći trezor neupotrebljivim. Razmotrite korištenje sigurnog trezora umjesto toga.</string>
+    <string name="name_vault_server_exists_warning_continue">Nastavi</string>
+    <string name="name_vault_server_exists_warning_back">Nazad</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Nepoznato</string>
     <string name="referral_code_cannot_be_empty">Referentni kod ne može biti prazan</string>
