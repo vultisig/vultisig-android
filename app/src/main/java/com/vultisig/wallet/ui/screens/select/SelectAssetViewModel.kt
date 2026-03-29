@@ -31,13 +31,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -61,7 +61,6 @@ internal data class AssetUiModel(
     val isDisabled: Boolean = false,
 )
 
-// TODO : Refactor current implementation
 @HiltViewModel
 internal class SelectAssetViewModel
 @Inject
@@ -83,26 +82,80 @@ constructor(
 
     val searchFieldState = TextFieldState()
 
-    private val allTokens = MutableStateFlow(emptyList<AssetUiModel>())
-
-    private var loadAllAssetsJob: Job? = null
-
     val state =
         MutableStateFlow(
             SelectAssetUiModel(selectedChain = Chain.fromRaw(args.preselectedNetworkId))
         )
 
     init {
-        collectSearchResults()
-        observeSelectedChainChanges()
+        collectAssets()
         loadAllAvailableNetworks()
     }
 
-    private fun observeSelectedChainChanges() {
+    private fun collectAssets() {
         state
             .map { it.selectedChain }
             .distinctUntilChanged()
-            .onEach { loadAllAssets() }
+            .flatMapLatest { chain ->
+                val vault = vaultRepository.get(vaultId) ?: return@flatMapLatest emptyFlow()
+                combine(
+                    accountRepository.loadAddress(vaultId, chain).catch { Timber.e(it) },
+                    getChainTokens(chain, vault)
+                        .catch { Timber.e(it) }
+                        .map { coinList ->
+                            coinList
+                                .filterNot { it.isNativeToken || it.isLpToken }
+                                .map { coin ->
+                                    AssetUiModel(
+                                        token = coin,
+                                        logo = getCoinLogo(coin.logo),
+                                        title = coin.ticker,
+                                        subtitle = coin.chain.raw,
+                                        amount = "0",
+                                        value = "0",
+                                        isDisabled = true,
+                                    )
+                                }
+                        },
+                    searchFieldState.textAsFlow().map { it.toString() },
+                ) { account, allTokens, query ->
+                    val filteredAssets =
+                        account.accounts
+                            .asSequence()
+                            .filter { it.token.id.contains(query, ignoreCase = true) }
+                            .filterNot {
+                                filter == Route.SelectNetwork.Filters.SwapAvailable &&
+                                    it.token.isLpToken
+                            }
+                            .sortedWith(
+                                compareByDescending<Account> { it.token.isNativeToken }
+                                    .thenBy { it.token.ticker }
+                            )
+                            .toList()
+                            .map {
+                                AssetUiModel(
+                                    token = it.token,
+                                    logo = getCoinLogo(it.token.logo),
+                                    title = it.token.ticker,
+                                    subtitle = it.token.chain.raw,
+                                    amount =
+                                        it.tokenValue?.let(mapTokenValueToDecimalUiString) ?: "0",
+                                    value =
+                                        it.fiatValue?.let { fiatValueToString.invoke(it) } ?: "0",
+                                )
+                            }
+
+                    val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
+                    val additionalAssets =
+                        allTokens.filter {
+                            it.token.id.contains(query, ignoreCase = true) &&
+                                it.token.id !in filteredTokenIds
+                        }
+
+                    filteredAssets + additionalAssets
+                }
+            }
+            .onEach { assets -> state.update { it.copy(assets = assets) } }
             .launchIn(viewModelScope)
     }
 
@@ -127,80 +180,6 @@ constructor(
             requestResultRepository.respond(args.requestId, null)
             navigator.navigate(Destination.Back)
         }
-    }
-
-    private fun loadAllAssets() {
-        loadAllAssetsJob?.cancel()
-        loadAllAssetsJob =
-            viewModelScope.launch {
-                val vault = vaultRepository.get(vaultId) ?: return@launch
-                getChainTokens(state.value.selectedChain, vault)
-                    .catch { Timber.e(it) }
-                    .map { coinList ->
-                        coinList
-                            .filterNot { it.isNativeToken || it.isLpToken }
-                            .map { coin ->
-                                AssetUiModel(
-                                    token = coin,
-                                    logo = getCoinLogo(coin.logo),
-                                    title = coin.ticker,
-                                    subtitle = coin.chain.raw,
-                                    amount = "0",
-                                    value = "0",
-                                    isDisabled = true,
-                                )
-                            }
-                    }
-                    .collect { assets -> allTokens.value = assets }
-            }
-    }
-
-    private fun collectSearchResults() {
-        combine(
-                state
-                    .map { it.selectedChain }
-                    .distinctUntilChanged()
-                    .flatMapConcat { selectedChain ->
-                        accountRepository.loadAddress(vaultId, selectedChain)
-                    }
-                    .catch { Timber.e(it) },
-                searchFieldState.textAsFlow().map { it.toString() },
-                allTokens,
-            ) { account, query, allTokens ->
-                val filteredAssets =
-                    account.accounts
-                        .asSequence()
-                        .filter { it.token.id.contains(query, ignoreCase = true) }
-                        .filterNot {
-                            filter == Route.SelectNetwork.Filters.SwapAvailable &&
-                                it.token.isLpToken
-                        }
-                        .sortedWith(
-                            compareByDescending<Account> { it.token.isNativeToken }
-                                .thenBy { it.token.ticker }
-                        )
-                        .toList()
-                        .map {
-                            AssetUiModel(
-                                token = it.token,
-                                logo = getCoinLogo(it.token.logo),
-                                title = it.token.ticker,
-                                subtitle = it.token.chain.raw,
-                                amount = it.tokenValue?.let(mapTokenValueToDecimalUiString) ?: "0",
-                                value = it.fiatValue?.let { fiatValueToString.invoke(it) } ?: "0",
-                            )
-                        }
-
-                val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
-                val additionalAssets =
-                    allTokens.filter {
-                        it.token.id.contains(query, ignoreCase = true) &&
-                            it.token.id !in filteredTokenIds
-                    }
-
-                state.update { it.copy(assets = filteredAssets + additionalAssets) }
-            }
-            .launchIn(viewModelScope)
     }
 
     private fun loadAllAvailableNetworks() {
