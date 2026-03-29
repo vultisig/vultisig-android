@@ -440,7 +440,6 @@
     <string name="address_bookmark_error_invalid_address">이 주소는 %s에 유효하지 않습니다</string>
     <string name="address_bookmark_error_empty_label">라벨을 입력해 주세요</string>
     <plurals name="address_bookmark_error_invalid_label">
-        <item quantity="one">라벨은 1자 이상 %d자 이하여야 합니다</item>
         <item quantity="other">라벨은 1자 이상 %d자 이하여야 합니다</item>
     </plurals>
     <string name="send_form_ripple_reaping_warning">수수료를 충당할 충분한 자금을 남겨두세요. 계정 잔액이 1 XRP(최소 예치금) 아래로 떨어지면 계정이 비활성화(수확)되고 남은 자금이 손실됩니다. 언제든지 최소 예치금보다 큰 새 입금으로 주소를 재활성화할 수 있습니다. 그러나 손실된 자금은 복구되지 않습니다.</string>
@@ -762,7 +761,6 @@
     <string name="backup_this_vault_only">이 볼트만</string>
     <string name="backup_all_vaults">모든 볼트</string>
     <plurals name="more">
-        <item quantity="one">+%1$d 더 보기</item>
         <item quantity="other">+%1$d 더 보기</item>
     </plurals>
     <string name="backup_choose_method_title">백업 방법 선택</string>
@@ -858,7 +856,6 @@
     <string name="referral_create_unknown">알 수 없음</string>
     <string name="referral_code_cannot_be_empty">추천 코드를 입력해 주세요</string>
     <plurals name="referral_code_can_be_up_to_characters">
-        <item quantity="one">추천 코드는 최대 %1$d자까지 가능합니다</item>
         <item quantity="other">추천 코드는 최대 %1$d자까지 가능합니다</item>
     </plurals>
     <string name="error_loading_information">정보 로딩 오류</string>
@@ -957,7 +954,6 @@
     <string name="solana_program_name">프로그램: %1$s</string>
     <string name="solana_program_id">프로그램 ID: %1$s</string>
     <plurals name="solana_accounts_data">
-        <item quantity="one">계정: %1$d | 데이터 길이: %2$d 바이트</item>
         <item quantity="other">계정: %1$d | 데이터 길이: %2$d 바이트</item>
     </plurals>
     <string name="vault_count_recommended">권장</string>
@@ -1009,7 +1005,6 @@
     <string name="import_seedphrase_label">시드 구문</string>
     <string name="import_seedphrase_hint">복구 구문을 입력하세요…</string>
     <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d 단어</item>
         <item quantity="other">%1$d / %2$d 단어</item>
     </plurals>
     <string name="import_seedphrase_invalid_word_count">%1$s 단어를 입력하셨습니다. 시드 구문은 12 또는 24 단어여야 합니다</string>
@@ -1118,7 +1113,6 @@
     <string name="vault_setup_built_for_teams_and_treasuries">팀과 트레저리를 위해 설계</string>
     <string name="vault_setup_back_up_each_device">각 기기를 백업하세요</string>
     <plurals name="vault_setup_you_ll_create_n_backups_in_total">
-        <item quantity="one">총 %1$d개의 백업을 생성합니다. 각 기기에서 이 작업을 수행합니다.</item>
         <item quantity="other">총 %1$d개의 백업을 생성합니다. 각 기기에서 이 작업을 수행합니다.</item>
     </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">각 백업을 다른 클라우드 서비스나 다른 비밀번호로 저장하세요. 하나가 노출되어도 자금은 안전합니다.</string>
