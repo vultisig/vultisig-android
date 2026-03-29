@@ -1063,7 +1063,7 @@
     <string name="vault_setup_built_for_teams_and_treasuries">Für Teams und Schatzkammern entwickelt</string>
     <string name="vault_setup_back_up_each_device">Jedes Gerät sichern</string>
     <plurals name="vault_setup_you_ll_create_n_backups_in_total">
-        <item quantity="one">Sie werden insgesamt %1$d Backups erstellen. Sie tun dies auf jedem Gerät.</item>
+        <item quantity="one">Sie werden insgesamt %1$d Backup erstellen. Sie tun dies auf jedem Gerät.</item>
         <item quantity="other">Sie werden insgesamt %1$d Backups erstellen. Sie tun dies auf jedem Gerät.</item>
     </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Speichern Sie jedes Backup in einem anderen Cloud-Dienst oder mit einem anderen Passwort. Wenn eines kompromittiert wird, bleiben Ihre Gelder sicher.</string>
