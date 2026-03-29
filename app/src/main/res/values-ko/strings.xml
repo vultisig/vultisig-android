@@ -81,6 +81,8 @@
     <string name="vault_settings_rename_subtitle">볼트 이름 수정</string>
     <string name="vault_settings_reshare_title">재공유</string>
     <string name="vault_settings_reshare_subtitle">새로운 구성원과 볼트 재공유</string>
+    <string name="vault_settings_dilithium_keygen_title">QBTC 활성화</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">QBTC 체인을 활성화하기 위한 키 생성</string>
     <string name="vault_settings_delete_title">삭제</string>
     <string name="vault_settings_delete_subtitle">볼트를 영구적으로 삭제합니다.</string>
     <string name="vault_settings_security_title">온체인 보안</string>
@@ -205,6 +207,7 @@
     <string name="keysign_screen_preparing_vault">볼트 준비 중…</string>
     <string name="keysign_screen_signing_with_ecdsa">ECDSA로 서명 중…</string>
     <string name="keysign_screen_signing_with_eddsa">EdDSA로 서명 중…</string>
+    <string name="keysign_screen_signing_with_mldsa">MLDSA로 서명 중…</string>
     <string name="keysign_screen_keysign_finished">서명 완료!</string>
     <string name="keysign_screen_error_please_try_again">오류! 다시 시도해 주세요. %1$s</string>
     <string name="successfully_scanned_barcode">바코드 스캔 성공: %1$s</string>
@@ -387,7 +390,7 @@
     <string name="vault_details_screen_vault_part">볼트 공유</string>
     <string name="vault_details_screen_vault_type">볼트 유형</string>
     <string name="vault_settings_delete_vault_part">볼트 공유:</string>
-    <string name="vault_password_hint_to_long">힌트가 너무 깁니다</string>
+    <string name="vault_password_hint_too_long">힌트가 너무 깁니다</string>
     <string name="vault_details_screen_vault_part_desc">공유 %1$s-of-%2$s</string>
     <string name="do_not_remind_me_again">다시 알리지 않기</string>
     <string name="monthly_backup_reminder_title">볼트 공유를 백업하고 완전성을 확인하는 것을 잊지 마세요.</string>
@@ -509,6 +512,7 @@
     <string name="keygen_step_preparing_vault">볼트 준비 중</string>
     <string name="keygen_step_generating_ecdsa">ECDSA 키 생성 중</string>
     <string name="keygen_step_generating_eddsa">EdDSA 키 생성 중</string>
+    <string name="keygen_step_generating_mldsa">MLDSA 키 생성 중</string>
     <string name="keygen_step_generating_chain_keys">체인 키 생성 중</string>
     <string name="reshare_step_generating_ecdsa">ECDSA 키 생성 중</string>
     <string name="reshare_step_generating_eddsa">EdDSA 키 생성 중</string>
@@ -547,7 +551,7 @@
     <string name="vault_backup_error_pin">코드 확인 오류, 다시 시도해 주세요</string>
     <string name="vault_backup_verifying_pin">코드 확인 중, 잠시 기다려 주세요</string>
     <string name="vault_backup_screen_email_sent_to">%s(으)로 전송됨.</string>
-    <string name="vault_backup_screen_donot_recieve_email">이메일을 받지 못하셨나요?</string>
+    <string name="vault_backup_screen_donot_receive_email">이메일을 받지 못하셨나요?</string>
     <string name="vault_backup_screen_restart_keygen">키 생성 재시작</string>
     <string name="vault_backup_summary_choose_chains">체인 선택</string>
     <string name="transaction_done_form_approve">승인</string>
@@ -635,7 +639,7 @@
     <string name="referral_edit_referral">추천 수정</string>
     <string name="referral_external_linked">추천 코드가 성공적으로 연결되었습니다</string>
     <string name="referral_external_not_linked">추천 코드가 존재하지 않습니다</string>
-    <string name="referral_external_not_failed">추천 코드 확인 실패</string>
+    <string name="referral_external_link_failed">추천 코드 확인 실패</string>
     <string name="referral_onboarding_title">추천</string>
     <string name="referral_onboarding_get_started">시작하기</string>
 
@@ -838,6 +842,10 @@
     <string name="keysign_password_enter_your_password">비밀번호를 입력하세요</string>
     <string name="migration_password_enter_your_password_to_unlock">서버 공유를 잠금 해제하고 업그레이드를 시작하려면 비밀번호를 입력하세요</string>
     <string name="name_vault_vault_with_this_name_already_exists">이 이름의 볼트가 이미 존재합니다</string>
+    <string name="name_vault_server_exists_warning_title">빠른 볼트가 이미 존재합니다</string>
+    <string name="name_vault_server_exists_warning_message">이 시드 구문을 사용하는 빠른 볼트가 이미 서버에 존재합니다. 새로운 빠른 볼트를 생성하면 서버 공유가 대체되어 기존 볼트를 사용할 수 없게 됩니다. 대신 보안 볼트 사용을 고려하세요.</string>
+    <string name="name_vault_server_exists_warning_continue">계속</string>
+    <string name="name_vault_server_exists_warning_back">뒤로</string>
     <string name="referral_create_status">상태</string>
     <string name="referral_create_unknown">알 수 없음</string>
     <string name="referral_code_cannot_be_empty">추천 코드를 입력해 주세요</string>
@@ -857,7 +865,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">승인 Tx 해시</string>
     <string name="swap_transaction_overview_track">추적</string>
     <string name="token_selection_screen_select_tokens">토큰 선택</string>
-    <string name="token_selecton_screen_enable_at_least_one">잔액을 확인하고 포지션을 관리하려면 최소 하나의 토큰을 활성화하세요.</string>
+    <string name="token_selection_screen_enable_at_least_one">잔액을 확인하고 포지션을 관리하려면 최소 하나의 토큰을 활성화하세요.</string>
     <string name="transfer_ibc_destination_chain">수신 체인</string>
     <string name="tx_done_transaction_details">거래 상세</string>
     <string name="vault_confirmation_vault_upgraded">"볼트가 업그레이드되었습니다 "</string>
@@ -865,7 +873,7 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">새로운 지갑 표준을 사용할 준비가 되었습니다.</string>
     <string name="vault_detail_vault_info">볼트 정보</string>
     <string name="vault_details_keys">키</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">생체 인증 빠른 서명 활성화</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">생체 인증 빠른 서명 활성화</string>
     <string name="verify_send_send_overview">보내기 개요</string>
     <string name="verify_swap_swap_overview">스왑 개요</string>
     <string name="rename_vault_screen_rename_vault">볼트 이름 변경</string>
@@ -892,8 +900,8 @@
     <string name="enable_at_least_one_position">잔액을 확인하고 포지션을 관리하려면 최소 하나의 포지션을 활성화하세요.</string>
     <string name="bandwidth">대역폭</string>
     <string name="energy">에너지</string>
-    <string name="bandwidth_dec">대역폭 포인트는 표준 토큰 전송 및 스마트 컨트랙트 상호작용을 포함하여 TRON의 모든 거래에 필요합니다. 모든 TRON 사용자는 하루에 600개의 무료 대역폭 포인트를 받으며, 이는 약 2건의 기본 전송을 처리할 수 있습니다. 또한 TRX를 스테이킹하여 추가 대역폭 포인트를 얻어 더 많은 거래를 지원할 수 있습니다. 충분한 대역폭 포인트가 있으면 TRX 가스 수수료 없이 토큰을 보내거나, TRX를 스테이킹하거나, 스마트 컨트랙트와 상호작용할 수 있습니다.</string>
-    <string name="energy_dec">스왑이나 dApp 거래와 같은 스마트 컨트랙트 상호작용 등 더 복잡한 작업에 필요합니다. 대역폭과 달리 에너지는 무료로 제공되지 않으며, TRX를 스테이킹하여 얻어야 합니다. (고급 사용자는 JustLend나 Tronify의 에너지 대여 시장과 같은 리스 메커니즘을 통해 에너지를 얻을 수도 있습니다). 그러나 에너지를 보유하면 스마트 컨트랙트 상호작용의 가스 수수료를 크게 줄이거나 아예 없앨 수 있어, TRON dApp을 자주 사용하는 사용자에게 유용합니다.</string>
+    <string name="bandwidth_desc">대역폭 포인트는 표준 토큰 전송 및 스마트 컨트랙트 상호작용을 포함하여 TRON의 모든 거래에 필요합니다. 모든 TRON 사용자는 하루에 600개의 무료 대역폭 포인트를 받으며, 이는 약 2건의 기본 전송을 처리할 수 있습니다. 또한 TRX를 스테이킹하여 추가 대역폭 포인트를 얻어 더 많은 거래를 지원할 수 있습니다. 충분한 대역폭 포인트가 있으면 TRX 가스 수수료 없이 토큰을 보내거나, TRX를 스테이킹하거나, 스마트 컨트랙트와 상호작용할 수 있습니다.</string>
+    <string name="energy_desc">스왑이나 dApp 거래와 같은 스마트 컨트랙트 상호작용 등 더 복잡한 작업에 필요합니다. 대역폭과 달리 에너지는 무료로 제공되지 않으며, TRX를 스테이킹하여 얻어야 합니다. (고급 사용자는 JustLend나 Tronify의 에너지 대여 시장과 같은 리스 메커니즘을 통해 에너지를 얻을 수도 있습니다). 그러나 에너지를 보유하면 스마트 컨트랙트 상호작용의 가스 수수료를 크게 줄이거나 아예 없앨 수 있어, TRON dApp을 자주 사용하는 사용자에게 유용합니다.</string>
     <string name="tron" translatable="false">Tron</string>
     <string name="tron_bandwidth_energy_title" translatable="false"><![CDATA["Bandwidth & Energy "]]></string>
 
@@ -1026,7 +1034,7 @@
     <string name="welcome_fast_and_easy">빠르고 간편</string>
     <string name="welcome_fast_and_easy_desc">기기 1대로만 서명. 보안 서버가 멀티시그 보안을 위해 함께 서명합니다. 플러그인 호환.</string>
     <string name="welcome_fast_and_easy_highlight">기기 1대로만.</string>
-    <string name="welcome_plugin_compatible">플러그인 마켓플레이스 호환</string>
+    <string name="welcome_plugin_compatible">플러그인 스토어 호환</string>
     <string name="welcome_tip">팁: 브라우저를 기기로 사용할 수 있습니다</string>
     <string name="welcome_only_your_devices">내 기기만 사용</string>
     <string name="welcome_only_your_devices_desc">내 기기만이 승인된 서명자입니다. 거래 서명에 기기 2대가 필요합니다. 완전한 자기 수탁.</string>

@@ -10,4 +10,5 @@ enum class TssAction {
     ReShare,
     Migrate,
     KeyImport,
+    SingleKeygen,
 }

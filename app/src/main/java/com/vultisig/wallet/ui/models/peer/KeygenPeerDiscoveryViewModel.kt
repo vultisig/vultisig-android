@@ -20,6 +20,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
@@ -34,6 +35,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
+import com.vultisig.wallet.data.models.proto.v1.SingleKeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.toProto
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.QrHelperModalRepository
@@ -366,7 +368,7 @@ constructor(
                 resharePrefix = existingVault.resharePrefix
                 signers = existingVault.signers
 
-                if (args.action == TssAction.Migrate) {
+                if (args.action == TssAction.Migrate || args.action == TssAction.SingleKeygen) {
                     state.update {
                         it.copy(
                             minimumDevices = existingVault.signers.size,
@@ -568,6 +570,23 @@ constructor(
                             )
                         )
                         .encodeBase64()
+            TssAction.SingleKeygen ->
+                "https://vultisig.com?type=NewVault&tssType=SingleKeygen&jsonData=" +
+                    compressQr(
+                            protoBuf.encodeToByteArray(
+                                SingleKeygenMessageProto(
+                                    sessionId = sessionId,
+                                    hexChainCode = hexChainCode,
+                                    serviceName = serviceName,
+                                    publicKeyEcdsa = pubKeyEcdsa,
+                                    encryptionKeyHex = encryptionKeyHex,
+                                    useVultisigRelay = isRelayEnabled,
+                                    vaultName = args.vaultName,
+                                    libType = libType.toProto(),
+                                )
+                            )
+                        )
+                        .encodeBase64()
         }
 
     private fun TssAction.toLinkTssType(): String =
@@ -576,6 +595,7 @@ constructor(
             TssAction.ReShare -> "Reshare"
             TssAction.Migrate -> "Migrate"
             TssAction.KeyImport -> "KeyImport"
+            TssAction.SingleKeygen -> "SingleKeygen"
         }
 
     private suspend fun requestVultiServerConnection() {
@@ -640,6 +660,18 @@ constructor(
                             chains =
                                 keyImportRepository.get()?.chainSettings?.map { it.chain.raw }
                                     ?: emptyList(),
+                        )
+                    )
+                }
+
+                TssAction.SingleKeygen -> {
+                    vultiSignerRepository.createMldsa(
+                        CreateMldsaVaultRequestJson(
+                            publicKey = pubKeyEcdsa,
+                            sessionId = sessionId,
+                            hexEncryptionKey = encryptionKeyHex,
+                            encryptionPassword = password,
+                            email = email,
                         )
                     )
                 }

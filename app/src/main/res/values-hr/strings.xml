@@ -7,6 +7,8 @@
     <string name="vault_settings_rename_subtitle">Uredite ime vašeg sefa</string>
     <string name="vault_settings_reshare_title">Ponovno podijeli</string>
     <string name="vault_settings_reshare_subtitle">Ponovno podijelite sef s novim odborom</string>
+    <string name="vault_settings_dilithium_keygen_title">Omogući QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generiraj ključ za omogućavanje QBTC mreže</string>
     <string name="vault_settings_delete_title">Izbriši</string>
     <string name="vault_settings_security_title">On-chain sigurnost</string>
     <string name="vault_settings_security_subtitle">Upravljajte svojom on-chain sigurnošću</string>
@@ -146,6 +148,7 @@
     <string name="chain_account_view_swap">ZAMIJENI</string>
     <string name="keysign_screen_signing_with_ecdsa">POTPISIVANJE KORISTEĆI ECDSA KLJUČ…</string>
     <string name="keysign_screen_signing_with_eddsa">POTPISIVANJE KORISTEĆI EdDSA KLJUČ…</string>
+    <string name="keysign_screen_signing_with_mldsa">POTPISIVANJE KORISTEĆI MLDSA KLJUČ…</string>
     <string name="signing_error_please_try_again_s">Greška pri prijavi. Molimo pokušajte ponovno. %s</string>
     <string name="faq_settings_q1">Moram li se registrirati?</string>
     <string name="swap_screen_invalid_vault">Transakcija će vjerojatno propasti, trezor se nije mogao učitati.</string>
@@ -307,7 +310,7 @@
     <string name="vault_details_screen_vault_part">Trezorski dio</string>
     <string name="vault_details_screen_vault_type">Vrsta trezora</string>
     <string name="vault_settings_delete_vault_part">Podijeli trezora:</string>
-    <string name="vault_password_hint_to_long">Savjet je predug</string>
+    <string name="vault_password_hint_too_long">Savjet je predug</string>
     <string name="vault_details_screen_vault_part_desc">Podijeli %1$s-od-%2$s</string>
     <string name="do_not_remind_me_again">Nemoj me ponovno podsjećati</string>
     <string name="monthly_backup_reminder_title">Ne zaboravite sigurnosno kopirati svoje dionice trezora i provjeriti cjelovitost.</string>
@@ -417,6 +420,7 @@
     <string name="reshare_step_generating_eddsa">Generiranje EDDSA ključa</string>
     <string name="keygen_connecting_with_server">Povezivanje sa serverom…</string>
     <string name="keygen_step_generating_eddsa">Generiranje EDDSA ključa</string>
+    <string name="keygen_step_generating_mldsa">Generiranje MLDSA ključa</string>
     <string name="keygen_step_generating_chain_keys">Generiranje ključeva lanca</string>
     <string name="reshare_step_generating_ecdsa">Generiranje ECDSA ključa</string>
     <string name="merge_account_doesnt_exist">Odabrani token nije pronađen za ovu adresu</string>
@@ -454,7 +458,7 @@
     <string name="referral_edit_referral">Uredi preporuku</string>
     <string name="referral_external_linked">Referral kod uspješno povezan</string>
     <string name="referral_external_not_linked">Referral kod ne postoji</string>
-    <string name="referral_external_not_failed">Neuspjela provjera referral koda</string>
+    <string name="referral_external_link_failed">Neuspjela provjera referral koda</string>
     <string name="referral_invite_next">Sljedeće</string>
     <string name="referral_code_settings_title">Referral kod</string>
     <string name="referral_screen_title">Vultisig - Preporuka</string>
@@ -502,8 +506,8 @@
     <string name="referral_top_bar_list_vaults">Trezori</string>
     <string name="tcy_auto_compound_enable_title">Omogući automatsko složeno računanje</string>
     <string name="tcy_auto_compound_enable_subtitle">Automatski složeno računajte svoje TCY nagrade</string>
-    <string name="tcy_auto_compound_unstake_title">Unstake Auto-Compound TCY</string>
-    <string name="tcy_auto_compound_unstake_subtitle">Unstake from auto-compounding TCY deposits</string>
+    <string name="tcy_auto_compound_unstake_title">Ukloni ulog iz automatski složenog TCY-a</string>
+    <string name="tcy_auto_compound_unstake_subtitle">Ukloni ulog iz automatski složenih TCY depozita</string>
     <string name="referral_view_title">Tvoja preporuka</string>
     <string name="referral_view_selected_vault">Odabrani trezor</string>
     <string name="referral_view_your_referral_code">Tvoj preporučni kod</string>
@@ -612,10 +616,10 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Spremni ste za korištenje novog standarda novčanika.</string>
     <string name="vault_detail_vault_info">Informacije o trezoru</string>
     <string name="vault_details_keys">ključevi</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Omogući brzo biometrijsko potpisivanje</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">Omogući brzo biometrijsko potpisivanje</string>
     <string name="verify_send_send_overview">Pregled slanja</string>
     <string name="verify_swap_swap_overview">Pregled zamjene</string>
-    <string name="token_selecton_screen_enable_at_least_one">Omogućite barem jedan token za pregled stanja i upravljanje pozicijama.</string>
+    <string name="token_selection_screen_enable_at_least_one">Omogućite barem jedan token za pregled stanja i upravljanje pozicijama.</string>
     <string name="transfer_ibc_destination_chain">Lanac odredišta</string>
     <string name="tx_done_transaction_details">Detalji transakcije</string>
     <string name="vault_confirmation_vault_upgraded">Trezor nadograđen</string>
@@ -636,6 +640,10 @@
     <string name="send_form_add_memo">Dodaj MEMO</string>
     <string name="send_form_enter_memo">Unesi memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Trezor s ovim nazivom već postoji</string>
+    <string name="name_vault_server_exists_warning_title">Brzi trezor već postoji</string>
+    <string name="name_vault_server_exists_warning_message">Brzi trezor s ovom frazom za oporavak već postoji na serveru. Stvaranje novog brzog trezora zamijenit će serverski udio i učiniti postojeći trezor neupotrebljivim. Razmotrite korištenje sigurnog trezora umjesto toga.</string>
+    <string name="name_vault_server_exists_warning_continue">Nastavi</string>
+    <string name="name_vault_server_exists_warning_back">Nazad</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Nepoznato</string>
     <string name="referral_code_cannot_be_empty">Referentni kod ne može biti prazan</string>
@@ -734,7 +742,7 @@
     <string name="peer_discovery_waiting_for_devices_action">Čekanje na uređaje…</string>
     <string name="peer_discovery_devices_n_of_n">Uređaji (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Poslano na %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email">Niste primili e-poštu?</string>
+    <string name="vault_backup_screen_donot_receive_email">Niste primili e-poštu?</string>
     <string name="onboarding_desc_page_5_part_2">odvojeno u</string>
     <string name="onboarding_desc_page_5_part_3">druga lokacija</string>
     <string name="scan_qr_code_modal_annotation">Preuzmite Vultisig na svoj drugi uređaj (uređaje) i odaberite \'Skeniraj QR kod\'</string>
@@ -839,8 +847,8 @@
     <string name="enable_at_least_one_position">Omogućite barem jednu poziciju za pregled stanja i upravljanje pozicijama.</string>
     <string name="bandwidth">Propusnost</string>
     <string name="energy">Energija</string>
-    <string name="bandwidth_dec">Za svaku transakciju na TRON-u, uključujući i standardna slanja tokena i interakcije pametnih ugovora, potrebni su bodovi propusnosti. Svaki korisnik TRON-a dobiva 600 besplatnih bodova propusnosti dnevno, što može pokriti otprilike dva osnovna slanja. Osim toga, možete zaraditi dodatne bodove propusnosti ulaganjem TRX-a, povećavajući svoj dnevni saldo kako biste podržali više transakcija. Ako imate dovoljno bodova propusnosti, možete slati tokene, ulagati TRX ili komunicirati s pametnim ugovorima bez plaćanja TRX-a u naknadama za gorivo.</string>
-    <string name="energy_dec">Potrebno za složenije radnje, kao što je interakcija s pametnim ugovorima (npr. zamjene ili transakcije dApp-ova). Za razliku od propusnosti, energija se ne daje besplatno - morate ulagati TRX da biste zaradili energiju. (Napredniji korisnici također mogu steći energiju putem mehanizama najma kao što su JustLend ili Tronifyjeva tržišta najma energije). Međutim, posjedovanje energije može značajno smanjiti ili čak eliminirati naknade za gorivo za interakcije pametnih ugovora, što energiju čini vrijednom za one koji često koriste TRON dApp-ove.</string>
+    <string name="bandwidth_desc">Za svaku transakciju na TRON-u, uključujući i standardna slanja tokena i interakcije pametnih ugovora, potrebni su bodovi propusnosti. Svaki korisnik TRON-a dobiva 600 besplatnih bodova propusnosti dnevno, što može pokriti otprilike dva osnovna slanja. Osim toga, možete zaraditi dodatne bodove propusnosti ulaganjem TRX-a, povećavajući svoj dnevni saldo kako biste podržali više transakcija. Ako imate dovoljno bodova propusnosti, možete slati tokene, ulagati TRX ili komunicirati s pametnim ugovorima bez plaćanja TRX-a u naknadama za gorivo.</string>
+    <string name="energy_desc">Potrebno za složenije radnje, kao što je interakcija s pametnim ugovorima (npr. zamjene ili transakcije dApp-ova). Za razliku od propusnosti, energija se ne daje besplatno - morate ulagati TRX da biste zaradili energiju. (Napredniji korisnici također mogu steći energiju putem mehanizama najma kao što su JustLend ili Tronifyjeva tržišta najma energije). Međutim, posjedovanje energije može značajno smanjiti ili čak eliminirati naknade za gorivo za interakcije pametnih ugovora, što energiju čini vrijednom za one koji često koriste TRON dApp-ove.</string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">Adresa Čvora</string>
@@ -972,7 +980,7 @@
     <string name="welcome_fast_and_easy">Brzo &amp; jednostavno</string>
     <string name="welcome_fast_and_easy_desc">Potpisujte s samo 1 uređajem. Naš sigurni poslužitelj potpisuje s vama za multisig sigurnost. Kompatibilno s dodacima.</string>
     <string name="welcome_fast_and_easy_highlight">samo 1 uređajem.</string>
-    <string name="welcome_plugin_compatible">Kompatibilno s Plugin Marketplace</string>
+    <string name="welcome_plugin_compatible">Kompatibilno s Plugin Store</string>
     <string name="welcome_tip">Savjet: Možete koristiti preglednik kao uređaj</string>
     <string name="welcome_only_your_devices">Samo vaši uređaji</string>
     <string name="welcome_only_your_devices_desc">Samo vaši uređaji su ovlašteni potpisnici. Potpisivanje transakcija zahtijeva 2 uređaja. Potpuna samopohrana na dohvat ruke.</string>

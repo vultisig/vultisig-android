@@ -14,8 +14,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.CheckServerVaultExistsUseCase
 import com.vultisig.wallet.data.usecases.GenerateUniqueName
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
@@ -32,6 +35,7 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -49,6 +53,7 @@ enum class StepType(
     val logo: Int,
     val isPassword: Boolean,
     val descriptionHighlight: UiText? = null,
+    val showInfoIcon: Boolean = false,
 ) {
     Name(
         title = StringResource(R.string.fast_vault_name_screen_title),
@@ -68,6 +73,7 @@ enum class StepType(
         logo = R.drawable.center_lock,
         isPassword = true,
         descriptionHighlight = StringResource(R.string.password_extra_layer_highlight),
+        showInfoIcon = true,
     ),
 }
 
@@ -107,9 +113,12 @@ internal data class EnterVaultInfoUiState(
     val confirmPasswordTextFieldState: TextFieldState = TextFieldState(),
     val errorMessage: UiText? = null,
     val isNextButtonEnabled: Boolean = false,
+    val isLoading: Boolean = false,
+    val showServerVaultExistsWarning: Boolean = false,
     val innerState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
+    val isMoreInfoVisible: Boolean = false,
 )
 
 internal sealed interface EnterVaultInfoEvent {
@@ -124,6 +133,10 @@ internal sealed interface EnterVaultInfoEvent {
     object TogglePasswordVisibility : EnterVaultInfoEvent
 
     object ToggleConfirmPasswordVisibility : EnterVaultInfoEvent
+
+    object ShowMoreInfo : EnterVaultInfoEvent
+
+    object HideMoreInfo : EnterVaultInfoEvent
 }
 
 @HiltViewModel
@@ -135,6 +148,8 @@ constructor(
     private val isNameLengthValid: IsVaultNameValid,
     private val generateUniqueName: GenerateUniqueName,
     private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
+    private val keyImportRepository: KeyImportRepository,
+    private val checkServerVaultExists: CheckServerVaultExistsUseCase,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -196,8 +211,11 @@ constructor(
     private fun generateVaultName() {
         viewModelScope.launch {
             vaultNamesList = vaultRepository.getAll().map { it.name }
+            val currentName = nameTextFieldState.text.toString()
+            val takenNames =
+                if (currentName.isNotEmpty()) vaultNamesList + currentName else vaultNamesList
             val proposeName =
-                generateUniqueName(context.getString(R.string.naming_saving_vault), vaultNamesList)
+                generateUniqueName(context.getString(R.string.naming_saving_vault), takenNames)
             nameTextFieldState.setTextAndPlaceCursorAtEnd(proposeName)
         }
     }
@@ -276,6 +294,9 @@ constructor(
             EnterVaultInfoEvent.ClearConfirmInput -> clearConfirmInput()
             EnterVaultInfoEvent.TogglePasswordVisibility -> togglePasswordVisibility()
             EnterVaultInfoEvent.ToggleConfirmPasswordVisibility -> toggleConfirmPasswordVisibility()
+            EnterVaultInfoEvent.ShowMoreInfo -> uiState.update { it.copy(isMoreInfoVisible = true) }
+            EnterVaultInfoEvent.HideMoreInfo ->
+                uiState.update { it.copy(isMoreInfoVisible = false) }
         }
     }
 
@@ -309,7 +330,7 @@ constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            uiState.update { it.copy(activeStep = newStep) }
+            uiState.update { it.copy(activeStep = newStep, isMoreInfoVisible = false) }
         }
     }
 
@@ -318,6 +339,7 @@ constructor(
     }
 
     private fun next() {
+        if (uiState.value.isLoading) return
         viewModelScope.launch {
             val currentStep = uiState.value.activeStep
             val canProceedToNextStep = validateAllInputs()
@@ -330,7 +352,7 @@ constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            uiState.update { it.copy(activeStep = newStep) }
+            uiState.update { it.copy(activeStep = newStep, isMoreInfoVisible = false) }
         }
     }
 
@@ -461,28 +483,65 @@ constructor(
         val email = emailTextFieldState.text.toString()
         val password = passwordTextFieldState.text.toString()
         viewModelScope.launch {
-            if (isSecureVault) {
-                navigator.route(
-                    Route.Keygen.PeerDiscovery(
-                        action = tssAction,
-                        vaultName = name,
-                        deviceCount = deviceCount,
-                    )
-                )
-            } else {
-                navigator.route(
-                    Route.Keygen.PeerDiscovery(
-                        action = tssAction,
-                        vaultName = name,
-                        email = email,
-                        password = password,
-                        hint = null,
-                        vaultId = null,
-                        deviceCount = deviceCount,
-                    )
-                )
+            if (!isSecureVault && tssAction == TssAction.KeyImport) {
+                val existsOnServer = checkServerVaultExistence()
+                if (existsOnServer) {
+                    uiState.update { it.copy(showServerVaultExistsWarning = true) }
+                    return@launch
+                }
             }
+            navigateToPeerDiscovery(name, email, password)
         }
+    }
+
+    private suspend fun checkServerVaultExistence(): Boolean {
+        val mnemonic = keyImportRepository.get()?.mnemonic ?: return false
+        uiState.update { it.copy(isLoading = true) }
+        return try {
+            checkServerVaultExists(mnemonic)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            true // fail-closed: show warning on error
+        } finally {
+            uiState.update { it.copy(isLoading = false) }
+        }
+    }
+
+    private suspend fun navigateToPeerDiscovery(name: String, email: String, password: String) {
+        if (isSecureVault) {
+            navigator.route(
+                Route.Keygen.PeerDiscovery(
+                    action = tssAction,
+                    vaultName = name,
+                    deviceCount = deviceCount,
+                )
+            )
+        } else {
+            navigator.route(
+                Route.Keygen.PeerDiscovery(
+                    action = tssAction,
+                    vaultName = name,
+                    email = email,
+                    password = password,
+                    hint = null,
+                    vaultId = null,
+                    deviceCount = deviceCount,
+                )
+            )
+        }
+    }
+
+    fun dismissServerVaultWarning() {
+        uiState.update { it.copy(showServerVaultExistsWarning = false) }
+    }
+
+    fun continueWithServerVaultWarning() {
+        uiState.update { it.copy(showServerVaultExistsWarning = false) }
+        val name = nameTextFieldState.text.toString()
+        val email = emailTextFieldState.text.toString()
+        val password = passwordTextFieldState.text.toString()
+        viewModelScope.launch { navigateToPeerDiscovery(name, email, password) }
     }
 
     private fun isNameValid(): Boolean {

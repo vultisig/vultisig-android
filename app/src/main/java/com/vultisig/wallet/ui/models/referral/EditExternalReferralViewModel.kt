@@ -133,7 +133,7 @@ constructor(
             .onFailure {
                 state.update {
                     it.copy(
-                        referralMessage = R.string.referral_external_not_failed.asUiText(),
+                        referralMessage = R.string.referral_external_link_failed.asUiText(),
                         referralMessageState = VsTextInputFieldInnerState.Error,
                     )
                 }

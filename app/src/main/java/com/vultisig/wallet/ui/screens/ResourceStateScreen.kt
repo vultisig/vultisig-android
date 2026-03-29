@@ -294,7 +294,7 @@ fun BandwidthEnergyContent() {
 
                 BandwidthEnergyItem(
                     title = R.string.bandwidth,
-                    description = R.string.bandwidth_dec,
+                    description = R.string.bandwidth_desc,
                     accentColor = colors.alerts.success,
                     containerBg = colors.backgrounds.surface4,
                     icon = R.drawable.bandwidth,
@@ -305,7 +305,7 @@ fun BandwidthEnergyContent() {
 
                 BandwidthEnergyItem(
                     title = R.string.energy,
-                    description = R.string.energy_dec,
+                    description = R.string.energy_desc,
                     accentColor = colors.alerts.warning,
                     containerBg = colors.backgrounds.surface3,
                     icon = R.drawable.energy,

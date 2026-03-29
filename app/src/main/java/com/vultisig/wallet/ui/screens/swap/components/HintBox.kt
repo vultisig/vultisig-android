@@ -24,12 +24,13 @@ import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
+import androidx.compose.ui.zIndex
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -99,41 +100,52 @@ private fun PointerShapeDown(
     }
 }
 
+// Note: HintBox uses Modifier.offset (not Popup). zIndex(Float.MAX_VALUE) ensures it
+// always renders on top of siblings regardless of declaration order in its parent Box.
 @Composable
 internal fun HintBox(
     modifier: Modifier = Modifier,
     isVisible: Boolean,
     isPointerTriangleOnTop: Boolean = true,
-    title: String,
+    title: String? = null,
     message: String,
     offset: IntOffset,
     pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     pointerOffset: DpOffset = DpOffset.Zero,
+    textColor: Color = Color.Unspecified,
+    textStyle: TextStyle = TextStyle.Default,
     onDismissClick: () -> Unit,
 ) {
-    AnimatedVisibility(visible = isVisible, enter = fadeIn(), exit = fadeOut()) {
-        Popup(offset = offset, onDismissRequest = null) {
-            HintBoxPopupContent(
-                modifier = modifier,
-                title = title,
-                message = message,
-                isPointerOnTop = isPointerTriangleOnTop,
-                pointerAlignment = pointerAlignment,
-                pointerOffset = pointerOffset,
-                onDismissClick = onDismissClick,
-            )
-        }
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(),
+        exit = fadeOut(),
+        modifier = Modifier.zIndex(Float.MAX_VALUE).offset { offset },
+    ) {
+        HintBoxPopupContent(
+            modifier = modifier,
+            title = title,
+            message = message,
+            isPointerOnTop = isPointerTriangleOnTop,
+            pointerAlignment = pointerAlignment,
+            pointerOffset = pointerOffset,
+            textColor = textColor,
+            textStyle = textStyle,
+            onDismissClick = onDismissClick,
+        )
     }
 }
 
 @Composable
 private fun HintBoxPopupContent(
     modifier: Modifier = Modifier,
-    title: String,
+    title: String? = null,
     message: String,
     isPointerOnTop: Boolean,
     pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     pointerOffset: DpOffset = DpOffset.Zero,
+    textColor: Color = Theme.v2.colors.text.tertiary,
+    textStyle: TextStyle = Theme.brockmann.supplementary.footnote,
     onDismissClick: () -> Unit,
 ) {
 
@@ -162,27 +174,25 @@ private fun HintBoxPopupContent(
                     )
                     .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            Row {
-                Text(
-                    text = title,
-                    style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.inverse,
-                )
-                UiSpacer(weight = 1f)
-                UiIcon(
-                    drawableResId = R.drawable.x,
-                    size = 16.dp,
-                    tint = Theme.v2.colors.text.button.disabled,
-                )
+            if (!title.isNullOrEmpty()) {
+                Row {
+                    Text(
+                        text = title,
+                        style = Theme.brockmann.body.m.medium,
+                        color = Theme.v2.colors.text.inverse,
+                    )
+                    UiSpacer(weight = 1f)
+                    UiIcon(
+                        drawableResId = R.drawable.x,
+                        size = 16.dp,
+                        tint = Theme.v2.colors.text.button.disabled,
+                    )
+                }
+
+                UiSpacer(size = 2.dp)
             }
 
-            UiSpacer(size = 2.dp)
-
-            Text(
-                text = message,
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.supplementary.footnote,
-            )
+            Text(text = message, color = textColor, style = Theme.brockmann.supplementary.footnote)
         }
 
         if (isPointerOnTop.not()) {
@@ -199,8 +209,6 @@ private fun HintBoxPopupContent(
 @Preview
 @Composable
 private fun HintBoxTopPointerPreview() {
-    // In preview mode, the popup displays an unwanted background that's not visible in the actual
-    // app.
     HintBox(
         modifier = Modifier.width(250.dp),
         title = "Insufficient funds",
@@ -214,8 +222,6 @@ private fun HintBoxTopPointerPreview() {
 @Preview
 @Composable
 private fun HintBoxDownPointerPreview() {
-    // In preview mode, the popup displays an unwanted background that's not visible in the actual
-    // app.
     HintBox(
         modifier = Modifier.width(250.dp),
         title = "Insufficient funds",
