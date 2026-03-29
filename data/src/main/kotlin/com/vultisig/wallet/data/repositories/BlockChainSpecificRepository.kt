@@ -238,29 +238,7 @@ constructor(
             }
 
             TokenStandard.UTXO -> {
-                // TODO: Refactor, delegate Cardano UTXO to WalletCore as BTC
                 if (chain == Chain.Cardano) {
-                    // For send max, don't add fees - let WalletCore handle it
-                    // For regular sends, add estimated fees to ensure we have enough
-                    val baseAmount = tokenAmountValue ?: BigInteger.ZERO
-                    val totalNeeded =
-                        if (isMaxAmountEnabled) baseAmount else baseAmount + gasFee.value
-
-                    val (selectedUTXOs, totalSelected) =
-                        cardanoApi.getUTXOs(token).sortedBy(UtxoInfo::amount).fold(
-                            listOf<UtxoInfo>() to BigInteger.ZERO
-                        ) { (selected, total), utxo ->
-                            if (total >= totalNeeded) selected to total
-                            else (selected + utxo) to (total + BigInteger.valueOf(utxo.amount))
-                        }
-
-                    if (
-                        selectedUTXOs.isEmpty() ||
-                            (!isMaxAmountEnabled && totalSelected < totalNeeded)
-                    ) {
-                        error("Not enough balance for Cardano transaction")
-                    }
-
                     BlockChainSpecificAndUtxo(
                         blockChainSpecific =
                             BlockChainSpecific.Cardano(
@@ -268,7 +246,7 @@ constructor(
                                 sendMaxAmount = isMaxAmountEnabled,
                                 ttl = cardanoApi.calculateDynamicTTL(),
                             ),
-                        utxos = selectedUTXOs,
+                        utxos = cardanoApi.getUTXOs(token),
                     )
                 } else {
                     val utxos = blockChairApi.getAddressInfo(chain = chain, address = address)
