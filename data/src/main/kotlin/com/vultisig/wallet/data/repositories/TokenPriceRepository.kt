@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.CurrencyToPrice
 import com.vultisig.wallet.data.api.LiQuestApi
+import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
@@ -51,6 +52,7 @@ constructor(
     private val coinGeckoApi: CoinGeckoApi,
     private val liQuestApi: LiQuestApi,
     private val thorApi: ThorChainApi,
+    private val mayaApi: MayaChainApi,
     private val tokenPriceDao: TokenPriceDao,
 ) : TokenPriceRepository {
 
@@ -69,7 +71,9 @@ constructor(
 
     @ExperimentalCoroutinesApi
     override fun getPrice(token: Coin, appCurrency: AppCurrency): Flow<BigDecimal> =
-        tokenIdToPrice.map { it[token.id]?.get(appCurrency.ticker.lowercase()) ?: BigDecimal.ZERO }
+        tokenIdToPrice.map {
+            it[token.id]?.get(appCurrency.ticker.lowercase()) ?: BigDecimal.ZERO
+        }
 
     override suspend fun refresh(tokens: List<Coin>) {
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
@@ -148,6 +152,8 @@ constructor(
 
         fetchThorPoolPrices(tokenList = tokens, currency = currency)
 
+        fetchMayaPoolPrices(tokenList = tokens, currency = currency)
+
         fetchThorContractPrices(currency = currency, tokenList = tokens)
     }
 
@@ -175,8 +181,9 @@ constructor(
         tokenIdToPrices: Map<TokenId, CurrencyToPrice>,
         currency: String,
     ) {
-        val tokenIdToPricesFiltered =
-            tokenIdToPrices.filter { (_, currencyToPrice) -> currencyToPrice.isNotEmpty() }
+        val tokenIdToPricesFiltered = tokenIdToPrices.filter { (_, currencyToPrice) ->
+            currencyToPrice.isNotEmpty()
+        }
         tokenIdToPricesFiltered.forEach { (tokenId, currencyToPrice) ->
             currencyToPrice[currency]?.toPlainString()?.let { price ->
                 tokenPriceDao.insertTokenPrice(
@@ -200,10 +207,9 @@ constructor(
                     contractAddresses = contractAddresses,
                     currencies = currencies,
                 )
-            val notInCoinGeckoTokens =
-                contractAddresses.filterNot { address ->
-                    coinGeckoContractsPrice.keys.any { key -> key.equals(address, false) }
-                }
+            val notInCoinGeckoTokens = contractAddresses.filterNot { address ->
+                coinGeckoContractsPrice.keys.any { key -> key.equals(address, false) }
+            }
 
             notInCoinGeckoTokens.takeIf { it.isNotEmpty() }
                 ?: return@coroutineScope coinGeckoContractsPrice
@@ -299,6 +305,58 @@ constructor(
         }
     }
 
+    private suspend fun fetchMayaPoolPrices(tokenList: List<Coin>, currency: String) {
+        supervisorScope {
+            val mayaTokens = tokenList.filter { it.chain == Chain.MayaChain && !it.isNativeToken }
+            if (mayaTokens.isEmpty()) return@supervisorScope
+
+            val cacaoToken =
+                tokenList.find { it.chain == Chain.MayaChain && it.isNativeToken }
+                    ?: return@supervisorScope
+
+            val cacaoPrice =
+                getCachedPrice(cacaoToken.id, AppCurrency.USD) ?: return@supervisorScope
+            if (cacaoPrice <= BigDecimal.ZERO) return@supervisorScope
+
+            val tickerUsd = AppCurrency.USD.ticker.lowercase()
+            val tetherPrice =
+                if (currency.equals(tickerUsd, ignoreCase = true)) BigDecimal.ONE
+                else fetchTetherPrice()
+
+            val tokenIdToPrices =
+                mayaTokens
+                    .mapNotNull { token ->
+                        try {
+                            val poolAsset = "MAYA.${token.ticker}"
+                            val pool = mayaApi.getPool(poolAsset)
+                            val balanceCacao = pool.balanceCacao.toBigDecimal()
+                            val balanceAsset = pool.balanceAsset.toBigDecimal()
+                            if (balanceAsset <= BigDecimal.ZERO) return@mapNotNull null
+
+                            val cacaoDecimals = BigDecimal.TEN.pow(CACAO_DECIMALS)
+                            val assetDecimals = BigDecimal.TEN.pow(token.decimal)
+                            val priceInCacao =
+                                balanceCacao
+                                    .divide(cacaoDecimals, 8, RoundingMode.HALF_UP)
+                                    .divide(
+                                        balanceAsset.divide(assetDecimals, 8, RoundingMode.HALF_UP),
+                                        8,
+                                        RoundingMode.HALF_UP,
+                                    )
+                            val priceUsd = priceInCacao * cacaoPrice
+
+                            token.id to mapOf(currency to priceUsd * tetherPrice)
+                        } catch (e: Exception) {
+                            Timber.e(e, "Failed to fetch Maya pool price for ${token.ticker}")
+                            null
+                        }
+                    }
+                    .toMap()
+
+            savePrices(tokenIdToPrices, currency)
+        }
+    }
+
     private suspend fun fetchThorContractPrices(tokenList: List<Coin>, currency: String) =
         supervisorScope {
             try {
@@ -308,21 +366,21 @@ constructor(
                             it.contractAddress == "x/staking-tcy"
                     } ?: emptyList()
 
-                val matchingTokens =
-                    tokenList.filter { token -> thorTokens.any { it.id.equals(token.id, true) } }
+                val matchingTokens = tokenList.filter { token ->
+                    thorTokens.any { it.id.equals(token.id, true) }
+                }
 
                 if (matchingTokens.isEmpty()) return@supervisorScope
 
-                val contracts =
-                    matchingTokens.map {
-                        when {
-                            it.contractAddress.startsWith("x/nami") ->
-                                it.contractAddress.substringAfter("nav-").substringBefore("-rcpt")
-                            it.contractAddress == "x/staking-tcy" ->
-                                "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
-                            else -> it.contractAddress
-                        }
+                val contracts = matchingTokens.map {
+                    when {
+                        it.contractAddress.startsWith("x/nami") ->
+                            it.contractAddress.substringAfter("nav-").substringBefore("-rcpt")
+                        it.contractAddress == "x/staking-tcy" ->
+                            "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
+                        else -> it.contractAddress
                     }
+                }
 
                 val tokenIds = matchingTokens.map { it.id }
 
@@ -393,6 +451,7 @@ constructor(
 
     companion object {
         private const val TETHER_PRICE_PROVIDER_ID = "tether"
+        private const val CACAO_DECIMALS = 10
     }
 
     private fun mapThorPoolAsset(contractAddress: String): String {
