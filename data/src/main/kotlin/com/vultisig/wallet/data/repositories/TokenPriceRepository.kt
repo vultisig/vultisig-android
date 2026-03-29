@@ -335,14 +335,12 @@ constructor(
 
                             val cacaoDecimals = BigDecimal.TEN.pow(CACAO_DECIMALS)
                             val assetDecimals = BigDecimal.TEN.pow(token.decimal)
+                            val normalizedCacao =
+                                balanceCacao.divide(cacaoDecimals, 8, RoundingMode.HALF_UP)
+                            val normalizedAsset =
+                                balanceAsset.divide(assetDecimals, 8, RoundingMode.HALF_UP)
                             val priceInCacao =
-                                balanceCacao
-                                    .divide(cacaoDecimals, 8, RoundingMode.HALF_UP)
-                                    .divide(
-                                        balanceAsset.divide(assetDecimals, 8, RoundingMode.HALF_UP),
-                                        8,
-                                        RoundingMode.HALF_UP,
-                                    )
+                                normalizedCacao.divide(normalizedAsset, 8, RoundingMode.HALF_UP)
                             val priceUsd = priceInCacao * cacaoPrice
 
                             token.id to mapOf(currency to priceUsd * tetherPrice)
