@@ -20,6 +20,8 @@ import com.vultisig.wallet.ui.models.deposit.DepositViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
+import com.vultisig.wallet.ui.screens.v2.defi.maya.AddLpScreen
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -60,10 +62,17 @@ internal fun DepositScreen(
     val progress: Float
     val title: String
 
+    val isAddLp = depositType == DeFiNavActions.ADD_LP.type
+
     when (route) {
         SendDst.Send.route -> {
             progress = 0.25f
-            title = stringResource(R.string.deposit_screen_title)
+            title =
+                if (isAddLp) {
+                    stringResource(R.string.add_pool_title)
+                } else {
+                    stringResource(R.string.deposit_screen_title)
+                }
         }
         SendDst.VerifyTransaction.staticRoute -> {
             progress = 0.5f
@@ -71,7 +80,12 @@ internal fun DepositScreen(
         }
         else -> {
             progress = 0.0f
-            title = stringResource(R.string.deposit_screen_title)
+            title =
+                if (isAddLp) {
+                    stringResource(R.string.add_pool_title)
+                } else {
+                    stringResource(R.string.deposit_screen_title)
+                }
         }
     }
     val qrAddress by viewModel.addressProvider.address.collectAsState()
@@ -121,13 +135,17 @@ private fun DepositScreen(
             popExitTransition = slideOutToEndExitTransition(),
         ) {
             composable(route = SendDst.Send.route) {
-                DepositFormScreen(
-                    vaultId = vaultId,
-                    chainId = chainId,
-                    depositType = depositType,
-                    bondAddress = bondAddress,
-                    poolId = poolId,
-                )
+                if (depositType == DeFiNavActions.ADD_LP.type) {
+                    AddLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId.orEmpty())
+                } else {
+                    DepositFormScreen(
+                        vaultId = vaultId,
+                        chainId = chainId,
+                        depositType = depositType,
+                        bondAddress = bondAddress,
+                        poolId = poolId,
+                    )
+                }
             }
             composable(
                 route = SendDst.VerifyTransaction.staticRoute,
