@@ -505,6 +505,12 @@ constructor(
 
             TokenStandard.TRC20 -> {
                 val specific = tronApi.getSpecific()
+                val energyPrice =
+                    try {
+                        tronApi.getChainParameters().energyFee.takeIf { it > 0L }
+                    } catch (_: Exception) {
+                        null
+                    } ?: ENERGY_TO_SUN_FACTOR.toLong()
                 val now = Clock.System.now()
                 val expiration = now + 1.hours
                 val rawData = specific.blockHeader.rawData
@@ -525,7 +531,7 @@ constructor(
                                 )
 
                             val totalEnergy = triggerResult.energyUsed + triggerResult.energyPenalty
-                            totalEnergy * ENERGY_TO_SUN_FACTOR
+                            totalEnergy * energyPrice
                         }
 
                 BlockChainSpecificAndUtxo(
