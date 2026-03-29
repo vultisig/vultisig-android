@@ -1431,7 +1431,7 @@ constructor(
                                                 }
                                             } catch (t: Throwable) {
                                                 Timber.e(t)
-                                                Pair(gasFees, srcNativeToken)
+                                                Pair(BigInteger.ZERO, srcNativeToken)
                                             }
                                         val updatedTx =
                                             apiQuote.tx.copy(swapFee = feeAmount.toString())

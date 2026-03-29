@@ -65,6 +65,7 @@ constructor(
             val sourceAddress = srcTokenContractAddress.ifEmpty { NULL_ADDRESS }
             val destinationAddress = dstTokenContractAddress.ifEmpty { NULL_ADDRESS }
 
+            val hasFee = affiliateBps > 0
             val response =
                 httpClient.get(aggregatorApiBaseUrl) {
                     url {
@@ -76,7 +77,7 @@ constructor(
                             append("saveGas", "false")
                             append("gasInclude", "true")
                             append("slippageTolerance", SLIPPAGE_TOLERANCE.toString())
-                            if (affiliateBps > 0) {
+                            if (hasFee) {
                                 append("feeAmount", affiliateBps.toString())
                                 append("chargeFeeBy", "currency_out")
                                 append("isInBps", "true")
