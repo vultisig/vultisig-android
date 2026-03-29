@@ -48,7 +48,7 @@ fun UiText.asString(context: Context): String {
     return when (this) {
         is DynamicString -> text
         is StringResource -> context.getString(resId)
-        is FormattedText -> context.getString(resId, formatArgs)
+        is FormattedText -> context.getString(resId, *formatArgs.toTypedArray())
         is PluralText ->
             context.resources.getQuantityString(resId, quantity, *formatArgs.toTypedArray())
     }
