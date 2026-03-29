@@ -348,7 +348,7 @@
     <string name="push_notification_error_token_not_available">No se pudo obtener el token de notificación</string>
     <string name="push_notification_error_api_failure">No se pudo actualizar el registro de notificaciones</string>
     <plurals name="push_notification_partial_failure">
-        <item quantity="one">%1$d de %2$d bóvedas actualizadas, %3$d fallidas</item>
+        <item quantity="one">%1$d de %2$d bóveda actualizada, %3$d fallida</item>
         <item quantity="other">%1$d de %2$d bóvedas actualizadas, %3$d fallidas</item>
     </plurals>
     <string name="push_notifications_sent">Notificación enviada correctamente</string>
@@ -653,7 +653,7 @@
     <string name="referral_create_unknown">Desconocido</string>
     <string name="referral_code_cannot_be_empty">El código de referencia no puede estar vacío.</string>
     <plurals name="referral_code_can_be_up_to_characters">
-        <item quantity="one">El código de referencia puede tener hasta %1$d caracteres.</item>
+        <item quantity="one">El código de referencia puede tener hasta %1$d carácter.</item>
         <item quantity="other">El código de referencia puede tener hasta %1$d caracteres.</item>
     </plurals>
     <string name="key_gen_discovery_no_connection_available">No hay conexión disponible</string>
@@ -728,7 +728,7 @@
     <string name="address_bookmark_error_invalid_address">Esta dirección no es válida para %s</string>
     <string name="address_bookmark_error_empty_label">La etiqueta no puede estar vacía</string>
     <plurals name="address_bookmark_error_invalid_label">
-        <item quantity="one">La etiqueta debe tener entre 1 y %d caracteres</item>
+        <item quantity="one">La etiqueta debe tener entre 1 y %d carácter</item>
         <item quantity="other">La etiqueta debe tener entre 1 y %d caracteres</item>
     </plurals>
     <string name="send_form_ripple_reaping_warning">Asegúrate de tener fondos suficientes para cubrir las comisiones. Si el saldo de una cuenta cae por debajo de 1 XRP (Depósito Existente), la cuenta se desactivará (se liquidará) y los fondos restantes se perderán. Puedes reactivar la dirección con un nuevo depósito superior al depósito existente en cualquier momento. Sin embargo, esto no recuperará los fondos perdidos.</string>
@@ -901,7 +901,7 @@
     <string name="solana_program_name">Programa: %1$s</string>
     <string name="solana_program_id">ID del programa: %1$s</string>
     <plurals name="solana_accounts_data">
-        <item quantity="one">Cuentas: %1$d | Longitud de datos: %2$d bytes</item>
+        <item quantity="one">Cuenta: %1$d | Longitud de datos: %2$d byte</item>
         <item quantity="other">Cuentas: %1$d | Longitud de datos: %2$d bytes</item>
     </plurals>
 
@@ -952,7 +952,7 @@
     <string name="import_seedphrase_label">Frase semilla</string>
     <string name="import_seedphrase_hint">Ingrese su frase de recuperación…</string>
     <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d palabras</item>
+        <item quantity="one">%1$d / %2$d palabra</item>
         <item quantity="other">%1$d / %2$d palabras</item>
     </plurals>
     <string name="import_seedphrase_invalid_word_count">Ingresaste %1$s palabras. La frase semilla debe tener 12 o 24 palabras</string>
@@ -1061,7 +1061,7 @@
     <string name="vault_setup_built_for_teams_and_treasuries">Diseñado para equipos y tesorerías</string>
     <string name="vault_setup_back_up_each_device">Hacer copia de seguridad de cada dispositivo</string>
     <plurals name="vault_setup_you_ll_create_n_backups_in_total">
-        <item quantity="one">Crearás %1$d copias de seguridad en total. Lo harás en cada dispositivo.</item>
+        <item quantity="one">Crearás %1$d copia de seguridad en total. Lo harás en cada dispositivo.</item>
         <item quantity="other">Crearás %1$d copias de seguridad en total. Lo harás en cada dispositivo.</item>
     </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Guarda cada copia de seguridad en un servicio de nube diferente o con una contraseña diferente. Si una se ve comprometida, tus fondos estarán seguros.</string>

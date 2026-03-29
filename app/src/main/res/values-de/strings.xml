@@ -903,7 +903,7 @@
     <string name="solana_program_name">Programm: %1$s</string>
     <string name="solana_program_id">Programm-ID: %1$s</string>
     <plurals name="solana_accounts_data">
-        <item quantity="one">Konten: %1$d | Datenlänge: %2$d Bytes</item>
+        <item quantity="one">Konto: %1$d | Datenlänge: %2$d Byte</item>
         <item quantity="other">Konten: %1$d | Datenlänge: %2$d Bytes</item>
     </plurals>
 
