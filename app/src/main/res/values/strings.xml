@@ -644,7 +644,7 @@
     <string name="add_referral">Add Referral</string>
     <string name="referral_added">Referral added</string>
     <string name="add_referral_sheet_title">Referral code</string>
-    <string name="add_referral_sheet_description">Enter your referral code here. Enjoy 10% off every transaction.</string>
+    <string name="add_referral_sheet_description">Enter your referral code here. Enjoy 10%% off every transaction.</string>
     <string name="add_referral_sheet_placeholder">Enter up to 4 characters</string>
     <string name="add_referral_sheet_apply">Apply Referral</string>
     <string name="add_referral_error_length">Referral code must be no more than 4 characters</string>
@@ -1116,7 +1116,7 @@
     <string name="vault_setup_perfect_balance_desc">Perfect balance for most users. 2 signers and 1 backup device. Store assets without stress.</string>
     <string name="vault_setup_perfect_for_users_with_only_2_devices">Perfect setup for users with only 2 devices.</string>
     <string name="vault_setup_3_device_or_more_signing">3-Device or more Signing</string>
-    <string name="vault_setup_3_device_or_more_signing_desc">Vaults need 67% of devices to sign a transaction. Have as many signers as you want.</string>
+    <string name="vault_setup_3_device_or_more_signing_desc">Vaults need 67%% of devices to sign a transaction. Have as many signers as you want.</string>
     <string name="vault_setup_dynamic_device_management">Dynamic device management</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">Add as many devices as you want and receive institutional-grade security.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Built for teams and treasuries</string>
