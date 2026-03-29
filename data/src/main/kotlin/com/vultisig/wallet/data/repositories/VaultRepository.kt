@@ -14,9 +14,11 @@ import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 
 interface VaultRepository {
 
@@ -141,24 +143,45 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
             resharePrefix = vault.vault.resharePrefix,
             keyshares = vault.keyShares.map { KeyShare(it.pubKey, it.keyShare) },
             coins =
-                vault.coins.map { it ->
-                    val chain = Chain.fromRaw(it.chain)
+                vault.coins.mapNotNull { coinEntity ->
+                    val chain =
+                        try {
+                            Chain.fromRaw(coinEntity.chain)
+                        } catch (e: NoSuchElementException) {
+                            Timber.e(
+                                e,
+                                "Failed to map coin %s on chain %s, skipping",
+                                coinEntity.id,
+                                coinEntity.chain,
+                            )
+                            return@mapNotNull null
+                        }
+
+                    val logo =
+                        try {
+                            coinEntity.logo.takeIf { it.isNotBlank() }
+                                ?: tokenRepository.getToken(coinEntity.id)?.logo
+                                ?: ""
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Timber.w(e, "Failed to resolve logo for coin %s", coinEntity.id)
+                            ""
+                        }
+
                     Coin(
                         chain = chain,
-                        ticker = it.ticker,
-                        logo =
-                            it.logo.takeIf { it.isNotBlank() }
-                                ?: tokenRepository.getToken(it.id)?.logo
-                                ?: "",
-                        address = it.address,
-                        decimal = it.decimals,
-                        hexPublicKey = it.hexPublicKey,
-                        priceProviderID = it.priceProviderID,
-                        contractAddress = it.contractAddress,
+                        ticker = coinEntity.ticker,
+                        logo = logo,
+                        address = coinEntity.address,
+                        decimal = coinEntity.decimals,
+                        hexPublicKey = coinEntity.hexPublicKey,
+                        priceProviderID = coinEntity.priceProviderID,
+                        contractAddress = coinEntity.contractAddress,
                         isNativeToken =
                             when (chain) {
-                                Chain.MayaChain -> it.ticker == "CACAO"
-                                else -> it.contractAddress.isBlank()
+                                Chain.MayaChain -> coinEntity.ticker == "CACAO"
+                                else -> coinEntity.contractAddress.isBlank()
                             },
                     )
                 },
