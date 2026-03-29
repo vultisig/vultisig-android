@@ -144,8 +144,8 @@ private fun HintBoxPopupContent(
     isPointerOnTop: Boolean,
     pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     pointerOffset: DpOffset = DpOffset.Zero,
-    textColor: Color = Color.Unspecified,
-    textStyle: TextStyle = TextStyle.Default,
+    textColor: Color = Theme.v2.colors.text.tertiary,
+    textStyle: TextStyle = Theme.brockmann.supplementary.footnote,
     onDismissClick: () -> Unit,
 ) {
 
@@ -192,13 +192,7 @@ private fun HintBoxPopupContent(
                 UiSpacer(size = 2.dp)
             }
 
-            Text(
-                text = message,
-                color =
-                    if (textColor != Color.Unspecified) textColor
-                    else Theme.v2.colors.text.tertiary,
-                style = if (textStyle != TextStyle.Default) Theme.brockmann.supplementary.footnote,
-            )
+            Text(text = message, color = textColor, style = Theme.brockmann.supplementary.footnote)
         }
 
         if (isPointerOnTop.not()) {
