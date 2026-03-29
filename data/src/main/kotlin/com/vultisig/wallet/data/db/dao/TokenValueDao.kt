@@ -20,4 +20,10 @@ interface TokenValueDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTokenValue(tokenValue: TokenValueEntity)
+
+    @Query(
+        "DELETE FROM tokenValue WHERE " +
+            "chain = :chainId AND address = :address AND ticker = :ticker"
+    )
+    suspend fun deleteTokenValue(chainId: String, address: String, ticker: String)
 }
