@@ -1034,7 +1034,7 @@
     <string name="welcome_fast_and_easy">빠르고 간편</string>
     <string name="welcome_fast_and_easy_desc">기기 1대로만 서명. 보안 서버가 멀티시그 보안을 위해 함께 서명합니다. 플러그인 호환.</string>
     <string name="welcome_fast_and_easy_highlight">기기 1대로만.</string>
-    <string name="welcome_plugin_compatible">플러그인 마켓플레이스 호환</string>
+    <string name="welcome_plugin_compatible">플러그인 스토어 호환</string>
     <string name="welcome_tip">팁: 브라우저를 기기로 사용할 수 있습니다</string>
     <string name="welcome_only_your_devices">내 기기만 사용</string>
     <string name="welcome_only_your_devices_desc">내 기기만이 승인된 서명자입니다. 거래 서명에 기기 2대가 필요합니다. 완전한 자기 수탁.</string>
