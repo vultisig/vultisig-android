@@ -633,7 +633,7 @@
     <string name="send_form_enter_memo">Ввести Memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Хранилище с таким именем уже существует.</string>
     <string name="name_vault_server_exists_warning_title">Быстрое хранилище уже существует</string>
-    <string name="name_vault_server_exists_warning_message">Быстрое хранилище с этой сид-фразой уже существует на другом устройстве. Создание нового быстрого хранилища заменит серверную долю и сделает существующее хранилище непригодным для использования. Рассмотрите возможность использования безопасного хранилища.</string>
+    <string name="name_vault_server_exists_warning_message">Быстрое хранилище с этой сид-фразой уже существует на сервере. Создание нового быстрого хранилища заменит общий доступ к серверу и сделает существующее хранилище непригодным для использования. Рассмотрите возможность использования безопасного хранилища.</string>
     <string name="name_vault_server_exists_warning_continue">Продолжить</string>
     <string name="name_vault_server_exists_warning_back">Назад</string>
     <string name="referral_create_status">Статус</string>

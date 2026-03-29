@@ -633,7 +633,7 @@
     <string name="send_form_enter_memo">Memo invoeren</string>
     <string name="name_vault_vault_with_this_name_already_exists">Er bestaat al een kluis met deze naam</string>
     <string name="name_vault_server_exists_warning_title">Snelle kluis bestaat al</string>
-    <string name="name_vault_server_exists_warning_message">Er bestaat al een snelle kluis met deze herstelzin op een ander apparaat. Het aanmaken van een nieuwe snelle kluis vervangt het serveraandeel en maakt de bestaande kluis onbruikbaar. Overweeg in plaats daarvan een beveiligde kluis te gebruiken.</string>
+    <string name="name_vault_server_exists_warning_message">Er bestaat al een snelle kluis met deze herstelzin op de server. Het aanmaken van een nieuwe snelle kluis vervangt de servershare en maakt de bestaande kluis onbruikbaar. Overweeg in plaats daarvan een beveiligde kluis te gebruiken.</string>
     <string name="name_vault_server_exists_warning_continue">Doorgaan</string>
     <string name="name_vault_server_exists_warning_back">Terug</string>
     <string name="referral_create_status">Status</string>
