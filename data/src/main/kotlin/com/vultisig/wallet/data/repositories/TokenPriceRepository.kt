@@ -71,9 +71,7 @@ constructor(
 
     @ExperimentalCoroutinesApi
     override fun getPrice(token: Coin, appCurrency: AppCurrency): Flow<BigDecimal> =
-        tokenIdToPrice.map {
-            it[token.id]?.get(appCurrency.ticker.lowercase()) ?: BigDecimal.ZERO
-        }
+        tokenIdToPrice.map { it[token.id]?.get(appCurrency.ticker.lowercase()) ?: BigDecimal.ZERO }
 
     override suspend fun refresh(tokens: List<Coin>) {
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
@@ -181,9 +179,8 @@ constructor(
         tokenIdToPrices: Map<TokenId, CurrencyToPrice>,
         currency: String,
     ) {
-        val tokenIdToPricesFiltered = tokenIdToPrices.filter { (_, currencyToPrice) ->
-            currencyToPrice.isNotEmpty()
-        }
+        val tokenIdToPricesFiltered =
+            tokenIdToPrices.filter { (_, currencyToPrice) -> currencyToPrice.isNotEmpty() }
         tokenIdToPricesFiltered.forEach { (tokenId, currencyToPrice) ->
             currencyToPrice[currency]?.toPlainString()?.let { price ->
                 tokenPriceDao.insertTokenPrice(
@@ -207,9 +204,10 @@ constructor(
                     contractAddresses = contractAddresses,
                     currencies = currencies,
                 )
-            val notInCoinGeckoTokens = contractAddresses.filterNot { address ->
-                coinGeckoContractsPrice.keys.any { key -> key.equals(address, false) }
-            }
+            val notInCoinGeckoTokens =
+                contractAddresses.filterNot { address ->
+                    coinGeckoContractsPrice.keys.any { key -> key.equals(address, false) }
+                }
 
             notInCoinGeckoTokens.takeIf { it.isNotEmpty() }
                 ?: return@coroutineScope coinGeckoContractsPrice
@@ -358,21 +356,21 @@ constructor(
                             it.contractAddress == "x/staking-tcy"
                     } ?: emptyList()
 
-                val matchingTokens = tokenList.filter { token ->
-                    thorTokens.any { it.id.equals(token.id, true) }
-                }
+                val matchingTokens =
+                    tokenList.filter { token -> thorTokens.any { it.id.equals(token.id, true) } }
 
                 if (matchingTokens.isEmpty()) return@supervisorScope
 
-                val contracts = matchingTokens.map {
-                    when {
-                        it.contractAddress.startsWith("x/nami") ->
-                            it.contractAddress.substringAfter("nav-").substringBefore("-rcpt")
-                        it.contractAddress == "x/staking-tcy" ->
-                            "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
-                        else -> it.contractAddress
+                val contracts =
+                    matchingTokens.map {
+                        when {
+                            it.contractAddress.startsWith("x/nami") ->
+                                it.contractAddress.substringAfter("nav-").substringBefore("-rcpt")
+                            it.contractAddress == "x/staking-tcy" ->
+                                "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
+                            else -> it.contractAddress
+                        }
                     }
-                }
 
                 val tokenIds = matchingTokens.map { it.id }
 
