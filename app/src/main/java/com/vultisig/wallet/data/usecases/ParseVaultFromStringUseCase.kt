@@ -82,6 +82,7 @@ constructor(
                     .associateBy { it.pubKey }
                     .values
                     .toList(),
+            pubKeyMLDSA = proto.publicKeyMldsa44,
             coins = emptyList(),
             libType = proto.libType.toSigningLibType(),
             chainPublicKeys =

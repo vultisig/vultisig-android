@@ -203,7 +203,7 @@ constructor(
                 state.update {
                     it.copy(
                         referralMessage =
-                            UiText.StringResource(R.string.referral_external_not_failed),
+                            UiText.StringResource(R.string.referral_external_link_failed),
                         referralMessageState = VsTextInputFieldInnerState.Error,
                         isLoading = false,
                     )

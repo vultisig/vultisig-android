@@ -69,6 +69,7 @@ internal fun KeygenScreen(model: KeygenViewModel = hiltViewModel()) {
         when (state.keygenState) {
             KeygenState.KeygenECDSA,
             KeygenState.KeygenEdDSA,
+            KeygenState.KeygenMLDSA,
             KeygenState.Success -> {
                 view.performHaptic()
             }
@@ -82,7 +83,8 @@ internal fun KeygenScreen(model: KeygenViewModel = hiltViewModel()) {
         when (state.action) {
             TssAction.KEYGEN,
             TssAction.ReShare,
-            TssAction.KeyImport -> {
+            TssAction.KeyImport,
+            TssAction.SingleKeygen -> {
                 KeygenScreen(state = state, onTryAgainClick = model::tryAgain)
             }
 

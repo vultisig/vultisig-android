@@ -65,6 +65,7 @@ constructor(
                 Chain.TerraClassic -> "https://terra-classic-lcd.publicnode.com"
                 Chain.Noble -> "https://noble-api.polkachu.com"
                 Chain.Akash -> "https://akash-rest.publicnode.com"
+                Chain.Qbtc -> "https://api.vultisig.com/qbtc-rpc"
                 else -> throw IllegalArgumentException("Unsupported chain $chain")
             }
 

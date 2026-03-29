@@ -80,6 +80,8 @@
     <string name="vault_settings_rename_subtitle">Edit your vault name</string>
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Reshare vault with a new committee</string>
+    <string name="vault_settings_dilithium_keygen_title">Enable QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generate key to enable QBTC chain</string>
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_delete_subtitle">Delete your vault permanently.</string>
     <string name="vault_settings_security_title">On-chain Security</string>
@@ -204,6 +206,7 @@
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
     <string name="keysign_screen_signing_with_ecdsa">Signing with ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">Signing with EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">Signing with MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign Finished!</string>
     <string name="keysign_screen_error_please_try_again">Error! Please try again. %1$s</string>
     <string name="successfully_scanned_barcode">Successfully scanned barcode: %1$s</string>
@@ -386,7 +389,7 @@
     <string name="vault_details_screen_vault_part">Vault Share</string>
     <string name="vault_details_screen_vault_type">Vault Type</string>
     <string name="vault_settings_delete_vault_part">Vault Share:</string>
-    <string name="vault_password_hint_to_long">Hint is too long</string>
+    <string name="vault_password_hint_too_long">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc">Share %1$s of %2$s</string>
     <string name="do_not_remind_me_again">Don\'t remind me again</string>
     <string name="monthly_backup_reminder_title">Don\'t forget to backup your vault shares and verify the completeness.</string>
@@ -506,6 +509,7 @@
     <string name="keygen_step_preparing_vault">Preparing Vault</string>
     <string name="keygen_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="keygen_step_generating_eddsa">Generating EdDSA Key</string>
+    <string name="keygen_step_generating_mldsa">Generating MLDSA Key</string>
     <string name="keygen_step_generating_chain_keys">Generating Chain Keys</string>
     <string name="reshare_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="reshare_step_generating_eddsa">Generating EdDSA Key</string>
@@ -544,7 +548,7 @@
     <string name="vault_backup_error_pin">Error verifying code, please re-try</string>
     <string name="vault_backup_verifying_pin">Verifying code, please wait</string>
     <string name="vault_backup_screen_email_sent_to">Sent to %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email">Didn’t receive an email?</string>
+    <string name="vault_backup_screen_donot_receive_email">Didn’t receive an email?</string>
     <string name="vault_backup_screen_restart_keygen">Restart keygen</string>
     <string name="vault_backup_summary_choose_chains">Choose Chains</string>
     <string name="transaction_done_form_approve">Approve</string>
@@ -632,7 +636,7 @@
     <string name="referral_edit_referral">Edit referral</string>
     <string name="referral_external_linked">Referral code successfully linked</string>
     <string name="referral_external_not_linked">Referral code does not exist</string>
-    <string name="referral_external_not_failed">Failed to check referral code</string>
+    <string name="referral_external_link_failed">Failed to check referral code</string>
     <string name="referral_onboarding_title">Referral</string>
     <string name="referral_onboarding_get_started">Get started</string>
 
@@ -854,7 +858,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">Approval Tx Hash</string>
     <string name="swap_transaction_overview_track">Track</string>
     <string name="token_selection_screen_select_tokens">Select tokens</string>
-    <string name="token_selecton_screen_enable_at_least_one">Enable at least one token to view balances and manage positions.</string>
+    <string name="token_selection_screen_enable_at_least_one">Enable at least one token to view balances and manage positions.</string>
     <string name="transfer_ibc_destination_chain">Destination Chain</string>
     <string name="tx_done_transaction_details">Transaction Details</string>
     <string name="vault_confirmation_vault_upgraded">"Vault upgraded"</string>
@@ -862,7 +866,7 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">You’re ready to use a new wallet standard.</string>
     <string name="vault_detail_vault_info">Vault Info</string>
     <string name="vault_details_keys">Keys</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Enable Biometrics Fast Signing</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">Enable Biometrics Fast Signing</string>
     <string name="verify_send_send_overview">Send overview</string>
     <string name="verify_swap_swap_overview">Swap overview</string>
     <string name="rename_vault_screen_rename_vault">Rename Vault</string>
@@ -889,8 +893,8 @@
     <string name="enable_at_least_one_position">Enable at least one position to view balances and manage positions.</string>
     <string name="bandwidth">Bandwidth</string>
     <string name="energy">Energy</string>
-    <string name="bandwidth_dec">Bandwidth Points are required for every transaction on TRON, including both standard token sends and smart contract interactions. Every TRON user receives 600 free Bandwidth Points per day, which can cover approximately two basic sends. Additionally, you can earn extra Bandwidth Points by staking TRX, increasing your daily balance to support more transactions. If you have enough Bandwidth Points, you can send tokens, stake TRX, or interact with smart contracts without paying TRX in gas fees.</string>
-    <string name="energy_dec">Required for more complex actions, such as interacting with smart contracts (e.g., swaps or dApp transactions). Unlike Bandwidth, Energy is not given for free—you need to stake TRX to earn Energy. (More advanced users can also acquire Energy through leasing mechanisms such as JustLend or Tronify’s Energy rental markets). However, having Energy can significantly reduce or even eliminate the gas fees for smart contract interactions, making Energy valuable for those who use TRON dApps frequently.</string>
+    <string name="bandwidth_desc">Bandwidth Points are required for every transaction on TRON, including both standard token sends and smart contract interactions. Every TRON user receives 600 free Bandwidth Points per day, which can cover approximately two basic sends. Additionally, you can earn extra Bandwidth Points by staking TRX, increasing your daily balance to support more transactions. If you have enough Bandwidth Points, you can send tokens, stake TRX, or interact with smart contracts without paying TRX in gas fees.</string>
+    <string name="energy_desc">Required for more complex actions, such as interacting with smart contracts (e.g., swaps or dApp transactions). Unlike Bandwidth, Energy is not given for free—you need to stake TRX to earn Energy. (More advanced users can also acquire Energy through leasing mechanisms such as JustLend or Tronify’s Energy rental markets). However, having Energy can significantly reduce or even eliminate the gas fees for smart contract interactions, making Energy valuable for those who use TRON dApps frequently.</string>
     <string name="tron" translatable="false">Tron</string>
     <string name="tron_bandwidth_energy_title" translatable="false"><![CDATA["Bandwidth & Energy "]]></string>
 

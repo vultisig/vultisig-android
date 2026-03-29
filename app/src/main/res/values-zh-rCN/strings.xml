@@ -76,6 +76,8 @@
     <string name="vault_settings_rename_subtitle">编辑您的保险库名称</string>
     <string name="vault_settings_reshare_title">重新分享</string>
     <string name="vault_settings_reshare_subtitle">与新委员会重新分享保险库</string>
+    <string name="vault_settings_dilithium_keygen_title">启用 QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">生成密钥以启用 QBTC 链</string>
     <string name="vault_settings_delete_title">删除</string>
     <string name="vault_settings_delete_subtitle">永久删除您的保险库。</string>
     <string name="vault_settings_security_title">链上安全</string>
@@ -250,6 +252,7 @@
     <string name="keysign_screen_preparing_vault">准备保险库…</string>
     <string name="keysign_screen_signing_with_ecdsa">使用 ECDSA 签名…</string>
     <string name="keysign_screen_signing_with_eddsa">使用 EdDSA 签名…</string>
+    <string name="keysign_screen_signing_with_mldsa">使用 MLDSA 签名…</string>
     <string name="keysign_screen_keysign_finished">密钥签名完成！</string>
     <string name="keysign_screen_error_please_try_again">错误！请重试。%1$s</string>
 
@@ -556,7 +559,7 @@
     <string name="vault_details_screen_vault_part">保险库份额</string>
     <string name="vault_details_screen_vault_type">保险库类型</string>
     <string name="vault_settings_delete_vault_part">保险库份额：</string>
-    <string name="vault_password_hint_to_long">提示太长</string>
+    <string name="vault_password_hint_too_long">提示太长</string>
     <string name="vault_details_screen_vault_part_desc">份额 %1$s/%2$s</string>
 
     <!-- Settings Screen -->
@@ -629,6 +632,7 @@
     <string name="keygen_step_preparing_vault">准备保险库</string>
     <string name="keygen_step_generating_ecdsa">生成 ECDSA 密钥</string>
     <string name="keygen_step_generating_eddsa">生成 EdDSA 密钥</string>
+    <string name="keygen_step_generating_mldsa">生成 MLDSA 密钥</string>
     <string name="keygen_step_generating_chain_keys">生成链密钥</string>
     <string name="reshare_step_generating_ecdsa">生成 ECDSA 密钥</string>
     <string name="reshare_step_generating_eddsa">生成 EdDSA 密钥</string>
@@ -704,7 +708,7 @@
     <string name="referral_edit_referral">编辑推荐</string>
     <string name="referral_external_linked">推荐代码成功链接</string>
     <string name="referral_external_not_linked">推荐代码不存在</string>
-    <string name="referral_external_not_failed">检查推荐代码失败</string>
+    <string name="referral_external_link_failed">检查推荐代码失败</string>
     <string name="referral_onboarding_title">推荐</string>
     <string name="referral_onboarding_get_started">开始</string>
     <string name="offline">您已离线</string>
@@ -846,7 +850,7 @@
 
     <!-- Token Selection -->
     <string name="token_selection_screen_select_tokens">选择代币</string>
-    <string name="token_selecton_screen_enable_at_least_one">启用至少一个代币以查看余额和管理仓位。</string>
+    <string name="token_selection_screen_enable_at_least_one">启用至少一个代币以查看余额和管理仓位。</string>
 
     <!-- Transfer -->
     <string name="transfer_ibc_destination_chain">目标链</string>
@@ -862,7 +866,7 @@
     <!-- Vault Details -->
     <string name="vault_detail_vault_info">保险库信息</string>
     <string name="vault_details_keys">密钥</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">启用生物识别快速签名</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">启用生物识别快速签名</string>
 
     <!-- Verify -->
     <string name="verify_send_send_overview">发送概览</string>
@@ -1063,7 +1067,7 @@
     <string name="backup_password_topbar_title">密码</string>
     <string name="function_transfer_ibc_dst_address_input_title">目标地址</string>
     <string name="vault_backup_screen_email_sent_to">已发送至 %s。</string>
-    <string name="vault_backup_screen_donot_recieve_email">未收到邮件？</string>
+    <string name="vault_backup_screen_donot_receive_email">未收到邮件？</string>
     <string name="select_vault_type_secure_desc_3">保护任意金额的资产</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver 立即联合签名</string>
     <string name="peer_discovery_topbar_title">扫描二维码</string>
@@ -1173,8 +1177,8 @@
     <string name="enable_at_least_one_position">请至少启用一个仓位以查看余额和管理仓位。</string>
     <string name="bandwidth">带宽</string>
     <string name="energy">能量</string>
-    <string name="bandwidth_dec">在 TRON 上进行所有交易都需要带宽点数 (Bandwidth Points)，包括标准代币发送和智能合约交互。每位 TRON 用户每天可获得 600 个免费带宽点数，大约可以完成两次基本发送。此外，您可以通过质押 TRX 来赚取额外的带宽点数，增加您的每日余额，从而支持更多交易。如果您拥有足够的带宽点数，则可以发送代币、质押 TRX 或与智能合约交互，而无需支付 TRX 作为 Gas 费用。</string>
-    <string name="energy_dec">更复杂的操作（例如与智能合约交互，如代币互换或 dApp 交易）则需要能量 (Energy)。与带宽不同，能量并非免费提供——您需要质押 TRX 才能获得能量。（更高级的用户还可以通过 JustLend 或 Tronify 的能量租赁市场等租赁机制来获取能量）。然而，拥有能量可以显著降低甚至消除智能合约交互的 Gas 费用，因此对于经常使用 TRON dApp 的用户来说，能量非常宝贵。</string>
+    <string name="bandwidth_desc">在 TRON 上进行所有交易都需要带宽点数 (Bandwidth Points)，包括标准代币发送和智能合约交互。每位 TRON 用户每天可获得 600 个免费带宽点数，大约可以完成两次基本发送。此外，您可以通过质押 TRX 来赚取额外的带宽点数，增加您的每日余额，从而支持更多交易。如果您拥有足够的带宽点数，则可以发送代币、质押 TRX 或与智能合约交互，而无需支付 TRX 作为 Gas 费用。</string>
+    <string name="energy_desc">更复杂的操作（例如与智能合约交互，如代币互换或 dApp 交易）则需要能量 (Energy)。与带宽不同，能量并非免费提供——您需要质押 TRX 才能获得能量。（更高级的用户还可以通过 JustLend 或 Tronify 的能量租赁市场等租赁机制来获取能量）。然而，拥有能量可以显著降低甚至消除智能合约交互的 Gas 费用，因此对于经常使用 TRON dApp 的用户来说，能量非常宝贵。</string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">节点地址</string>
