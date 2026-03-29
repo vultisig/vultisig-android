@@ -976,7 +976,7 @@
     <string name="welcome_fast_and_easy">Rápido &amp; fácil</string>
     <string name="welcome_fast_and_easy_desc">Firma con solo 1 dispositivo. Nuestro servidor seguro firma contigo para seguridad multisig. Compatible con plugins.</string>
     <string name="welcome_fast_and_easy_highlight">solo 1 dispositivo.</string>
-    <string name="welcome_plugin_compatible">Compatible con Plugin Marketplace</string>
+    <string name="welcome_plugin_compatible">Compatible con Plugin Store</string>
     <string name="welcome_tip">Consejo: Puedes usar un navegador como dispositivo</string>
     <string name="welcome_only_your_devices">Solo tus dispositivos</string>
     <string name="welcome_only_your_devices_desc">Solo tus dispositivos son firmantes autorizados. Firmar transacciones requiere 2 dispositivos. Autocustodia total al alcance de tu mano.</string>
