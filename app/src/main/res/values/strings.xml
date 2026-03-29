@@ -839,6 +839,10 @@
     <string name="keysign_password_enter_your_password">Enter your password</string>
     <string name="migration_password_enter_your_password_to_unlock">Enter your password to unlock your Server Share and start the upgrade</string>
     <string name="name_vault_vault_with_this_name_already_exists">Vault with this name already exists</string>
+    <string name="name_vault_server_exists_warning_title">Fast vault already exists</string>
+    <string name="name_vault_server_exists_warning_message">A fast vault with this seed phrase already exists on the server. Creating a new fast vault will replace the server share and make the existing vault unusable. Consider using a secure vault instead.</string>
+    <string name="name_vault_server_exists_warning_continue">Continue</string>
+    <string name="name_vault_server_exists_warning_back">Back</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Unknown</string>
     <string name="referral_code_cannot_be_empty">Referral code cannot be empty</string>

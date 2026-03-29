@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -78,6 +80,13 @@ internal fun EnterVaultInfoScreen(viewModel: EnterVaultInfoViewModel = hiltViewM
         onEvent = viewModel::onEvent,
     )
 
+    if (uiState.showServerVaultExistsWarning) {
+        ServerVaultExistsWarningDialog(
+            onContinue = viewModel::continueWithServerVaultWarning,
+            onDismiss = viewModel::dismissServerVaultWarning,
+        )
+    }
+
     if (showReferralSheet) {
         AddReferralBottomSheet(
             onApply = { _ -> showReferralSheet = false },
@@ -93,6 +102,9 @@ internal fun EnterVaultInfoScreen(
     onReferralClick: () -> Unit = {},
     onEvent: (EnterVaultInfoEvent) -> Unit,
 ) {
+
+    val canProceed =
+        uiState.isNextButtonEnabled && !uiState.isLoading && !uiState.showServerVaultExistsWarning
 
     BackHandler { onEvent(EnterVaultInfoEvent.Back) }
 
@@ -193,7 +205,7 @@ internal fun EnterVaultInfoScreen(
                 footNote = uiState.errorMessage?.asString(),
                 imeAction = ImeAction.Go,
                 onKeyboardAction = {
-                    if (uiState.isNextButtonEnabled) {
+                    if (canProceed) {
                         onEvent(EnterVaultInfoEvent.Next)
                     }
                 },
@@ -229,9 +241,7 @@ internal fun EnterVaultInfoScreen(
             VsButton(
                 label = stringResource(R.string.enter_email_screen_next),
                 modifier = Modifier.fillMaxWidth().testTag(EnterVaultInfoTags.NEXT_BUTTON),
-                state =
-                    if (uiState.isNextButtonEnabled) VsButtonState.Enabled
-                    else VsButtonState.Disabled,
+                state = if (canProceed) VsButtonState.Enabled else VsButtonState.Disabled,
             ) {
                 onEvent(EnterVaultInfoEvent.Next)
             }
@@ -296,6 +306,46 @@ fun StepIcon(type: StepType, state: StepState) {
             size = 18.dp,
         )
     }
+}
+
+@Composable
+private fun ServerVaultExistsWarningDialog(onContinue: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        containerColor = Theme.v2.colors.backgrounds.secondary,
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.name_vault_server_exists_warning_title),
+                color = Theme.v2.colors.neutrals.n100,
+                style = Theme.montserrat.heading5,
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.name_vault_server_exists_warning_message),
+                color = Theme.v2.colors.neutrals.n100,
+                style = Theme.montserrat.body2,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onContinue) {
+                Text(
+                    text = stringResource(R.string.name_vault_server_exists_warning_continue),
+                    color = Theme.v2.colors.neutrals.n100,
+                    style = Theme.montserrat.body3,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = stringResource(R.string.name_vault_server_exists_warning_back),
+                    color = Theme.v2.colors.neutrals.n100,
+                    style = Theme.montserrat.body3,
+                )
+            }
+        },
+    )
 }
 
 @Preview

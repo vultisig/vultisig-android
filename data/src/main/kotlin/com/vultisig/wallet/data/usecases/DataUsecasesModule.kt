@@ -190,6 +190,12 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindCheckServerVaultExistsUseCase(
+        impl: CheckServerVaultExistsUseCaseImpl
+    ): CheckServerVaultExistsUseCase
+
+    @Binds
+    @Singleton
     fun bindExtractMasterKeysUseCase(impl: ExtractMasterKeysUseCaseImpl): ExtractMasterKeysUseCase
 
     @Binds

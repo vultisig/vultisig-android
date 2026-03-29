@@ -81,7 +81,7 @@
     <string name="transaction_type_button_send">Invia</string>
     <string name="send_from_address">Da</string>
     <string name="send_to_address">A</string>
-    <string name="send_to_address_hint">Inserisci Quantità</string>
+    <string name="send_to_address_hint">Inserisci l\'indirizzo qui</string>
     <string name="send_amount">Quantità</string>
     <string name="send_amount_currency_hint">Inserisci Quantità</string>
     <string name="send_continue_button">Continua</string>
@@ -92,7 +92,7 @@
     <string name="open_account_button">Apri account</string>
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Errore</string>
-    <string name="send_error_no_amount">a quantità deve essere un numero positivo.</string>
+    <string name="send_error_no_amount">La quantità deve essere un numero positivo.</string>
     <string name="send_error_invalid_operator_fee">La commissione dell\'operatore deve essere un numero valido tra 0 e 10000 punti base</string>
     <string name="settings_screen_language">Lingua</string>
     <string name="settings_screen_currency">Valuta</string>
@@ -639,6 +639,10 @@
     <string name="send_form_add_memo">Aggiungi MEMO</string>
     <string name="send_form_enter_memo">Inserisci Memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Esiste già un Vault con questo nome</string>
+    <string name="name_vault_server_exists_warning_title">Il vault veloce esiste già</string>
+    <string name="name_vault_server_exists_warning_message">Un vault veloce con questa frase seed esiste già sul server. La creazione di un nuovo vault veloce sostituirà la condivisione del server e renderà inutilizzabile il vault esistente. Considera invece l\'utilizzo di un vault sicuro.</string>
+    <string name="name_vault_server_exists_warning_continue">Continua</string>
+    <string name="name_vault_server_exists_warning_back">Indietro</string>
     <string name="referral_create_status">Stato</string>
     <string name="referral_create_unknown">Sconosciuto</string>
     <string name="referral_code_cannot_be_empty">Il codice di riferimento non può essere vuoto</string>
@@ -870,7 +874,7 @@
     <string name="withdraw">Prelevare</string>
     <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
     <string name="swap_form_referral_discount_bps">Referral (-%1$d bps)</string>
-    <string name="amino_sign">Amino Sign</string>
+    <string name="amino_sign">Firma Amino</string>
     <string name="amino_direct">Firma diretta</string>
 
     <!-- Transaction Status Strings from main branch -->

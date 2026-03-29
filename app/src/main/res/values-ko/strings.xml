@@ -842,6 +842,10 @@
     <string name="keysign_password_enter_your_password">비밀번호를 입력하세요</string>
     <string name="migration_password_enter_your_password_to_unlock">서버 공유를 잠금 해제하고 업그레이드를 시작하려면 비밀번호를 입력하세요</string>
     <string name="name_vault_vault_with_this_name_already_exists">이 이름의 볼트가 이미 존재합니다</string>
+    <string name="name_vault_server_exists_warning_title">빠른 볼트가 이미 존재합니다</string>
+    <string name="name_vault_server_exists_warning_message">이 시드 구문을 사용하는 빠른 볼트가 이미 서버에 존재합니다. 새로운 빠른 볼트를 생성하면 서버 공유가 대체되어 기존 볼트를 사용할 수 없게 됩니다. 대신 보안 볼트 사용을 고려하세요.</string>
+    <string name="name_vault_server_exists_warning_continue">계속</string>
+    <string name="name_vault_server_exists_warning_back">뒤로</string>
     <string name="referral_create_status">상태</string>
     <string name="referral_create_unknown">알 수 없음</string>
     <string name="referral_code_cannot_be_empty">추천 코드를 입력해 주세요</string>
