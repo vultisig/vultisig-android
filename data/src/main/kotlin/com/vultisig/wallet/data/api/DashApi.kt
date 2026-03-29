@@ -9,17 +9,14 @@ import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
 
 interface DashApi {
     suspend fun getAddressUtxos(address: String): List<UtxoInfo>
 }
 
-internal class DashApiImpl
-@Inject
-constructor(
-    private val httpClient: HttpClient,
-) : DashApi {
+internal class DashApiImpl @Inject constructor(private val httpClient: HttpClient) : DashApi {
 
     companion object {
         private const val BASE_URL = "https://api.vultisig.com/dash/"
@@ -40,7 +37,7 @@ constructor(
                     .body<DashRpcResponse>()
 
             if (rpcResponse.error != null) {
-                Timber.e("Dash RPC error: ${rpcResponse.error}")
+                Timber.e("Dash RPC error: %s", rpcResponse.error)
                 return emptyList()
             }
 
@@ -51,8 +48,10 @@ constructor(
                     index = utxo.outputIndex.toUInt(),
                 )
             } ?: emptyList()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Timber.e("fail to get Dash UTXOs via RPC: ${e.message}")
+            Timber.e(e, "Failed to get Dash UTXOs via RPC")
             return emptyList()
         }
     }

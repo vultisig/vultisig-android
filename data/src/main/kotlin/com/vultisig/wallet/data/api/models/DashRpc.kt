@@ -10,17 +10,16 @@ internal data class DashRpcRequest(
     val params: List<DashAddressParam>,
 )
 
-@Serializable
-internal data class DashAddressParam(
-    val addresses: List<String>,
-)
+@Serializable internal data class DashAddressParam(val addresses: List<String>)
 
 @Serializable
 internal data class DashRpcResponse(
     val result: List<DashAddressUtxo>?,
-    val error: String?,
+    val error: DashRpcError?,
     val id: String,
 )
+
+@Serializable internal data class DashRpcError(val code: Int, val message: String)
 
 @Serializable
 internal data class DashAddressUtxo(
