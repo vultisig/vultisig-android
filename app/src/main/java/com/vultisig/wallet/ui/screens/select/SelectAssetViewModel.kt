@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
@@ -99,9 +100,15 @@ constructor(
             .flatMapLatest { chain ->
                 val vault = vaultRepository.get(vaultId) ?: return@flatMapLatest emptyFlow()
                 combine(
-                    accountRepository.loadAddress(vaultId, chain).catch { Timber.e(it) },
+                    accountRepository.loadAddress(vaultId, chain).catch {
+                        Timber.e(it)
+                        emit(Address(chain = chain, address = "", accounts = emptyList()))
+                    },
                     getChainTokens(chain, vault)
-                        .catch { Timber.e(it) }
+                        .catch {
+                            Timber.e(it)
+                            emit(emptyList())
+                        }
                         .map { coinList ->
                             coinList
                                 .filterNot { it.isNativeToken || it.isLpToken }
