@@ -10,10 +10,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TssAction
-import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.CheckServerVaultExistsUseCase
 import com.vultisig.wallet.data.usecases.GenerateUniqueName
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.navigation.Destination
@@ -36,8 +34,6 @@ import kotlinx.coroutines.withContext
 internal data class NameVaultUiModel(
     val errorMessage: UiText? = null,
     val isNextButtonEnabled: Boolean = false,
-    val isLoading: Boolean = false,
-    val showServerVaultExistsWarning: Boolean = false,
 )
 
 @HiltViewModel
@@ -50,8 +46,6 @@ constructor(
     private val isNameLengthValid: IsVaultNameValid,
     private val generateUniqueName: GenerateUniqueName,
     private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
-    private val keyImportRepository: KeyImportRepository,
-    private val checkServerVaultExists: CheckServerVaultExistsUseCase,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -133,11 +127,7 @@ constructor(
         viewModelScope.launch {
             when (args.vaultType) {
                 VaultType.Fast -> {
-                    if (args.tssAction == TssAction.KeyImport) {
-                        checkServerVaultAndProceed(name)
-                    } else {
-                        navigator.route(Route.VaultInfo.Email(name, args.tssAction))
-                    }
+                    navigator.route(Route.VaultInfo.Email(name, args.tssAction))
                 }
 
                 VaultType.Secure -> {
@@ -151,40 +141,6 @@ constructor(
                 }
             }
         }
-    }
-
-    private suspend fun checkServerVaultAndProceed(name: String) {
-        val mnemonic =
-            keyImportRepository.get()?.mnemonic
-                ?: run {
-                    navigator.route(Route.VaultInfo.Email(name, args.tssAction))
-                    return
-                }
-
-        state.update { it.copy(isLoading = true) }
-        val existsOnServer =
-            try {
-                checkServerVaultExists(mnemonic)
-            } catch (_: Exception) {
-                false
-            }
-        state.update { it.copy(isLoading = false) }
-
-        if (existsOnServer) {
-            state.update { it.copy(showServerVaultExistsWarning = true) }
-        } else {
-            navigator.route(Route.VaultInfo.Email(name, args.tssAction))
-        }
-    }
-
-    fun dismissServerVaultWarning() {
-        state.update { it.copy(showServerVaultExistsWarning = false) }
-    }
-
-    fun continueWithServerVaultWarning() {
-        state.update { it.copy(showServerVaultExistsWarning = false) }
-        val name = nameFieldState.text.toString()
-        viewModelScope.launch { navigator.route(Route.VaultInfo.Email(name, args.tssAction)) }
     }
 
     fun clearInput() {
