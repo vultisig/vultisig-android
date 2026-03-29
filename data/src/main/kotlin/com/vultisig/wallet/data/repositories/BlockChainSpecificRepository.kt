@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
+import com.vultisig.wallet.data.api.DashApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
@@ -81,6 +82,7 @@ constructor(
     private val solanaApi: SolanaApi,
     private val cosmosApiFactory: CosmosApiFactory,
     private val blockChairApi: BlockChairApi,
+    private val dashApi: DashApi,
     private val polkadotApi: PolkadotApi,
     private val bittensorApi: BittensorApi,
     private val suiApi: SuiApi,
@@ -247,6 +249,15 @@ constructor(
                                 ttl = cardanoApi.calculateDynamicTTL(),
                             ),
                         utxos = cardanoApi.getUTXOs(token),
+                    )
+                } else if (chain == Chain.Dash) {
+                    BlockChainSpecificAndUtxo(
+                        blockChainSpecific =
+                            BlockChainSpecific.UTXO(
+                                byteFee = gasFee.value,
+                                sendMaxAmount = isMaxAmountEnabled,
+                            ),
+                        utxos = dashApi.getAddressUtxos(address).sortedBy(UtxoInfo::amount),
                     )
                 } else {
                     val utxos = blockChairApi.getAddressInfo(chain = chain, address = address)
