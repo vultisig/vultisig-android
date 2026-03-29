@@ -263,7 +263,7 @@ internal fun FastVaultVerificationScreen(
                         VerifyPinState.Error -> {
                             val annotatedString = buildAnnotatedString {
                                 append(
-                                    stringResource(R.string.vault_backup_screen_donot_recieve_email)
+                                    stringResource(R.string.vault_backup_screen_donot_receive_email)
                                 )
                                 append(" ")
                                 withStyle(

@@ -55,6 +55,7 @@ fun String.getChain(): Chain {
         "MNT" -> Chain.Mantle
         "SEI" -> Chain.Sei
         "HYPE" -> Chain.Hyperliquid
+        "QBTC" -> Chain.Qbtc
         else -> Chain.ThorChain
     }
 }
