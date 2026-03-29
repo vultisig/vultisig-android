@@ -244,6 +244,8 @@ internal fun EnterVaultInfoScreen(
             onDismissClick = { onEvent(EnterVaultInfoEvent.HideMoreInfo) },
             modifier = Modifier.padding(horizontal = 16.dp),
             isVisible = uiState.isMoreInfoVisible,
+            textColor = Theme.v2.colors.text.inverse,
+            textStyle = Theme.satoshi.price.bodyS,
         )
     }
 }

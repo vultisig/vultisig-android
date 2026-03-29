@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
@@ -111,6 +112,8 @@ internal fun HintBox(
     offset: IntOffset,
     pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     pointerOffset: DpOffset = DpOffset.Zero,
+    textColor: Color = Color.Unspecified,
+    textStyle: TextStyle = TextStyle.Default,
     onDismissClick: () -> Unit,
 ) {
     AnimatedVisibility(
@@ -126,6 +129,8 @@ internal fun HintBox(
             isPointerOnTop = isPointerTriangleOnTop,
             pointerAlignment = pointerAlignment,
             pointerOffset = pointerOffset,
+            textColor = textColor,
+            textStyle = textStyle,
             onDismissClick = onDismissClick,
         )
     }
@@ -139,6 +144,8 @@ private fun HintBoxPopupContent(
     isPointerOnTop: Boolean,
     pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     pointerOffset: DpOffset = DpOffset.Zero,
+    textColor: Color = Color.Unspecified,
+    textStyle: TextStyle = TextStyle.Default,
     onDismissClick: () -> Unit,
 ) {
 
@@ -187,8 +194,9 @@ private fun HintBoxPopupContent(
 
             Text(
                 text = message,
-                color = Theme.v2.colors.text.inverse,
-                style = Theme.satoshi.price.bodyS,
+                color =
+                    if (textColor != Color.Unspecified) textColor else Theme.v2.colors.text.inverse,
+                style = if (textStyle != TextStyle.Default) textStyle else Theme.satoshi.price.bodyS,
             )
         }
 
