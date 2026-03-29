@@ -1034,7 +1034,7 @@
     <string name="vault_setup_perfect_balance_desc">Perfecte balans voor de meeste gebruikers. 2 ondertekenaars en 1 back-upapparaat. Bewaar activa zonder stress.</string>
     <string name="vault_setup_perfect_for_users_with_only_2_devices">Perfecte instelling voor gebruikers met slechts 2 apparaten.</string>
     <string name="vault_setup_3_device_or_more_signing">Ondertekening met 3 of meer apparaten</string>
-    <string name="vault_setup_3_device_or_more_signing_desc">Kluizen hebben 67% van de apparaten nodig om een transactie te ondertekenen. Heeft u zoveel ondertekenaars als u wilt.</string>
+    <string name="vault_setup_3_device_or_more_signing_desc">Kluizen hebben 67%% van de apparaten nodig om een transactie te ondertekenen. Heeft u zoveel ondertekenaars als u wilt.</string>
     <string name="vault_setup_dynamic_device_management">Dynamisch apparaatbeheer</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">Voeg zoveel apparaten toe als u wilt en ontvang institutionele beveiliging.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Gebouwd voor teams en schatkamers</string>
@@ -1069,7 +1069,7 @@
     <string name="add_referral">Verwijzing toevoegen</string>
     <string name="referral_added">Verwijzing toegevoegd</string>
     <string name="add_referral_sheet_title">Verwijzingscode</string>
-    <string name="add_referral_sheet_description">Voer hier je verwijzingscode in. Geniet van 10% korting op elke transactie.</string>
+    <string name="add_referral_sheet_description">Voer hier je verwijzingscode in. Geniet van 10%% korting op elke transactie.</string>
     <string name="add_referral_sheet_placeholder">Voer maximaal 4 tekens in</string>
     <string name="add_referral_sheet_apply">Verwijzing toepassen</string>
     <string name="add_referral_error_length">Verwijzingscode mag maximaal 4 tekens bevatten</string>

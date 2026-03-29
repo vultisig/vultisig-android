@@ -1040,7 +1040,7 @@
     <string name="vault_setup_perfect_balance_desc">Equilibrio perfetto per la maggior parte degli utenti. 2 firmatari e 1 dispositivo di backup. Conserva gli asset senza stress.</string>
     <string name="vault_setup_perfect_for_users_with_only_2_devices">Configurazione perfetta per utenti con solo 2 dispositivi.</string>
     <string name="vault_setup_3_device_or_more_signing">Firma con 3 o più dispositivi</string>
-    <string name="vault_setup_3_device_or_more_signing_desc">I vault hanno bisogno del 67% dei dispositivi per firmare una transazione. Avere quanti firmatari si vuole.</string>
+    <string name="vault_setup_3_device_or_more_signing_desc">I vault hanno bisogno del 67%% dei dispositivi per firmare una transazione. Avere quanti firmatari si vuole.</string>
     <string name="vault_setup_dynamic_device_management">Gestione dinamica dei dispositivi</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">Aggiungi quanti dispositivi vuoi e ottieni sicurezza di livello istituzionale.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Costruito per team e tesorerie</string>
@@ -1075,7 +1075,7 @@
     <string name="add_referral">Aggiungi referral</string>
     <string name="referral_added">Referral aggiunto</string>
     <string name="add_referral_sheet_title">Codice referral</string>
-    <string name="add_referral_sheet_description">Inserisci qui il tuo codice referral. Goditi il 10% di sconto su ogni transazione.</string>
+    <string name="add_referral_sheet_description">Inserisci qui il tuo codice referral. Goditi il 10%% di sconto su ogni transazione.</string>
     <string name="add_referral_sheet_placeholder">Inserisci fino a 4 caratteri</string>
     <string name="add_referral_sheet_apply">Applica referral</string>
     <string name="add_referral_error_length">Il codice referral può contenere fino a 4 caratteri</string>

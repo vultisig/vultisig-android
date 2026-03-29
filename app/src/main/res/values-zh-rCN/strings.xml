@@ -1371,7 +1371,7 @@
     <string name="vault_setup_perfect_balance_desc">适合大多数用户的完美平衡。2个签署方和1个备份设备。无压力存储资产。</string>
     <string name="vault_setup_perfect_for_users_with_only_2_devices">仅有2台设备的用户的完美设置。</string>
     <string name="vault_setup_3_device_or_more_signing">3台或更多设备签署</string>
-    <string name="vault_setup_3_device_or_more_signing_desc">保险库需要67%的设备来签署交易。可以有任意数量的签署方。</string>
+    <string name="vault_setup_3_device_or_more_signing_desc">保险库需要67%%的设备来签署交易。可以有任意数量的签署方。</string>
     <string name="vault_setup_dynamic_device_management">动态设备管理</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">添加任意数量的设备，获得机构级安全保障。</string>
     <string name="vault_setup_built_for_teams_and_treasuries">为团队和国库而构建</string>
@@ -1406,7 +1406,7 @@
     <string name="add_referral">添加推荐</string>
     <string name="referral_added">推荐已添加</string>
     <string name="add_referral_sheet_title">推荐码</string>
-    <string name="add_referral_sheet_description">在此输入您的推荐码。每笔交易享受10%折扣。</string>
+    <string name="add_referral_sheet_description">在此输入您的推荐码。每笔交易享受10%%折扣。</string>
     <string name="add_referral_sheet_placeholder">输入最多4个字符</string>
     <string name="add_referral_sheet_apply">应用推荐</string>
     <string name="add_referral_error_length">推荐码最多4个字符</string>

@@ -1072,7 +1072,7 @@
     <string name="add_referral">Añadir referido</string>
     <string name="referral_added">Referido añadido</string>
     <string name="add_referral_sheet_title">Código de referido</string>
-    <string name="add_referral_sheet_description">Ingresa tu código de referido aquí. Disfruta un 10% de descuento en cada transacción.</string>
+    <string name="add_referral_sheet_description">Ingresa tu código de referido aquí. Disfruta un 10%% de descuento en cada transacción.</string>
     <string name="add_referral_sheet_placeholder">Ingresa hasta 4 caracteres</string>
     <string name="add_referral_sheet_apply">Aplicar referido</string>
     <string name="add_referral_error_length">El código de referido puede contener hasta 4 caracteres</string>

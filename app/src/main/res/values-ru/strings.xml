@@ -1040,7 +1040,7 @@
     <string name="vault_setup_perfect_balance_desc">Идеальный баланс для большинства пользователей. 2 подписанта и 1 резервное устройство. Храните активы без лишних забот.</string>
     <string name="vault_setup_perfect_for_users_with_only_2_devices">Идеальная настройка для пользователей с только 2 устройствами.</string>
     <string name="vault_setup_3_device_or_more_signing">Подпись 3 или более устройствами</string>
-    <string name="vault_setup_3_device_or_more_signing_desc">Хранилищам требуется 67% устройств для подписания транзакции. Имейте столько подписантов, сколько хотите.</string>
+    <string name="vault_setup_3_device_or_more_signing_desc">Хранилищам требуется 67%% устройств для подписания транзакции. Имейте столько подписантов, сколько хотите.</string>
     <string name="vault_setup_dynamic_device_management">Динамическое управление устройствами</string>
     <string name="vault_setup_add_as_many_devices_as_you_want">Добавляйте столько устройств, сколько хотите, и получите безопасность институционального уровня.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Создано для команд и казначейств</string>
@@ -1075,7 +1075,7 @@
     <string name="add_referral">Добавить реферала</string>
     <string name="referral_added">Реферал добавлен</string>
     <string name="add_referral_sheet_title">Реферальный код</string>
-    <string name="add_referral_sheet_description">Введите ваш реферальный код здесь. Получите скидку 10% на каждую транзакцию.</string>
+    <string name="add_referral_sheet_description">Введите ваш реферальный код здесь. Получите скидку 10%% на каждую транзакцию.</string>
     <string name="add_referral_sheet_placeholder">Введите до 4 символов</string>
     <string name="add_referral_sheet_apply">Применить реферала</string>
     <string name="add_referral_error_length">Реферальный код должен содержать не более 4 символов</string>

@@ -1076,7 +1076,7 @@
     <string name="add_referral">Dodaj preporuku</string>
     <string name="referral_added">Preporuka dodana</string>
     <string name="add_referral_sheet_title">Kod preporuke</string>
-    <string name="add_referral_sheet_description">Unesite svoj kod preporuke ovdje. Uživajte 10% popusta na svaku transakciju.</string>
+    <string name="add_referral_sheet_description">Unesite svoj kod preporuke ovdje. Uživajte 10%% popusta na svaku transakciju.</string>
     <string name="add_referral_sheet_placeholder">Unesite do 4 znaka</string>
     <string name="add_referral_sheet_apply">Primijeni preporuku</string>
     <string name="add_referral_error_length">Referalni kod može sadržavati do 4 znaka</string>
