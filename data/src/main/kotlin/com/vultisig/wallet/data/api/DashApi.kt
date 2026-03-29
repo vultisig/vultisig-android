@@ -34,7 +34,7 @@ internal class DashApiImpl @Inject constructor(private val httpClient: HttpClien
                             )
                         )
                     }
-                    .body<DashRpcResponse>()
+                    .bodyOrThrow<DashRpcResponse>()
 
             if (rpcResponse.error != null) {
                 Timber.e("Dash RPC error: %s", rpcResponse.error)
