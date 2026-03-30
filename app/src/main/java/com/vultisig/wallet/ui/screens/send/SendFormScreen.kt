@@ -14,7 +14,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -25,14 +24,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.InputTransformation
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
@@ -74,6 +68,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.PasteIcon
+import com.vultisig.wallet.ui.components.TokenAmountInput
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
@@ -99,7 +94,6 @@ import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.swap.TokenChip
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.cursorBrush
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
@@ -601,107 +595,53 @@ private fun FoldableAmountWidget(
                     if (isCircleMode) Modifier.weight(1f).fillMaxWidth()
                     else Modifier.height(211.dp).fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 54.dp).align(Alignment.Center),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    val primaryAmountText: String
-                    val secondaryAmountText: String
-                    val primaryFieldState: TextFieldState
-                    val secondaryFieldState: TextFieldState
+                val primaryAmountText: String
+                val secondaryAmountText: String
+                val primaryFieldState: TextFieldState
+                val secondaryFieldState: TextFieldState
 
-                    if (state.usingTokenAmountInput) {
-                        primaryAmountText = state.selectedCoin?.title ?: ""
-                        secondaryAmountText = state.fiatCurrency
-                        primaryFieldState = tokenAmountFieldState
-                        secondaryFieldState = fiatAmountFieldState
-                    } else {
-                        primaryAmountText = state.fiatCurrency
-                        secondaryAmountText = state.selectedCoin?.title ?: ""
-                        primaryFieldState = fiatAmountFieldState
-                        secondaryFieldState = tokenAmountFieldState
-                    }
-
-                    val maxBalance =
-                        if (isCircleMode) state.selectedCoin?.balance?.toBigDecimalOrNull()
-                        else null
-
-                    FlowRow(horizontalArrangement = Arrangement.Center) {
-                        BasicTextField(
-                            state = primaryFieldState,
-                            inputTransformation =
-                                maxBalance?.let { max ->
-                                    InputTransformation {
-                                        val entered =
-                                            asCharSequence().toString().toBigDecimalOrNull()
-                                        if (entered != null && entered > max) {
-                                            revertAllChanges()
-                                        }
-                                    }
-                                },
-                            lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 3),
-                            textStyle =
-                                Theme.brockmann.headings.largeTitle.copy(
-                                    color = Theme.v2.colors.text.primary,
-                                    textAlign = TextAlign.Center,
-                                ),
-                            cursorBrush = Theme.cursorBrush,
-                            keyboardOptions =
-                                KeyboardOptions(
-                                    keyboardType = KeyboardType.Decimal,
-                                    imeAction = ImeAction.Send,
-                                ),
-                            onKeyboardAction = {
-                                focusManager.clearFocus()
-                                onSend()
-                            },
-                            modifier =
-                                Modifier.width(IntrinsicSize.Min)
-                                    .focusRequester(amountFocusRequester)
-                                    .testTag("SendFormScreen.amountField"),
-                            decorator = { textField ->
-                                if (primaryFieldState.text.isEmpty()) {
-                                    Text(
-                                        text = "0",
-                                        color = Theme.v2.colors.text.secondary,
-                                        style = Theme.brockmann.headings.largeTitle,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.wrapContentWidth(),
-                                    )
-                                }
-                                textField()
-                            },
-                        )
-
-                        Text(
-                            text = " $primaryAmountText",
-                            color = Theme.v2.colors.text.primary,
-                            style = Theme.brockmann.headings.largeTitle,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-
-                    val secondaryText =
-                        if (isCircleMode) {
-                            val entered =
-                                tokenAmountFieldState.text.toString().toDoubleOrNull() ?: 0.0
-                            val balance = state.selectedCoin?.balance?.toDoubleOrNull() ?: 0.0
-                            val pct =
-                                if (balance > 0.0) (entered / balance * 100).coerceIn(0.0, 100.0)
-                                else 0.0
-                            "%.1f%%".format(pct)
-                        } else {
-                            "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText"
-                        }
-
-                    Text(
-                        text = secondaryText,
-                        color = Theme.v2.colors.text.tertiary,
-                        style = Theme.brockmann.body.s.medium,
-                        textAlign = TextAlign.Center,
-                    )
+                if (state.usingTokenAmountInput) {
+                    primaryAmountText = state.selectedCoin?.title ?: ""
+                    secondaryAmountText = state.fiatCurrency
+                    primaryFieldState = tokenAmountFieldState
+                    secondaryFieldState = fiatAmountFieldState
+                } else {
+                    primaryAmountText = state.fiatCurrency
+                    secondaryAmountText = state.selectedCoin?.title ?: ""
+                    primaryFieldState = fiatAmountFieldState
+                    secondaryFieldState = tokenAmountFieldState
                 }
+
+                val maxBalance =
+                    if (isCircleMode) state.selectedCoin?.balance?.toBigDecimalOrNull() else null
+
+                val secondaryText =
+                    if (isCircleMode) {
+                        val entered = tokenAmountFieldState.text.toString().toDoubleOrNull() ?: 0.0
+                        val balance = state.selectedCoin?.balance?.toDoubleOrNull() ?: 0.0
+                        val pct =
+                            if (balance > 0.0) (entered / balance * 100).coerceIn(0.0, 100.0)
+                            else 0.0
+                        "%.1f%%".format(pct)
+                    } else {
+                        "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText"
+                    }
+
+                TokenAmountInput(
+                    primaryFieldState = primaryFieldState,
+                    primaryLabel = primaryAmountText,
+                    secondaryText = secondaryText,
+                    maxBalance = maxBalance,
+                    focusRequester = amountFocusRequester,
+                    onKeyboardAction = {
+                        focusManager.clearFocus()
+                        onSend()
+                    },
+                    modifier =
+                        Modifier.padding(horizontal = 54.dp)
+                            .align(Alignment.Center)
+                            .testTag("SendFormScreen.amountField"),
+                )
 
                 if (!isCircleMode) {
                     TokenFiatToggle(
@@ -1514,10 +1454,11 @@ private fun SendScreenPreview() {
                 totalGas = UiText.DynamicString("12.5 Eth"),
                 showGasFee = true,
                 estimatedFee = UiText.DynamicString("$3.4"),
+                expandedSection = SendSections.Amount,
             ),
         addressFieldState = TextFieldState(),
-        tokenAmountFieldState = TextFieldState(),
-        fiatAmountFieldState = TextFieldState(),
+        tokenAmountFieldState = TextFieldState("50"),
+        fiatAmountFieldState = TextFieldState("$2,000.56"),
         memoFieldState = TextFieldState(),
         onNetworkDragStart = {},
         onNetworkDrag = {},

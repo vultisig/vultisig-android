@@ -13,9 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Text
@@ -30,12 +27,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.TokenAmountInput
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -69,6 +66,7 @@ internal fun AddLpScreen(
     AddLpContent(
         tokenSymbol = state.selectedToken.ticker,
         tokenAmountFieldState = viewModel.tokenAmountFieldState,
+        fiatAmount = null,
         balance = state.balance.asString(),
         isLoading = state.isLoading,
         tokenAmountError = state.tokenAmountError?.asString(),
@@ -83,6 +81,7 @@ internal fun AddLpScreen(
 private fun AddLpContent(
     tokenSymbol: String,
     tokenAmountFieldState: TextFieldState,
+    fiatAmount: String?,
     balance: String,
     isLoading: Boolean,
     tokenAmountError: String?,
@@ -134,42 +133,12 @@ private fun AddLpContent(
                 UiHorizontalDivider()
 
                 // Large amount input area
-                Box(
-                    modifier = Modifier.fillMaxWidth().height(147.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    val amountStyle =
-                        Theme.brockmann.headings.largeTitle.copy(
-                            color = Theme.v2.colors.text.primary
-                        )
-                    BasicTextField(
-                        state = tokenAmountFieldState,
-                        textStyle = amountStyle,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        lineLimits = TextFieldLineLimits.SingleLine,
-                        modifier = Modifier.fillMaxWidth(),
-                        decorator = { innerTextField ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    if (tokenAmountFieldState.text.isEmpty()) {
-                                        Text(
-                                            text = "0",
-                                            style =
-                                                amountStyle.copy(
-                                                    color = Theme.v2.colors.text.tertiary
-                                                ),
-                                        )
-                                    }
-                                    innerTextField()
-                                }
-                                UiSpacer(size = 8.dp)
-                                Text(text = tokenSymbol, style = amountStyle)
-                            }
-                        },
+                Box(modifier = Modifier.fillMaxWidth().height(211.dp)) {
+                    TokenAmountInput(
+                        primaryFieldState = tokenAmountFieldState,
+                        primaryLabel = tokenSymbol,
+                        secondaryText = fiatAmount ?: "",
+                        modifier = Modifier.padding(horizontal = 54.dp).align(Alignment.Center),
                     )
                 }
 
@@ -300,6 +269,7 @@ private fun AddLpContentPreview() {
         AddLpContent(
             tokenSymbol = "CACAO",
             tokenAmountFieldState = TextFieldState("50"),
+            fiatAmount = "$2,000.56",
             balance = "24,052 CACAO",
             isLoading = false,
             tokenAmountError = null,
