@@ -68,7 +68,7 @@ internal val Chain.monoToneLogo: Int
             Chain.MayaChain -> R.drawable.maya_mono
             Chain.CronosChain -> R.drawable.cronos_mono
             Chain.Polkadot -> R.drawable.dot_mono
-            Chain.Bittensor -> R.drawable.bittensor // TODO: Add mono variant
+            Chain.Bittensor -> R.drawable.bittensor_mono
             Chain.Dydx -> R.drawable.dxdy_mono
             Chain.ZkSync -> R.drawable.zksync_mono
             Chain.Sui -> R.drawable.sui_mono

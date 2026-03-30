@@ -8,7 +8,7 @@ import java.math.BigDecimal
 val Coin.thorswapMultiplier: BigDecimal
     get() =
         when (chain) {
-            Chain.MayaChain -> BigDecimal(1e10)
+            Chain.MayaChain -> BigDecimal.TEN.pow(decimal)
             else -> BigDecimal(1e8)
         }
 
