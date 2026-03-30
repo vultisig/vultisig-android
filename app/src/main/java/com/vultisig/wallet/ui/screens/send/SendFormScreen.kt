@@ -1227,10 +1227,15 @@ private fun FoldableAssetWidget(
 }
 
 @Composable
-internal fun EstimatedNetworkFee(tokenGas: String, fiatGas: String, isLoading: Boolean = false) {
+internal fun EstimatedNetworkFee(
+    tokenGas: String,
+    fiatGas: String,
+    isLoading: Boolean = false,
+    title: String = stringResource(R.string.send_form_est_network_fee),
+) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = stringResource(R.string.send_form_est_network_fee),
+            text = title,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.tertiary,
         )

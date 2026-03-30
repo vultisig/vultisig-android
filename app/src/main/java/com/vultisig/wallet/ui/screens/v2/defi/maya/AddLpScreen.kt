@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
+import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -65,6 +66,8 @@ internal fun AddLpScreen(
         tokenSymbol = state.selectedToken.ticker,
         tokenAmountFieldState = viewModel.tokenAmountFieldState,
         fiatAmount = null,
+        totalGas = "",
+        estimatedFee = "",
         balance = state.balance.asString(),
         isLoading = state.isLoading,
         tokenAmountError = state.tokenAmountError?.asString(),
@@ -80,6 +83,8 @@ private fun AddLpContent(
     tokenSymbol: String,
     tokenAmountFieldState: TextFieldState,
     fiatAmount: String?,
+    totalGas: String,
+    estimatedFee: String,
     balance: String,
     isLoading: Boolean,
     tokenAmountError: String?,
@@ -188,17 +193,11 @@ private fun AddLpContent(
                 UiGradientHorizontalDivider()
 
                 // Gas row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.add_pool_gas_auto),
-                        style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.v2.colors.text.tertiary,
-                    )
-                }
+                EstimatedNetworkFee(
+                    tokenGas = totalGas,
+                    fiatGas = estimatedFee,
+                    title = stringResource(R.string.add_pool_gas_auto),
+                )
             }
 
             if (tokenAmountError != null) {
@@ -230,6 +229,8 @@ private fun AddLpContentPreview() {
             tokenSymbol = "CACAO",
             tokenAmountFieldState = TextFieldState("50"),
             fiatAmount = "$2,000.56",
+            totalGas = "0.04103261 CACAO",
+            estimatedFee = "$0.08",
             balance = "24,052 CACAO",
             isLoading = false,
             tokenAmountError = null,
