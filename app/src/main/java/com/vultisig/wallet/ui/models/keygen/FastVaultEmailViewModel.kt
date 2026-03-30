@@ -98,7 +98,10 @@ constructor(
                         name = vaultName,
                         email = enteredEmail,
                         tssAction = action,
-                        vaultId = vaultId,
+                        vaultId =
+                            requireNotNull(vaultId) {
+                                "vaultId required for VerifyExistingPassword"
+                            },
                     )
                 )
             } else {

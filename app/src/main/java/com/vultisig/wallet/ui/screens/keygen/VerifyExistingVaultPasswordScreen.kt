@@ -1,4 +1,4 @@
-// TODO: Update password verification screen design to match Figma
+// TODO: Update password verfication screen design to match Figma
 package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.layout.Arrangement
@@ -30,7 +30,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.keygen.VerifyExistingVaultPasswordUiModel
+import com.vultisig.wallet.ui.models.keygen.VerifyExistingVaultPasswordUiState
 import com.vultisig.wallet.ui.models.keygen.VerifyExistingVaultPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -52,12 +52,15 @@ internal fun VerifyExistingVaultPasswordScreen(
 
 @Composable
 internal fun VerifyExistingVaultPasswordScreen(
-    state: VerifyExistingVaultPasswordUiModel,
+    state: VerifyExistingVaultPasswordUiState,
     passwordFieldState: TextFieldState,
     onVerifyClick: () -> Unit,
     onBackClick: () -> Unit,
     onTogglePasswordVisibilityClick: () -> Unit,
 ) {
+    val isLoading = state is VerifyExistingVaultPasswordUiState.Loading
+    val readyState = state as? VerifyExistingVaultPasswordUiState.Ready
+
     V2Scaffold(
         title = null,
         onBackClick = onBackClick,
@@ -82,16 +85,16 @@ internal fun VerifyExistingVaultPasswordScreen(
                     hint = stringResource(R.string.keysign_password_title),
                     type =
                         VsTextInputFieldType.Password(
-                            isVisible = state.isPasswordVisible,
+                            isVisible = readyState?.isPasswordVisible ?: false,
                             onVisibilityClick = onTogglePasswordVisibilityClick,
                         ),
                     focusRequester = focusRequester,
                     imeAction = ImeAction.Go,
                     onKeyboardAction = { onVerifyClick() },
                     innerState =
-                        if (state.error != null) VsTextInputFieldInnerState.Error
+                        if (readyState?.error != null) VsTextInputFieldInnerState.Error
                         else VsTextInputFieldInnerState.Default,
-                    footNote = state.error?.asString(),
+                    footNote = readyState?.error?.asString(),
                     modifier = Modifier.testTag("VerifyExistingVaultPasswordScreen.passwordField"),
                 )
             }
@@ -99,7 +102,7 @@ internal fun VerifyExistingVaultPasswordScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.verify_transaction_screen_title),
-                state = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
+                state = if (isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 24.dp)
@@ -114,7 +117,7 @@ internal fun VerifyExistingVaultPasswordScreen(
 @Preview
 private fun VerifyExistingVaultPasswordScreenPreview() {
     VerifyExistingVaultPasswordScreen(
-        state = VerifyExistingVaultPasswordUiModel(),
+        state = VerifyExistingVaultPasswordUiState.Ready(),
         passwordFieldState = rememberTextFieldState(),
         onVerifyClick = {},
         onBackClick = {},

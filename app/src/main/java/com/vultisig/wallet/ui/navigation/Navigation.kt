@@ -255,7 +255,7 @@ internal sealed class Route {
             val name: String,
             val email: String,
             val tssAction: TssAction,
-            val vaultId: VaultId? = null,
+            val vaultId: VaultId,
         )
     }
 
