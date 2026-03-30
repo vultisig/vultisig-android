@@ -233,62 +233,76 @@ internal fun FastVaultVerificationScreen(
                                     color = Theme.v2.colors.text.tertiary,
                                     style = Theme.brockmann.supplementary.footnote,
                                 )
-                                UiSpacer(size = 12.dp)
 
-                                Text(
-                                    text = stringResource(R.string.backup_use_a_different_email),
-                                    color = Theme.v2.colors.variables.textButtonSecondaryLightDark,
-                                    style = Theme.brockmann.supplementary.caption,
-                                    modifier =
-                                        Modifier.border(
-                                                width = 1.dp,
-                                                color = Theme.v2.colors.variables.bordersExtraLight,
-                                                shape = RoundedCornerShape(12.dp),
-                                            )
-                                            .background(
-                                                color = Theme.v2.colors.buttons.secondary,
-                                                shape = RoundedCornerShape(12.dp),
-                                            )
-                                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                                            .clickOnce(
-                                                onClick = onChangeEmailClick,
-                                                coolDownPeriod = 1500L,
-                                            ),
-                                )
+                                if (!state.isSingleKeygen) {
+                                    UiSpacer(size = 12.dp)
+
+                                    Text(
+                                        text =
+                                            stringResource(R.string.backup_use_a_different_email),
+                                        color =
+                                            Theme.v2.colors.variables
+                                                .textButtonSecondaryLightDark,
+                                        style = Theme.brockmann.supplementary.caption,
+                                        modifier =
+                                            Modifier.border(
+                                                    width = 1.dp,
+                                                    color =
+                                                        Theme.v2.colors.variables
+                                                            .bordersExtraLight,
+                                                    shape = RoundedCornerShape(12.dp),
+                                                )
+                                                .background(
+                                                    color = Theme.v2.colors.buttons.secondary,
+                                                    shape = RoundedCornerShape(12.dp),
+                                                )
+                                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                                .clickOnce(
+                                                    onClick = onChangeEmailClick,
+                                                    coolDownPeriod = 1500L,
+                                                ),
+                                    )
+                                }
                             }
                         }
 
                         VerifyPinState.Loading -> Unit
                         VerifyPinState.Success -> Unit
                         VerifyPinState.Error -> {
-                            val annotatedString = buildAnnotatedString {
-                                append(
-                                    stringResource(R.string.vault_backup_screen_donot_receive_email)
-                                )
-                                append(" ")
-                                withStyle(
-                                    style =
-                                        SpanStyle(
-                                            color = Theme.v2.colors.text.secondary,
-                                            textDecoration = TextDecoration.Underline,
-                                        )
-                                ) {
+                            if (!state.isSingleKeygen) {
+                                val annotatedString = buildAnnotatedString {
                                     append(
-                                        stringResource(R.string.vault_backup_screen_restart_keygen)
+                                        stringResource(
+                                            R.string.vault_backup_screen_donot_receive_email
+                                        )
                                     )
+                                    append(" ")
+                                    withStyle(
+                                        style =
+                                            SpanStyle(
+                                                color = Theme.v2.colors.text.secondary,
+                                                textDecoration = TextDecoration.Underline,
+                                            )
+                                    ) {
+                                        append(
+                                            stringResource(
+                                                R.string.vault_backup_screen_restart_keygen
+                                            )
+                                        )
+                                    }
                                 }
-                            }
 
-                            Text(
-                                text = annotatedString,
-                                style = Theme.brockmann.supplementary.footnote,
-                                color = Theme.v2.colors.text.tertiary,
-                                modifier =
-                                    Modifier.fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 24.dp)
-                                        .clickable(onClick = onChangeEmailClick),
-                                textAlign = TextAlign.Center,
-                            )
+                                Text(
+                                    text = annotatedString,
+                                    style = Theme.brockmann.supplementary.footnote,
+                                    color = Theme.v2.colors.text.tertiary,
+                                    modifier =
+                                        Modifier.fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 24.dp)
+                                            .clickable(onClick = onChangeEmailClick),
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
                         }
                     }
                 }
