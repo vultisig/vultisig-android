@@ -219,6 +219,7 @@ constructor(
     private val address = MutableStateFlow<Address?>(null)
     private val secureAssetNodeValue = MutableStateFlow<String?>(null)
     private var addressJob: Job? = null
+    private var whitelistJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
@@ -760,8 +761,9 @@ constructor(
             return
         }
         if (chain == Chain.MayaChain && state.value.depositOption == DepositOption.Bond) {
+            whitelistJob?.cancel()
             state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = true) }
-            viewModelScope.safeLaunch { checkNodeWhitelist(nodeAddress) }
+            whitelistJob = viewModelScope.safeLaunch { checkNodeWhitelist(nodeAddress) }
         } else {
             state.update { it.copy(nodeAddressError = null) }
         }
