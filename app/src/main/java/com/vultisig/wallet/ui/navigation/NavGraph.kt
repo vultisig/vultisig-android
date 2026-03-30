@@ -73,7 +73,6 @@ import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordHintScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
-import com.vultisig.wallet.ui.screens.keygen.VerifyExistingVaultPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseScreen
 import com.vultisig.wallet.ui.screens.keygen.JoinKeygenScreen
 import com.vultisig.wallet.ui.screens.keygen.KeyImportChainsSetupScreen
@@ -82,6 +81,7 @@ import com.vultisig.wallet.ui.screens.keygen.KeygenScreen
 import com.vultisig.wallet.ui.screens.keygen.NameVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.StartScreen
 import com.vultisig.wallet.ui.screens.keygen.VaultConfirmationScreen
+import com.vultisig.wallet.ui.screens.keygen.VerifyExistingVaultPasswordScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignScreen
@@ -141,276 +141,261 @@ import kotlin.reflect.typeOf
 @ExperimentalAnimationApi
 @Composable
 internal fun SetupNavGraph(navController: NavHostController, startDestination: Any) {
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        enterTransition = slideInFromEndEnterTransition(),
-        exitTransition = slideOutToStartExitTransition(),
-        popEnterTransition = slideInFromStartEnterTransition(),
-        popExitTransition = slideOutToEndExitTransition(),
+  NavHost(
+    navController = navController,
+    startDestination = startDestination,
+    enterTransition = slideInFromEndEnterTransition(),
+    exitTransition = slideOutToStartExitTransition(),
+    popEnterTransition = slideInFromStartEnterTransition(),
+    popExitTransition = slideOutToEndExitTransition(),
+  ) {
+    composable<Route.ChainDashboard>(
+      typeMap = mapOf(typeOf<ChainDashboardRoute>() to ChainDashboardRouteNavType)
     ) {
-        composable<Route.ChainDashboard>(
-            typeMap = mapOf(typeOf<ChainDashboardRoute>() to ChainDashboardRouteNavType)
-        ) {
-            ChainDashboardScreen()
-        }
-
-        composable<Route.Home> { VaultAccountsScreen() }
-
-        composable<Route.TransactionHistory> { TransactionHistoryScreen() }
-
-        composable<ImportVault> { ImportFileScreen() }
-
-        dialog<AddChainAccount> { ChainSelectionScreen() }
-        dialog<Route.AddDeFiChainAccount> { DeFiChainSelectionScreen() }
-        composable<Route.VaultSettings> { VaultSettingsScreen() }
-        composable<Route.Details> { VaultDetailScreen(navController) }
-
-        composable<Route.Rename> { VaultRenameScreen() }
-
-        composable<Route.AddVault> { StartScreen() }
-
-        dialog<TokenDetail> { TokenDetailScreen() }
-        dialog<Route.SelectTokens> { TokenSelectionScreen() }
-
-        composable<Route.SignMessage> { entry ->
-            val args = entry.toRoute<Route.SignMessage>()
-
-            SignMessageScreen(navController = navController, vaultId = args.vaultId)
-        }
-
-        composable<Route.AddressBookScreen> { AddressBookScreen() }
-
-        composable<AddressEntry> { AddAddressEntryScreen(navController = navController) }
-
-        composable<Route.Deposit> { entry ->
-            val args = entry.toRoute<Route.Deposit>()
-
-            DepositScreen(
-                navController = navController,
-                vaultId = args.vaultId,
-                chainId = args.chainId,
-                depositType = args.depositType,
-                bondAddress = args.bondAddress,
-                poolId = args.poolId,
-            )
-        }
-
-        composable<Route.BondForm> { entry ->
-            val args = entry.toRoute<Route.BondForm>()
-
-            BondFormScreen(
-                navController = navController,
-                vaultId = args.vaultId,
-                chainId = args.chainId,
-            )
-        }
-
-        composable<Route.Settings> { SettingsScreen() }
-
-        composable<Route.FAQSetting> { FaqSettingScreen(navController = navController) }
-
-        composable<Route.DiscountTiers> { DiscountTiersScreen() }
-
-        composable<Route.LanguageSetting> { LanguageSettingScreen(navController = navController) }
-
-        composable<Route.CurrencyUnitSetting> {
-            CurrencyUnitSettingScreen(navController = navController)
-        }
-
-        composable<Route.ConfirmDelete> { ConfirmDeleteScreen(navController) }
-
-        composable<Route.ShareVaultQr> { ShareVaultQrScreen(navController = navController) }
-
-        dialog<Route.CustomToken> { CustomTokenScreen() }
-
-        composable<Route.ReshareStartScreen> { ReshareStartScreen() }
-
-        composable<Route.OnChainSecurity> { SecurityScannerEnableScreen(navController) }
-
-        composable<Secret> { SecretScreen() }
-
-        // onboarding
-        composable<Onboarding.VaultCreation>(enterTransition = slideInFromBottomEnterTransition()) {
-            OnboardingScreen()
-        }
-
-        composable<Onboarding.VaultCreationSummary> { OnboardingSummaryScreen() }
-
-        // home
-
-        dialog<FastVaultPasswordReminder> { FastVaultPasswordReminderDialog() }
-
-        // scan
-
-        composable<ScanQr> { ScanQrScreen() }
-
-        composable<ScanError> { ScanQrErrorScreen() }
-
-        // keygen vault info
-        composable<ChooseVaultType> { ChooseVaultScreen() }
-
-        // key import
-        composable<Route.KeyImport.FeatureSpotlight> { KeyImportFeatureSpotlightScreen() }
-
-        composable<Route.KeyImport.ImportSeedphrase> { ImportSeedphraseScreen() }
-
-        composable<Route.KeyImport.ChainsSetup> { KeyImportChainsSetupScreen() }
-
-        composable<VaultInfo.Name> { NameVaultScreen() }
-
-        composable<VaultInfo.Email> { FastVaultEmailScreen() }
-
-        composable<VaultInfo.Password> { FastVaultPasswordScreen() }
-
-        composable<VaultInfo.PasswordHint> { FastVaultPasswordHintScreen() }
-
-        composable<VaultInfo.VerifyExistingPassword> { VerifyExistingVaultPasswordScreen() }
-
-        // keygen
-        composable<Keygen.Join> { JoinKeygenScreen() }
-
-        composable<Keygen.PeerDiscovery>(exitTransition = { fadeOut(animationSpec = tween(300)) }) {
-            KeygenPeerDiscoveryScreen()
-        }
-
-        composable<Keygen.Generating>(enterTransition = { fadeIn(animationSpec = tween(300)) }) {
-            KeygenScreen()
-        }
-
-        // vault backup
-        composable<Onboarding.VaultBackup>(enterTransition = slideInFromBottomEnterTransition()) {
-            VaultBackupOnboardingScreen()
-        }
-
-        dialog<FastVaultVerification> { FastVaultVerificationScreen() }
-
-        composable<BackupVault>(
-            typeMap = mapOf(typeOf<BackupPasswordType>() to BackupPasswordTypeNavType)
-        ) {
-            BackupVaultScreen()
-        }
-
-        composable<BackupPasswordRequest>(
-            typeMap = mapOf(typeOf<BackupType>() to BackupTypeNavType)
-        ) {
-            BackupPasswordRequestScreen()
-        }
-        composable<Route.BackupPassword>(
-            typeMap = mapOf(typeOf<BackupType>() to BackupTypeNavType)
-        ) {
-            BackupPasswordScreen()
-        }
-        dialog<VaultBackupSummary> { VaultBackupSummaryScreen() }
-
-        composable<VaultConfirmation> { VaultConfirmationScreen() }
-
-        // transactions
-
-        // select asset / network
-        dialog<SelectAsset> { SelectAssetScreen() }
-
-        dialog<SelectNetwork> { SelectNetworkScreen() }
-
-        // send
-        navigation<Send>(startDestination = Send.SendMain) {
-            sendScreen(navController = navController)
-        }
-
-        composable<VerifySend> { VerifySendScreen() }
-
-        // swap
-        navigation<Swap>(startDestination = Swap.SwapMain) {
-            swapScreen(navController = navController)
-        }
-
-        composable<VerifySwap> { VerifySwapScreen() }
-
-        composable<VerifyDeposit> { VerifyDepositScreen(navController = navController) }
-
-        // keysign
-        composable<Keysign.Join> { JoinKeysignView(navController = navController) }
-
-        dialog<Keysign.Password> { KeysignPasswordScreen() }
-
-        composable<Keysign.Keysign> { entry ->
-            val args = entry.toRoute<Keysign.Keysign>()
-            KeysignScreen(txType = args.txType)
-        }
-
-        // migration
-
-        composable<Migration.Onboarding> { MigrationOnboardingScreen() }
-
-        composable<Migration.Password> { MigrationPasswordScreen() }
-
-        // address book
-
-        dialog<AddressBook> { AddressBookBottomSheet() }
-
-        composable(
-            route = Destination.ReferralCode.STATIC_ROUTE,
-            arguments = listOf(navArgument(ARG_VAULT_ID) { type = NavType.StringType }),
-        ) {
-            ReferralScreen(navController = navController)
-        }
-
-        composable<Route.ReferralOnboarding> { ReferralOnboardingScreen() }
-
-        composable<Route.ReferralListVault> {
-            ReferralVaultListScreen(navController = navController)
-        }
-
-        composable<Route.ReferralExternalEdition> {
-            ReferralEditExternalScreen(navController = navController)
-        }
-
-        composable<Route.ReferralCreation> { ReferralCreateScreen(navController = navController) }
-
-        composable(
-            route = Destination.ReferralView.STATIC_ROUTE,
-            arguments =
-                listOf(
-                    navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                    navArgument(ARG_REFERRAL_ID) { type = NavType.StringType },
-                ),
-        ) {
-            ReferralViewScreen(navController = navController)
-        }
-
-        composable<Route.ReferralVaultEdition> {
-            ReferralEditVaultScreen(navController = navController)
-        }
-
-        composable<Route.CheckForUpdateSetting> { CheckForUpdateScreen() }
-
-        composable<Route.NotificationSettings> { NotificationsSettingsScreen() }
-
-        composable<Route.OnRamp> { OnRampScreen(navController = navController) }
-
-        dialog<VaultList>(
-            typeMap = mapOf(typeOf<VaultList.OpenType>() to VaultListOpenTypeNavType)
-        ) { backStackEntry ->
-            VaultListBottomSheet(
-                vaultList = backStackEntry.toRoute<VaultList>(),
-                onDismiss = navController::popBackStack,
-            )
-        }
-
-        composable<Route.VaultsToBackup> { VaultsToBackupScreen() }
-
-        composable<Route.ReviewVaultDevices> { ReviewVaultDevicesScreen() }
-
-        composable<Route.ChooseVaultCount> { ChooseDeviceCountScreen() }
-
-        composable<Route.SetupVaultInfo> { SetupVaultInfoScreen() }
-
-        composable<Route.EnterVaultInfo> { EnterVaultInfoScreen() }
-
-        composable<Route.ServerBackup> { ServerBackupScreen() }
-
-        dialog<Route.Receive> { ReceiveBottomSheet() }
-
-        dialog<Route.AddressQr> { TokenAddressQrBottomSheet() }
+      ChainDashboardScreen()
     }
+
+    composable<Route.Home> { VaultAccountsScreen() }
+
+    composable<Route.TransactionHistory> { TransactionHistoryScreen() }
+
+    composable<ImportVault> { ImportFileScreen() }
+
+    dialog<AddChainAccount> { ChainSelectionScreen() }
+    dialog<Route.AddDeFiChainAccount> { DeFiChainSelectionScreen() }
+    composable<Route.VaultSettings> { VaultSettingsScreen() }
+    composable<Route.Details> { VaultDetailScreen(navController) }
+
+    composable<Route.Rename> { VaultRenameScreen() }
+
+    composable<Route.AddVault> { StartScreen() }
+
+    dialog<TokenDetail> { TokenDetailScreen() }
+    dialog<Route.SelectTokens> { TokenSelectionScreen() }
+
+    composable<Route.SignMessage> { entry ->
+      val args = entry.toRoute<Route.SignMessage>()
+
+      SignMessageScreen(navController = navController, vaultId = args.vaultId)
+    }
+
+    composable<Route.AddressBookScreen> { AddressBookScreen() }
+
+    composable<AddressEntry> { AddAddressEntryScreen(navController = navController) }
+
+    composable<Route.Deposit> { entry ->
+      val args = entry.toRoute<Route.Deposit>()
+
+      DepositScreen(
+        navController = navController,
+        vaultId = args.vaultId,
+        chainId = args.chainId,
+        depositType = args.depositType,
+        bondAddress = args.bondAddress,
+        poolId = args.poolId,
+      )
+    }
+
+    composable<Route.BondForm> { entry ->
+      val args = entry.toRoute<Route.BondForm>()
+
+      BondFormScreen(navController = navController, vaultId = args.vaultId, chainId = args.chainId)
+    }
+
+    composable<Route.Settings> { SettingsScreen() }
+
+    composable<Route.FAQSetting> { FaqSettingScreen(navController = navController) }
+
+    composable<Route.DiscountTiers> { DiscountTiersScreen() }
+
+    composable<Route.LanguageSetting> { LanguageSettingScreen(navController = navController) }
+
+    composable<Route.CurrencyUnitSetting> {
+      CurrencyUnitSettingScreen(navController = navController)
+    }
+
+    composable<Route.ConfirmDelete> { ConfirmDeleteScreen(navController) }
+
+    composable<Route.ShareVaultQr> { ShareVaultQrScreen(navController = navController) }
+
+    dialog<Route.CustomToken> { CustomTokenScreen() }
+
+    composable<Route.ReshareStartScreen> { ReshareStartScreen() }
+
+    composable<Route.OnChainSecurity> { SecurityScannerEnableScreen(navController) }
+
+    composable<Secret> { SecretScreen() }
+
+    // onboarding
+    composable<Onboarding.VaultCreation>(enterTransition = slideInFromBottomEnterTransition()) {
+      OnboardingScreen()
+    }
+
+    composable<Onboarding.VaultCreationSummary> { OnboardingSummaryScreen() }
+
+    // home
+
+    dialog<FastVaultPasswordReminder> { FastVaultPasswordReminderDialog() }
+
+    // scan
+
+    composable<ScanQr> { ScanQrScreen() }
+
+    composable<ScanError> { ScanQrErrorScreen() }
+
+    // keygen vault info
+    composable<ChooseVaultType> { ChooseVaultScreen() }
+
+    // key import
+    composable<Route.KeyImport.FeatureSpotlight> { KeyImportFeatureSpotlightScreen() }
+
+    composable<Route.KeyImport.ImportSeedphrase> { ImportSeedphraseScreen() }
+
+    composable<Route.KeyImport.ChainsSetup> { KeyImportChainsSetupScreen() }
+
+    composable<VaultInfo.Name> { NameVaultScreen() }
+
+    composable<VaultInfo.Email> { FastVaultEmailScreen() }
+
+    composable<VaultInfo.Password> { FastVaultPasswordScreen() }
+
+    composable<VaultInfo.PasswordHint> { FastVaultPasswordHintScreen() }
+
+    composable<VaultInfo.VerifyExistingPassword> { VerifyExistingVaultPasswordScreen() }
+
+    // keygen
+    composable<Keygen.Join> { JoinKeygenScreen() }
+
+    composable<Keygen.PeerDiscovery>(exitTransition = { fadeOut(animationSpec = tween(300)) }) {
+      KeygenPeerDiscoveryScreen()
+    }
+
+    composable<Keygen.Generating>(enterTransition = { fadeIn(animationSpec = tween(300)) }) {
+      KeygenScreen()
+    }
+
+    // vault backup
+    composable<Onboarding.VaultBackup>(enterTransition = slideInFromBottomEnterTransition()) {
+      VaultBackupOnboardingScreen()
+    }
+
+    dialog<FastVaultVerification> { FastVaultVerificationScreen() }
+
+    composable<BackupVault>(
+      typeMap = mapOf(typeOf<BackupPasswordType>() to BackupPasswordTypeNavType)
+    ) {
+      BackupVaultScreen()
+    }
+
+    composable<BackupPasswordRequest>(typeMap = mapOf(typeOf<BackupType>() to BackupTypeNavType)) {
+      BackupPasswordRequestScreen()
+    }
+    composable<Route.BackupPassword>(typeMap = mapOf(typeOf<BackupType>() to BackupTypeNavType)) {
+      BackupPasswordScreen()
+    }
+    dialog<VaultBackupSummary> { VaultBackupSummaryScreen() }
+
+    composable<VaultConfirmation> { VaultConfirmationScreen() }
+
+    // transactions
+
+    // select asset / network
+    dialog<SelectAsset> { SelectAssetScreen() }
+
+    dialog<SelectNetwork> { SelectNetworkScreen() }
+
+    // send
+    navigation<Send>(startDestination = Send.SendMain) { sendScreen(navController = navController) }
+
+    composable<VerifySend> { VerifySendScreen() }
+
+    // swap
+    navigation<Swap>(startDestination = Swap.SwapMain) { swapScreen(navController = navController) }
+
+    composable<VerifySwap> { VerifySwapScreen() }
+
+    composable<VerifyDeposit> { VerifyDepositScreen(navController = navController) }
+
+    // keysign
+    composable<Keysign.Join> { JoinKeysignView(navController = navController) }
+
+    dialog<Keysign.Password> { KeysignPasswordScreen() }
+
+    composable<Keysign.Keysign> { entry ->
+      val args = entry.toRoute<Keysign.Keysign>()
+      KeysignScreen(txType = args.txType)
+    }
+
+    // migration
+
+    composable<Migration.Onboarding> { MigrationOnboardingScreen() }
+
+    composable<Migration.Password> { MigrationPasswordScreen() }
+
+    // address book
+
+    dialog<AddressBook> { AddressBookBottomSheet() }
+
+    composable(
+      route = Destination.ReferralCode.STATIC_ROUTE,
+      arguments = listOf(navArgument(ARG_VAULT_ID) { type = NavType.StringType }),
+    ) {
+      ReferralScreen(navController = navController)
+    }
+
+    composable<Route.ReferralOnboarding> { ReferralOnboardingScreen() }
+
+    composable<Route.ReferralListVault> { ReferralVaultListScreen(navController = navController) }
+
+    composable<Route.ReferralExternalEdition> {
+      ReferralEditExternalScreen(navController = navController)
+    }
+
+    composable<Route.ReferralCreation> { ReferralCreateScreen(navController = navController) }
+
+    composable(
+      route = Destination.ReferralView.STATIC_ROUTE,
+      arguments =
+        listOf(
+          navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+          navArgument(ARG_REFERRAL_ID) { type = NavType.StringType },
+        ),
+    ) {
+      ReferralViewScreen(navController = navController)
+    }
+
+    composable<Route.ReferralVaultEdition> {
+      ReferralEditVaultScreen(navController = navController)
+    }
+
+    composable<Route.CheckForUpdateSetting> { CheckForUpdateScreen() }
+
+    composable<Route.NotificationSettings> { NotificationsSettingsScreen() }
+
+    composable<Route.OnRamp> { OnRampScreen(navController = navController) }
+
+    dialog<VaultList>(typeMap = mapOf(typeOf<VaultList.OpenType>() to VaultListOpenTypeNavType)) {
+      backStackEntry ->
+      VaultListBottomSheet(
+        vaultList = backStackEntry.toRoute<VaultList>(),
+        onDismiss = navController::popBackStack,
+      )
+    }
+
+    composable<Route.VaultsToBackup> { VaultsToBackupScreen() }
+
+    composable<Route.ReviewVaultDevices> { ReviewVaultDevicesScreen() }
+
+    composable<Route.ChooseVaultCount> { ChooseDeviceCountScreen() }
+
+    composable<Route.SetupVaultInfo> { SetupVaultInfoScreen() }
+
+    composable<Route.EnterVaultInfo> { EnterVaultInfoScreen() }
+
+    composable<Route.ServerBackup> { ServerBackupScreen() }
+
+    dialog<Route.Receive> { ReceiveBottomSheet() }
+
+    dialog<Route.AddressQr> { TokenAddressQrBottomSheet() }
+  }
 }

@@ -37,90 +37,84 @@ import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun VerifyExistingVaultPasswordScreen(
-    model: VerifyExistingVaultPasswordViewModel = hiltViewModel()
+  model: VerifyExistingVaultPasswordViewModel = hiltViewModel()
 ) {
-    val state by model.state.collectAsState()
+  val state by model.state.collectAsState()
 
-    VerifyExistingVaultPasswordScreen(
-        state = state,
-        passwordFieldState = model.passwordFieldState,
-        onVerifyClick = model::verify,
-        onBackClick = model::back,
-        onTogglePasswordVisibilityClick = model::togglePasswordVisibility,
-    )
+  VerifyExistingVaultPasswordScreen(
+    state = state,
+    passwordFieldState = model.passwordFieldState,
+    onVerifyClick = model::verify,
+    onBackClick = model::back,
+    onTogglePasswordVisibilityClick = model::togglePasswordVisibility,
+  )
 }
 
 @Composable
 internal fun VerifyExistingVaultPasswordScreen(
-    state: VerifyExistingVaultPasswordUiModel,
-    passwordFieldState: TextFieldState,
-    onVerifyClick: () -> Unit,
-    onBackClick: () -> Unit,
-    onTogglePasswordVisibilityClick: () -> Unit,
+  state: VerifyExistingVaultPasswordUiModel,
+  passwordFieldState: TextFieldState,
+  onVerifyClick: () -> Unit,
+  onBackClick: () -> Unit,
+  onTogglePasswordVisibilityClick: () -> Unit,
 ) {
-    V2Scaffold(
-        title = null,
-        onBackClick = onBackClick,
-        content = {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.keysign_password_enter_your_password),
-                    style = Theme.brockmann.headings.largeTitle,
-                    color = Theme.v2.colors.text.primary,
-                )
+  V2Scaffold(
+    title = null,
+    onBackClick = onBackClick,
+    content = {
+      Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+          text = stringResource(R.string.keysign_password_enter_your_password),
+          style = Theme.brockmann.headings.largeTitle,
+          color = Theme.v2.colors.text.primary,
+        )
 
-                UiSpacer(8.dp)
+        UiSpacer(8.dp)
 
-                val focusRequester = remember { FocusRequester() }
-                LaunchedEffect(Unit) { focusRequester.requestFocus() }
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-                VsTextInputField(
-                    textFieldState = passwordFieldState,
-                    hint = stringResource(R.string.keysign_password_title),
-                    type =
-                        VsTextInputFieldType.Password(
-                            isVisible = state.isPasswordVisible,
-                            onVisibilityClick = onTogglePasswordVisibilityClick,
-                        ),
-                    focusRequester = focusRequester,
-                    imeAction = ImeAction.Go,
-                    onKeyboardAction = { onVerifyClick() },
-                    innerState =
-                        if (state.error != null) VsTextInputFieldInnerState.Error
-                        else VsTextInputFieldInnerState.Default,
-                    footNote = state.error?.asString(),
-                    modifier =
-                        Modifier.testTag("VerifyExistingVaultPasswordScreen.passwordField"),
-                )
-            }
-        },
-        bottomBar = {
-            VsButton(
-                label = stringResource(R.string.verify_transaction_screen_title),
-                state =
-                    if (state.isLoading) VsButtonState.Disabled
-                    else VsButtonState.Enabled,
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 24.dp)
-                        .testTag("VerifyExistingVaultPasswordScreen.verify"),
-                onClick = onVerifyClick,
-            )
-        },
-    )
+        VsTextInputField(
+          textFieldState = passwordFieldState,
+          hint = stringResource(R.string.keysign_password_title),
+          type =
+            VsTextInputFieldType.Password(
+              isVisible = state.isPasswordVisible,
+              onVisibilityClick = onTogglePasswordVisibilityClick,
+            ),
+          focusRequester = focusRequester,
+          imeAction = ImeAction.Go,
+          onKeyboardAction = { onVerifyClick() },
+          innerState =
+            if (state.error != null) VsTextInputFieldInnerState.Error
+            else VsTextInputFieldInnerState.Default,
+          footNote = state.error?.asString(),
+          modifier = Modifier.testTag("VerifyExistingVaultPasswordScreen.passwordField"),
+        )
+      }
+    },
+    bottomBar = {
+      VsButton(
+        label = stringResource(R.string.verify_transaction_screen_title),
+        state = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
+        modifier =
+          Modifier.fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 24.dp)
+            .testTag("VerifyExistingVaultPasswordScreen.verify"),
+        onClick = onVerifyClick,
+      )
+    },
+  )
 }
 
 @Composable
 @Preview
 private fun VerifyExistingVaultPasswordScreenPreview() {
-    VerifyExistingVaultPasswordScreen(
-        state = VerifyExistingVaultPasswordUiModel(),
-        passwordFieldState = rememberTextFieldState(),
-        onVerifyClick = {},
-        onBackClick = {},
-        onTogglePasswordVisibilityClick = {},
-    )
+  VerifyExistingVaultPasswordScreen(
+    state = VerifyExistingVaultPasswordUiModel(),
+    passwordFieldState = rememberTextFieldState(),
+    onVerifyClick = {},
+    onBackClick = {},
+    onTogglePasswordVisibilityClick = {},
+  )
 }
