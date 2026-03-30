@@ -159,6 +159,8 @@ internal data class DepositFormUiModel(
     val availableLpUnits: String? = null,
     val selectedPoolTotalLpUnits: Long = 0L,
     val selectedPoolCacaoDepth: Long = 0L,
+    val totalGas: UiText = UiText.Empty,
+    val estimatedFee: UiText = UiText.Empty,
 )
 
 @HiltViewModel
@@ -306,6 +308,9 @@ constructor(
             .onEach { address ->
                 val selectedToken = address.accounts.find { it.token.isNativeToken }?.token
                 selectedToken?.let { state.update { it.copy(selectedToken = selectedToken) } }
+                if (depositTypeAction == DeFiNavActions.ADD_LP.type) {
+                    loadGasFeeForDisplay()
+                }
             }
             .launchIn(viewModelScope)
 
@@ -501,6 +506,33 @@ constructor(
                             R.string.must_be_enabled_before_proceeding,
                             listOf(targetTicker.orEmpty()),
                         ),
+                )
+            }
+        }
+    }
+
+    private fun loadGasFeeForDisplay() {
+        val chain = chain ?: return
+        viewModelScope.safeLaunch {
+            val address = address.value ?: return@safeLaunch
+            val token = address.accounts.find { it.token.isNativeToken }?.token ?: return@safeLaunch
+            val srcAddress = token.address
+            val gasFee = calculateGasFee(chain, token, srcAddress)
+            val specific =
+                blockChainSpecificRepository.getSpecific(
+                    chain,
+                    srcAddress,
+                    token,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                )
+            val estimatedGasFee = getFeesFiatValue(specific, gasFee, token)
+            state.update {
+                it.copy(
+                    totalGas = UiText.DynamicString(estimatedGasFee.formattedTokenValue),
+                    estimatedFee = UiText.DynamicString(estimatedGasFee.formattedFiatValue),
                 )
             }
         }
