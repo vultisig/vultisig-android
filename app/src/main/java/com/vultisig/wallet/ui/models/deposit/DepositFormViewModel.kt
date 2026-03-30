@@ -800,7 +800,7 @@ constructor(
             }
         } catch (ce: CancellationException) {
             throw ce
-        } catch (_: NetworkException) {
+        } catch (_: Exception) {
             state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
         }
     }
