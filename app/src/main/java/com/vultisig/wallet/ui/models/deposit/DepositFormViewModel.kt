@@ -138,6 +138,7 @@ internal data class DepositFormUiModel(
     val lpUnitsError: UiText? = null,
     val slippageError: UiText? = null,
     val isLoading: Boolean = false,
+    val isCheckingWhitelist: Boolean = false,
     val balance: UiText = UiText.Empty,
     val sharesBalance: UiText = R.string.share_balance_loading.asUiText(),
     val selectedDstChain: Chain = Chain.ThorChain,
@@ -759,6 +760,7 @@ constructor(
             return
         }
         if (chain == Chain.MayaChain && state.value.depositOption == DepositOption.Bond) {
+            state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = true) }
             viewModelScope.safeLaunch { checkNodeWhitelist(nodeAddress) }
         } else {
             state.update { it.copy(nodeAddressError = null) }
@@ -775,14 +777,15 @@ constructor(
                 state.update {
                     it.copy(
                         nodeAddressError =
-                            UiText.StringResource(R.string.bond_not_whitelisted_error)
+                            UiText.StringResource(R.string.bond_not_whitelisted_error),
+                        isCheckingWhitelist = false,
                     )
                 }
             } else {
-                state.update { it.copy(nodeAddressError = null) }
+                state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
             }
         } catch (_: Exception) {
-            state.update { it.copy(nodeAddressError = null) }
+            state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
         }
     }
 
