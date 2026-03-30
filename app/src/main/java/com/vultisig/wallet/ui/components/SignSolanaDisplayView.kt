@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -169,8 +170,9 @@ private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstructio
 
         Text(
             text =
-                stringResource(
-                    R.string.solana_accounts_data,
+                pluralStringResource(
+                    R.plurals.solana_accounts_data,
+                    instruction.accountsCount,
                     instruction.accountsCount,
                     instruction.dataLength,
                 ),

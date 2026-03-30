@@ -72,6 +72,8 @@ interface MayaChainApi {
     suspend fun getMidgardHealth(): MayaMidgardHealth
 
     suspend fun getMayaNodePools(): List<MayaNodePool>
+
+    suspend fun getPool(poolAsset: String): MayaNodePool
 }
 
 @Serializable
@@ -111,6 +113,7 @@ data class MayaNodePool(
     @SerialName("bondable") val bondable: Boolean = false,
     @SerialName("LP_units") val lpUnits: String = "0",
     @SerialName("balance_cacao") val balanceCacao: String = "0",
+    @SerialName("balance_asset") val balanceAsset: String = "0",
 )
 
 @Serializable
@@ -328,6 +331,11 @@ constructor(
         httpClient
             .get("$MAYA_NODE_BASE/mayachain/pools") { header(xClientID, xClientIDValue) }
             .bodyOrThrow<List<MayaNodePool>>()
+
+    override suspend fun getPool(poolAsset: String): MayaNodePool =
+        httpClient
+            .get("$MAYA_NODE_BASE/mayachain/pool/$poolAsset") { header(xClientID, xClientIDValue) }
+            .bodyOrThrow<MayaNodePool>()
 
     companion object {
         private const val MAYA_NODE_BASE = "https://mayanode.mayachain.info"

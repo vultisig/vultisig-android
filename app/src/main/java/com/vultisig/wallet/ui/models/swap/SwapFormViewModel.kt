@@ -40,7 +40,6 @@ import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -466,15 +465,7 @@ constructor(
                                 val isApprovalRequired =
                                     allowance != null && allowance < srcTokenValue.value
 
-                                val srcFiatValue =
-                                    convertTokenValueToFiat(
-                                        srcToken,
-                                        srcTokenValue,
-                                        AppCurrency.USD,
-                                    )
-
-                                val isAffiliate =
-                                    srcFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                                val isAffiliate = true
 
                                 RegularSwapTransaction(
                                     id = UUID.randomUUID().toString(),
@@ -539,15 +530,7 @@ constructor(
                                 val isApprovalRequired =
                                     allowance != null && allowance < srcTokenValue.value
 
-                                val srcFiatValue =
-                                    convertTokenValueToFiat(
-                                        srcToken,
-                                        srcTokenValue,
-                                        AppCurrency.USD,
-                                    )
-
-                                val isAffiliate =
-                                    srcFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                                val isAffiliate = true
 
                                 val regularSwapTransaction =
                                     RegularSwapTransaction(
@@ -1306,12 +1289,7 @@ constructor(
                         when (provider) {
                             SwapProvider.MAYA,
                             SwapProvider.THORCHAIN -> {
-                                val srcUsdFiatValue =
-                                    convertTokenValueToFiat(srcToken, tokenValue, AppCurrency.USD)
-
-                                val isAffiliate =
-                                    srcUsdFiatValue.value >=
-                                        AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                                val isAffiliate = true
 
                                 val (quote, recommendedMinAmountToken) =
                                     if (provider == SwapProvider.MAYA) {
@@ -1401,11 +1379,6 @@ constructor(
                             }
 
                             SwapProvider.KYBER -> {
-                                val srcUsdFiatValue =
-                                    convertTokenValueToFiat(srcToken, tokenValue, AppCurrency.USD)
-                                val isAffiliate =
-                                    srcUsdFiatValue.value >=
-                                        AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
                                 val swapQuote =
                                     getCachedQuoteOrFetch(
                                         srcToken.id,
@@ -1418,27 +1391,56 @@ constructor(
                                                 srcToken = srcToken,
                                                 dstToken = dstToken,
                                                 tokenValue = tokenValue,
-                                                isAffiliate = isAffiliate,
+                                                affiliateBps =
+                                                    maxOf(
+                                                        0,
+                                                        KYBER_AFFILIATE_FEE_BPS -
+                                                            (vultBPSDiscount ?: 0),
+                                                    ),
                                             )
                                         val expectedDstValue =
                                             TokenValue(
                                                 value = apiQuote.dstAmount.toBigInteger(),
                                                 token = dstToken,
                                             )
+                                        val gasFees =
+                                            apiQuote.tx.gasPrice.toBigInteger() *
+                                                (apiQuote.tx.gas.takeIf { it != 0L }
+                                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
+                                                    .toBigInteger()
+                                        val (feeAmount, feeCoin) =
+                                            try {
+                                                if (apiQuote.tx.swapFeeTokenContract.isNotEmpty()) {
+                                                    val tokenContract =
+                                                        apiQuote.tx.swapFeeTokenContract
+                                                    val chainId = srcNativeToken.chain.id
+                                                    val amount = apiQuote.tx.swapFee.toBigInteger()
+                                                    val coinAndFiatValue =
+                                                        searchToken(chainId, tokenContract)
+                                                            ?: error("Can't find token or price")
+                                                    val newNativeAmount =
+                                                        convertTokenToTokenUseCase
+                                                            .convertTokenToToken(
+                                                                amount,
+                                                                coinAndFiatValue,
+                                                                srcNativeToken,
+                                                            )
+                                                    Pair(newNativeAmount, srcNativeToken)
+                                                } else {
+                                                    Pair(gasFees, srcNativeToken)
+                                                }
+                                            } catch (t: Throwable) {
+                                                Timber.e(t)
+                                                Pair(BigInteger.ZERO, srcNativeToken)
+                                            }
+                                        val updatedTx =
+                                            apiQuote.tx.copy(swapFee = feeAmount.toString())
                                         val tokenFees =
-                                            TokenValue(
-                                                value =
-                                                    apiQuote.tx.gasPrice.toBigInteger() *
-                                                        (apiQuote.tx.gas.takeIf { it != 0L }
-                                                                ?: EvmHelper
-                                                                    .DEFAULT_ETH_SWAP_GAS_UNIT)
-                                                            .toBigInteger(),
-                                                token = srcNativeToken,
-                                            )
+                                            TokenValue(value = feeAmount, token = feeCoin)
                                         SwapQuote.OneInch(
                                             expectedDstValue = expectedDstValue,
                                             fees = tokenFees,
-                                            data = apiQuote,
+                                            data = apiQuote.copy(tx = updatedTx),
                                             expiredAt = Clock.System.now() + expiredAfter,
                                             provider = provider.getSwapProviderId(),
                                         )
@@ -1480,12 +1482,7 @@ constructor(
                             }
 
                             SwapProvider.ONEINCH -> {
-                                val srcUsdFiatValue =
-                                    convertTokenValueToFiat(srcToken, tokenValue, AppCurrency.USD)
-
-                                val isAffiliate =
-                                    srcUsdFiatValue.value >=
-                                        AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                                val isAffiliate = true
 
                                 val swapQuote =
                                     getCachedQuoteOrFetch(
@@ -1927,9 +1924,9 @@ constructor(
     }
 
     companion object {
-        const val AFFILIATE_FEE_USD_THRESHOLD = 100
         const val ETH_GAS_LIMIT: Long = 40_000
         const val ARB_GAS_LIMIT: Long = 400_000
+        private const val KYBER_AFFILIATE_FEE_BPS = 50
 
         private const val ARG_SELECTED_SRC_TOKEN_ID = "ARG_SELECTED_SRC_TOKEN_ID"
         private const val ARG_SELECTED_DST_TOKEN_ID = "ARG_SELECTED_DST_TOKEN_ID"

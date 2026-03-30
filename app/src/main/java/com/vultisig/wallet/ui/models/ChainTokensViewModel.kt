@@ -214,11 +214,7 @@ constructor(
                 val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
 
                 val addressDataSource =
-                    if (isRefresh) {
-                        accountsRepository.loadAddress(vaultId = vaultId, chain = chain)
-                    } else {
-                        accountsRepository.loadCachedAddress(vaultId = vaultId, chain = chain)
-                    }
+                    accountsRepository.loadAddress(vaultId = vaultId, chain = chain)
 
                 currentVault = vaultRepository.get(vaultId) ?: error("No vault with $vaultId")
                 collectTronResourceStats(chain)

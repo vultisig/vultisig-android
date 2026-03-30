@@ -22,6 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -227,7 +230,28 @@ private fun DeviceCountDescription(
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .drawWithContent {
+                            drawContent()
+                            // top inset shadow: 0 -1px 0.5px 0 #0F1C3E
+                            drawLine(
+                                color = Color(0xFF0F1C3E),
+                                start = Offset(0f, 0f),
+                                end = Offset(size.width, 0f),
+                                strokeWidth = 1.dp.toPx(),
+                                blendMode = BlendMode.SrcOver,
+                            )
+                            // bottom inset highlight: 0 1px 1px 0 rgba(255,255,255,0.10)
+                            drawLine(
+                                color = Color(0x1AFFFFFF),
+                                start = Offset(0f, size.height),
+                                end = Offset(size.width, size.height),
+                                strokeWidth = 1.dp.toPx(),
+                                blendMode = BlendMode.SrcOver,
+                            )
+                        }
+                        .padding(vertical = 14.dp),
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.appstore_style_icon),

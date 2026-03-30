@@ -348,7 +348,10 @@
     <string name="push_notification_error_vault_not_supported">Tresor unterstützt keine Benachrichtigungen</string>
     <string name="push_notification_error_token_not_available">Benachrichtigungstoken konnte nicht abgerufen werden</string>
     <string name="push_notification_error_api_failure">Benachrichtigungsregistrierung konnte nicht aktualisiert werden</string>
-    <string name="push_notification_partial_failure">%1$d von %2$d Tresoren aktualisiert, %3$d fehlgeschlagen</string>
+    <plurals name="push_notification_partial_failure">
+        <item quantity="one">%1$d von %2$d Tresoren aktualisiert, %3$d fehlgeschlagen</item>
+        <item quantity="other">%1$d von %2$d Tresoren aktualisiert, %3$d fehlgeschlagen</item>
+    </plurals>
     <string name="push_notifications_sent">Benachrichtigung erfolgreich gesendet</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Erhalten Sie eine Benachrichtigung, wenn Ihre Unterschrift erforderlich ist oder ein Gerät Zugriff anfordert.</string>
     <string name="keysign_notification_channel_name">Keysign-Anfragen</string>
@@ -559,7 +562,10 @@
     <string name="backup_select_vaults_subtitle">Wählen Sie, ob nur dieser Tresor oder alle Tresore in Ihrer App gesichert werden sollen.</string>
     <string name="backup_this_vault_only">Nur dieser Tresor</string>
     <string name="backup_all_vaults">Alle Tresore</string>
-    <string name="more">+%1$d mehr</string>
+    <plurals name="more">
+        <item quantity="one">+%1$d mehr</item>
+        <item quantity="other">+%1$d mehr</item>
+    </plurals>
     <string name="backup_choose_method_title">Sicherungsmethode auswählen</string>
     <string name="backup_device_desc">Speichern Sie die Vault-Freigabe dieses Geräts.</string>
     <string name="backup_device_title">Gerätesicherung</string>
@@ -649,7 +655,10 @@
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Unbekannt</string>
     <string name="referral_code_cannot_be_empty">Der Empfehlungscode darf nicht leer sein.</string>
-    <string name="referral_code_can_be_up_to_characters">Der Empfehlungscode darf maximal %1$d Zeichen lang sein.</string>
+    <plurals name="referral_code_can_be_up_to_characters">
+        <item quantity="one">Der Empfehlungscode darf maximal %1$d Zeichen lang sein.</item>
+        <item quantity="other">Der Empfehlungscode darf maximal %1$d Zeichen lang sein.</item>
+    </plurals>
     <string name="key_gen_discovery_no_connection_available">Keine Verbindung verfügbar</string>
     <string name="key_gen_discovery_enable_wifi">Bitte aktivieren Sie WLAN oder Mobilgerät, um die Transaktion zu signieren.</string>
     <string name="keygen_screen_upgrading_vault">Tresor wird aktualisiert.</string>
@@ -721,7 +730,10 @@
     <string name="backup_password_request_no_password_action">Backup ohne Passwort</string>
     <string name="address_bookmark_error_invalid_address">Diese Adresse ist für %s ungültig.</string>
     <string name="address_bookmark_error_empty_label">Das Label darf nicht leer sein</string>
-    <string name="address_bookmark_error_invalid_label">Das Label muss zwischen 1 und %d Zeichen haben</string>
+    <plurals name="address_bookmark_error_invalid_label">
+        <item quantity="one">Das Label muss zwischen 1 und %d Zeichen haben</item>
+        <item quantity="other">Das Label muss zwischen 1 und %d Zeichen haben</item>
+    </plurals>
     <string name="send_form_ripple_reaping_warning">Stellen Sie sicher, dass Ihr Konto ausreichend Guthaben zur Deckung der Gebühren aufweist. Fällt Ihr Kontostand unter 1 XRP (Einzahlung), wird das Konto deaktiviert (eingezogen) und das verbleibende Guthaben geht verloren. Sie können die Adresse jederzeit mit einer neuen Einzahlung, die höher als die Mindesteinzahlung ist, reaktivieren. Dadurch werden die verlorenen Guthaben jedoch nicht wiederhergestellt.</string>
     <string name="error_invalid_chain">Die Blockchain ist ungültig</string>
     <string name="vault_backup_verifying_pin">Code wird überprüft, bitte warten</string>
@@ -891,7 +903,10 @@
     <string name="solana_instruction_number">Anweisung %1$d</string>
     <string name="solana_program_name">Programm: %1$s</string>
     <string name="solana_program_id">Programm-ID: %1$s</string>
-    <string name="solana_accounts_data">Konten: %1$d | Datenlänge: %2$d Bytes</string>
+    <plurals name="solana_accounts_data">
+        <item quantity="one">Konto: %1$d | Datenlänge: %2$d Byte</item>
+        <item quantity="other">Konten: %1$d | Datenlänge: %2$d Bytes</item>
+    </plurals>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Bevor Sie beginnen…</string>
@@ -939,7 +954,10 @@
     <string name="import_seedphrase_subtitle">Geben Sie Ihre Wiederherstellungsphrase mit 12 oder 24 Wörtern ein</string>
     <string name="import_seedphrase_label">Seed-Phrase</string>
     <string name="import_seedphrase_hint">Wiederherstellungsphrase eingeben…</string>
-    <string name="import_seedphrase_word_count">%1$d / %2$d Wörter</string>
+    <plurals name="import_seedphrase_word_count">
+        <item quantity="one">%1$d / %2$d Wörter</item>
+        <item quantity="other">%1$d / %2$d Wörter</item>
+    </plurals>
     <string name="import_seedphrase_invalid_word_count">Sie haben %1$s Wörter eingegeben. Die Seed-Phrase muss 12 oder 24 Wörter haben</string>
     <string name="import_seedphrase_invalid_phrase">Ungültige Seed-Phrase</string>
     <string name="import_seedphrase_already_imported">Diese Seed-Phrase wurde bereits importiert</string>
@@ -979,7 +997,7 @@
     <string name="welcome_fast_and_easy">Schnell &amp; einfach</string>
     <string name="welcome_fast_and_easy_desc">Signieren Sie mit nur 1 Gerät. Unser sicherer Server signiert mit Ihnen für Multisig-Sicherheit. Plugin-kompatibel.</string>
     <string name="welcome_fast_and_easy_highlight">nur 1 Gerät.</string>
-    <string name="welcome_plugin_compatible">Plugin Marketplace kompatibel</string>
+    <string name="welcome_plugin_compatible">Plugin Store kompatibel</string>
     <string name="welcome_tip">Tipp: Sie können einen Browser als Gerät verwenden</string>
     <string name="welcome_only_your_devices">Nur Ihre Geräte</string>
     <string name="welcome_only_your_devices_desc">Nur Ihre Geräte sind autorisierte Unterzeichner. Das Signieren von Transaktionen erfordert 2 Geräte. Vollständige Selbstverwahrung auf Knopfdruck.</string>
@@ -1045,7 +1063,10 @@
     <string name="vault_setup_add_as_many_devices_as_you_want">Fügen Sie so viele Geräte hinzu, wie Sie möchten, und erhalten Sie institutionelle Sicherheit.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Für Teams und Schatzkammern entwickelt</string>
     <string name="vault_setup_back_up_each_device">Jedes Gerät sichern</string>
-    <string name="vault_setup_you_ll_create_n_backups_in_total">Sie werden insgesamt %1$d Backups erstellen. Sie tun dies auf jedem Gerät.</string>
+    <plurals name="vault_setup_you_ll_create_n_backups_in_total">
+        <item quantity="one">Sie werden insgesamt %1$d Backup erstellen. Sie tun dies auf jedem Gerät.</item>
+        <item quantity="other">Sie werden insgesamt %1$d Backups erstellen. Sie tun dies auf jedem Gerät.</item>
+    </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Speichern Sie jedes Backup in einem anderen Cloud-Dienst oder mit einem anderen Passwort. Wenn eines kompromittiert wird, bleiben Ihre Gelder sicher.</string>
     <string name="vault_setup_i_understand">Ich verstehe</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Backup %1$d von %2$d in der Cloud speichern</string>
