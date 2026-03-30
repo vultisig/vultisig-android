@@ -1,4 +1,3 @@
-// TODO: Update email screen design to match Figma
 package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.layout.Column

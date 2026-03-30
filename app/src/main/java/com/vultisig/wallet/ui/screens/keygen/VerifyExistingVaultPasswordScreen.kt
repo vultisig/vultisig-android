@@ -1,4 +1,3 @@
-// TODO: Update password verfication screen design to match Figma
 package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.layout.Arrangement
