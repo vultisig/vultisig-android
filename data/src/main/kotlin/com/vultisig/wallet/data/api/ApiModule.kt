@@ -38,6 +38,8 @@ internal interface ApiModule {
 
     @Binds @Singleton fun bindBlockChairApi(impl: BlockChairApiImp): BlockChairApi
 
+    @Binds @Singleton fun bindDashApi(impl: DashApiImpl): DashApi
+
     @Binds @Singleton fun bindCosmosApi(impl: CosmosApiFactoryImp): CosmosApiFactory
 
     @Binds @Singleton fun bindSolanaApi(impl: SolanaApiImp): SolanaApi
