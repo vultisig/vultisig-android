@@ -862,7 +862,7 @@ constructor(
         viewModelScope.launch {
             val qr = requestQrScan()
             if (!qr.isNullOrBlank()) {
-                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(qr)
+                setNodeAddress(qr)
             }
         }
     }
