@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
+import com.vultisig.wallet.data.api.DashApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
@@ -81,6 +82,7 @@ constructor(
     private val solanaApi: SolanaApi,
     private val cosmosApiFactory: CosmosApiFactory,
     private val blockChairApi: BlockChairApi,
+    private val dashApi: DashApi,
     private val polkadotApi: PolkadotApi,
     private val bittensorApi: BittensorApi,
     private val suiApi: SuiApi,
@@ -248,6 +250,46 @@ constructor(
                             ),
                         utxos = cardanoApi.getUTXOs(token),
                     )
+                } else if (chain == Chain.Dash) {
+                    val dashUtxos =
+                        try {
+                            dashApi.getAddressUtxos(address)
+                        } catch (e: Exception) {
+                            Timber.e(e, "Dash RPC failed, falling back to Blockchair")
+                            null
+                        }
+                    if (dashUtxos != null) {
+                        BlockChainSpecificAndUtxo(
+                            blockChainSpecific =
+                                BlockChainSpecific.UTXO(
+                                    byteFee = gasFee.value,
+                                    sendMaxAmount = isMaxAmountEnabled,
+                                ),
+                            utxos = dashUtxos.sortedBy(UtxoInfo::amount),
+                        )
+                    } else {
+                        // Fallback to Blockchair with block_id filtering
+                        val utxos = blockChairApi.getAddressInfo(chain = chain, address = address)
+                        BlockChainSpecificAndUtxo(
+                            blockChainSpecific =
+                                BlockChainSpecific.UTXO(
+                                    byteFee = gasFee.value,
+                                    sendMaxAmount = isMaxAmountEnabled,
+                                ),
+                            utxos =
+                                utxos
+                                    ?.utxos
+                                    ?.filter { it.blockId > 0 }
+                                    ?.sortedBy { it.value }
+                                    ?.map {
+                                        UtxoInfo(
+                                            hash = it.transactionHash,
+                                            amount = it.value,
+                                            index = it.index.toUInt(),
+                                        )
+                                    } ?: emptyList(),
+                        )
+                    }
                 } else {
                     val utxos = blockChairApi.getAddressInfo(chain = chain, address = address)
 
@@ -262,6 +304,7 @@ constructor(
                         utxos =
                             utxos
                                 ?.utxos
+                                ?.filter { chain != Chain.Dash || it.blockId > 0 }
                                 ?.sortedBy { it.value }
                                 ?.toList()
                                 ?.map {
