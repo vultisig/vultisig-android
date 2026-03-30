@@ -2,7 +2,6 @@
 
 package com.vultisig.wallet.ui.screens.send
 
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -14,7 +13,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -25,7 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -44,7 +41,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
@@ -53,7 +49,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -70,11 +65,11 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.PercentageChip
 import com.vultisig.wallet.ui.components.TokenAmountInput
+import com.vultisig.wallet.ui.components.TokenFiatToggle
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
@@ -1298,55 +1293,6 @@ private fun Modifier.vsClickableBackground() =
             color = Theme.v2.colors.backgrounds.secondary,
             shape = RoundedCornerShape(12.dp),
         )
-
-@Composable
-private fun TokenFiatToggle(
-    isTokenSelected: Boolean,
-    onTokenSelected: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier =
-            modifier
-                .height(IntrinsicSize.Min)
-                .background(color = Theme.v2.colors.backgrounds.secondary, shape = CircleShape)
-    ) {
-        LookaheadScope {
-            Box(
-                Modifier.animatePlacementInScope(lookaheadScope = this@LookaheadScope)
-                    .padding(all = 4.dp)
-                    .background(color = Theme.v2.colors.primary.accent3, shape = CircleShape)
-                    .padding(all = 8.dp)
-                    .size(16.dp)
-                    .align(if (isTokenSelected) Alignment.TopCenter else Alignment.BottomCenter)
-            )
-            Column(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-                modifier = Modifier.padding(all = 4.dp),
-            ) {
-                ToggleButton(
-                    drawableResId = R.drawable.ic_coins,
-                    onClick = { onTokenSelected(true) },
-                )
-
-                ToggleButton(
-                    drawableResId = R.drawable.ic_dollar_sign,
-                    onClick = { onTokenSelected(false) },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ToggleButton(@DrawableRes drawableResId: Int, onClick: () -> Unit) {
-    UiIcon(
-        drawableResId = drawableResId,
-        size = 16.dp,
-        tint = Theme.v2.colors.text.secondary,
-        modifier = Modifier.clip(CircleShape).clickable(onClick = onClick).padding(all = 8.dp),
-    )
-}
 
 @Composable
 private fun FoldableSection(

@@ -195,6 +195,7 @@ constructor(
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
 
     val tokenAmountFieldState = TextFieldState()
+    val fiatAmountFieldState = TextFieldState()
     val nodeAddressFieldState = TextFieldState()
     val providerFieldState = TextFieldState()
     val operatorFeeFieldState = TextFieldState()

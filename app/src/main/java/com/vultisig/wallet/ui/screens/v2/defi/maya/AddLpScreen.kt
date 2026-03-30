@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -31,6 +32,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.PercentageChip
 import com.vultisig.wallet.ui.components.TokenAmountInput
+import com.vultisig.wallet.ui.components.TokenFiatToggle
 import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -65,6 +67,7 @@ internal fun AddLpScreen(
     AddLpContent(
         tokenSymbol = state.selectedToken.ticker,
         tokenAmountFieldState = viewModel.tokenAmountFieldState,
+        fiatAmountFieldState = viewModel.fiatAmountFieldState,
         fiatAmount = null,
         totalGas = "",
         estimatedFee = "",
@@ -82,6 +85,7 @@ internal fun AddLpScreen(
 private fun AddLpContent(
     tokenSymbol: String,
     tokenAmountFieldState: TextFieldState,
+    fiatAmountFieldState: TextFieldState,
     fiatAmount: String?,
     totalGas: String,
     estimatedFee: String,
@@ -89,8 +93,10 @@ private fun AddLpContent(
     isLoading: Boolean,
     tokenAmountError: String?,
     onDeposit: () -> Unit,
+    initialSelectedPercentageIndex: Int = -1,
 ) {
-    var selectedPercentageIndex by remember { mutableIntStateOf(-1) }
+    var selectedPercentageIndex by remember { mutableIntStateOf(initialSelectedPercentageIndex) }
+    var usingTokenAmountInput by remember { mutableStateOf(true) }
 
     val balanceNumeric =
         remember(balance) {
@@ -129,7 +135,7 @@ private fun AddLpContent(
                     UiIcon(
                         drawableResId = R.drawable.gas,
                         size = 16.dp,
-                        tint = Theme.v2.colors.text.tertiary,
+                        tint = Theme.v2.colors.text.secondary,
                     )
                 }
 
@@ -137,11 +143,31 @@ private fun AddLpContent(
 
                 // Large amount input area
                 Box(modifier = Modifier.fillMaxWidth().height(211.dp)) {
+                    val primaryFieldState: TextFieldState
+                    val primaryLabel: String
+                    val secondaryText: String
+
+                    if (usingTokenAmountInput) {
+                        primaryFieldState = tokenAmountFieldState
+                        primaryLabel = tokenSymbol
+                        secondaryText = fiatAmount ?: ""
+                    } else {
+                        primaryFieldState = fiatAmountFieldState
+                        primaryLabel = ""
+                        secondaryText = "${tokenAmountFieldState.text.ifEmpty { "0" }} $tokenSymbol"
+                    }
+
                     TokenAmountInput(
-                        primaryFieldState = tokenAmountFieldState,
-                        primaryLabel = tokenSymbol,
-                        secondaryText = fiatAmount ?: "",
+                        primaryFieldState = primaryFieldState,
+                        primaryLabel = primaryLabel,
+                        secondaryText = secondaryText,
                         modifier = Modifier.padding(horizontal = 54.dp).align(Alignment.Center),
+                    )
+
+                    TokenFiatToggle(
+                        isTokenSelected = usingTokenAmountInput,
+                        onTokenSelected = { isToken -> usingTokenAmountInput = isToken },
+                        modifier = Modifier.align(Alignment.CenterEnd),
                     )
                 }
 
@@ -228,6 +254,7 @@ private fun AddLpContentPreview() {
         AddLpContent(
             tokenSymbol = "CACAO",
             tokenAmountFieldState = TextFieldState("50"),
+            fiatAmountFieldState = TextFieldState(),
             fiatAmount = "$2,000.56",
             totalGas = "0.04103261 CACAO",
             estimatedFee = "$0.08",
@@ -235,6 +262,7 @@ private fun AddLpContentPreview() {
             isLoading = false,
             tokenAmountError = null,
             onDeposit = {},
+            initialSelectedPercentageIndex = 2,
         )
     }
 }
