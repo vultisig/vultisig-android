@@ -4,13 +4,11 @@ import com.vultisig.wallet.data.api.models.DashAddressParam
 import com.vultisig.wallet.data.api.models.DashRpcRequest
 import com.vultisig.wallet.data.api.models.DashRpcResponse
 import com.vultisig.wallet.data.models.payload.UtxoInfo
-import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
-import timber.log.Timber
 
 interface DashApi {
     suspend fun getAddressUtxos(address: String): List<UtxoInfo>
@@ -23,36 +21,24 @@ internal class DashApiImpl @Inject constructor(private val httpClient: HttpClien
     }
 
     override suspend fun getAddressUtxos(address: String): List<UtxoInfo> {
-        try {
-            val rpcResponse =
-                httpClient
-                    .post(BASE_URL) {
-                        setBody(
-                            DashRpcRequest(
-                                method = "getaddressutxos",
-                                params = listOf(DashAddressParam(addresses = listOf(address))),
-                            )
+        val rpcResponse =
+            httpClient
+                .post(BASE_URL) {
+                    setBody(
+                        DashRpcRequest(
+                            method = "getaddressutxos",
+                            params = listOf(DashAddressParam(addresses = listOf(address))),
                         )
-                    }
-                    .bodyOrThrow<DashRpcResponse>()
+                    )
+                }
+                .body<DashRpcResponse>()
 
-            if (rpcResponse.error != null) {
-                Timber.e("Dash RPC error: %s", rpcResponse.error)
-                return emptyList()
-            }
-
-            return rpcResponse.result?.map { utxo ->
-                UtxoInfo(
-                    hash = utxo.txid,
-                    amount = utxo.satoshis,
-                    index = utxo.outputIndex.toUInt(),
-                )
-            } ?: emptyList()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to get Dash UTXOs via RPC")
-            return emptyList()
+        if (rpcResponse.error != null) {
+            error("Dash RPC error: ${rpcResponse.error.message}")
         }
+
+        return rpcResponse.result?.map { utxo ->
+            UtxoInfo(hash = utxo.txid, amount = utxo.satoshis, index = utxo.outputIndex.toUInt())
+        } ?: emptyList()
     }
 }

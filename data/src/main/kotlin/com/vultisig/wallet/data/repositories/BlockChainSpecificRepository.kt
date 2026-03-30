@@ -251,14 +251,45 @@ constructor(
                         utxos = cardanoApi.getUTXOs(token),
                     )
                 } else if (chain == Chain.Dash) {
-                    BlockChainSpecificAndUtxo(
-                        blockChainSpecific =
-                            BlockChainSpecific.UTXO(
-                                byteFee = gasFee.value,
-                                sendMaxAmount = isMaxAmountEnabled,
-                            ),
-                        utxos = dashApi.getAddressUtxos(address).sortedBy(UtxoInfo::amount),
-                    )
+                    val dashUtxos =
+                        try {
+                            dashApi.getAddressUtxos(address)
+                        } catch (e: Exception) {
+                            Timber.e(e, "Dash RPC failed, falling back to Blockchair")
+                            null
+                        }
+                    if (dashUtxos != null) {
+                        BlockChainSpecificAndUtxo(
+                            blockChainSpecific =
+                                BlockChainSpecific.UTXO(
+                                    byteFee = gasFee.value,
+                                    sendMaxAmount = isMaxAmountEnabled,
+                                ),
+                            utxos = dashUtxos.sortedBy(UtxoInfo::amount),
+                        )
+                    } else {
+                        // Fallback to Blockchair with block_id filtering
+                        val utxos = blockChairApi.getAddressInfo(chain = chain, address = address)
+                        BlockChainSpecificAndUtxo(
+                            blockChainSpecific =
+                                BlockChainSpecific.UTXO(
+                                    byteFee = gasFee.value,
+                                    sendMaxAmount = isMaxAmountEnabled,
+                                ),
+                            utxos =
+                                utxos
+                                    ?.utxos
+                                    ?.filter { it.blockId > 0 }
+                                    ?.sortedBy { it.value }
+                                    ?.map {
+                                        UtxoInfo(
+                                            hash = it.transactionHash,
+                                            amount = it.value,
+                                            index = it.index.toUInt(),
+                                        )
+                                    } ?: emptyList(),
+                        )
+                    }
                 } else {
                     val utxos = blockChairApi.getAddressInfo(chain = chain, address = address)
 
