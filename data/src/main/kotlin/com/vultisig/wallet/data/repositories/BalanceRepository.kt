@@ -110,6 +110,8 @@ interface BalanceRepository {
     suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount>
 
     suspend fun getTcyAutoCompoundAmount(address: String): String?
+
+    suspend fun invalidateBalance(address: String, coin: Coin)
 }
 
 internal class BalanceRepositoryImpl
@@ -150,6 +152,14 @@ constructor(
 
     override suspend fun getTcyAutoCompoundAmount(address: String): String? {
         return thorChainApi.getTcyAutoCompoundAmount(address)
+    }
+
+    override suspend fun invalidateBalance(address: String, coin: Coin) {
+        tokenValueDao.deleteTokenValue(
+            chainId = coin.chain.id,
+            address = address,
+            ticker = coin.ticker,
+        )
     }
 
     override suspend fun getCachedTokenBalanceAndPrice(
