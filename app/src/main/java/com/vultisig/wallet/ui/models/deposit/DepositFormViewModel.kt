@@ -140,6 +140,7 @@ internal data class DepositFormUiModel(
     val slippageError: UiText? = null,
     val isLoading: Boolean = false,
     val isCheckingWhitelist: Boolean = false,
+    val isWhitelistFailed: Boolean = false,
     val balance: UiText = UiText.Empty,
     val sharesBalance: UiText = R.string.share_balance_loading.asUiText(),
     val selectedDstChain: Chain = Chain.ThorChain,
@@ -764,7 +765,13 @@ constructor(
         }
         if (chain == Chain.MayaChain && state.value.depositOption == DepositOption.Bond) {
             whitelistJob?.cancel()
-            state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = true) }
+            state.update {
+                it.copy(
+                    nodeAddressError = null,
+                    isCheckingWhitelist = true,
+                    isWhitelistFailed = false,
+                )
+            }
             whitelistJob = viewModelScope.safeLaunch { checkNodeWhitelist(nodeAddress) }
         } else {
             state.update { it.copy(nodeAddressError = null) }
@@ -775,7 +782,11 @@ constructor(
         try {
             val userAddress =
                 withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
-                    ?.address ?: return
+                    ?.address
+            if (userAddress == null) {
+                state.update { it.copy(isCheckingWhitelist = false) }
+                return
+            }
             val nodeInfo = mayachainBondRepository.getNodeDetails(nodeAddress)
             if (
                 nodeAddressFieldState.text.toString() != nodeAddress ||
@@ -793,10 +804,17 @@ constructor(
                         nodeAddressError =
                             UiText.StringResource(R.string.bond_not_whitelisted_error),
                         isCheckingWhitelist = false,
+                        isWhitelistFailed = true,
                     )
                 }
             } else {
-                state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
+                state.update {
+                    it.copy(
+                        nodeAddressError = null,
+                        isCheckingWhitelist = false,
+                        isWhitelistFailed = false,
+                    )
+                }
             }
         } catch (ce: CancellationException) {
             throw ce
@@ -1517,6 +1535,12 @@ constructor(
                 ?: throw InvalidTransactionDataException(
                     UiText.StringResource(R.string.send_error_no_address)
                 )
+
+        if (state.value.isWhitelistFailed) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.bond_not_whitelisted_error)
+            )
+        }
 
         val depositChain = state.value.depositChain
 

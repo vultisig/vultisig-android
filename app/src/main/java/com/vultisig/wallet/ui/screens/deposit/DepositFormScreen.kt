@@ -567,7 +567,12 @@ internal fun DepositFormScreen(
                 onDeposit()
             },
             state =
-                if (state.isLoading || state.isCheckingWhitelist || state.nodeAddressError != null)
+                if (
+                    state.isLoading ||
+                        state.isCheckingWhitelist ||
+                        state.isWhitelistFailed ||
+                        state.nodeAddressError != null
+                )
                     VsButtonState.Disabled
                 else VsButtonState.Enabled,
             modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(all = 16.dp),
