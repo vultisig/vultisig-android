@@ -48,7 +48,7 @@ interface SwapQuoteRepository {
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-        isAffiliate: Boolean,
+        affiliateBps: Int,
     ): EVMSwapQuoteJson
 
     suspend fun getOneInchSwapQuote(
@@ -131,7 +131,7 @@ constructor(
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-        isAffiliate: Boolean,
+        affiliateBps: Int,
     ): EVMSwapQuoteJson {
         val kyberSwapQuote =
             kyberApi.getSwapQuote(
@@ -140,7 +140,7 @@ constructor(
                 dstTokenContractAddress = dstToken.contractAddress,
                 amount = tokenValue.value.toString(),
                 srcAddress = srcToken.address,
-                isAffiliate = isAffiliate,
+                affiliateBps = affiliateBps,
             )
         when (kyberSwapQuote) {
             is KyberSwapQuoteDeserialized.Error ->
@@ -157,7 +157,7 @@ constructor(
                             routeSummary = kyberSwapQuote.result.data.routeSummary,
                             from = srcToken.address,
                             enableGasEstimation = true,
-                            isAffiliate = isAffiliate,
+                            affiliateBps = affiliateBps,
                         ),
                 )
             }
@@ -184,6 +184,15 @@ constructor(
                     data = response.data.data,
                     value = response.data.transactionValue,
                     gasPrice = gasPrice,
+                    swapFee =
+                        routeSummary.extraFee?.let { fee ->
+                            if (fee.isInBps) {
+                                (routeSummary.amountOut.toBigInteger() *
+                                        fee.feeAmount.toBigInteger() / 10000.toBigInteger())
+                                    .toString()
+                            } else fee.feeAmount
+                        } ?: "0",
+                    swapFeeTokenContract = routeSummary.tokenOut,
                 ),
         )
     }

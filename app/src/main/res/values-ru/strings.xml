@@ -982,7 +982,7 @@
     <string name="welcome_fast_and_easy">Быстро &amp; просто</string>
     <string name="welcome_fast_and_easy_desc">Подписывайте всего с 1 устройством. Наш защищённый сервер подписывает вместе с вами для мультисиг-безопасности. Совместим с плагинами.</string>
     <string name="welcome_fast_and_easy_highlight">всего с 1 устройством.</string>
-    <string name="welcome_plugin_compatible">Совместимо с Plugin Marketplace</string>
+    <string name="welcome_plugin_compatible">Совместимо с Plugin Store</string>
     <string name="welcome_tip">Совет: Вы можете использовать браузер как устройство</string>
     <string name="welcome_only_your_devices">Только ваши устройства</string>
     <string name="welcome_only_your_devices_desc">Только ваши устройства являются авторизованными подписантами. Для подписания транзакций требуется 2 устройства. Полное самостоятельное хранение в ваших руках.</string>

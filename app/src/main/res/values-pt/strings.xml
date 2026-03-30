@@ -980,7 +980,7 @@
     <string name="welcome_fast_and_easy">Rápido &amp; fácil</string>
     <string name="welcome_fast_and_easy_desc">Assine com apenas 1 dispositivo. O nosso servidor seguro assina consigo para segurança multisig. Compatível com plugins.</string>
     <string name="welcome_fast_and_easy_highlight">apenas 1 dispositivo.</string>
-    <string name="welcome_plugin_compatible">Compatível com Plugin Marketplace</string>
+    <string name="welcome_plugin_compatible">Compatível com Plugin Store</string>
     <string name="welcome_tip">Dica: Pode usar um browser como dispositivo</string>
     <string name="welcome_only_your_devices">Apenas os seus dispositivos</string>
     <string name="welcome_only_your_devices_desc">Apenas os seus dispositivos são signatários autorizados. Assinar transações requer 2 dispositivos. Custódia própria completa ao seu alcance.</string>

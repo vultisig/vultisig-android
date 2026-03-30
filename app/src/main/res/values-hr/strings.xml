@@ -983,7 +983,7 @@
     <string name="welcome_fast_and_easy">Brzo &amp; jednostavno</string>
     <string name="welcome_fast_and_easy_desc">Potpisujte s samo 1 uređajem. Naš sigurni poslužitelj potpisuje s vama za multisig sigurnost. Kompatibilno s dodacima.</string>
     <string name="welcome_fast_and_easy_highlight">samo 1 uređajem.</string>
-    <string name="welcome_plugin_compatible">Kompatibilno s Plugin Marketplace</string>
+    <string name="welcome_plugin_compatible">Kompatibilno s Plugin Store</string>
     <string name="welcome_tip">Savjet: Možete koristiti preglednik kao uređaj</string>
     <string name="welcome_only_your_devices">Samo vaši uređaji</string>
     <string name="welcome_only_your_devices_desc">Samo vaši uređaji su ovlašteni potpisnici. Potpisivanje transakcija zahtijeva 2 uređaja. Potpuna samopohrana na dohvat ruke.</string>

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -90,15 +89,11 @@ private fun VaultConfirmationScreen(vaultInfo: VaultType, action: TssAction?) {
         )
 
         UiSpacer(36.dp)
-
-        RiveAnimation(animation = R.raw.riv_connecting_with_server, modifier = Modifier.size(36.dp))
-
-        UiSpacer(70.dp)
     }
 }
 
 @Preview
 @Composable
 private fun VaultConfirmationScreenPreview() {
-    VaultConfirmationScreen(vaultInfo = VaultType.Secure, action = TssAction.Migrate)
+    VaultConfirmationScreen(vaultInfo = VaultType.Secure, action = TssAction.KEYGEN)
 }

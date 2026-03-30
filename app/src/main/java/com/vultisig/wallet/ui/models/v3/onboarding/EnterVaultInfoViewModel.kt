@@ -53,6 +53,7 @@ enum class StepType(
     val logo: Int,
     val isPassword: Boolean,
     val descriptionHighlight: UiText? = null,
+    val showInfoIcon: Boolean = false,
 ) {
     Name(
         title = StringResource(R.string.fast_vault_name_screen_title),
@@ -72,6 +73,7 @@ enum class StepType(
         logo = R.drawable.center_lock,
         isPassword = true,
         descriptionHighlight = StringResource(R.string.password_extra_layer_highlight),
+        showInfoIcon = true,
     ),
 }
 
@@ -116,6 +118,7 @@ internal data class EnterVaultInfoUiState(
     val innerState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
+    val isMoreInfoVisible: Boolean = false,
 )
 
 internal sealed interface EnterVaultInfoEvent {
@@ -130,6 +133,10 @@ internal sealed interface EnterVaultInfoEvent {
     object TogglePasswordVisibility : EnterVaultInfoEvent
 
     object ToggleConfirmPasswordVisibility : EnterVaultInfoEvent
+
+    object ShowMoreInfo : EnterVaultInfoEvent
+
+    object HideMoreInfo : EnterVaultInfoEvent
 }
 
 @HiltViewModel
@@ -204,8 +211,11 @@ constructor(
     private fun generateVaultName() {
         viewModelScope.launch {
             vaultNamesList = vaultRepository.getAll().map { it.name }
+            val currentName = nameTextFieldState.text.toString()
+            val takenNames =
+                if (currentName.isNotEmpty()) vaultNamesList + currentName else vaultNamesList
             val proposeName =
-                generateUniqueName(context.getString(R.string.naming_saving_vault), vaultNamesList)
+                generateUniqueName(context.getString(R.string.naming_saving_vault), takenNames)
             nameTextFieldState.setTextAndPlaceCursorAtEnd(proposeName)
         }
     }
@@ -284,6 +294,9 @@ constructor(
             EnterVaultInfoEvent.ClearConfirmInput -> clearConfirmInput()
             EnterVaultInfoEvent.TogglePasswordVisibility -> togglePasswordVisibility()
             EnterVaultInfoEvent.ToggleConfirmPasswordVisibility -> toggleConfirmPasswordVisibility()
+            EnterVaultInfoEvent.ShowMoreInfo -> uiState.update { it.copy(isMoreInfoVisible = true) }
+            EnterVaultInfoEvent.HideMoreInfo ->
+                uiState.update { it.copy(isMoreInfoVisible = false) }
         }
     }
 
@@ -317,7 +330,7 @@ constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            uiState.update { it.copy(activeStep = newStep) }
+            uiState.update { it.copy(activeStep = newStep, isMoreInfoVisible = false) }
         }
     }
 
@@ -339,7 +352,7 @@ constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            uiState.update { it.copy(activeStep = newStep) }
+            uiState.update { it.copy(activeStep = newStep, isMoreInfoVisible = false) }
         }
     }
 

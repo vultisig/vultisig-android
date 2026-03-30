@@ -1058,7 +1058,7 @@
     <string name="welcome_fast_and_easy">Fast &amp; easy</string>
     <string name="welcome_fast_and_easy_desc">Sign with only 1 device. Our secure server signs with you for multisig security. Plugin compatible.</string>
     <string name="welcome_fast_and_easy_highlight">only 1 device.</string>
-    <string name="welcome_plugin_compatible">Plugin Marketplace compatible</string>
+    <string name="welcome_plugin_compatible">Plugin Store compatible</string>
     <string name="welcome_tip">Tip: You can use a browser as a device</string>
     <string name="welcome_only_your_devices">Only your devices</string>
     <string name="welcome_only_your_devices_desc">Only your devices are authorized signers. Signing transactions takes 2 devices. Full self-custody at your fingertips.</string>

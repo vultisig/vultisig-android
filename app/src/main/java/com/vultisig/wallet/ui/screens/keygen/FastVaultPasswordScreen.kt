@@ -31,7 +31,12 @@ import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -114,16 +119,55 @@ internal fun FastVaultPasswordScreen(
                 )
                 UiSpacer(16.dp)
 
-                Column(modifier = Modifier.fillMaxSize()) {
-                    WarningCard(
-                        onShowMoreInfo = onShowMoreInfo,
-                        modifier =
-                            Modifier.onGloballyPositioned { position ->
-                                hintBoxOffset =
-                                    position.boundsInParent().bottom.toInt() + topbarHeight -
-                                        defaultVerticalPadding
-                            },
+                val descText = stringResource(R.string.password_extra_layer)
+                val descHighlight = stringResource(R.string.password_extra_layer_highlight)
+                val descAnnotated = buildAnnotatedString {
+                    val start = descText.indexOf(descHighlight)
+                    if (start >= 0) {
+                        append(descText.substring(0, start))
+                        withStyle(
+                            SpanStyle(
+                                color = Theme.v2.colors.text.primary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        ) {
+                            append(descHighlight)
+                        }
+                        append(descText.substring(start + descHighlight.length))
+                    } else {
+                        append(descText)
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier =
+                        Modifier.fillMaxWidth().onGloballyPositioned { position ->
+                            hintBoxOffset =
+                                position.boundsInParent().bottom.toInt() + topbarHeight -
+                                    defaultVerticalPadding
+                        },
+                ) {
+                    Text(
+                        text = descAnnotated,
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.tertiary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f, fill = false),
                     )
+                    UiSpacer(size = 4.dp)
+                    UiIcon(
+                        drawableResId = R.drawable.circleinfo,
+                        size = 16.dp,
+                        tint = Theme.v2.colors.text.tertiary,
+                        onClick = onShowMoreInfo,
+                    )
+                }
+
+                UiSpacer(16.dp)
+
+                Column(modifier = Modifier.fillMaxSize()) {
+                    WarningCard(onShowMoreInfo = onShowMoreInfo, modifier = Modifier)
 
                     UiSpacer(8.dp)
 
