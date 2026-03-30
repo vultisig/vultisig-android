@@ -273,6 +273,7 @@ constructor(
                         utxos =
                             utxos
                                 ?.utxos
+                                ?.filter { chain != Chain.Dash || it.blockId > 0 }
                                 ?.sortedBy { it.value }
                                 ?.toList()
                                 ?.map {
