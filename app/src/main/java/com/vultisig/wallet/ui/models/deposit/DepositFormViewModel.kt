@@ -80,6 +80,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -786,6 +787,8 @@ constructor(
             } else {
                 state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
             }
+        } catch (ce: CancellationException) {
+            throw ce
         } catch (_: Exception) {
             state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
         }
