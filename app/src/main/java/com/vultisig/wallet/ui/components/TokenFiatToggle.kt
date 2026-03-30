@@ -11,11 +11,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.LookaheadScope
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
@@ -47,11 +51,15 @@ internal fun TokenFiatToggle(
             ) {
                 TokenFiatToggleButton(
                     drawableResId = R.drawable.ic_coins,
+                    isSelected = isTokenSelected,
+                    label = stringResource(R.string.token_fiat_toggle_token_label),
                     onClick = { onTokenSelected(true) },
                 )
 
                 TokenFiatToggleButton(
                     drawableResId = R.drawable.ic_dollar_sign,
+                    isSelected = !isTokenSelected,
+                    label = stringResource(R.string.token_fiat_toggle_fiat_label),
                     onClick = { onTokenSelected(false) },
                 )
             }
@@ -60,11 +68,25 @@ internal fun TokenFiatToggle(
 }
 
 @Composable
-private fun TokenFiatToggleButton(@DrawableRes drawableResId: Int, onClick: () -> Unit) {
-    UiIcon(
-        drawableResId = drawableResId,
-        size = 16.dp,
-        tint = Theme.v2.colors.text.secondary,
-        modifier = Modifier.clip(CircleShape).clickable(onClick = onClick).padding(all = 8.dp),
-    )
+private fun TokenFiatToggleButton(
+    @DrawableRes drawableResId: Int,
+    isSelected: Boolean,
+    label: String,
+    onClick: () -> Unit,
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier =
+            Modifier.minimumInteractiveComponentSize()
+                .clip(CircleShape)
+                .clickable(onClick = onClick)
+                .semantics { selected = isSelected },
+    ) {
+        UiIcon(
+            drawableResId = drawableResId,
+            size = 16.dp,
+            tint = Theme.v2.colors.text.secondary,
+            contentDescription = label,
+        )
+    }
 }

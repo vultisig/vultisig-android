@@ -475,6 +475,8 @@
     <string name="add_pool_title">Agregar Pool</string>
     <string name="add_pool_amount_label">Importe</string>
     <string name="add_pool_gas_auto">Tarifa de red (auto)</string>
+    <string name="token_fiat_toggle_token_label">Valor del token</string>
+    <string name="token_fiat_toggle_fiat_label">Valor fiat</string>
     <string name="cacaopool_only_cacao_supported">Solo se admite el token CACAO para las operaciones del pool</string>
     <string name="referral_create_info_title">Programa de referidos</string>
     <string name="referral_create_info_content">El programa de referidos se aplica a los intercambios de THORChain y se realiza con el mejor esfuerzo posible. Necesitas registrar un THORName para usar el referido de Vultisig. La tarifa de registro es de 10 RUNE y 1 RUNE por cada año, que se paga a la red THORChain.</string>

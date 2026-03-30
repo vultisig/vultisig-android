@@ -309,7 +309,7 @@ constructor(
                 val selectedToken = address.accounts.find { it.token.isNativeToken }?.token
                 selectedToken?.let { state.update { it.copy(selectedToken = selectedToken) } }
                 if (depositTypeAction == DeFiNavActions.ADD_LP.type) {
-                    loadGasFeeForDisplay()
+                    loadGasFeeForDisplay(address)
                 }
             }
             .launchIn(viewModelScope)
@@ -511,10 +511,9 @@ constructor(
         }
     }
 
-    private fun loadGasFeeForDisplay() {
+    private fun loadGasFeeForDisplay(address: Address) {
         val chain = chain ?: return
         viewModelScope.safeLaunch {
-            val address = address.value ?: return@safeLaunch
             val token = address.accounts.find { it.token.isNativeToken }?.token ?: return@safeLaunch
             val srcAddress = token.address
             val gasFee = calculateGasFee(chain, token, srcAddress)

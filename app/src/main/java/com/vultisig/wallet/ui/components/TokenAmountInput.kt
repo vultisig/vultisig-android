@@ -44,10 +44,19 @@ internal fun TokenAmountInput(
             BasicTextField(
                 state = primaryFieldState,
                 inputTransformation =
-                    maxBalance?.let { max ->
-                        InputTransformation {
-                            val entered = asCharSequence().toString().toBigDecimalOrNull()
-                            if (entered != null && entered > max) {
+                    InputTransformation {
+                        val raw = asCharSequence().toString()
+                        if (raw.isEmpty()) return@InputTransformation
+                        val normalized = raw.replace(',', '.')
+                        val dotCount = normalized.count { it == '.' }
+                        val isValid = dotCount <= 1 && normalized.all { it.isDigit() || it == '.' }
+                        if (!isValid) {
+                            revertAllChanges()
+                            return@InputTransformation
+                        }
+                        if (maxBalance != null) {
+                            val entered = normalized.toBigDecimalOrNull()
+                            if (entered != null && entered > maxBalance) {
                                 revertAllChanges()
                             }
                         }

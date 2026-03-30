@@ -136,7 +136,10 @@ private fun DepositScreen(
         ) {
             composable(route = SendDst.Send.route) {
                 if (depositType == DeFiNavActions.ADD_LP.type) {
-                    AddLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId.orEmpty())
+                    require(!poolId.isNullOrBlank()) {
+                        "poolId must be non-null and non-blank for ADD_LP flow"
+                    }
+                    AddLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId)
                 } else {
                     DepositFormScreen(
                         vaultId = vaultId,

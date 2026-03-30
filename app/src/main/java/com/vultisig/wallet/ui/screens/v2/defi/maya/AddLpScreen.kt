@@ -76,7 +76,9 @@ internal fun AddLpScreen(
         tokenAmountError = state.tokenAmountError?.asString(),
         onDeposit = {
             viewModel.validateTokenAmount()
-            viewModel.deposit()
+            if (viewModel.state.value.tokenAmountError == null) {
+                viewModel.deposit()
+            }
         },
     )
 }
