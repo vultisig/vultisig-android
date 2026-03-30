@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
@@ -94,76 +93,80 @@ constructor(
     }
 
     private fun collectAssets() {
-        state
-            .map { it.selectedChain }
-            .distinctUntilChanged()
-            .flatMapLatest { chain ->
-                val vault = vaultRepository.get(vaultId) ?: return@flatMapLatest emptyFlow()
-                combine(
-                    accountRepository.loadAddress(vaultId, chain).catch {
-                        Timber.e(it)
-                        emit(Address(chain = chain, address = "", accounts = emptyList()))
-                    },
-                    getChainTokens(chain, vault)
-                        .catch {
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId) ?: return@launch
+            state
+                .map { it.selectedChain }
+                .distinctUntilChanged()
+                .flatMapLatest { chain ->
+                    combine(
+                        accountRepository.loadAddress(vaultId, chain).catch {
                             Timber.e(it)
-                            emit(emptyList())
-                        }
-                        .map { coinList ->
-                            coinList
-                                .filterNot { it.isNativeToken || it.isLpToken }
-                                .map { coin ->
+                            emit(Address(chain = chain, address = "", accounts = emptyList()))
+                        },
+                        getChainTokens(chain, vault)
+                            .catch {
+                                Timber.e(it)
+                                emit(emptyList())
+                            }
+                            .map { coinList ->
+                                coinList
+                                    .filterNot { it.isNativeToken || it.isLpToken }
+                                    .map { coin ->
+                                        AssetUiModel(
+                                            token = coin,
+                                            logo = getCoinLogo(coin.logo),
+                                            title = coin.ticker,
+                                            subtitle = coin.chain.raw,
+                                            amount = "0",
+                                            value = "0",
+                                            isDisabled = true,
+                                        )
+                                    }
+                            },
+                        searchFieldState.textAsFlow().map { it.toString() },
+                    ) { account, allTokens, query ->
+                        val filteredAssets =
+                            account.accounts
+                                .asSequence()
+                                .filter { it.token.id.contains(query, ignoreCase = true) }
+                                .filterNot {
+                                    filter == Route.SelectNetwork.Filters.SwapAvailable &&
+                                        it.token.isLpToken
+                                }
+                                .sortedWith(
+                                    compareByDescending<Account> { it.token.isNativeToken }
+                                        .thenBy { it.token.ticker }
+                                )
+                                .toList()
+                                .map {
                                     AssetUiModel(
-                                        token = coin,
-                                        logo = getCoinLogo(coin.logo),
-                                        title = coin.ticker,
-                                        subtitle = coin.chain.raw,
-                                        amount = "0",
-                                        value = "0",
-                                        isDisabled = true,
+                                        token = it.token,
+                                        logo = getCoinLogo(it.token.logo),
+                                        title = it.token.ticker,
+                                        subtitle = it.token.chain.raw,
+                                        amount =
+                                            it.tokenValue?.let(mapTokenValueToDecimalUiString)
+                                                ?: "0",
+                                        value =
+                                            it.fiatValue?.let { fiatValueToString.invoke(it) }
+                                                ?: "0",
                                     )
                                 }
-                        },
-                    searchFieldState.textAsFlow().map { it.toString() },
-                ) { account, allTokens, query ->
-                    val filteredAssets =
-                        account.accounts
-                            .asSequence()
-                            .filter { it.token.id.contains(query, ignoreCase = true) }
-                            .filterNot {
-                                filter == Route.SelectNetwork.Filters.SwapAvailable &&
-                                    it.token.isLpToken
-                            }
-                            .sortedWith(
-                                compareByDescending<Account> { it.token.isNativeToken }
-                                    .thenBy { it.token.ticker }
-                            )
-                            .toList()
-                            .map {
-                                AssetUiModel(
-                                    token = it.token,
-                                    logo = getCoinLogo(it.token.logo),
-                                    title = it.token.ticker,
-                                    subtitle = it.token.chain.raw,
-                                    amount =
-                                        it.tokenValue?.let(mapTokenValueToDecimalUiString) ?: "0",
-                                    value =
-                                        it.fiatValue?.let { fiatValueToString.invoke(it) } ?: "0",
-                                )
+
+                        val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
+                        val additionalAssets =
+                            allTokens.filter {
+                                it.token.id.contains(query, ignoreCase = true) &&
+                                    it.token.id !in filteredTokenIds
                             }
 
-                    val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
-                    val additionalAssets =
-                        allTokens.filter {
-                            it.token.id.contains(query, ignoreCase = true) &&
-                                it.token.id !in filteredTokenIds
-                        }
-
-                    filteredAssets + additionalAssets
+                        filteredAssets + additionalAssets
+                    }
                 }
-            }
-            .onEach { assets -> state.update { it.copy(assets = assets) } }
-            .launchIn(viewModelScope)
+                .onEach { assets -> state.update { it.copy(assets = assets) } }
+                .launchIn(this)
+        }
     }
 
     fun selectAsset(asset: AssetUiModel) {
