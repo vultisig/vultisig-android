@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens.v2.defi.maya
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -27,13 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.PercentageChip
 import com.vultisig.wallet.ui.components.TokenAmountInput
-import com.vultisig.wallet.ui.components.UiHorizontalDivider
+import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -124,13 +122,13 @@ private fun AddLpContent(
                         color = Theme.v2.colors.text.primary,
                     )
                     UiIcon(
-                        drawableResId = R.drawable.advance_gas_settings,
+                        drawableResId = R.drawable.gas,
                         size = 16.dp,
                         tint = Theme.v2.colors.text.tertiary,
                     )
                 }
 
-                UiHorizontalDivider()
+                UiGradientHorizontalDivider()
 
                 // Large amount input area
                 Box(modifier = Modifier.fillMaxWidth().height(211.dp)) {
@@ -148,7 +146,7 @@ private fun AddLpContent(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     percentageLabels.forEachIndexed { index, label ->
-                        AddLpPercentageChip(
+                        PercentageChip(
                             title = label,
                             isSelected = selectedPercentageIndex == index,
                             onClick = {
@@ -187,7 +185,7 @@ private fun AddLpContent(
                     )
                 }
 
-                UiHorizontalDivider()
+                UiGradientHorizontalDivider()
 
                 // Gas row
                 Row(
@@ -220,44 +218,6 @@ private fun AddLpContent(
             state = if (isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
             onClick = onDeposit,
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
-        )
-    }
-}
-
-@Composable
-private fun AddLpPercentageChip(
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier =
-            modifier
-                .clip(CircleShape)
-                .clickable(onClick = onClick)
-                .then(
-                    if (isSelected) {
-                        Modifier.background(
-                            color = Theme.v2.colors.primary.accent3,
-                            shape = CircleShape,
-                        )
-                    } else {
-                        Modifier.border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.border.light,
-                            shape = CircleShape,
-                        )
-                    }
-                )
-                .padding(vertical = 4.dp, horizontal = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = title,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.secondary,
-            textAlign = TextAlign.Center,
         )
     }
 }

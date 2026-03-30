@@ -68,6 +68,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.PasteIcon
+import com.vultisig.wallet.ui.components.PercentageChip
 import com.vultisig.wallet.ui.components.TokenAmountInput
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -81,7 +82,6 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
-import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.send.AddressBookType
 import com.vultisig.wallet.ui.models.send.AmountFraction
@@ -1293,48 +1293,6 @@ private fun Modifier.vsClickableBackground() =
             color = Theme.v2.colors.backgrounds.secondary,
             shape = RoundedCornerShape(12.dp),
         )
-
-@Composable
-private fun PercentageChip(
-    title: String,
-    isSelected: Boolean,
-    isLoading: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-
-    Box(
-        modifier =
-            modifier
-                .clickable(onClick = onClick)
-                .then(
-                    if (isSelected)
-                        Modifier.background(
-                            color = Theme.v2.colors.primary.accent3,
-                            shape = CircleShape,
-                        )
-                    else
-                        Modifier.border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.border.light,
-                            shape = CircleShape,
-                        )
-                )
-                .padding(all = 4.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (isLoading && isSelected) {
-            V2Loading(modifier = Modifier.size(16.dp))
-        } else {
-            Text(
-                text = title,
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.secondary,
-                textAlign = TextAlign.Center,
-            )
-        }
-    }
-}
 
 @Composable
 private fun TokenFiatToggle(
