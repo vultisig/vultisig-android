@@ -758,7 +758,8 @@ constructor(
         val nodeAddress = nodeAddressFieldState.text.toString()
         val errorText = validateDstAddress(nodeAddress)
         if (errorText != null) {
-            state.update { it.copy(nodeAddressError = errorText) }
+            whitelistJob?.cancel()
+            state.update { it.copy(nodeAddressError = errorText, isCheckingWhitelist = false) }
             return
         }
         if (chain == Chain.MayaChain && state.value.depositOption == DepositOption.Bond) {
@@ -772,8 +773,18 @@ constructor(
 
     private suspend fun checkNodeWhitelist(nodeAddress: String) {
         try {
-            val userAddress = address.value?.address ?: return
+            val userAddress =
+                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                    ?.address ?: return
             val nodeInfo = mayachainBondRepository.getNodeDetails(nodeAddress)
+            if (
+                nodeAddressFieldState.text.toString() != nodeAddress ||
+                    chain != Chain.MayaChain ||
+                    state.value.depositOption != DepositOption.Bond
+            ) {
+                state.update { it.copy(isCheckingWhitelist = false) }
+                return
+            }
             val isWhitelisted =
                 nodeInfo.bondProviders.providers.any { it.bondAddress == userAddress }
             if (!isWhitelisted) {
@@ -789,7 +800,7 @@ constructor(
             }
         } catch (ce: CancellationException) {
             throw ce
-        } catch (_: Exception) {
+        } catch (_: NetworkException) {
             state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
         }
     }
