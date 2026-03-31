@@ -479,7 +479,11 @@ constructor(
 
     fun setRemoveLpPercent(percent: Float) {
         val s = state.value
-        val availableUnits = s.availableLpUnits?.toLongOrNull() ?: return
+        val availableUnits = s.availableLpUnits?.toLongOrNull()
+        if (availableUnits == null) {
+            state.update { it.copy(removeLpPercent = percent) }
+            return
+        }
         val selectedUnits = (percent * availableUnits).toLong().coerceAtLeast(0L)
         val cacaoDisplay =
             if (s.selectedPoolTotalLpUnits > 0L) {
