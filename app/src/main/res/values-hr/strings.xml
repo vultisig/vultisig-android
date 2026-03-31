@@ -347,7 +347,11 @@
     <string name="push_notification_error_vault_not_supported">Trezor ne podržava obavijesti</string>
     <string name="push_notification_error_token_not_available">Nije moguće dohvatiti token obavijesti</string>
     <string name="push_notification_error_api_failure">Nije moguće ažurirati registraciju obavijesti</string>
-    <string name="push_notification_partial_failure">%1$d od %2$d trezora ažurirano, %3$d neuspješno</string>
+    <plurals name="push_notification_partial_failure">
+        <item quantity="one">%1$d od %2$d trezora ažurirano, %3$d neuspješno</item>
+        <item quantity="few">%1$d od %2$d trezora ažurirano, %3$d neuspješno</item>
+        <item quantity="other">%1$d od %2$d trezora ažurirano, %3$d neuspješno</item>
+    </plurals>
     <string name="push_notifications_sent">Obavijest je uspješno poslana</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Primite obavijest kada je potreban vaš potpis ili uređaj zatraži pristup.</string>
     <string name="keysign_notification_channel_name">Zahtjevi za potpisivanje</string>
@@ -489,6 +493,7 @@
     <string name="referral_create_set_expiration_years">Postavi istek (u godinama)</string>
     <string name="referral_create_registration_fees">Naknade za registraciju</string>
     <string name="referral_create_cost">Trošak</string>
+    <string name="referral_create_fees_error">Učitavanje naknada nije uspjelo. Pokušajte ponovo.</string>
     <string name="referral_create_create_referral_code">Stvori kod preporuke</string>
     <string name="referral_create_invalid">Nevažeće</string>
     <string name="referral_create_available">Dostupno</string>
@@ -563,7 +568,11 @@
     <string name="backup_select_vaults_subtitle">Odaberite želite li sigurnosno kopirati samo ovaj trezor ili sve trezore u aplikaciji.</string>
     <string name="backup_this_vault_only">Samo ovaj trezor</string>
     <string name="backup_all_vaults">Svi trezori</string>
-    <string name="more">+ još %1$d</string>
+    <plurals name="more">
+        <item quantity="one">+ još %1$d</item>
+        <item quantity="few">+ još %1$d</item>
+        <item quantity="other">+ još %1$d</item>
+    </plurals>
     <string name="backup_choose_method_title">Odaberite metodu sigurnosne kopije</string>
     <string name="backup_device_desc">Pohranite dijeljenje trezora ovog uređaja.</string>
     <string name="backup_device_title">Sigurnosna kopija uređaja</string>
@@ -652,7 +661,11 @@
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Nepoznato</string>
     <string name="referral_code_cannot_be_empty">Referentni kod ne može biti prazan</string>
-    <string name="referral_code_can_be_up_to_characters">Referentni kod može sadržavati najviše %1$d znakova</string>
+    <plurals name="referral_code_can_be_up_to_characters">
+        <item quantity="one">Referentni kod može sadržavati najviše %1$d znakova</item>
+        <item quantity="few">Referentni kod može sadržavati najviše %1$d znakova</item>
+        <item quantity="other">Referentni kod može sadržavati najviše %1$d znakova</item>
+    </plurals>
     <string name="key_gen_discovery_no_connection_available">Nema dostupne veze</string>
     <string name="key_gen_discovery_enable_wifi">Omogućite WiFi ili mobilni uređaj za potpisivanje transakcije</string>
     <string name="keygen_screen_upgrading_vault">Nadogradnja trezora</string>
@@ -724,7 +737,11 @@
     <string name="backup_password_request_no_password_action">Sigurnosna kopija bez lozinke</string>
     <string name="address_bookmark_error_invalid_address">Ova adresa nije važeća za %s</string>
     <string name="address_bookmark_error_empty_label">Oznaka ne može biti prazna</string>
-    <string name="address_bookmark_error_invalid_label">Oznaka mora imati između 1 i %d znakova</string>
+    <plurals name="address_bookmark_error_invalid_label">
+        <item quantity="one">Oznaka mora imati između 1 i %d znakova</item>
+        <item quantity="few">Oznaka mora imati između 1 i %d znakova</item>
+        <item quantity="other">Oznaka mora imati između 1 i %d znakova</item>
+    </plurals>
     <string name="send_form_ripple_reaping_warning">Osigurajte dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 XRP (egzistencijalni depozit), račun će biti deaktiviran (potrošen) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati novim depozitom većim od egzistencijalnog depozita u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
     <string name="error_invalid_chain">Lanac nije valjan</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
@@ -894,7 +911,11 @@
     <string name="solana_instruction_number">Uputa %1$d</string>
     <string name="solana_program_name">Program: %1$s</string>
     <string name="solana_program_id">ID programa: %1$s</string>
-    <string name="solana_accounts_data">Računi: %1$d | Duljina podataka: %2$d bajtova</string>
+    <plurals name="solana_accounts_data">
+        <item quantity="one">Računi: %1$d | Duljina podataka: %2$d bajtova</item>
+        <item quantity="few">Računi: %1$d | Duljina podataka: %2$d bajtova</item>
+        <item quantity="other">Računi: %1$d | Duljina podataka: %2$d bajtova</item>
+    </plurals>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Prije nego što počnete…</string>
@@ -942,7 +963,11 @@
     <string name="import_seedphrase_subtitle">Unesite svoju frazu za oporavak od 12 ili 24 riječi</string>
     <string name="import_seedphrase_label">Fraza za oporavak</string>
     <string name="import_seedphrase_hint">Unesite svoju frazu za oporavak…</string>
-    <string name="import_seedphrase_word_count">%1$d / %2$d riječi</string>
+    <plurals name="import_seedphrase_word_count">
+        <item quantity="one">%1$d / %2$d riječi</item>
+        <item quantity="few">%1$d / %2$d riječi</item>
+        <item quantity="other">%1$d / %2$d riječi</item>
+    </plurals>
     <string name="import_seedphrase_invalid_word_count">Unijeli ste %1$s riječi. Fraza za oporavak mora imati 12 ili 24 riječi.</string>
     <string name="import_seedphrase_invalid_phrase">Nevažeća fraza za oporavak</string>
     <string name="import_seedphrase_already_imported">Ova fraza za oporavak je već uvezena</string>
@@ -1051,7 +1076,11 @@
     <string name="vault_setup_add_as_many_devices_as_you_want">Dodajte onoliko uređaja koliko želite i dobijte sigurnost institucionalnog stupnja.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Izgrađeno za timove i riznice</string>
     <string name="vault_setup_back_up_each_device">Napravite sigurnosnu kopiju svakog uređaja</string>
-    <string name="vault_setup_you_ll_create_n_backups_in_total">Ukupno ćete stvoriti %1$d sigurnosnih kopija. To ćete učiniti na svakom uređaju.</string>
+    <plurals name="vault_setup_you_ll_create_n_backups_in_total">
+        <item quantity="one">Ukupno ćete stvoriti %1$d sigurnosnih kopija. To ćete učiniti na svakom uređaju.</item>
+        <item quantity="few">Ukupno ćete stvoriti %1$d sigurnosnih kopija. To ćete učiniti na svakom uređaju.</item>
+        <item quantity="other">Ukupno ćete stvoriti %1$d sigurnosnih kopija. To ćete učiniti na svakom uređaju.</item>
+    </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Spremi svaku sigurnosnu kopiju u drugi oblak ili s drugom lozinkom. Ako jedna bude kompromitirana, vaša sredstva ostaju sigurna.</string>
     <string name="vault_setup_i_understand">Razumijem</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Spremi sigurnosnu kopiju %1$d od %2$d u oblak</string>

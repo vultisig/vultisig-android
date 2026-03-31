@@ -8,7 +8,9 @@
     <string name="push_notification_error_vault_not_supported">保险库不支持通知</string>
     <string name="push_notification_error_token_not_available">无法获取通知令牌</string>
     <string name="push_notification_error_api_failure">无法更新通知注册</string>
-    <string name="push_notification_partial_failure">已更新 %2$d 个保险库中的 %1$d 个，%3$d 个失败</string>
+    <plurals name="push_notification_partial_failure">
+        <item quantity="other">已更新 %2$d 个保险库中的 %1$d 个，%3$d 个失败</item>
+    </plurals>
     <string name="push_notifications_sent">通知发送成功</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">当需要您的签名或设备请求访问时，您将收到通知。</string>
     <string name="keysign_notification_channel_name">签名请求</string>
@@ -734,6 +736,7 @@
     <string name="referral_create_set_expiration_years">设置到期（年）</string>
     <string name="referral_create_registration_fees">注册费</string>
     <string name="referral_create_cost">成本</string>
+    <string name="referral_create_fees_error">加载费用失败，请重试。</string>
     <string name="referral_create_create_referral_code">创建推荐代码</string>
     <string name="referral_create_invalid">无效</string>
     <string name="referral_create_available">可用</string>
@@ -816,7 +819,9 @@
     <string name="referral_create_status">状态</string>
     <string name="referral_create_unknown">未知</string>
     <string name="referral_code_cannot_be_empty">推荐代码不能为空</string>
-    <string name="referral_code_can_be_up_to_characters">推荐代码最多可以有 %1$d 个字符</string>
+    <plurals name="referral_code_can_be_up_to_characters">
+        <item quantity="other">推荐代码最多可以有 %1$d 个字符</item>
+    </plurals>
     <string name="referral_view_expires_on">到期时间</string>
 
     <!-- Fast Vault & Folders -->
@@ -924,7 +929,9 @@
     <string name="backup_all_vaults">所有保险库</string>
 
     <!-- More -->
-    <string name="more">+%1$d 更多</string>
+    <plurals name="more">
+        <item quantity="other">+%1$d 更多</item>
+    </plurals>
 
     <!-- Backup Choose Method -->
     <string name="backup_choose_method_title">选择备份方法</string>
@@ -1058,7 +1065,9 @@
     <string name="keygen_benefit_5_emphasized">无种子钱包</string>
     <string name="address_bookmark_error_invalid_address">此地址对 %s 无效</string>
     <string name="address_bookmark_error_empty_label">标签不能为空</string>
-    <string name="address_bookmark_error_invalid_label">标签必须在1到%d个字符之间</string>
+    <plurals name="address_bookmark_error_invalid_label">
+        <item quantity="other">标签必须在1到%d个字符之间</item>
+    </plurals>
     <string name="send_form_ripple_reaping_warning">请确保账户中留有足够的资金以支付手续费。如果账户余额低于 1 XRP（存量保证金），账户将被停用（清算），剩余资金也将丢失。您可以随时通过存入高于存量保证金的金额来重新激活账户。但是，这无法找回已丢失的资金。</string>
     <string name="error_invalid_chain">链无效</string>
     <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>
@@ -1230,7 +1239,9 @@
     <string name="solana_instruction_number">指令 %1$d</string>
     <string name="solana_program_name">程序：%1$s</string>
     <string name="solana_program_id">程序 ID：%1$s</string>
-    <string name="solana_accounts_data">账户：%1$d | 数据长度：%2$d 字节</string>
+    <plurals name="solana_accounts_data">
+        <item quantity="other">账户：%1$d | 数据长度：%2$d 字节</item>
+    </plurals>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">在您开始之前…</string>
@@ -1278,7 +1289,9 @@
     <string name="import_seedphrase_subtitle">输入您的12或24个单词的恢复短语</string>
     <string name="import_seedphrase_label">助记词</string>
     <string name="import_seedphrase_hint">输入您的恢复短语…</string>
-    <string name="import_seedphrase_word_count">%1$d / %2$d 个单词</string>
+    <plurals name="import_seedphrase_word_count">
+        <item quantity="other">%1$d / %2$d 个单词</item>
+    </plurals>
     <string name="import_seedphrase_invalid_word_count">您输入了 %1$s 个单词。助记词必须是 12 或 24 个单词</string>
     <string name="import_seedphrase_invalid_phrase">无效的助记词</string>
     <string name="import_seedphrase_already_imported">该助记词已被导入</string>
@@ -1381,7 +1394,9 @@
     <string name="vault_setup_add_as_many_devices_as_you_want">添加任意数量的设备，获得机构级安全保障。</string>
     <string name="vault_setup_built_for_teams_and_treasuries">为团队和国库而构建</string>
     <string name="vault_setup_back_up_each_device">备份每台设备</string>
-    <string name="vault_setup_you_ll_create_n_backups_in_total">您将总共创建 %1$d 份备份。您将在每台设备上执行此操作。</string>
+    <plurals name="vault_setup_you_ll_create_n_backups_in_total">
+        <item quantity="other">您将总共创建 %1$d 份备份。您将在每台设备上执行此操作。</item>
+    </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">将每份备份保存在不同的云服务中或使用不同的密码。如果其中一份被泄露，您的资金仍然安全。</string>
     <string name="vault_setup_i_understand">我明白了</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">将第 %1$d 份备份（共 %2$d 份）保存到云端</string>

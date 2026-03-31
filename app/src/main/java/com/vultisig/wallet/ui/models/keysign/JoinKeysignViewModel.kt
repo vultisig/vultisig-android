@@ -57,6 +57,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
@@ -1112,7 +1113,13 @@ constructor(
     private fun onServerAddressDiscovered(address: String) {
         _serverAddress = address
         if (!payloadId.isEmpty() && tempKeysignMessageProto != null) {
-            viewModelScope.launch {
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    Timber.e(e, "Failed to fetch keysign payload")
+                    currentState.value =
+                        JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+                }
+            ) {
                 // when Payload is not in the QRCode
                 routerApi.getPayload(_serverAddress, payloadId).let { payload ->
                     if (payload.isNotEmpty()) {
@@ -1129,22 +1136,22 @@ constructor(
                                 payloadId = payloadId,
                             )
                         if (handleKeysignMessage(keysignMsgProto)) {
-                            return@launch
+                            return@safeLaunch
                         }
                         currentState.value = JoinKeysignState.JoinKeysign
                     }
                 }
             }
         } else if (customPayloadId.isNotEmpty() && tempKeysignMessageProto != null) {
-            viewModelScope.launch {
-                try {
-                    if (fetchAndHandleCustomMessagePayload(_serverAddress)) {
-                        currentState.value = JoinKeysignState.JoinKeysign
-                    } else {
-                        currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
-                    }
-                } catch (e: Exception) {
+            viewModelScope.safeLaunch(
+                onError = { e ->
                     Timber.e(e, "Failed to fetch custom message payload")
+                    currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
+                }
+            ) {
+                if (fetchAndHandleCustomMessagePayload(_serverAddress)) {
+                    currentState.value = JoinKeysignState.JoinKeysign
+                } else {
                     currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
                 }
             }

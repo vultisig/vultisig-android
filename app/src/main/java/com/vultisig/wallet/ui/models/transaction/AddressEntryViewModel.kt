@@ -211,8 +211,9 @@ constructor(
                 state.update {
                     it.copy(
                         titleError =
-                            UiText.FormattedText(
-                                R.string.address_bookmark_error_invalid_label,
+                            UiText.PluralText(
+                                R.plurals.address_bookmark_error_invalid_label,
+                                LABEL_MAX_LENGTH,
                                 listOf(LABEL_MAX_LENGTH),
                             )
                     )

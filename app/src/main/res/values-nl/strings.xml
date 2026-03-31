@@ -346,7 +346,10 @@
     <string name="push_notification_error_vault_not_supported">Kluis ondersteunt geen meldingen</string>
     <string name="push_notification_error_token_not_available">Kan meldingentoken niet ophalen</string>
     <string name="push_notification_error_api_failure">Kan meldingenregistratie niet bijwerken</string>
-    <string name="push_notification_partial_failure">%1$d van %2$d kluizen bijgewerkt, %3$d mislukt</string>
+    <plurals name="push_notification_partial_failure">
+        <item quantity="one">%1$d van %2$d kluizen bijgewerkt, %3$d mislukt</item>
+        <item quantity="other">%1$d van %2$d kluizen bijgewerkt, %3$d mislukt</item>
+    </plurals>
     <string name="push_notifications_sent">Melding succesvol verzonden</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Ontvang een melding wanneer uw handtekening vereist is of een apparaat toegang aanvraagt.</string>
     <string name="keysign_notification_channel_name">Ondertekeningsverzoeken</string>
@@ -486,6 +489,7 @@
     <string name="referral_create_set_expiration_years">Vervaldatum instellen (in jaren)</string>
     <string name="referral_create_registration_fees">Registratiekosten</string>
     <string name="referral_create_cost">Kosten</string>
+    <string name="referral_create_fees_error">Laden van vergoedingen mislukt. Probeer het opnieuw.</string>
     <string name="referral_create_create_referral_code">Verwijzingscode maken</string>
     <string name="referral_create_invalid">Ongeldig</string>
     <string name="referral_create_available">Beschikbaar</string>
@@ -560,7 +564,10 @@
     <string name="backup_select_vaults_subtitle">Kies of u alleen deze kluis of alle kluizen in uw app wilt back-uppen.</string>
     <string name="backup_this_vault_only">Alleen deze kluis</string>
     <string name="backup_all_vaults">Alle kluizen</string>
-    <string name="more">+%1$d meer</string>
+    <plurals name="more">
+        <item quantity="one">+%1$d meer</item>
+        <item quantity="other">+%1$d meer</item>
+    </plurals>
     <string name="backup_choose_method_title">Back-upmethode kiezen</string>
     <string name="backup_device_desc">Sla de kluisshare van dit apparaat op.</string>
     <string name="backup_device_title">Apparaatback-up</string>
@@ -648,7 +655,10 @@
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Onbekend</string>
     <string name="referral_code_cannot_be_empty">Verwijzingscode mag niet leeg zijn</string>
-    <string name="referral_code_can_be_up_to_characters">Verwijzingscode mag maximaal %1$d tekens lang zijn</string>
+    <plurals name="referral_code_can_be_up_to_characters">
+        <item quantity="one">Verwijzingscode mag maximaal %1$d tekens lang zijn</item>
+        <item quantity="other">Verwijzingscode mag maximaal %1$d tekens lang zijn</item>
+    </plurals>
     <string name="key_gen_discovery_no_connection_available">Geen verbinding beschikbaar</string>
     <string name="key_gen_discovery_enable_wifi">Schakel wifi of mobiel in om transacties te ondertekenen</string>
     <string name="keygen_screen_upgrading_vault">Kluis upgraden</string>
@@ -720,7 +730,10 @@
     <string name="backup_password_request_no_password_action">Maak een back-up zonder wachtwoord</string>
     <string name="address_bookmark_error_invalid_address">Dit adres is niet geldig voor %s</string>
     <string name="address_bookmark_error_empty_label">Label mag niet leeg zijn</string>
-    <string name="address_bookmark_error_invalid_label">Label moet tussen 1 en %d tekens zijn</string>
+    <plurals name="address_bookmark_error_invalid_label">
+        <item quantity="one">Label moet tussen 1 en %d tekens zijn</item>
+        <item quantity="other">Label moet tussen 1 en %d tekens zijn</item>
+    </plurals>
     <string name="send_form_ripple_reaping_warning">Zorg ervoor dat je voldoende saldo achterlaat om de kosten te dekken. Als het saldo onder de 1 XRP (Existentiële Storting) komt, wordt het account gedeactiveerd (opgenomen) en gaat het resterende saldo verloren. Je kunt het adres op elk moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Hiermee krijg je het verloren geld echter niet terug.</string>
     <string name="error_invalid_chain">Ketting is ongeldig</string>
     <string name="vault_backup_verifying_pin">Code verifiëren, even geduld a.u.b.</string>
@@ -890,7 +903,10 @@
     <string name="solana_instruction_number">Instructie %1$d</string>
     <string name="solana_program_name">Programma: %1$s</string>
     <string name="solana_program_id">Programma-ID: %1$s</string>
-    <string name="solana_accounts_data">Accounts: %1$d | Gegevenslengte: %2$d bytes</string>
+    <plurals name="solana_accounts_data">
+        <item quantity="one">Accounts: %1$d | Gegevenslengte: %2$d bytes</item>
+        <item quantity="other">Accounts: %1$d | Gegevenslengte: %2$d bytes</item>
+    </plurals>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Voordat u begint…</string>
@@ -938,7 +954,10 @@
     <string name="import_seedphrase_subtitle">Voer uw herstelzin van 12 of 24 woorden in</string>
     <string name="import_seedphrase_label">Herstelzin</string>
     <string name="import_seedphrase_hint">Voer uw herstelzin in…</string>
-    <string name="import_seedphrase_word_count">%1$d / %2$d woorden</string>
+    <plurals name="import_seedphrase_word_count">
+        <item quantity="one">%1$d / %2$d woorden</item>
+        <item quantity="other">%1$d / %2$d woorden</item>
+    </plurals>
     <string name="import_seedphrase_invalid_word_count">Je hebt %1$s woorden ingevoerd. De herstelzin moet 12 of 24 woorden bevatten</string>
     <string name="import_seedphrase_invalid_phrase">Ongeldige herstelzin</string>
     <string name="import_seedphrase_already_imported">Deze herstelzin is al geïmporteerd</string>
@@ -1044,7 +1063,10 @@
     <string name="vault_setup_add_as_many_devices_as_you_want">Voeg zoveel apparaten toe als u wilt en ontvang institutionele beveiliging.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Gebouwd voor teams en schatkamers</string>
     <string name="vault_setup_back_up_each_device">Maak een back-up van elk apparaat</string>
-    <string name="vault_setup_you_ll_create_n_backups_in_total">U maakt in totaal %1$d back-ups. U doet dit op elk apparaat.</string>
+    <plurals name="vault_setup_you_ll_create_n_backups_in_total">
+        <item quantity="one">U maakt in totaal %1$d back-ups. U doet dit op elk apparaat.</item>
+        <item quantity="other">U maakt in totaal %1$d back-ups. U doet dit op elk apparaat.</item>
+    </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Sla elke back-up op in een andere cloudservice of met een ander wachtwoord. Als er één gecompromitteerd is, blijven uw fondsen veilig.</string>
     <string name="vault_setup_i_understand">Ik begrijp het</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Sla back-up %1$d van %2$d op in de cloud</string>
