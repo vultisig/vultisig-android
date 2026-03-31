@@ -53,6 +53,7 @@ internal fun AddLpScreen(
     viewModel: DepositFormViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val fiatCurrency by viewModel.fiatCurrency.collectAsState()
 
     LaunchedEffect(vaultId, chainId, poolId) {
         viewModel.loadData(
@@ -66,6 +67,7 @@ internal fun AddLpScreen(
 
     AddLpContent(
         tokenSymbol = state.selectedToken.ticker,
+        fiatCurrency = fiatCurrency,
         tokenAmountFieldState = viewModel.tokenAmountFieldState,
         fiatAmountFieldState = viewModel.fiatAmountFieldState,
         fiatAmount = null,
@@ -86,6 +88,7 @@ internal fun AddLpScreen(
 @Composable
 private fun AddLpContent(
     tokenSymbol: String,
+    fiatCurrency: String,
     tokenAmountFieldState: TextFieldState,
     fiatAmountFieldState: TextFieldState,
     fiatAmount: String?,
@@ -155,7 +158,7 @@ private fun AddLpContent(
                         secondaryText = fiatAmount ?: ""
                     } else {
                         primaryFieldState = fiatAmountFieldState
-                        primaryLabel = ""
+                        primaryLabel = fiatCurrency
                         secondaryText = "${tokenAmountFieldState.text.ifEmpty { "0" }} $tokenSymbol"
                     }
 
@@ -255,6 +258,7 @@ private fun AddLpContentPreview() {
     Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)) {
         AddLpContent(
             tokenSymbol = "CACAO",
+            fiatCurrency = "USD",
             tokenAmountFieldState = TextFieldState("50"),
             fiatAmountFieldState = TextFieldState(),
             fiatAmount = "$2,000.56",

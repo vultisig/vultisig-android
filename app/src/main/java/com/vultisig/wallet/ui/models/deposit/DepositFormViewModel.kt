@@ -44,6 +44,7 @@ import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
@@ -51,6 +52,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
@@ -75,14 +77,18 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -91,6 +97,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -170,6 +177,8 @@ constructor(
     private val navigator: Navigator<Destination>,
     private val sendNavigator: Navigator<SendDst>,
     private val requestQrScan: RequestQrScanUseCase,
+    appCurrencyRepository: AppCurrencyRepository,
+    private val tokenPriceRepository: TokenPriceRepository,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val accountsRepository: AccountsRepository,
     private val isAssetCharsValid: DepositMemoAssetsValidatorUseCase,
@@ -188,6 +197,26 @@ constructor(
     private val tokenRepository: TokenRepository,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
 ) : ViewModel() {
+
+    private val appCurrency =
+        appCurrencyRepository.currency.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(),
+            appCurrencyRepository.defaultCurrency,
+        )
+
+    val fiatCurrency =
+        appCurrency
+            .map { it.ticker }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(),
+                appCurrencyRepository.defaultCurrency.ticker,
+            )
+
+    private var lastTokenValueUserInput: String = ""
+    private var lastFiatValueUserInput: String = ""
+    private var amountChangesJob: Job? = null
 
     private var vaultId: String? = null
     private var chain: Chain? = null
@@ -238,6 +267,8 @@ constructor(
         this.depositTypeAction = depositType
         this.bondAddress = bondAddress
         this.lpPoolId = poolId
+
+        collectAmountChanges()
 
         val depositOptions =
             when (chain) {
@@ -2305,6 +2336,58 @@ constructor(
                 selectedToken = selectedToken,
             )
         )
+    }
+
+    private fun collectAmountChanges() {
+        if (amountChangesJob != null) return
+        amountChangesJob =
+            viewModelScope.launch {
+                combine(
+                        state.map { it.selectedToken }.distinctUntilChanged(),
+                        tokenAmountFieldState.textAsFlow(),
+                        fiatAmountFieldState.textAsFlow(),
+                    ) { selectedToken, tokenFieldValue, fiatFieldValue ->
+                        val tokenString = tokenFieldValue.toString()
+                        val fiatString = fiatFieldValue.toString()
+                        if (lastTokenValueUserInput != tokenString) {
+                            val fiatValue =
+                                convertAmountValue(tokenString, selectedToken) { value, price ->
+                                    value
+                                        .multiply(price)
+                                        .setScale(3, RoundingMode.DOWN)
+                                        .stripTrailingZeros()
+                                } ?: return@combine
+                            lastTokenValueUserInput = tokenString
+                            lastFiatValueUserInput = fiatValue
+                            fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
+                        } else if (lastFiatValueUserInput != fiatString) {
+                            val tokenValue =
+                                convertAmountValue(fiatString, selectedToken) { value, price ->
+                                    value.divide(price, selectedToken.decimal, RoundingMode.DOWN)
+                                } ?: return@combine
+                            lastTokenValueUserInput = tokenValue
+                            lastFiatValueUserInput = fiatString
+                            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
+                        }
+                    }
+                    .collect()
+            }
+    }
+
+    private suspend fun convertAmountValue(
+        value: String,
+        token: Coin,
+        transform: (value: BigDecimal, price: BigDecimal) -> BigDecimal,
+    ): String? {
+        val decimalValue = value.toBigDecimalOrNull() ?: return ""
+        return try {
+            val price = tokenPriceRepository.getPrice(token, appCurrency.value).first()
+            if (price == BigDecimal.ZERO) return null
+            transform(decimalValue, price).toPlainString()
+        } catch (_: Exception) {
+            Timber.d("Failed to get price for token %s", token)
+            null
+        }
     }
 
     private fun isLpUnitCharsValid(lpUnits: String) =
