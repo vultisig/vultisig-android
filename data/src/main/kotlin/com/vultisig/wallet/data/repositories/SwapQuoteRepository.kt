@@ -266,7 +266,7 @@ constructor(
                     fromAsset = srcToken.swapAssetName(),
                     toAsset = dstToken.swapAssetName(),
                     amount = thorTokenValue.toString(),
-                    interval = "1",
+                    interval = "0",
                     referralCode = referralCode,
                     bpsDiscount = bpsDiscount,
                 )
