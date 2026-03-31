@@ -475,6 +475,8 @@
     <string name="deposit_option_remove_cacao_pool">Aus dem CACAO-Pool entfernen</string>
     <string name="deposit_option_add_liquidity">Liquidität hinzufügen</string>
     <string name="deposit_option_remove_liquidity">Liquidität entfernen</string>
+    <string name="remove_pool_title">Pool entfernen</string>
+    <string name="remove_pool_amount_label">Menge</string>
     <string name="cacaopool_only_cacao_supported">Nur das CACAO-Token wird für Poolvorgänge unterstützt</string>
     <string name="referral_create_info_title">Empfehlungsprogramm</string>
     <string name="referral_create_info_content">Das Empfehlungsprogramm gilt für THORChain-Swaps und erfolgt nach bestem Bemühen. Sie müssen einen THORName registrieren, um die Vultisig-Empfehlung zu nutzen. Die Registrierungsgebühr beträgt 10 RUNE und 1 RUNE für jedes Jahr, die an das THORChain-Netzwerk gezahlt wird.</string>

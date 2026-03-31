@@ -473,6 +473,8 @@
     <string name="deposit_option_remove_cacao_pool">Remover do pool CACAO</string>
     <string name="deposit_option_add_liquidity">Adicionar liquidez</string>
     <string name="deposit_option_remove_liquidity">Remover liquidez</string>
+    <string name="remove_pool_title">Remover Pool</string>
+    <string name="remove_pool_amount_label">Montante</string>
     <string name="cacaopool_only_cacao_supported">Apenas o token CACAO é suportado neste pool</string>
     <string name="referral_create_info_title">Programa de referência</string>
     <string name="referral_create_info_content">O programa de referência aplica-se a trocas THORChain e é feito com base no melhor esforço. Você precisa registrar um THORName para usar a referência Vultisig. A taxa de registro é de 10 RUNE e 1 RUNE por cada ano, que é paga à rede THORChain.</string>

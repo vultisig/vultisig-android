@@ -159,6 +159,8 @@ internal data class DepositFormUiModel(
     val availableLpUnits: String? = null,
     val selectedPoolTotalLpUnits: Long = 0L,
     val selectedPoolCacaoDepth: Long = 0L,
+    val removeLpPercent: Float = 1f,
+    val removeLpCacaoDisplay: String = "",
 )
 
 @HiltViewModel
@@ -473,6 +475,29 @@ constructor(
     fun setMaxLpUnits() {
         val units = state.value.availableLpUnits ?: return
         lpUnitsFieldState.setTextAndPlaceCursorAtEnd(units)
+    }
+
+    fun setRemoveLpPercent(percent: Float) {
+        val s = state.value
+        val availableUnits = s.availableLpUnits?.toLongOrNull() ?: return
+        val selectedUnits = (percent * availableUnits).toLong().coerceAtLeast(0L)
+        val cacaoDisplay =
+            if (s.selectedPoolTotalLpUnits > 0L) {
+                val cacao =
+                    selectedUnits
+                        .toBigDecimal()
+                        .multiply(s.selectedPoolCacaoDepth.toBigDecimal())
+                        .divide(
+                            s.selectedPoolTotalLpUnits.toBigDecimal(),
+                            3,
+                            java.math.RoundingMode.DOWN,
+                        )
+                        .stripTrailingZeros()
+                        .toPlainString()
+                "$cacao CACAO"
+            } else ""
+        lpUnitsFieldState.setTextAndPlaceCursorAtEnd(selectedUnits.toString())
+        state.update { it.copy(removeLpPercent = percent, removeLpCacaoDisplay = cacaoDisplay) }
     }
 
     private suspend fun updateTokenAmount(
