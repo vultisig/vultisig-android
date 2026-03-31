@@ -71,7 +71,11 @@ class KeysignMessageTest {
 
         assertEquals(sessionId, result.sessionId)
         assertEquals(serviceName, result.serviceName)
-        assertNotNull(result.keysignPayload?.thorchainSpecific)
+        val decodedPayload = result.keysignPayload
+        assertNotNull(decodedPayload)
+        assertEquals(thorchainSpecific, decodedPayload?.thorchainSpecific)
+        assertEquals(toAddress, decodedPayload?.toAddress)
+        assertEquals(toAmount, decodedPayload?.toAmount)
 
         val encodedPayload = protoBuf.encodeToByteArray(payloadProto)
         val result1 = protoBuf.decodeFromByteArray<KeysignPayloadProto>(encodedPayload)
