@@ -249,6 +249,14 @@ internal sealed class Route {
             val tssAction: TssAction,
             val vaultId: VaultId? = null,
         )
+
+        @Serializable
+        data class VerifyExistingPassword(
+            val name: String,
+            val email: String,
+            val tssAction: TssAction,
+            val vaultId: VaultId,
+        )
     }
 
     @Serializable

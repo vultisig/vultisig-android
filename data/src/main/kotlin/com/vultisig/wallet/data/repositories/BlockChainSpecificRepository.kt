@@ -137,6 +137,7 @@ constructor(
 
             TokenStandard.EVM -> {
                 val evmApi = evmApiFactory.createEvmApi(chain)
+                val recipientAddress = dstAddress ?: address
                 if (chain == Chain.ZkSync) {
                     val memoDataHex =
                         "0xffffffff".toByteArray().joinToString(separator = "") { byte ->
@@ -149,7 +150,7 @@ constructor(
                     val feeEstimate =
                         evmApi.zkEstimateFee(
                             srcAddress = token.address,
-                            dstAddress = address,
+                            dstAddress = recipientAddress,
                             data = data,
                         )
 
@@ -174,7 +175,7 @@ constructor(
                         if (token.isNativeToken)
                             evmApi.estimateGasForEthTransaction(
                                 senderAddress = token.address,
-                                recipientAddress = address,
+                                recipientAddress = recipientAddress,
                                 value = tokenAmountValue ?: BigInteger.ZERO,
                                 memo = memo,
                             )
@@ -182,7 +183,7 @@ constructor(
                             evmApi
                                 .estimateGasForERC20Transfer(
                                     senderAddress = token.address,
-                                    recipientAddress = address,
+                                    recipientAddress = recipientAddress,
                                     contractAddress = token.contractAddress,
                                     value = tokenAmountValue ?: BigInteger.ZERO,
                                 )
@@ -212,7 +213,7 @@ constructor(
                                     coin = token,
                                     vault = VaultData("", ""),
                                     amount = tokenAmountValue ?: BigInteger.ZERO,
-                                    to = address,
+                                    to = recipientAddress,
                                     memo = memo,
                                 )
                             )
