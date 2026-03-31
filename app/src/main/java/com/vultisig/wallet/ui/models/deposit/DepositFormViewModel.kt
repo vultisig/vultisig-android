@@ -84,6 +84,7 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -146,6 +147,7 @@ internal data class DepositFormUiModel(
     val slippageError: UiText? = null,
     val isLoading: Boolean = false,
     val balance: UiText = UiText.Empty,
+    val balanceDecimal: BigDecimal? = null,
     val sharesBalance: UiText = R.string.share_balance_loading.asUiText(),
     val selectedDstChain: Chain = Chain.ThorChain,
     val dstChainList: List<Chain> = emptyList(),
@@ -522,16 +524,25 @@ constructor(
             val tokenValue = account.tokenValue
             if (tokenValue != null) {
                 val value = mapTokenValueToStringWithUnit(tokenValue)
-                state.update { state -> state.copy(amountError = null, balance = value.asUiText()) }
+                state.update { state ->
+                    state.copy(
+                        amountError = null,
+                        balance = value.asUiText(),
+                        balanceDecimal = tokenValue.decimal,
+                    )
+                }
             } else {
                 // Account exists in vault but balance not yet loaded — clear stale error and
                 // balance
-                state.update { it.copy(amountError = null, balance = UiText.Empty) }
+                state.update {
+                    it.copy(amountError = null, balance = UiText.Empty, balanceDecimal = null)
+                }
             }
         } else {
             state.update {
                 it.copy(
                     balance = UiText.Empty,
+                    balanceDecimal = null,
                     amountError =
                         UiText.FormattedText(
                             R.string.must_be_enabled_before_proceeding,
@@ -2343,7 +2354,7 @@ constructor(
     private fun collectAmountChanges() {
         if (amountChangesJob != null) return
         amountChangesJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 combine(
                         state.map { it.selectedToken }.distinctUntilChanged(),
                         tokenAmountFieldState.textAsFlow(),
@@ -2386,6 +2397,8 @@ constructor(
             val price = tokenPriceRepository.getPrice(token, appCurrency.value).first()
             if (price == BigDecimal.ZERO) return null
             transform(decimalValue, price).toPlainString()
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             Timber.d("Failed to get price for token %s", token)
             null

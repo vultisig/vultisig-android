@@ -44,6 +44,7 @@ import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import java.math.BigDecimal
 
 @Composable
 internal fun AddLpScreen(
@@ -74,6 +75,7 @@ internal fun AddLpScreen(
         totalGas = state.totalGas.asString(),
         estimatedFee = state.estimatedFee.asString(),
         balance = state.balance.asString(),
+        rawBalance = state.balanceDecimal,
         isLoading = state.isLoading,
         tokenAmountError = state.tokenAmountError?.asString(),
         onDeposit = {
@@ -95,6 +97,7 @@ private fun AddLpContent(
     totalGas: String,
     estimatedFee: String,
     balance: String,
+    rawBalance: BigDecimal? = null,
     isLoading: Boolean,
     tokenAmountError: String?,
     onDeposit: () -> Unit,
@@ -103,10 +106,7 @@ private fun AddLpContent(
     var selectedPercentageIndex by remember { mutableIntStateOf(initialSelectedPercentageIndex) }
     var usingTokenAmountInput by remember { mutableStateOf(true) }
 
-    val balanceNumeric =
-        remember(balance) {
-            balance.replace(",", "").split(" ").firstOrNull()?.toBigDecimalOrNull()
-        }
+    LaunchedEffect(balance) { selectedPercentageIndex = initialSelectedPercentageIndex }
 
     val percentages = listOf(25, 50, 75, 100)
     val percentageLabels = listOf("25%", "50%", "75%", "Max")
@@ -188,9 +188,9 @@ private fun AddLpContent(
                             onClick = {
                                 selectedPercentageIndex = index
                                 val percent = percentages[index]
-                                if (balanceNumeric != null) {
+                                if (rawBalance != null) {
                                     val amount =
-                                        balanceNumeric
+                                        rawBalance
                                             .multiply(percent.toBigDecimal())
                                             .divide(100.toBigDecimal())
                                             .stripTrailingZeros()
