@@ -9,6 +9,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.isServerError
 import io.ktor.http.isSuccess
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -102,7 +103,7 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         localPartyId: List<String>,
     ) {
         val response = httpClient.post("$serverUrl/complete/$sessionId") { setBody(localPartyId) }
-        if (response.status.value in 500..599) {
+        if (response.status.isServerError()) {
             Timber.w("markLocalPartyComplete: server returned ${response.status.value}, ignoring")
             return
         }
