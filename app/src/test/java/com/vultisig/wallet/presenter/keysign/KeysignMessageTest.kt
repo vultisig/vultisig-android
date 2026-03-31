@@ -31,18 +31,7 @@ class KeysignMessageTest {
         val toAddress = "thor1x6f63myfwktevd6mkspdeus9rea5a72w6ynax2"
         val toAmount = "10000000"
 
-        val coinProto =
-            CoinProto(
-                chain = "thorChain",
-                ticker = "RUNE",
-                address = "",
-                contractAddress = "",
-                decimals = 8,
-                priceProviderId = "thorchain",
-                isNativeToken = true,
-                hexPublicKey = "",
-                logo = "rune",
-            )
+        val coinProto = testCoin
 
         val thorchainSpecific =
             THORChainSpecific(
