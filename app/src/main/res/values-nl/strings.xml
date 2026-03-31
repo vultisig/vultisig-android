@@ -435,6 +435,17 @@
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquiditeitspool</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">Beschikbaar Saldo</string>
+    <string name="tron_defi_staking">Staking</string>
+    <string name="tron_defi_bandwidth">Bandbreedte</string>
+    <string name="tron_defi_energy">Energie</string>
+    <string name="tron_defi_freeze">Bevriezen</string>
+    <string name="tron_defi_unfreeze">Ontdooien</string>
+    <string name="tron_defi_unfreezing">Wordt ontdooid</string>
+    <string name="tron_defi_resources">Bronnen</string>
+    <string name="tron_defi_pending_withdrawals">Uitstaande Opnames</string>
+    <string name="tron_defi_ready_to_claim">Klaar om te claimen</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Slippage is vereist</string>
     <string name="slippage_invalid_error">Slippage moet tussen 1 en 100 liggen</string>

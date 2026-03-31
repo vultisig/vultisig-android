@@ -65,6 +65,17 @@
     <string name="defi_bond">본딩</string>
     <string name="defi_stake">스테이킹</string>
     <string name="liquidity_pool">유동성 풀</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">사용 가능 잔액</string>
+    <string name="tron_defi_staking">스테이킹</string>
+    <string name="tron_defi_bandwidth">대역폭</string>
+    <string name="tron_defi_energy">에너지</string>
+    <string name="tron_defi_freeze">동결</string>
+    <string name="tron_defi_unfreeze">동결 해제</string>
+    <string name="tron_defi_unfreezing">동결 해제 중</string>
+    <string name="tron_defi_resources">리소스</string>
+    <string name="tron_defi_pending_withdrawals">대기 중인 출금</string>
+    <string name="tron_defi_ready_to_claim">청구 가능</string>
     <string name="circle_defi_description">USDC를 Circle 계정에 예치하고 수익을 얻으세요. Vultisig 볼트 내에서 안전하게 관리됩니다.</string>
     <string name="circle_defi_control_info">자금은 완전히 볼트의 통제 하에 있습니다. Circle 계정은 자기 수탁형이며 수익은 안전한 오프체인 트레저리를 통해 생성됩니다.</string>
     <string name="usdc_deposit_title">USDC 예치</string>

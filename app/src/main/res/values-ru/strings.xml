@@ -437,6 +437,17 @@
     <string name="defi_bond">Бонд</string>
     <string name="defi_stake">Стейк</string>
     <string name="liquidity_pool">Пул ликвидности</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">Доступный баланс</string>
+    <string name="tron_defi_staking">Стейкинг</string>
+    <string name="tron_defi_bandwidth">Пропускная способность</string>
+    <string name="tron_defi_energy">Энергия</string>
+    <string name="tron_defi_freeze">Заморозить</string>
+    <string name="tron_defi_unfreeze">Разморозить</string>
+    <string name="tron_defi_unfreezing">Размораживается</string>
+    <string name="tron_defi_resources">Ресурсы</string>
+    <string name="tron_defi_pending_withdrawals">Ожидающие выводы</string>
+    <string name="tron_defi_ready_to_claim">Готово к получению</string>
     <string name="deposit_form_operator_slippage_title">Проскальзывание</string>
     <string name="slippage_required_error">Проскальзывание обязательно</string>
     <string name="slippage_invalid_error">Проскальзывание должно быть от 1 до 100</string>

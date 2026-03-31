@@ -1218,7 +1218,9 @@ constructor(
                 val isMaxAmount = tokenAmount == maxAmount
 
                 if (chain == Chain.Tron) {
-                    if (srcAddress == dstAddress) {
+                    val isTronStakingOp =
+                        memo?.startsWith("FREEZE:") == true || memo?.startsWith("UNFREEZE:") == true
+                    if (!isTronStakingOp && srcAddress == dstAddress) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_same_address)
                         )
