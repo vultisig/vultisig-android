@@ -787,7 +787,12 @@ constructor(
                                 password = args.password,
                             )
                         } else {
-                            Route.Home(openVaultId = vaultId)
+                            Route.BackupVault(
+                                vaultId = vaultId,
+                                vaultType = vaultType,
+                                action = args.action,
+                                passwordType = BackupPasswordType.UserSelectionPassword,
+                            )
                         }
                 },
             opts =
