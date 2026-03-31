@@ -936,7 +936,7 @@ constructor(
                                     val valueElem =
                                         try {
                                             json.parseToJsonElement(cosmosMsg.value)
-                                        } catch (e: Exception) {
+                                        } catch (_: Exception) {
                                             kotlinx.serialization.json.JsonPrimitive(
                                                 cosmosMsg.value
                                             )
@@ -1179,8 +1179,7 @@ constructor(
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
                 } catch (e: Exception) {
-                    Timber.tag("JoinKeysignViewModel")
-                        .e("Failed to join keysign: %s", e.stackTraceToString())
+                    Timber.tag("JoinKeysignViewModel").e("Failed to join keysign")
                     currentState.value =
                         JoinKeysignState.Error(JoinKeysignError.FailedToStart(e.message.toString()))
                 }

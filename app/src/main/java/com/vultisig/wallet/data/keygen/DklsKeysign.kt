@@ -162,7 +162,7 @@ class DKLSKeysign(
             val receiverResult =
                 dkls_sign_session_message_receiver(handle, message, idx, bufReceiver)
             if (receiverResult != LIB_OK) {
-                println("fail to get receiver message, error: $receiverResult")
+                Timber.e("Failed to resolve outbound keysign receiver, error=%s", receiverResult)
                 return byteArrayOf()
             }
             return BufferUtilJNI.get_bytes_from_tss_buffer(bufReceiver)
@@ -176,7 +176,7 @@ class DKLSKeysign(
         try {
             val result = dkls_sign_session_output_message(handle, buf)
             if (result != LIB_OK) {
-                println("fail to get outbound message: $result")
+                Timber.e("Failed to get outbound keysign message, error=%s", result)
                 return Pair(result, byteArrayOf())
             }
             return Pair(result, BufferUtilJNI.get_bytes_from_tss_buffer(buf))
@@ -189,7 +189,7 @@ class DKLSKeysign(
         while (true) {
             val (result, outboundMessage) = getDKLSOutboundMessage(handle)
             if (result != LIB_OK) {
-                println("fail to get outbound message, $result")
+                Timber.e("Outbound keysign message unavailable, error=%s", result)
             }
             if (outboundMessage.isEmpty()) {
                 return
@@ -202,8 +202,10 @@ class DKLSKeysign(
                     break
                 }
                 val receiverString = String(receiverArray, Charsets.UTF_8)
-                println(
-                    "sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}"
+                Timber.v(
+                    "Sending outbound keysign message to committee participant %d of %d",
+                    i + 1,
+                    keysignCommittee.size,
                 )
                 messenger.send(localPartyID, receiverString, encodedOutboundMessage)
             }
@@ -248,10 +250,9 @@ class DKLSKeysign(
         for (msg in sortedMsgs) {
             val key = "$sessionID-$localPartyID-$messageID-${msg.hash}"
             if (cache[key] != null) {
-                println("message with key: $key has been applied before")
+                Timber.v("Skipping duplicate inbound keysign message")
                 continue
             }
-            println("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
             val decryptedBody =
                 encryption.decrypt(
                     Base64.decode(msg.body),
@@ -325,7 +326,7 @@ class DKLSKeysign(
 
             val signingMsg = decodeMessage(keysignSetupMsg)
             if (signingMsg != messageToSign) {
-                error("message doesn't match ($messageToSign) vs ($signingMsg)")
+                error("Received mismatched keysign setup message")
             }
             val decodedSetupMsg = keysignSetupMsg.toGoSlice()
             val handler = Handle()
@@ -364,8 +365,8 @@ class DKLSKeysign(
                 keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
                 signatures[messageToSign] = resp
             }
-        } catch (e: Exception) {
-            println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
+        } catch (_: Exception) {
+            Timber.e("Failed to sign keysign message on attempt %d", attempt)
             if (attempt < 3) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)
             }

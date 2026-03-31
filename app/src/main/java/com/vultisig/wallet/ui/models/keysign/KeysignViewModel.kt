@@ -339,9 +339,8 @@ constructor(
                     currentState.value = KeysignState.KeysignMLDSA
 
                     Timber.d(
-                        "MLDSA keysign: pubKeyMLDSA=%s..., keyshares=%s, isInitiating=%b",
-                        vault.pubKeyMLDSA.take(20),
-                        vault.keyshares.map { it.pubKey.take(20) },
+                        "MLDSA keysign: participantCount=%d, isInitiating=%b",
+                        keysignCommittee.size,
                         isInitiatingDevice,
                     )
 
@@ -382,7 +381,7 @@ constructor(
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.e(e)
+            Timber.e("Keysign flow failed")
             currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
         }
     }
@@ -415,8 +414,8 @@ constructor(
                     ?: error("Failed to create TSS instance")
             tssInstance = tssService
 
-            messagesToSign.forEach { message ->
-                Timber.d("signing message: $message")
+            messagesToSign.forEachIndexed { index, message ->
+                Timber.d("Signing keysign message %d of %d", index + 1, messagesToSign.size)
                 signMessageWithRetry(tssService, message, 1)
             }
 
@@ -433,7 +432,7 @@ constructor(
 
             pullTssMessagesJob?.cancel()
         } catch (e: Exception) {
-            Timber.e(e)
+            Timber.e("Keysign signing flow failed")
             currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
         }
     }
@@ -453,10 +452,9 @@ constructor(
     private suspend fun signMessageWithRetry(service: ServiceImpl, message: String, attempt: Int) {
         val keysignVerify = KeysignVerify(serverUrl, sessionId, sessionApi)
         try {
-            Timber.d("signMessageWithRetry: $message, attempt: $attempt")
+            Timber.d("signMessageWithRetry: attempt=%d", attempt)
             val msgHash = message.md5()
             this.tssMessenger?.setMessageID(msgHash)
-            Timber.d("signMessageWithRetry: msgHash: $msgHash")
 
             val isEncryptionGcm = featureFlag?.isEncryptGcmEnabled == true
             pullTssMessagesJob =
@@ -509,17 +507,16 @@ constructor(
             pullTssMessagesJob?.cancel()
 
             delay(1.seconds)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             pullTssMessagesJob?.cancel()
-            Timber.tag("KeysignViewModel")
-                .d("signMessageWithRetry error: %s", e.stackTraceToString())
+            Timber.tag("KeysignViewModel").e("signMessageWithRetry failed on attempt %d", attempt)
             val resp = keysignVerify.checkKeysignComplete(message)
             resp?.let {
                 this.signatures[message] = it
                 return
             }
             if (attempt > 3) {
-                throw e
+                throw IllegalStateException("Failed to sign keysign message")
             }
             signMessageWithRetry(service, message, attempt + 1)
         }

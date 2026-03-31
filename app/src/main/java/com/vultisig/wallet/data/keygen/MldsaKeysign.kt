@@ -110,12 +110,12 @@ class MldsaKeysign(
             executeSigningProtocol(setupMsg, msgHash, messageToSign)
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to sign message (%s)", messageToSign)
+        } catch (_: Exception) {
+            Timber.e("Failed to sign MLDSA message on attempt %d", attempt)
             if (attempt < MAX_PROTOCOL_RETRIES) {
                 keysignOneMessage(attempt + 1, messageToSign)
             } else {
-                throw e
+                throw IllegalStateException("Failed to sign keysign message")
             }
         }
     }
@@ -168,9 +168,7 @@ class MldsaKeysign(
 
     private fun verifySetupMessage(setupMsg: ByteArray, expectedMessage: String) {
         val decoded = decodeMessage(setupMsg)
-        check(decoded == expectedMessage) {
-            "Setup message mismatch: expected $expectedMessage, got $decoded"
-        }
+        check(decoded == expectedMessage) { "Received mismatched keysign setup message" }
     }
 
     /**

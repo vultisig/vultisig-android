@@ -159,7 +159,7 @@ class SchnorrKeysign(
         while (true) {
             val (result, outboundMessage) = getSchnorrOutboundMessage(handle)
             if (result != LIB_OK) {
-                println("fail to get outbound message")
+                Timber.e("Failed to get outbound keysign message")
             }
             if (outboundMessage.isEmpty()) {
                 return
@@ -172,8 +172,10 @@ class SchnorrKeysign(
                     break
                 }
                 val receiverString = String(receiverArray, Charsets.UTF_8)
-                Timber.d(
-                    "sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}"
+                Timber.v(
+                    "Sending outbound keysign message to committee participant %d of %d",
+                    i + 1,
+                    keysignCommittee.size,
                 )
                 messenger?.send(localPartyID, receiverString, encodedOutboundMessage)
             }
@@ -219,10 +221,9 @@ class SchnorrKeysign(
         for (msg in sortedMsgs) {
             val key = "$sessionID-$localPartyID-$messageID-${msg.hash}"
             if (cache.containsKey(key)) {
-                println("message with key: $key has been applied before")
+                Timber.v("Skipping duplicate inbound keysign message")
                 continue
             }
-            println("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
             val decryptedBody =
                 encryption.decrypt(
                     Base64.decode(msg.body),
@@ -296,7 +297,7 @@ class SchnorrKeysign(
 
             val signingMsg = decodeMessage(keysignSetupMsg)
             if (signingMsg != messageToSign) {
-                throw RuntimeException("message doesn't match ($messageToSign) vs ($signingMsg)")
+                throw RuntimeException("Received mismatched keysign setup message")
             }
             val decodedSetupMsg = keysignSetupMsg.toGoSlice()
             val handler = Handle()
@@ -336,8 +337,8 @@ class SchnorrKeysign(
                 keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
                 signatures[messageToSign] = resp
             }
-        } catch (e: Exception) {
-            println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
+        } catch (_: Exception) {
+            Timber.e("Failed to sign keysign message on attempt %d", attempt)
             if (attempt < 3) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)
             }

@@ -375,7 +375,7 @@ constructor(
                 )
             )
 
-        Timber.d("keysignProto: $keysignProto")
+        Timber.d("Prepared keysign QR payload")
 
         var data = compressQr(keysignProto).encodeBase64()
         if (keysignPayloadProto != null && routerApi.shouldUploadPayload(data)) {
@@ -600,7 +600,11 @@ constructor(
                 val isEcdsa = tssKeysignType == TssKeyType.ECDSA
                 Timber.tag("KeysignFlowViewModel")
                     .d(
-                        "joinKeysign: chain=$chain, isEcdsa=$isEcdsa, tssKeysignType=$tssKeysignType, messages=${messagesToSign.map { it.take(16) }}"
+                        "joinKeysign: chain=%s, isEcdsa=%b, tssKeysignType=%s, messageCount=%d",
+                        chain,
+                        isEcdsa,
+                        tssKeysignType,
+                        messagesToSign.size,
                     )
                 vultiSignerRepository.joinKeysign(
                     JoinKeysignRequestJson(
@@ -618,8 +622,8 @@ constructor(
                 )
                 Timber.tag("KeysignFlowViewModel").d("joinKeysign: server notified successfully")
             }
-        } catch (e: Exception) {
-            Timber.tag("KeysignFlowViewModel").e("startSession: ${e.stackTraceToString()}")
+        } catch (_: Exception) {
+            Timber.tag("KeysignFlowViewModel").e("startSession failed")
         }
     }
 
@@ -748,8 +752,8 @@ constructor(
                 val keygenCommittee = selection.value
                 sessionApi.startWithCommittee(_serverAddress, _sessionID, keygenCommittee)
                 Timber.d("Keysign started")
-            } catch (e: Exception) {
-                Timber.e("Failed to start keysign: ${e.stackTraceToString()}")
+            } catch (_: Exception) {
+                Timber.e("Failed to start keysign")
             }
         }
     }
