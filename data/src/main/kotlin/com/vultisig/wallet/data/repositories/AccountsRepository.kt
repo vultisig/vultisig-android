@@ -303,17 +303,16 @@ constructor(
                     Chain.MayaChain to Coins.MayaChain.CACAO,
                 )
 
+            val addressesByChain = addresses.associateBy { it.chain }
             val cacheBalances =
                 defiChainNativeCoins.flatMap { (chain, nativeCoin) ->
-                    addresses
-                        .find { it.chain == chain }
-                        ?.let { address ->
-                            balanceRepository.getDeFiCachedTokeBalanceAndPrice(
-                                address = address.address,
-                                coin = nativeCoin,
-                                vaultId = vaultId,
-                            )
-                        } ?: emptyList()
+                    addressesByChain[chain]?.let { address ->
+                        balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+                            address = address.address,
+                            coin = nativeCoin,
+                            vaultId = vaultId,
+                        )
+                    } ?: emptyList()
                 }
 
             if (cacheBalances.isNotEmpty()) {
