@@ -1961,14 +1961,14 @@ internal fun MutableStateFlow<SendSrc?>.updateSrc(
         }
 }
 
-internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain: Chain?): SendSrc {
+internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain: Chain?): SendSrc? {
     val address =
         when {
             !selectedTokenId.isNullOrBlank() ->
                 firstOrNull() { it -> it.accounts.any { it.token.id == selectedTokenId } }
                     ?: this.first()
 
-            filterByChain != null -> first { it.chain == filterByChain }
+            filterByChain != null -> firstOrNull { it.chain == filterByChain } ?: return null
             else -> first()
         }
     val account =
@@ -1977,14 +1977,16 @@ internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain:
                 address.accounts.firstOrNull() { it.token.id == selectedTokenId }
                     ?: address.accounts.first()
 
-            filterByChain != null -> address.accounts.first { it.token.isNativeToken }
+            filterByChain != null ->
+                address.accounts.firstOrNull { it.token.isNativeToken } ?: return null
+
             else -> address.accounts.first()
         }
 
     return SendSrc(address, account)
 }
 
-internal fun List<Address>.findCurrentSrc(selectedTokenId: String?, currentSrc: SendSrc): SendSrc {
+internal fun List<Address>.findCurrentSrc(selectedTokenId: String?, currentSrc: SendSrc): SendSrc? {
     if (selectedTokenId == null) {
         val selectedAddress = currentSrc.address
         val selectedAccount = currentSrc.account
