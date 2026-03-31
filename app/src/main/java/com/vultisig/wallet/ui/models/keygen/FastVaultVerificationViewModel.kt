@@ -28,6 +28,7 @@ import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -108,6 +109,7 @@ constructor(
     }
 
     private fun verify() {
+        if (state.value.verifyPinState == VerifyPinState.Loading) return
         viewModelScope.launch {
             val code = codeFieldState.text.toString()
 
@@ -181,6 +183,7 @@ constructor(
                             )
                         }
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         Timber.e(e, "FastVaultVerification: save vault failed")
                         updateVerifyState(VerifyPinState.Error)
                     }

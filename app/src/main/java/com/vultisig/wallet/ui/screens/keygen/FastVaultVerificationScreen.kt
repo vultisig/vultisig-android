@@ -20,6 +20,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,8 +61,13 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun FastVaultVerificationScreen(model: FastVaultVerificationViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
+    val sheetState =
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+            confirmValueChange = { !state.isSingleKeygen },
+        )
 
-    V2BottomSheet(onDismissRequest = model::back) {
+    V2BottomSheet(sheetState = sheetState, onDismissRequest = model::back) {
         FastVaultVerificationScreen(
             state = state,
             codeFieldState = model.codeFieldState,

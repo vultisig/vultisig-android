@@ -656,10 +656,12 @@ constructor(
             }
         } else if (action == TssAction.SingleKeygen && !args.email.isNullOrBlank()) {
             // Fast vault SingleKeygen: defer save until OTP verification
+            val email = args.email
+            checkNotNull(email)
             temporaryVaultRepository.add(
                 TempVaultDto(
                     vault = vault,
-                    email = args.email!!,
+                    email = email,
                     password = args.password ?: "",
                     hint = null,
                 )
@@ -774,10 +776,12 @@ constructor(
 
                     TssAction.SingleKeygen ->
                         if (!args.email.isNullOrEmpty()) {
+                            val email = args.email
+                            checkNotNull(email)
                             Route.FastVaultVerification(
                                 vaultId = vaultId,
                                 pubKeyEcdsa = vault.pubKeyECDSA,
-                                email = args.email!!,
+                                email = email,
                                 tssAction = action,
                                 vaultName = args.vaultName,
                                 password = args.password,
