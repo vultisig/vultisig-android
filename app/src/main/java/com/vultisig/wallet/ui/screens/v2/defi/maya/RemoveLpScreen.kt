@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -38,6 +39,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -171,6 +173,42 @@ internal fun RemoveLpScreenContent(
                 if (state.removeLpPercent > 0f && state.availableLpUnits != null)
                     VsButtonState.Enabled
                 else VsButtonState.Disabled,
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RemoveLpScreenContentPreview() {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)) {
+        RemoveLpScreenContent(
+            state =
+                DepositFormUiModel(
+                    removeLpPercent = 1f,
+                    removeLpCacaoDisplay = "5.000 CACAO",
+                    availableLpUnits = "1000000",
+                    balance = UiText.DynamicString("24,000 CACAO"),
+                    selectedPoolTotalLpUnits = 5_000_000L,
+                    selectedPoolCacaoDepth = 25_000_000L,
+                )
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Remove Pool - 50%")
+@Composable
+private fun RemoveLpScreenContentHalfPreview() {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)) {
+        RemoveLpScreenContent(
+            state =
+                DepositFormUiModel(
+                    removeLpPercent = 0.5f,
+                    removeLpCacaoDisplay = "2.500 CACAO",
+                    availableLpUnits = "1000000",
+                    balance = UiText.DynamicString("24,000 CACAO"),
+                    selectedPoolTotalLpUnits = 5_000_000L,
+                    selectedPoolCacaoDepth = 25_000_000L,
+                )
         )
     }
 }
