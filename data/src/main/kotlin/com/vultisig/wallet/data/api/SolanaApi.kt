@@ -331,6 +331,14 @@ constructor(
                 return Pair(null, false)
             }
             val value = response.value ?: error("getTokenAssociatedAccountByOwner error")
+            if (value.value.isEmpty()) {
+                Timber.d(
+                    "getTokenAssociatedAccountByOwner: no ATA found for %s / %s",
+                    walletAddress,
+                    mintAddress,
+                )
+                return Pair(null, false)
+            }
             return Pair(
                 value.value[0].pubKey,
                 value.value[0].account.owner == TOKEN_PROGRAM_ID_2022,
