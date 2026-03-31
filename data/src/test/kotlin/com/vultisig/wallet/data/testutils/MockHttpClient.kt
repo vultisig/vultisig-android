@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.utils.NetworkException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpCallValidator
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.ContentType
@@ -11,6 +12,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.util.appendIfNameAbsent
 import java.io.IOException
 import kotlinx.serialization.json.Json
 
@@ -55,6 +57,12 @@ object MockHttpClient {
      */
     private fun io.ktor.client.HttpClientConfig<*>.installDefaults() {
         install(ContentNegotiation) { json(json, ContentType.Any) }
+        install(DefaultRequest) {
+            headers.appendIfNameAbsent(
+                HttpHeaders.ContentType,
+                ContentType.Application.Json.toString(),
+            )
+        }
         install(HttpCallValidator) {
             handleResponseExceptionWithRequest { cause, _ ->
                 if (cause is IOException) {
