@@ -652,12 +652,14 @@ constructor(
     }
 
     private fun collectSecuredAssetAddresses() {
-        viewModelScope.launch {
-            val vaultId = vaultId ?: return@launch
+        viewModelScope.safeLaunch(
+            onError = { Timber.e(it, "Failed to collect secured asset addresses") }
+        ) {
+            val vaultId = vaultId ?: return@safeLaunch
             val vault =
                 vaultRepository.get(vaultId)
                     ?: run {
-                        return@launch
+                        return@safeLaunch
                     }
             val (thorAddress) =
                 chainAccountAddressRepository.getAddress(chain = Chain.ThorChain, vault = vault)
