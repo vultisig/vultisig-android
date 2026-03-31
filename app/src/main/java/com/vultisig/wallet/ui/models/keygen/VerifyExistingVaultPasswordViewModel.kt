@@ -64,9 +64,12 @@ constructor(
     fun verify() {
         val password = passwordFieldState.text.toString()
         if (password.isBlank()) return
+        if (_state.value is VerifyExistingVaultPasswordUiState.Loading) return
 
         val isPasswordVisible =
             (_state.value as? VerifyExistingVaultPasswordUiState.Ready)?.isPasswordVisible ?: false
+
+        _state.update { VerifyExistingVaultPasswordUiState.Loading }
 
         viewModelScope.safeLaunch(
             onError = { e ->
@@ -79,8 +82,6 @@ constructor(
                 }
             }
         ) {
-            _state.update { VerifyExistingVaultPasswordUiState.Loading }
-
             val vault = vaultRepository.get(vaultId)
             if (vault == null) {
                 _state.update {
