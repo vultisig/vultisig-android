@@ -485,6 +485,7 @@
     <string name="referral_create_set_expiration_years">Definir expiração (em anos)</string>
     <string name="referral_create_registration_fees">Taxas de registro</string>
     <string name="referral_create_cost">Custo</string>
+    <string name="referral_create_fees_error">Falha ao carregar taxas. Tente novamente.</string>
     <string name="referral_create_create_referral_code">Criar código de referência</string>
     <string name="referral_create_invalid">Inválido</string>
     <string name="referral_create_available">Disponível</string>
