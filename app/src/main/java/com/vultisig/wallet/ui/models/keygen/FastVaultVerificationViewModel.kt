@@ -146,7 +146,18 @@ constructor(
                             )
 
                             delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
-                            navigator.route(route = Route.Home(openVaultId = vaultId))
+                            navigator.route(
+                                route =
+                                    Route.BackupVault(
+                                        vaultId = vaultId,
+                                        vaultType = VaultType.Fast,
+                                        action = args.tssAction,
+                                        passwordType =
+                                            BackupPasswordType.VultiServerPassword(
+                                                password = args.password
+                                            ),
+                                    )
+                            )
                         } else {
                             val vault = temporaryVaultRepository.getById(vaultId)
                             val shouldOverride = args.tssAction == TssAction.Migrate
