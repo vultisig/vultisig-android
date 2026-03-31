@@ -192,7 +192,7 @@ private fun AddLpContent(
                                     val amount =
                                         balanceNumeric
                                             .multiply(percent.toBigDecimal())
-                                            .divide(java.math.BigDecimal(100))
+                                            .divide(100.toBigDecimal())
                                             .stripTrailingZeros()
                                             .toPlainString()
                                     tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount)

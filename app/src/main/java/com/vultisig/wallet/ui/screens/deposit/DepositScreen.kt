@@ -59,33 +59,22 @@ internal fun DepositScreen(
             depositNavHostController
         }
 
-    val progress: Float
     val title: String
 
     val isAddLp = depositType == DeFiNavActions.ADD_LP.type
+    val defaultTitle =
+        if (isAddLp) stringResource(R.string.add_pool_title)
+        else stringResource(R.string.deposit_screen_title)
 
     when (route) {
         SendDst.Send.route -> {
-            progress = 0.25f
-            title =
-                if (isAddLp) {
-                    stringResource(R.string.add_pool_title)
-                } else {
-                    stringResource(R.string.deposit_screen_title)
-                }
+            title = defaultTitle
         }
         SendDst.VerifyTransaction.staticRoute -> {
-            progress = 0.5f
             title = stringResource(R.string.verify_transaction_screen_title)
         }
         else -> {
-            progress = 0.0f
-            title =
-                if (isAddLp) {
-                    stringResource(R.string.add_pool_title)
-                } else {
-                    stringResource(R.string.deposit_screen_title)
-                }
+            title = defaultTitle
         }
     }
     val qrAddress by viewModel.addressProvider.address.collectAsState()
