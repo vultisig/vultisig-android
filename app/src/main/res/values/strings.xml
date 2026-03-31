@@ -668,6 +668,7 @@
     <string name="add_pool_title">Add Pool</string>
     <string name="add_pool_amount_label">Amount</string>
     <string name="add_pool_gas_auto">Gas (auto)</string>
+    <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Token value</string>
     <string name="token_fiat_toggle_fiat_label">Fiat value</string>
     <string name="cacaopool_only_cacao_supported">Only CACAO token is supported for pool operations</string>

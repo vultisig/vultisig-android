@@ -478,6 +478,7 @@
     <string name="add_pool_title">Aggiungi Pool</string>
     <string name="add_pool_amount_label">Importo</string>
     <string name="add_pool_gas_auto">Commissione di rete (automatica)</string>
+    <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Valore token</string>
     <string name="token_fiat_toggle_fiat_label">Valore fiat</string>
     <string name="cacaopool_only_cacao_supported">Per le operazioni del pool è supportato solo il token CACAO</string>

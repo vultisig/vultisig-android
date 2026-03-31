@@ -479,6 +479,7 @@
     <string name="add_pool_title">Dodaj Pool</string>
     <string name="add_pool_amount_label">Iznos</string>
     <string name="add_pool_gas_auto">Mrežna naknada (automatski)</string>
+    <string name="max">Maks</string>
     <string name="token_fiat_toggle_token_label">Vrijednost tokena</string>
     <string name="token_fiat_toggle_fiat_label">Fiat vrijednost</string>
     <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>

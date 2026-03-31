@@ -475,6 +475,7 @@
     <string name="add_pool_title">Pool toevoegen</string>
     <string name="add_pool_amount_label">Bedrag</string>
     <string name="add_pool_gas_auto">Netwerkkosten (auto)</string>
+    <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Tokenwaarde</string>
     <string name="token_fiat_toggle_fiat_label">Fiatwaarde</string>
     <string name="cacaopool_only_cacao_supported">Alleen CACAO-tokens worden ondersteund voor pooloperaties</string>

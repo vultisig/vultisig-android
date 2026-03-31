@@ -109,7 +109,7 @@ private fun AddLpContent(
     LaunchedEffect(balance) { selectedPercentageIndex = initialSelectedPercentageIndex }
 
     val percentages = listOf(25, 50, 75, 100)
-    val percentageLabels = listOf("25%", "50%", "75%", "Max")
+    val percentageLabels = listOf("25%", "50%", "75%", stringResource(R.string.max))
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
@@ -186,9 +186,9 @@ private fun AddLpContent(
                             title = label,
                             isSelected = selectedPercentageIndex == index,
                             onClick = {
-                                selectedPercentageIndex = index
-                                val percent = percentages[index]
                                 if (rawBalance != null) {
+                                    selectedPercentageIndex = index
+                                    val percent = percentages[index]
                                     val amount =
                                         rawBalance
                                             .multiply(percent.toBigDecimal())
@@ -260,8 +260,8 @@ private fun AddLpContentPreview() {
             tokenSymbol = "CACAO",
             fiatCurrency = "USD",
             tokenAmountFieldState = TextFieldState("50"),
-            fiatAmountFieldState = TextFieldState(),
-            fiatAmount = "$2,000.56",
+            fiatAmountFieldState = TextFieldState("2,000.56"),
+            fiatAmount = null,
             totalGas = "0.04103261 CACAO",
             estimatedFee = "$0.08",
             balance = "24,052 CACAO",

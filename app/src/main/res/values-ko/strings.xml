@@ -669,6 +669,7 @@
     <string name="add_pool_title">풀 추가</string>
     <string name="add_pool_amount_label">금액</string>
     <string name="add_pool_gas_auto">가스 (자동)</string>
+    <string name="max">최대</string>
     <string name="token_fiat_toggle_token_label">토큰 가치</string>
     <string name="token_fiat_toggle_fiat_label">법정화폐 가치</string>
     <string name="cacaopool_only_cacao_supported">풀 작업에는 CACAO 토큰만 지원됩니다</string>

@@ -722,6 +722,7 @@
     <string name="add_pool_title">添加池</string>
     <string name="add_pool_amount_label">金额</string>
     <string name="add_pool_gas_auto">网络费用（自动）</string>
+    <string name="max">最大</string>
     <string name="token_fiat_toggle_token_label">代币价值</string>
     <string name="token_fiat_toggle_fiat_label">法币价值</string>
     <string name="cacaopool_only_cacao_supported">池操作仅支持 CACAO 代币</string>

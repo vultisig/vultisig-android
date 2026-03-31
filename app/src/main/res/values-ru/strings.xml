@@ -477,6 +477,7 @@
     <string name="add_pool_title">Добавить в пул</string>
     <string name="add_pool_amount_label">Сумма</string>
     <string name="add_pool_gas_auto">Комиссия сети (авто)</string>
+    <string name="max">Макс</string>
     <string name="token_fiat_toggle_token_label">Стоимость токена</string>
     <string name="token_fiat_toggle_fiat_label">Фиатная стоимость</string>
     <string name="cacaopool_only_cacao_supported">Для операций пула поддерживается только токен CACAO.</string>
