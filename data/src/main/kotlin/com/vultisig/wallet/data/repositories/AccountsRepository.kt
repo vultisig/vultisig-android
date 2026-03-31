@@ -296,40 +296,24 @@ constructor(
 
         // emit cached
         try {
-            // TODO: Unify loading cache code into one service with DeFi Maya (generic loading)
-            val thorchainAddress = addresses.find { it.chain == Chain.ThorChain }
-            val ethereumAddress = addresses.find { it.chain == Chain.Ethereum }
-            val mayaAddress = addresses.find { it.chain == Chain.MayaChain }
+            val defiChainNativeCoins =
+                listOf(
+                    Chain.ThorChain to Coins.ThorChain.RUNE,
+                    Chain.Ethereum to Coins.Ethereum.ETH,
+                    Chain.MayaChain to Coins.MayaChain.CACAO,
+                )
 
-            val cachedDeFiThorchainBalances =
-                thorchainAddress?.let {
-                    balanceRepository.getDeFiCachedTokeBalanceAndPrice(
-                        address = thorchainAddress.address,
-                        coin = Coins.ThorChain.RUNE,
-                        vaultId = vaultId,
-                    )
-                } ?: emptyList()
-
-            val cacheDeFiEthereumBalances =
-                ethereumAddress?.let {
-                    balanceRepository.getDeFiCachedTokeBalanceAndPrice(
-                        address = ethereumAddress.address,
-                        coin = Coins.Ethereum.ETH,
-                        vaultId = vaultId,
-                    )
-                } ?: emptyList()
-
-            val cacheDeFiMayaBalances =
-                mayaAddress?.let {
-                    balanceRepository.getDeFiCachedTokeBalanceAndPrice(
-                        address = mayaAddress.address,
-                        coin = Coins.MayaChain.CACAO,
-                        vaultId = vaultId,
-                    )
-                } ?: emptyList()
-
+            val addressesByChain = addresses.associateBy { it.chain }
             val cacheBalances =
-                cachedDeFiThorchainBalances + cacheDeFiEthereumBalances + cacheDeFiMayaBalances
+                defiChainNativeCoins.flatMap { (chain, nativeCoin) ->
+                    addressesByChain[chain]?.let { address ->
+                        balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+                            address = address.address,
+                            coin = nativeCoin,
+                            vaultId = vaultId,
+                        )
+                    } ?: emptyList()
+                }
 
             if (cacheBalances.isNotEmpty()) {
                 val balancesByTicker =
