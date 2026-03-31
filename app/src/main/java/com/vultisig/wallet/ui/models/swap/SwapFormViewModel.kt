@@ -1990,13 +1990,14 @@ internal fun List<Address>.findCurrentSrc(selectedTokenId: String?, currentSrc: 
     if (selectedTokenId == null) {
         val selectedAddress = currentSrc.address
         val selectedAccount = currentSrc.account
-        val address = first {
-            it.chain == selectedAddress.chain && it.address == selectedAddress.address
-        }
-        return SendSrc(
-            address,
-            address.accounts.first { it.token.ticker == selectedAccount.token.ticker },
-        )
+        val address =
+            firstOrNull {
+                it.chain == selectedAddress.chain && it.address == selectedAddress.address
+            } ?: return null
+        val account =
+            address.accounts.firstOrNull { it.token.ticker == selectedAccount.token.ticker }
+                ?: return null
+        return SendSrc(address, account)
     } else {
         return firstSendSrc(selectedTokenId, null)
     }
