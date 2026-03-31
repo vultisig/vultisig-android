@@ -101,9 +101,12 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         sessionId: String,
         localPartyId: List<String>,
     ) {
-        httpClient
-            .post("$serverUrl/complete/$sessionId") { setBody(localPartyId) }
-            .throwIfUnsuccessful()
+        val response = httpClient.post("$serverUrl/complete/$sessionId") { setBody(localPartyId) }
+        if (response.status.value in 500..599) {
+            Timber.w("markLocalPartyComplete: server returned ${response.status.value}, ignoring")
+            return
+        }
+        response.throwIfUnsuccessful()
     }
 
     override suspend fun getCompletedParties(serverUrl: String, sessionId: String): List<String> {
