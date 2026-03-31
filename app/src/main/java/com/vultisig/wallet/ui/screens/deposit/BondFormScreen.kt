@@ -229,7 +229,8 @@ internal fun BondFormContent(
                 onDeposit()
             },
             state =
-                if (state.isLoading || state.nodeAddressError != null) VsButtonState.Disabled
+                if (state.isLoading || state.isCheckingWhitelist || state.nodeAddressError != null)
+                    VsButtonState.Disabled
                 else VsButtonState.Enabled,
             modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(all = 16.dp),
         )

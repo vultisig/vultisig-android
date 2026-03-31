@@ -783,10 +783,10 @@ constructor(
             val userAddress =
                 withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
                     ?.address
-            if (userAddress == null) {
-                state.update { it.copy(isCheckingWhitelist = false) }
-                return
-            }
+                    ?: run {
+                        state.update { it.copy(isCheckingWhitelist = false) }
+                        return
+                    }
             val nodeInfo = mayachainBondRepository.getNodeDetails(nodeAddress)
             if (
                 nodeAddressFieldState.text.toString() != nodeAddress ||
