@@ -155,7 +155,7 @@ private fun AddLpContent(
                     if (usingTokenAmountInput) {
                         primaryFieldState = tokenAmountFieldState
                         primaryLabel = tokenSymbol
-                        secondaryText = fiatAmount ?: ""
+                        secondaryText = "${fiatAmountFieldState.text.ifEmpty { "0" }} $fiatCurrency"
                     } else {
                         primaryFieldState = fiatAmountFieldState
                         primaryLabel = fiatCurrency
