@@ -22,6 +22,8 @@ typealias KeygenMessageProto = vultisig.keygen.v1.KeygenMessage
 
 typealias ReshareMessageProto = vultisig.keygen.v1.ReshareMessage
 
+typealias SingleKeygenMessageProto = vultisig.keygen.v1.SingleKeygenMessage
+
 typealias VaultProto = Vault
 
 typealias VaultContainerProto = vultisig.vault.v1.VaultContainer

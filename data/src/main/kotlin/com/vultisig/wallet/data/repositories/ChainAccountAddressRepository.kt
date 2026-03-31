@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
 import com.vultisig.wallet.data.crypto.CardanoUtils
+import com.vultisig.wallet.data.crypto.QbtcHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainPublicKey
 import com.vultisig.wallet.data.models.Coin
@@ -41,6 +42,13 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
         val chainPubKey = findChainPublicKey(chain, vault)
 
         when (chain.TssKeysignType) {
+            TssKeyType.MLDSA -> {
+                val mldsaPubKey = vault.pubKeyMLDSA
+                require(mldsaPubKey.isNotBlank()) { "MLDSA public key is required for QBTC" }
+                val address = QbtcHelper.deriveAddress(mldsaPubKey)
+                return Pair(address, mldsaPubKey)
+            }
+
             TssKeyType.ECDSA -> {
                 val derivedPublicKey =
                     if (chainPubKey != null) {
@@ -102,6 +110,8 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     override fun isValid(chain: Chain, address: String): Boolean =
         when (chain) {
             Chain.MayaChain -> AnyAddress.isValidBech32(address, chain.coinType, "maya")
+
+            Chain.Qbtc -> AnyAddress.isValidBech32(address, CoinType.COSMOS, "qbtc")
 
             Chain.Sei -> AnyAddress.isValid(address, CoinType.ETHEREUM)
 

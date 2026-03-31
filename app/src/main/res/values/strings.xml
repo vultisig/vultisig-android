@@ -7,7 +7,10 @@
     <string name="push_notification_error_vault_not_supported">Vault does not support notifications</string>
     <string name="push_notification_error_token_not_available">Failed to get notification token</string>
     <string name="push_notification_error_api_failure">Failed to update notification registration</string>
-    <string name="push_notification_partial_failure">%1$d of %2$d vaults updated, %3$d failed</string>
+    <plurals name="push_notification_partial_failure">
+        <item quantity="one">%1$d of %2$d vaults updated, %3$d failed</item>
+        <item quantity="other">%1$d of %2$d vaults updated, %3$d failed</item>
+    </plurals>
     <string name="push_notifications_sent">Notification sent successfully</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Get notified when your signature is required or a device requests access.</string>
     <string name="keysign_notification_channel_name">Keysign Requests</string>
@@ -80,6 +83,8 @@
     <string name="vault_settings_rename_subtitle">Edit your vault name</string>
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Reshare vault with a new committee</string>
+    <string name="vault_settings_dilithium_keygen_title">Enable QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generate key to enable QBTC chain</string>
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_delete_subtitle">Delete your vault permanently.</string>
     <string name="vault_settings_security_title">On-chain Security</string>
@@ -204,6 +209,7 @@
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
     <string name="keysign_screen_signing_with_ecdsa">Signing with ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">Signing with EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">Signing with MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign Finished!</string>
     <string name="keysign_screen_error_please_try_again">Error! Please try again. %1$s</string>
     <string name="successfully_scanned_barcode">Successfully scanned barcode: %1$s</string>
@@ -386,7 +392,7 @@
     <string name="vault_details_screen_vault_part">Vault Share</string>
     <string name="vault_details_screen_vault_type">Vault Type</string>
     <string name="vault_settings_delete_vault_part">Vault Share:</string>
-    <string name="vault_password_hint_to_long">Hint is too long</string>
+    <string name="vault_password_hint_too_long">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc">Share %1$s of %2$s</string>
     <string name="do_not_remind_me_again">Don\'t remind me again</string>
     <string name="monthly_backup_reminder_title">Don\'t forget to backup your vault shares and verify the completeness.</string>
@@ -433,7 +439,10 @@
     <string name="dialog_default_error_body">Something went wrong</string>
     <string name="address_bookmark_error_invalid_address">This address is not valid for %s</string>
     <string name="address_bookmark_error_empty_label">Label cannot be empty</string>
-    <string name="address_bookmark_error_invalid_label">Label must be between 1 and %d characters</string>
+    <plurals name="address_bookmark_error_invalid_label">
+        <item quantity="one">Label must be between 1 and %d characters</item>
+        <item quantity="other">Label must be between 1 and %d characters</item>
+    </plurals>
     <string name="send_form_ripple_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 XRP (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
     <string name="error_invalid_chain">Chain is invalid</string>
     <string name="send_error_invalid_plan_fee">Invalid Plan Fee</string>
@@ -506,6 +515,7 @@
     <string name="keygen_step_preparing_vault">Preparing Vault</string>
     <string name="keygen_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="keygen_step_generating_eddsa">Generating EdDSA Key</string>
+    <string name="keygen_step_generating_mldsa">Generating MLDSA Key</string>
     <string name="keygen_step_generating_chain_keys">Generating Chain Keys</string>
     <string name="reshare_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="reshare_step_generating_eddsa">Generating EdDSA Key</string>
@@ -544,7 +554,7 @@
     <string name="vault_backup_error_pin">Error verifying code, please re-try</string>
     <string name="vault_backup_verifying_pin">Verifying code, please wait</string>
     <string name="vault_backup_screen_email_sent_to">Sent to %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email">Didn’t receive an email?</string>
+    <string name="vault_backup_screen_donot_receive_email">Didn’t receive an email?</string>
     <string name="vault_backup_screen_restart_keygen">Restart keygen</string>
     <string name="vault_backup_summary_choose_chains">Choose Chains</string>
     <string name="transaction_done_form_approve">Approve</string>
@@ -632,7 +642,7 @@
     <string name="referral_edit_referral">Edit referral</string>
     <string name="referral_external_linked">Referral code successfully linked</string>
     <string name="referral_external_not_linked">Referral code does not exist</string>
-    <string name="referral_external_not_failed">Failed to check referral code</string>
+    <string name="referral_external_link_failed">Failed to check referral code</string>
     <string name="referral_onboarding_title">Referral</string>
     <string name="referral_onboarding_get_started">Get started</string>
 
@@ -750,7 +760,10 @@
     <string name="backup_select_vaults_subtitle">Choose whether to back up just this vault or all vaults in your app.</string>
     <string name="backup_this_vault_only">This Vault Only</string>
     <string name="backup_all_vaults">All Vaults</string>
-    <string name="more">+%1$d more</string>
+    <plurals name="more">
+        <item quantity="one">+%1$d more</item>
+        <item quantity="other">+%1$d more</item>
+    </plurals>
     <string name="backup_choose_method_title">Choose Backup Method</string>
     <string name="backup_device_desc">Store the vault share of this device.</string>
     <string name="backup_device_title">Device Backup</string>
@@ -836,10 +849,17 @@
     <string name="keysign_password_enter_your_password">Enter your password</string>
     <string name="migration_password_enter_your_password_to_unlock">Enter your password to unlock your Server Share and start the upgrade</string>
     <string name="name_vault_vault_with_this_name_already_exists">Vault with this name already exists</string>
+    <string name="name_vault_server_exists_warning_title">Fast vault already exists</string>
+    <string name="name_vault_server_exists_warning_message">A fast vault with this seed phrase already exists on the server. Creating a new fast vault will replace the server share and make the existing vault unusable. Consider using a secure vault instead.</string>
+    <string name="name_vault_server_exists_warning_continue">Continue</string>
+    <string name="name_vault_server_exists_warning_back">Back</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Unknown</string>
     <string name="referral_code_cannot_be_empty">Referral code cannot be empty</string>
-    <string name="referral_code_can_be_up_to_characters">Referral code can be up to %1$d characters</string>
+    <plurals name="referral_code_can_be_up_to_characters">
+        <item quantity="one">Referral code can be up to %1$d characters</item>
+        <item quantity="other">Referral code can be up to %1$d characters</item>
+    </plurals>
     <string name="error_loading_information">Error Loading Information</string>
     <string name="referral_view_expires_on">Expires on</string>
     <string name="send_form_balance_available">Balance available:</string>
@@ -855,7 +875,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">Approval Tx Hash</string>
     <string name="swap_transaction_overview_track">Track</string>
     <string name="token_selection_screen_select_tokens">Select tokens</string>
-    <string name="token_selecton_screen_enable_at_least_one">Enable at least one token to view balances and manage positions.</string>
+    <string name="token_selection_screen_enable_at_least_one">Enable at least one token to view balances and manage positions.</string>
     <string name="transfer_ibc_destination_chain">Destination Chain</string>
     <string name="tx_done_transaction_details">Transaction Details</string>
     <string name="vault_confirmation_vault_upgraded">"Vault upgraded"</string>
@@ -863,7 +883,7 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">You’re ready to use a new wallet standard.</string>
     <string name="vault_detail_vault_info">Vault Info</string>
     <string name="vault_details_keys">Keys</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Enable Biometrics Fast Signing</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">Enable Biometrics Fast Signing</string>
     <string name="verify_send_send_overview">Send overview</string>
     <string name="verify_swap_swap_overview">Swap overview</string>
     <string name="rename_vault_screen_rename_vault">Rename Vault</string>
@@ -890,8 +910,8 @@
     <string name="enable_at_least_one_position">Enable at least one position to view balances and manage positions.</string>
     <string name="bandwidth">Bandwidth</string>
     <string name="energy">Energy</string>
-    <string name="bandwidth_dec">Bandwidth Points are required for every transaction on TRON, including both standard token sends and smart contract interactions. Every TRON user receives 600 free Bandwidth Points per day, which can cover approximately two basic sends. Additionally, you can earn extra Bandwidth Points by staking TRX, increasing your daily balance to support more transactions. If you have enough Bandwidth Points, you can send tokens, stake TRX, or interact with smart contracts without paying TRX in gas fees.</string>
-    <string name="energy_dec">Required for more complex actions, such as interacting with smart contracts (e.g., swaps or dApp transactions). Unlike Bandwidth, Energy is not given for free—you need to stake TRX to earn Energy. (More advanced users can also acquire Energy through leasing mechanisms such as JustLend or Tronify’s Energy rental markets). However, having Energy can significantly reduce or even eliminate the gas fees for smart contract interactions, making Energy valuable for those who use TRON dApps frequently.</string>
+    <string name="bandwidth_desc">Bandwidth Points are required for every transaction on TRON, including both standard token sends and smart contract interactions. Every TRON user receives 600 free Bandwidth Points per day, which can cover approximately two basic sends. Additionally, you can earn extra Bandwidth Points by staking TRX, increasing your daily balance to support more transactions. If you have enough Bandwidth Points, you can send tokens, stake TRX, or interact with smart contracts without paying TRX in gas fees.</string>
+    <string name="energy_desc">Required for more complex actions, such as interacting with smart contracts (e.g., swaps or dApp transactions). Unlike Bandwidth, Energy is not given for free—you need to stake TRX to earn Energy. (More advanced users can also acquire Energy through leasing mechanisms such as JustLend or Tronify’s Energy rental markets). However, having Energy can significantly reduce or even eliminate the gas fees for smart contract interactions, making Energy valuable for those who use TRON dApps frequently.</string>
     <string name="tron" translatable="false">Tron</string>
     <string name="tron_bandwidth_energy_title" translatable="false"><![CDATA["Bandwidth & Energy "]]></string>
 
@@ -935,7 +955,10 @@
     <string name="solana_instruction_number">Instruction %1$d</string>
     <string name="solana_program_name">Program: %1$s</string>
     <string name="solana_program_id">Program ID: %1$s</string>
-    <string name="solana_accounts_data">Accounts: %1$d | Data length: %2$d bytes</string>
+    <plurals name="solana_accounts_data">
+        <item quantity="one">Accounts: %1$d | Data length: %2$d bytes</item>
+        <item quantity="other">Accounts: %1$d | Data length: %2$d bytes</item>
+    </plurals>
     <string name="vault_count_recommended">Recommended</string>
 
     <!-- Vault count plural -->
@@ -1006,7 +1029,10 @@
     <string name="import_seedphrase_subtitle">Enter your 12 or 24 word recovery phrase</string>
     <string name="import_seedphrase_label">Seed Phrase</string>
     <string name="import_seedphrase_hint">Enter your recovery phrase…</string>
-    <string name="import_seedphrase_word_count">%1$d / %2$d words</string>
+    <plurals name="import_seedphrase_word_count">
+        <item quantity="one">%1$d / %2$d words</item>
+        <item quantity="other">%1$d / %2$d words</item>
+    </plurals>
     <string name="import_seedphrase_invalid_word_count">You entered %1$s words. Seed phrase must be 12 or 24</string>
     <string name="import_seedphrase_invalid_phrase">Invalid seed phrase</string>
     <string name="import_seedphrase_already_imported">This seed phrase has already been imported</string>
@@ -1048,7 +1074,7 @@
     <string name="welcome_fast_and_easy">Fast &amp; easy</string>
     <string name="welcome_fast_and_easy_desc">Sign with only 1 device. Our secure server signs with you for multisig security. Plugin compatible.</string>
     <string name="welcome_fast_and_easy_highlight">only 1 device.</string>
-    <string name="welcome_plugin_compatible">Plugin Marketplace compatible</string>
+    <string name="welcome_plugin_compatible">Plugin Store compatible</string>
     <string name="welcome_tip">Tip: You can use a browser as a device</string>
     <string name="welcome_only_your_devices">Only your devices</string>
     <string name="welcome_only_your_devices_desc">Only your devices are authorized signers. Signing transactions takes 2 devices. Full self-custody at your fingertips.</string>
@@ -1114,7 +1140,10 @@
     <string name="vault_setup_add_as_many_devices_as_you_want">Add as many devices as you want and receive institutional-grade security.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Built for teams and treasuries</string>
     <string name="vault_setup_back_up_each_device">Back up each device</string>
-    <string name="vault_setup_you_ll_create_n_backups_in_total">You’ll create %1$d backups in total. You will do this on each device.</string>
+    <plurals name="vault_setup_you_ll_create_n_backups_in_total">
+        <item quantity="one">You’ll create %1$d backups in total. You will do this on each device.</item>
+        <item quantity="other">You’ll create %1$d backups in total. You will do this on each device.</item>
+    </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Save each backup in a different cloud service or with a different password. If one is exposed, your funds stay safe.</string>
     <string name="vault_setup_i_understand">I understand</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Save backup %1$d of %2$d to the cloud</string>

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.onboarding
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,8 +56,7 @@ internal fun VaultBackupOnboardingScreen(
         applyDefaultPaddings = false,
         content = {
             Column(modifier = Modifier.fillMaxSize()) {
-                RiveAnimation(
-                    animation = uiState.rive,
+                Box(
                     modifier =
                         Modifier.size(width = 350.dp, height = 260.dp)
                             .dashedBorder(
@@ -65,16 +65,20 @@ internal fun VaultBackupOnboardingScreen(
                                 dashLength = 4.dp,
                                 intervalLength = 4.dp,
                                 cornerRadius = 0.dp,
-                            ),
-                )
+                            )
+                ) {
+                    RiveAnimation(animation = uiState.rive, modifier = Modifier.fillMaxSize())
+                }
                 UiSpacer(size = 14.dp)
 
                 Column(
                     modifier =
-                        Modifier.padding(
-                            horizontal = V3Scaffold.PADDING_HORIZONTAL,
-                            vertical = V3Scaffold.PADDING_VERTICAL,
-                        )
+                        Modifier.weight(1f)
+                            .padding(
+                                horizontal = V3Scaffold.PADDING_HORIZONTAL,
+                                vertical = V3Scaffold.PADDING_VERTICAL,
+                            )
+                            .verticalScroll(rememberScrollState())
                 ) {
                     GradientTitleText(
                         gradientPart = stringResource(R.string.backup_backups),
@@ -101,31 +105,31 @@ internal fun VaultBackupOnboardingScreen(
                     )
                     UiSpacer(size = 32.dp)
 
-                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                        uiState.tips.forEach { (title, description, logo) ->
-                            Row {
-                                UiIcon(
-                                    drawableResId = logo,
-                                    contentDescription = null,
-                                    size = 24.dp,
-                                    tint = Theme.v2.colors.alerts.info,
+                    uiState.tips.forEachIndexed { index, (title, description, logo) ->
+                        Row {
+                            UiIcon(
+                                drawableResId = logo,
+                                contentDescription = null,
+                                size = 24.dp,
+                                tint = Theme.v2.colors.alerts.info,
+                            )
+                            UiSpacer(size = 16.dp)
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    text = title.asString(),
+                                    style = Theme.brockmann.headings.subtitle,
+                                    color = Theme.v2.colors.neutrals.n50,
                                 )
-                                UiSpacer(size = 16.dp)
-                                Column(modifier = Modifier.fillMaxWidth()) {
-                                    Text(
-                                        text = title.asString(),
-                                        style = Theme.brockmann.headings.subtitle,
-                                        color = Theme.v2.colors.neutrals.n50,
-                                    )
-                                    UiSpacer(size = 8.dp)
+                                UiSpacer(size = 8.dp)
 
-                                    Text(
-                                        text = description.asString(),
-                                        style = Theme.brockmann.supplementary.footnote,
-                                        color = Theme.v2.colors.text.tertiary,
-                                    )
-                                }
+                                Text(
+                                    text = description.asString(),
+                                    style = Theme.brockmann.supplementary.footnote,
+                                    color = Theme.v2.colors.text.tertiary,
+                                )
                             }
+                        }
+                        if (index < uiState.tips.lastIndex) {
                             UiSpacer(size = 16.dp)
                         }
                     }

@@ -137,6 +137,7 @@ class DKLSKeygen(
                     TssAction.KeyImport -> dkls_keygen_session_output_message(handle, buf)
 
                     TssAction.ReShare -> dkls_qc_session_output_message(handle, buf)
+                    TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
                 }
 
             if (result != LIB_OK) {
@@ -165,6 +166,7 @@ class DKLSKeygen(
 
                     TssAction.ReShare ->
                         dkls_qc_session_message_receiver(handle, message, idx, bufReceiver)
+                    TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
                 }
 
             if (receiverResult != LIB_OK) {
@@ -264,6 +266,7 @@ class DKLSKeygen(
 
                     TssAction.ReShare ->
                         dkls_qc_session_input_message(handle, decryptedBodySlice, isFinished)
+                    TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
                 }
 
             if (result != LIB_OK) {
@@ -304,6 +307,7 @@ class DKLSKeygen(
                     TssAction.ReShare -> {
                         keygenSetupMsg = getDklsSetupMessage()
                     }
+                    TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
                 }
                 sessionApi.uploadSetupMessage(
                     serverUrl = mediatorURL,
@@ -390,6 +394,7 @@ class DKLSKeygen(
                 }
 
                 TssAction.ReShare -> error("Shouldn't use this method with $action")
+                TssAction.SingleKeygen -> error("SingleKeygen is handled separately")
             }
 
             processDKLSOutboundMessage(handler)

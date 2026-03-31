@@ -7,7 +7,6 @@ import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
-import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -15,9 +14,10 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.utils.toUnit
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import javax.inject.Inject
 import kotlinx.coroutines.async
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.coroutineScope
 import wallet.core.jni.CoinType
 
 /**
@@ -49,8 +49,6 @@ import wallet.core.jni.CoinType
  * - Fees are denominated in lamports (1 SOL = 1,000,000,000 lamports).
  * - This service provides both exact fee calculation ([calculateFees]) and a default safe estimate
  *   ([calculateDefaultFees]).
- * - IMPORTANT: Still to be done, proper fee priority estimation. As now, it is fixed values across
- *   all clients in SolanaHelper
  *
  * @property solanaApi API interface for interacting with Solana blockchain RPC endpoints.
  */
@@ -72,11 +70,17 @@ class SolanaFeeService @Inject constructor(private val solanaApi: SolanaApi) : F
         val baseFee = solanaApi.getFeeForMessage(serializedTx)
         val rentExemptionFee = calculateRentExemptionForTokens(toAddress, coin)
 
-        val priorityFee = (SOLANA_PRIORITY_FEE_PRICE * SOLANA_PRIORITY_FEE_LIMIT).toBigInteger()
-        val priorityAmount = priorityFee.toBigDecimal().divide(BigDecimal.TEN.pow(6)).toBigInteger()
+        val solanaPriorityFee =
+            (keySignPayload.blockChainSpecific as BlockChainSpecific.Solana).priorityFee
+        val priorityFee = solanaPriorityFee * SOLANA_PRIORITY_FEE_LIMIT.toBigInteger()
+        val priorityAmount =
+            priorityFee
+                .toBigDecimal()
+                .divide(BigDecimal.TEN.pow(6), RoundingMode.DOWN)
+                .toBigInteger()
 
         return GasFees(
-            price = SOLANA_PRIORITY_FEE_PRICE.toBigInteger(),
+            price = solanaPriorityFee,
             limit = SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
             amount = baseFee + priorityAmount + rentExemptionFee,
         )
@@ -104,7 +108,7 @@ class SolanaFeeService @Inject constructor(private val solanaApi: SolanaApi) : F
         coin: Coin,
         toAddress: String,
         amount: BigInteger,
-    ): KeysignPayload = supervisorScope {
+    ): KeysignPayload = coroutineScope {
         val blockHash = async { solanaApi.getRecentBlockHash() }
 
         val (fromPubAddress, toPubAddress, token2022) =
@@ -127,6 +131,15 @@ class SolanaFeeService @Inject constructor(private val solanaApi: SolanaApi) : F
                 Triple("", "", false)
             }
 
+        val accounts = buildList {
+            add(coin.address)
+            if (!coin.isNativeToken) {
+                if (fromPubAddress.isNotEmpty()) add(fromPubAddress)
+                if (toPubAddress.isNotEmpty()) add(toPubAddress)
+            }
+        }
+        val dynamicPriorityFee = solanaApi.getMedianPriorityFee(accounts)
+
         KeysignPayload(
             coin = coin,
             toAddress = toAddress,
@@ -134,7 +147,7 @@ class SolanaFeeService @Inject constructor(private val solanaApi: SolanaApi) : F
             blockChainSpecific =
                 BlockChainSpecific.Solana(
                     recentBlockHash = blockHash.await(),
-                    priorityFee = SOLANA_PRIORITY_FEE_PRICE.toBigInteger(),
+                    priorityFee = dynamicPriorityFee,
                     fromAddressPubKey = fromPubAddress,
                     toAddressPubKey = toPubAddress,
                     programId = token2022,
@@ -152,12 +165,17 @@ class SolanaFeeService @Inject constructor(private val solanaApi: SolanaApi) : F
             "Invalid Transaction Type: ${transaction::class.simpleName}"
         }
 
-        val priorityFee = (SOLANA_PRIORITY_FEE_PRICE * SOLANA_PRIORITY_FEE_LIMIT).toBigInteger()
+        val dynamicFeePrice = solanaApi.getMedianPriorityFee(listOf(transaction.coin.address))
+        val priorityFee = dynamicFeePrice * SOLANA_PRIORITY_FEE_LIMIT.toBigInteger()
 
-        val priorityAmount = priorityFee.toBigDecimal().divide(BigDecimal.TEN.pow(6)).toBigInteger()
+        val priorityAmount =
+            priorityFee
+                .toBigDecimal()
+                .divide(BigDecimal.TEN.pow(6), RoundingMode.DOWN)
+                .toBigInteger()
 
         return GasFees(
-            price = SOLANA_PRIORITY_FEE_PRICE.toBigInteger(),
+            price = dynamicFeePrice,
             limit = SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
             amount = DEFAULT_COIN_TRANSFER_BASE_FEE + priorityAmount,
         )

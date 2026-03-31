@@ -40,7 +40,6 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
-import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -72,7 +71,6 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
-import com.vultisig.wallet.ui.models.swap.SwapFormViewModel.Companion.AFFILIATE_FEE_USD_THRESHOLD
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
@@ -703,11 +701,7 @@ constructor(
                     }
 
                     is SwapPayload.MayaChain -> {
-                        val srcUsdFiatValue =
-                            convertTokenValueToFiat(srcToken, srcTokenValue, AppCurrency.USD)
-
-                        val isAffiliate =
-                            srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                        val isAffiliate = true
 
                         val quote =
                             swapQuoteRepository.getMayaSwapQuote(
@@ -1231,7 +1225,6 @@ constructor(
             }
     }
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun checkKeygenStarted(): Boolean {
         try {
             this._keysignCommittee = sessionApi.checkCommittee(_serverAddress, _sessionID)
@@ -1240,15 +1233,18 @@ constructor(
             if (this._keysignCommittee.contains(_localPartyID)) {
                 when {
                     _keysignPayload != null -> {
+                        val payload = _keysignPayload ?: error("keysignPayload unexpectedly null")
                         messagesToSign =
                             SigningHelper.getKeysignMessages(
-                                payload = _keysignPayload!!,
+                                payload = payload,
                                 vault = _currentVault,
                             )
                     }
 
                     customMessagePayload != null -> {
-                        messagesToSign = SigningHelper.getKeysignMessages(customMessagePayload!!)
+                        val payload =
+                            customMessagePayload ?: error("customMessagePayload unexpectedly null")
+                        messagesToSign = SigningHelper.getKeysignMessages(payload)
                     }
 
                     else -> {

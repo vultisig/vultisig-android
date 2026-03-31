@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.SPLTokenRequestJson
 import com.vultisig.wallet.data.api.models.SolanaBalanceJson
 import com.vultisig.wallet.data.api.models.SolanaFeeForMessageResponse
-import com.vultisig.wallet.data.api.models.SolanaFeeObjectJson
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectRespJson
 import com.vultisig.wallet.data.api.models.SolanaMinimumBalanceForRentExemptionJson
 import com.vultisig.wallet.data.api.models.SolanaRpcResponseJson
@@ -19,6 +18,7 @@ import com.vultisig.wallet.data.api.models.SplResponseJson
 import com.vultisig.wallet.data.api.models.SplTokenInfo
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.utils.postRpc
+import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
@@ -33,6 +33,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -52,7 +53,7 @@ interface SolanaApi {
 
     suspend fun getRecentBlockHash(): String
 
-    suspend fun getHighPriorityFee(account: String): String
+    suspend fun getMedianPriorityFee(accounts: List<String>): BigInteger
 
     suspend fun broadcastTransaction(tx: String): String?
 
@@ -146,32 +147,32 @@ constructor(
         return rpcResp.result?.value?.blockHash ?: error("getRecentBlockHash error")
     }
 
-    @Deprecated("Perform proper calculation in fee service once decouple from helper")
-    override suspend fun getHighPriorityFee(account: String): String {
-        try {
-            val payload =
-                RpcPayload(
-                    jsonrpc = "2.0",
+    override suspend fun getMedianPriorityFee(accounts: List<String>): BigInteger {
+        val fallback = SOLANA_PRIORITY_FEE_PRICE.toBigInteger()
+        return try {
+            val rpcResp =
+                httpClient.postRpc<SolanaFeeObjectRespJson>(
+                    url = rpcEndpoint,
                     method = "getRecentPrioritizationFees",
-                    params = buildJsonArray { addJsonArray { add(account) } },
-                    id = 1,
+                    params = buildJsonArray { addJsonArray { accounts.forEach { add(it) } } },
                 )
-            val response = httpClient.post(rpcEndpoint) { setBody(payload) }
-            val responseContent = response.bodyAsText()
-            Timber.d(responseContent)
-            val rpcResp = response.body<SolanaFeeObjectRespJson>()
-
-            if (rpcResp.error != null) {
-                Timber.d("get high priority fee  error: ${rpcResp.error}")
-                return ""
+            rpcResp.error?.let {
+                Timber.tag("SolanaApiImp").w("getRecentPrioritizationFees RPC error: %s", it)
             }
-            val fees: List<SolanaFeeObjectJson> =
-                rpcResp.result ?: error("getHighPriorityFee error")
-            return fees.maxOf { it.prioritizationFee }.toString()
+            val nonZeroFees =
+                rpcResp.result
+                    ?.map { it.prioritizationFee }
+                    ?.filter { it > BigInteger.ZERO }
+                    ?.sorted()
+                    .orEmpty()
+            val median = if (nonZeroFees.isEmpty()) fallback else nonZeroFees[nonZeroFees.size / 2]
+            maxOf(median, fallback).coerceAtMost(MAX_PRIORITY_FEE_PRICE.toBigInteger())
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Timber.tag("SolanaApiImp").e("Error getting high priority fee: ${e.message}")
+            Timber.tag("SolanaApiImp").e(e, "Error getting median priority fee")
+            fallback
         }
-        return "0"
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
@@ -393,5 +394,8 @@ constructor(
         private const val TOKEN_PROGRAM_ID_2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
         private const val ENCODING_SPL_REQUEST_PARAM = "jsonParsed"
         private const val DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION = 165
+        // 100x the floor — caps priority fee at ~0.01 SOL per tx to prevent overpayment
+        // during congestion spikes or compromised RPC proxy
+        private const val MAX_PRIORITY_FEE_PRICE = 100_000_000L
     }
 }

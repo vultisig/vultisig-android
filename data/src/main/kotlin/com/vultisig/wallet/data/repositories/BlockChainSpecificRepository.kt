@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
+import com.vultisig.wallet.data.api.DashApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
@@ -81,6 +82,7 @@ constructor(
     private val solanaApi: SolanaApi,
     private val cosmosApiFactory: CosmosApiFactory,
     private val blockChairApi: BlockChairApi,
+    private val dashApi: DashApi,
     private val polkadotApi: PolkadotApi,
     private val bittensorApi: BittensorApi,
     private val suiApi: SuiApi,
@@ -238,29 +240,7 @@ constructor(
             }
 
             TokenStandard.UTXO -> {
-                // TODO: Refactor, delegate Cardano UTXO to WalletCore as BTC
                 if (chain == Chain.Cardano) {
-                    // For send max, don't add fees - let WalletCore handle it
-                    // For regular sends, add estimated fees to ensure we have enough
-                    val baseAmount = tokenAmountValue ?: BigInteger.ZERO
-                    val totalNeeded =
-                        if (isMaxAmountEnabled) baseAmount else baseAmount + gasFee.value
-
-                    val (selectedUTXOs, totalSelected) =
-                        cardanoApi.getUTXOs(token).sortedBy(UtxoInfo::amount).fold(
-                            listOf<UtxoInfo>() to BigInteger.ZERO
-                        ) { (selected, total), utxo ->
-                            if (total >= totalNeeded) selected to total
-                            else (selected + utxo) to (total + BigInteger.valueOf(utxo.amount))
-                        }
-
-                    if (
-                        selectedUTXOs.isEmpty() ||
-                            (!isMaxAmountEnabled && totalSelected < totalNeeded)
-                    ) {
-                        error("Not enough balance for Cardano transaction")
-                    }
-
                     BlockChainSpecificAndUtxo(
                         blockChainSpecific =
                             BlockChainSpecific.Cardano(
@@ -268,8 +248,48 @@ constructor(
                                 sendMaxAmount = isMaxAmountEnabled,
                                 ttl = cardanoApi.calculateDynamicTTL(),
                             ),
-                        utxos = selectedUTXOs,
+                        utxos = cardanoApi.getUTXOs(token),
                     )
+                } else if (chain == Chain.Dash) {
+                    val dashUtxos =
+                        try {
+                            dashApi.getAddressUtxos(address)
+                        } catch (e: Exception) {
+                            Timber.e(e, "Dash RPC failed, falling back to Blockchair")
+                            null
+                        }
+                    if (dashUtxos != null) {
+                        BlockChainSpecificAndUtxo(
+                            blockChainSpecific =
+                                BlockChainSpecific.UTXO(
+                                    byteFee = gasFee.value,
+                                    sendMaxAmount = isMaxAmountEnabled,
+                                ),
+                            utxos = dashUtxos.sortedBy(UtxoInfo::amount),
+                        )
+                    } else {
+                        // Fallback to Blockchair with block_id filtering
+                        val utxos = blockChairApi.getAddressInfo(chain = chain, address = address)
+                        BlockChainSpecificAndUtxo(
+                            blockChainSpecific =
+                                BlockChainSpecific.UTXO(
+                                    byteFee = gasFee.value,
+                                    sendMaxAmount = isMaxAmountEnabled,
+                                ),
+                            utxos =
+                                utxos
+                                    ?.utxos
+                                    ?.filter { it.blockId > 0 }
+                                    ?.sortedBy { it.value }
+                                    ?.map {
+                                        UtxoInfo(
+                                            hash = it.transactionHash,
+                                            amount = it.value,
+                                            index = it.index.toUInt(),
+                                        )
+                                    } ?: emptyList(),
+                        )
+                    }
                 } else {
                     val utxos = blockChairApi.getAddressInfo(chain = chain, address = address)
 
@@ -527,6 +547,12 @@ constructor(
 
             TokenStandard.TRC20 -> {
                 val specific = tronApi.getSpecific()
+                val energyPrice =
+                    try {
+                        tronApi.getChainParameters().energyFee.takeIf { it > 0L }
+                    } catch (_: Exception) {
+                        null
+                    } ?: ENERGY_TO_SUN_FACTOR.toLong()
                 val now = Clock.System.now()
                 val expiration = now + 1.hours
                 val rawData = specific.blockHeader.rawData
@@ -547,7 +573,7 @@ constructor(
                                 )
 
                             val totalEnergy = triggerResult.energyUsed + triggerResult.energyPenalty
-                            totalEnergy * ENERGY_TO_SUN_FACTOR
+                            totalEnergy * energyPrice
                         }
 
                 BlockChainSpecificAndUtxo(

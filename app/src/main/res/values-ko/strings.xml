@@ -8,7 +8,9 @@
     <string name="push_notification_error_vault_not_supported">볼트가 알림을 지원하지 않습니다</string>
     <string name="push_notification_error_token_not_available">알림 토큰을 가져오지 못했습니다</string>
     <string name="push_notification_error_api_failure">알림 등록 업데이트에 실패했습니다</string>
-    <string name="push_notification_partial_failure">%1$d / %2$d 볼트 업데이트됨, %3$d 실패</string>
+    <plurals name="push_notification_partial_failure">
+        <item quantity="other">%1$d / %2$d 볼트 업데이트됨, %3$d 실패</item>
+    </plurals>
     <string name="push_notifications_sent">알림이 성공적으로 전송되었습니다</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">서명이 필요하거나 기기가 접근을 요청할 때 알림을 받으세요.</string>
     <string name="keysign_notification_channel_name">서명 요청</string>
@@ -81,6 +83,8 @@
     <string name="vault_settings_rename_subtitle">볼트 이름 수정</string>
     <string name="vault_settings_reshare_title">재공유</string>
     <string name="vault_settings_reshare_subtitle">새로운 구성원과 볼트 재공유</string>
+    <string name="vault_settings_dilithium_keygen_title">QBTC 활성화</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">QBTC 체인을 활성화하기 위한 키 생성</string>
     <string name="vault_settings_delete_title">삭제</string>
     <string name="vault_settings_delete_subtitle">볼트를 영구적으로 삭제합니다.</string>
     <string name="vault_settings_security_title">온체인 보안</string>
@@ -205,6 +209,7 @@
     <string name="keysign_screen_preparing_vault">볼트 준비 중…</string>
     <string name="keysign_screen_signing_with_ecdsa">ECDSA로 서명 중…</string>
     <string name="keysign_screen_signing_with_eddsa">EdDSA로 서명 중…</string>
+    <string name="keysign_screen_signing_with_mldsa">MLDSA로 서명 중…</string>
     <string name="keysign_screen_keysign_finished">서명 완료!</string>
     <string name="keysign_screen_error_please_try_again">오류! 다시 시도해 주세요. %1$s</string>
     <string name="successfully_scanned_barcode">바코드 스캔 성공: %1$s</string>
@@ -387,7 +392,7 @@
     <string name="vault_details_screen_vault_part">볼트 공유</string>
     <string name="vault_details_screen_vault_type">볼트 유형</string>
     <string name="vault_settings_delete_vault_part">볼트 공유:</string>
-    <string name="vault_password_hint_to_long">힌트가 너무 깁니다</string>
+    <string name="vault_password_hint_too_long">힌트가 너무 깁니다</string>
     <string name="vault_details_screen_vault_part_desc">공유 %1$s-of-%2$s</string>
     <string name="do_not_remind_me_again">다시 알리지 않기</string>
     <string name="monthly_backup_reminder_title">볼트 공유를 백업하고 완전성을 확인하는 것을 잊지 마세요.</string>
@@ -434,7 +439,9 @@
     <string name="dialog_default_error_body">문제가 발생했습니다</string>
     <string name="address_bookmark_error_invalid_address">이 주소는 %s에 유효하지 않습니다</string>
     <string name="address_bookmark_error_empty_label">라벨을 입력해 주세요</string>
-    <string name="address_bookmark_error_invalid_label">라벨은 1자 이상 %d자 이하여야 합니다</string>
+    <plurals name="address_bookmark_error_invalid_label">
+        <item quantity="other">라벨은 1자 이상 %d자 이하여야 합니다</item>
+    </plurals>
     <string name="send_form_ripple_reaping_warning">수수료를 충당할 충분한 자금을 남겨두세요. 계정 잔액이 1 XRP(최소 예치금) 아래로 떨어지면 계정이 비활성화(수확)되고 남은 자금이 손실됩니다. 언제든지 최소 예치금보다 큰 새 입금으로 주소를 재활성화할 수 있습니다. 그러나 손실된 자금은 복구되지 않습니다.</string>
     <string name="error_invalid_chain">체인이 유효하지 않습니다</string>
     <string name="send_error_invalid_plan_fee">유효하지 않은 플랜 수수료</string>
@@ -509,6 +516,7 @@
     <string name="keygen_step_preparing_vault">볼트 준비 중</string>
     <string name="keygen_step_generating_ecdsa">ECDSA 키 생성 중</string>
     <string name="keygen_step_generating_eddsa">EdDSA 키 생성 중</string>
+    <string name="keygen_step_generating_mldsa">MLDSA 키 생성 중</string>
     <string name="keygen_step_generating_chain_keys">체인 키 생성 중</string>
     <string name="reshare_step_generating_ecdsa">ECDSA 키 생성 중</string>
     <string name="reshare_step_generating_eddsa">EdDSA 키 생성 중</string>
@@ -547,7 +555,7 @@
     <string name="vault_backup_error_pin">코드 확인 오류, 다시 시도해 주세요</string>
     <string name="vault_backup_verifying_pin">코드 확인 중, 잠시 기다려 주세요</string>
     <string name="vault_backup_screen_email_sent_to">%s(으)로 전송됨.</string>
-    <string name="vault_backup_screen_donot_recieve_email">이메일을 받지 못하셨나요?</string>
+    <string name="vault_backup_screen_donot_receive_email">이메일을 받지 못하셨나요?</string>
     <string name="vault_backup_screen_restart_keygen">키 생성 재시작</string>
     <string name="vault_backup_summary_choose_chains">체인 선택</string>
     <string name="transaction_done_form_approve">승인</string>
@@ -635,7 +643,7 @@
     <string name="referral_edit_referral">추천 수정</string>
     <string name="referral_external_linked">추천 코드가 성공적으로 연결되었습니다</string>
     <string name="referral_external_not_linked">추천 코드가 존재하지 않습니다</string>
-    <string name="referral_external_not_failed">추천 코드 확인 실패</string>
+    <string name="referral_external_link_failed">추천 코드 확인 실패</string>
     <string name="referral_onboarding_title">추천</string>
     <string name="referral_onboarding_get_started">시작하기</string>
 
@@ -753,7 +761,9 @@
     <string name="backup_select_vaults_subtitle">이 볼트만 백업할지 앱의 모든 볼트를 백업할지 선택하세요.</string>
     <string name="backup_this_vault_only">이 볼트만</string>
     <string name="backup_all_vaults">모든 볼트</string>
-    <string name="more">+%1$d 더 보기</string>
+    <plurals name="more">
+        <item quantity="other">+%1$d 더 보기</item>
+    </plurals>
     <string name="backup_choose_method_title">백업 방법 선택</string>
     <string name="backup_device_desc">이 기기의 볼트 공유를 저장합니다.</string>
     <string name="backup_device_title">기기 백업</string>
@@ -839,10 +849,16 @@
     <string name="keysign_password_enter_your_password">비밀번호를 입력하세요</string>
     <string name="migration_password_enter_your_password_to_unlock">서버 공유를 잠금 해제하고 업그레이드를 시작하려면 비밀번호를 입력하세요</string>
     <string name="name_vault_vault_with_this_name_already_exists">이 이름의 볼트가 이미 존재합니다</string>
+    <string name="name_vault_server_exists_warning_title">빠른 볼트가 이미 존재합니다</string>
+    <string name="name_vault_server_exists_warning_message">이 시드 구문을 사용하는 빠른 볼트가 이미 서버에 존재합니다. 새로운 빠른 볼트를 생성하면 서버 공유가 대체되어 기존 볼트를 사용할 수 없게 됩니다. 대신 보안 볼트 사용을 고려하세요.</string>
+    <string name="name_vault_server_exists_warning_continue">계속</string>
+    <string name="name_vault_server_exists_warning_back">뒤로</string>
     <string name="referral_create_status">상태</string>
     <string name="referral_create_unknown">알 수 없음</string>
     <string name="referral_code_cannot_be_empty">추천 코드를 입력해 주세요</string>
-    <string name="referral_code_can_be_up_to_characters">추천 코드는 최대 %1$d자까지 가능합니다</string>
+    <plurals name="referral_code_can_be_up_to_characters">
+        <item quantity="other">추천 코드는 최대 %1$d자까지 가능합니다</item>
+    </plurals>
     <string name="error_loading_information">정보 로딩 오류</string>
     <string name="referral_view_expires_on">만료일</string>
     <string name="send_form_balance_available">사용 가능한 잔액:</string>
@@ -858,7 +874,7 @@
     <string name="swap_transaction_overview_approval_tx_hash">승인 Tx 해시</string>
     <string name="swap_transaction_overview_track">추적</string>
     <string name="token_selection_screen_select_tokens">토큰 선택</string>
-    <string name="token_selecton_screen_enable_at_least_one">잔액을 확인하고 포지션을 관리하려면 최소 하나의 토큰을 활성화하세요.</string>
+    <string name="token_selection_screen_enable_at_least_one">잔액을 확인하고 포지션을 관리하려면 최소 하나의 토큰을 활성화하세요.</string>
     <string name="transfer_ibc_destination_chain">수신 체인</string>
     <string name="tx_done_transaction_details">거래 상세</string>
     <string name="vault_confirmation_vault_upgraded">"볼트가 업그레이드되었습니다 "</string>
@@ -866,7 +882,7 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">새로운 지갑 표준을 사용할 준비가 되었습니다.</string>
     <string name="vault_detail_vault_info">볼트 정보</string>
     <string name="vault_details_keys">키</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">생체 인증 빠른 서명 활성화</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">생체 인증 빠른 서명 활성화</string>
     <string name="verify_send_send_overview">보내기 개요</string>
     <string name="verify_swap_swap_overview">스왑 개요</string>
     <string name="rename_vault_screen_rename_vault">볼트 이름 변경</string>
@@ -893,8 +909,8 @@
     <string name="enable_at_least_one_position">잔액을 확인하고 포지션을 관리하려면 최소 하나의 포지션을 활성화하세요.</string>
     <string name="bandwidth">대역폭</string>
     <string name="energy">에너지</string>
-    <string name="bandwidth_dec">대역폭 포인트는 표준 토큰 전송 및 스마트 컨트랙트 상호작용을 포함하여 TRON의 모든 거래에 필요합니다. 모든 TRON 사용자는 하루에 600개의 무료 대역폭 포인트를 받으며, 이는 약 2건의 기본 전송을 처리할 수 있습니다. 또한 TRX를 스테이킹하여 추가 대역폭 포인트를 얻어 더 많은 거래를 지원할 수 있습니다. 충분한 대역폭 포인트가 있으면 TRX 가스 수수료 없이 토큰을 보내거나, TRX를 스테이킹하거나, 스마트 컨트랙트와 상호작용할 수 있습니다.</string>
-    <string name="energy_dec">스왑이나 dApp 거래와 같은 스마트 컨트랙트 상호작용 등 더 복잡한 작업에 필요합니다. 대역폭과 달리 에너지는 무료로 제공되지 않으며, TRX를 스테이킹하여 얻어야 합니다. (고급 사용자는 JustLend나 Tronify의 에너지 대여 시장과 같은 리스 메커니즘을 통해 에너지를 얻을 수도 있습니다). 그러나 에너지를 보유하면 스마트 컨트랙트 상호작용의 가스 수수료를 크게 줄이거나 아예 없앨 수 있어, TRON dApp을 자주 사용하는 사용자에게 유용합니다.</string>
+    <string name="bandwidth_desc">대역폭 포인트는 표준 토큰 전송 및 스마트 컨트랙트 상호작용을 포함하여 TRON의 모든 거래에 필요합니다. 모든 TRON 사용자는 하루에 600개의 무료 대역폭 포인트를 받으며, 이는 약 2건의 기본 전송을 처리할 수 있습니다. 또한 TRX를 스테이킹하여 추가 대역폭 포인트를 얻어 더 많은 거래를 지원할 수 있습니다. 충분한 대역폭 포인트가 있으면 TRX 가스 수수료 없이 토큰을 보내거나, TRX를 스테이킹하거나, 스마트 컨트랙트와 상호작용할 수 있습니다.</string>
+    <string name="energy_desc">스왑이나 dApp 거래와 같은 스마트 컨트랙트 상호작용 등 더 복잡한 작업에 필요합니다. 대역폭과 달리 에너지는 무료로 제공되지 않으며, TRX를 스테이킹하여 얻어야 합니다. (고급 사용자는 JustLend나 Tronify의 에너지 대여 시장과 같은 리스 메커니즘을 통해 에너지를 얻을 수도 있습니다). 그러나 에너지를 보유하면 스마트 컨트랙트 상호작용의 가스 수수료를 크게 줄이거나 아예 없앨 수 있어, TRON dApp을 자주 사용하는 사용자에게 유용합니다.</string>
     <string name="tron" translatable="false">Tron</string>
     <string name="tron_bandwidth_energy_title" translatable="false"><![CDATA["Bandwidth & Energy "]]></string>
 
@@ -938,7 +954,9 @@
     <string name="solana_instruction_number">명령어 %1$d</string>
     <string name="solana_program_name">프로그램: %1$s</string>
     <string name="solana_program_id">프로그램 ID: %1$s</string>
-    <string name="solana_accounts_data">계정: %1$d | 데이터 길이: %2$d 바이트</string>
+    <plurals name="solana_accounts_data">
+        <item quantity="other">계정: %1$d | 데이터 길이: %2$d 바이트</item>
+    </plurals>
     <string name="vault_count_recommended">권장</string>
 
     <!-- Key Import / Feature Spotlight -->
@@ -987,7 +1005,9 @@
     <string name="import_seedphrase_subtitle">12자 또는 24자 복구 구문을 입력하세요</string>
     <string name="import_seedphrase_label">시드 구문</string>
     <string name="import_seedphrase_hint">복구 구문을 입력하세요…</string>
-    <string name="import_seedphrase_word_count">%1$d / %2$d 단어</string>
+    <plurals name="import_seedphrase_word_count">
+        <item quantity="other">%1$d / %2$d 단어</item>
+    </plurals>
     <string name="import_seedphrase_invalid_word_count">%1$s 단어를 입력하셨습니다. 시드 구문은 12 또는 24 단어여야 합니다</string>
     <string name="import_seedphrase_invalid_phrase">유효하지 않은 시드 구문</string>
     <string name="import_seedphrase_already_imported">이 시드 구문은 이미 가져온 상태입니다</string>
@@ -1027,7 +1047,7 @@
     <string name="welcome_fast_and_easy">빠르고 간편</string>
     <string name="welcome_fast_and_easy_desc">기기 1대로만 서명. 보안 서버가 멀티시그 보안을 위해 함께 서명합니다. 플러그인 호환.</string>
     <string name="welcome_fast_and_easy_highlight">기기 1대로만.</string>
-    <string name="welcome_plugin_compatible">플러그인 마켓플레이스 호환</string>
+    <string name="welcome_plugin_compatible">플러그인 스토어 호환</string>
     <string name="welcome_tip">팁: 브라우저를 기기로 사용할 수 있습니다</string>
     <string name="welcome_only_your_devices">내 기기만 사용</string>
     <string name="welcome_only_your_devices_desc">내 기기만이 승인된 서명자입니다. 거래 서명에 기기 2대가 필요합니다. 완전한 자기 수탁.</string>
@@ -1093,7 +1113,9 @@
     <string name="vault_setup_add_as_many_devices_as_you_want">원하는 만큼 기기를 추가하고 기관급 보안을 받으세요.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">팀과 트레저리를 위해 설계</string>
     <string name="vault_setup_back_up_each_device">각 기기를 백업하세요</string>
-    <string name="vault_setup_you_ll_create_n_backups_in_total">총 %1$d개의 백업을 생성합니다. 각 기기에서 이 작업을 수행합니다.</string>
+    <plurals name="vault_setup_you_ll_create_n_backups_in_total">
+        <item quantity="other">총 %1$d개의 백업을 생성합니다. 각 기기에서 이 작업을 수행합니다.</item>
+    </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">각 백업을 다른 클라우드 서비스나 다른 비밀번호로 저장하세요. 하나가 노출되어도 자금은 안전합니다.</string>
     <string name="vault_setup_i_understand">이해했습니다</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">클라우드에 백업 %1$d/%2$d 저장</string>

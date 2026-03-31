@@ -87,7 +87,7 @@ internal fun DiscountTiersScreen(model: DiscountTiersViewModel = hiltViewModel()
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.tiers_header),
-                    contentDescription = "Provider Logo",
+                    contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.matchParentSize(),
                 )
@@ -302,13 +302,15 @@ private fun TierCard(
                         }
                     }
 
-                    UiSpacer(size = 16.dp)
+                    if (!isActive) {
+                        UiSpacer(size = 16.dp)
 
-                    VsButton(
-                        label = stringResource(R.string.vault_tier_unlock),
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = onClickUnlock,
-                    )
+                        VsButton(
+                            label = stringResource(R.string.vault_tier_unlock),
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = onClickUnlock,
+                        )
+                    }
                 }
             }
         }

@@ -110,7 +110,7 @@ private fun ReferralScreen(
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Image(
                     painter = painterResource(id = R.drawable.crypto_natives_v2),
-                    contentDescription = "ReferralImage",
+                    contentDescription = null,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

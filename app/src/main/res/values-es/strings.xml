@@ -10,6 +10,8 @@
     <string name="vault_settings_rename_subtitle">Editar el nombre de tu bóveda</string>
     <string name="vault_settings_reshare_title">Recompartir</string>
     <string name="vault_settings_reshare_subtitle">Recompartir bóveda con un nuevo comité</string>
+    <string name="vault_settings_dilithium_keygen_title">Habilitar QBTC</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generar clave para habilitar la cadena QBTC</string>
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="swap_form_on_chain">en</string>
     <string name="select_asset_title">Seleccionar activo</string>
@@ -147,6 +149,7 @@
     <string name="keysign_screen_preparing_vault">PREPARANDO BÓVEDA..</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO USANDO CLAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">FIRMANDO USANDO CLAVE EdDSA…</string>
+    <string name="keysign_screen_signing_with_mldsa">FIRMANDO USANDO CLAVE MLDSA…</string>
     <string name="keysign_screen_keysign_finished">¡Keysign terminado!</string>
     <string name="keysign_screen_error_please_try_again">Error! Por favor, inténtalo de nuevo. %1$s</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado con éxito: %1$s</string>
@@ -307,7 +310,7 @@
     <string name="vault_details_screen_vault_part">Compartir de la bóveda</string>
     <string name="vault_details_screen_vault_type">Tipo de bóveda</string>
     <string name="vault_settings_delete_vault_part">Compartir de la bóveda:</string>
-    <string name="vault_password_hint_to_long">La pista es demasiado larga</string>
+    <string name="vault_password_hint_too_long">La pista es demasiado larga</string>
     <string name="vault_details_screen_vault_part_desc">Compartir %1$s-de-%2$s</string>
     <string name="do_not_remind_me_again">No me lo recuerdes otra vez</string>
     <string name="monthly_backup_reminder_title">No olvides hacer una copia de seguridad de tus recursos compartidos de bóveda y verificar que estén completos.</string>
@@ -344,7 +347,10 @@
     <string name="push_notification_error_vault_not_supported">La bóveda no admite notificaciones</string>
     <string name="push_notification_error_token_not_available">No se pudo obtener el token de notificación</string>
     <string name="push_notification_error_api_failure">No se pudo actualizar el registro de notificaciones</string>
-    <string name="push_notification_partial_failure">%1$d de %2$d bóvedas actualizadas, %3$d fallidas</string>
+    <plurals name="push_notification_partial_failure">
+        <item quantity="one">%1$d de %2$d bóveda actualizada, %3$d fallida</item>
+        <item quantity="other">%1$d de %2$d bóvedas actualizadas, %3$d fallidas</item>
+    </plurals>
     <string name="push_notifications_sent">Notificación enviada correctamente</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Recibe una notificación cuando se requiera tu firma o un dispositivo solicite acceso.</string>
     <string name="keysign_notification_channel_name">Solicitudes de firma</string>
@@ -415,6 +421,7 @@
     <string name="keygen_step_preparing_vault">Preparando la bóveda</string>
     <string name="keygen_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="keygen_step_generating_eddsa">Generación de clave EdDSA</string>
+    <string name="keygen_step_generating_mldsa">Generación de clave MLDSA</string>
     <string name="keygen_step_generating_chain_keys">Generación de claves de cadena</string>
     <string name="keygen_connecting_with_server">Conectando con el servidor…</string>
     <string name="reshare_step_generating_ecdsa">Generación de clave ECDSA</string>
@@ -454,7 +461,7 @@
     <string name="referral_edit_referral">Editar referencia</string>
     <string name="referral_external_linked">Código de referido vinculado con éxito</string>
     <string name="referral_external_not_linked">El código de referido no existe</string>
-    <string name="referral_external_not_failed">Error al verificar el código de referido</string>
+    <string name="referral_external_link_failed">Error al verificar el código de referido</string>
     <string name="referral_invite_next">Siguiente</string>
     <string name="referral_code_settings_title">Código de referido</string>
     <string name="referral_screen_title">Vultisig - Referidos</string>
@@ -557,7 +564,10 @@
     <string name="backup_select_vaults_subtitle">Elige si quieres respaldar solo esta bóveda o todas las bóvedas de tu aplicación.</string>
     <string name="backup_this_vault_only">Solo esta bóveda</string>
     <string name="backup_all_vaults">Todas las bóvedas</string>
-    <string name="more">+%1$d más</string>
+    <plurals name="more">
+        <item quantity="one">+%1$d más</item>
+        <item quantity="other">+%1$d más</item>
+    </plurals>
     <string name="backup_choose_method_title">Seleccionar método de copia de seguridad</string>
     <string name="backup_device_desc">Almacenar el recurso compartido de la bóveda de este dispositivo.</string>
     <string name="backup_device_title">Copia de seguridad del dispositivo</string>
@@ -612,10 +622,10 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Listo para usar un nuevo estándar de billetera.</string>
     <string name="vault_detail_vault_info">Información de la bóveda</string>
     <string name="vault_details_keys">Claves</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Habilitar la firma rápida biométrica</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">Habilitar la firma rápida biométrica</string>
     <string name="verify_send_send_overview">Enviar resumen</string>
     <string name="verify_swap_swap_overview">Resumen de intercambio</string>
-    <string name="token_selecton_screen_enable_at_least_one">Habilite al menos un token para ver saldos y gestionar posiciones.</string>
+    <string name="token_selection_screen_enable_at_least_one">Habilite al menos un token para ver saldos y gestionar posiciones.</string>
     <string name="transfer_ibc_destination_chain">Cadena de destino</string>
     <string name="tx_done_transaction_details">Detalles de la transacción</string>
     <string name="vault_confirmation_vault_upgraded">Bóveda mejorada</string>
@@ -636,10 +646,17 @@
     <string name="send_form_add_memo">Añadir MEMO</string>
     <string name="send_form_enter_memo">Ingresar Memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Ya existe una bóveda con este nombre.</string>
+    <string name="name_vault_server_exists_warning_title">La bóveda rápida ya existe</string>
+    <string name="name_vault_server_exists_warning_message">Ya existe una bóveda rápida con esta frase semilla en el servidor. Crear una nueva bóveda rápida reemplazará el recurso compartido del servidor y hará que la bóveda existente quede inutilizable. Considere usar una bóveda segura en su lugar.</string>
+    <string name="name_vault_server_exists_warning_continue">Continuar</string>
+    <string name="name_vault_server_exists_warning_back">Volver</string>
     <string name="referral_create_status">Estado</string>
     <string name="referral_create_unknown">Desconocido</string>
     <string name="referral_code_cannot_be_empty">El código de referencia no puede estar vacío.</string>
-    <string name="referral_code_can_be_up_to_characters">El código de referencia puede tener hasta %1$d caracteres.</string>
+    <plurals name="referral_code_can_be_up_to_characters">
+        <item quantity="one">El código de referencia puede tener hasta %1$d carácter.</item>
+        <item quantity="other">El código de referencia puede tener hasta %1$d caracteres.</item>
+    </plurals>
     <string name="key_gen_discovery_no_connection_available">No hay conexión disponible</string>
     <string name="key_gen_discovery_enable_wifi">Habilite el wifi o el móvil para firmar la transacción.</string>
     <string name="keygen_screen_upgrading_vault">Actualizando la bóveda.</string>
@@ -711,7 +728,10 @@
     <string name="backup_password_request_no_password_action">Copia de seguridad sin contraseña</string>
     <string name="address_bookmark_error_invalid_address">Esta dirección no es válida para %s</string>
     <string name="address_bookmark_error_empty_label">La etiqueta no puede estar vacía</string>
-    <string name="address_bookmark_error_invalid_label">La etiqueta debe tener entre 1 y %d caracteres</string>
+    <plurals name="address_bookmark_error_invalid_label">
+        <item quantity="one">La etiqueta debe tener entre 1 y %d carácter</item>
+        <item quantity="other">La etiqueta debe tener entre 1 y %d caracteres</item>
+    </plurals>
     <string name="send_form_ripple_reaping_warning">Asegúrate de tener fondos suficientes para cubrir las comisiones. Si el saldo de una cuenta cae por debajo de 1 XRP (Depósito Existente), la cuenta se desactivará (se liquidará) y los fondos restantes se perderán. Puedes reactivar la dirección con un nuevo depósito superior al depósito existente en cualquier momento. Sin embargo, esto no recuperará los fondos perdidos.</string>
     <string name="error_invalid_chain">La cadena no es válida.</string>
     <string name="vault_backup_verifying_pin">Verificando código, por favor espere</string>
@@ -734,7 +754,7 @@
     <string name="peer_discovery_waiting_for_devices_action">Esperando dispositivos…</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivos (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Enviado a %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email">¿No recibiste un correo?</string>
+    <string name="vault_backup_screen_donot_receive_email">¿No recibiste un correo?</string>
     <string name="onboarding_desc_page_5_part_2">por separado en un</string>
     <string name="onboarding_desc_page_5_part_3">Otra ubicación</string>
     <string name="scan_qr_code_modal_annotation">Descarga Vultisig en tus otros dispositivos y selecciona «Escanear código QR».</string>
@@ -839,8 +859,8 @@
     <string name="enable_at_least_one_position">Habilite al menos una posición para ver saldos y gestionar posiciones.</string>
     <string name="bandwidth">Ancho de banda</string>
     <string name="energy">Energía</string>
-    <string name="bandwidth_dec">Se requieren Puntos de Ancho de Banda para cada transacción en TRON, incluyendo tanto los envíos de tokens estándar como las interacciones con contratos inteligentes. Cada usuario de TRON recibe 600 Puntos de Ancho de Banda gratuitos al día, que pueden cubrir aproximadamente dos envíos básicos. Además, puedes ganar Puntos de Ancho de Banda adicionales al hacer staking de TRX, lo que aumenta tu saldo diario para soportar más transacciones. Si tienes suficientes Puntos de Ancho de Banda, puedes enviar tokens, hacer staking de TRX o interactuar con contratos inteligentes sin pagar TRX en comisiones de gas.</string>
-    <string name="energy_dec">Se requiere para acciones más complejas, como interactuar con contratos inteligentes (por ejemplo, swaps o transacciones de dApps). A diferencia del Ancho de Banda, la Energía no es gratuita; necesitas hacer staking de TRX para obtenerla. (Los usuarios más avanzados también pueden adquirir Energía mediante mecanismos de leasing como JustLend o los mercados de alquiler de Energía de Tronify). Sin embargo, tener Energía puede reducir significativamente o incluso eliminar las comisiones de gas para las interacciones con contratos inteligentes, lo que la hace valiosa para quienes usan dApps de TRON con frecuencia.</string>
+    <string name="bandwidth_desc">Se requieren Puntos de Ancho de Banda para cada transacción en TRON, incluyendo tanto los envíos de tokens estándar como las interacciones con contratos inteligentes. Cada usuario de TRON recibe 600 Puntos de Ancho de Banda gratuitos al día, que pueden cubrir aproximadamente dos envíos básicos. Además, puedes ganar Puntos de Ancho de Banda adicionales al hacer staking de TRX, lo que aumenta tu saldo diario para soportar más transacciones. Si tienes suficientes Puntos de Ancho de Banda, puedes enviar tokens, hacer staking de TRX o interactuar con contratos inteligentes sin pagar TRX en comisiones de gas.</string>
+    <string name="energy_desc">Se requiere para acciones más complejas, como interactuar con contratos inteligentes (por ejemplo, swaps o transacciones de dApps). A diferencia del Ancho de Banda, la Energía no es gratuita; necesitas hacer staking de TRX para obtenerla. (Los usuarios más avanzados también pueden adquirir Energía mediante mecanismos de leasing como JustLend o los mercados de alquiler de Energía de Tronify). Sin embargo, tener Energía puede reducir significativamente o incluso eliminar las comisiones de gas para las interacciones con contratos inteligentes, lo que la hace valiosa para quienes usan dApps de TRON con frecuencia.</string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">Dirección del Nodo</string>
@@ -881,7 +901,10 @@
     <string name="solana_instruction_number">Instrucción %1$d</string>
     <string name="solana_program_name">Programa: %1$s</string>
     <string name="solana_program_id">ID del programa: %1$s</string>
-    <string name="solana_accounts_data">Cuentas: %1$d | Longitud de datos: %2$d bytes</string>
+    <plurals name="solana_accounts_data">
+        <item quantity="one">Cuenta: %1$d | Longitud de datos: %2$d byte</item>
+        <item quantity="other">Cuentas: %1$d | Longitud de datos: %2$d bytes</item>
+    </plurals>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Antes de empezar…</string>
@@ -929,7 +952,10 @@
     <string name="import_seedphrase_subtitle">Ingrese su frase de recuperación de 12 o 24 palabras</string>
     <string name="import_seedphrase_label">Frase semilla</string>
     <string name="import_seedphrase_hint">Ingrese su frase de recuperación…</string>
-    <string name="import_seedphrase_word_count">%1$d / %2$d palabras</string>
+    <plurals name="import_seedphrase_word_count">
+        <item quantity="one">%1$d / %2$d palabra</item>
+        <item quantity="other">%1$d / %2$d palabras</item>
+    </plurals>
     <string name="import_seedphrase_invalid_word_count">Ingresaste %1$s palabras. La frase semilla debe tener 12 o 24 palabras</string>
     <string name="import_seedphrase_invalid_phrase">Frase semilla no válida</string>
     <string name="import_seedphrase_already_imported">Esta frase semilla ya ha sido importada</string>
@@ -969,7 +995,7 @@
     <string name="welcome_fast_and_easy">Rápido &amp; fácil</string>
     <string name="welcome_fast_and_easy_desc">Firma con solo 1 dispositivo. Nuestro servidor seguro firma contigo para seguridad multisig. Compatible con plugins.</string>
     <string name="welcome_fast_and_easy_highlight">solo 1 dispositivo.</string>
-    <string name="welcome_plugin_compatible">Compatible con Plugin Marketplace</string>
+    <string name="welcome_plugin_compatible">Compatible con Plugin Store</string>
     <string name="welcome_tip">Consejo: Puedes usar un navegador como dispositivo</string>
     <string name="welcome_only_your_devices">Solo tus dispositivos</string>
     <string name="welcome_only_your_devices_desc">Solo tus dispositivos son firmantes autorizados. Firmar transacciones requiere 2 dispositivos. Autocustodia total al alcance de tu mano.</string>
@@ -1035,7 +1061,10 @@
     <string name="vault_setup_add_as_many_devices_as_you_want">Agrega tantos dispositivos como quieras y obtén seguridad de nivel institucional.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Diseñado para equipos y tesorerías</string>
     <string name="vault_setup_back_up_each_device">Hacer copia de seguridad de cada dispositivo</string>
-    <string name="vault_setup_you_ll_create_n_backups_in_total">Crearás %1$d copias de seguridad en total. Lo harás en cada dispositivo.</string>
+    <plurals name="vault_setup_you_ll_create_n_backups_in_total">
+        <item quantity="one">Crearás %1$d copia de seguridad en total. Lo harás en cada dispositivo.</item>
+        <item quantity="other">Crearás %1$d copias de seguridad en total. Lo harás en cada dispositivo.</item>
+    </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Guarda cada copia de seguridad en un servicio de nube diferente o con una contraseña diferente. Si una se ve comprometida, tus fondos estarán seguros.</string>
     <string name="vault_setup_i_understand">Entiendo</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Guardar copia de seguridad %1$d de %2$d en la nube</string>

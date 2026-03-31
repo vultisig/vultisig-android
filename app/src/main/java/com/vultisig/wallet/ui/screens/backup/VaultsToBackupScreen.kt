@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -264,7 +265,7 @@ private fun BackupVaultContainer(
 private fun RemainedCountText(remainedCount: Int?) {
     remainedCount?.let {
         Text(
-            text = stringResource(R.string.more, remainedCount),
+            text = pluralStringResource(R.plurals.more, remainedCount, remainedCount),
             color = Theme.v2.colors.text.secondary,
             style = Theme.brockmann.supplementary.footnote,
             textAlign = TextAlign.Center,

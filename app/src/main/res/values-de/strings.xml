@@ -8,6 +8,8 @@
     <string name="vault_settings_rename_subtitle">Den Namen Ihres Tresors bearbeiten</string>
     <string name="vault_settings_reshare_title">Erneut teilen</string>
     <string name="vault_settings_reshare_subtitle">Tresor mit einem neuen Komitee erneut teilen</string>
+    <string name="vault_settings_dilithium_keygen_title">QBTC aktivieren</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Schlüssel generieren, um die QBTC-Blockchain zu aktivieren</string>
     <string name="vault_settings_delete_title">Löschen</string>
     <string name="select_asset_title">Asset auswählen</string>
     <string name="select_asset_no_result">Kein Ergebnis gefunden.</string>
@@ -121,6 +123,7 @@
     <string name="keysign_screen_preparing_vault">TRESOR VORBEREITEN…</string>
     <string name="keysign_screen_signing_with_ecdsa">MIT ECDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
     <string name="keysign_screen_signing_with_eddsa">MIT EdDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
+    <string name="keysign_screen_signing_with_mldsa">MIT MLDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
     <string name="vault_settings_delete_vault_caution1">Mir ist bewusst, dass der Tresor dauerhaft gelöscht wird</string>
     <string name="vault_settings_delete_vault_caution2">Mir ist bewusst, dass ich Geld verlieren kann</string>
     <string name="vault_settings_delete_vault_caution3">Ich habe eine Sicherung des Tresors erstellt</string>
@@ -307,7 +310,7 @@
     <string name="vault_details_screen_vault_part">Tresorteil</string>
     <string name="vault_details_screen_vault_type">Tresortyp</string>
     <string name="vault_settings_delete_vault_part">Tresorteil:</string>
-    <string name="vault_password_hint_to_long">Der Hinweis ist zu lang</string>
+    <string name="vault_password_hint_too_long">Der Hinweis ist zu lang</string>
     <string name="vault_details_screen_vault_part_desc">Teilen %1$s-von-%2$s</string>
     <string name="do_not_remind_me_again">Erinnere mich nicht mehr daran</string>
     <string name="monthly_backup_reminder_title">Vergessen Sie nicht, Ihre Tresorfreigaben zu sichern und die Vollständigkeit zu überprüfen.</string>
@@ -344,7 +347,10 @@
     <string name="push_notification_error_vault_not_supported">Tresor unterstützt keine Benachrichtigungen</string>
     <string name="push_notification_error_token_not_available">Benachrichtigungstoken konnte nicht abgerufen werden</string>
     <string name="push_notification_error_api_failure">Benachrichtigungsregistrierung konnte nicht aktualisiert werden</string>
-    <string name="push_notification_partial_failure">%1$d von %2$d Tresoren aktualisiert, %3$d fehlgeschlagen</string>
+    <plurals name="push_notification_partial_failure">
+        <item quantity="one">%1$d von %2$d Tresoren aktualisiert, %3$d fehlgeschlagen</item>
+        <item quantity="other">%1$d von %2$d Tresoren aktualisiert, %3$d fehlgeschlagen</item>
+    </plurals>
     <string name="push_notifications_sent">Benachrichtigung erfolgreich gesendet</string>
     <string name="get_notified_when_your_signature_is_required_or_a_device_requests_access">Erhalten Sie eine Benachrichtigung, wenn Ihre Unterschrift erforderlich ist oder ein Gerät Zugriff anfordert.</string>
     <string name="keysign_notification_channel_name">Keysign-Anfragen</string>
@@ -417,6 +423,7 @@
     <string name="reshare_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
     <string name="keygen_connecting_with_server">Mit Server verbinden …</string>
     <string name="keygen_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
+    <string name="keygen_step_generating_mldsa">Generieren eines MLDSA-Schlüssels</string>
     <string name="keygen_step_generating_chain_keys">Blockchain-Schlüssel generieren</string>
     <string name="reshare_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
     <string name="merge_account_doesnt_exist">Das ausgewählte Token wurde für diese Adresse nicht gefunden.</string>
@@ -454,7 +461,7 @@
     <string name="referral_edit_referral">Empfehlung bearbeiten</string>
     <string name="referral_external_linked">Referral-Code erfolgreich verknüpft</string>
     <string name="referral_external_not_linked">Referral-Code existiert nicht</string>
-    <string name="referral_external_not_failed">Fehler beim Überprüfen des Referral-Codes</string>
+    <string name="referral_external_link_failed">Fehler beim Überprüfen des Referral-Codes</string>
     <string name="referral_invite_next">Weiter</string>
     <string name="referral_code_settings_title">Empfehlungscode</string>
     <string name="referral_screen_title">Vultisig – Empfehlung</string>
@@ -555,7 +562,10 @@
     <string name="backup_select_vaults_subtitle">Wählen Sie, ob nur dieser Tresor oder alle Tresore in Ihrer App gesichert werden sollen.</string>
     <string name="backup_this_vault_only">Nur dieser Tresor</string>
     <string name="backup_all_vaults">Alle Tresore</string>
-    <string name="more">+%1$d mehr</string>
+    <plurals name="more">
+        <item quantity="one">+%1$d mehr</item>
+        <item quantity="other">+%1$d mehr</item>
+    </plurals>
     <string name="backup_choose_method_title">Sicherungsmethode auswählen</string>
     <string name="backup_device_desc">Speichern Sie die Vault-Freigabe dieses Geräts.</string>
     <string name="backup_device_title">Gerätesicherung</string>
@@ -614,10 +624,10 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Sie sind bereit für den neuen Wallet-Standard.</string>
     <string name="vault_detail_vault_info">Tresorinformationen</string>
     <string name="vault_details_keys">Schlüssel</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Biometrische Schnellsignatur aktivieren</string>
+    <string name="vault_password_biometric_enable_biometrics_fast_signing">Biometrische Schnellsignatur aktivieren</string>
     <string name="verify_send_send_overview">Sendeübersicht</string>
     <string name="verify_swap_swap_overview">Tauschübersicht</string>
-    <string name="token_selecton_screen_enable_at_least_one">Aktivieren Sie mindestens einen Token, um Salden anzuzeigen und Positionen zu verwalten.</string>
+    <string name="token_selection_screen_enable_at_least_one">Aktivieren Sie mindestens einen Token, um Salden anzuzeigen und Positionen zu verwalten.</string>
     <string name="transfer_ibc_destination_chain">Zielkette</string>
     <string name="tx_done_transaction_details">Transaktionsdetails</string>
     <string name="vault_confirmation_vault_upgraded">Tresor aktualisiert</string>
@@ -638,10 +648,17 @@
     <string name="send_form_add_memo">Memo hinzufügen</string>
     <string name="send_form_enter_memo">Memo eingeben</string>
     <string name="name_vault_vault_with_this_name_already_exists">Ein Tresor mit diesem Namen ist bereits vorhanden.</string>
+    <string name="name_vault_server_exists_warning_title">Schneller Tresor existiert bereits</string>
+    <string name="name_vault_server_exists_warning_message">Ein schneller Tresor mit dieser Seed-Phrase existiert bereits auf dem Server. Das Erstellen eines neuen schnellen Tresors ersetzt die Serverfreigabe und macht den bestehenden Tresor unbrauchbar. Erwägen Sie stattdessen einen sicheren Tresor.</string>
+    <string name="name_vault_server_exists_warning_continue">Weiter</string>
+    <string name="name_vault_server_exists_warning_back">Zurück</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Unbekannt</string>
     <string name="referral_code_cannot_be_empty">Der Empfehlungscode darf nicht leer sein.</string>
-    <string name="referral_code_can_be_up_to_characters">Der Empfehlungscode darf maximal %1$d Zeichen lang sein.</string>
+    <plurals name="referral_code_can_be_up_to_characters">
+        <item quantity="one">Der Empfehlungscode darf maximal %1$d Zeichen lang sein.</item>
+        <item quantity="other">Der Empfehlungscode darf maximal %1$d Zeichen lang sein.</item>
+    </plurals>
     <string name="key_gen_discovery_no_connection_available">Keine Verbindung verfügbar</string>
     <string name="key_gen_discovery_enable_wifi">Bitte aktivieren Sie WLAN oder Mobilgerät, um die Transaktion zu signieren.</string>
     <string name="keygen_screen_upgrading_vault">Tresor wird aktualisiert.</string>
@@ -713,7 +730,10 @@
     <string name="backup_password_request_no_password_action">Backup ohne Passwort</string>
     <string name="address_bookmark_error_invalid_address">Diese Adresse ist für %s ungültig.</string>
     <string name="address_bookmark_error_empty_label">Das Label darf nicht leer sein</string>
-    <string name="address_bookmark_error_invalid_label">Das Label muss zwischen 1 und %d Zeichen haben</string>
+    <plurals name="address_bookmark_error_invalid_label">
+        <item quantity="one">Das Label muss zwischen 1 und %d Zeichen haben</item>
+        <item quantity="other">Das Label muss zwischen 1 und %d Zeichen haben</item>
+    </plurals>
     <string name="send_form_ripple_reaping_warning">Stellen Sie sicher, dass Ihr Konto ausreichend Guthaben zur Deckung der Gebühren aufweist. Fällt Ihr Kontostand unter 1 XRP (Einzahlung), wird das Konto deaktiviert (eingezogen) und das verbleibende Guthaben geht verloren. Sie können die Adresse jederzeit mit einer neuen Einzahlung, die höher als die Mindesteinzahlung ist, reaktivieren. Dadurch werden die verlorenen Guthaben jedoch nicht wiederhergestellt.</string>
     <string name="error_invalid_chain">Die Blockchain ist ungültig</string>
     <string name="vault_backup_verifying_pin">Code wird überprüft, bitte warten</string>
@@ -736,7 +756,7 @@
     <string name="peer_discovery_waiting_for_devices_action">Geräte werden angefordert…</string>
     <string name="peer_discovery_devices_n_of_n">Geräte (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">An %s gesendet.</string>
-    <string name="vault_backup_screen_donot_recieve_email">Keine E-Mail erhalten?</string>
+    <string name="vault_backup_screen_donot_receive_email">Keine E-Mail erhalten?</string>
     <string name="onboarding_desc_page_5_part_2">separat in einem</string>
     <string name="onboarding_desc_page_5_part_3">Anderer Standort</string>
     <string name="scan_qr_code_modal_annotation">Laden Sie Vultisig auf Ihre anderen Geräte herunter und wählen Sie „QR-Code scannen“.</string>
@@ -841,8 +861,8 @@
     <string name="enable_at_least_one_position">Aktivieren Sie mindestens eine Position, um Salden anzuzeigen und Positionen zu verwalten.</string>
     <string name="bandwidth">Bandbreite</string>
     <string name="energy">Energie</string>
-    <string name="bandwidth_dec">Bandbreitenpunkte werden für jede Transaktion auf TRON benötigt, sowohl für Standard-Token-Sendungen als auch für Smart-Contract-Interaktionen. Jeder TRON-Nutzer erhält täglich 600 kostenlose Bandbreitenpunkte, was für etwa zwei einfache Sendungen ausreicht. Zusätzlich können Sie durch das Staking von TRX weitere Bandbreitenpunkte verdienen und so Ihr tägliches Guthaben erhöhen, um mehr Transaktionen zu ermöglichen. Mit genügend Bandbreitenpunkten können Sie Token senden, TRX staken oder mit Smart Contracts interagieren, ohne TRX an Gasgebühren zahlen zu müssen.</string>
-    <string name="energy_dec">Energie wird für komplexere Aktionen benötigt, wie z. B. die Interaktion mit Smart Contracts (z. B. Swaps oder dApp-Transaktionen). Im Gegensatz zu Bandbreite ist Energie nicht kostenlos – Sie müssen TRX staken, um Energie zu erhalten. (Fortgeschrittene Nutzer können Energie auch über Leasing-Mechanismen wie JustLend oder die Energie-Mietmärkte von Tronify erwerben.) Energie kann die Gasgebühren für Smart-Contract-Interaktionen jedoch deutlich reduzieren oder sogar eliminieren und ist daher besonders wertvoll für Nutzer, die häufig TRON-dApps verwenden.</string>
+    <string name="bandwidth_desc">Bandbreitenpunkte werden für jede Transaktion auf TRON benötigt, sowohl für Standard-Token-Sendungen als auch für Smart-Contract-Interaktionen. Jeder TRON-Nutzer erhält täglich 600 kostenlose Bandbreitenpunkte, was für etwa zwei einfache Sendungen ausreicht. Zusätzlich können Sie durch das Staking von TRX weitere Bandbreitenpunkte verdienen und so Ihr tägliches Guthaben erhöhen, um mehr Transaktionen zu ermöglichen. Mit genügend Bandbreitenpunkten können Sie Token senden, TRX staken oder mit Smart Contracts interagieren, ohne TRX an Gasgebühren zahlen zu müssen.</string>
+    <string name="energy_desc">Energie wird für komplexere Aktionen benötigt, wie z. B. die Interaktion mit Smart Contracts (z. B. Swaps oder dApp-Transaktionen). Im Gegensatz zu Bandbreite ist Energie nicht kostenlos – Sie müssen TRX staken, um Energie zu erhalten. (Fortgeschrittene Nutzer können Energie auch über Leasing-Mechanismen wie JustLend oder die Energie-Mietmärkte von Tronify erwerben.) Energie kann die Gasgebühren für Smart-Contract-Interaktionen jedoch deutlich reduzieren oder sogar eliminieren und ist daher besonders wertvoll für Nutzer, die häufig TRON-dApps verwenden.</string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">Knotenadresse</string>
@@ -883,7 +903,10 @@
     <string name="solana_instruction_number">Anweisung %1$d</string>
     <string name="solana_program_name">Programm: %1$s</string>
     <string name="solana_program_id">Programm-ID: %1$s</string>
-    <string name="solana_accounts_data">Konten: %1$d | Datenlänge: %2$d Bytes</string>
+    <plurals name="solana_accounts_data">
+        <item quantity="one">Konto: %1$d | Datenlänge: %2$d Byte</item>
+        <item quantity="other">Konten: %1$d | Datenlänge: %2$d Bytes</item>
+    </plurals>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">Bevor Sie beginnen…</string>
@@ -931,7 +954,10 @@
     <string name="import_seedphrase_subtitle">Geben Sie Ihre Wiederherstellungsphrase mit 12 oder 24 Wörtern ein</string>
     <string name="import_seedphrase_label">Seed-Phrase</string>
     <string name="import_seedphrase_hint">Wiederherstellungsphrase eingeben…</string>
-    <string name="import_seedphrase_word_count">%1$d / %2$d Wörter</string>
+    <plurals name="import_seedphrase_word_count">
+        <item quantity="one">%1$d / %2$d Wörter</item>
+        <item quantity="other">%1$d / %2$d Wörter</item>
+    </plurals>
     <string name="import_seedphrase_invalid_word_count">Sie haben %1$s Wörter eingegeben. Die Seed-Phrase muss 12 oder 24 Wörter haben</string>
     <string name="import_seedphrase_invalid_phrase">Ungültige Seed-Phrase</string>
     <string name="import_seedphrase_already_imported">Diese Seed-Phrase wurde bereits importiert</string>
@@ -971,7 +997,7 @@
     <string name="welcome_fast_and_easy">Schnell &amp; einfach</string>
     <string name="welcome_fast_and_easy_desc">Signieren Sie mit nur 1 Gerät. Unser sicherer Server signiert mit Ihnen für Multisig-Sicherheit. Plugin-kompatibel.</string>
     <string name="welcome_fast_and_easy_highlight">nur 1 Gerät.</string>
-    <string name="welcome_plugin_compatible">Plugin Marketplace kompatibel</string>
+    <string name="welcome_plugin_compatible">Plugin Store kompatibel</string>
     <string name="welcome_tip">Tipp: Sie können einen Browser als Gerät verwenden</string>
     <string name="welcome_only_your_devices">Nur Ihre Geräte</string>
     <string name="welcome_only_your_devices_desc">Nur Ihre Geräte sind autorisierte Unterzeichner. Das Signieren von Transaktionen erfordert 2 Geräte. Vollständige Selbstverwahrung auf Knopfdruck.</string>
@@ -1037,7 +1063,10 @@
     <string name="vault_setup_add_as_many_devices_as_you_want">Fügen Sie so viele Geräte hinzu, wie Sie möchten, und erhalten Sie institutionelle Sicherheit.</string>
     <string name="vault_setup_built_for_teams_and_treasuries">Für Teams und Schatzkammern entwickelt</string>
     <string name="vault_setup_back_up_each_device">Jedes Gerät sichern</string>
-    <string name="vault_setup_you_ll_create_n_backups_in_total">Sie werden insgesamt %1$d Backups erstellen. Sie tun dies auf jedem Gerät.</string>
+    <plurals name="vault_setup_you_ll_create_n_backups_in_total">
+        <item quantity="one">Sie werden insgesamt %1$d Backup erstellen. Sie tun dies auf jedem Gerät.</item>
+        <item quantity="other">Sie werden insgesamt %1$d Backups erstellen. Sie tun dies auf jedem Gerät.</item>
+    </plurals>
     <string name="vault_setup_save_each_backup_in_a_different_cloud_service">Speichern Sie jedes Backup in einem anderen Cloud-Dienst oder mit einem anderen Passwort. Wenn eines kompromittiert wird, bleiben Ihre Gelder sicher.</string>
     <string name="vault_setup_i_understand">Ich verstehe</string>
     <string name="vault_setup_save_backup_n_of_n_to_the_cloud">Backup %1$d von %2$d in der Cloud speichern</string>

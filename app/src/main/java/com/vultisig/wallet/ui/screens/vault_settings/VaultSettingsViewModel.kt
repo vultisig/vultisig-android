@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -159,6 +160,19 @@ internal sealed class VaultSettingsItem(
                 )
         )
 
+    data class DilithiumKeygen(val isEnabled: Boolean) :
+        VaultSettingsItem(
+            value =
+                SettingsItemUiModel(
+                    title = UiText.StringResource(R.string.vault_settings_dilithium_keygen_title),
+                    subTitle =
+                        UiText.StringResource(R.string.vault_settings_dilithium_keygen_subtitle),
+                    trailingIcon = R.drawable.ic_small_caret_right,
+                    leadingIcon = R.drawable.advanced,
+                ),
+            enabled = isEnabled,
+        )
+
     data object Delete :
         VaultSettingsItem(
             value =
@@ -215,6 +229,7 @@ constructor(
                 items =
                     listOf(
                         VaultSettingsItem.Reshare(false),
+                        VaultSettingsItem.DilithiumKeygen(false),
                         VaultSettingsItem.Sign,
                         VaultSettingsItem.OnChainSecurity,
                     ),
@@ -251,6 +266,11 @@ constructor(
             val hasMigration = vault?.libType == SigningLibType.GG20
             hasFastSign = isVaultHasFastSignById(vaultId) && vault?.signers?.count() == 2
             val hasPassword = vaultPasswordRepository.getPassword(vaultId) != null
+            val hasMldsaKey =
+                vault != null &&
+                    vault.pubKeyMLDSA.isNotBlank() &&
+                    vault.keyshares.any { it.pubKey == vault.pubKeyMLDSA }
+            val supportsDilithiumKeygen = vault != null && vault.libType != SigningLibType.KeyImport
 
             val newItems =
                 uiModel.value.settingGroups.map { group ->
@@ -266,8 +286,11 @@ constructor(
 
                                     is VaultSettingsItem.Migrate ->
                                         it.copy(isEnabled = hasMigration)
+                                    // Reshare not supported for MLDSA vaults yet
                                     is VaultSettingsItem.Reshare ->
-                                        it.copy(isEnabled = !hasFastSign)
+                                        it.copy(isEnabled = !hasFastSign && !hasMldsaKey)
+                                    is VaultSettingsItem.DilithiumKeygen ->
+                                        it.copy(isEnabled = supportsDilithiumKeygen && !hasMldsaKey)
                                     else -> it
                                 }
                             }
@@ -349,6 +372,7 @@ constructor(
             VaultSettingsItem.Rename -> openRename()
             VaultSettingsItem.OnChainSecurity -> navigateToOnChainSecurityScreen()
             is VaultSettingsItem.Reshare -> navigateToReshareStartScreen()
+            is VaultSettingsItem.DilithiumKeygen -> navigateToDilithiumKeygen()
             VaultSettingsItem.Sign -> signMessage()
         }
     }
@@ -391,6 +415,35 @@ constructor(
 
     fun navigateToOnChainSecurityScreen() {
         viewModelScope.launch { navigator.route(Route.OnChainSecurity) }
+    }
+
+    fun navigateToDilithiumKeygen() {
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId exists")
+            val hasValidMldsaKey =
+                vault.pubKeyMLDSA.isNotBlank() &&
+                    vault.keyshares.any { it.pubKey == vault.pubKeyMLDSA }
+            if (hasValidMldsaKey || vault.libType == SigningLibType.KeyImport) {
+                return@launch
+            }
+            if (hasFastSign) {
+                navigator.route(
+                    Route.VaultInfo.Email(
+                        name = vault.name,
+                        action = TssAction.SingleKeygen,
+                        vaultId = vaultId,
+                    )
+                )
+            } else {
+                navigator.route(
+                    Route.Keygen.PeerDiscovery(
+                        action = TssAction.SingleKeygen,
+                        vaultName = vault.name,
+                        vaultId = vaultId,
+                    )
+                )
+            }
+        }
     }
 
     fun signMessage() {

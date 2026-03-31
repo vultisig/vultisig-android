@@ -125,8 +125,9 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
                 VaultBackupOnboardingTip(
                     title = UiText.StringResource(R.string.vault_setup_back_up_each_device),
                     description =
-                        UiText.FormattedText(
-                            R.string.vault_setup_you_ll_create_n_backups_in_total,
+                        UiText.PluralText(
+                            R.plurals.vault_setup_you_ll_create_n_backups_in_total,
+                            deviceCount,
                             listOf(deviceCount),
                         ),
                     logo = R.drawable.arrow_cloude,

@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.CurrencyToPrice
 import com.vultisig.wallet.data.api.LiQuestApi
+import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
@@ -51,6 +52,7 @@ constructor(
     private val coinGeckoApi: CoinGeckoApi,
     private val liQuestApi: LiQuestApi,
     private val thorApi: ThorChainApi,
+    private val mayaApi: MayaChainApi,
     private val tokenPriceDao: TokenPriceDao,
 ) : TokenPriceRepository {
 
@@ -102,7 +104,7 @@ constructor(
                     priceProviderIds.add(token.priceProviderID)
                 }
 
-                else -> {
+                token.contractAddress.isNotEmpty() -> {
                     val existingChain =
                         chainContractAddresses.getOrPut(token.chain) { mutableListOf() }
                     chainContractAddresses[token.chain] = existingChain + token
@@ -147,6 +149,8 @@ constructor(
         }
 
         fetchThorPoolPrices(tokenList = tokens, currency = currency)
+
+        fetchMayaPoolPrices(tokenList = tokens, currency = currency)
 
         fetchThorContractPrices(currency = currency, tokenList = tokens)
     }
@@ -299,6 +303,50 @@ constructor(
         }
     }
 
+    private suspend fun fetchMayaPoolPrices(tokenList: List<Coin>, currency: String) {
+        supervisorScope {
+            val mayaTokens = tokenList.filter { it.chain == Chain.MayaChain && !it.isNativeToken }
+            if (mayaTokens.isEmpty()) return@supervisorScope
+
+            val cacaoToken =
+                tokenList.find { it.chain == Chain.MayaChain && it.isNativeToken }
+                    ?: return@supervisorScope
+
+            val userCurrency = appCurrencyRepository.currency.first()
+            val cacaoPrice = getCachedPrice(cacaoToken.id, userCurrency) ?: return@supervisorScope
+            if (cacaoPrice <= BigDecimal.ZERO) return@supervisorScope
+
+            val tokenIdToPrices =
+                mayaTokens
+                    .mapNotNull { token ->
+                        try {
+                            val poolAsset = "MAYA.${token.ticker}"
+                            val pool = mayaApi.getPool(poolAsset)
+                            val balanceCacao = pool.balanceCacao.toBigDecimal()
+                            val balanceAsset = pool.balanceAsset.toBigDecimal()
+                            if (balanceAsset <= BigDecimal.ZERO) return@mapNotNull null
+
+                            val cacaoDecimals = BigDecimal.TEN.pow(CACAO_DECIMALS)
+                            val assetDecimals = BigDecimal.TEN.pow(token.decimal)
+                            val normalizedCacao =
+                                balanceCacao.divide(cacaoDecimals, 8, RoundingMode.HALF_UP)
+                            val normalizedAsset =
+                                balanceAsset.divide(assetDecimals, 8, RoundingMode.HALF_UP)
+                            val priceInCacao =
+                                normalizedCacao.divide(normalizedAsset, 8, RoundingMode.HALF_UP)
+
+                            token.id to mapOf(currency to priceInCacao * cacaoPrice)
+                        } catch (e: Exception) {
+                            Timber.e(e, "Failed to fetch Maya pool price for ${token.ticker}")
+                            null
+                        }
+                    }
+                    .toMap()
+
+            savePrices(tokenIdToPrices, currency)
+        }
+    }
+
     private suspend fun fetchThorContractPrices(tokenList: List<Coin>, currency: String) =
         supervisorScope {
             try {
@@ -393,6 +441,7 @@ constructor(
 
     companion object {
         private const val TETHER_PRICE_PROVIDER_ID = "tether"
+        private const val CACAO_DECIMALS = 10
     }
 
     private fun mapThorPoolAsset(contractAddress: String): String {

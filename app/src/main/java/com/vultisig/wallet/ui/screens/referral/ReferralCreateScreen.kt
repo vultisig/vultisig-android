@@ -405,10 +405,7 @@ fun CounterYearExpiration(
                     .height(height = 60.dp)
                     .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
         ) {
-            Icon(
-                painter = painterResource(R.drawable.circle_minus),
-                contentDescription = "Decrease",
-            )
+            Icon(painter = painterResource(R.drawable.circle_minus), contentDescription = null)
         }
 
         Box(
@@ -438,7 +435,7 @@ fun CounterYearExpiration(
                     .height(height = 60.dp)
                     .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
         ) {
-            Icon(painter = painterResource(R.drawable.circle_plus), contentDescription = "Increase")
+            Icon(painter = painterResource(R.drawable.circle_plus), contentDescription = null)
         }
     }
 }
