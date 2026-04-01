@@ -187,7 +187,7 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
                 "eth_getTransactionCount",
                 buildJsonArray {
                     add(address)
-                    add("latest")
+                    add("pending")
                 },
             )
         if (rpcResp.error != null) {
