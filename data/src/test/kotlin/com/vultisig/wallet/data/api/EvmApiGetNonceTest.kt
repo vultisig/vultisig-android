@@ -39,9 +39,16 @@ class EvmApiGetNonceTest {
             EvmApiImp(
                 http =
                     mockHttpClient { request ->
-                        actualRequest = request.requireRpcPayload()
                         val nonce =
-                            when (val blockTag = actualRequest.params[1].jsonPrimitive.content) {
+                            when (
+                                val blockTag =
+                                    request
+                                        .requireRpcPayload()
+                                        .also { actualRequest = it }
+                                        .params[1]
+                                        .jsonPrimitive
+                                        .content
+                            ) {
                                 "latest" -> LATEST_CONFIRMED_NONCE
                                 "pending" -> PENDING_NONCE
                                 else -> error("Unexpected block tag: $blockTag")
