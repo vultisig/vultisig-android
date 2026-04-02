@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.keygen
 
+import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TssAction
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -7,6 +9,66 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class KeygenRetryRegressionTest {
+
+    @Test
+    fun `new keygen execution stays off when feature flag is off`() {
+        val isEnabled =
+            shouldUseNewKeygenExecution(
+                action = TssAction.KEYGEN,
+                libType = SigningLibType.DKLS,
+                isParallelKeygenFeatureEnabled = false,
+            )
+
+        assertEquals(false, isEnabled)
+    }
+
+    @Test
+    fun `new keygen execution is enabled for DKLS keygen when feature flag is on`() {
+        val isEnabled =
+            shouldUseNewKeygenExecution(
+                action = TssAction.KEYGEN,
+                libType = SigningLibType.DKLS,
+                isParallelKeygenFeatureEnabled = true,
+            )
+
+        assertEquals(true, isEnabled)
+    }
+
+    @Test
+    fun `new keygen execution stays off for reshare even when feature flag is on`() {
+        val isEnabled =
+            shouldUseNewKeygenExecution(
+                action = TssAction.ReShare,
+                libType = SigningLibType.DKLS,
+                isParallelKeygenFeatureEnabled = true,
+            )
+
+        assertEquals(false, isEnabled)
+    }
+
+    @Test
+    fun `new keygen execution is enabled for key import when feature flag is on`() {
+        val isEnabled =
+            shouldUseNewKeygenExecution(
+                action = TssAction.KeyImport,
+                libType = SigningLibType.KeyImport,
+                isParallelKeygenFeatureEnabled = true,
+            )
+
+        assertEquals(true, isEnabled)
+    }
+
+    @Test
+    fun `new keygen execution is enabled for mldsa when feature flag is on`() {
+        val isEnabled =
+            shouldUseNewKeygenExecution(
+                action = TssAction.SingleKeygen,
+                libType = SigningLibType.DKLS,
+                isParallelKeygenFeatureEnabled = true,
+            )
+
+        assertEquals(true, isEnabled)
+    }
 
     @Test
     fun `routing can separate shared setup from exchange namespace`() {

@@ -9,13 +9,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.keygen.DKLSKeygen
 import com.vultisig.wallet.data.keygen.KeygenRouting
 import com.vultisig.wallet.data.keygen.MldsaKeygen
 import com.vultisig.wallet.data.keygen.SchnorrKeygen
+import com.vultisig.wallet.data.keygen.shouldUseNewKeygenExecution
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainPublicKey
@@ -29,6 +29,8 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ChainImportSetting
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
+import com.vultisig.wallet.data.repositories.KeyImportData
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
@@ -123,10 +125,16 @@ constructor(
     private val deriveChainKey: DeriveChainKeyUseCase,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
-    private val featureFlagApi: FeatureFlagApi,
+    private val featureFlagRepository: FeatureFlagRepository,
     private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
+    private data class ChainKeygenResult(
+        val chainName: String,
+        val pubKey: String,
+        val keyShare: String,
+        val isEddsa: Boolean,
+    )
 
     private val args = savedStateHandle.toRoute<Route.Keygen.Generating>()
 
@@ -154,7 +162,7 @@ constructor(
     private val libType = args.libType
 
     private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessor(vault)
-    private var featureFlag: FeatureFlagJson? = null
+    private var featureFlags = FeatureFlagJson()
 
     private val isReshareMode: Boolean = action == TssAction.ReShare
 
@@ -174,6 +182,92 @@ constructor(
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
+    private fun shouldUseNewKeygenPath(): Boolean =
+        shouldUseNewKeygenExecution(
+            action = action,
+            libType = libType,
+            isParallelKeygenFeatureEnabled = featureFlags.isParallelKeygenEnabled,
+        )
+
+    private fun createDklsKeygen(localUi: String, action: TssAction = this.action): DKLSKeygen =
+        DKLSKeygen(
+            localPartyId = vault.localPartyID,
+            keygenCommittee = keygenCommittee,
+            mediatorURL = serverUrl,
+            sessionID = sessionId,
+            encryptionKeyHex = encryptionKeyHex,
+            isInitiateDevice = isInitiatingDevice,
+            encryption = encryption,
+            sessionApi = sessionApi,
+            hexChainCode = vault.hexChainCode,
+            localUi = localUi,
+            action = action,
+            oldCommittee = oldCommittee,
+            vault = vault,
+        )
+
+    private fun createSchnorrKeygen(
+        localUi: String,
+        setupMessage: ByteArray = byteArrayOf(),
+        action: TssAction = this.action,
+    ): SchnorrKeygen =
+        SchnorrKeygen(
+            localPartyId = vault.localPartyID,
+            keygenCommittee = keygenCommittee,
+            vault = vault,
+            oldCommittee = oldCommittee,
+            mediatorURL = serverUrl,
+            sessionID = sessionId,
+            encryptionKeyHex = encryptionKeyHex,
+            action = action,
+            encryption = encryption,
+            sessionApi = sessionApi,
+            setupMessage = setupMessage,
+            isInitiatingDevice = isInitiatingDevice,
+            hexChainCode = vault.hexChainCode,
+            localUi = localUi,
+        )
+
+    private suspend fun runKeyImportChainKeygen(
+        keyImportData: KeyImportData,
+        chainSetting: ChainImportSetting,
+    ): ChainKeygenResult {
+        val chainName = chainSetting.chain.raw
+        val chainKey =
+            if (isInitiatingDevice) {
+                withContext(Dispatchers.IO) { deriveChainKey(keyImportData.mnemonic, chainSetting) }
+            } else null
+
+        val isEddsa = chainSetting.chain.TssKeysignType == TssKeyType.EDDSA
+        val localUi = chainKey?.privateKeyHex.orEmpty()
+
+        val chainKeyshare =
+            if (isEddsa) {
+                val chainSchnorr =
+                    createSchnorrKeygen(localUi = localUi, action = TssAction.KeyImport)
+                chainSchnorr.schnorrKeygenWithRetry(
+                    0,
+                    KeygenRouting.from(setupMessageId = chainName),
+                )
+                requireNotNull(chainSchnorr.keyshare) {
+                    "Chain $chainName keygen produced no keyshare"
+                }
+            } else {
+                val chainDkls = createDklsKeygen(localUi = localUi, action = TssAction.KeyImport)
+                chainDkls.dklsKeygenWithRetry(0, KeygenRouting.from(setupMessageId = chainName))
+                requireNotNull(chainDkls.keyshare) {
+                    "Chain $chainName keygen produced no keyshare"
+                }
+            }
+
+        return ChainKeygenResult(
+            chainName = chainName,
+            pubKey = chainKeyshare.pubKey,
+            keyShare = chainKeyshare.keyshare,
+            isEddsa = isEddsa,
+        )
+    }
+
     private fun generateKey() {
         viewModelScope.launch {
             updateStep(KeygenState.CreatingInstance)
@@ -191,6 +285,8 @@ constructor(
             state.update { it.copy(error = null) }
 
             try {
+                featureFlags = featureFlagRepository.getFeatureFlags()
+
                 if (action == TssAction.SingleKeygen) {
                     require(vault.pubKeyECDSA.isNotBlank() && vault.pubKeyEDDSA.isNotBlank()) {
                         "SingleKeygen requires an existing vault with ECDSA and EdDSA keys"
@@ -220,6 +316,7 @@ constructor(
     }
 
     private suspend fun startKeygenDkls() {
+        val useNewKeygenPath = shouldUseNewKeygenPath()
         updateStep(
             when (action) {
                 TssAction.ReShare -> KeygenState.ReshareECDSA
@@ -250,67 +347,57 @@ constructor(
             }
         }
 
-        val dklsKeygen =
-            DKLSKeygen(
-                localPartyId = vault.localPartyID,
-                keygenCommittee = keygenCommittee,
-                mediatorURL = serverUrl,
-                sessionID = sessionId,
-                encryptionKeyHex = encryptionKeyHex,
-                isInitiateDevice = isInitiatingDevice,
-                encryption = encryption,
-                sessionApi = sessionApi,
-                hexChainCode = vault.hexChainCode,
-                localUi = localUiEcdsa,
-                action = action,
-                oldCommittee = oldCommittee,
-                vault = vault,
-            )
-
-        val schnorr =
-            SchnorrKeygen(
-                localPartyId = vault.localPartyID,
-                keygenCommittee = keygenCommittee,
-                vault = vault,
-                oldCommittee = oldCommittee,
-                mediatorURL = serverUrl,
-                sessionID = sessionId,
-                encryptionKeyHex = encryptionKeyHex,
-                action = action,
-                encryption = encryption,
-                sessionApi = sessionApi,
-                // Empty setup — SchnorrKeygen will download from relay in parallel
-                setupMessage = byteArrayOf(),
-                isInitiatingDevice = isInitiatingDevice,
-                hexChainCode = vault.hexChainCode,
-                localUi = localUiEddsa,
-            )
+        val dklsKeygen = createDklsKeygen(localUi = localUiEcdsa)
+        lateinit var schnorr: SchnorrKeygen
 
         when (action) {
             TssAction.KEYGEN,
             TssAction.Migrate -> {
-                // Root ECDSA and EdDSA keygen are isolated by relay namespace, so they can run
-                // concurrently and we only wait for both shares before finalizing the vault.
-                coroutineScope {
-                    listOf(
-                            async {
-                                dklsKeygen.dklsKeygenWithRetry(
-                                    0,
-                                    KeygenRouting.from(exchangeMessageId = ROOT_ECDSA_MESSAGE_ID),
-                                )
-                            },
-                            async {
-                                schnorr.schnorrKeygenWithRetry(
-                                    0,
-                                    KeygenRouting.from(exchangeMessageId = ROOT_EDDSA_MESSAGE_ID),
-                                )
-                            },
+                if (useNewKeygenPath) {
+                    // Root ECDSA and EdDSA keygen are isolated by relay namespace, so they can
+                    // run concurrently and we only wait for both shares before finalizing.
+                    schnorr =
+                        createSchnorrKeygen(
+                            localUi = localUiEddsa,
+                            // Empty setup — SchnorrKeygen will download the shared setup from the
+                            // relay only when the parallel keygen flag is enabled.
+                            setupMessage = byteArrayOf(),
                         )
-                        .awaitAll()
+                    coroutineScope {
+                        listOf(
+                                async {
+                                    dklsKeygen.dklsKeygenWithRetry(
+                                        0,
+                                        KeygenRouting.from(
+                                            exchangeMessageId = ROOT_ECDSA_MESSAGE_ID
+                                        ),
+                                    )
+                                },
+                                async {
+                                    schnorr.schnorrKeygenWithRetry(
+                                        0,
+                                        KeygenRouting.from(
+                                            exchangeMessageId = ROOT_EDDSA_MESSAGE_ID
+                                        ),
+                                    )
+                                },
+                            )
+                            .awaitAll()
+                    }
+                } else {
+                    dklsKeygen.dklsKeygenWithRetry(0)
+                    updateStep(KeygenState.KeygenEdDSA)
+                    schnorr =
+                        createSchnorrKeygen(
+                            localUi = localUiEddsa,
+                            setupMessage = dklsKeygen.setupMessage,
+                        )
+                    schnorr.schnorrKeygenWithRetry(0)
                 }
             }
 
             TssAction.ReShare -> {
+                schnorr = createSchnorrKeygen(localUi = localUiEddsa)
                 // Reshare still uses the legacy shared relay namespace. Keep it sequential until
                 // both ceremonies are explicitly partitioned the same way as keygen.
                 dklsKeygen.reshareWithRetry(0)
@@ -349,6 +436,7 @@ constructor(
 
     private suspend fun startSingleKeygen() {
         updateStep(KeygenState.KeygenMLDSA)
+        val useNewKeygenPath = shouldUseNewKeygenPath()
 
         val mldsaKeygen =
             MldsaKeygen(
@@ -362,7 +450,14 @@ constructor(
                 sessionApi = sessionApi,
             )
 
-        mldsaKeygen.mldsaKeygenWithRetry(0, KeygenRouting.from(setupMessageId = MLDSA_MESSAGE_ID))
+        if (useNewKeygenPath) {
+            mldsaKeygen.mldsaKeygenWithRetry(
+                0,
+                KeygenRouting.from(setupMessageId = MLDSA_MESSAGE_ID),
+            )
+        } else {
+            mldsaKeygen.mldsaKeygenWithRetry(0)
+        }
 
         val mldsaKeyshare = mldsaKeygen.keyshare ?: error("Failed to generate MLDSA keyshare")
 
@@ -377,6 +472,7 @@ constructor(
     }
 
     private suspend fun startKeyImportKeygen() {
+        val useNewKeygenPath = shouldUseNewKeygenPath()
         // Non-initiating devices don't go through ImportSeedphrase/ChainsSetup screens,
         // so populate chain settings from the route args (originally from the QR code).
         if (!isInitiatingDevice) {
@@ -398,65 +494,49 @@ constructor(
                     withContext(Dispatchers.IO) { extractMasterKeys(keyImportData.mnemonic) }
                 } else null
 
-            // Phase 1+2: Root ECDSA + EdDSA keygen (parallel)
+            // Phase 1+2: Root ECDSA + EdDSA keygen
             updateStep(KeygenState.KeygenECDSA)
 
             val dklsKeygen =
-                DKLSKeygen(
-                    localPartyId = vault.localPartyID,
-                    keygenCommittee = keygenCommittee,
-                    mediatorURL = serverUrl,
-                    sessionID = sessionId,
-                    encryptionKeyHex = encryptionKeyHex,
-                    isInitiateDevice = isInitiatingDevice,
-                    encryption = encryption,
-                    sessionApi = sessionApi,
-                    hexChainCode = vault.hexChainCode,
+                createDklsKeygen(
                     localUi = masterKeys?.ecdsaMasterKeyHex.orEmpty(),
                     action = TssAction.KeyImport,
-                    oldCommittee = oldCommittee,
-                    vault = vault,
                 )
-
+            val schnorrLocalUi = masterKeys?.eddsaMasterKeyHex.orEmpty()
             val schnorr =
-                SchnorrKeygen(
-                    localPartyId = vault.localPartyID,
-                    keygenCommittee = keygenCommittee,
-                    vault = vault,
-                    oldCommittee = oldCommittee,
-                    mediatorURL = serverUrl,
-                    sessionID = sessionId,
-                    encryptionKeyHex = encryptionKeyHex,
-                    action = TssAction.KeyImport,
-                    encryption = encryption,
-                    sessionApi = sessionApi,
-                    setupMessage = byteArrayOf(),
-                    isInitiatingDevice = isInitiatingDevice,
-                    hexChainCode = vault.hexChainCode,
-                    localUi = masterKeys?.eddsaMasterKeyHex.orEmpty(),
-                )
-
-            coroutineScope {
-                listOf(
-                        async {
-                            dklsKeygen.dklsKeygenWithRetry(
-                                0,
-                                KeygenRouting.from(
-                                    setupMessageId = ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID
-                                ),
-                            )
-                        },
-                        async {
-                            schnorr.schnorrKeygenWithRetry(
-                                0,
-                                KeygenRouting.from(
-                                    setupMessageId = ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID
-                                ),
-                            )
-                        },
-                    )
-                    .awaitAll()
-            }
+                if (useNewKeygenPath) {
+                    createSchnorrKeygen(localUi = schnorrLocalUi, action = TssAction.KeyImport)
+                        .also { rootSchnorr ->
+                            coroutineScope {
+                                listOf(
+                                        async {
+                                            dklsKeygen.dklsKeygenWithRetry(
+                                                0,
+                                                KeygenRouting.from(
+                                                    setupMessageId =
+                                                        ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID
+                                                ),
+                                            )
+                                        },
+                                        async {
+                                            rootSchnorr.schnorrKeygenWithRetry(
+                                                0,
+                                                KeygenRouting.from(
+                                                    setupMessageId =
+                                                        ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID
+                                                ),
+                                            )
+                                        },
+                                    )
+                                    .awaitAll()
+                            }
+                        }
+                } else {
+                    dklsKeygen.dklsKeygenWithRetry(0)
+                    updateStep(KeygenState.KeygenEdDSA)
+                    createSchnorrKeygen(localUi = schnorrLocalUi, action = TssAction.KeyImport)
+                        .also { rootSchnorr -> rootSchnorr.schnorrKeygenWithRetry(0) }
+                }
 
             val keyshareEcdsa =
                 requireNotNull(dklsKeygen.keyshare) { "Root ECDSA keygen produced no keyshare" }
@@ -475,94 +555,26 @@ constructor(
                     KeyShare(pubKey = keyshareEddsa.pubKey, keyShare = keyshareEddsa.keyshare),
                 )
 
-            // Phase 3: Per-chain keygen (all chains in parallel)
+            // Phase 3: Per-chain keygen
             updateStep(KeygenState.KeygenChains)
             val chainPublicKeys = mutableListOf<ChainPublicKey>()
 
-            data class ChainKeygenResult(
-                val chainName: String,
-                val pubKey: String,
-                val keyShare: String,
-                val isEddsa: Boolean,
-            )
-
-            val chainResults = coroutineScope {
-                keyImportData.chainSettings
-                    .map { chainSetting ->
-                        async {
-                            val chainName = chainSetting.chain.raw
-                            val chainKey =
-                                if (isInitiatingDevice) {
-                                    withContext(Dispatchers.IO) {
-                                        deriveChainKey(keyImportData.mnemonic, chainSetting)
-                                    }
-                                } else null
-
-                            val isEddsa = chainSetting.chain.TssKeysignType == TssKeyType.EDDSA
-                            val localUi = chainKey?.privateKeyHex.orEmpty()
-
-                            val chainKeyshare =
-                                if (isEddsa) {
-                                    val chainSchnorr =
-                                        SchnorrKeygen(
-                                            localPartyId = vault.localPartyID,
-                                            keygenCommittee = keygenCommittee,
-                                            vault = vault,
-                                            oldCommittee = oldCommittee,
-                                            mediatorURL = serverUrl,
-                                            sessionID = sessionId,
-                                            encryptionKeyHex = encryptionKeyHex,
-                                            action = TssAction.KeyImport,
-                                            encryption = encryption,
-                                            sessionApi = sessionApi,
-                                            setupMessage = byteArrayOf(),
-                                            isInitiatingDevice = isInitiatingDevice,
-                                            hexChainCode = vault.hexChainCode,
-                                            localUi = localUi,
-                                        )
-                                    chainSchnorr.schnorrKeygenWithRetry(
-                                        0,
-                                        KeygenRouting.from(setupMessageId = chainName),
-                                    )
-                                    requireNotNull(chainSchnorr.keyshare) {
-                                        "Chain $chainName keygen produced no keyshare"
-                                    }
-                                } else {
-                                    val chainDkls =
-                                        DKLSKeygen(
-                                            localPartyId = vault.localPartyID,
-                                            keygenCommittee = keygenCommittee,
-                                            mediatorURL = serverUrl,
-                                            sessionID = sessionId,
-                                            encryptionKeyHex = encryptionKeyHex,
-                                            isInitiateDevice = isInitiatingDevice,
-                                            encryption = encryption,
-                                            sessionApi = sessionApi,
-                                            hexChainCode = vault.hexChainCode,
-                                            localUi = localUi,
-                                            action = TssAction.KeyImport,
-                                            oldCommittee = oldCommittee,
-                                            vault = vault,
-                                        )
-                                    chainDkls.dklsKeygenWithRetry(
-                                        0,
-                                        KeygenRouting.from(setupMessageId = chainName),
-                                    )
-                                    requireNotNull(chainDkls.keyshare) {
-                                        "Chain $chainName keygen produced no keyshare"
-                                    }
-                                }
-
-                            ChainKeygenResult(
-                                chainName = chainName,
-                                pubKey = chainKeyshare.pubKey,
-                                keyShare = chainKeyshare.keyshare,
-                                isEddsa = isEddsa,
-                            )
+            val chainResults =
+                if (useNewKeygenPath) {
+                    coroutineScope {
+                        keyImportData.chainSettings
+                            .map { chainSetting ->
+                                async { runKeyImportChainKeygen(keyImportData, chainSetting) }
+                            }
+                            .awaitAll()
+                    }
+                } else {
+                    buildList {
+                        for (chainSetting in keyImportData.chainSettings) {
+                            add(runKeyImportChainKeygen(keyImportData, chainSetting))
                         }
                     }
-                    .awaitAll()
-            }
+                }
 
             for (result in chainResults) {
                 if (seenPubKeys.add(result.pubKey)) {
@@ -591,8 +603,6 @@ constructor(
     }
 
     private suspend fun startKeygenGG20() {
-        featureFlag = featureFlagApi.getFeatureFlag()
-
         val tss = createTss()
 
         keygenWithRetry(tss, 1)
@@ -609,7 +619,7 @@ constructor(
                     sessionId,
                     sessionApi,
                     encryption,
-                    featureFlag?.isEncryptGcmEnabled == true,
+                    featureFlags.isEncryptGcmEnabled,
                 )
 
             try {
@@ -711,7 +721,7 @@ constructor(
                     sessionApi = sessionApi,
                     coroutineScope = viewModelScope,
                     encryption = encryption,
-                    isEncryptionGCM = featureFlag?.isEncryptGcmEnabled == true,
+                    isEncryptionGCM = featureFlags.isEncryptGcmEnabled,
                 )
 
             // this will take a while
@@ -936,9 +946,7 @@ constructor(
     private fun usesParallelRootKeyStage(step: KeygenState): Boolean =
         // Parallel DKLS/KeyImport root keygen starts ECDSA and EdDSA together, so the first UI
         // step needs to represent the combined root-key stage rather than ECDSA alone.
-        step is KeygenState.KeygenECDSA &&
-            action != TssAction.ReShare &&
-            (libType == SigningLibType.DKLS || libType == SigningLibType.KeyImport)
+        step is KeygenState.KeygenECDSA && shouldUseNewKeygenPath()
 
     private fun updateStep(step: KeygenState) {
         val usesParallelRootKeyStage = usesParallelRootKeyStage(step)

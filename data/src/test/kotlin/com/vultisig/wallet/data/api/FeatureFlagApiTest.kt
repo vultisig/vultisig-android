@@ -18,6 +18,27 @@ class FeatureFlagApiTest {
     fun `test feature flag`() = runBlocking {
         val mockEngine = MockEngine { request ->
             respond(
+                content = """{"encrypt-gcm": true, "parallel-keygen": true}""",
+                status = HttpStatusCode.OK,
+                headers =
+                    headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+            )
+        }
+        val httpClient =
+            HttpClient(mockEngine) {
+                install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+            }
+
+        val featureFlagApi = FeatureFlagApiImpl(httpClient)
+        val featureFlagJson = featureFlagApi.getFeatureFlags()
+        assertEquals(true, featureFlagJson.isEncryptGcmEnabled)
+        assertEquals(true, featureFlagJson.isParallelKeygenEnabled)
+    }
+
+    @Test
+    fun `parallel keygen defaults to false when missing from payload`() = runBlocking {
+        val mockEngine = MockEngine {
+            respond(
                 content = """{"encrypt-gcm": true}""",
                 status = HttpStatusCode.OK,
                 headers =
@@ -30,7 +51,7 @@ class FeatureFlagApiTest {
             }
 
         val featureFlagApi = FeatureFlagApiImpl(httpClient)
-        val featureFlagJson = featureFlagApi.getFeatureFlag()
-        assertEquals(true, featureFlagJson.isEncryptGcmEnabled)
+        val featureFlagJson = featureFlagApi.getFeatureFlags()
+        assertEquals(false, featureFlagJson.isParallelKeygenEnabled)
     }
 }

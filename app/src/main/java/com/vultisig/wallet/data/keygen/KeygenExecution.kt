@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.keygen
 
+import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TssAction
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -26,6 +28,40 @@ internal data class KeygenRouting(val exchangeMessageId: String?, val setupMessa
             )
     }
 }
+
+/**
+ * Returns `true` when this flow should use the new feature-flagged keygen path.
+ *
+ * The decision is intentionally all-or-nothing for the currently supported flows:
+ * - flag off: keep the legacy path everywhere
+ * - reshare: always keep the legacy path
+ * - flag on: opt into the new path for DKLS root keygen/migrate, key import, and MLDSA
+ */
+internal fun shouldUseNewKeygenExecution(
+    action: TssAction,
+    libType: SigningLibType,
+    isParallelKeygenFeatureEnabled: Boolean,
+): Boolean {
+    if (action == TssAction.ReShare) {
+        return false
+    }
+
+    if (isParallelKeygenFeatureEnabled) {
+        return isMldsaSingleKeygen(action) ||
+            isKeyImportFlow(action, libType) ||
+            isDklsRootKeygen(action, libType)
+    }
+
+    return false
+}
+
+private fun isMldsaSingleKeygen(action: TssAction): Boolean = action == TssAction.SingleKeygen
+
+private fun isKeyImportFlow(action: TssAction, libType: SigningLibType): Boolean =
+    libType == SigningLibType.KeyImport && action == TssAction.KeyImport
+
+private fun isDklsRootKeygen(action: TssAction, libType: SigningLibType): Boolean =
+    libType == SigningLibType.DKLS && (action == TssAction.KEYGEN || action == TssAction.Migrate)
 
 /**
  * Shared retry wrapper for keygen ceremonies.
