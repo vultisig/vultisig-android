@@ -51,16 +51,17 @@ constructor(
             .combine(searchFieldState.textAsFlow().map { it.toString() }) { addresses, searchTerm ->
                 val chains =
                     addresses
-                        .map {
+                        .mapNotNull { address ->
+                            val ticker =
+                                address.accounts
+                                    .firstOrNull { account -> account.token.isNativeToken }
+                                    ?.token
+                                    ?.ticker ?: return@mapNotNull null
                             ChainToReceiveUiModel(
-                                name = it.chain.raw,
-                                logo = it.chain.logo,
-                                address = it.address,
-                                ticker =
-                                    it.accounts
-                                        .first { account -> account.token.isNativeToken }
-                                        .token
-                                        .ticker,
+                                name = address.chain.raw,
+                                logo = address.chain.logo,
+                                address = address.address,
+                                ticker = ticker,
                             )
                         }
                         .filter {
