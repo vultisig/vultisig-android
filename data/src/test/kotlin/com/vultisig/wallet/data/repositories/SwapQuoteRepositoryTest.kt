@@ -1,9 +1,14 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteData
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapEstimateJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapTxJson
 import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -22,13 +27,14 @@ import org.junit.jupiter.api.Test
 class SwapQuoteRepositoryTest {
 
     private val kyberApi: KyberApi = mockk()
+    private val liFiChainApi: LiFiChainApi = mockk()
 
     private val repository =
         SwapQuoteRepositoryImpl(
             thorChainApi = mockk(),
             mayaChainApi = mockk(),
             oneInchApi = mockk(),
-            liFiChainApi = mockk(),
+            liFiChainApi = liFiChainApi,
             jupiterApi = mockk(),
             kyberApi = kyberApi,
         )
@@ -300,5 +306,76 @@ class SwapQuoteRepositoryTest {
     fun `kyber no discount leaves affiliate fee unchanged`() {
         val affiliateFeeBps = 50
         assertEquals(50, maxOf(0, affiliateFeeBps - 0))
+    }
+
+    @Test
+    fun `lifi quote with null transaction value returns zero`() = runTest {
+        val liFiQuote =
+            LiFiSwapQuoteJson(
+                estimate = LiFiSwapEstimateJson(toAmount = "1000000", feeCosts = emptyList()),
+                transactionRequest =
+                    LiFiSwapTxJson(
+                        from = "0xabc",
+                        to = "0xdef",
+                        gasLimit = "0x5208",
+                        data = "0x",
+                        value = null,
+                        gasPrice = "0x3b9aca00",
+                    ),
+            )
+
+        coEvery {
+            liFiChainApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any(), any())
+        } returns LiFiSwapQuoteDeserialized.Result(liFiQuote)
+
+        val result =
+            repository.getLiFiSwapQuote(
+                srcAddress = "0xsrc",
+                dstAddress = "0xdst",
+                srcToken = coin(Chain.Ethereum, "ETH"),
+                dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
+                tokenValue =
+                    TokenValue(value = BigInteger("1000000"), token = coin(Chain.Ethereum, "ETH")),
+                bpsDiscount = 0,
+            )
+
+        assertEquals("0", result.tx.value)
+    }
+
+    @Test
+    fun `lifi quote with valid hex transaction value parses correctly`() = runTest {
+        val liFiQuote =
+            LiFiSwapQuoteJson(
+                estimate = LiFiSwapEstimateJson(toAmount = "1000000", feeCosts = emptyList()),
+                transactionRequest =
+                    LiFiSwapTxJson(
+                        from = "0xabc",
+                        to = "0xdef",
+                        gasLimit = "0x5208",
+                        data = "0x",
+                        value = "0xde0b6b3a7640000",
+                        gasPrice = "0x3b9aca00",
+                    ),
+            )
+
+        coEvery {
+            liFiChainApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any(), any())
+        } returns LiFiSwapQuoteDeserialized.Result(liFiQuote)
+
+        val result =
+            repository.getLiFiSwapQuote(
+                srcAddress = "0xsrc",
+                dstAddress = "0xdst",
+                srcToken = coin(Chain.Ethereum, "ETH"),
+                dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
+                tokenValue =
+                    TokenValue(
+                        value = BigInteger("1000000000000000000"),
+                        token = coin(Chain.Ethereum, "ETH"),
+                    ),
+                bpsDiscount = 0,
+            )
+
+        assertEquals("1000000000000000000", result.tx.value)
     }
 }

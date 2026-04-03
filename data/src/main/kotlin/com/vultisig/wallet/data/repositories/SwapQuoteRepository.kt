@@ -362,7 +362,7 @@ constructor(
                                 liFiQuote.transactionRequest.value
                                     ?.substring(startIndex = 2)
                                     ?.convertToBigIntegerOrZero()
-                                    .toString(),
+                                    ?.toString() ?: "0",
                             gasPrice =
                                 liFiQuote.transactionRequest.gasPrice
                                     ?.substring(startIndex = 2)
