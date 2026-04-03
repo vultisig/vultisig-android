@@ -228,6 +228,9 @@ internal sealed class GasSettings {
 
 internal data class InvalidTransactionDataException(val text: UiText) : Exception()
 
+// Matches exactly "FREEZE:BANDWIDTH", "FREEZE:ENERGY", "UNFREEZE:BANDWIDTH", "UNFREEZE:ENERGY"
+private val TRON_STAKING_MEMO_REGEX = Regex("^(FREEZE|UNFREEZE):(BANDWIDTH|ENERGY)$")
+
 @ExperimentalStdlibApi
 @HiltViewModel
 internal class SendFormViewModel
@@ -1218,8 +1221,7 @@ constructor(
                 val isMaxAmount = tokenAmount == maxAmount
 
                 if (chain == Chain.Tron) {
-                    val isTronStakingOp =
-                        memo?.startsWith("FREEZE:") == true || memo?.startsWith("UNFREEZE:") == true
+                    val isTronStakingOp = memo != null && TRON_STAKING_MEMO_REGEX.matches(memo)
                     if (!isTronStakingOp && srcAddress == dstAddress) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_same_address)
