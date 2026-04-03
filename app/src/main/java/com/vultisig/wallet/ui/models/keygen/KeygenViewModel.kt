@@ -654,8 +654,20 @@ constructor(
             if (context.canAuthenticateBiometric()) {
                 vaultPasswordRepository.savePassword(vaultId, password)
             }
+        } else if (action == TssAction.SingleKeygen && !args.email.isNullOrBlank()) {
+            // Fast vault SingleKeygen: defer save until OTP verification
+            val email = args.email
+            checkNotNull(email)
+            temporaryVaultRepository.add(
+                TempVaultDto(
+                    vault = vault,
+                    email = email,
+                    password = args.password ?: "",
+                    hint = null,
+                )
+            )
         } else if (action == TssAction.SingleKeygen) {
-            // For SingleKeygen, load the full existing vault and merge only the MLDSA
+            // Secure vault SingleKeygen: save directly, merge only the MLDSA
             // changes to avoid wiping coins, signers, chainPublicKeys via full upsert
             val existingVault =
                 vaultRepository.get(vaultId)
@@ -762,7 +774,26 @@ constructor(
                             )
                         }
 
-                    TssAction.SingleKeygen -> Route.Home(openVaultId = vaultId)
+                    TssAction.SingleKeygen ->
+                        if (!args.email.isNullOrEmpty()) {
+                            val email = args.email
+                            checkNotNull(email)
+                            Route.FastVaultVerification(
+                                vaultId = vaultId,
+                                pubKeyEcdsa = vault.pubKeyECDSA,
+                                email = email,
+                                tssAction = action,
+                                vaultName = args.vaultName,
+                                password = args.password,
+                            )
+                        } else {
+                            Route.BackupVault(
+                                vaultId = vaultId,
+                                vaultType = vaultType,
+                                action = args.action,
+                                passwordType = BackupPasswordType.UserSelectionPassword,
+                            )
+                        }
                 },
             opts =
                 NavigationOptions(popUpToRoute = Route.Keygen.Generating::class, inclusive = true),
