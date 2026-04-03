@@ -7,7 +7,9 @@ import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.calculateResourceStats
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
@@ -18,13 +20,16 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 @Immutable
@@ -32,6 +37,7 @@ data class TronDeFiUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val availableBalanceTrx: String = "0",
+    val totalAmountPrice: String = "",
     val frozenBandwidthTrx: String = "0",
     val frozenEnergyTrx: String = "0",
     val unfreezingTrx: String = "0",
@@ -44,6 +50,7 @@ data class TronDeFiUiState(
     val pendingWithdrawals: List<TronPendingWithdrawalUiModel> = emptyList(),
     val isBalanceVisible: Boolean = true,
     val selectedTab: Int = DeFiTab.STAKED.displayNameRes,
+    val showPositionSelectionDialog: Boolean = false,
 )
 
 @Immutable
@@ -60,6 +67,8 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val tronApi: TronApi,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val tokenPriceRepository: TokenPriceRepository,
+    private val appCurrencyRepository: AppCurrencyRepository,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
@@ -141,10 +150,19 @@ constructor(
                     }
                     .sortedWith(compareBy({ !it.isClaimable }))
 
+            val currency = appCurrencyRepository.currency.first()
+            val currencyFormat =
+                withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+            val trxPrice =
+                tokenPriceRepository.getCachedPrice(tokenId = trxCoin.id, appCurrency = currency)
+                    ?: BigDecimal.ZERO
+            val totalAmountPrice = currencyFormat.format(availableBalanceTrx.multiply(trxPrice))
+
             _state.update {
                 it.copy(
                     isLoading = false,
                     availableBalanceTrx = availableBalanceTrx.toPlainString(),
+                    totalAmountPrice = totalAmountPrice,
                     frozenBandwidthTrx = frozenBandwidthTrx.toPlainString(),
                     frozenEnergyTrx = frozenEnergyTrx.toPlainString(),
                     unfreezingTrx = unfreezingTrx.toPlainString(),
@@ -163,6 +181,10 @@ constructor(
 
     fun onTabSelected(tab: DeFiTab) {
         _state.update { it.copy(selectedTab = tab.displayNameRes) }
+    }
+
+    fun setPositionSelectionDialogVisibility(visible: Boolean) {
+        _state.update { it.copy(showPositionSelectionDialog = visible) }
     }
 
     fun onClickFreeze(resourceType: String) {

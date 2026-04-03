@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.defi.tron
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -22,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,6 +28,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.CornerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
@@ -45,8 +46,6 @@ private const val TRON_RESOURCE_BANDWIDTH = "BANDWIDTH"
 
 private val TRON_DEFI_TABS = listOf(DeFiTab.STAKED)
 
-private val TronEditButtonBg = Color(0xFF061B3A)
-
 @Composable
 internal fun TronDeFiPositionsScreen(
     vaultId: VaultId,
@@ -58,16 +57,16 @@ internal fun TronDeFiPositionsScreen(
 
     TronDeFiPositionsScreenContent(
         state = state,
-        onClickManage = { viewModel.onClickFreeze(TRON_RESOURCE_BANDWIDTH) },
         onTabSelected = viewModel::onTabSelected,
+        onEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(true) },
     )
 }
 
 @Composable
 private fun TronDeFiPositionsScreenContent(
     state: TronDeFiUiState,
-    onClickManage: () -> Unit = {},
     onTabSelected: (DeFiTab) -> Unit = {},
+    onEditPositionClick: () -> Unit = {},
 ) {
     val hasNoFrozenPositions =
         !state.isLoading &&
@@ -84,7 +83,7 @@ private fun TronDeFiPositionsScreenContent(
     ) {
         TronDeFiBanner(
             isLoading = state.isLoading,
-            totalValue = "${state.availableBalanceTrx} TRX",
+            totalValue = state.totalAmountPrice,
             isBalanceVisible = state.isBalanceVisible,
         )
 
@@ -106,15 +105,17 @@ private fun TronDeFiPositionsScreenContent(
                 }
             }
 
-            Box(
-                modifier =
-                    Modifier.size(40.dp)
-                        .clip(CircleShape)
-                        .background(TronEditButtonBg)
-                        .clickable(onClick = onClickManage),
-                contentAlignment = Alignment.Center,
+            V2Container(
+                type = ContainerType.SECONDARY,
+                cornerType = CornerType.Circular,
+                modifier = Modifier.clickOnce(onClick = onEditPositionClick),
             ) {
-                UiIcon(drawableResId = R.drawable.ic_edit_pencil, size = 16.dp)
+                UiIcon(
+                    drawableResId = R.drawable.edit_chain,
+                    size = 16.dp,
+                    modifier = Modifier.padding(all = 12.dp),
+                    tint = Theme.v2.colors.primary.accent4,
+                )
             }
         }
 
@@ -204,7 +205,8 @@ private fun TronDeFiPositionsScreenNoPositionsPreview() {
         state =
             TronDeFiUiState(
                 isLoading = false,
-                availableBalanceTrx = "1,240.50",
+                availableBalanceTrx = "1240.50",
+                totalAmountPrice = "$1240.05",
                 frozenBandwidthTrx = "0.000000",
                 frozenEnergyTrx = "0.000000",
                 unfreezingTrx = "0.000000",
@@ -225,7 +227,8 @@ private fun TronDeFiPositionsScreenPreview() {
         state =
             TronDeFiUiState(
                 isLoading = false,
-                availableBalanceTrx = "1,240.50",
+                availableBalanceTrx = "1240.50",
+                totalAmountPrice = "$1240.05",
                 frozenBandwidthTrx = "100.000000",
                 frozenEnergyTrx = "200.000000",
                 unfreezingTrx = "50.000000",
