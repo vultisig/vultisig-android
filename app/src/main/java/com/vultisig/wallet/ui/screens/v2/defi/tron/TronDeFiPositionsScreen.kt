@@ -43,7 +43,6 @@ import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
-import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.delay
@@ -83,10 +82,6 @@ private fun TronDeFiPositionsScreenContent(
     onClickUnfreeze: () -> Unit = {},
 ) {
     val searchTextFieldState = remember { TextFieldState() }
-    val hasNoFrozenPositions =
-        !state.isLoading &&
-            state.frozenBandwidthTrx.toBigDecimalOrNull()?.signum() == 0 &&
-            state.frozenEnergyTrx.toBigDecimalOrNull()?.signum() == 0
 
     Column(
         modifier =
@@ -155,9 +150,7 @@ private fun TronDeFiPositionsScreenContent(
                 )
         )
 
-        if (hasNoFrozenPositions) {
-            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-        } else if (!state.isLoading) {
+        if (!state.isLoading) {
             TronFreezePositionCard(
                 frozenTotalPrice = state.frozenTotalPrice,
                 frozenTotalTrx = state.frozenTotalTrx,

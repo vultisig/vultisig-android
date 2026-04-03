@@ -109,7 +109,13 @@ internal interface BlockchainServicesModule {
 
         @Provides
         @Singleton
-        fun provideTronDeFiBalanceService(tronApi: TronApi): TronDeFiBalanceService =
-            TronDeFiBalanceService(tronApi = tronApi)
+        fun provideTronDeFiBalanceService(
+            tronApi: TronApi,
+            stakingDetailsRepository: StakingDetailsRepository,
+        ): TronDeFiBalanceService =
+            TronDeFiBalanceService(
+                tronApi = tronApi,
+                stakingDetailsRepository = stakingDetailsRepository,
+            )
     }
 }
