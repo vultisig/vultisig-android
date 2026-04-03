@@ -445,6 +445,8 @@
     <string name="tron_defi_energy">Energía</string>
     <string name="tron_defi_freeze">Congelar</string>
     <string name="tron_defi_unfreeze">Descongelar</string>
+    <string name="tron_defi_tron_freeze">TRON Congelar</string>
+    <string name="tron_defi_frozen">Congelado</string>
     <string name="tron_defi_unfreezing">Descongelando</string>
     <string name="tron_defi_resources">Recursos</string>
     <string name="tron_defi_pending_withdrawals">Retiros Pendientes</string>

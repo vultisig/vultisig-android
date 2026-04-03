@@ -72,6 +72,8 @@
     <string name="tron_defi_energy">에너지</string>
     <string name="tron_defi_freeze">동결</string>
     <string name="tron_defi_unfreeze">동결 해제</string>
+    <string name="tron_defi_tron_freeze">TRON 동결</string>
+    <string name="tron_defi_frozen">동결됨</string>
     <string name="tron_defi_unfreezing">동결 해제 중</string>
     <string name="tron_defi_resources">리소스</string>
     <string name="tron_defi_pending_withdrawals">대기 중인 출금</string>

@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,9 +42,8 @@ import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
+import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
-
-private const val TRON_RESOURCE_BANDWIDTH = "BANDWIDTH"
 
 private val TRON_DEFI_TABS = listOf(DeFiTab.STAKED)
 
@@ -59,6 +60,11 @@ internal fun TronDeFiPositionsScreen(
         state = state,
         onTabSelected = viewModel::onTabSelected,
         onEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(true) },
+        onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
+        onDonePositionClick = viewModel::onPositionSelectionDone,
+        onPositionSelectionChange = viewModel::onPositionSelectionChange,
+        onClickFreeze = { viewModel.onClickFreeze("BANDWIDTH") },
+        onClickUnfreeze = { viewModel.onClickUnfreeze("BANDWIDTH") },
     )
 }
 
@@ -67,7 +73,13 @@ private fun TronDeFiPositionsScreenContent(
     state: TronDeFiUiState,
     onTabSelected: (DeFiTab) -> Unit = {},
     onEditPositionClick: () -> Unit = {},
+    onCancelEditPositionClick: () -> Unit = {},
+    onDonePositionClick: () -> Unit = {},
+    onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
+    onClickFreeze: () -> Unit = {},
+    onClickUnfreeze: () -> Unit = {},
 ) {
+    val searchTextFieldState = remember { TextFieldState() }
     val hasNoFrozenPositions =
         !state.isLoading &&
             state.frozenBandwidthTrx.toBigDecimalOrNull()?.signum() == 0 &&
@@ -119,6 +131,17 @@ private fun TronDeFiPositionsScreenContent(
             }
         }
 
+        if (state.showPositionSelectionDialog) {
+            PositionsSelectionDialog(
+                stakePositions = state.stakePositionsDialog,
+                selectedPositions = state.tempSelectedPositions,
+                searchTextFieldState = searchTextFieldState,
+                onPositionSelectionChange = onPositionSelectionChange,
+                onDoneClick = onDonePositionClick,
+                onCancelClick = onCancelEditPositionClick,
+            )
+        }
+
         ResourceTwoCardsRow(
             resourceUsage =
                 ResourceUsage(
@@ -130,7 +153,15 @@ private fun TronDeFiPositionsScreenContent(
         )
 
         if (hasNoFrozenPositions) {
-            NoPositionsContainer()
+            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+        } else if (!state.isLoading) {
+            TronFreezePositionCard(
+                frozenTotalPrice = state.frozenTotalPrice,
+                frozenTotalTrx = state.frozenTotalTrx,
+                isBalanceVisible = state.isBalanceVisible,
+                onClickFreeze = onClickFreeze,
+                onClickUnfreeze = onClickUnfreeze,
+            )
         }
 
         if (state.pendingWithdrawals.isNotEmpty()) {
@@ -231,6 +262,8 @@ private fun TronDeFiPositionsScreenPreview() {
                 totalAmountPrice = "$1240.05",
                 frozenBandwidthTrx = "100.000000",
                 frozenEnergyTrx = "200.000000",
+                frozenTotalTrx = "300.000000",
+                frozenTotalPrice = "$30.00",
                 unfreezingTrx = "50.000000",
                 availableBandwidth = 15000L,
                 totalBandwidth = 20000L,

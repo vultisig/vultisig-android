@@ -442,6 +442,8 @@
     <string name="tron_defi_energy">Energie</string>
     <string name="tron_defi_freeze">Bevriezen</string>
     <string name="tron_defi_unfreeze">Ontdooien</string>
+    <string name="tron_defi_tron_freeze">TRON Bevriezen</string>
+    <string name="tron_defi_frozen">Bevroren</string>
     <string name="tron_defi_unfreezing">Wordt ontdooid</string>
     <string name="tron_defi_resources">Bronnen</string>
     <string name="tron_defi_pending_withdrawals">Uitstaande Opnames</string>

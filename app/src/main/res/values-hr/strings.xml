@@ -446,6 +446,8 @@
     <string name="tron_defi_energy">Energija</string>
     <string name="tron_defi_freeze">Zamrzni</string>
     <string name="tron_defi_unfreeze">Odmrzni</string>
+    <string name="tron_defi_tron_freeze">TRON Zamrzni</string>
+    <string name="tron_defi_frozen">Zamrznuto</string>
     <string name="tron_defi_unfreezing">Odmrzavanje</string>
     <string name="tron_defi_resources">Resursi</string>
     <string name="tron_defi_pending_withdrawals">Čekanje isplate</string>

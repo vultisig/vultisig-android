@@ -444,6 +444,8 @@
     <string name="tron_defi_energy">Энергия</string>
     <string name="tron_defi_freeze">Заморозить</string>
     <string name="tron_defi_unfreeze">Разморозить</string>
+    <string name="tron_defi_tron_freeze">TRON Заморозить</string>
+    <string name="tron_defi_frozen">Заморожено</string>
     <string name="tron_defi_unfreezing">Размораживается</string>
     <string name="tron_defi_resources">Ресурсы</string>
     <string name="tron_defi_pending_withdrawals">Ожидающие выводы</string>

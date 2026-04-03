@@ -67,6 +67,8 @@
     <string name="tron_defi_energy">能量</string>
     <string name="tron_defi_freeze">冻结</string>
     <string name="tron_defi_unfreeze">解冻</string>
+    <string name="tron_defi_tron_freeze">TRON 冻结</string>
+    <string name="tron_defi_frozen">已冻结</string>
     <string name="tron_defi_unfreezing">解冻中</string>
     <string name="tron_defi_resources">资源</string>
     <string name="tron_defi_pending_withdrawals">待提取</string>

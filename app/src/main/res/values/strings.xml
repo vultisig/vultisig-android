@@ -72,6 +72,8 @@
     <string name="tron_defi_energy">Energy</string>
     <string name="tron_defi_freeze">Freeze</string>
     <string name="tron_defi_unfreeze">Unfreeze</string>
+    <string name="tron_defi_tron_freeze">TRON Freeze</string>
+    <string name="tron_defi_frozen">Frozen</string>
     <string name="tron_defi_unfreezing">Unfreezing</string>
     <string name="tron_defi_resources">Resources</string>
     <string name="tron_defi_pending_withdrawals">Pending Withdrawals</string>

@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.calculateResourceStats
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -16,6 +17,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -32,12 +34,28 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+private const val TRON_KEY = "TRON"
+
+private val TRON_STAKE_POSITIONS_DIALOG
+    get() =
+        listOf(
+            PositionUiModelDialog(
+                logo = getCoinLogo("tron"),
+                ticker = "Tron",
+                positionKey = TRON_KEY,
+            )
+        )
+
+private val TRON_DEFAULT_SELECTED_POSITIONS = listOf(TRON_KEY)
+
 @Immutable
 data class TronDeFiUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val availableBalanceTrx: String = "0",
     val totalAmountPrice: String = "",
+    val frozenTotalTrx: String = "0",
+    val frozenTotalPrice: String = "",
     val frozenBandwidthTrx: String = "0",
     val frozenEnergyTrx: String = "0",
     val unfreezingTrx: String = "0",
@@ -51,6 +69,9 @@ data class TronDeFiUiState(
     val isBalanceVisible: Boolean = true,
     val selectedTab: Int = DeFiTab.STAKED.displayNameRes,
     val showPositionSelectionDialog: Boolean = false,
+    val stakePositionsDialog: List<PositionUiModelDialog> = TRON_STAKE_POSITIONS_DIALOG,
+    val selectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
+    val tempSelectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
 )
 
 @Immutable
@@ -157,12 +178,16 @@ constructor(
                 tokenPriceRepository.getCachedPrice(tokenId = trxCoin.id, appCurrency = currency)
                     ?: BigDecimal.ZERO
             val totalAmountPrice = currencyFormat.format(availableBalanceTrx.multiply(trxPrice))
+            val frozenTotal = frozenBandwidthTrx.add(frozenEnergyTrx)
+            val frozenTotalPrice = currencyFormat.format(frozenTotal.multiply(trxPrice))
 
             _state.update {
                 it.copy(
                     isLoading = false,
                     availableBalanceTrx = availableBalanceTrx.toPlainString(),
                     totalAmountPrice = totalAmountPrice,
+                    frozenTotalTrx = frozenTotal.toPlainString(),
+                    frozenTotalPrice = frozenTotalPrice,
                     frozenBandwidthTrx = frozenBandwidthTrx.toPlainString(),
                     frozenEnergyTrx = frozenEnergyTrx.toPlainString(),
                     unfreezingTrx = unfreezingTrx.toPlainString(),
@@ -184,7 +209,30 @@ constructor(
     }
 
     fun setPositionSelectionDialogVisibility(visible: Boolean) {
-        _state.update { it.copy(showPositionSelectionDialog = visible) }
+        _state.update {
+            it.copy(
+                showPositionSelectionDialog = visible,
+                tempSelectedPositions = it.selectedPositions,
+            )
+        }
+    }
+
+    fun onPositionSelectionChange(ticker: String, selected: Boolean) {
+        _state.update { current ->
+            val updated =
+                if (selected) current.tempSelectedPositions + ticker
+                else current.tempSelectedPositions - ticker
+            current.copy(tempSelectedPositions = updated)
+        }
+    }
+
+    fun onPositionSelectionDone() {
+        _state.update {
+            it.copy(
+                showPositionSelectionDialog = false,
+                selectedPositions = it.tempSelectedPositions,
+            )
+        }
     }
 
     fun onClickFreeze(resourceType: String) {
