@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
+import com.vultisig.wallet.ui.models.defi.TronResource
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
@@ -48,6 +49,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.delay
 
 private val TRON_DEFI_TABS = listOf(DeFiTab.STAKED)
+private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 
 @Composable
 internal fun TronDeFiPositionsScreen(
@@ -65,8 +67,8 @@ internal fun TronDeFiPositionsScreen(
         onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = viewModel::onPositionSelectionDone,
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
-        onClickFreeze = { viewModel.onClickFreeze("BANDWIDTH") },
-        onClickUnfreeze = { viewModel.onClickUnfreeze("BANDWIDTH") },
+        onClickFreeze = { viewModel.onClickFreeze(TronResource.BANDWIDTH) },
+        onClickUnfreeze = { viewModel.onClickUnfreeze(TronResource.BANDWIDTH) },
     )
 }
 
@@ -161,13 +163,19 @@ private fun TronDeFiPositionsScreenContent(
         }
 
         if (state.pendingWithdrawals.isNotEmpty()) {
-            TronPendingWithdrawalsCard(withdrawals = state.pendingWithdrawals)
+            TronPendingWithdrawalsCard(
+                withdrawals = state.pendingWithdrawals,
+                isBalanceVisible = state.isBalanceVisible,
+            )
         }
     }
 }
 
 @Composable
-private fun TronPendingWithdrawalsCard(withdrawals: List<TronPendingWithdrawalUiModel>) {
+private fun TronPendingWithdrawalsCard(
+    withdrawals: List<TronPendingWithdrawalUiModel>,
+    isBalanceVisible: Boolean,
+) {
     Column(
         modifier =
             Modifier.fillMaxWidth()
@@ -182,12 +190,17 @@ private fun TronPendingWithdrawalsCard(withdrawals: List<TronPendingWithdrawalUi
             color = Theme.v2.colors.text.primary,
         )
 
-        withdrawals.forEach { withdrawal -> TronPendingWithdrawalRow(withdrawal = withdrawal) }
+        withdrawals.forEach { withdrawal ->
+            TronPendingWithdrawalRow(withdrawal = withdrawal, isBalanceVisible = isBalanceVisible)
+        }
     }
 }
 
 @Composable
-private fun TronPendingWithdrawalRow(withdrawal: TronPendingWithdrawalUiModel) {
+private fun TronPendingWithdrawalRow(
+    withdrawal: TronPendingWithdrawalUiModel,
+    isBalanceVisible: Boolean,
+) {
     var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(withdrawal.expiryEpochMs) {
         while (true) {
@@ -216,7 +229,7 @@ private fun TronPendingWithdrawalRow(withdrawal: TronPendingWithdrawalUiModel) {
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "${withdrawal.amountTrx} TRX",
+                text = if (isBalanceVisible) "${withdrawal.amountTrx} TRX" else HIDE_BALANCE_CHARS,
                 style = Theme.brockmann.body.m.medium,
                 color = Theme.v2.colors.text.primary,
             )
