@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,14 +20,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -38,7 +35,9 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
+import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
+import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 private const val TRON_RESOURCE_BANDWIDTH = "BANDWIDTH"
@@ -70,6 +69,11 @@ private fun TronDeFiPositionsScreenContent(
     onClickUnfreezeBandwidth: () -> Unit = {},
     onClickUnfreezeEnergy: () -> Unit = {},
 ) {
+    val hasNoFrozenPositions =
+        !state.isLoading &&
+            state.frozenBandwidthTrx.toBigDecimalOrNull()?.signum() == 0 &&
+            state.frozenEnergyTrx.toBigDecimalOrNull()?.signum() == 0
+
     Column(
         modifier =
             Modifier.fillMaxSize()
@@ -97,15 +101,19 @@ private fun TronDeFiPositionsScreenContent(
             onClickUnfreezeEnergy = onClickUnfreezeEnergy,
         )
 
-        TronResourcesCard(
-            isLoading = state.isLoading,
-            availableBandwidth = state.availableBandwidth,
-            totalBandwidth = state.totalBandwidth,
-            availableEnergy = state.availableEnergy,
-            totalEnergy = state.totalEnergy,
-            bandwidthProgress = state.bandwidthProgress,
-            energyProgress = state.energyProgress,
+        ResourceTwoCardsRow(
+            resourceUsage =
+                ResourceUsage(
+                    availableBandwidth = state.availableBandwidth,
+                    totalBandwidth = state.totalBandwidth,
+                    availableEnergy = state.availableEnergy,
+                    totalEnergy = state.totalEnergy,
+                )
         )
+
+        if (hasNoFrozenPositions) {
+            NoPositionsContainer()
+        }
 
         if (state.pendingWithdrawals.isNotEmpty()) {
             TronPendingWithdrawalsCard(withdrawals = state.pendingWithdrawals)
@@ -133,7 +141,7 @@ private fun TronFrozenCard(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            text = stringResource(R.string.tron_defi_staking),
+            text = stringResource(R.string.defi_tab_staked),
             style = Theme.brockmann.body.l.medium,
             color = Theme.v2.colors.text.primary,
         )
@@ -154,7 +162,7 @@ private fun TronFrozenCard(
             onClickUnfreeze = onClickUnfreezeEnergy,
         )
 
-        if (!isLoading && unfreezingTrx != "0.000000" && unfreezingTrx != "0") {
+        if (!isLoading && unfreezingTrx.toBigDecimalOrNull()?.signum() != 0) {
             TronInfoRow(
                 label = stringResource(R.string.tron_defi_unfreezing),
                 value = "$unfreezingTrx TRX",
@@ -208,98 +216,6 @@ private fun TronFrozenRow(
                 onClick = onClickUnfreeze,
             )
         }
-    }
-}
-
-@Composable
-private fun TronResourcesCard(
-    isLoading: Boolean,
-    availableBandwidth: Long,
-    totalBandwidth: Long,
-    availableEnergy: Long,
-    totalEnergy: Long,
-    bandwidthProgress: Float,
-    energyProgress: Float,
-) {
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.tron_defi_resources),
-            style = Theme.brockmann.body.l.medium,
-            color = Theme.v2.colors.text.primary,
-        )
-
-        TronResourceRow(
-            label = stringResource(R.string.tron_defi_bandwidth),
-            iconResId = R.drawable.ic_tron_bandwidth,
-            isLoading = isLoading,
-            available = availableBandwidth,
-            total = totalBandwidth,
-            progress = bandwidthProgress,
-        )
-
-        TronResourceRow(
-            label = stringResource(R.string.tron_defi_energy),
-            iconResId = R.drawable.energy,
-            isLoading = isLoading,
-            available = availableEnergy,
-            total = totalEnergy,
-            progress = energyProgress,
-        )
-    }
-}
-
-@Composable
-private fun TronResourceRow(
-    label: String,
-    iconResId: Int,
-    isLoading: Boolean,
-    available: Long,
-    total: Long,
-    progress: Float,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                UiIcon(drawableResId = iconResId, size = 16.dp)
-                Text(
-                    text = label,
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.secondary,
-                )
-            }
-
-            if (isLoading) {
-                UiPlaceholderLoader(modifier = Modifier.size(width = 80.dp, height = 16.dp))
-            } else {
-                Text(
-                    text = "$available / $total",
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                )
-            }
-        }
-
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
-            color = Theme.v2.colors.primary.accent1,
-            trackColor = Theme.v2.colors.backgrounds.tertiary,
-            strokeCap = StrokeCap.Round,
-        )
     }
 }
 
@@ -412,6 +328,27 @@ private fun TronDeFiPositionsScreenPreview() {
                             isClaimable = false,
                         ),
                     ),
+            )
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TronDeFiPositionsScreenNoPositionsPreview() {
+    TronDeFiPositionsScreenContent(
+        state =
+            TronDeFiUiState(
+                isLoading = false,
+                availableBalanceTrx = "1234.567890",
+                frozenBandwidthTrx = "0.000000",
+                frozenEnergyTrx = "0.000000",
+                unfreezingTrx = "0.000000",
+                availableBandwidth = 1500L,
+                totalBandwidth = 2000L,
+                availableEnergy = 1L,
+                totalEnergy = 2L,
+                bandwidthProgress = 0.75f,
+                energyProgress = 0.5f,
             )
     )
 }
