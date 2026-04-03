@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
@@ -89,6 +90,18 @@ constructor(
                         action = action,
                         vaultId = vaultId,
                         password = args.password,
+                    )
+                )
+            } else if (action == TssAction.SingleKeygen) {
+                navigator.route(
+                    Route.VaultInfo.VerifyExistingPassword(
+                        name = vaultName,
+                        email = enteredEmail,
+                        tssAction = action,
+                        vaultId =
+                            requireNotNull(vaultId) {
+                                "vaultId required for VerifyExistingPassword"
+                            },
                     )
                 )
             } else {
