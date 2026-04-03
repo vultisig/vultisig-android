@@ -301,6 +301,7 @@ constructor(
                     Chain.ThorChain to Coins.ThorChain.RUNE,
                     Chain.Ethereum to Coins.Ethereum.ETH,
                     Chain.MayaChain to Coins.MayaChain.CACAO,
+                    Chain.Tron to Coins.Tron.TRX,
                 )
 
             val addressesByChain = addresses.associateBy { it.chain }
@@ -456,6 +457,7 @@ constructor(
             Chain.ThorChain -> true
             Chain.Ethereum -> true
             Chain.MayaChain -> true
+            Chain.Tron -> true
             else -> false
         }
     }

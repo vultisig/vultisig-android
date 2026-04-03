@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.tron.TronDeFiBalanceService
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.models.Chain
@@ -138,6 +139,7 @@ constructor(
     private val thorchainDeFiBalanceService: ThorchainDeFiBalanceService,
     private val circleDeFiBalanceService: CircleDeFiBalanceService,
     private val mayaDeFiBalanceService: MayaDeFiBalanceService,
+    private val tronDeFiBalanceService: TronDeFiBalanceService,
 ) : BalanceRepository {
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
@@ -202,6 +204,8 @@ constructor(
                 ThorChain -> thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Ethereum -> circleDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 MayaChain -> mayaDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+                Chain.Tron -> tronDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+
                 else -> error("Not Supported ${coin.chain}")
             }
 
@@ -391,6 +395,19 @@ constructor(
                         ?: run {
                             val remote =
                                 mayaDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
+                            defiBalanceCache.put(cacheKey, remote)
+                            remote
+                        }
+                }
+            }
+            Chain.Tron -> {
+                val cacheKey = "${Chain.Tron.id}:$vaultId:$address"
+                val mutex = lockFor(cacheKey)
+                mutex.withLock {
+                    defiBalanceCache.get(cacheKey)
+                        ?: run {
+                            val remote =
+                                tronDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
                             defiBalanceCache.put(cacheKey, remote)
                             remote
                         }
