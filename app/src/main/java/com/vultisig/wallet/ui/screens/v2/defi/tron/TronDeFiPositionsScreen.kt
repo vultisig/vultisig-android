@@ -1,17 +1,24 @@
 package com.vultisig.wallet.ui.screens.v2.defi.tron
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,7 +26,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,21 +39,23 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.buttons.VsButtonSize
-import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
-import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 private const val TRON_RESOURCE_BANDWIDTH = "BANDWIDTH"
-private const val TRON_RESOURCE_ENERGY = "ENERGY"
+
+private val TronBannerGradientTop = Color(0x17FF060A) // rgba(255,6,10, 0.09)
+private val TronBannerGradientBottom = Color(0x00FF060A) // rgba(255,6,10, 0.00)
+private val TronBannerBorder = Color(0x2BFF060A) // rgba(255,6,10, 0.17)
+private val TronEditButtonBg = Color(0xFF061B3A)
+
+private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 
 @Composable
 internal fun TronDeFiPositionsScreen(
@@ -54,21 +68,12 @@ internal fun TronDeFiPositionsScreen(
 
     TronDeFiPositionsScreenContent(
         state = state,
-        onClickFreezeBandwidth = { viewModel.onClickFreeze(TRON_RESOURCE_BANDWIDTH) },
-        onClickFreezeEnergy = { viewModel.onClickFreeze(TRON_RESOURCE_ENERGY) },
-        onClickUnfreezeBandwidth = { viewModel.onClickUnfreeze(TRON_RESOURCE_BANDWIDTH) },
-        onClickUnfreezeEnergy = { viewModel.onClickUnfreeze(TRON_RESOURCE_ENERGY) },
+        onClickManage = { viewModel.onClickFreeze(TRON_RESOURCE_BANDWIDTH) },
     )
 }
 
 @Composable
-private fun TronDeFiPositionsScreenContent(
-    state: TronDeFiUiState,
-    onClickFreezeBandwidth: () -> Unit = {},
-    onClickFreezeEnergy: () -> Unit = {},
-    onClickUnfreezeBandwidth: () -> Unit = {},
-    onClickUnfreezeEnergy: () -> Unit = {},
-) {
+private fun TronDeFiPositionsScreenContent(state: TronDeFiUiState, onClickManage: () -> Unit = {}) {
     val hasNoFrozenPositions =
         !state.isLoading &&
             state.frozenBandwidthTrx.toBigDecimalOrNull()?.signum() == 0 &&
@@ -82,23 +87,11 @@ private fun TronDeFiPositionsScreenContent(
                 .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        BalanceBanner(
-            title = stringResource(R.string.tron_defi_available_balance),
+        TronDeFiBanner(
             isLoading = state.isLoading,
             totalValue = "${state.availableBalanceTrx} TRX",
-            image = R.drawable.referral_data_banner,
             isBalanceVisible = state.isBalanceVisible,
-        )
-
-        TronFrozenCard(
-            isLoading = state.isLoading,
-            frozenBandwidthTrx = state.frozenBandwidthTrx,
-            frozenEnergyTrx = state.frozenEnergyTrx,
-            unfreezingTrx = state.unfreezingTrx,
-            onClickFreezeBandwidth = onClickFreezeBandwidth,
-            onClickFreezeEnergy = onClickFreezeEnergy,
-            onClickUnfreezeBandwidth = onClickUnfreezeBandwidth,
-            onClickUnfreezeEnergy = onClickUnfreezeEnergy,
+            onClickManage = onClickManage,
         )
 
         ResourceTwoCardsRow(
@@ -122,99 +115,89 @@ private fun TronDeFiPositionsScreenContent(
 }
 
 @Composable
-private fun TronFrozenCard(
+private fun TronDeFiBanner(
     isLoading: Boolean,
-    frozenBandwidthTrx: String,
-    frozenEnergyTrx: String,
-    unfreezingTrx: String,
-    onClickFreezeBandwidth: () -> Unit,
-    onClickFreezeEnergy: () -> Unit,
-    onClickUnfreezeBandwidth: () -> Unit,
-    onClickUnfreezeEnergy: () -> Unit,
+    totalValue: String,
+    isBalanceVisible: Boolean,
+    onClickManage: () -> Unit,
 ) {
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.defi_tab_staked),
-            style = Theme.brockmann.body.l.medium,
-            color = Theme.v2.colors.text.primary,
-        )
-
-        TronFrozenRow(
-            label = stringResource(R.string.tron_defi_bandwidth),
-            isLoading = isLoading,
-            amountTrx = frozenBandwidthTrx,
-            onClickFreeze = onClickFreezeBandwidth,
-            onClickUnfreeze = onClickUnfreezeBandwidth,
-        )
-
-        TronFrozenRow(
-            label = stringResource(R.string.tron_defi_energy),
-            isLoading = isLoading,
-            amountTrx = frozenEnergyTrx,
-            onClickFreeze = onClickFreezeEnergy,
-            onClickUnfreeze = onClickUnfreezeEnergy,
-        )
-
-        if (!isLoading && unfreezingTrx.toBigDecimalOrNull()?.signum() != 0) {
-            TronInfoRow(
-                label = stringResource(R.string.tron_defi_unfreezing),
-                value = "$unfreezingTrx TRX",
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Card
+        Box(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .height(118.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(TronBannerGradientTop, TronBannerGradientBottom)
+                        )
+                    )
+                    .border(1.dp, TronBannerBorder, RoundedCornerShape(16.dp))
+        ) {
+            // Decorative TRON logo — absolute overlay, clipped by the card
+            Image(
+                painter = painterResource(R.drawable.tron),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier =
+                    Modifier.size(width = 200.dp, height = 206.dp)
+                        .offset(x = 175.dp, y = (-17).dp)
+                        .alpha(0.6f),
             )
-        }
-    }
-}
 
-@Composable
-private fun TronFrozenRow(
-    label: String,
-    isLoading: Boolean,
-    amountTrx: String,
-    onClickFreeze: () -> Unit,
-    onClickUnfreeze: () -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = label,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.secondary,
-            )
-            if (isLoading) {
-                UiPlaceholderLoader(modifier = Modifier.size(width = 80.dp, height = 18.dp))
-            } else {
+            // Chain name + balance
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
                 Text(
-                    text = "$amountTrx TRX",
-                    style = Theme.brockmann.body.m.medium,
+                    text = stringResource(R.string.tron),
+                    style = Theme.brockmann.body.l.medium,
                     color = Theme.v2.colors.text.primary,
                 )
+
+                if (isLoading) {
+                    UiPlaceholderLoader(modifier = Modifier.size(width = 150.dp, height = 32.dp))
+                } else {
+                    Text(
+                        text = if (isBalanceVisible) totalValue else HIDE_BALANCE_CHARS,
+                        style = Theme.satoshi.price.title1,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                }
             }
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            VsButton(
-                label = stringResource(R.string.tron_defi_freeze),
-                state = VsButtonState.Enabled,
-                size = VsButtonSize.Small,
-                onClick = onClickFreeze,
-            )
-            VsButton(
-                label = stringResource(R.string.tron_defi_unfreeze),
-                variant = VsButtonVariant.Secondary,
-                state = VsButtonState.Enabled,
-                size = VsButtonSize.Small,
-                onClick = onClickUnfreeze,
-            )
+        // Staked row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = stringResource(R.string.defi_tab_staked),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.secondary,
+                )
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(0.4f),
+                    color = Theme.v2.colors.border.light,
+                    thickness = 1.dp,
+                )
+            }
+
+            Box(
+                modifier =
+                    Modifier.size(40.dp)
+                        .clip(CircleShape)
+                        .background(TronEditButtonBg)
+                        .clickable(onClick = onClickManage),
+                contentAlignment = Alignment.Center,
+            ) {
+                UiIcon(drawableResId = R.drawable.ic_edit_pencil, size = 16.dp)
+            }
         }
     }
 }
@@ -275,26 +258,6 @@ private fun TronPendingWithdrawalRow(withdrawal: TronPendingWithdrawalUiModel) {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun TronInfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = label,
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.secondary,
-        )
-        Text(
-            text = value,
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
-        )
     }
 }
 
