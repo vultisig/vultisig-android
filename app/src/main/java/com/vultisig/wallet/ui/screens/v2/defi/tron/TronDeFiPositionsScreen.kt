@@ -18,7 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +46,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.coroutines.delay
 
 private val TRON_DEFI_TABS = listOf(DeFiTab.STAKED)
 
@@ -192,6 +195,27 @@ private fun TronPendingWithdrawalsCard(withdrawals: List<TronPendingWithdrawalUi
 
 @Composable
 private fun TronPendingWithdrawalRow(withdrawal: TronPendingWithdrawalUiModel) {
+    var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(withdrawal.expiryEpochMs) {
+        while (true) {
+            delay(1_000L)
+            nowMs = System.currentTimeMillis()
+        }
+    }
+
+    val isClaimable = withdrawal.expiryEpochMs <= nowMs
+    val timeRemainingText =
+        if (isClaimable) {
+            stringResource(R.string.tron_defi_ready_to_claim)
+        } else {
+            val remaining = withdrawal.expiryEpochMs - nowMs
+            val days = remaining / (1_000L * 60 * 60 * 24)
+            val hours = (remaining % (1_000L * 60 * 60 * 24)) / (1_000L * 60 * 60)
+            val minutes = (remaining % (1_000L * 60 * 60)) / (1_000L * 60)
+            if (days > 0) stringResource(R.string.tron_defi_countdown_days, days, hours)
+            else stringResource(R.string.tron_defi_countdown_hours, hours, minutes)
+        }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -204,15 +228,15 @@ private fun TronPendingWithdrawalRow(withdrawal: TronPendingWithdrawalUiModel) {
                 color = Theme.v2.colors.text.primary,
             )
             Text(
-                text = withdrawal.timeRemaining,
+                text = timeRemainingText,
                 style = Theme.brockmann.body.s.medium,
                 color =
-                    if (withdrawal.isClaimable) Theme.v2.colors.alerts.success
+                    if (isClaimable) Theme.v2.colors.alerts.success
                     else Theme.v2.colors.text.secondary,
             )
         }
 
-        if (withdrawal.isClaimable) {
+        if (isClaimable) {
             Box(
                 modifier =
                     Modifier.clip(RoundedCornerShape(8.dp))
@@ -275,13 +299,11 @@ private fun TronDeFiPositionsScreenPreview() {
                     listOf(
                         TronPendingWithdrawalUiModel(
                             amountTrx = "50.000000",
-                            timeRemaining = "Ready to claim",
-                            isClaimable = true,
+                            expiryEpochMs = System.currentTimeMillis() - 1_000L,
                         ),
                         TronPendingWithdrawalUiModel(
                             amountTrx = "30.000000",
-                            timeRemaining = "2 days, 5 hrs",
-                            isClaimable = false,
+                            expiryEpochMs = System.currentTimeMillis() + 2 * 24 * 60 * 60 * 1_000L,
                         ),
                     ),
             )

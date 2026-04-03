@@ -74,12 +74,7 @@ data class TronDeFiUiState(
     val tempSelectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
 )
 
-@Immutable
-data class TronPendingWithdrawalUiModel(
-    val amountTrx: String,
-    val timeRemaining: String,
-    val isClaimable: Boolean,
-)
+@Immutable data class TronPendingWithdrawalUiModel(val amountTrx: String, val expiryEpochMs: Long)
 
 @HiltViewModel
 internal class TronDeFiPositionsViewModel
@@ -116,9 +111,16 @@ constructor(
         ) {
             _state.update { it.copy(isLoading = true, error = null) }
 
-            val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
-            val trxCoin =
-                vault.coins.find { it.chain == Chain.Tron && it.isNativeToken } ?: return@safeLaunch
+            val vault = vaultRepository.get(vaultId)
+            if (vault == null) {
+                _state.update { it.copy(isLoading = false, error = "Vault not found") }
+                return@safeLaunch
+            }
+            val trxCoin = vault.coins.find { it.chain == Chain.Tron && it.isNativeToken }
+            if (trxCoin == null) {
+                _state.update { it.copy(isLoading = false, error = "TRX coin not found in vault") }
+                return@safeLaunch
+            }
 
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
 
@@ -161,15 +163,12 @@ constructor(
                         val expireTimeMs = entry.unfreezeExpireTime ?: return@mapNotNull null
                         val amountTrx =
                             BigDecimal(amountSun).divide(sunPerTrx).setScale(6, RoundingMode.DOWN)
-                        val remaining = expireTimeMs - now
-                        val isClaimable = remaining <= 0
                         TronPendingWithdrawalUiModel(
                             amountTrx = amountTrx.toPlainString(),
-                            timeRemaining = formatTimeRemaining(remaining),
-                            isClaimable = isClaimable,
+                            expiryEpochMs = expireTimeMs,
                         )
                     }
-                    .sortedWith(compareBy({ !it.isClaimable }))
+                    .sortedWith(compareBy { it.expiryEpochMs })
 
             val currency = appCurrencyRepository.currency.first()
             val currencyFormat =
@@ -271,17 +270,5 @@ constructor(
 
     fun onBackClick() {
         viewModelScope.launch { navigator.navigate(Destination.Back) }
-    }
-
-    private fun formatTimeRemaining(remainingMs: Long): String {
-        if (remainingMs <= 0) return "Ready to claim"
-        val days = remainingMs / (1000L * 60 * 60 * 24)
-        val hours = (remainingMs % (1000L * 60 * 60 * 24)) / (1000L * 60 * 60)
-        return if (days > 0) {
-            "$days days, $hours hrs"
-        } else {
-            val minutes = (remainingMs % (1000L * 60 * 60)) / (1000L * 60)
-            "$hours hrs, $minutes min"
-        }
     }
 }
