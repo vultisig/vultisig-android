@@ -53,7 +53,10 @@ internal fun TronDeFiBanner(isLoading: Boolean, totalValue: String, isBalanceVis
         Column(
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxHeight().width(200.dp).padding(16.dp),
+            modifier =
+                Modifier.fillMaxHeight()
+                    .width(200.dp)
+                    .padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
         ) {
             Text(
                 text = stringResource(R.string.tron),
