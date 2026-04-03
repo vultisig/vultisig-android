@@ -49,7 +49,7 @@ private val TRON_STAKE_POSITIONS_DIALOG
 private val TRON_DEFAULT_SELECTED_POSITIONS = listOf(TRON_KEY)
 
 @Immutable
-data class TronDeFiUiState(
+internal data class TronDeFiUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val availableBalanceTrx: String = "0",
@@ -155,7 +155,6 @@ constructor(
                     stats.availableEnergy.toFloat() / stats.totalEnergy.toFloat()
                 else 0f
 
-            val now = System.currentTimeMillis()
             val pendingWithdrawals =
                 (account.unfrozenV2 ?: emptyList())
                     .mapNotNull { entry ->
