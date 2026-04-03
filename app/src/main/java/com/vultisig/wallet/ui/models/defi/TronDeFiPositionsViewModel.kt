@@ -234,10 +234,12 @@ constructor(
     }
 
     fun onClickFreeze(resourceType: String) {
-        viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
+        viewModelScope.safeLaunch(
+            onError = { e -> Timber.e(e, "Failed to navigate to freeze screen") }
+        ) {
+            val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
             val trxCoin =
-                vault.coins.find { it.chain == Chain.Tron && it.isNativeToken } ?: return@launch
+                vault.coins.find { it.chain == Chain.Tron && it.isNativeToken } ?: return@safeLaunch
             navigator.route(
                 Route.Send(
                     vaultId = vaultId,
@@ -251,10 +253,12 @@ constructor(
     }
 
     fun onClickUnfreeze(resourceType: String) {
-        viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
+        viewModelScope.safeLaunch(
+            onError = { e -> Timber.e(e, "Failed to navigate to unfreeze screen") }
+        ) {
+            val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
             val trxCoin =
-                vault.coins.find { it.chain == Chain.Tron && it.isNativeToken } ?: return@launch
+                vault.coins.find { it.chain == Chain.Tron && it.isNativeToken } ?: return@safeLaunch
             navigator.route(
                 Route.Send(
                     vaultId = vaultId,
