@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -42,6 +43,7 @@ data class TronDeFiUiState(
     val energyProgress: Float = 0f,
     val pendingWithdrawals: List<TronPendingWithdrawalUiModel> = emptyList(),
     val isBalanceVisible: Boolean = true,
+    val selectedTab: Int = DeFiTab.STAKED.displayNameRes,
 )
 
 @Immutable
@@ -157,6 +159,10 @@ constructor(
                 )
             }
         }
+    }
+
+    fun onTabSelected(tab: DeFiTab) {
+        _state.update { it.copy(selectedTab = tab.displayNameRes) }
     }
 
     fun onClickFreeze(resourceType: String) {

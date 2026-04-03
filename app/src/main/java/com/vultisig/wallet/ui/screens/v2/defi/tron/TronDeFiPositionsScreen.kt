@@ -19,7 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,14 +42,19 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
+import com.vultisig.wallet.ui.components.v2.tab.VsTab
+import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 private const val TRON_RESOURCE_BANDWIDTH = "BANDWIDTH"
+
+private val TRON_DEFI_TABS = listOf(DeFiTab.STAKED)
 
 private val TronBannerGradientTop = Color(0x17FF060A) // rgba(255,6,10, 0.09)
 private val TronBannerGradientBottom = Color(0x00FF060A) // rgba(255,6,10, 0.00)
@@ -71,11 +75,16 @@ internal fun TronDeFiPositionsScreen(
     TronDeFiPositionsScreenContent(
         state = state,
         onClickManage = { viewModel.onClickFreeze(TRON_RESOURCE_BANDWIDTH) },
+        onTabSelected = viewModel::onTabSelected,
     )
 }
 
 @Composable
-private fun TronDeFiPositionsScreenContent(state: TronDeFiUiState, onClickManage: () -> Unit = {}) {
+private fun TronDeFiPositionsScreenContent(
+    state: TronDeFiUiState,
+    onClickManage: () -> Unit = {},
+    onTabSelected: (DeFiTab) -> Unit = {},
+) {
     val hasNoFrozenPositions =
         !state.isLoading &&
             state.frozenBandwidthTrx.toBigDecimalOrNull()?.signum() == 0 &&
@@ -93,6 +102,8 @@ private fun TronDeFiPositionsScreenContent(state: TronDeFiUiState, onClickManage
             isLoading = state.isLoading,
             totalValue = "${state.availableBalanceTrx} TRX",
             isBalanceVisible = state.isBalanceVisible,
+            selectedTab = state.selectedTab,
+            onTabSelected = onTabSelected,
             onClickManage = onClickManage,
         )
 
@@ -121,10 +132,11 @@ private fun TronDeFiBanner(
     isLoading: Boolean,
     totalValue: String,
     isBalanceVisible: Boolean,
+    selectedTab: Int,
+    onTabSelected: (DeFiTab) -> Unit,
     onClickManage: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // Card
+    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Row(
             modifier =
                 Modifier.fillMaxWidth()
@@ -140,7 +152,7 @@ private fun TronDeFiBanner(
             Column(
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxHeight().padding(16.dp),
+                modifier = Modifier.fillMaxHeight().width(200.dp).padding(16.dp),
             ) {
                 Text(
                     text = stringResource(R.string.tron),
@@ -159,33 +171,30 @@ private fun TronDeFiBanner(
                     )
                 }
             }
-            Column {
+            Column(modifier = Modifier.fillMaxHeight().weight(1f)) {
                 Image(
                     painter = painterResource(R.drawable.tron_banner),
                     contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize().alpha(0.6f),
+                    contentScale = ContentScale.FillHeight,
+                    modifier = Modifier.alpha(0.6f),
                 )
             }
         }
 
-        // Staked row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = stringResource(R.string.defi_tab_staked),
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.secondary,
-                )
-                HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth(0.4f),
-                    color = Theme.v2.colors.border.light,
-                    thickness = 1.dp,
-                )
+            VsTabGroup(index = TRON_DEFI_TABS.indexOfFirst { it.displayNameRes == selectedTab }) {
+                TRON_DEFI_TABS.forEach { tab ->
+                    tab {
+                        VsTab(
+                            label = stringResource(tab.displayNameRes),
+                            onClick = { onTabSelected(tab) },
+                        )
+                    }
+                }
             }
 
             Box(
@@ -263,6 +272,27 @@ private fun TronPendingWithdrawalRow(withdrawal: TronPendingWithdrawalUiModel) {
 
 @Preview(showBackground = true)
 @Composable
+private fun TronDeFiPositionsScreenNoPositionsPreview() {
+    TronDeFiPositionsScreenContent(
+        state =
+            TronDeFiUiState(
+                isLoading = false,
+                availableBalanceTrx = "1,240.50",
+                frozenBandwidthTrx = "0.000000",
+                frozenEnergyTrx = "0.000000",
+                unfreezingTrx = "0.000000",
+                availableBandwidth = 1500L,
+                totalBandwidth = 2000L,
+                availableEnergy = 1L,
+                totalEnergy = 2L,
+                bandwidthProgress = 0.75f,
+                energyProgress = 0.5f,
+            )
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
 private fun TronDeFiPositionsScreenPreview() {
     TronDeFiPositionsScreenContent(
         state =
@@ -291,27 +321,6 @@ private fun TronDeFiPositionsScreenPreview() {
                             isClaimable = false,
                         ),
                     ),
-            )
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun TronDeFiPositionsScreenNoPositionsPreview() {
-    TronDeFiPositionsScreenContent(
-        state =
-            TronDeFiUiState(
-                isLoading = false,
-                availableBalanceTrx = "1234.567890",
-                frozenBandwidthTrx = "0.000000",
-                frozenEnergyTrx = "0.000000",
-                unfreezingTrx = "0.000000",
-                availableBandwidth = 1500L,
-                totalBandwidth = 2000L,
-                availableEnergy = 1L,
-                totalEnergy = 2L,
-                bandwidthProgress = 0.75f,
-                energyProgress = 0.5f,
             )
     )
 }
