@@ -298,6 +298,7 @@
     <string name="share_vault_qr_save">Save</string>
     <string name="share_vault_qr_share">Share</string>
     <string name="deposit_form_node_address_title">Node Address</string>
+    <string name="bond_not_whitelisted_error">You are not whitelisted on this node</string>
     <string name="deposit_form_address_card_title">Address</string>
     <string name="deposit_form_provider_title">Provider (optional)</string>
     <string name="deposit_form_provider_hint">Provider</string>
