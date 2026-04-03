@@ -44,6 +44,7 @@ import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
 import com.vultisig.wallet.ui.models.defi.TronResource
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.delay
@@ -153,13 +154,14 @@ private fun TronDeFiPositionsScreenContent(
         )
 
         if (!state.isLoading) {
-            TronFreezePositionCard(
-                frozenTotalPrice = state.frozenTotalPrice,
-                frozenTotalTrx = state.frozenTotalTrx,
-                isBalanceVisible = state.isBalanceVisible,
-                onClickFreeze = onClickFreeze,
-                onClickUnfreeze = onClickUnfreeze,
-            )
+            NoPositionsContainer()
+            //            TronFreezePositionCard(
+            //                frozenTotalPrice = state.frozenTotalPrice,
+            //                frozenTotalTrx = state.frozenTotalTrx,
+            //                isBalanceVisible = state.isBalanceVisible,
+            //                onClickFreeze = onClickFreeze,
+            //                onClickUnfreeze = onClickUnfreeze,
+            //            )
         }
 
         if (state.pendingWithdrawals.isNotEmpty()) {
