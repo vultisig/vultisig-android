@@ -356,18 +356,16 @@ constructor(
                             data = liFiQuote.transactionRequest.data,
                             gas =
                                 liFiQuote.transactionRequest.gasLimit
-                                    ?.substring(startIndex = 2)
-                                    ?.hexToLong() ?: 0,
+                                    .convertToBigIntegerOrZero()
+                                    .toLong(),
                             value =
                                 liFiQuote.transactionRequest.value
-                                    ?.substring(startIndex = 2)
-                                    ?.convertToBigIntegerOrZero()
+                                    .convertToBigIntegerOrZero()
                                     .toString(),
                             gasPrice =
                                 liFiQuote.transactionRequest.gasPrice
-                                    ?.substring(startIndex = 2)
-                                    ?.hexToLong()
-                                    ?.toString() ?: "0",
+                                    .convertToBigIntegerOrZero()
+                                    .toString(),
                             swapFee = swapFee?.amount ?: "0",
                             swapFeeTokenContract = swapFeeToken,
                         ),
