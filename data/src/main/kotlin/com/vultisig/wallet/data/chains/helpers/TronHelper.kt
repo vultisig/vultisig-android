@@ -19,6 +19,9 @@ import wallet.core.jni.proto.Tron
 import wallet.core.jni.proto.Tron.BlockHeader
 import wallet.core.jni.proto.Tron.TransferTRC20Contract
 
+// Matches exactly FREEZE:BANDWIDTH, FREEZE:ENERGY, UNFREEZE:BANDWIDTH, UNFREEZE:ENERGY
+private val TRON_STAKING_MEMO_REGEX = Regex("^(FREEZE|UNFREEZE):(BANDWIDTH|ENERGY)$")
+
 class TronHelper(
     private val coinType: CoinType,
     private val vaultHexPublicKey: String,
@@ -37,9 +40,17 @@ class TronHelper(
                 buildTronSmartContractPayload(keysignPayload, tronSpecific)
             keysignPayload.tronTransferAssetContractPayload != null ->
                 buildTronTransferAssetSmartContractPayload(keysignPayload, tronSpecific)
-            keysignPayload.memo?.startsWith("FREEZE:") == true ->
+            keysignPayload.coin.isNativeToken &&
+                keysignPayload.coin.address == keysignPayload.toAddress &&
+                keysignPayload.memo != null &&
+                TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) &&
+                keysignPayload.memo.startsWith("FREEZE:") ->
                 buildFreezeBalanceV2(keysignPayload, tronSpecific)
-            keysignPayload.memo?.startsWith("UNFREEZE:") == true ->
+            keysignPayload.coin.isNativeToken &&
+                keysignPayload.coin.address == keysignPayload.toAddress &&
+                keysignPayload.memo != null &&
+                TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) &&
+                keysignPayload.memo.startsWith("UNFREEZE:") ->
                 buildUnfreezeBalanceV2(keysignPayload, tronSpecific)
             keysignPayload.coin.isNativeToken -> buildCoinTransfer(keysignPayload, tronSpecific)
             else -> buildTokenTransfer(keysignPayload, tronSpecific)
