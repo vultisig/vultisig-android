@@ -8,12 +8,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +41,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
@@ -123,7 +125,7 @@ private fun TronDeFiBanner(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // Card
-        Box(
+        Row(
             modifier =
                 Modifier.fillMaxWidth()
                     .height(118.dp)
@@ -135,27 +137,17 @@ private fun TronDeFiBanner(
                     )
                     .border(1.dp, TronBannerBorder, RoundedCornerShape(16.dp))
         ) {
-            // Decorative TRON logo — absolute overlay, clipped by the card
-            Image(
-                painter = painterResource(R.drawable.tron),
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier =
-                    Modifier.size(width = 200.dp, height = 206.dp)
-                        .offset(x = 175.dp, y = (-17).dp)
-                        .alpha(0.6f),
-            )
-
-            // Chain name + balance
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxHeight().padding(16.dp),
             ) {
                 Text(
                     text = stringResource(R.string.tron),
                     style = Theme.brockmann.body.l.medium,
                     color = Theme.v2.colors.text.primary,
                 )
+                UiSpacer(6.dp)
 
                 if (isLoading) {
                     UiPlaceholderLoader(modifier = Modifier.size(width = 150.dp, height = 32.dp))
@@ -166,6 +158,14 @@ private fun TronDeFiBanner(
                         color = Theme.v2.colors.text.primary,
                     )
                 }
+            }
+            Column {
+                Image(
+                    painter = painterResource(R.drawable.tron_banner),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize().alpha(0.6f),
+                )
             }
         }
 
@@ -268,7 +268,7 @@ private fun TronDeFiPositionsScreenPreview() {
         state =
             TronDeFiUiState(
                 isLoading = false,
-                availableBalanceTrx = "1234.567890",
+                availableBalanceTrx = "1,240.50",
                 frozenBandwidthTrx = "100.000000",
                 frozenEnergyTrx = "200.000000",
                 unfreezingTrx = "50.000000",
