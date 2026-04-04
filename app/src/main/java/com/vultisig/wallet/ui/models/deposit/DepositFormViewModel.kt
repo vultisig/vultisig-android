@@ -2438,19 +2438,25 @@ constructor(
                         if (lastTokenValueUserInput != tokenString) {
                             val fiatValue =
                                 convertAmountValue(tokenString, selectedToken) { value, price ->
-                                    value
-                                        .multiply(price)
-                                        .setScale(3, RoundingMode.DOWN)
-                                        .stripTrailingZeros()
-                                } ?: return@combine
+                                        value
+                                            .multiply(price)
+                                            .setScale(3, RoundingMode.DOWN)
+                                            .stripTrailingZeros()
+                                    }
+                                    ?.takeIf { it.isNotEmpty() } ?: return@combine
                             lastTokenValueUserInput = tokenString
                             lastFiatValueUserInput = fiatValue
                             fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
                         } else if (lastFiatValueUserInput != fiatString) {
                             val tokenValue =
                                 convertAmountValue(fiatString, selectedToken) { value, price ->
-                                    value.divide(price, selectedToken.decimal, RoundingMode.DOWN)
-                                } ?: return@combine
+                                        value.divide(
+                                            price,
+                                            selectedToken.decimal,
+                                            RoundingMode.DOWN,
+                                        )
+                                    }
+                                    ?.takeIf { it.isNotEmpty() } ?: return@combine
                             lastTokenValueUserInput = tokenValue
                             lastFiatValueUserInput = fiatString
                             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
