@@ -166,6 +166,7 @@ private fun AddLpContent(
                         primaryFieldState = primaryFieldState,
                         primaryLabel = primaryLabel,
                         secondaryText = secondaryText,
+                        maxBalance = if (usingTokenAmountInput) rawBalance else null,
                         modifier = Modifier.padding(horizontal = 54.dp).align(Alignment.Center),
                     )
 
