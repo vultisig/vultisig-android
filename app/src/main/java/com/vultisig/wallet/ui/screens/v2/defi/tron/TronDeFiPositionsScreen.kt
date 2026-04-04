@@ -67,6 +67,9 @@ internal fun TronDeFiPositionsScreen(
         onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = viewModel::onPositionSelectionDone,
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
+        // TODO(follow-up #4): TronFreezePositionCard will expose per-resource callbacks once
+        //  it is completed. Until then both actions default to BANDWIDTH so the navigation
+        //  path is exercisable. ENERGY freeze/unfreeze is intentionally unreachable here.
         onClickFreeze = { viewModel.onClickFreeze(TronResource.BANDWIDTH) },
         onClickUnfreeze = { viewModel.onClickUnfreeze(TronResource.BANDWIDTH) },
     )
