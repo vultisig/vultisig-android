@@ -20,6 +20,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
+import com.vultisig.wallet.ui.screens.v2.defi.maya.AddLpScreen
 import com.vultisig.wallet.ui.screens.v2.defi.maya.RemoveLpScreen
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
@@ -61,9 +62,11 @@ internal fun DepositScreen(
 
     val title: String
 
+    val isAddLp = depositType == DeFiNavActions.ADD_LP.type
     val isRemoveLp = depositType == DeFiNavActions.REMOVE_LP.type
     val defaultTitle =
-        if (isRemoveLp) stringResource(R.string.remove_pool_title)
+        if (isAddLp) stringResource(R.string.add_pool_title)
+        else if (isRemoveLp) stringResource(R.string.remove_pool_title)
         else stringResource(R.string.deposit_screen_title)
 
     when (route) {
@@ -124,7 +127,12 @@ private fun DepositScreen(
             popExitTransition = slideOutToEndExitTransition(),
         ) {
             composable(route = SendDst.Send.route) {
-                if (depositType == DeFiNavActions.REMOVE_LP.type) {
+                require(!poolId.isNullOrBlank()) {
+                    "poolId must be non-null and non-blank for ADD_LP flow"
+                }
+                if (depositType == DeFiNavActions.ADD_LP.type) {
+                    AddLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId)
+                } else if (depositType == DeFiNavActions.REMOVE_LP.type) {
                     RemoveLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId)
                 } else {
                     DepositFormScreen(

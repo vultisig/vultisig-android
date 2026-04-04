@@ -44,6 +44,7 @@ import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
@@ -51,6 +52,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
@@ -75,14 +77,19 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -91,6 +98,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -138,7 +146,10 @@ internal data class DepositFormUiModel(
     val lpUnitsError: UiText? = null,
     val slippageError: UiText? = null,
     val isLoading: Boolean = false,
+    val isCheckingWhitelist: Boolean = false,
+    val isWhitelistFailed: Boolean = false,
     val balance: UiText = UiText.Empty,
+    val balanceDecimal: BigDecimal? = null,
     val sharesBalance: UiText = R.string.share_balance_loading.asUiText(),
     val selectedDstChain: Chain = Chain.ThorChain,
     val dstChainList: List<Chain> = emptyList(),
@@ -159,6 +170,8 @@ internal data class DepositFormUiModel(
     val availableLpUnits: String? = null,
     val selectedPoolTotalLpUnits: Long = 0L,
     val selectedPoolCacaoDepth: Long = 0L,
+    val totalGas: UiText = UiText.Empty,
+    val estimatedFee: UiText = UiText.Empty,
     val removeLpPercent: Float = 1f,
     val removeLpCacaoDisplay: String = "",
 )
@@ -170,6 +183,8 @@ constructor(
     private val navigator: Navigator<Destination>,
     private val sendNavigator: Navigator<SendDst>,
     private val requestQrScan: RequestQrScanUseCase,
+    appCurrencyRepository: AppCurrencyRepository,
+    private val tokenPriceRepository: TokenPriceRepository,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val accountsRepository: AccountsRepository,
     private val isAssetCharsValid: DepositMemoAssetsValidatorUseCase,
@@ -189,6 +204,26 @@ constructor(
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
 ) : ViewModel() {
 
+    private val appCurrency =
+        appCurrencyRepository.currency.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(),
+            appCurrencyRepository.defaultCurrency,
+        )
+
+    val fiatCurrency =
+        appCurrency
+            .map { it.ticker }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(),
+                appCurrencyRepository.defaultCurrency.ticker,
+            )
+
+    private var lastTokenValueUserInput: String = ""
+    private var lastFiatValueUserInput: String = ""
+    private var amountChangesJob: Job? = null
+
     private var vaultId: String? = null
     private var chain: Chain? = null
 
@@ -197,6 +232,7 @@ constructor(
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
 
     val tokenAmountFieldState = TextFieldState()
+    val fiatAmountFieldState = TextFieldState()
     val nodeAddressFieldState = TextFieldState()
     val providerFieldState = TextFieldState()
     val operatorFeeFieldState = TextFieldState()
@@ -220,6 +256,7 @@ constructor(
     private val address = MutableStateFlow<Address?>(null)
     private val secureAssetNodeValue = MutableStateFlow<String?>(null)
     private var addressJob: Job? = null
+    private var whitelistJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
@@ -237,6 +274,8 @@ constructor(
         this.depositTypeAction = depositType
         this.bondAddress = bondAddress
         this.lpPoolId = poolId
+
+        collectAmountChanges()
 
         val depositOptions =
             when (chain) {
@@ -278,12 +317,18 @@ constructor(
                     }
             }
         val depositOption = depositOptions.first()
+        val defaultToken =
+            when (chain) {
+                Chain.MayaChain -> Coins.MayaChain.CACAO
+                else -> Coins.ThorChain.RUNE
+            }
         state.update {
             it.copy(
                 depositMessage = R.string.deposit_message_deposit_title.asUiText(chain.raw),
                 depositOptions = depositOptions,
                 depositOption = depositOption,
                 depositChain = chain,
+                selectedToken = defaultToken,
             )
         }
 
@@ -307,6 +352,9 @@ constructor(
             .onEach { address ->
                 val selectedToken = address.accounts.find { it.token.isNativeToken }?.token
                 selectedToken?.let { state.update { it.copy(selectedToken = selectedToken) } }
+                if (depositTypeAction == DeFiNavActions.ADD_LP.type) {
+                    loadGasFeeForDisplay(address)
+                }
             }
             .launchIn(viewModelScope)
 
@@ -514,21 +562,56 @@ constructor(
             val tokenValue = account.tokenValue
             if (tokenValue != null) {
                 val value = mapTokenValueToStringWithUnit(tokenValue)
-                state.update { state -> state.copy(amountError = null, balance = value.asUiText()) }
+                state.update { state ->
+                    state.copy(
+                        amountError = null,
+                        balance = value.asUiText(),
+                        balanceDecimal = tokenValue.decimal,
+                    )
+                }
             } else {
                 // Account exists in vault but balance not yet loaded — clear stale error and
                 // balance
-                state.update { it.copy(amountError = null, balance = UiText.Empty) }
+                state.update {
+                    it.copy(amountError = null, balance = UiText.Empty, balanceDecimal = null)
+                }
             }
         } else {
             state.update {
                 it.copy(
                     balance = UiText.Empty,
+                    balanceDecimal = null,
                     amountError =
                         UiText.FormattedText(
                             R.string.must_be_enabled_before_proceeding,
                             listOf(targetTicker.orEmpty()),
                         ),
+                )
+            }
+        }
+    }
+
+    private fun loadGasFeeForDisplay(address: Address) {
+        val chain = chain ?: return
+        viewModelScope.safeLaunch {
+            val token = address.accounts.find { it.token.isNativeToken }?.token ?: return@safeLaunch
+            val srcAddress = token.address
+            val gasFee = calculateGasFee(chain, token, srcAddress)
+            val specific =
+                blockChainSpecificRepository.getSpecific(
+                    chain,
+                    srcAddress,
+                    token,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                )
+            val estimatedGasFee = getFeesFiatValue(specific, gasFee, token)
+            state.update {
+                it.copy(
+                    totalGas = UiText.DynamicString(estimatedGasFee.formattedTokenValue),
+                    estimatedFee = UiText.DynamicString(estimatedGasFee.formattedFiatValue),
                 )
             }
         }
@@ -783,8 +866,71 @@ constructor(
     }
 
     fun validateNodeAddress() {
-        val errorText = validateDstAddress(nodeAddressFieldState.text.toString())
-        state.update { it.copy(nodeAddressError = errorText) }
+        val nodeAddress = nodeAddressFieldState.text.toString()
+        val errorText = validateDstAddress(nodeAddress)
+        if (errorText != null) {
+            whitelistJob?.cancel()
+            state.update { it.copy(nodeAddressError = errorText, isCheckingWhitelist = false) }
+            return
+        }
+        if (chain == Chain.MayaChain && state.value.depositOption == DepositOption.Bond) {
+            whitelistJob?.cancel()
+            state.update {
+                it.copy(
+                    nodeAddressError = null,
+                    isCheckingWhitelist = true,
+                    isWhitelistFailed = false,
+                )
+            }
+            whitelistJob = viewModelScope.safeLaunch { checkNodeWhitelist(nodeAddress) }
+        } else {
+            state.update { it.copy(nodeAddressError = null) }
+        }
+    }
+
+    private suspend fun checkNodeWhitelist(nodeAddress: String) {
+        try {
+            val userAddress =
+                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                    ?.address
+                    ?: run {
+                        state.update { it.copy(isCheckingWhitelist = false) }
+                        return
+                    }
+            val nodeInfo = mayachainBondRepository.getNodeDetails(nodeAddress)
+            if (
+                nodeAddressFieldState.text.toString() != nodeAddress ||
+                    chain != Chain.MayaChain ||
+                    state.value.depositOption != DepositOption.Bond
+            ) {
+                state.update { it.copy(isCheckingWhitelist = false) }
+                return
+            }
+            val isWhitelisted =
+                nodeInfo.bondProviders.providers.any { it.bondAddress == userAddress }
+            if (!isWhitelisted) {
+                state.update {
+                    it.copy(
+                        nodeAddressError =
+                            UiText.StringResource(R.string.bond_not_whitelisted_error),
+                        isCheckingWhitelist = false,
+                        isWhitelistFailed = true,
+                    )
+                }
+            } else {
+                state.update {
+                    it.copy(
+                        nodeAddressError = null,
+                        isCheckingWhitelist = false,
+                        isWhitelistFailed = false,
+                    )
+                }
+            }
+        } catch (ce: CancellationException) {
+            throw ce
+        } catch (_: Exception) {
+            state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
+        }
     }
 
     fun validateTokenAmount() {
@@ -847,6 +993,7 @@ constructor(
 
     fun setNodeAddress(address: String) {
         nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address)
+        validateNodeAddress()
     }
 
     private fun setSlippage(slippage: String) {
@@ -857,7 +1004,7 @@ constructor(
         viewModelScope.launch {
             val qr = requestQrScan()
             if (!qr.isNullOrBlank()) {
-                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(qr)
+                setNodeAddress(qr)
             }
         }
     }
@@ -1498,6 +1645,12 @@ constructor(
                 ?: throw InvalidTransactionDataException(
                     UiText.StringResource(R.string.send_error_no_address)
                 )
+
+        if (state.value.isWhitelistFailed) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.bond_not_whitelisted_error)
+            )
+        }
 
         val depositChain = state.value.depositChain
 
@@ -2304,6 +2457,72 @@ constructor(
                 selectedToken = selectedToken,
             )
         )
+    }
+
+    private fun collectAmountChanges() {
+        if (amountChangesJob != null) return
+        amountChangesJob =
+            viewModelScope.safeLaunch {
+                combine(
+                        state.map { it.selectedToken }.distinctUntilChanged(),
+                        tokenAmountFieldState.textAsFlow(),
+                        fiatAmountFieldState.textAsFlow(),
+                    ) { selectedToken, tokenFieldValue, fiatFieldValue ->
+                        val tokenString = tokenFieldValue.toString()
+                        val fiatString = fiatFieldValue.toString()
+                        if (lastTokenValueUserInput != tokenString) {
+                            val fiatValue =
+                                convertAmountValue(tokenString, selectedToken) { value, price ->
+                                        value
+                                            .multiply(price)
+                                            .setScale(selectedToken.decimal, RoundingMode.DOWN)
+                                            .stripTrailingZeros()
+                                    }
+                                    ?.takeIf { it.isNotEmpty() } ?: return@combine
+                            lastTokenValueUserInput = tokenString
+                            lastFiatValueUserInput = fiatValue
+                            fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
+                        } else if (lastFiatValueUserInput != fiatString) {
+                            val tokenValue =
+                                convertAmountValue(fiatString, selectedToken) { value, price ->
+                                        value.divide(
+                                            price,
+                                            selectedToken.decimal,
+                                            RoundingMode.DOWN,
+                                        )
+                                    }
+                                    ?.takeIf { it.isNotEmpty() } ?: return@combine
+                            lastTokenValueUserInput = tokenValue
+                            lastFiatValueUserInput = fiatString
+                            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
+                        }
+                    }
+                    .collect()
+            }
+    }
+
+    private suspend fun convertAmountValue(
+        value: String,
+        token: Coin,
+        transform: (value: BigDecimal, price: BigDecimal) -> BigDecimal,
+    ): String? {
+        val decimalValue = value.toBigDecimalOrNull() ?: return ""
+        return try {
+            val price = tokenPriceRepository.getPrice(token, appCurrency.value).first()
+            if (price == BigDecimal.ZERO) {
+                Timber.w(
+                    "convertAmountValue: price is ZERO for token %s, skipping conversion",
+                    token.ticker,
+                )
+                return null
+            }
+            transform(decimalValue, price).toPlainString()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            Timber.d("Failed to get price for token %s", token)
+            null
+        }
     }
 
     private fun isLpUnitCharsValid(lpUnits: String) =

@@ -230,6 +230,7 @@
     <string name="share_vault_qr_save" >Opslaan</string>
     <string name="share_vault_qr_share" >Delen</string>
     <string name="deposit_form_node_address_title">Knooppuntadres</string>
+    <string name="bond_not_whitelisted_error">U staat niet op de whitelist van dit knooppunt</string>
     <string name="deposit_form_address_card_title">Adres</string>
     <string name="deposit_form_provider_title">Provider (optioneel)</string>
     <string name="deposit_form_provider_hint">Leverancier</string>
@@ -472,6 +473,12 @@
     <string name="deposit_option_remove_cacao_pool">Verwijderen uit CACAO-pool</string>
     <string name="deposit_option_add_liquidity">Liquiditeit toevoegen</string>
     <string name="deposit_option_remove_liquidity">Liquiditeit verwijderen</string>
+    <string name="add_pool_title">Pool toevoegen</string>
+    <string name="add_pool_amount_label">Bedrag</string>
+    <string name="add_pool_gas_auto">Netwerkkosten (auto)</string>
+    <string name="max">Max</string>
+    <string name="token_fiat_toggle_token_label">Tokenwaarde</string>
+    <string name="token_fiat_toggle_fiat_label">Fiatwaarde</string>
     <string name="remove_pool_title">Pool verwijderen</string>
     <string name="remove_pool_amount_label">Bedrag</string>
     <string name="cacaopool_only_cacao_supported">Alleen CACAO-tokens worden ondersteund voor pooloperaties</string>

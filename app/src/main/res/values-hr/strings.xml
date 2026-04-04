@@ -231,6 +231,7 @@
     <string name="share_vault_qr_save" >Spremi</string>
     <string name="share_vault_qr_share" >Podijeli</string>
     <string name="deposit_form_node_address_title">Adresa čvora</string>
+    <string name="bond_not_whitelisted_error">Niste na listi dozvoljenih za ovaj čvor</string>
     <string name="deposit_form_address_card_title">Adresa</string>
     <string name="deposit_form_provider_title">Davatelj (neobavezno)</string>
     <string name="deposit_form_provider_hint">Davatelj</string>
@@ -476,6 +477,12 @@
     <string name="deposit_option_remove_cacao_pool">Ukloni iz CACAO poola</string>
     <string name="deposit_option_add_liquidity">Dodaj likvidnost</string>
     <string name="deposit_option_remove_liquidity">Ukloni likvidnost</string>
+    <string name="add_pool_title">Dodaj Pool</string>
+    <string name="add_pool_amount_label">Iznos</string>
+    <string name="add_pool_gas_auto">Mrežna naknada (automatski)</string>
+    <string name="max">Maks</string>
+    <string name="token_fiat_toggle_token_label">Vrijednost tokena</string>
+    <string name="token_fiat_toggle_fiat_label">Fiat vrijednost</string>
     <string name="remove_pool_title">Ukloni Pool</string>
     <string name="remove_pool_amount_label">Iznos</string>
     <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>
