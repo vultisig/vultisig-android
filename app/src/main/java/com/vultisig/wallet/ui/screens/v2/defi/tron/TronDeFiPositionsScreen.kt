@@ -38,10 +38,10 @@ import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
+import com.vultisig.wallet.ui.models.defi.TronAction
 import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
-import com.vultisig.wallet.ui.models.defi.TronResource
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
@@ -67,11 +67,11 @@ internal fun TronDeFiPositionsScreen(
         onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = viewModel::onPositionSelectionDone,
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
-        // TODO(follow-up #4): TronFreezePositionCard will expose per-resource callbacks once
-        //  it is completed. Until then both actions default to BANDWIDTH so the navigation
-        //  path is exercisable. ENERGY freeze/unfreeze is intentionally unreachable here.
-        onClickFreeze = { viewModel.onClickFreeze(TronResource.BANDWIDTH) },
-        onClickUnfreeze = { viewModel.onClickUnfreeze(TronResource.BANDWIDTH) },
+        // TODO(follow-up #4): TronFreezePositionCard will pass the specific TronAction per row
+        //  once it exposes per-resource callbacks. Until then both default to BANDWIDTH.
+        //  ENERGY freeze/unfreeze is intentionally unreachable from the UI in this PR.
+        onClickFreeze = { viewModel.onTronAction(TronAction.FREEZE_BANDWIDTH) },
+        onClickUnfreeze = { viewModel.onTronAction(TronAction.UNFREEZE_BANDWIDTH) },
     )
 }
 

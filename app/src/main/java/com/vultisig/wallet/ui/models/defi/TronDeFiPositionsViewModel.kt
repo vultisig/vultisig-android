@@ -77,9 +77,11 @@ internal data class TronDeFiUiState(
 
 @Immutable data class TronPendingWithdrawalUiModel(val amountTrx: String, val expiryEpochMs: Long)
 
-enum class TronResource {
-    BANDWIDTH,
-    ENERGY,
+enum class TronAction(val memo: String) {
+    FREEZE_BANDWIDTH("FREEZE:BANDWIDTH"),
+    FREEZE_ENERGY("FREEZE:ENERGY"),
+    UNFREEZE_BANDWIDTH("UNFREEZE:BANDWIDTH"),
+    UNFREEZE_ENERGY("UNFREEZE:ENERGY"),
 }
 
 @HiltViewModel
@@ -252,9 +254,9 @@ constructor(
         }
     }
 
-    fun onClickFreeze(resource: TronResource) {
+    fun onTronAction(action: TronAction) {
         viewModelScope.safeLaunch(
-            onError = { e -> Timber.e(e, "Failed to navigate to freeze screen") }
+            onError = { e -> Timber.e(e, "Failed to navigate for action %s", action) }
         ) {
             val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
             val trxCoin =
@@ -265,26 +267,7 @@ constructor(
                     chainId = Chain.Tron.id,
                     tokenId = trxCoin.id,
                     address = trxCoin.address,
-                    memo = "FREEZE:${resource.name}",
-                )
-            )
-        }
-    }
-
-    fun onClickUnfreeze(resource: TronResource) {
-        viewModelScope.safeLaunch(
-            onError = { e -> Timber.e(e, "Failed to navigate to unfreeze screen") }
-        ) {
-            val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
-            val trxCoin =
-                vault.coins.find { it.chain == Chain.Tron && it.isNativeToken } ?: return@safeLaunch
-            navigator.route(
-                Route.Send(
-                    vaultId = vaultId,
-                    chainId = Chain.Tron.id,
-                    tokenId = trxCoin.id,
-                    address = trxCoin.address,
-                    memo = "UNFREEZE:${resource.name}",
+                    memo = action.memo,
                 )
             )
         }
