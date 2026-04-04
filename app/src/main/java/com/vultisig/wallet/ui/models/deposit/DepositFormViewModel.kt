@@ -2440,7 +2440,7 @@ constructor(
                                 convertAmountValue(tokenString, selectedToken) { value, price ->
                                         value
                                             .multiply(price)
-                                            .setScale(3, RoundingMode.DOWN)
+                                            .setScale(selectedToken.decimal, RoundingMode.DOWN)
                                             .stripTrailingZeros()
                                     }
                                     ?.takeIf { it.isNotEmpty() } ?: return@combine
