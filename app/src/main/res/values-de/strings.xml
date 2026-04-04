@@ -160,6 +160,7 @@
     <string name="token_logo">Token-Logo</string>
     <string name="vault_edit_this_name_already_exist">dieser Name existiert bereits</string>
     <string name="import_file_screen_duplicate_vault">Der Tresor ist ein Duplikat</string>
+    <string name="import_file_screen_success_import">Der Tresor wurde erfolgreich importiert</string>
     <string name="verify_swap_consent_amount">Der Swapbetrag ist korrekt</string>
     <string name="successfully_scanned_barcode">Barcode erfolgreich gescannt: %1$s</string>
     <string name="scan_qr_screen_return_vault">Zurück zum Tresor</string>

@@ -19,13 +19,11 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -57,13 +55,6 @@ import com.vultisig.wallet.ui.utils.asString
 internal fun ImportFileScreen(viewModel: ImportFileViewModel = hiltViewModel()) {
     val uiModel by viewModel.uiModel.collectAsState()
     val snackBarHostState = rememberVsSnackbarState()
-    val context = LocalContext.current
-
-    LaunchedEffect(key1 = Unit) {
-        viewModel.snackBarChannelFlow.collect { snackBarMessage ->
-            snackBarMessage?.let { snackBarHostState.show(it.asString(context)) }
-        }
-    }
 
     val launcher =
         rememberLauncherForActivityResult(
@@ -176,7 +167,8 @@ private fun ImportFileScreen(
                         contentDescription = null,
                         tint =
                             when {
-                                uiModel.error != null -> Theme.v2.colors.alerts.error
+                                uiModel.isZip != true && uiModel.error != null ->
+                                    Theme.v2.colors.alerts.error
                                 !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
                                 else -> Theme.v2.colors.primary.accent4
                             },

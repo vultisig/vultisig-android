@@ -198,6 +198,7 @@
     <string name="vault_list_vaults_list">Vaults</string>
     <string name="import_file_screen_title">Import</string>
     <string name="import_file_screen_duplicate_vault">The vault is duplicate</string>
+    <string name="import_file_screen_success_import">The vault imported successfully</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SECURE CRYPTO VAULT</string>
     <string name="generating_key_screen_keygen_failed">Keygen Failed</string>

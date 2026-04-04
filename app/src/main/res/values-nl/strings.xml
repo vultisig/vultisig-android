@@ -138,6 +138,7 @@
     <string name="vault_list_vaults_list">Kluizen</string>
     <string name="import_file_screen_title">Importeren</string>
     <string name="import_file_screen_duplicate_vault">De kluis is dubbel</string>
+    <string name="import_file_screen_success_import">De kluis is succesvol geïmporteerd</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">VEILIGE CRYPTO KLUIS</string>
     <string name="generating_key_screen_keygen_failed">Sleutel genereren mislukt</string>
