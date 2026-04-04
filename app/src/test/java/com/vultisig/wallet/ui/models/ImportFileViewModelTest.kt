@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -50,6 +51,7 @@ internal class ImportFileViewModelTest {
     private lateinit var discoverToken: DiscoverTokenUseCase
     private lateinit var vaultRepository: VaultRepository
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
+    private lateinit var snackbarFlow: SnackbarFlow
 
     @BeforeEach
     fun setUp() {
@@ -64,6 +66,7 @@ internal class ImportFileViewModelTest {
         discoverToken = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
         chainAccountAddressRepository = mockk(relaxed = true)
+        snackbarFlow = mockk(relaxed = true)
     }
 
     @AfterEach
@@ -89,6 +92,7 @@ internal class ImportFileViewModelTest {
                 discoverToken = discoverToken,
                 vaultRepository = vaultRepository,
                 chainAccountAddressRepository = chainAccountAddressRepository,
+                snackBarFlow = snackbarFlow,
             )
         vm.uiModel.value =
             ImportFileState(fileName = fileName, fileContent = fileContent, isZip = false)
