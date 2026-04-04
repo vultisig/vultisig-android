@@ -5,7 +5,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,9 +37,6 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.util.dashedBorder
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
-import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
-import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.FILE_ALLOWED_MIME_TYPES
 import com.vultisig.wallet.ui.models.ImportFileState
 import com.vultisig.wallet.ui.models.ImportFileViewModel
@@ -54,7 +50,6 @@ import com.vultisig.wallet.ui.utils.asString
 @Composable
 internal fun ImportFileScreen(viewModel: ImportFileViewModel = hiltViewModel()) {
     val uiModel by viewModel.uiModel.collectAsState()
-    val snackBarHostState = rememberVsSnackbarState()
 
     val launcher =
         rememberLauncherForActivityResult(
@@ -68,7 +63,6 @@ internal fun ImportFileScreen(viewModel: ImportFileViewModel = hiltViewModel()) 
         passwordTextFieldState = viewModel.passwordTextFieldState,
         onImportFile = { launcher.launch("*/*") },
         onContinue = viewModel::saveFileToAppDir,
-        snackBarHostState = snackBarHostState,
         onHidePasswordPromptDialog = viewModel::hidePasswordPromptDialog,
         onConfirmPasswordClick = viewModel::decryptVaultData,
         onTogglePasswordVisibilityClick = viewModel::togglePasswordVisibility,
@@ -88,7 +82,6 @@ private fun ImportFileScreen(
     passwordTextFieldState: TextFieldState = TextFieldState(),
     onTogglePasswordVisibilityClick: () -> Unit = {},
     onConfirmPasswordClick: () -> Unit = {},
-    snackBarHostState: VSSnackbarState = rememberVsSnackbarState(),
 ) {
     if (uiModel.showPasswordPrompt) {
         KeysignPasswordBottomSheet(
@@ -121,96 +114,87 @@ private fun ImportFileScreen(
                 )
         },
     ) {
-        Box {
-            Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize()) {
-                Column(
-                    horizontalAlignment = CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .background(
-                                color =
-                                    when {
-                                        uiModel.error != null -> Theme.v2.colors.backgrounds.error
-                                        !uiModel.fileName.isNullOrBlank() ->
-                                            Theme.v2.colors.backgrounds.success
-                                        else -> Theme.v2.colors.backgrounds.secondary
-                                    },
-                                shape = RoundedCornerShape(12.dp),
-                            )
-                            .dashedBorder(
-                                width = 1.dp,
-                                color =
-                                    when {
-                                        uiModel.error != null -> Theme.v2.colors.alerts.error
-                                        !uiModel.fileName.isNullOrBlank() ->
-                                            Theme.v2.colors.alerts.success
-                                        else -> Theme.v2.colors.border.normal
-                                    },
-                                cornerRadius = 12.dp,
-                                dashLength = 4.dp,
-                                intervalLength = 4.dp,
-                            )
-                            .padding(horizontal = 16.dp, vertical = 48.dp)
-                            .clickable(onClick = onImportFile),
-                ) {
-                    Icon(
-                        painter =
-                            painterResource(
-                                id =
-                                    when {
-                                        !uiModel.fileName.isNullOrBlank() ->
-                                            R.drawable.ic_page_check
-                                        else -> R.drawable.ic_cloud_upload
-                                    }
-                            ),
-                        contentDescription = null,
-                        tint =
-                            when {
-                                uiModel.isZip != true && uiModel.error != null ->
-                                    Theme.v2.colors.alerts.error
-                                !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
-                                else -> Theme.v2.colors.primary.accent4
-                            },
-                        modifier = Modifier.size(48.dp),
-                    )
+        Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize()) {
+            Column(
+                horizontalAlignment = CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .background(
+                            color =
+                                when {
+                                    uiModel.error != null -> Theme.v2.colors.backgrounds.error
+                                    !uiModel.fileName.isNullOrBlank() ->
+                                        Theme.v2.colors.backgrounds.success
+                                    else -> Theme.v2.colors.backgrounds.secondary
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .dashedBorder(
+                            width = 1.dp,
+                            color =
+                                when {
+                                    uiModel.error != null -> Theme.v2.colors.alerts.error
+                                    !uiModel.fileName.isNullOrBlank() ->
+                                        Theme.v2.colors.alerts.success
+                                    else -> Theme.v2.colors.border.normal
+                                },
+                            cornerRadius = 12.dp,
+                            dashLength = 4.dp,
+                            intervalLength = 4.dp,
+                        )
+                        .padding(horizontal = 16.dp, vertical = 48.dp)
+                        .clickable(onClick = onImportFile),
+            ) {
+                Icon(
+                    painter =
+                        painterResource(
+                            id =
+                                when {
+                                    !uiModel.fileName.isNullOrBlank() -> R.drawable.ic_page_check
+                                    else -> R.drawable.ic_cloud_upload
+                                }
+                        ),
+                    contentDescription = null,
+                    tint =
+                        when {
+                            uiModel.isZip != true && uiModel.error != null ->
+                                Theme.v2.colors.alerts.error
+                            !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
+                            else -> Theme.v2.colors.primary.accent4
+                        },
+                    modifier = Modifier.size(48.dp),
+                )
 
-                    Text(
-                        text =
-                            uiModel.error?.asString()
-                                ?: uiModel.fileName
-                                ?: stringResource(R.string.import_file_import_your_vault_share),
-                        color =
-                            when {
-                                uiModel.error != null -> Theme.v2.colors.alerts.error
-                                !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
-                                else -> Theme.v2.colors.text.secondary
-                            },
-                        style = Theme.brockmann.headings.subtitle,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-
-                UiSpacer(16.dp)
-
-                if (uiModel.fileName.isNullOrBlank()) {
-                    Text(
-                        text =
-                            stringResource(R.string.import_file_supported_file_types_dat_bak_vult),
-                        color = Theme.v2.colors.text.tertiary,
-                        style = Theme.brockmann.supplementary.footnote,
-                    )
-                }
-
-                if (uiModel.isZip == true) {
-                    ZipOutput(zipOutputs = uiModel.zipOutputs, onImportVult = onImportVult)
-                }
+                Text(
+                    text =
+                        uiModel.error?.asString()
+                            ?: uiModel.fileName
+                            ?: stringResource(R.string.import_file_import_your_vault_share),
+                    color =
+                        when {
+                            uiModel.error != null -> Theme.v2.colors.alerts.error
+                            !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
+                            else -> Theme.v2.colors.text.secondary
+                        },
+                    style = Theme.brockmann.headings.subtitle,
+                    textAlign = TextAlign.Center,
+                )
             }
 
-            VsSnackBar(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                snackbarState = snackBarHostState,
-            )
+            UiSpacer(16.dp)
+
+            if (uiModel.fileName.isNullOrBlank()) {
+                Text(
+                    text = stringResource(R.string.import_file_supported_file_types_dat_bak_vult),
+                    color = Theme.v2.colors.text.tertiary,
+                    style = Theme.brockmann.supplementary.footnote,
+                )
+            }
+
+            if (uiModel.isZip == true) {
+                ZipOutput(zipOutputs = uiModel.zipOutputs, onImportVult = onImportVult)
+            }
         }
     }
 }
@@ -248,17 +232,11 @@ private fun ZipOutput(zipOutputs: List<AppZipEntry>, onImportVult: (AppZipEntry)
 @Preview(showBackground = true)
 @Composable
 private fun ImportFilePreview() {
-    ImportFileScreen(
-        uiModel = ImportFileState(isZip = true),
-        snackBarHostState = rememberVsSnackbarState(),
-    )
+    ImportFileScreen(uiModel = ImportFileState(isZip = true))
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun ImportFilePasswordPromptPreview() {
-    ImportFileScreen(
-        uiModel = ImportFileState(showPasswordPrompt = true),
-        snackBarHostState = rememberVsSnackbarState(),
-    )
+    ImportFileScreen(uiModel = ImportFileState(showPasswordPrompt = true))
 }
