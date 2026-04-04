@@ -315,12 +315,18 @@ constructor(
                     }
             }
         val depositOption = depositOptions.first()
+        val defaultToken =
+            when (chain) {
+                Chain.MayaChain -> Coins.MayaChain.CACAO
+                else -> Coins.ThorChain.RUNE
+            }
         state.update {
             it.copy(
                 depositMessage = R.string.deposit_message_deposit_title.asUiText(chain.raw),
                 depositOptions = depositOptions,
                 depositOption = depositOption,
                 depositChain = chain,
+                selectedToken = defaultToken,
             )
         }
 
