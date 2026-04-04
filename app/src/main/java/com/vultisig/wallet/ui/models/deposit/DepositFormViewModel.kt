@@ -2474,7 +2474,13 @@ constructor(
         val decimalValue = value.toBigDecimalOrNull() ?: return ""
         return try {
             val price = tokenPriceRepository.getPrice(token, appCurrency.value).first()
-            if (price == BigDecimal.ZERO) return null
+            if (price == BigDecimal.ZERO) {
+                Timber.w(
+                    "convertAmountValue: price is ZERO for token %s, skipping conversion",
+                    token.ticker,
+                )
+                return null
+            }
             transform(decimalValue, price).toPlainString()
         } catch (e: CancellationException) {
             throw e

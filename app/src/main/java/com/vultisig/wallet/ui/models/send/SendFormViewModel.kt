@@ -2929,7 +2929,13 @@ constructor(
                     return null
                 }
 
-            if (price == BigDecimal.ZERO) return null
+            if (price == BigDecimal.ZERO) {
+                Timber.w(
+                    "convertValue: price is ZERO for token %s, skipping conversion",
+                    selectedToken.ticker,
+                )
+                return null
+            }
 
             transform(decimalValue, price, selectedToken).toPlainString()
         } else {
