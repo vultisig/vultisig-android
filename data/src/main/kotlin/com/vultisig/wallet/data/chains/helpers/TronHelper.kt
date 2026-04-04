@@ -3,6 +3,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -18,9 +19,6 @@ import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Tron
 import wallet.core.jni.proto.Tron.BlockHeader
 import wallet.core.jni.proto.Tron.TransferTRC20Contract
-
-// Matches exactly FREEZE:BANDWIDTH, FREEZE:ENERGY, UNFREEZE:BANDWIDTH, UNFREEZE:ENERGY
-private val TRON_STAKING_MEMO_REGEX = Regex("^(FREEZE|UNFREEZE):(BANDWIDTH|ENERGY)$")
 
 class TronHelper(
     private val coinType: CoinType,

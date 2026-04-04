@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -29,12 +28,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.theme.Theme
-
-private val TronBannerGradientTop = Color(0x17FF060A) // rgba(255,6,10, 0.09)
-private val TronBannerGradientBottom = Color(0x00FF060A) // rgba(255,6,10, 0.00)
-private val TronBannerBorder = Color(0x2BFF060A) // rgba(255,6,10, 0.17)
-
-private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 
 @Composable
 internal fun TronDeFiBanner(isLoading: Boolean, totalValue: String, isBalanceVisible: Boolean) {

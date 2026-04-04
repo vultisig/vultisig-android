@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.genera
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
+import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
@@ -227,9 +228,6 @@ internal sealed class GasSettings {
 }
 
 internal data class InvalidTransactionDataException(val text: UiText) : Exception()
-
-// Matches exactly "FREEZE:BANDWIDTH", "FREEZE:ENERGY", "UNFREEZE:BANDWIDTH", "UNFREEZE:ENERGY"
-private val TRON_STAKING_MEMO_REGEX = Regex("^(FREEZE|UNFREEZE):(BANDWIDTH|ENERGY)$")
 
 @ExperimentalStdlibApi
 @HiltViewModel

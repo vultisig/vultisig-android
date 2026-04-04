@@ -26,7 +26,6 @@ import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
 import com.vultisig.wallet.ui.theme.Theme
 
 private val TronFreezeCardIconCircleColor = Color.White.copy(alpha = 0.12f)
-private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 
 @Composable
 internal fun TronFreezePositionCard(

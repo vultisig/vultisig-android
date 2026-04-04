@@ -50,7 +50,6 @@ import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.delay
 
 private val TRON_DEFI_TABS = listOf(DeFiTab.STAKED)
-private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 
 @Composable
 internal fun TronDeFiPositionsScreen(
@@ -155,13 +154,6 @@ private fun TronDeFiPositionsScreenContent(
 
         if (!state.isLoading) {
             NoPositionsContainer()
-            //            TronFreezePositionCard(
-            //                frozenTotalPrice = state.frozenTotalPrice,
-            //                frozenTotalTrx = state.frozenTotalTrx,
-            //                isBalanceVisible = state.isBalanceVisible,
-            //                onClickFreeze = onClickFreeze,
-            //                onClickUnfreeze = onClickUnfreeze,
-            //            )
         }
 
         if (state.pendingWithdrawals.isNotEmpty()) {
