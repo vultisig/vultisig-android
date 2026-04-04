@@ -45,15 +45,10 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun VerifyExistingVaultScreen(
-    viewModel: VerifyExistingVaultViewModel = hiltViewModel()
-) {
+internal fun VerifyExistingVaultScreen(viewModel: VerifyExistingVaultViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
 
-    VerifyExistingVaultScreen(
-        uiState = uiState,
-        onEvent = viewModel::onEvent,
-    )
+    VerifyExistingVaultScreen(uiState = uiState, onEvent = viewModel::onEvent)
 }
 
 @Composable
@@ -65,9 +60,7 @@ internal fun VerifyExistingVaultScreen(
 
     BackHandler { onEvent(VerifyExistingVaultEvent.Back) }
 
-    V3Scaffold(
-        onBackClick = { onEvent(VerifyExistingVaultEvent.Back) },
-    ) {
+    V3Scaffold(onBackClick = { onEvent(VerifyExistingVaultEvent.Back) }) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -93,16 +86,17 @@ internal fun VerifyExistingVaultScreen(
                 textFieldState = uiState.inputTextFieldState,
                 trailingIcon = R.drawable.close_circle,
                 innerState = uiState.innerState,
-                type = if (uiState.activeStep.isPassword) {
-                    VsTextInputFieldType.Password(
-                        isVisible = uiState.isPasswordVisible,
-                        onVisibilityClick = {
-                            onEvent(VerifyExistingVaultEvent.TogglePasswordVisibility)
-                        },
-                    )
-                } else {
-                    VsTextInputFieldType.Text
-                },
+                type =
+                    if (uiState.activeStep.isPassword) {
+                        VsTextInputFieldType.Password(
+                            isVisible = uiState.isPasswordVisible,
+                            onVisibilityClick = {
+                                onEvent(VerifyExistingVaultEvent.TogglePasswordVisibility)
+                            },
+                        )
+                    } else {
+                        VsTextInputFieldType.Text
+                    },
                 onTrailingIconClick = { onEvent(VerifyExistingVaultEvent.ClearInput) },
                 footNote = uiState.errorMessage?.asString(),
                 imeAction = ImeAction.Go,
@@ -117,9 +111,7 @@ internal fun VerifyExistingVaultScreen(
             UiSpacer(weight = 1f)
             VsButton(
                 label = stringResource(R.string.enter_email_screen_next),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag(VerifyExistingVaultTags.NEXT_BUTTON),
+                modifier = Modifier.fillMaxWidth().testTag(VerifyExistingVaultTags.NEXT_BUTTON),
                 state = if (canProceed) VsButtonState.Enabled else VsButtonState.Disabled,
             ) {
                 onEvent(VerifyExistingVaultEvent.Next)
@@ -141,10 +133,10 @@ private fun VerifyExistingVaultSteps(
 
             if (index != stepsState.size - 1) {
                 Box(
-                    modifier = Modifier
-                        .width(16.dp)
-                        .height(1.dp)
-                        .background(color = Theme.v2.colors.border.normal)
+                    modifier =
+                        Modifier.width(16.dp)
+                            .height(1.dp)
+                            .background(color = Theme.v2.colors.border.normal)
                 )
             }
         }
@@ -157,19 +149,15 @@ private fun VerifyExistingVaultStepIcon(
     state: VerifyExistingVaultStepState,
 ) {
     Box(
-        modifier = Modifier
-            .size(44.dp)
-            .clip(shape = CircleShape)
-            .background(color = state.backgroundColor)
-            .then(
-                if (state == VerifyExistingVaultStepState.Done) Modifier
-                else Modifier.shinedBottom(color = Theme.v2.colors.alerts.success)
-            )
-            .border(
-                width = state.borderWidth,
-                color = state.borderColor,
-                shape = CircleShape,
-            ),
+        modifier =
+            Modifier.size(44.dp)
+                .clip(shape = CircleShape)
+                .background(color = state.backgroundColor)
+                .then(
+                    if (state == VerifyExistingVaultStepState.Done) Modifier
+                    else Modifier.shinedBottom(color = Theme.v2.colors.alerts.success)
+                )
+                .border(width = state.borderWidth, color = state.borderColor, shape = CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         UiIcon(
@@ -185,33 +173,38 @@ private fun VerifyExistingVaultStepIcon(
 @Composable
 private fun VerifyExistingVaultScreenEmailPreview() {
     VerifyExistingVaultScreen(
-        uiState = VerifyExistingVaultUiState(
-            stepAndStates = mapOf(
-                VerifyExistingVaultStepType.Email to VerifyExistingVaultStepState.InProgress,
-                VerifyExistingVaultStepType.Password to VerifyExistingVaultStepState.Inactive,
+        uiState =
+            VerifyExistingVaultUiState(
+                stepAndStates =
+                    mapOf(
+                        VerifyExistingVaultStepType.Email to
+                            VerifyExistingVaultStepState.InProgress,
+                        VerifyExistingVaultStepType.Password to
+                            VerifyExistingVaultStepState.Inactive,
+                    ),
+                activeStep = VerifyExistingVaultStepType.Email,
             ),
-            activeStep = VerifyExistingVaultStepType.Email,
-        ),
         onEvent = {},
     )
 }
-
 
 @Preview
 @Composable
 private fun VerifyExistingVaultScreenPasswordPreview() {
     VerifyExistingVaultScreen(
-        uiState = VerifyExistingVaultUiState(
-            stepAndStates = mapOf(
-                VerifyExistingVaultStepType.Email to VerifyExistingVaultStepState.Done,
-                VerifyExistingVaultStepType.Password to VerifyExistingVaultStepState.InProgress,
+        uiState =
+            VerifyExistingVaultUiState(
+                stepAndStates =
+                    mapOf(
+                        VerifyExistingVaultStepType.Email to VerifyExistingVaultStepState.Done,
+                        VerifyExistingVaultStepType.Password to
+                            VerifyExistingVaultStepState.InProgress,
+                    ),
+                activeStep = VerifyExistingVaultStepType.Password,
             ),
-            activeStep = VerifyExistingVaultStepType.Password,
-        ),
         onEvent = {},
     )
 }
-
 
 internal object VerifyExistingVaultTags {
     const val INPUT_FIELD = "VerifyExistingVaultScreen.inputField"

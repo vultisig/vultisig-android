@@ -99,8 +99,11 @@ internal data class VerifyExistingVaultUiState(
 
 internal sealed interface VerifyExistingVaultEvent {
     data object Next : VerifyExistingVaultEvent
+
     data object Back : VerifyExistingVaultEvent
+
     data object ClearInput : VerifyExistingVaultEvent
+
     data object TogglePasswordVisibility : VerifyExistingVaultEvent
 }
 
@@ -139,10 +142,11 @@ constructor(
     }
 
     private fun initStepStates() {
-        val stepAndStates = mapOf(
-            VerifyExistingVaultStepType.Email to VerifyExistingVaultStepState.InProgress,
-            VerifyExistingVaultStepType.Password to VerifyExistingVaultStepState.Inactive,
-        )
+        val stepAndStates =
+            mapOf(
+                VerifyExistingVaultStepType.Email to VerifyExistingVaultStepState.InProgress,
+                VerifyExistingVaultStepType.Password to VerifyExistingVaultStepState.Inactive,
+            )
         uiState.update { it.copy(stepAndStates = stepAndStates) }
     }
 
@@ -152,10 +156,12 @@ constructor(
             .map { it.activeStep }
             .distinctUntilChanged()
             .flatMapLatest { activeStep ->
-                val (innerStateFlow, errorMessageFlow) = when (activeStep) {
-                    VerifyExistingVaultStepType.Email -> emailInnerState to emailErrorMessage
-                    VerifyExistingVaultStepType.Password -> passwordInnerState to passwordErrorMessage
-                }
+                val (innerStateFlow, errorMessageFlow) =
+                    when (activeStep) {
+                        VerifyExistingVaultStepType.Email -> emailInnerState to emailErrorMessage
+                        VerifyExistingVaultStepType.Password ->
+                            passwordInnerState to passwordErrorMessage
+                    }
                 combine(innerStateFlow, errorMessageFlow) { innerState, errorMessage ->
                     innerState to errorMessage
                 }
@@ -171,25 +177,28 @@ constructor(
             .map { it.activeStep }
             .distinctUntilChanged()
             .combine(uiState.map { it.stepAndStates.keys }) { activeStep, steps ->
-                val map = steps.associateWith { step ->
-                    when {
-                        step == activeStep -> VerifyExistingVaultStepState.InProgress
-                        step.ordinal < activeStep.ordinal -> VerifyExistingVaultStepState.Done
-                        else -> VerifyExistingVaultStepState.Inactive
+                val map =
+                    steps.associateWith { step ->
+                        when {
+                            step == activeStep -> VerifyExistingVaultStepState.InProgress
+                            step.ordinal < activeStep.ordinal -> VerifyExistingVaultStepState.Done
+                            else -> VerifyExistingVaultStepState.Inactive
+                        }
                     }
-                }
 
-                val textFieldState = when (activeStep) {
-                    VerifyExistingVaultStepType.Email -> emailTextFieldState
-                    VerifyExistingVaultStepType.Password -> passwordTextFieldState
-                }
+                val textFieldState =
+                    when (activeStep) {
+                        VerifyExistingVaultStepType.Email -> emailTextFieldState
+                        VerifyExistingVaultStepType.Password -> passwordTextFieldState
+                    }
 
-                val hint = when (activeStep) {
-                    VerifyExistingVaultStepType.Email ->
-                        StringResource(R.string.enter_email_screen_title)
-                    VerifyExistingVaultStepType.Password ->
-                        StringResource(R.string.keysign_password_enter_your_password)
-                }
+                val hint =
+                    when (activeStep) {
+                        VerifyExistingVaultStepType.Email ->
+                            StringResource(R.string.enter_email_screen_title)
+                        VerifyExistingVaultStepType.Password ->
+                            StringResource(R.string.keysign_password_enter_your_password)
+                    }
 
                 uiState.update {
                     it.copy(
@@ -311,8 +320,7 @@ constructor(
                 }
                 is PasswordCheckResult.NetworkError -> {
                     passwordInnerState.value = VsTextInputFieldInnerState.Error
-                    passwordErrorMessage.value =
-                        StringResource(R.string.network_connection_lost)
+                    passwordErrorMessage.value = StringResource(R.string.network_connection_lost)
                 }
                 is PasswordCheckResult.Error -> {
                     passwordInnerState.value = VsTextInputFieldInnerState.Error
@@ -327,9 +335,10 @@ constructor(
         viewModelScope.launch {
             emailTextFieldState.textAsFlow().collectLatest { email ->
                 val isEmailValid = validateEmail(email)
-                val errorMessage = StringResource(R.string.keygen_email_error).takeIf {
-                    email.isNotEmpty() && !isEmailValid
-                }
+                val errorMessage =
+                    StringResource(R.string.keygen_email_error).takeIf {
+                        email.isNotEmpty() && !isEmailValid
+                    }
                 val innerState = getEmailInnerState(email.toString(), isEmailValid)
 
                 emailInnerState.value = innerState
