@@ -200,11 +200,19 @@ constructor(
                             StringResource(R.string.keysign_password_enter_your_password)
                     }
 
+                val isNextButtonEnabled =
+                    when (activeStep) {
+                        VerifyExistingVaultStepType.Email -> validateEmail(emailTextFieldState.text)
+                        VerifyExistingVaultStepType.Password ->
+                            passwordTextFieldState.text.isNotBlank()
+                    }
+
                 uiState.update {
                     it.copy(
                         stepAndStates = map,
                         inputTextFieldState = textFieldState,
                         textFieldHint = hint,
+                        isNextButtonEnabled = isNextButtonEnabled,
                     )
                 }
             }
@@ -232,6 +240,7 @@ constructor(
     }
 
     private fun prev() {
+        if (uiState.value.isLoading) return
         viewModelScope.launch {
             val currentStep = uiState.value.activeStep
             val currentStepIndex = uiState.value.stepAndStates.keys.indexOf(currentStep)
