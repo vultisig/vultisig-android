@@ -28,6 +28,11 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.TronRed
+
+private val TronBannerGradientTop = TronRed.copy(alpha = 0.09f)
+private val TronBannerGradientBottom = TronRed.copy(alpha = 0f)
+private val TronBannerBorder = TronRed.copy(alpha = 0.17f)
 
 @Composable
 internal fun TronDeFiBanner(isLoading: Boolean, totalValue: String, isBalanceVisible: Boolean) {
