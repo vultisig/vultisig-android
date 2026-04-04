@@ -396,6 +396,7 @@
 
     <!-- Deposit Form -->
     <string name="deposit_form_node_address_title">节点地址</string>
+    <string name="bond_not_whitelisted_error">您不在此节点的白名单中</string>
     <string name="deposit_form_address_card_title">地址</string>
     <string name="deposit_form_provider_title">提供商（可选）</string>
     <string name="deposit_form_provider_hint">提供商</string>

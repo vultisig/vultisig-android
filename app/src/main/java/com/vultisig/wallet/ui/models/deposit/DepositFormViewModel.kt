@@ -146,6 +146,8 @@ internal data class DepositFormUiModel(
     val lpUnitsError: UiText? = null,
     val slippageError: UiText? = null,
     val isLoading: Boolean = false,
+    val isCheckingWhitelist: Boolean = false,
+    val isWhitelistFailed: Boolean = false,
     val balance: UiText = UiText.Empty,
     val balanceDecimal: BigDecimal? = null,
     val sharesBalance: UiText = R.string.share_balance_loading.asUiText(),
@@ -252,6 +254,7 @@ constructor(
     private val address = MutableStateFlow<Address?>(null)
     private val secureAssetNodeValue = MutableStateFlow<String?>(null)
     private var addressJob: Job? = null
+    private var whitelistJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
@@ -828,8 +831,71 @@ constructor(
     }
 
     fun validateNodeAddress() {
-        val errorText = validateDstAddress(nodeAddressFieldState.text.toString())
-        state.update { it.copy(nodeAddressError = errorText) }
+        val nodeAddress = nodeAddressFieldState.text.toString()
+        val errorText = validateDstAddress(nodeAddress)
+        if (errorText != null) {
+            whitelistJob?.cancel()
+            state.update { it.copy(nodeAddressError = errorText, isCheckingWhitelist = false) }
+            return
+        }
+        if (chain == Chain.MayaChain && state.value.depositOption == DepositOption.Bond) {
+            whitelistJob?.cancel()
+            state.update {
+                it.copy(
+                    nodeAddressError = null,
+                    isCheckingWhitelist = true,
+                    isWhitelistFailed = false,
+                )
+            }
+            whitelistJob = viewModelScope.safeLaunch { checkNodeWhitelist(nodeAddress) }
+        } else {
+            state.update { it.copy(nodeAddressError = null) }
+        }
+    }
+
+    private suspend fun checkNodeWhitelist(nodeAddress: String) {
+        try {
+            val userAddress =
+                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                    ?.address
+                    ?: run {
+                        state.update { it.copy(isCheckingWhitelist = false) }
+                        return
+                    }
+            val nodeInfo = mayachainBondRepository.getNodeDetails(nodeAddress)
+            if (
+                nodeAddressFieldState.text.toString() != nodeAddress ||
+                    chain != Chain.MayaChain ||
+                    state.value.depositOption != DepositOption.Bond
+            ) {
+                state.update { it.copy(isCheckingWhitelist = false) }
+                return
+            }
+            val isWhitelisted =
+                nodeInfo.bondProviders.providers.any { it.bondAddress == userAddress }
+            if (!isWhitelisted) {
+                state.update {
+                    it.copy(
+                        nodeAddressError =
+                            UiText.StringResource(R.string.bond_not_whitelisted_error),
+                        isCheckingWhitelist = false,
+                        isWhitelistFailed = true,
+                    )
+                }
+            } else {
+                state.update {
+                    it.copy(
+                        nodeAddressError = null,
+                        isCheckingWhitelist = false,
+                        isWhitelistFailed = false,
+                    )
+                }
+            }
+        } catch (ce: CancellationException) {
+            throw ce
+        } catch (_: Exception) {
+            state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
+        }
     }
 
     fun validateTokenAmount() {
@@ -892,6 +958,7 @@ constructor(
 
     fun setNodeAddress(address: String) {
         nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address)
+        validateNodeAddress()
     }
 
     private fun setSlippage(slippage: String) {
@@ -902,7 +969,7 @@ constructor(
         viewModelScope.launch {
             val qr = requestQrScan()
             if (!qr.isNullOrBlank()) {
-                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(qr)
+                setNodeAddress(qr)
             }
         }
     }
@@ -1543,6 +1610,12 @@ constructor(
                 ?: throw InvalidTransactionDataException(
                     UiText.StringResource(R.string.send_error_no_address)
                 )
+
+        if (state.value.isWhitelistFailed) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.bond_not_whitelisted_error)
+            )
+        }
 
         val depositChain = state.value.depositChain
 

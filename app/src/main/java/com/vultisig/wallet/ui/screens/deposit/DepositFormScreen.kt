@@ -566,7 +566,15 @@ internal fun DepositFormScreen(
                 focusManager.clearFocus()
                 onDeposit()
             },
-            state = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
+            state =
+                if (
+                    state.isLoading ||
+                        state.isCheckingWhitelist ||
+                        state.isWhitelistFailed ||
+                        state.nodeAddressError != null
+                )
+                    VsButtonState.Disabled
+                else VsButtonState.Enabled,
             modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(all = 16.dp),
         )
     }
