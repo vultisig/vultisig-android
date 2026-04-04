@@ -1023,6 +1023,9 @@
     <string name="password_choose_a_password">Kies een wachtwoord</string>
     <string name="password_extra_layer">Als u een extra beveiligingslaag wilt, kies dan een wachtwoord. Het wachtwoord kan niet worden hersteld.</string>
     <string name="password_extra_layer_highlight">Het wachtwoord kan niet worden hersteld.</string>
+    <string name="verify_existing_vault_email_description">Dit wordt slechts eenmalig gebruikt om uw back-upbestand te verzenden. Vultisig slaat geen gegevens op.</string>
+    <string name="verify_existing_vault_password_title">Voer het kluiswachtwoord in</string>
+    <string name="verify_existing_vault_password_description">Voer het wachtwoord van uw kluis in.</string>
     <string name="backup_backups">Back-ups,</string>
     <string name="backup_your_new_recovery_method">uw nieuwe herstelmethode</string>
     <string name="backup_backups_power_your_vault">Back-ups versterken uw kluis. Elk apparaat heeft zijn eigen back-up. Een back-up alleen kan geen fondsen verplaatsen, het is alleen voor herstel. Importeer en herstel elk verloren apparaat.</string>

@@ -1105,6 +1105,9 @@
     <string name="password_choose_a_password">Choose a password</string>
     <string name="password_extra_layer">If you want an extra layer of security, choose a password. Password cannot be recovered.</string>
     <string name="password_extra_layer_highlight">Password cannot be recovered.</string>
+    <string name="verify_existing_vault_email_description">This will only be used once to send your backup file, Vultisig doesn\'t store any data.</string>
+    <string name="verify_existing_vault_password_title">Enter Vault password</string>
+    <string name="verify_existing_vault_password_description">Enter your Vault\'s password.</string>
     <string name="backup_backups">Backups,</string>
     <string name="backup_your_new_recovery_method">your new recovery method</string>
     <string name="backup_backups_power_your_vault">Backups power your vault. Each device has its own backup. A backup alone can’t move funds, it’s only for recovery. Import and recover any lost device.</string>
