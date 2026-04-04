@@ -231,6 +231,7 @@
     <string name="share_vault_qr_save" >Salva</string>
     <string name="share_vault_qr_share" >Condividi</string>
     <string name="deposit_form_node_address_title">Indirizzo del nodo</string>
+    <string name="bond_not_whitelisted_error">Non sei nella whitelist di questo nodo</string>
     <string name="deposit_form_address_card_title">Indirizzo</string>
     <string name="deposit_form_provider_title">Fornitore (facoltativo)</string>
     <string name="deposit_form_provider_hint">Fornitrice</string>
