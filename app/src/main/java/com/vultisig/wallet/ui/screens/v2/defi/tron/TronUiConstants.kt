@@ -4,7 +4,10 @@ import androidx.compose.ui.graphics.Color
 
 internal val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 
-// Tron brand red (#FF060A) at various opacities — used for the DeFi banner gradient and border
-internal val TronBannerGradientTop = Color(0x17FF060A) // 9 % opacity
-internal val TronBannerGradientBottom = Color(0x00FF060A) // 0 % opacity (transparent)
-internal val TronBannerBorder = Color(0x2BFF060A) // 17 % opacity
+// Tron brand red — single source so the hex never drifts across derived tokens
+private val TronRed = Color(0xFFFF060A)
+
+// Banner gradient and border are alpha variants of the brand red
+internal val TronBannerGradientTop = TronRed.copy(alpha = 0.09f)
+internal val TronBannerGradientBottom = TronRed.copy(alpha = 0f)
+internal val TronBannerBorder = TronRed.copy(alpha = 0.17f)
