@@ -158,6 +158,7 @@
     <string name="token_logo">Logotipo do token</string>
     <string name="vault_edit_this_name_already_exist">esse nome já existe</string>
     <string name="import_file_screen_duplicate_vault">O cofre é duplicado</string>
+    <string name="import_file_screen_success_import">O cofre foi importado com sucesso</string>
     <string name="verify_swap_consent_amount">O valor da troca está correto</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado com sucesso: %1$s</string>
     <string name="scan_qr_screen_return_vault">Retornar ao Cofre</string>

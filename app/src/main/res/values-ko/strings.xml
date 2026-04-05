@@ -212,6 +212,7 @@
     <string name="vault_list_vaults_list">볼트</string>
     <string name="import_file_screen_title">가져오기</string>
     <string name="import_file_screen_duplicate_vault">중복된 볼트입니다</string>
+    <string name="import_file_screen_success_import">볼트를 성공적으로 가져왔습니다</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">안전한 암호화폐 볼트</string>
     <string name="generating_key_screen_keygen_failed">키 생성 실패</string>

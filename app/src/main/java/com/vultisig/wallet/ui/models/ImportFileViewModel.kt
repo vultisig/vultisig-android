@@ -26,19 +26,19 @@ import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.usecases.backup.FILE_ALLOWED_EXTENSIONS
+import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -73,6 +73,7 @@ constructor(
     private val discoverToken: DiscoverTokenUseCase,
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val snackBarFlow: SnackbarFlow,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.ImportVault>()
@@ -80,9 +81,6 @@ constructor(
     val uiModel = MutableStateFlow(ImportFileState())
 
     val passwordTextFieldState = TextFieldState()
-
-    private val snackBarChannel = Channel<UiText?>()
-    val snackBarChannelFlow = snackBarChannel.receiveAsFlow()
 
     init {
         args.uri?.toUri()?.let { fetchFileName(it) }
@@ -99,7 +97,11 @@ constructor(
             viewModelScope.launch {
                 val result = saveToDb(vaultFileContent, key)
                 hidePasswordPromptDialog()
-                if (result == SaveResult.Failed) showErrorHint()
+                when (result) {
+                    SaveResult.Success -> showSuccessImport()
+                    SaveResult.Duplicate -> showDuplicateError()
+                    SaveResult.Failed -> showErrorHint()
+                }
             }
         }
     }
@@ -107,8 +109,8 @@ constructor(
     private suspend fun parseFileContent() {
         val fileContent = uiModel.value.fileContent ?: return
         when (saveToDb(fileContent, null)) {
-            SaveResult.Success -> Unit
-            SaveResult.Duplicate -> Unit
+            SaveResult.Success -> showSuccessImport()
+            SaveResult.Duplicate -> showDuplicateError()
             SaveResult.Failed ->
                 uiModel.update { it.copy(showPasswordPrompt = true, passwordErrorHint = null) }
         }
@@ -120,24 +122,41 @@ constructor(
             SaveResult.Success
         } catch (e: DuplicateVaultException) {
             Timber.e(e)
-            setDuplicateError()
             SaveResult.Duplicate
         } catch (e: SQLiteConstraintException) {
             Timber.e(e)
-            setDuplicateError()
             SaveResult.Duplicate
         } catch (e: Exception) {
             Timber.e(e)
             SaveResult.Failed
         }
 
-    private fun setDuplicateError() {
-        uiModel.update {
-            it.copy(
-                error = UiText.StringResource(R.string.import_file_screen_duplicate_vault),
-                fileName = null,
-                fileContent = null,
+    private fun showSuccessImport() {
+        showSnackBarMessage(
+            message = context.getString(R.string.import_file_screen_success_import),
+            type = SnackbarType.Success,
+        )
+    }
+
+    private fun showSnackBarMessage(message: String, type: SnackbarType) {
+        viewModelScope.launch { snackBarFlow.showMessage(message = message, type = type) }
+    }
+
+    private fun showDuplicateError() {
+        val isZip = uiModel.value.isZip
+        if (isZip == true) {
+            showSnackBarMessage(
+                message = context.getString(R.string.import_file_screen_duplicate_vault),
+                type = SnackbarType.Error,
             )
+        } else {
+            uiModel.update {
+                it.copy(
+                    error = UiText.StringResource(R.string.import_file_screen_duplicate_vault),
+                    fileName = null,
+                    fileContent = null,
+                )
+            }
         }
     }
 

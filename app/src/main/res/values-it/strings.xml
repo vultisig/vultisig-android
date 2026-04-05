@@ -160,6 +160,7 @@
     <string name="token_logo">Logo del gettone</string>
     <string name="vault_edit_this_name_already_exist">questo nome esiste già</string>
     <string name="import_file_screen_duplicate_vault">Il caveau è duplicato</string>
+    <string name="import_file_screen_success_import">Il caveau è stato importato con successo</string>
     <string name="verify_swap_consent_amount">L\'importo dello swap è corretto</string>
     <string name="successfully_scanned_barcode">Codice a barre scansionato correttamente: %1$s</string>
     <string name="scan_qr_screen_return_vault">Torna al Caveau</string>

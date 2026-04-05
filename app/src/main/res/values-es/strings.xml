@@ -138,6 +138,7 @@
     <string name="vault_list_vaults_list">Bóvedas</string>
     <string name="import_file_screen_title">Importar</string>
     <string name="import_file_screen_duplicate_vault">La bóveda es un duplicado</string>
+    <string name="import_file_screen_success_import">La bóveda se importó correctamente</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">BÓVEDA DE CRIPTO</string>
     <string name="generating_key_screen_keygen_failed">Falló la generación de clave</string>
