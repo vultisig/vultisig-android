@@ -18,9 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +50,18 @@ import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.delay
 
 private val TRON_DEFI_TABS = listOf(DeFiTab.STAKED)
+
+private data class CountdownParts(val days: Long, val hours: Long, val minutes: Long)
+
+private fun countdownParts(expiryEpochMs: Long, nowMs: Long): CountdownParts? {
+    if (expiryEpochMs <= nowMs) return null
+    val remaining = expiryEpochMs - nowMs
+    return CountdownParts(
+        days = remaining / (1_000L * 60 * 60 * 24),
+        hours = (remaining % (1_000L * 60 * 60 * 24)) / (1_000L * 60 * 60),
+        minutes = (remaining % (1_000L * 60 * 60)) / (1_000L * 60),
+    )
+}
 
 @Composable
 internal fun TronDeFiPositionsScreen(
@@ -177,6 +188,15 @@ private fun TronPendingWithdrawalsCard(
     withdrawals: List<TronPendingWithdrawalUiModel>,
     isBalanceVisible: Boolean,
 ) {
+    val latestExpiry = remember(withdrawals) { withdrawals.maxOfOrNull { it.expiryEpochMs } ?: 0L }
+    val nowMs by
+        produceState(initialValue = System.currentTimeMillis(), key1 = latestExpiry) {
+            while (value < latestExpiry) {
+                delay(1_000L)
+                value = System.currentTimeMillis()
+            }
+        }
+
     Column(
         modifier =
             Modifier.fillMaxWidth()
@@ -192,7 +212,11 @@ private fun TronPendingWithdrawalsCard(
         )
 
         withdrawals.forEach { withdrawal ->
-            TronPendingWithdrawalRow(withdrawal = withdrawal, isBalanceVisible = isBalanceVisible)
+            TronPendingWithdrawalRow(
+                withdrawal = withdrawal,
+                nowMs = nowMs,
+                isBalanceVisible = isBalanceVisible,
+            )
         }
     }
 }
@@ -200,27 +224,22 @@ private fun TronPendingWithdrawalsCard(
 @Composable
 private fun TronPendingWithdrawalRow(
     withdrawal: TronPendingWithdrawalUiModel,
+    nowMs: Long,
     isBalanceVisible: Boolean,
 ) {
-    var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(withdrawal.expiryEpochMs) {
-        while (true) {
-            delay(1_000L)
-            nowMs = System.currentTimeMillis()
-        }
-    }
-
-    val isClaimable = withdrawal.expiryEpochMs <= nowMs
+    val countdown = countdownParts(withdrawal.expiryEpochMs, nowMs)
+    val isClaimable = countdown == null
     val timeRemainingText =
-        if (isClaimable) {
-            stringResource(R.string.tron_defi_ready_to_claim)
-        } else {
-            val remaining = withdrawal.expiryEpochMs - nowMs
-            val days = remaining / (1_000L * 60 * 60 * 24)
-            val hours = (remaining % (1_000L * 60 * 60 * 24)) / (1_000L * 60 * 60)
-            val minutes = (remaining % (1_000L * 60 * 60)) / (1_000L * 60)
-            if (days > 0) stringResource(R.string.tron_defi_countdown_days, days, hours)
-            else stringResource(R.string.tron_defi_countdown_hours, hours, minutes)
+        when {
+            countdown == null -> stringResource(R.string.tron_defi_ready_to_claim)
+            countdown.days > 0 ->
+                stringResource(R.string.tron_defi_countdown_days, countdown.days, countdown.hours)
+            else ->
+                stringResource(
+                    R.string.tron_defi_countdown_hours,
+                    countdown.hours,
+                    countdown.minutes,
+                )
         }
 
     Row(

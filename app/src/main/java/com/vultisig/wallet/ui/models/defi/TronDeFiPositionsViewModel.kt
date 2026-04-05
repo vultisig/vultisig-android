@@ -109,14 +109,14 @@ constructor(
 
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
-        loadData()
+        loadData(vaultId)
     }
 
     fun refresh() {
-        loadData()
+        loadData(vaultId)
     }
 
-    private fun loadData() {
+    private fun loadData(vaultId: VaultId) {
         loadJob?.cancel()
         loadJob =
             viewModelScope.safeLaunch(
