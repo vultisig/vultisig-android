@@ -26,6 +26,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -181,11 +183,22 @@ private fun RemoveLpSlider(
             thumb = {
                 Box(
                     modifier =
-                        Modifier.width(28.dp)
-                            .height(16.dp)
+                        Modifier.shadow(
+                                elevation = 13.dp,
+                                spotColor = Color(0x1F000000),
+                                ambientColor = Color(0x1F000000),
+                            )
+                            .shadow(
+                                elevation = 4.dp,
+                                spotColor = Color(0x1F000000),
+                                ambientColor = Color(0x1F000000),
+                            )
+                            .padding(0.5.dp)
+                            .width(38.dp)
+                            .height(24.dp)
                             .background(
                                 color = Theme.v2.colors.text.primary,
-                                shape = RoundedCornerShape(50),
+                                shape = RoundedCornerShape(100),
                             )
                 )
             },
@@ -198,8 +211,9 @@ private fun RemoveLpSlider(
                             inactiveTrackColor = Theme.v2.colors.border.normal,
                             thumbColor = Theme.v2.colors.text.primary,
                         ),
+                    thumbTrackGapSize = 0.dp,
                     drawStopIndicator = null,
-                    modifier = Modifier.height(4.dp),
+                    modifier = Modifier.height(6.dp),
                 )
             },
         )
