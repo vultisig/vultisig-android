@@ -113,7 +113,7 @@ private fun AddLpContent(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-            // Amount card
+            // Am useount card
             Column(
                 modifier =
                     Modifier.fillMaxWidth()

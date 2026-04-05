@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.v2.defi.maya
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -83,47 +84,63 @@ internal fun RemoveLpScreenContent(
             Modifier.fillMaxSize()
                 .background(Theme.v2.colors.backgrounds.primary)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 24.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // Amount card
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Theme.v2.colors.backgrounds.secondary)
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.border.normal,
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Text(
-                text = stringResource(R.string.remove_pool_amount_label),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary,
-                textAlign = TextAlign.Center,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.remove_pool_amount_label),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.primary,
+                )
+            }
 
-            UiSpacer(size = 8.dp)
-
-            Text(
-                text = state.removeLpCacaoDisplay.ifEmpty { "0 CACAO" },
-                style = Theme.brockmann.headings.largeTitle,
-                color = Theme.v2.colors.text.primary,
-                textAlign = TextAlign.Center,
-            )
-
-            Text(
-                text = "${(state.removeLpPercent * 100).toInt()}%",
-                style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.tertiary,
-                textAlign = TextAlign.Center,
-            )
-
-            UiSpacer(size = 8.dp)
+            UiSpacer(12.dp)
 
             UiGradientHorizontalDivider()
 
-            UiSpacer(size = 8.dp)
+            Box(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = state.removeLpCacaoDisplay.ifEmpty { "0 CACAO" },
+                        style = Theme.brockmann.headings.largeTitle,
+                        color = Theme.v2.colors.text.primary,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Text(
+                        text = "${(state.removeLpPercent * 100).toInt()}%",
+                        style = Theme.brockmann.body.m.medium,
+                        color = Theme.v2.colors.text.tertiary,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
 
             RemoveLpSlider(
                 percent = state.removeLpPercent,
@@ -131,29 +148,28 @@ internal fun RemoveLpScreenContent(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            UiSpacer(size = 8.dp)
+            UiSpacer(size = 12.dp)
+            // Balance row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.send_form_balance_available),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.secondary,
+                )
+
+                Text(
+                    text = state.balance.asString(),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.secondary,
+                )
+            }
         }
 
-        // Balance row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.send_form_balance_available),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.secondary,
-            )
-
-            Text(
-                text = state.balance.asString(),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.secondary,
-            )
-        }
-
-        UiSpacer(size = 16.dp)
+        UiSpacer(size = 43.dp)
 
         // Continue button
         VsButton(
@@ -178,7 +194,7 @@ private fun RemoveLpSlider(
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = "0%",
-            style = Theme.brockmann.supplementary.caption,
+            style = Theme.brockmann.body.xs.medium,
             color = Theme.v2.colors.text.tertiary,
         )
         UiSpacer(12.dp)
@@ -257,7 +273,7 @@ private fun RemoveLpSlider(
         UiSpacer(12.dp)
         Text(
             text = "100%",
-            style = Theme.brockmann.supplementary.caption,
+            style = Theme.brockmann.body.xs.medium,
             color = Theme.v2.colors.text.tertiary,
         )
     }
