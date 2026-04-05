@@ -1035,6 +1035,9 @@
     <string name="password_choose_a_password">Wählen Sie ein Passwort</string>
     <string name="password_extra_layer">Wenn Sie eine zusätzliche Sicherheitsebene möchten, wählen Sie ein Passwort. Das Passwort kann nicht wiederhergestellt werden.</string>
     <string name="password_extra_layer_highlight">Das Passwort kann nicht wiederhergestellt werden.</string>
+    <string name="verify_existing_vault_email_description">Dies wird nur einmal verwendet, um Ihre Sicherungsdatei zu senden. Vultisig speichert keine Daten.</string>
+    <string name="verify_existing_vault_password_title">Tresor-Passwort eingeben</string>
+    <string name="verify_existing_vault_password_description">Geben Sie das Passwort Ihres Tresors ein.</string>
     <string name="backup_backups">Backups,</string>
     <string name="backup_your_new_recovery_method">Ihre neue Wiederherstellungsmethode</string>
     <string name="backup_backups_power_your_vault">Backups stärken Ihren Tresor. Jedes Gerät hat sein eigenes Backup. Ein Backup allein kann keine Gelder bewegen, es dient nur zur Wiederherstellung. Importieren und stellen Sie jedes verlorene Gerät wieder her.</string>

@@ -1043,6 +1043,9 @@
     <string name="password_choose_a_password">Odaberite lozinku</string>
     <string name="password_extra_layer">Ako želite dodatni sloj sigurnosti, odaberite lozinku. Lozinka se ne može oporaviti.</string>
     <string name="password_extra_layer_highlight">Lozinka se ne može oporaviti.</string>
+    <string name="verify_existing_vault_email_description">Ovo će se koristiti samo jednom za slanje vaše sigurnosne kopije. Vultisig ne pohranjuje nikakve podatke.</string>
+    <string name="verify_existing_vault_password_title">Unesite lozinku trezora</string>
+    <string name="verify_existing_vault_password_description">Unesite lozinku svog trezora.</string>
     <string name="backup_backups">Sigurnosne kopije,</string>
     <string name="backup_your_new_recovery_method">vaša nova metoda oporavka</string>
     <string name="backup_backups_power_your_vault">Sigurnosne kopije osnažuju vaš trezor. Svaki uređaj ima svoju vlastitu sigurnosnu kopiju. Sigurnosna kopija sama ne može premjestiti sredstva, služi samo za oporavak. Uvezite i oporavite bilo koji izgubljeni uređaj.</string>

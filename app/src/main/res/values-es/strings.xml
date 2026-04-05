@@ -1033,6 +1033,9 @@
     <string name="password_choose_a_password">Elige una contraseña</string>
     <string name="password_extra_layer">Si quieres una capa adicional de seguridad, elige una contraseña. La contraseña no se puede recuperar.</string>
     <string name="password_extra_layer_highlight">La contraseña no se puede recuperar.</string>
+    <string name="verify_existing_vault_email_description">Esto solo se usará una vez para enviar tu archivo de copia de seguridad. Vultisig no almacena ningún dato.</string>
+    <string name="verify_existing_vault_password_title">Introducir contraseña de la Bóveda</string>
+    <string name="verify_existing_vault_password_description">Introduce la contraseña de tu Bóveda.</string>
     <string name="backup_backups">Copias de seguridad,</string>
     <string name="backup_your_new_recovery_method">tu nuevo método de recuperación</string>
     <string name="backup_backups_power_your_vault">Las copias de seguridad potencian tu bóveda. Cada dispositivo tiene su propia copia de seguridad. Una copia sola no puede mover fondos, solo sirve para recuperación. Importa y recupera cualquier dispositivo perdido.</string>

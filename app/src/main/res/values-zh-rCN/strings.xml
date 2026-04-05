@@ -1361,6 +1361,9 @@
     <string name="password_choose_a_password">选择密码</string>
     <string name="password_extra_layer">如果您想要额外的安全层，请选择密码。密码无法恢复。</string>
     <string name="password_extra_layer_highlight">密码无法恢复。</string>
+    <string name="verify_existing_vault_email_description">此邮箱仅用于一次性发送您的备份文件，Vultisig 不存储任何数据。</string>
+    <string name="verify_existing_vault_password_title">输入保险库密码</string>
+    <string name="verify_existing_vault_password_description">输入您的保险库密码。</string>
     <string name="backup_backups">备份，</string>
     <string name="backup_your_new_recovery_method">您的新恢复方法</string>
     <string name="backup_backups_power_your_vault">备份为您的保险库提供动力。每台设备都有自己的备份。单独的备份无法转移资金，仅用于恢复。导入并恢复任何丢失的设备。</string>

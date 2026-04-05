@@ -1048,6 +1048,9 @@
     <string name="password_choose_a_password">Выберите пароль</string>
     <string name="password_extra_layer">Если вы хотите дополнительный уровень безопасности, выберите пароль. Пароль невозможно восстановить.</string>
     <string name="password_extra_layer_highlight">Пароль невозможно восстановить.</string>
+    <string name="verify_existing_vault_email_description">Это будет использовано только один раз для отправки файла резервной копии. Vultisig не хранит никаких данных.</string>
+    <string name="verify_existing_vault_password_title">Введите пароль хранилища</string>
+    <string name="verify_existing_vault_password_description">Введите пароль вашего хранилища.</string>
     <string name="backup_backups">Резервные копии,</string>
     <string name="backup_your_new_recovery_method">ваш новый метод восстановления</string>
     <string name="backup_backups_power_your_vault">Резервные копии усиливают ваше хранилище. Каждое устройство имеет собственную резервную копию. Резервная копия одна не может перемещать средства, она только для восстановления. Импортируйте и восстанавливайте любое потерянное устройство.</string>
