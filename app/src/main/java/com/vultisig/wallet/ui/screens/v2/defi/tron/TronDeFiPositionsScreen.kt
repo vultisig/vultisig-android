@@ -4,15 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -99,53 +99,81 @@ private fun TronDeFiPositionsScreenContent(
     onClickFreeze: () -> Unit = {},
     onClickUnfreeze: () -> Unit = {},
 ) {
-    Column(
-        modifier =
-            Modifier.fillMaxSize()
-                .background(Theme.v2.colors.backgrounds.primary)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        val tronData = state.tronData
+    val tronData = state.tronData
 
-        TronDeFiBanner(
-            isLoading = state.isLoading,
-            totalValue = tronData?.totalAmountPrice ?: "",
-            isBalanceVisible = state.isBalanceVisible,
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            VsTabGroup(
-                index =
-                    TRON_DEFI_TABS.indexOfFirst { it.displayNameRes == state.selectedTab }
-                        .coerceAtLeast(0)
-            ) {
-                TRON_DEFI_TABS.forEach { tab ->
-                    tab {
-                        VsTab(
-                            label = stringResource(tab.displayNameRes),
-                            onClick = { onTabSelected(tab) },
+            item {
+                TronDeFiBanner(
+                    isLoading = state.isLoading,
+                    totalValue = tronData?.totalAmountPrice ?: "",
+                    isBalanceVisible = state.isBalanceVisible,
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    VsTabGroup(
+                        index =
+                            TRON_DEFI_TABS.indexOfFirst { it == state.selectedTab }.coerceAtLeast(0)
+                    ) {
+                        TRON_DEFI_TABS.forEach { tab ->
+                            tab {
+                                VsTab(
+                                    label = stringResource(tab.displayNameRes),
+                                    onClick = { onTabSelected(tab) },
+                                )
+                            }
+                        }
+                    }
+
+                    V2Container(
+                        type = ContainerType.SECONDARY,
+                        cornerType = CornerType.Circular,
+                        modifier = Modifier.clickOnce(onClick = onEditPositionClick),
+                    ) {
+                        UiIcon(
+                            drawableResId = R.drawable.edit_chain,
+                            size = 16.dp,
+                            modifier = Modifier.padding(all = 12.dp),
+                            tint = Theme.v2.colors.primary.accent4,
                         )
                     }
                 }
             }
 
-            V2Container(
-                type = ContainerType.SECONDARY,
-                cornerType = CornerType.Circular,
-                modifier = Modifier.clickOnce(onClick = onEditPositionClick),
-            ) {
-                UiIcon(
-                    drawableResId = R.drawable.edit_chain,
-                    size = 16.dp,
-                    modifier = Modifier.padding(all = 12.dp),
-                    tint = Theme.v2.colors.primary.accent4,
+            item {
+                ResourceTwoCardsRow(
+                    resourceUsage =
+                        ResourceUsage(
+                            availableBandwidth = tronData?.availableBandwidth ?: 0L,
+                            totalBandwidth = tronData?.totalBandwidth ?: 0L,
+                            availableEnergy = tronData?.availableEnergy ?: 0L,
+                            totalEnergy = tronData?.totalEnergy ?: 0L,
+                        )
                 )
+            }
+
+            if (tronData != null && !tronData.hasPositions) {
+                item { NoPositionsContainer() }
+            }
+
+            val pendingWithdrawals = tronData?.pendingWithdrawals ?: emptyList()
+            if (pendingWithdrawals.isNotEmpty()) {
+                item {
+                    TronPendingWithdrawalsCard(
+                        withdrawals = pendingWithdrawals,
+                        isBalanceVisible = state.isBalanceVisible,
+                    )
+                }
             }
         }
 
@@ -158,28 +186,6 @@ private fun TronDeFiPositionsScreenContent(
                 onPositionSelectionChange = onPositionSelectionChange,
                 onDoneClick = onDonePositionClick,
                 onCancelClick = onCancelEditPositionClick,
-            )
-        }
-
-        ResourceTwoCardsRow(
-            resourceUsage =
-                ResourceUsage(
-                    availableBandwidth = tronData?.availableBandwidth ?: 0L,
-                    totalBandwidth = tronData?.totalBandwidth ?: 0L,
-                    availableEnergy = tronData?.availableEnergy ?: 0L,
-                    totalEnergy = tronData?.totalEnergy ?: 0L,
-                )
-        )
-
-        if (!state.isLoading) {
-            NoPositionsContainer()
-        }
-
-        val pendingWithdrawals = tronData?.pendingWithdrawals ?: emptyList()
-        if (pendingWithdrawals.isNotEmpty()) {
-            TronPendingWithdrawalsCard(
-                withdrawals = pendingWithdrawals,
-                isBalanceVisible = state.isBalanceVisible,
             )
         }
     }

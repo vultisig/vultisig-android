@@ -65,6 +65,7 @@ internal data class TronStakingUiModel(
     val bandwidthProgress: Float = 0f,
     val energyProgress: Float = 0f,
     val pendingWithdrawals: List<TronPendingWithdrawalUiModel> = emptyList(),
+    val hasPositions: Boolean = false,
 )
 
 @Immutable
@@ -72,7 +73,7 @@ internal data class TronDeFiUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val isBalanceVisible: Boolean = true,
-    val selectedTab: Int = DeFiTab.STAKED.displayNameRes,
+    val selectedTab: DeFiTab = DeFiTab.STAKED,
     val showPositionSelectionDialog: Boolean = false,
     val stakePositionsDialog: List<PositionUiModelDialog> = TRON_STAKE_POSITIONS_DIALOG,
     val selectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
@@ -84,9 +85,7 @@ internal data class TronDeFiUiState(
 
 enum class TronAction(val memo: String) {
     FREEZE_BANDWIDTH("FREEZE:BANDWIDTH"),
-    FREEZE_ENERGY("FREEZE:ENERGY"),
     UNFREEZE_BANDWIDTH("UNFREEZE:BANDWIDTH"),
-    UNFREEZE_ENERGY("UNFREEZE:ENERGY"),
 }
 
 @HiltViewModel
@@ -225,6 +224,8 @@ constructor(
                                 bandwidthProgress = bandwidthProgress,
                                 energyProgress = energyProgress,
                                 pendingWithdrawals = pendingWithdrawals,
+                                hasPositions =
+                                    frozenTotal > BigDecimal.ZERO || pendingWithdrawals.isNotEmpty(),
                             ),
                     )
                 }
@@ -232,7 +233,7 @@ constructor(
     }
 
     fun onTabSelected(tab: DeFiTab) {
-        _state.update { it.copy(selectedTab = tab.displayNameRes) }
+        _state.update { it.copy(selectedTab = tab) }
     }
 
     fun setPositionSelectionDialogVisibility(visible: Boolean) {
