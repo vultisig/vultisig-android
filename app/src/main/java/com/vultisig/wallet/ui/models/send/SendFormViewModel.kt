@@ -2819,13 +2819,14 @@ constructor(
 
                         val fiatValue =
                             convertValue(tokenString, selectedToken) { value, price, token ->
-                                // this is the fiat value , we should not keep too much decimal
-                                // places
-                                value
-                                    .multiply(price)
-                                    .setScale(3, RoundingMode.DOWN)
-                                    .stripTrailingZeros()
-                            } ?: return@combine
+                                    // this is the fiat value , we should not keep too much decimal
+                                    // places
+                                    value
+                                        .multiply(price)
+                                        .setScale(selectedToken.decimal, RoundingMode.DOWN)
+                                        .stripTrailingZeros()
+                                }
+                                ?.takeIf { it.isNotEmpty() } ?: return@combine
 
                         lastTokenValueUserInput = tokenString
                         lastFiatValueUserInput = fiatValue
@@ -2834,8 +2835,9 @@ constructor(
                     } else if (lastFiatValueUserInput != fiatString) {
                         val tokenValue =
                             convertValue(fiatString, selectedToken) { value, price, token ->
-                                value.divide(price, token.decimal, RoundingMode.DOWN)
-                            } ?: return@combine
+                                    value.divide(price, token.decimal, RoundingMode.DOWN)
+                                }
+                                ?.takeIf { it.isNotEmpty() } ?: return@combine
 
                         val tokenDecimal = tokenValue.toBigDecimalOrNull()
                         isMaxAmount.value = tokenDecimal == maxAmount && maxAmount > BigDecimal.ZERO
@@ -2929,7 +2931,13 @@ constructor(
                     return null
                 }
 
-            if (price == BigDecimal.ZERO) return null
+            if (price == BigDecimal.ZERO) {
+                Timber.w(
+                    "convertValue: price is ZERO for token %s, skipping conversion",
+                    selectedToken.ticker,
+                )
+                return null
+            }
 
             transform(decimalValue, price, selectedToken).toPlainString()
         } else {

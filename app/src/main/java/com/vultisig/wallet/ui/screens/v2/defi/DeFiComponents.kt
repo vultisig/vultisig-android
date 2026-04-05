@@ -264,7 +264,12 @@ fun ActionButton(
             }
         }
 
-        Text(text = title, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        Text(
+            text = title,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            style = Theme.brockmann.button.medium.medium,
+        )
     }
 }
 
