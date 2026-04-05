@@ -10,13 +10,16 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -31,10 +34,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -55,7 +62,13 @@ import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v3.V3Scaffold
+import com.vultisig.wallet.ui.components.v3.V3Topbar
 import com.vultisig.wallet.ui.models.ScanQrUiModel
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -63,13 +76,13 @@ import com.vultisig.wallet.ui.utils.addWhiteBorder
 import com.vultisig.wallet.ui.utils.setupCamera
 import com.vultisig.wallet.ui.utils.unbindCameraListener
 import com.vultisig.wallet.ui.utils.uriToBitmap
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import timber.log.Timber
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,7 +175,10 @@ internal fun ScanQrScreen(
                 )
 
                 Image(
-                    modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(40.dp),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                        .padding(40.dp),
                     painter =
                         if (isFrameHighlighted) {
                             painterResource(id = R.drawable.vs_camera_frame_highlight)
@@ -176,7 +192,9 @@ internal fun ScanQrScreen(
                     Banner(
                         text = uiModel.error.orEmpty(),
                         variant = BannerVariant.Warning,
-                        modifier = Modifier.fillMaxWidth().align(Alignment.TopStart),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.TopStart),
                     )
                 }
             } else if (
@@ -205,7 +223,10 @@ internal fun ScanQrScreen(
             }
             Column(
                 modifier =
-                    Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(vertical = 16.dp)
+                    Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .padding(vertical = 16.dp)
             ) {
                 if (cameraPermissionState.status.isGranted.not()) {
                     VsButton(
@@ -293,7 +314,7 @@ fun createScanner() =
     )
 
 private suspend fun scanImage(inputImage: InputImage, onError: (String) -> Unit) =
-    suspendCoroutine { continuation ->
+    suspendCancellableCoroutine { continuation ->
         try {
             createScanner()
                 .process(inputImage)
@@ -314,3 +335,88 @@ private suspend fun scanImage(inputImage: InputImage, onError: (String) -> Unit)
             continuation.resume(emptyList())
         }
     }
+
+@Preview
+@Composable
+private fun CameraBox() {
+    Scaffold(
+        bottomBar = {
+            Box(Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center){
+                VsButton(
+                    modifier = Modifier
+                        .padding(
+                            horizontal = V3Scaffold.PADDING_HORIZONTAL,
+                            vertical = V3Scaffold.PADDING_VERTICAL
+                        )
+                    , label = "Upload QR Code"
+                ) { }
+            }
+        },
+        topBar = {
+            V3Topbar(
+                title = "Scan QR",
+                onBackClick = {},
+                actions = {
+                    VsCircleButton(
+                        onClick = {},
+                        size = VsCircleButtonSize.Small,
+                        type = VsCircleButtonType.Secondary,
+                        designType = DesignType.Shined,
+                        icon = R.drawable.camera,
+                    )
+                },
+                transparentBackground = true
+            )
+        },
+    ) { contentPadding ->
+        Box(
+            modifier = Modifier
+                .background(
+                    Color(0xFF95AEE0)
+                )
+                .background(brush =
+                    Brush.verticalGradient(
+                        colorStops = arrayOf(
+                            0.0000f to Color(0xFF02122B),
+                            0.0043f to Color(0xFD02122B), // 99.14%
+                            0.0178f to Color(0xF602122B), // 96.45%
+                            0.0409f to Color(0xEB02122B), // 91.83%
+                            0.0737f to Color(0xDA02122B), // 85.26%
+                            0.1159f to Color(0xC402122B), // 76.82%
+                            0.1660f to Color(0xAB02122B), // 66.81%
+                            0.2214f to Color(0x8E02122B), // 55.73%
+                            0.2786f to Color(0x7102122B), // 44.27%
+                            0.3340f to Color(0x5502122B), // 33.19%
+                            0.3841f to Color(0x3B02122B), // 23.18%
+                            0.4263f to Color(0x2502122B), // 14.74%
+                            0.4591f to Color(0x1502122B), // 8.17%
+                            0.4822f to Color(0x0902122B), // 3.55%
+                            0.4957f to Color(0x0202122B), // 0.86%
+                            0.5000f to Color(0x0002122B), // 0%
+                            1.0000f to Color(0x0002122B), // hold bottom half
+                        ),
+                    )
+                )
+
+
+                .padding(contentPadding)
+        )
+        {
+            Box(
+                modifier = Modifier.fillMaxSize()
+                    .padding(
+                        horizontal = V3Scaffold.PADDING_HORIZONTAL,
+                    )
+                    .padding(
+                        top = V3Scaffold.PADDING_VERTICAL,
+                        bottom = 40.dp
+                    )
+                    .clip(
+                        shape = RoundedCornerShape(size = 40.dp)
+                    )
+                    .background(color = Theme.v2.colors.backgrounds.background)
+            )
+        }
+    }
+}
