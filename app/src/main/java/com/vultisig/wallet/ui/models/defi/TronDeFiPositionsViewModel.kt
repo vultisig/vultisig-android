@@ -28,7 +28,6 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.NumberFormat
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -37,8 +36,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 private const val TRON_KEY = "TRON"
@@ -158,8 +155,7 @@ constructor(
 
                 // Resolve fiat price for display
                 val currency = appCurrencyRepository.currency.first()
-                val currencyFormat =
-                    withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                val currencyFormat = appCurrencyRepository.getCurrencyFormat()
                 val trxPrice =
                     tokenPriceRepository.getCachedPrice(
                         tokenId = trxCoin.id,
@@ -282,6 +278,6 @@ constructor(
     }
 
     fun onBackClick() {
-        viewModelScope.launch { navigator.navigate(Destination.Back) }
+        viewModelScope.safeLaunch { navigator.navigate(Destination.Back) }
     }
 }
