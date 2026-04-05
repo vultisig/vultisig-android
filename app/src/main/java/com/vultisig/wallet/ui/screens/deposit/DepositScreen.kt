@@ -127,10 +127,10 @@ private fun DepositScreen(
             popExitTransition = slideOutToEndExitTransition(),
         ) {
             composable(route = SendDst.Send.route) {
-                require(!poolId.isNullOrBlank()) {
-                    "poolId must be non-null and non-blank for ADD_LP flow"
-                }
                 if (depositType == DeFiNavActions.ADD_LP.type) {
+                    require(!poolId.isNullOrBlank()) {
+                        "poolId must be non-null and non-blank for ADD_LP flow"
+                    }
                     AddLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId)
                 } else if (depositType == DeFiNavActions.REMOVE_LP.type) {
                     RemoveLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId)

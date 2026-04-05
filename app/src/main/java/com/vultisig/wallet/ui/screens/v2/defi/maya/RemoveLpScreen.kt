@@ -128,19 +128,6 @@ internal fun RemoveLpScreenContent(
             )
 
             UiSpacer(size = 8.dp)
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                listOf("0%", "25%", "50%", "75%", "100%").forEach { label ->
-                    Text(
-                        text = label,
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.tertiary,
-                    )
-                }
-            }
         }
 
         // Balance row
@@ -177,42 +164,6 @@ internal fun RemoveLpScreenContent(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun RemoveLpScreenContentPreview() {
-    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)) {
-        RemoveLpScreenContent(
-            state =
-                DepositFormUiModel(
-                    removeLpPercent = 1f,
-                    removeLpCacaoDisplay = "5.000 CACAO",
-                    availableLpUnits = "1000000",
-                    balance = UiText.DynamicString("24,000 CACAO"),
-                    selectedPoolTotalLpUnits = 5_000_000L,
-                    selectedPoolCacaoDepth = 25_000_000L,
-                )
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Remove Pool - 50%")
-@Composable
-private fun RemoveLpScreenContentHalfPreview() {
-    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)) {
-        RemoveLpScreenContent(
-            state =
-                DepositFormUiModel(
-                    removeLpPercent = 0.5f,
-                    removeLpCacaoDisplay = "2.500 CACAO",
-                    availableLpUnits = "1000000",
-                    balance = UiText.DynamicString("24,000 CACAO"),
-                    selectedPoolTotalLpUnits = 5_000_000L,
-                    selectedPoolCacaoDepth = 25_000_000L,
-                )
-        )
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RemoveLpSlider(
@@ -220,35 +171,22 @@ private fun RemoveLpSlider(
     onPercentChanged: (Float) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier) {
-        // Tick marks
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp).align(Alignment.Center),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            repeat(5) {
-                Box(
-                    modifier =
-                        Modifier.size(width = 2.dp, height = 6.dp)
-                            .background(
-                                color = Theme.v2.colors.border.normal,
-                                shape = RoundedCornerShape(1.dp),
-                            )
-                )
-            }
-        }
-
+    Column(modifier = modifier) {
         Slider(
             value = percent,
             onValueChange = onPercentChanged,
             valueRange = 0f..1f,
             steps = 0,
-            modifier = Modifier.fillMaxWidth().height(38.dp),
+            modifier = Modifier.fillMaxWidth(),
             thumb = {
                 Box(
                     modifier =
-                        Modifier.size(38.dp)
-                            .background(color = Theme.v2.colors.text.primary, shape = CircleShape)
+                        Modifier.width(28.dp)
+                            .height(16.dp)
+                            .background(
+                                color = Theme.v2.colors.text.primary,
+                                shape = RoundedCornerShape(50),
+                            )
                 )
             },
             track = { sliderState ->
@@ -261,9 +199,41 @@ private fun RemoveLpSlider(
                             thumbColor = Theme.v2.colors.text.primary,
                         ),
                     drawStopIndicator = null,
-                    modifier = Modifier.height(6.dp),
+                    modifier = Modifier.height(4.dp),
                 )
             },
+        )
+
+        // Tick marks below the track
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            repeat(5) {
+                Box(
+                    modifier =
+                        Modifier.size(4.dp)
+                            .background(color = Theme.v2.colors.border.normal, shape = CircleShape)
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RemoveLpScreenContentPreview() {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)) {
+        RemoveLpScreenContent(
+            state =
+                DepositFormUiModel(
+                    removeLpPercent = .5f,
+                    removeLpCacaoDisplay = "5.000 CACAO",
+                    availableLpUnits = "1000000",
+                    balance = UiText.DynamicString("24,000 CACAO"),
+                    selectedPoolTotalLpUnits = 5_000_000L,
+                    selectedPoolCacaoDepth = 25_000_000L,
+                )
         )
     }
 }
