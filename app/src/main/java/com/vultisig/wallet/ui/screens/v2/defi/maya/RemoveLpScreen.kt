@@ -24,11 +24,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -174,73 +174,83 @@ private fun RemoveLpSlider(
     onPercentChanged: (Float) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = "0%",
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.tertiary,
         )
         UiSpacer(12.dp)
-        Column(modifier = Modifier.weight(1f)) {
-        Slider(
-            value = percent,
-            onValueChange = onPercentChanged,
-            valueRange = 0f..1f,
-            steps = 0,
-            modifier = Modifier.fillMaxWidth(),
-            thumb = {
-                Box(
-                    modifier =
-                        Modifier.shadow(
-                                elevation = 13.dp,
-                                spotColor = Color(0x1F000000),
-                                ambientColor = Color(0x1F000000),
+        Column(verticalArrangement = Arrangement.Center, modifier = Modifier.weight(1f)) {
+            Slider(
+                value = percent,
+                onValueChange = onPercentChanged,
+                valueRange = 0f..1f,
+                steps = 0,
+                modifier =
+                    Modifier.layout { measurable, constraints ->
+                        val insetPx = 20.dp.roundToPx()
+                        val placeable =
+                            measurable.measure(
+                                constraints.copy(maxWidth = constraints.maxWidth + insetPx * 2)
                             )
-                            .shadow(
-                                elevation = 4.dp,
-                                spotColor = Color(0x1F000000),
-                                ambientColor = Color(0x1F000000),
-                            )
-                            .width(38.dp)
-                            .height(24.dp)
-                            .background(
-                                color = Theme.v2.colors.text.primary,
-                                shape = RoundedCornerShape(100),
-                            )
-                )
-            },
-            track = { sliderState ->
-                SliderDefaults.Track(
-                    sliderState = sliderState,
-                    colors =
-                        SliderDefaults.colors(
-                            activeTrackColor = Theme.v2.colors.primary.accent3,
-                            inactiveTrackColor = Theme.v2.colors.border.normal,
-                            thumbColor = Theme.v2.colors.text.primary,
-                        ),
-                    thumbTrackGapSize = 0.dp,
-                    drawStopIndicator = null,
-                    modifier = Modifier.height(6.dp),
-                )
-            },
-        )
+                        layout(constraints.maxWidth, placeable.height) {
+                            placeable.place(-insetPx, 0)
+                        }
+                    },
+                thumb = {
+                    Box(
+                        modifier =
+                            Modifier.shadow(
+                                    elevation = 13.dp,
+                                    spotColor = Color(0x1F000000),
+                                    ambientColor = Color(0x1F000000),
+                                )
+                                .shadow(
+                                    elevation = 4.dp,
+                                    spotColor = Color(0x1F000000),
+                                    ambientColor = Color(0x1F000000),
+                                )
+                                .width(38.dp)
+                                .height(24.dp)
+                                .background(
+                                    color = Theme.v2.colors.text.primary,
+                                    shape = RoundedCornerShape(100),
+                                )
+                    )
+                },
+                track = { sliderState ->
+                    SliderDefaults.Track(
+                        sliderState = sliderState,
+                        colors =
+                            SliderDefaults.colors(
+                                activeTrackColor = Theme.v2.colors.primary.accent3,
+                                inactiveTrackColor = Theme.v2.colors.border.normal,
+                                thumbColor = Theme.v2.colors.text.primary,
+                            ),
+                        thumbTrackGapSize = 0.dp,
+                        drawStopIndicator = null,
+                        modifier = Modifier.height(6.dp),
+                    )
+                },
+            )
 
-        // Tick marks below the track
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            repeat(5) {
-                Box(
-                    modifier =
-                        Modifier.size(4.dp)
-                            .background(color = Theme.v2.colors.border.normal, shape = CircleShape)
-                )
+            // Tick marks below the track
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                repeat(5) {
+                    Box(
+                        modifier =
+                            Modifier.size(4.dp)
+                                .background(
+                                    color = Theme.v2.colors.border.normal,
+                                    shape = CircleShape,
+                                )
+                    )
+                }
             }
-        }
         }
         UiSpacer(12.dp)
         Text(
