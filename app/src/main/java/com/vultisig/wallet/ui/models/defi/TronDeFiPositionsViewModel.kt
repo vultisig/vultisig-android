@@ -50,9 +50,7 @@ private val TRON_STAKE_POSITIONS_DIALOG
 private val TRON_DEFAULT_SELECTED_POSITIONS = listOf(TRON_KEY)
 
 @Immutable
-internal data class TronDeFiUiState(
-    val isLoading: Boolean = true,
-    val error: String? = null,
+internal data class TronStakingUiModel(
     val availableBalanceTrx: String = "0",
     val totalAmountPrice: String = "",
     val frozenTotalTrx: String = "0",
@@ -67,12 +65,19 @@ internal data class TronDeFiUiState(
     val bandwidthProgress: Float = 0f,
     val energyProgress: Float = 0f,
     val pendingWithdrawals: List<TronPendingWithdrawalUiModel> = emptyList(),
+)
+
+@Immutable
+internal data class TronDeFiUiState(
+    val isLoading: Boolean = true,
+    val error: String? = null,
     val isBalanceVisible: Boolean = true,
     val selectedTab: Int = DeFiTab.STAKED.displayNameRes,
     val showPositionSelectionDialog: Boolean = false,
     val stakePositionsDialog: List<PositionUiModelDialog> = TRON_STAKE_POSITIONS_DIALOG,
     val selectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
     val tempSelectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
+    val tronData: TronStakingUiModel? = null,
 )
 
 @Immutable data class TronPendingWithdrawalUiModel(val amountTrx: String, val expiryEpochMs: Long)
@@ -203,21 +208,24 @@ constructor(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        availableBalanceTrx = availableBalanceTrx.toPlainString(),
-                        totalAmountPrice = totalAmountPrice,
-                        frozenTotalTrx = frozenTotal.toPlainString(),
-                        frozenTotalPrice = frozenTotalPrice,
-                        frozenBandwidthTrx = frozenBandwidthTrx.toPlainString(),
-                        frozenEnergyTrx = frozenEnergyTrx.toPlainString(),
-                        unfreezingTrx = unfreezingTrx.toPlainString(),
-                        availableBandwidth = stats.availableBandwidth,
-                        totalBandwidth = stats.totalBandwidth,
-                        availableEnergy = stats.availableEnergy,
-                        totalEnergy = stats.totalEnergy,
-                        bandwidthProgress = bandwidthProgress,
-                        energyProgress = energyProgress,
-                        pendingWithdrawals = pendingWithdrawals,
                         isBalanceVisible = isBalanceVisible,
+                        tronData =
+                            TronStakingUiModel(
+                                availableBalanceTrx = availableBalanceTrx.toPlainString(),
+                                totalAmountPrice = totalAmountPrice,
+                                frozenTotalTrx = frozenTotal.toPlainString(),
+                                frozenTotalPrice = frozenTotalPrice,
+                                frozenBandwidthTrx = frozenBandwidthTrx.toPlainString(),
+                                frozenEnergyTrx = frozenEnergyTrx.toPlainString(),
+                                unfreezingTrx = unfreezingTrx.toPlainString(),
+                                availableBandwidth = stats.availableBandwidth,
+                                totalBandwidth = stats.totalBandwidth,
+                                availableEnergy = stats.availableEnergy,
+                                totalEnergy = stats.totalEnergy,
+                                bandwidthProgress = bandwidthProgress,
+                                energyProgress = energyProgress,
+                                pendingWithdrawals = pendingWithdrawals,
+                            ),
                     )
                 }
             }

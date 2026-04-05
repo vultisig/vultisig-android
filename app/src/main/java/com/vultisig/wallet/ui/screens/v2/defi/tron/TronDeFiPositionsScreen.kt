@@ -42,6 +42,7 @@ import com.vultisig.wallet.ui.models.defi.TronAction
 import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
+import com.vultisig.wallet.ui.models.defi.TronStakingUiModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
@@ -96,9 +97,11 @@ private fun TronDeFiPositionsScreenContent(
                 .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        val tronData = state.tronData
+
         TronDeFiBanner(
             isLoading = state.isLoading,
-            totalValue = state.totalAmountPrice,
+            totalValue = tronData?.totalAmountPrice ?: "",
             isBalanceVisible = state.isBalanceVisible,
         )
 
@@ -148,10 +151,10 @@ private fun TronDeFiPositionsScreenContent(
         ResourceTwoCardsRow(
             resourceUsage =
                 ResourceUsage(
-                    availableBandwidth = state.availableBandwidth,
-                    totalBandwidth = state.totalBandwidth,
-                    availableEnergy = state.availableEnergy,
-                    totalEnergy = state.totalEnergy,
+                    availableBandwidth = tronData?.availableBandwidth ?: 0L,
+                    totalBandwidth = tronData?.totalBandwidth ?: 0L,
+                    availableEnergy = tronData?.availableEnergy ?: 0L,
+                    totalEnergy = tronData?.totalEnergy ?: 0L,
                 )
         )
 
@@ -159,9 +162,10 @@ private fun TronDeFiPositionsScreenContent(
             NoPositionsContainer()
         }
 
-        if (state.pendingWithdrawals.isNotEmpty()) {
+        val pendingWithdrawals = tronData?.pendingWithdrawals ?: emptyList()
+        if (pendingWithdrawals.isNotEmpty()) {
             TronPendingWithdrawalsCard(
-                withdrawals = state.pendingWithdrawals,
+                withdrawals = pendingWithdrawals,
                 isBalanceVisible = state.isBalanceVisible,
             )
         }
@@ -263,17 +267,20 @@ private fun TronDeFiPositionsScreenNoPositionsPreview() {
         state =
             TronDeFiUiState(
                 isLoading = false,
-                availableBalanceTrx = "1240.50",
-                totalAmountPrice = "$1240.05",
-                frozenBandwidthTrx = "0.000000",
-                frozenEnergyTrx = "0.000000",
-                unfreezingTrx = "0.000000",
-                availableBandwidth = 1500L,
-                totalBandwidth = 2000L,
-                availableEnergy = 1L,
-                totalEnergy = 2L,
-                bandwidthProgress = 0.75f,
-                energyProgress = 0.5f,
+                tronData =
+                    TronStakingUiModel(
+                        availableBalanceTrx = "1240.50",
+                        totalAmountPrice = "$1240.05",
+                        frozenBandwidthTrx = "0.000000",
+                        frozenEnergyTrx = "0.000000",
+                        unfreezingTrx = "0.000000",
+                        availableBandwidth = 1500L,
+                        totalBandwidth = 2000L,
+                        availableEnergy = 1L,
+                        totalEnergy = 2L,
+                        bandwidthProgress = 0.75f,
+                        energyProgress = 0.5f,
+                    ),
             )
     )
 }
@@ -285,29 +292,33 @@ private fun TronDeFiPositionsScreenPreview() {
         state =
             TronDeFiUiState(
                 isLoading = false,
-                availableBalanceTrx = "1240.50",
-                totalAmountPrice = "$1240.05",
-                frozenBandwidthTrx = "100.000000",
-                frozenEnergyTrx = "200.000000",
-                frozenTotalTrx = "300.000000",
-                frozenTotalPrice = "$30.00",
-                unfreezingTrx = "50.000000",
-                availableBandwidth = 15000L,
-                totalBandwidth = 20000L,
-                availableEnergy = 50000L,
-                totalEnergy = 100000L,
-                bandwidthProgress = 0.75f,
-                energyProgress = 0.5f,
-                pendingWithdrawals =
-                    listOf(
-                        TronPendingWithdrawalUiModel(
-                            amountTrx = "50.000000",
-                            expiryEpochMs = System.currentTimeMillis() - 1_000L,
-                        ),
-                        TronPendingWithdrawalUiModel(
-                            amountTrx = "30.000000",
-                            expiryEpochMs = System.currentTimeMillis() + 2 * 24 * 60 * 60 * 1_000L,
-                        ),
+                tronData =
+                    TronStakingUiModel(
+                        availableBalanceTrx = "1240.50",
+                        totalAmountPrice = "$1240.05",
+                        frozenBandwidthTrx = "100.000000",
+                        frozenEnergyTrx = "200.000000",
+                        frozenTotalTrx = "300.000000",
+                        frozenTotalPrice = "$30.00",
+                        unfreezingTrx = "50.000000",
+                        availableBandwidth = 15000L,
+                        totalBandwidth = 20000L,
+                        availableEnergy = 50000L,
+                        totalEnergy = 100000L,
+                        bandwidthProgress = 0.75f,
+                        energyProgress = 0.5f,
+                        pendingWithdrawals =
+                            listOf(
+                                TronPendingWithdrawalUiModel(
+                                    amountTrx = "50.000000",
+                                    expiryEpochMs = System.currentTimeMillis() - 1_000L,
+                                ),
+                                TronPendingWithdrawalUiModel(
+                                    amountTrx = "30.000000",
+                                    expiryEpochMs =
+                                        System.currentTimeMillis() + 2 * 24 * 60 * 60 * 1_000L,
+                                ),
+                            ),
                     ),
             )
     )

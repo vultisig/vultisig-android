@@ -8,8 +8,8 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.genera
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
+import java.io.IOException
 import java.math.BigInteger
-import kotlinx.io.IOException
 import timber.log.Timber
 
 class TronDeFiBalanceService(
@@ -23,7 +23,7 @@ class TronDeFiBalanceService(
             val frozenBandwidth = account.frozenBandwidthSun.toBigInteger()
             val frozenEnergy = account.frozenEnergySun.toBigInteger()
             val unfreezing = account.unfreezingTotalSun.toBigInteger()
-            val totalFrozen = frozenBandwidth + frozenEnergy + unfreezing
+            val totalFrozen = frozenBandwidth + frozenEnergy
 
             Timber.d(
                 "TronDeFiBalanceService: frozen bandwidth=%s, energy=%s, unfreezing=%s",
