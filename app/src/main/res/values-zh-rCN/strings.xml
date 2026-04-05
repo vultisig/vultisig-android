@@ -231,6 +231,7 @@
     <!-- Import File -->
     <string name="import_file_screen_title">导入</string>
     <string name="import_file_screen_duplicate_vault">保险库重复</string>
+    <string name="import_file_screen_success_import">保险库导入成功</string>
 
     <!-- Create New Vault -->
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
