@@ -1050,6 +1050,9 @@
     <string name="password_choose_a_password">Escolha uma palavra-passe</string>
     <string name="password_extra_layer">Se quiser uma camada extra de segurança, escolha uma palavra-passe. A palavra-passe não pode ser recuperada.</string>
     <string name="password_extra_layer_highlight">A palavra-passe não pode ser recuperada.</string>
+    <string name="verify_existing_vault_email_description">Isto será utilizado apenas uma vez para enviar o seu ficheiro de cópia de segurança. A Vultisig não armazena quaisquer dados.</string>
+    <string name="verify_existing_vault_password_title">Introduzir palavra-passe do Cofre</string>
+    <string name="verify_existing_vault_password_description">Introduza a palavra-passe do seu Cofre.</string>
     <string name="backup_backups">Cópias de segurança,</string>
     <string name="backup_your_new_recovery_method">o seu novo método de recuperação</string>
     <string name="backup_backups_power_your_vault">As cópias de segurança potenciam o seu cofre. Cada dispositivo tem a sua própria cópia de segurança. Uma cópia sozinha não pode mover fundos, serve apenas para recuperação. Importe e recupere qualquer dispositivo perdido.</string>
