@@ -188,8 +188,8 @@ constructor(
     }
 
     private fun prev() {
-        if (uiState.value.isLoading) return
         viewModelScope.launch {
+            if (uiState.value.isLoading) return@launch
             val currentStep = uiState.value.activeStep
             val currentStepIndex = uiState.value.stepAndStates.keys.indexOf(currentStep)
             val nextIndex = currentStepIndex - 1
@@ -203,8 +203,8 @@ constructor(
     }
 
     private fun next() {
-        if (uiState.value.isLoading) return
         viewModelScope.launch {
+            if (uiState.value.isLoading) return@launch
             val currentStep = uiState.value.activeStep
             val isValid = validateCurrentStep()
             if (!isValid) return@launch
