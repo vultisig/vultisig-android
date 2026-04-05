@@ -4,9 +4,6 @@ import android.util.Patterns
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,13 +17,16 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.theme.v2.V2
+import com.vultisig.wallet.ui.screens.keygen.VerifyExistingVaultStepState
+import com.vultisig.wallet.ui.screens.keygen.VerifyExistingVaultStepType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -38,57 +38,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-enum class VerifyExistingVaultStepType(
-    val title: UiText,
-    val description: UiText,
-    val logo: Int,
-    val isPassword: Boolean,
-) {
-    Email(
-        title = StringResource(R.string.email_enter_your_email),
-        description = StringResource(R.string.verify_existing_vault_email_description),
-        logo = R.drawable.mail,
-        isPassword = false,
-    ),
-    Password(
-        title = StringResource(R.string.verify_existing_vault_password_title),
-        description = StringResource(R.string.verify_existing_vault_password_description),
-        logo = R.drawable.center_lock,
-        isPassword = true,
-    ),
-}
-
-enum class VerifyExistingVaultStepState(
-    val backgroundColor: Color,
-    val borderColor: Color,
-    val borderWidth: Dp,
-    val logoTint: Color,
-) {
-    InProgress(
-        backgroundColor = Color.Transparent,
-        borderColor = V2.colors.neutrals.n50.copy(alpha = 0.2f),
-        borderWidth = 1.5.dp,
-        logoTint = V2.colors.buttons.ctaPrimary,
-    ),
-    Done(
-        backgroundColor = V2.colors.backgrounds.state.success.copy(alpha = 0.05f),
-        borderColor = Color.Transparent,
-        borderWidth = 0.dp,
-        logoTint = V2.colors.alerts.success,
-    ),
-    Inactive(
-        backgroundColor = Color.Transparent,
-        borderColor = V2.colors.text.button.disabled,
-        borderWidth = 0.dp,
-        logoTint = V2.colors.text.button.disabled,
-    ),
-}
-
 @Immutable
 internal data class VerifyExistingVaultUiState(
     val activeStep: VerifyExistingVaultStepType = VerifyExistingVaultStepType.Email,
     val stepAndStates: Map<VerifyExistingVaultStepType, VerifyExistingVaultStepState> = emptyMap(),
-    val inputTextFieldState: TextFieldState = TextFieldState(),
     val textFieldHint: UiText = UiText.Empty,
     val errorMessage: UiText? = null,
     val isNextButtonEnabled: Boolean = false,
@@ -122,7 +75,8 @@ constructor(
     private val tssAction = args.tssAction
     private val vaultId = args.vaultId
 
-    val uiState = MutableStateFlow(VerifyExistingVaultUiState())
+    private val _uiState = MutableStateFlow(VerifyExistingVaultUiState())
+    val uiState: StateFlow<VerifyExistingVaultUiState> = _uiState.asStateFlow()
 
     val emailTextFieldState = TextFieldState()
     val passwordTextFieldState = TextFieldState()
@@ -147,7 +101,7 @@ constructor(
                 VerifyExistingVaultStepType.Email to VerifyExistingVaultStepState.InProgress,
                 VerifyExistingVaultStepType.Password to VerifyExistingVaultStepState.Inactive,
             )
-        uiState.update { it.copy(stepAndStates = stepAndStates) }
+        _uiState.update { it.copy(stepAndStates = stepAndStates) }
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -167,16 +121,18 @@ constructor(
                 }
             }
             .onEach { (innerState, errorMessage) ->
-                uiState.update { it.copy(innerState = innerState, errorMessage = errorMessage) }
+                _uiState.update { it.copy(innerState = innerState, errorMessage = errorMessage) }
             }
             .launchIn(viewModelScope)
     }
 
     private fun collectStepStates() {
-        uiState
-            .map { it.activeStep }
-            .distinctUntilChanged()
-            .combine(uiState.map { it.stepAndStates.keys }) { activeStep, steps ->
+        combine(
+                uiState.map { it.activeStep }.distinctUntilChanged(),
+                uiState.map { it.stepAndStates.keys },
+                emailTextFieldState.textAsFlow().map { it.toString() },
+                passwordTextFieldState.textAsFlow().map { it.toString() },
+            ) { activeStep, steps, email, password ->
                 val map =
                     steps.associateWith { step ->
                         when {
@@ -184,12 +140,6 @@ constructor(
                             step.ordinal < activeStep.ordinal -> VerifyExistingVaultStepState.Done
                             else -> VerifyExistingVaultStepState.Inactive
                         }
-                    }
-
-                val textFieldState =
-                    when (activeStep) {
-                        VerifyExistingVaultStepType.Email -> emailTextFieldState
-                        VerifyExistingVaultStepType.Password -> passwordTextFieldState
                     }
 
                 val hint =
@@ -202,15 +152,13 @@ constructor(
 
                 val isNextButtonEnabled =
                     when (activeStep) {
-                        VerifyExistingVaultStepType.Email -> validateEmail(emailTextFieldState.text)
-                        VerifyExistingVaultStepType.Password ->
-                            passwordTextFieldState.text.isNotBlank()
+                        VerifyExistingVaultStepType.Email -> validateEmail(email)
+                        VerifyExistingVaultStepType.Password -> password.isNotBlank()
                     }
 
-                uiState.update {
+                _uiState.update {
                     it.copy(
                         stepAndStates = map,
-                        inputTextFieldState = textFieldState,
                         textFieldHint = hint,
                         isNextButtonEnabled = isNextButtonEnabled,
                     )
@@ -229,7 +177,7 @@ constructor(
     }
 
     private fun togglePasswordVisibility() {
-        uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
+        _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
     }
 
     private fun clearInput() {
@@ -250,7 +198,7 @@ constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            uiState.update { it.copy(activeStep = newStep) }
+            _uiState.update { it.copy(activeStep = newStep) }
         }
     }
 
@@ -268,7 +216,7 @@ constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            uiState.update { it.copy(activeStep = newStep) }
+            _uiState.update { it.copy(activeStep = newStep) }
         }
     }
 
@@ -291,14 +239,14 @@ constructor(
         val password = passwordTextFieldState.text.toString()
         if (password.isBlank()) return
 
-        uiState.update { it.copy(isLoading = true) }
+        _uiState.update { it.copy(isLoading = true) }
 
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to verify vault password")
                 passwordInnerState.value = VsTextInputFieldInnerState.Error
-                passwordErrorMessage.value = UiText.DynamicString(e.message.orEmpty())
-                uiState.update { it.copy(isLoading = false) }
+                passwordErrorMessage.value = StringResource(R.string.fast_vault_invalid_password)
+                _uiState.update { it.copy(isLoading = false) }
             }
         ) {
             val vault = vaultRepository.get(vaultId)
@@ -306,7 +254,7 @@ constructor(
                 passwordInnerState.value = VsTextInputFieldInnerState.Error
                 passwordErrorMessage.value =
                     StringResource(R.string.push_notification_vault_not_found)
-                uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(isLoading = false) }
                 return@safeLaunch
             }
 
@@ -336,7 +284,7 @@ constructor(
                     passwordErrorMessage.value = UiText.DynamicString(result.message)
                 }
             }
-            uiState.update { it.copy(isLoading = false) }
+            _uiState.update { it.copy(isLoading = false) }
         }
     }
 
@@ -352,20 +300,16 @@ constructor(
 
                 emailInnerState.value = innerState
                 emailErrorMessage.value = errorMessage
-                if (uiState.value.activeStep == VerifyExistingVaultStepType.Email) {
-                    uiState.update { it.copy(isNextButtonEnabled = isEmailValid) }
-                }
             }
         }
     }
 
     private fun observePasswordFieldChanges() {
         viewModelScope.launch {
-            passwordTextFieldState.textAsFlow().collectLatest { password ->
+            passwordTextFieldState.textAsFlow().collectLatest { _ ->
                 if (uiState.value.activeStep == VerifyExistingVaultStepType.Password) {
                     passwordInnerState.value = VsTextInputFieldInnerState.Default
                     passwordErrorMessage.value = null
-                    uiState.update { it.copy(isNextButtonEnabled = password.isNotBlank()) }
                 }
             }
         }

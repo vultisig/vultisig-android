@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -20,11 +21,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -37,23 +40,35 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.v2.modifiers.shinedBottom
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.keygen.VerifyExistingVaultEvent
-import com.vultisig.wallet.ui.models.keygen.VerifyExistingVaultStepState
-import com.vultisig.wallet.ui.models.keygen.VerifyExistingVaultStepType
 import com.vultisig.wallet.ui.models.keygen.VerifyExistingVaultUiState
 import com.vultisig.wallet.ui.models.keygen.VerifyExistingVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun VerifyExistingVaultScreen(viewModel: VerifyExistingVaultViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
 
-    VerifyExistingVaultScreen(uiState = uiState, onEvent = viewModel::onEvent)
+    val inputTextFieldState =
+        when (uiState.activeStep) {
+            VerifyExistingVaultStepType.Email -> viewModel.emailTextFieldState
+            VerifyExistingVaultStepType.Password -> viewModel.passwordTextFieldState
+        }
+
+    VerifyExistingVaultScreen(
+        uiState = uiState,
+        inputTextFieldState = inputTextFieldState,
+        onEvent = viewModel::onEvent,
+    )
 }
 
 @Composable
 internal fun VerifyExistingVaultScreen(
     uiState: VerifyExistingVaultUiState,
+    inputTextFieldState: TextFieldState,
     onEvent: (VerifyExistingVaultEvent) -> Unit,
 ) {
     val canProceed = uiState.isNextButtonEnabled && !uiState.isLoading
@@ -83,7 +98,7 @@ internal fun VerifyExistingVaultScreen(
 
             VsTextInputField(
                 modifier = Modifier.testTag(VerifyExistingVaultTags.INPUT_FIELD),
-                textFieldState = uiState.inputTextFieldState,
+                textFieldState = inputTextFieldState,
                 trailingIcon = R.drawable.close_circle,
                 innerState = uiState.innerState,
                 type =
@@ -154,8 +169,11 @@ private fun VerifyExistingVaultStepIcon(
                 .clip(shape = CircleShape)
                 .background(color = state.backgroundColor)
                 .then(
-                    if (state == VerifyExistingVaultStepState.Done) Modifier
-                    else Modifier.shinedBottom(color = Theme.v2.colors.alerts.success)
+                    if (state == VerifyExistingVaultStepState.InProgress) {
+                        Modifier.shinedBottom(color = Theme.v2.colors.alerts.success)
+                    } else {
+                        Modifier
+                    }
                 )
                 .border(width = state.borderWidth, color = state.borderColor, shape = CircleShape),
         contentAlignment = Alignment.Center,
@@ -184,6 +202,7 @@ private fun VerifyExistingVaultScreenEmailPreview() {
                     ),
                 activeStep = VerifyExistingVaultStepType.Email,
             ),
+        inputTextFieldState = TextFieldState(),
         onEvent = {},
     )
 }
@@ -202,8 +221,55 @@ private fun VerifyExistingVaultScreenPasswordPreview() {
                     ),
                 activeStep = VerifyExistingVaultStepType.Password,
             ),
+        inputTextFieldState = TextFieldState(),
         onEvent = {},
     )
+}
+
+enum class VerifyExistingVaultStepState(
+    val backgroundColor: Color,
+    val borderColor: Color,
+    val borderWidth: Dp,
+    val logoTint: Color,
+) {
+    InProgress(
+        backgroundColor = Color.Transparent,
+        borderColor = V2.colors.neutrals.n50.copy(alpha = 0.2f),
+        borderWidth = 1.5.dp,
+        logoTint = V2.colors.buttons.ctaPrimary,
+    ),
+    Done(
+        backgroundColor = V2.colors.backgrounds.state.success.copy(alpha = 0.05f),
+        borderColor = Color.Transparent,
+        borderWidth = 0.dp,
+        logoTint = V2.colors.alerts.success,
+    ),
+    Inactive(
+        backgroundColor = Color.Transparent,
+        borderColor = V2.colors.text.button.disabled,
+        borderWidth = 0.dp,
+        logoTint = V2.colors.text.button.disabled,
+    ),
+}
+
+enum class VerifyExistingVaultStepType(
+    val title: UiText,
+    val description: UiText,
+    val logo: Int,
+    val isPassword: Boolean,
+) {
+    Email(
+        title = StringResource(R.string.email_enter_your_email),
+        description = StringResource(R.string.verify_existing_vault_email_description),
+        logo = R.drawable.mail,
+        isPassword = false,
+    ),
+    Password(
+        title = StringResource(R.string.verify_existing_vault_password_title),
+        description = StringResource(R.string.verify_existing_vault_password_description),
+        logo = R.drawable.center_lock,
+        isPassword = true,
+    ),
 }
 
 internal object VerifyExistingVaultTags {
