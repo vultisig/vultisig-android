@@ -1219,7 +1219,10 @@ constructor(
                 val isMaxAmount = tokenAmount == maxAmount
 
                 if (chain == Chain.Tron) {
-                    val isTronStakingOp = memo != null && TRON_STAKING_MEMO_REGEX.matches(memo)
+                    val isTronStakingOp =
+                        memo != null &&
+                            selectedToken.isNativeToken &&
+                            TRON_STAKING_MEMO_REGEX.matches(memo)
                     if (!isTronStakingOp && srcAddress == dstAddress) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_same_address)

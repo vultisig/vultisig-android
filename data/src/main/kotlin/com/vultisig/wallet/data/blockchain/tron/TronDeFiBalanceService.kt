@@ -81,8 +81,10 @@ class TronDeFiBalanceService(
                 )
             val existing =
                 stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Tron.TRX.id)
-            if (existing == null || existing.stakeAmount != totalFrozen) {
-                stakingDetailsRepository.saveStakingDetails(vaultId, details)
+            when {
+                existing == null -> stakingDetailsRepository.saveStakingDetails(vaultId, details)
+                existing.stakeAmount != totalFrozen ->
+                    stakingDetailsRepository.updateStakingDetails(vaultId, details)
             }
         } catch (e: Exception) {
             Timber.e(e, "TronDeFiBalanceService: Failed to persist frozen TRX balance")

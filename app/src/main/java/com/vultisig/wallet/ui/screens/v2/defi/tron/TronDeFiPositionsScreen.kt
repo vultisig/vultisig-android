@@ -261,13 +261,13 @@ private fun TronPendingWithdrawalRow(
                 style = Theme.brockmann.body.m.medium,
                 color = Theme.v2.colors.text.primary,
             )
-            Text(
-                text = timeRemainingText,
-                style = Theme.brockmann.body.s.medium,
-                color =
-                    if (isClaimable) Theme.v2.colors.alerts.success
-                    else Theme.v2.colors.text.secondary,
-            )
+            if (!isClaimable) {
+                Text(
+                    text = timeRemainingText,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.secondary,
+                )
+            }
         }
 
         if (isClaimable) {

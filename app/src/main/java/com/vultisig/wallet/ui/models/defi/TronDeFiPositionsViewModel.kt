@@ -264,7 +264,13 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e -> Timber.e(e, "Failed to navigate for action %s", action) }
         ) {
-            val trxCoin = findTrxCoin(vaultId) ?: return@safeLaunch
+            val trxCoin = findTrxCoin(vaultId)
+            if (trxCoin == null) {
+                _state.update {
+                    it.copy(error = R.string.tron_defi_error_trx_not_in_vault.asUiText())
+                }
+                return@safeLaunch
+            }
             navigator.route(
                 Route.Send(
                     vaultId = vaultId,
