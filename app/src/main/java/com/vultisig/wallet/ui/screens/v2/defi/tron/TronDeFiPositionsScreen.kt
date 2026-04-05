@@ -50,6 +50,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.delay
 
 private val TRON_DEFI_TABS = listOf(DeFiTab.STAKED)
+private const val TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1_000L
 
 private data class CountdownParts(val days: Long, val hours: Long, val minutes: Long)
 
@@ -98,8 +99,6 @@ private fun TronDeFiPositionsScreenContent(
     onClickFreeze: () -> Unit = {},
     onClickUnfreeze: () -> Unit = {},
 ) {
-    val searchTextFieldState = remember { TextFieldState() }
-
     Column(
         modifier =
             Modifier.fillMaxSize()
@@ -122,7 +121,9 @@ private fun TronDeFiPositionsScreenContent(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             VsTabGroup(
-                index = TRON_DEFI_TABS.indexOfFirst { it.displayNameRes == state.selectedTab }
+                index =
+                    TRON_DEFI_TABS.indexOfFirst { it.displayNameRes == state.selectedTab }
+                        .coerceAtLeast(0)
             ) {
                 TRON_DEFI_TABS.forEach { tab ->
                     tab {
@@ -149,6 +150,7 @@ private fun TronDeFiPositionsScreenContent(
         }
 
         if (state.showPositionSelectionDialog) {
+            val searchTextFieldState = remember { TextFieldState() }
             PositionsSelectionDialog(
                 stakePositions = state.stakePositionsDialog,
                 selectedPositions = state.tempSelectedPositions,
@@ -270,7 +272,7 @@ private fun TronPendingWithdrawalRow(
                         .padding(horizontal = 10.dp, vertical = 4.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.tron_defi_ready_to_claim),
+                    text = timeRemainingText,
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.alerts.success,
                 )
@@ -334,8 +336,7 @@ private fun TronDeFiPositionsScreenPreview() {
                                 ),
                                 TronPendingWithdrawalUiModel(
                                     amountTrx = "30.000000",
-                                    expiryEpochMs =
-                                        System.currentTimeMillis() + 2 * 24 * 60 * 60 * 1_000L,
+                                    expiryEpochMs = System.currentTimeMillis() + TWO_DAYS_MS,
                                 ),
                             ),
                     ),
