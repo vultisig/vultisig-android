@@ -122,6 +122,7 @@ data class TronFrozenV2Json(
 
 @Serializable
 data class TronUnfrozenV2Json(
+    @SerialName("type") val type: String? = null,
     @SerialName("unfreeze_amount") val unfreezeAmount: Long? = null,
     @SerialName("unfreeze_expire_time") val unfreezeExpireTime: Long? = null,
 )
