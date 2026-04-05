@@ -475,6 +475,12 @@
     <string name="deposit_option_remove_cacao_pool">Удалить из пула CACAO</string>
     <string name="deposit_option_add_liquidity">Добавить ликвидность</string>
     <string name="deposit_option_remove_liquidity">Удалить ликвидность</string>
+    <string name="add_pool_title">Добавить в пул</string>
+    <string name="add_pool_amount_label">Сумма</string>
+    <string name="add_pool_gas_auto">Комиссия сети (авто)</string>
+    <string name="max">Макс</string>
+    <string name="token_fiat_toggle_token_label">Стоимость токена</string>
+    <string name="token_fiat_toggle_fiat_label">Фиатная стоимость</string>
     <string name="cacaopool_only_cacao_supported">Для операций пула поддерживается только токен CACAO.</string>
     <string name="referral_create_info_title">Реферальная программа</string>
     <string name="referral_create_info_content">Реферальная программа применяется к обменам THORChain и работает на основе максимальных усилий. Вам необходимо зарегистрировать THORName для использования реферальной программы Vultisig. Плата за регистрацию составляет 10 RUNE и 1 RUNE за каждый год, которая выплачивается сети THORChain.</string>

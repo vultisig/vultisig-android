@@ -155,7 +155,6 @@
     <string name="send_amount_currency_hint">금액 입력</string>
     <string name="send_shares_currency_hint">수량 입력</string>
     <string name="send_continue_button">계속</string>
-    <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">스왑</string>
     <string name="vault_settings_error_backup_file">오류가 발생했습니다</string>
     <string name="vault_settings_success_backup_file">Downloads/%1$s에 파일 저장됨</string>
@@ -267,13 +266,7 @@
     <string name="circular_progress_indicator_done">완료</string>
     <string name="join_keysign_wrong_reshare">잘못된 재공유</string>
     <string name="swap_screen_provider_title">제공자</string>
-    <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>
-    <string name="swap_form_provider_mayachain" translatable="false">MayaChain</string>
     <string name="swap_form_minimum_amount">"스왑 금액이 너무 적습니다. 권장 금액 %1$s %2$s "</string>
-    <string name="swap_for_provider_1inch" translatable="false">1Inch</string>
-    <string name="swap_for_provider_kyber" translatable="false">Kyber</string>
-    <string name="swap_for_provider_li_fi" translatable="false">LI.FI</string>
-    <string name="swap_for_provider_jupiter" translatable="false">Jupiter</string>
     <string name="backup_password_screen_title">백업</string>
     <string name="import_file_screen_password_error">비밀번호가 틀렸습니다. 다시 시도해 주세요</string>
     <string name="add_vault_save">저장</string>
@@ -372,8 +365,6 @@
     <string name="qr_title_join_keysign_description">볼트: %1$s\n금액: %2$s\n 수신: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">볼트: %1$s\n보내기: %2$s\n 받기: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">폴더에는 최소 하나의 볼트가 선택되어야 합니다</string>
-    <string name="share_vault_qr_uid" translatable="false">UID: %1$s</string>
-    <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
     <string name="import_file_password_hint_text">힌트: %s</string>
     <string name="scan_qr_upload_from_gallery">QR 업로드</string>
     <string name="no_barcodes_found">바코드를 찾을 수 없습니다</string>
@@ -667,6 +658,12 @@
     <string name="deposit_option_remove_cacao_pool">CACAO 풀에서 제거</string>
     <string name="deposit_option_add_liquidity">유동성 추가</string>
     <string name="deposit_option_remove_liquidity">유동성 제거</string>
+    <string name="add_pool_title">풀 추가</string>
+    <string name="add_pool_amount_label">금액</string>
+    <string name="add_pool_gas_auto">가스 (자동)</string>
+    <string name="max">최대</string>
+    <string name="token_fiat_toggle_token_label">토큰 가치</string>
+    <string name="token_fiat_toggle_fiat_label">법정화폐 가치</string>
     <string name="cacaopool_only_cacao_supported">풀 작업에는 CACAO 토큰만 지원됩니다</string>
     <string name="referral_create_info_content">추천 프로그램은 THORChain 스왑에 적용되며 최선의 노력으로 제공됩니다. Vultisig 추천을 사용하려면 THORName을 등록해야 합니다. 등록비는 10 RUNE이며 매년 1 RUNE이 THORChain 네트워크에 지불됩니다.</string>
     <string name="referral_create_info_title">추천 프로그램</string>
@@ -729,8 +726,6 @@
     <string name="address_book_empty_description">모든 중요한 주소를 한곳에서 관리하세요.</string>
     <string name="address_book_empty_title">주소록이 비어 있습니다</string>
     <string name="check_updates_settings_title">업데이트 확인</string>
-    <string name="discord" translatable="false">Discord</string>
-    <string name="github" translatable="false">Github</string>
     <string name="vult_website_settings_title">Vultisig 웹사이트</string>
     <string name="vault">볼트</string>
     <string name="general">일반</string>
@@ -739,10 +734,6 @@
     <string name="vault_management">볼트 관리</string>
     <string name="other">기타</string>
 
-    <string name="defi_action_stake" translatable="false">Stake</string>
-    <string name="defi_action_unstake" translatable="false">Unstake</string>
-    <string name="defi_action_mint" translatable="false">Mint</string>
-    <string name="defi_action_redeem" translatable="false">Redeem</string>
 
     <string name="check_updates_title">업데이트 확인</string>
     <string name="update_available">업데이트가 있습니다</string>
@@ -771,8 +762,6 @@
     <string name="backup_server_title">서버 백업</string>
     <string name="backup_server_desc">서버 볼트 공유를 다시 요청합니다.</string>
     <string name="share_sheet_more">더 보기</string>
-    <string name="x_twitter" translatable="false">X (Twitter)</string>
-    <string name="vult" translatable="false">$VULT</string>
     <string name="error_saving_qr_code">QR 코드 저장 실패. %1$s</string>
     <string name="transaction_type_button_buy">구매</string>
     <string name="transaction_type_button_receive">받기</string>
@@ -815,7 +804,6 @@
     <string name="vault_list_edit_vaults_header">볼트 수정</string>
     <string name="token_details_bottom_sheet_price">가격</string>
     <string name="token_details_bottom_sheet_network">네트워크</string>
-    <string name="defi" translatable="false">DeFi</string>
     <string name="vault_ceil_active">활성</string>
     <string name="send_tx_overview_add_to_address_book">주소록에 추가</string>
     <string name="invite_to_x_banner_title">Vultisig는 여러분과 함께 성장합니다.</string>
@@ -912,8 +900,6 @@
     <string name="energy">에너지</string>
     <string name="bandwidth_desc">대역폭 포인트는 표준 토큰 전송 및 스마트 컨트랙트 상호작용을 포함하여 TRON의 모든 거래에 필요합니다. 모든 TRON 사용자는 하루에 600개의 무료 대역폭 포인트를 받으며, 이는 약 2건의 기본 전송을 처리할 수 있습니다. 또한 TRX를 스테이킹하여 추가 대역폭 포인트를 얻어 더 많은 거래를 지원할 수 있습니다. 충분한 대역폭 포인트가 있으면 TRX 가스 수수료 없이 토큰을 보내거나, TRX를 스테이킹하거나, 스마트 컨트랙트와 상호작용할 수 있습니다.</string>
     <string name="energy_desc">스왑이나 dApp 거래와 같은 스마트 컨트랙트 상호작용 등 더 복잡한 작업에 필요합니다. 대역폭과 달리 에너지는 무료로 제공되지 않으며, TRX를 스테이킹하여 얻어야 합니다. (고급 사용자는 JustLend나 Tronify의 에너지 대여 시장과 같은 리스 메커니즘을 통해 에너지를 얻을 수도 있습니다). 그러나 에너지를 보유하면 스마트 컨트랙트 상호작용의 가스 수수료를 크게 줄이거나 아예 없앨 수 있어, TRON dApp을 자주 사용하는 사용자에게 유용합니다.</string>
-    <string name="tron" translatable="false">Tron</string>
-    <string name="tron_bandwidth_energy_title" translatable="false"><![CDATA["Bandwidth & Energy "]]></string>
 
     <!-- Bond Form -->
     <string name="bond_node_address">노드 주소</string>
@@ -924,7 +910,6 @@
     <string name="deposit_option_secured_assets">보안 자산</string>
     <string name="address_auto_filled">%1$s 주소 (자동 입력)</string>
     <string name="generated_memo">생성된 메모:</string>
-    <string name="secure" translatable="false">SECURE+:%1$s</string>
     <string name="amount_to_withdraw">출금 금액 (잔액: %1$s)</string>
     <string name="mint_secured_asset_secure">보안 자산 민트 (SECURE+)</string>
     <string name="target_asset">대상 자산: %1$s-%2$s</string>
