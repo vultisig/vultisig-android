@@ -4,6 +4,8 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.TronApi
+import com.vultisig.wallet.data.api.models.TronAccountJson
+import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.calculateResourceStats
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
@@ -21,6 +23,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.text.NumberFormat
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,15 +40,10 @@ import timber.log.Timber
 
 private const val TRON_KEY = "TRON"
 
-private val TRON_STAKE_POSITIONS_DIALOG
-    get() =
-        listOf(
-            PositionUiModelDialog(
-                logo = getCoinLogo("tron"),
-                ticker = "Tron",
-                positionKey = TRON_KEY,
-            )
-        )
+private val TRON_STAKE_POSITIONS_DIALOG =
+    listOf(
+        PositionUiModelDialog(logo = getCoinLogo("tron"), ticker = "Tron", positionKey = TRON_KEY)
+    )
 
 private val TRON_DEFAULT_SELECTED_POSITIONS = listOf(TRON_KEY)
 
@@ -112,7 +110,7 @@ constructor(
     }
 
     fun refresh() {
-        loadData(vaultId)
+        if (vaultId.isNotEmpty()) loadData(vaultId)
     }
 
     private fun loadData(vaultId: VaultId) {
@@ -126,12 +124,8 @@ constructor(
             ) {
                 _state.update { it.copy(isLoading = true, error = null) }
 
-                val vault = vaultRepository.get(vaultId)
-                if (vault == null) {
-                    _state.update { it.copy(isLoading = false, error = "Vault not found") }
-                    return@safeLaunch
-                }
-                val trxCoin = vault.coins.find { it.chain == Chain.Tron && it.isNativeToken }
+                // Resolve the TRX coin for this vault
+                val trxCoin = findTrxCoin(vaultId)
                 if (trxCoin == null) {
                     _state.update {
                         it.copy(isLoading = false, error = "TRX coin not found in vault")
@@ -141,6 +135,7 @@ constructor(
 
                 val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
 
+                // Fetch account state and resource usage in parallel
                 val (account, resource) =
                     coroutineScope {
                         val accountDeferred = async { tronApi.getAccount(trxCoin.address) }
@@ -148,50 +143,7 @@ constructor(
                         Pair(accountDeferred.await(), resourceDeferred.await())
                     }
 
-                val sunPerTrx = BigDecimal(1_000_000)
-                val availableBalanceTrx =
-                    BigDecimal(account.balance ?: 0L)
-                        .divide(sunPerTrx)
-                        .setScale(6, RoundingMode.DOWN)
-                val frozenBandwidthTrx =
-                    BigDecimal(account.frozenBandwidthSun)
-                        .divide(sunPerTrx)
-                        .setScale(6, RoundingMode.DOWN)
-                val frozenEnergyTrx =
-                    BigDecimal(account.frozenEnergySun)
-                        .divide(sunPerTrx)
-                        .setScale(6, RoundingMode.DOWN)
-                val unfreezingTrx =
-                    BigDecimal(account.unfreezingTotalSun)
-                        .divide(sunPerTrx)
-                        .setScale(6, RoundingMode.DOWN)
-
-                val stats = resource.calculateResourceStats()
-                val bandwidthProgress =
-                    if (stats.totalBandwidth > 0)
-                        stats.availableBandwidth.toFloat() / stats.totalBandwidth.toFloat()
-                    else 0f
-                val energyProgress =
-                    if (stats.totalEnergy > 0)
-                        stats.availableEnergy.toFloat() / stats.totalEnergy.toFloat()
-                    else 0f
-
-                val pendingWithdrawals =
-                    (account.unfrozenV2 ?: emptyList())
-                        .mapNotNull { entry ->
-                            val amountSun = entry.unfreezeAmount ?: return@mapNotNull null
-                            val expireTimeMs = entry.unfreezeExpireTime ?: return@mapNotNull null
-                            val amountTrx =
-                                BigDecimal(amountSun)
-                                    .divide(sunPerTrx)
-                                    .setScale(6, RoundingMode.DOWN)
-                            TronPendingWithdrawalUiModel(
-                                amountTrx = amountTrx.toPlainString(),
-                                expiryEpochMs = expireTimeMs,
-                            )
-                        }
-                        .sortedWith(compareBy { it.expiryEpochMs })
-
+                // Resolve fiat price for display
                 val currency = appCurrencyRepository.currency.first()
                 val currencyFormat =
                     withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
@@ -200,37 +152,87 @@ constructor(
                         tokenId = trxCoin.id,
                         appCurrency = currency,
                     ) ?: BigDecimal.ZERO
-                val totalAmountPrice = currencyFormat.format(availableBalanceTrx.multiply(trxPrice))
-                val frozenTotal = frozenBandwidthTrx.add(frozenEnergyTrx)
-                val frozenTotalPrice = currencyFormat.format(frozenTotal.multiply(trxPrice))
 
                 _state.update {
                     it.copy(
                         isLoading = false,
                         isBalanceVisible = isBalanceVisible,
-                        tronData =
-                            TronStakingUiModel(
-                                availableBalanceTrx = availableBalanceTrx.toPlainString(),
-                                totalAmountPrice = totalAmountPrice,
-                                frozenTotalTrx = frozenTotal.toPlainString(),
-                                frozenTotalPrice = frozenTotalPrice,
-                                frozenBandwidthTrx = frozenBandwidthTrx.toPlainString(),
-                                frozenEnergyTrx = frozenEnergyTrx.toPlainString(),
-                                unfreezingTrx = unfreezingTrx.toPlainString(),
-                                availableBandwidth = stats.availableBandwidth,
-                                totalBandwidth = stats.totalBandwidth,
-                                availableEnergy = stats.availableEnergy,
-                                totalEnergy = stats.totalEnergy,
-                                bandwidthProgress = bandwidthProgress,
-                                energyProgress = energyProgress,
-                                pendingWithdrawals = pendingWithdrawals,
-                                hasPositions =
-                                    frozenTotal > BigDecimal.ZERO || pendingWithdrawals.isNotEmpty(),
-                            ),
+                        tronData = buildStakingUiModel(account, resource, trxPrice, currencyFormat),
                     )
                 }
             }
     }
+
+    private fun buildStakingUiModel(
+        account: TronAccountJson,
+        resource: TronAccountResourceJson,
+        trxPrice: BigDecimal,
+        currencyFormat: NumberFormat,
+    ): TronStakingUiModel {
+        val sunPerTrx = BigDecimal(1_000_000)
+
+        // Convert sun amounts to TRX
+        val availableBalanceTrx =
+            BigDecimal(account.balance ?: 0L).divide(sunPerTrx).setScale(6, RoundingMode.DOWN)
+        val frozenBandwidthTrx =
+            BigDecimal(account.frozenBandwidthSun).divide(sunPerTrx).setScale(6, RoundingMode.DOWN)
+        val frozenEnergyTrx =
+            BigDecimal(account.frozenEnergySun).divide(sunPerTrx).setScale(6, RoundingMode.DOWN)
+        val unfreezingTrx =
+            BigDecimal(account.unfreezingTotalSun).divide(sunPerTrx).setScale(6, RoundingMode.DOWN)
+        val frozenTotal = frozenBandwidthTrx.add(frozenEnergyTrx)
+
+        // Compute resource utilisation ratios
+        val stats = resource.calculateResourceStats()
+        val bandwidthProgress =
+            if (stats.totalBandwidth > 0)
+                stats.availableBandwidth.toFloat() / stats.totalBandwidth.toFloat()
+            else 0f
+        val energyProgress =
+            if (stats.totalEnergy > 0) stats.availableEnergy.toFloat() / stats.totalEnergy.toFloat()
+            else 0f
+
+        // Map pending unfreeze entries, sorted by expiry
+        val pendingWithdrawals = mapPendingWithdrawals(account, sunPerTrx)
+
+        return TronStakingUiModel(
+            availableBalanceTrx = availableBalanceTrx.toPlainString(),
+            totalAmountPrice = currencyFormat.format(availableBalanceTrx.multiply(trxPrice)),
+            frozenTotalTrx = frozenTotal.toPlainString(),
+            frozenTotalPrice = currencyFormat.format(frozenTotal.multiply(trxPrice)),
+            frozenBandwidthTrx = frozenBandwidthTrx.toPlainString(),
+            frozenEnergyTrx = frozenEnergyTrx.toPlainString(),
+            unfreezingTrx = unfreezingTrx.toPlainString(),
+            availableBandwidth = stats.availableBandwidth,
+            totalBandwidth = stats.totalBandwidth,
+            availableEnergy = stats.availableEnergy,
+            totalEnergy = stats.totalEnergy,
+            bandwidthProgress = bandwidthProgress,
+            energyProgress = energyProgress,
+            pendingWithdrawals = pendingWithdrawals,
+            hasPositions = frozenTotal > BigDecimal.ZERO || pendingWithdrawals.isNotEmpty(),
+        )
+    }
+
+    private fun mapPendingWithdrawals(
+        account: TronAccountJson,
+        sunPerTrx: BigDecimal,
+    ): List<TronPendingWithdrawalUiModel> =
+        (account.unfrozenV2 ?: emptyList())
+            .mapNotNull { entry ->
+                val amountSun = entry.unfreezeAmount ?: return@mapNotNull null
+                val expireTimeMs = entry.unfreezeExpireTime ?: return@mapNotNull null
+                val amountTrx =
+                    BigDecimal(amountSun).divide(sunPerTrx).setScale(6, RoundingMode.DOWN)
+                TronPendingWithdrawalUiModel(
+                    amountTrx = amountTrx.toPlainString(),
+                    expiryEpochMs = expireTimeMs,
+                )
+            }
+            .sortedWith(compareBy { it.expiryEpochMs })
+
+    private suspend fun findTrxCoin(vaultId: VaultId) =
+        vaultRepository.get(vaultId)?.coins?.find { it.chain == Chain.Tron && it.isNativeToken }
 
     fun onTabSelected(tab: DeFiTab) {
         _state.update { it.copy(selectedTab = tab) }
@@ -267,9 +269,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e -> Timber.e(e, "Failed to navigate for action %s", action) }
         ) {
-            val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
-            val trxCoin =
-                vault.coins.find { it.chain == Chain.Tron && it.isNativeToken } ?: return@safeLaunch
+            val trxCoin = findTrxCoin(vaultId) ?: return@safeLaunch
             navigator.route(
                 Route.Send(
                     vaultId = vaultId,
