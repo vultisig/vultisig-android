@@ -542,6 +542,7 @@ constructor(
                     selectedPoolCacaoDepth = pool.cacaoDepth.toLongOrNull() ?: 0L,
                 )
             }
+            setRemoveLpPercent(state.value.removeLpPercent)
         }
     }
 
