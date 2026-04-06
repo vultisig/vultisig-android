@@ -70,9 +70,15 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
                 )
             }
             TransactionResult.NotFound -> {
-                dao.updateToFailed(
+                // NotFound is a *transient* state (indexer lag, mempool propagation delay,
+                // RPC flakiness). Persisting it as FAILED — as we used to — caused recently
+                // broadcast transactions to flip to a hard-failed display on the first missed
+                // poll. Keep the row in its own dedicated NotFound state instead and let the
+                // poller retry. Terminal states (CONFIRMED, FAILED) are never overwritten by
+                // this path thanks to the DAO terminal-state guards.
+                dao.updateStatus(
                     txHash = txHash,
-                    failureReason = "Transaction not found",
+                    status = TransactionStatus.NotFound,
                     lastCheckedAt = now,
                 )
             }

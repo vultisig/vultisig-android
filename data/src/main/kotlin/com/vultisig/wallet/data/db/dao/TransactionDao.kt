@@ -12,7 +12,18 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TransactionHistoryDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    /**
+     * Inserts a transaction row, ignoring the insert if a row with the same primary key already
+     * exists. The conflict strategy was previously [OnConflictStrategy.REPLACE], which silently
+     * wiped `confirmedAt` / `failureReason` when the same row was inserted twice (e.g. the user
+     * retries a broadcast and gets back the same txHash). [OnConflictStrategy.IGNORE] preserves the
+     * existing row and its status metadata.
+     *
+     * When the backfill merge logic lands (history-2-schema PR), a dedicated `upsertWithMerge`
+     * entry point replaces direct `insert` calls for paths that need to combine local and chain
+     * data; `insert` continues to be used only by the local-broadcast path.
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(transaction: TransactionHistoryEntity)
 
     @Update suspend fun update(transaction: TransactionHistoryEntity)
@@ -71,32 +82,42 @@ interface TransactionHistoryDao {
     )
     suspend fun getAllPendingTransactions(): List<TransactionHistoryEntity>
 
-    // Update status only
+    // Terminal-state guards:
+    // CONFIRMED and FAILED are treated as terminal — once a row reaches one of these states
+    // it must never be downgraded back to PENDING / BROADCASTED / NotFound by a stale poll or
+    // a concurrent writer. Every mutating query below includes an explicit guard so the rules
+    // are enforced by the database, not the caller.
+
+    // Update status (non-terminal transitions only).
     @Query(
         """
         UPDATE transaction_history
         SET status = :status, lastCheckedAt = :lastCheckedAt
-        WHERE txHash = :txHash
+        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED')
     """
     )
     suspend fun updateStatus(txHash: String, status: TransactionStatus, lastCheckedAt: Long)
 
-    // Update to confirmed
+    // Update to confirmed. Skips rows that are already in a terminal state to make the call
+    // idempotent and safe under concurrent polling.
     @Query(
         """
         UPDATE transaction_history
         SET status = 'CONFIRMED', confirmedAt = :confirmedAt, lastCheckedAt = :lastCheckedAt
-        WHERE txHash = :txHash
+        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED')
     """
     )
     suspend fun updateToConfirmed(txHash: String, confirmedAt: Long, lastCheckedAt: Long)
 
-    // Update to failed
+    // Update to failed. Same terminal-state guard: a FAILED tx stays FAILED, and a CONFIRMED
+    // tx is never silently flipped to FAILED from a transient poll error. Reorg-driven
+    // demotions (CONFIRMED → FAILED) are intentionally out of scope here and will be handled
+    // explicitly by the backfill merge logic in the history-2-schema PR.
     @Query(
         """
         UPDATE transaction_history
         SET status = 'FAILED', failureReason = :failureReason, lastCheckedAt = :lastCheckedAt
-        WHERE txHash = :txHash
+        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED')
     """
     )
     suspend fun updateToFailed(txHash: String, failureReason: String, lastCheckedAt: Long)

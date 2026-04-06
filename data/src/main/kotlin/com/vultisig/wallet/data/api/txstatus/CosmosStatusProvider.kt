@@ -5,36 +5,46 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
+import timber.log.Timber
 
 class CosmosStatusProvider @Inject constructor(private val cosmosApiFactory: CosmosApiFactory) :
     TransactionStatusProvider {
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        try {
-            val txResponse =
+        // Previous implementation matched on the substring "tx not found" in the exception
+        // message to distinguish missing-tx from transient error, and mapped anything else to
+        // FAILED — meaning a single flaky RPC call would mark a broadcast transaction as a
+        // hard failure in the local DB. Replace with a conservative rule: any exception is
+        // treated as Pending, and only the chain's own `code != 0` response produces Failed.
+        // CancellationException always propagates.
+        val txResponse =
+            try {
                 cosmosApiFactory.createCosmosApi(chain).getTxStatus(txHash)
-                    ?: return TransactionResult.NotFound
-
-            return if (
-                txResponse.txResponse?.height?.toLongOrNull() != null &&
-                    txResponse.txResponse.height.toLong() > 0
-            ) {
-                if (txResponse.txResponse.code == 0) {
-                    TransactionResult.Confirmed
-                } else {
-                    TransactionResult.Failed(
-                        txResponse.txResponse.rawLog
-                            ?: "Transaction failed with code ${txResponse.txResponse.code}"
-                    )
-                }
-            } else {
-                TransactionResult.Pending
-            }
-        } catch (e: Exception) {
-            if (e.message?.contains("tx not found") == true) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(
+                    e,
+                    "Cosmos tx status check failed for %s on %s — treating as Pending",
+                    txHash,
+                    chain,
+                )
                 return TransactionResult.Pending
             }
-            return TransactionResult.Failed(e.message.toString())
+
+        if (txResponse == null) return TransactionResult.NotFound
+
+        val response = txResponse.txResponse
+        val height = response?.height?.toLongOrNull() ?: 0L
+        if (height <= 0) return TransactionResult.Pending
+
+        return if (response.code == 0) {
+            TransactionResult.Confirmed
+        } else {
+            TransactionResult.Failed(
+                response.rawLog ?: "Transaction failed with code ${response.code}"
+            )
         }
     }
 }

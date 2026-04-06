@@ -7,7 +7,6 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
-import java.util.UUID
 
 enum class TransactionType {
     SEND,
@@ -52,7 +51,10 @@ fun TransactionResult.toDbModel() =
         ],
 )
 data class TransactionHistoryEntity(
-    @PrimaryKey @ColumnInfo("id") val id: String = UUID.randomUUID().toString(),
+    // Deterministic primary key derived from chain + txHash. Two devices that see the same
+    // on-chain transaction produce the same row id, which is required for cross-device dedup
+    // and for the backfill merge logic that will land in the history-2-schema PR.
+    @PrimaryKey @ColumnInfo("id") val id: String,
 
     // Common fields
     @ColumnInfo("vaultId") val vaultId: String,

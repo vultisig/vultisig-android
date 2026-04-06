@@ -53,6 +53,7 @@ internal fun TransactionHistoryData.toEntity(
     genericData: CommonTransactionHistoryData
 ): TransactionHistoryEntity =
     TransactionHistoryEntity(
+        id = buildTransactionHistoryId(genericData.chain, genericData.txHash),
         vaultId = genericData.vaultId,
         type = genericData.type,
         status = genericData.status,
@@ -65,3 +66,12 @@ internal fun TransactionHistoryData.toEntity(
         lastCheckedAt = genericData.lastCheckedAt,
         payload = this,
     )
+
+/**
+ * Deterministic row identifier for [TransactionHistoryEntity].
+ *
+ * Derived from `"${chain}:${txHash}"` so the same on-chain transaction observed on two devices (or
+ * observed by both a local broadcast and a chain backfill in future PRs) produces the same row id —
+ * required for idempotent merging.
+ */
+internal fun buildTransactionHistoryId(chain: String, txHash: String): String = "$chain:$txHash"

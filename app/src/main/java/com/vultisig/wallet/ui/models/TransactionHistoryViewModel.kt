@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 enum class TransactionHistoryTab {
     OVERVIEW,
@@ -230,7 +231,13 @@ constructor(
     }
 
     fun refresh() {
-        viewModelScope.launch {
+        // Use safeLaunch so an unexpected exception from the refresh use case (network error,
+        // deserialization failure, etc.) is caught and logged instead of crashing the VM.
+        // The `finally` guarantees `isRefreshing = false` on every terminating path — including
+        // CancellationException, which safeLaunch re-throws after the finally runs.
+        viewModelScope.safeLaunch(
+            onError = { t -> Timber.w(t, "TransactionHistoryViewModel.refresh() failed") }
+        ) {
             _uiState.update { it.copy(isRefreshing = true) }
             try {
                 refreshPendingTransactions(vaultId)
@@ -359,8 +366,12 @@ constructor(
                 TransactionStatus.CONFIRMED -> TransactionStatusUiModel.Confirmed
                 TransactionStatus.FAILED ->
                     TransactionStatusUiModel.Failed(UiText.DynamicString(failureReason.orEmpty()))
+                // NotFound is a transient diagnostic state — the status provider looked but
+                // the chain doesn't have the tx yet (indexer lag, mempool propagation delay).
+                // Display it as Pending so the user isn't told a freshly broadcast transaction
+                // has "failed" just because the first poll raced the indexer.
                 TransactionStatus.NotFound ->
-                    TransactionStatusUiModel.Failed(UiText.DynamicString(failureReason.orEmpty()))
+                    TransactionStatusUiModel.Pending(elapsedTime = formatElapsed(now - timestamp))
             }
 
         return when (val p = payload) {
