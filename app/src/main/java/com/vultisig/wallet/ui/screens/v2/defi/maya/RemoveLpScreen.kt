@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -191,31 +189,20 @@ private fun RemoveLpSlider(
     onPercentChanged: (Float) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val tickColor = Theme.v2.colors.border.normal
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = "0%",
             style = Theme.brockmann.body.xs.medium,
             color = Theme.v2.colors.text.tertiary,
         )
-        UiSpacer(12.dp)
         Column(verticalArrangement = Arrangement.Center, modifier = Modifier.weight(1f)) {
             Spacer(modifier = Modifier.height(4.dp))
             Slider(
                 value = percent,
                 onValueChange = onPercentChanged,
                 valueRange = 0f..1f,
-                steps = 0,
-                modifier =
-                    Modifier.layout { measurable, constraints ->
-                        val insetPx = 20.dp.roundToPx()
-                        val placeable =
-                            measurable.measure(
-                                constraints.copy(maxWidth = constraints.maxWidth + insetPx * 2)
-                            )
-                        layout(constraints.maxWidth, placeable.height) {
-                            placeable.place(-insetPx, 0)
-                        }
-                    },
+                steps = 3,
                 thumb = {
                     Box(
                         modifier =
@@ -247,30 +234,18 @@ private fun RemoveLpSlider(
                                 thumbColor = Theme.v2.colors.text.primary,
                             ),
                         thumbTrackGapSize = 0.dp,
-                        drawStopIndicator = null,
+                        drawStopIndicator = { offset ->
+                            drawCircle(
+                                color = tickColor,
+                                radius = 2.dp.toPx(),
+                                center = offset.copy(y = offset.y + 9.dp.toPx()),
+                            )
+                        },
                         modifier = Modifier.height(6.dp),
                     )
                 },
             )
-
-            // Tick marks below the track
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                repeat(5) {
-                    Box(
-                        modifier =
-                            Modifier.size(4.dp)
-                                .background(
-                                    color = Theme.v2.colors.border.normal,
-                                    shape = CircleShape,
-                                )
-                    )
-                }
-            }
         }
-        UiSpacer(12.dp)
         Text(
             text = "100%",
             style = Theme.brockmann.body.xs.medium,
@@ -286,7 +261,7 @@ private fun RemoveLpScreenContentPreview() {
         RemoveLpScreenContent(
             state =
                 DepositFormUiModel(
-                    removeLpPercent = .5f,
+                    removeLpPercent = 1f,
                     removeLpCacaoDisplay = "5.000 CACAO",
                     availableLpUnits = "1000000",
                     balance = UiText.DynamicString("24,000 CACAO"),
