@@ -82,6 +82,7 @@ import com.vultisig.wallet.ui.screens.keygen.NameVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.StartScreen
 import com.vultisig.wallet.ui.screens.keygen.VaultConfirmationScreen
 import com.vultisig.wallet.ui.screens.keygen.VerifyExistingVaultPasswordScreen
+import com.vultisig.wallet.ui.screens.keygen.VerifyExistingVaultScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignScreen
@@ -266,6 +267,8 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         composable<VaultInfo.PasswordHint> { FastVaultPasswordHintScreen() }
 
         composable<VaultInfo.VerifyExistingPassword> { VerifyExistingVaultPasswordScreen() }
+
+        composable<Route.VerifyExistingVault> { VerifyExistingVaultScreen() }
 
         // keygen
         composable<Keygen.Join> { JoinKeygenScreen() }

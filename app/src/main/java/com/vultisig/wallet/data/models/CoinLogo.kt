@@ -71,6 +71,7 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "mim" -> R.drawable.mim
         "ldo" -> R.drawable.ldo
         "dai" -> R.drawable.dai
+        "usds" -> R.drawable.usds
         "knc" -> R.drawable.knc
         "aero" -> R.drawable.aero
         "bag" -> R.drawable.bag
