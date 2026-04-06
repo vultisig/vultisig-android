@@ -54,7 +54,7 @@ internal fun RemoveLpScreen(
 ) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(vaultId, chainId, poolId) {
         model.loadData(
             vaultId = vaultId,
             chainId = chainId,
@@ -125,14 +125,21 @@ internal fun RemoveLpScreenContent(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
-                        text = state.removeLpCacaoDisplay.ifEmpty { "0 CACAO" },
+                        text =
+                            state.removeLpCacaoDisplay.ifEmpty {
+                                stringResource(R.string.remove_pool_zero_cacao)
+                            },
                         style = Theme.brockmann.headings.largeTitle,
                         color = Theme.v2.colors.text.primary,
                         textAlign = TextAlign.Center,
                     )
 
                     Text(
-                        text = "${(state.removeLpPercent * 100).toInt()}%",
+                        text =
+                            stringResource(
+                                R.string.remove_pool_percent_format,
+                                (state.removeLpPercent * 100).toInt(),
+                            ),
                         style = Theme.brockmann.body.m.medium,
                         color = Theme.v2.colors.text.tertiary,
                         textAlign = TextAlign.Center,
@@ -192,7 +199,7 @@ private fun RemoveLpSlider(
     val tickColor = Theme.v2.colors.border.normal
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = "0%",
+            text = stringResource(R.string.remove_pool_percent_format, 0),
             style = Theme.brockmann.body.xs.medium,
             color = Theme.v2.colors.text.tertiary,
         )
@@ -247,7 +254,7 @@ private fun RemoveLpSlider(
             )
         }
         Text(
-            text = "100%",
+            text = stringResource(R.string.remove_pool_percent_format, 100),
             style = Theme.brockmann.body.xs.medium,
             color = Theme.v2.colors.text.tertiary,
         )
