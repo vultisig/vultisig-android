@@ -6,12 +6,17 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
 
 class UtxoStatusProvider @Inject constructor(private val blockChairApi: BlockChairApi) :
     TransactionStatusProvider {
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
+        // Transient HTTP / deserialization errors are mapped to Pending so the poller
+        // retries instead of persisting a bogus FAILED status — same treatment as EVM,
+        // Sui, Cosmos. CancellationException always propagates to preserve structured
+        // concurrency on viewModelScope teardown.
         return try {
             val response = blockChairApi.getTsStatus(chain, txHash)
             val (txData, context) =
@@ -22,40 +27,27 @@ class UtxoStatusProvider @Inject constructor(private val blockChairApi: BlockCha
                 }
 
             when {
-                txData == null -> {
-                    TransactionResult.Pending
-                }
-
-                txData.transaction == null -> {
-                    TransactionResult.NotFound
-                }
-
-                txData.transaction.blockId == -1 -> {
-                    TransactionResult.Pending
-                }
-
-                txData.transaction.blockId == null -> {
-                    TransactionResult.NotFound
-                }
-
+                txData == null -> TransactionResult.Pending
+                txData.transaction == null -> TransactionResult.NotFound
+                txData.transaction.blockId == -1 -> TransactionResult.Pending
+                txData.transaction.blockId == null -> TransactionResult.NotFound
                 else -> {
                     val confirmations =
                         context?.state?.minus(txData.transaction.blockId)?.plus(1) ?: 0
-
-                    when {
-                        confirmations <= 0 -> {
-                            TransactionResult.Pending
-                        }
-
-                        else -> {
-                            TransactionResult.Confirmed
-                        }
-                    }
+                    if (confirmations > 0) TransactionResult.Confirmed
+                    else TransactionResult.Pending
                 }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Timber.tag("UtxoStatusProvider").e(e, "Error checking tx status: $txHash")
-            TransactionResult.Failed(e.message.orEmpty())
+            Timber.w(
+                e,
+                "UTXO tx status check failed for %s on %s — treating as Pending",
+                txHash,
+                chain,
+            )
+            TransactionResult.Pending
         }
     }
 }

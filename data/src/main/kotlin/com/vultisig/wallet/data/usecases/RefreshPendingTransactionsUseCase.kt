@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -30,6 +31,11 @@ constructor(
             pendingTransactions
                 .map { transaction ->
                     async {
+                        // CancellationException extends IllegalStateException -> RuntimeException
+                        // ->
+                        // Exception, so a bare catch (e: Exception) would swallow it and leak the
+                        // in-flight coroutine after viewModelScope cancellation. Explicitly
+                        // rethrow.
                         try {
                             val chain = Chain.fromRaw(transaction.chain)
                             val result =
@@ -41,8 +47,10 @@ constructor(
                                 transaction.txHash,
                                 result,
                             )
+                        } catch (e: CancellationException) {
+                            throw e
                         } catch (e: Exception) {
-                            Timber.e("Failed to refresh ${transaction.txHash}: ${e.message}")
+                            Timber.e(e, "Failed to refresh %s", transaction.txHash)
                         }
                     }
                 }

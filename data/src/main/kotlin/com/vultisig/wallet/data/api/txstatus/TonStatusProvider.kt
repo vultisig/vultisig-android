@@ -5,24 +5,31 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
+import timber.log.Timber
 
 class TonStatusProvider @Inject constructor(private val tonApi: TonApi) :
     TransactionStatusProvider {
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
+        // Transient HTTP / deserialization errors map to Pending so the poller retries.
+        // CancellationException always propagates.
         return try {
-            var resp = tonApi.getTsStatus(txHash)
+            val resp = tonApi.getTsStatus(txHash)
 
             if (
                 resp.transactions.firstOrNull()?.finality != null &&
                     resp.transactions.firstOrNull()?.finality?.lowercase()?.contains("unknown") ==
                         true
             ) {
-                return TransactionResult.Confirmed
+                TransactionResult.Confirmed
             } else {
                 TransactionResult.Pending
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            TransactionResult.Failed(e.message.toString())
+            Timber.w(e, "TON tx status check failed for %s — treating as Pending", txHash)
+            TransactionResult.Pending
         }
     }
 }

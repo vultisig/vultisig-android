@@ -6,6 +6,8 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
+import timber.log.Timber
 
 class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: HttpClient) :
     TransactionStatusProvider {
@@ -17,6 +19,8 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
         )
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
+        // Transient HTTP / deserialization errors map to Pending so the poller retries.
+        // CancellationException always propagates.
         return try {
             val baseUrl = apiUrls[chain] ?: return TransactionResult.Failed("Unknown chain")
             val response = httpClient.get("$baseUrl/$txHash")
@@ -26,8 +30,16 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
             } else {
                 TransactionResult.Pending
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            TransactionResult.Failed(e.message.toString())
+            Timber.w(
+                e,
+                "THOR/Maya tx status check failed for %s on %s — treating as Pending",
+                txHash,
+                chain,
+            )
+            TransactionResult.Pending
         }
     }
 }

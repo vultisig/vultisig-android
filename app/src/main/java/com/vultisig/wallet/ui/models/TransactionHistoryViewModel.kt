@@ -448,7 +448,13 @@ constructor(
     }
 
     private fun formatElapsed(elapsedMs: Long): UiText {
-        val minutes = elapsedMs / 60_000
+        // Coerce negative elapsed to 0 — `elapsedMs = currentTime - timestamp` can go
+        // negative if the user's wall clock moved backward (NTP correction, DST transition,
+        // manual date change). A negative elapsed would otherwise fall through to every
+        // `> 0` branch and land on "just now", which is arguably correct but fragile: a
+        // future refactor that reverses the order of branches would display negative days.
+        val clamped = elapsedMs.coerceAtLeast(0L)
+        val minutes = clamped / 60_000
         val hours = minutes / 60
         val days = hours / 24
         return when {

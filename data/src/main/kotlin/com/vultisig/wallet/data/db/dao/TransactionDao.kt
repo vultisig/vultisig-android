@@ -61,22 +61,29 @@ interface TransactionHistoryDao {
     )
     fun observeSwapByVault(vaultId: String): Flow<List<TransactionHistoryEntity>>
 
-    // Get pending transactions for refresh
+    // Get pending transactions for refresh.
+    //
+    // `NotFound` is included because it is a *transient* state — the poller looked but the
+    // chain hasn't indexed the tx yet (mempool propagation delay, indexer lag). It MUST be
+    // re-polled on subsequent refreshes, otherwise a row that hits NotFound once becomes a
+    // permanently stuck "Pending" row in the UI (the UI renders NotFound as Pending per the
+    // mapping in TransactionHistoryViewModel.toUiModel). The only terminal states are
+    // CONFIRMED and FAILED, enforced by the WHERE-clause guards in the update queries below.
     @Query(
         """
         SELECT * FROM transaction_history
         WHERE vaultId = :vaultId
-        AND status IN ('BROADCASTED', 'PENDING')
+        AND status IN ('BROADCASTED', 'PENDING', 'NotFound')
         ORDER BY timestamp DESC
     """
     )
     suspend fun getPendingTransactions(vaultId: String): List<TransactionHistoryEntity>
 
-    // Get all pending across all vaults (for app resume)
+    // Get all pending across all vaults (for app resume). Same `NotFound` inclusion as above.
     @Query(
         """
         SELECT * FROM transaction_history
-        WHERE status IN ('BROADCASTED', 'PENDING')
+        WHERE status IN ('BROADCASTED', 'PENDING', 'NotFound')
         ORDER BY timestamp DESC
     """
     )

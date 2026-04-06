@@ -73,5 +73,16 @@ internal fun TransactionHistoryData.toEntity(
  * Derived from `"${chain}:${txHash}"` so the same on-chain transaction observed on two devices (or
  * observed by both a local broadcast and a chain backfill in future PRs) produces the same row id —
  * required for idempotent merging.
+ *
+ * The `:` separator MUST NOT appear in either [chain] or [txHash]: a chain named `"some:chain"` or
+ * a (hypothetical) tx hash containing a colon would produce an ambiguous id that cannot be round-
+ * tripped by splitting on the separator. All current [com.vultisig.wallet.data.models.Chain.raw]
+ * values are colon-free and every mainstream chain's tx hash format is hexadecimal / base58 /
+ * base64url — none contains a colon — so the invariant holds today. The [require] below fails fast
+ * if a future Chain enum entry or a future hash format violates it.
  */
-internal fun buildTransactionHistoryId(chain: String, txHash: String): String = "$chain:$txHash"
+internal fun buildTransactionHistoryId(chain: String, txHash: String): String {
+    require(!chain.contains(':')) { "chain must not contain ':' — got '$chain'" }
+    require(!txHash.contains(':')) { "txHash must not contain ':' — got '$txHash'" }
+    return "$chain:$txHash"
+}
