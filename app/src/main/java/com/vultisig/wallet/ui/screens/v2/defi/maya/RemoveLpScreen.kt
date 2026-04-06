@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -58,7 +59,7 @@ internal fun RemoveLpScreen(
         model.loadData(
             vaultId = vaultId,
             chainId = chainId,
-            depositType = "remove_lp",
+            depositType = DeFiNavActions.REMOVE_LP.type,
             bondAddress = null,
             poolId = poolId,
         )
