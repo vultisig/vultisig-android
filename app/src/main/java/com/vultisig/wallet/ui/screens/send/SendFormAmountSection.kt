@@ -1,0 +1,349 @@
+package com.vultisig.wallet.ui.screens.send
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.PercentageChip
+import com.vultisig.wallet.ui.components.TokenAmountInput
+import com.vultisig.wallet.ui.components.TokenFiatToggle
+import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.models.send.AmountFraction
+import com.vultisig.wallet.ui.models.send.SendFormUiModel
+import com.vultisig.wallet.ui.models.send.SendSections
+import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsClipboardService
+import com.vultisig.wallet.ui.utils.asString
+
+@Composable
+internal fun FoldableAmountWidget(
+    state: SendFormUiModel,
+    addressFieldState: TextFieldState,
+    amountFocusRequester: FocusRequester = remember { FocusRequester() },
+    onExpandSection: (SendSections) -> Unit,
+    onGasSettingsClick: () -> Unit,
+    tokenAmountFieldState: TextFieldState,
+    fiatAmountFieldState: TextFieldState,
+    focusManager: FocusManager,
+    onSend: () -> Unit,
+    onToogleAmountInputType: (Boolean) -> Unit,
+    onChoosePercentageAmount: (AmountFraction) -> Unit,
+    onChooseMaxTokenAmount: () -> Unit,
+    onAutoCompoundCheckedChange: (Boolean) -> Unit,
+    memoFieldState: TextFieldState,
+    operatorFeeFieldState: TextFieldState,
+    slippageTexFieldState: TextFieldState,
+) {
+    val isCircleMode =
+        state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
+            state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
+
+    FoldableSection(
+        expanded = isCircleMode || state.expandedSection == SendSections.Amount,
+        onToggle = {
+            if (
+                !isCircleMode && state.isDstAddressComplete && addressFieldState.text.isNotEmpty()
+            ) {
+                onExpandSection(SendSections.Amount)
+            }
+        },
+        expandedTitleActions = {
+            if (!isCircleMode && state.hasGasSettings) {
+                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.weight(1f)) {
+                    UiIcon(
+                        drawableResId = R.drawable.advance_gas_settings,
+                        size = 16.dp,
+                        tint = Theme.v2.colors.text.primary,
+                        onClick = onGasSettingsClick,
+                    )
+                }
+            }
+        },
+        title = stringResource(R.string.send_amount),
+    ) {
+        val contentPadding =
+            Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
+        Column(
+            modifier =
+                if (isCircleMode) Modifier.fillMaxHeight().then(contentPadding) else contentPadding
+        ) {
+            Box(
+                modifier =
+                    if (isCircleMode) Modifier.weight(1f).fillMaxWidth()
+                    else Modifier.height(211.dp).fillMaxWidth()
+            ) {
+                val primaryAmountText: String
+                val secondaryAmountText: String
+                val primaryFieldState: TextFieldState
+                val secondaryFieldState: TextFieldState
+
+                if (state.usingTokenAmountInput) {
+                    primaryAmountText = state.selectedCoin?.title ?: ""
+                    secondaryAmountText = state.fiatCurrency
+                    primaryFieldState = tokenAmountFieldState
+                    secondaryFieldState = fiatAmountFieldState
+                } else {
+                    primaryAmountText = state.fiatCurrency
+                    secondaryAmountText = state.selectedCoin?.title ?: ""
+                    primaryFieldState = fiatAmountFieldState
+                    secondaryFieldState = tokenAmountFieldState
+                }
+
+                val maxBalance =
+                    if (isCircleMode) state.selectedCoin?.balance?.toBigDecimalOrNull() else null
+
+                val secondaryText =
+                    if (isCircleMode) {
+                        val entered = tokenAmountFieldState.text.toString().toDoubleOrNull() ?: 0.0
+                        val balance = state.selectedCoin?.balance?.toDoubleOrNull() ?: 0.0
+                        val pct =
+                            if (balance > 0.0) (entered / balance * 100).coerceIn(0.0, 100.0)
+                            else 0.0
+                        "%.1f%%".format(pct)
+                    } else {
+                        "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText"
+                    }
+
+                TokenAmountInput(
+                    primaryFieldState = primaryFieldState,
+                    primaryLabel = primaryAmountText,
+                    secondaryText = secondaryText,
+                    maxBalance = maxBalance,
+                    focusRequester = amountFocusRequester,
+                    onKeyboardAction = {
+                        focusManager.clearFocus()
+                        onSend()
+                    },
+                    modifier =
+                        Modifier.padding(horizontal = 54.dp)
+                            .align(Alignment.Center)
+                            .testTag("SendFormScreen.amountField"),
+                )
+
+                if (!isCircleMode) {
+                    TokenFiatToggle(
+                        isTokenSelected = state.usingTokenAmountInput,
+                        onTokenSelected = { onToogleAmountInputType(it) },
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                    )
+                }
+            }
+
+            UiSpacer(12.dp)
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                state.amountFractionEntries.forEach { fraction ->
+                    PercentageChip(
+                        title = fraction.title.asString(),
+                        isSelected = fraction == state.selectedAmountFraction,
+                        onClick = {
+                            if (fraction == AmountFraction.F100) {
+                                onChooseMaxTokenAmount()
+                            } else {
+                                onChoosePercentageAmount(fraction)
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        isLoading = state.isAmountSelectionLoading,
+                    )
+                }
+            }
+
+            UiSpacer(12.dp)
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier =
+                    if (isCircleMode) Modifier.padding(all = 16.dp)
+                    else
+                        Modifier.background(
+                                color = Theme.v2.colors.backgrounds.secondary,
+                                shape = RoundedCornerShape(12.dp),
+                            )
+                            .padding(all = 16.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.send_form_balance_available),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.primary,
+                )
+
+                val ticker = state.selectedCoin?.title?.let { " $it" } ?: ""
+
+                Text(
+                    text = (state.selectedCoin?.balance ?: "0") + ticker,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.secondary,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            UiSpacer(12.dp)
+
+            // memo
+            if (state.hasMemo && state.defiType == null) {
+                var isMemoExpanded by remember { mutableStateOf(false) }
+
+                val rotationAngle by
+                    animateFloatAsState(
+                        targetValue = if (isMemoExpanded) 180f else 0f,
+                        animationSpec = tween(durationMillis = 200),
+                        label = "caretRotation",
+                    )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier.clickable { isMemoExpanded = !isMemoExpanded }
+                            .padding(vertical = 2.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.send_form_add_memo),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.tertiary,
+                        modifier = Modifier.weight(1f),
+                    )
+
+                    UiIcon(
+                        drawableResId = R.drawable.ic_caret_down,
+                        tint = Theme.v2.colors.text.primary,
+                        size = 16.dp,
+                        modifier = Modifier.rotate(rotationAngle),
+                    )
+                }
+
+                UiSpacer(12.dp)
+
+                AnimatedVisibility(visible = isMemoExpanded) {
+                    val clipboardData = VsClipboardService.getClipboardData()
+                    VsTextInputField(
+                        textFieldState = memoFieldState,
+                        hint = stringResource(R.string.send_form_enter_memo),
+                        autoCorrectEnabled = false,
+                        trailingIcon = R.drawable.paste,
+                        onTrailingIconClick = {
+                            clipboardData.value
+                                ?.takeIf { it.isNotEmpty() }
+                                ?.let { memoFieldState.setTextAndPlaceCursorAtEnd(text = it) }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    UiSpacer(12.dp)
+                }
+            }
+
+            if (state.defiType == DeFiNavActions.BOND) {
+                Column(modifier = Modifier.padding(vertical = 2.dp)) {
+                    Text(
+                        text = stringResource(R.string.bond_operator_fees_basis_point),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
+
+                    UiSpacer(12.dp)
+
+                    VsTextInputField(
+                        textFieldState = operatorFeeFieldState,
+                        hint = "0",
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    UiSpacer(12.dp)
+                }
+            }
+
+            if (
+                state.defiType == DeFiNavActions.REDEEM_YRUNE ||
+                    state.defiType == DeFiNavActions.REDEEM_YTCY
+            ) {
+                Column(modifier = Modifier.padding(vertical = 2.dp)) {
+                    Text(
+                        text = stringResource(R.string.deposit_form_operator_slippage_title),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
+
+                    UiSpacer(12.dp)
+
+                    VsTextInputField(
+                        textFieldState = slippageTexFieldState,
+                        hint = stringResource(R.string.slippage_hint),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    UiSpacer(12.dp)
+                }
+            }
+
+            if (
+                state.defiType == DeFiNavActions.STAKE_TCY ||
+                    state.defiType == DeFiNavActions.STAKE_STCY
+            ) {
+                AutoCompoundToggle(
+                    title = stringResource(R.string.tcy_auto_compound_enable_title),
+                    subtitle = stringResource(R.string.tcy_auto_compound_enable_subtitle),
+                    isChecked = state.isAutocompound,
+                    onCheckedChange = onAutoCompoundCheckedChange,
+                )
+            }
+
+            if (
+                state.defiType == DeFiNavActions.UNSTAKE_TCY ||
+                    state.defiType == DeFiNavActions.UNSTAKE_STCY
+            ) {
+                AutoCompoundToggle(
+                    title = stringResource(R.string.tcy_auto_compound_unstake_title),
+                    subtitle = stringResource(R.string.tcy_auto_compound_unstake_subtitle),
+                    isChecked = state.isAutocompound,
+                    onCheckedChange = onAutoCompoundCheckedChange,
+                )
+            }
+
+            if (state.showGasFee && !isCircleMode) {
+                FadingHorizontalDivider(modifier = Modifier.fillMaxWidth())
+
+                UiSpacer(12.dp)
+
+                EstimatedNetworkFee(
+                    tokenGas = state.totalGas.asString(),
+                    fiatGas = state.estimatedFee.asString(),
+                )
+            }
+        }
+    }
+}
