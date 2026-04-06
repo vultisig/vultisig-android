@@ -158,6 +158,7 @@
     <string name="token_logo">Logotipo do token</string>
     <string name="vault_edit_this_name_already_exist">esse nome já existe</string>
     <string name="import_file_screen_duplicate_vault">O cofre é duplicado</string>
+    <string name="import_file_screen_success_import">O cofre foi importado com sucesso</string>
     <string name="verify_swap_consent_amount">O valor da troca está correto</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado com sucesso: %1$s</string>
     <string name="scan_qr_screen_return_vault">Retornar ao Cofre</string>
@@ -480,8 +481,6 @@
     <string name="max">Máx</string>
     <string name="token_fiat_toggle_token_label">Valor do token</string>
     <string name="token_fiat_toggle_fiat_label">Valor fiat</string>
-    <string name="remove_pool_title">Remover Pool</string>
-    <string name="remove_pool_amount_label">Montante</string>
     <string name="cacaopool_only_cacao_supported">Apenas o token CACAO é suportado neste pool</string>
     <string name="referral_create_info_title">Programa de referência</string>
     <string name="referral_create_info_content">O programa de referência aplica-se a trocas THORChain e é feito com base no melhor esforço. Você precisa registrar um THORName para usar a referência Vultisig. A taxa de registro é de 10 RUNE e 1 RUNE por cada ano, que é paga à rede THORChain.</string>
@@ -1035,6 +1034,9 @@
     <string name="password_choose_a_password">Escolha uma palavra-passe</string>
     <string name="password_extra_layer">Se quiser uma camada extra de segurança, escolha uma palavra-passe. A palavra-passe não pode ser recuperada.</string>
     <string name="password_extra_layer_highlight">A palavra-passe não pode ser recuperada.</string>
+    <string name="verify_existing_vault_email_description">Isto será utilizado apenas uma vez para enviar o seu ficheiro de cópia de segurança. A Vultisig não armazena quaisquer dados.</string>
+    <string name="verify_existing_vault_password_title">Introduzir palavra-passe do Cofre</string>
+    <string name="verify_existing_vault_password_description">Introduza a palavra-passe do seu Cofre.</string>
     <string name="backup_backups">Cópias de segurança,</string>
     <string name="backup_your_new_recovery_method">o seu novo método de recuperação</string>
     <string name="backup_backups_power_your_vault">As cópias de segurança potenciam o seu cofre. Cada dispositivo tem a sua própria cópia de segurança. Uma cópia sozinha não pode mover fundos, serve apenas para recuperação. Importe e recupere qualquer dispositivo perdido.</string>

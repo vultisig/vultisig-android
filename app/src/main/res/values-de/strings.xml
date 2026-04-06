@@ -160,6 +160,7 @@
     <string name="token_logo">Token-Logo</string>
     <string name="vault_edit_this_name_already_exist">dieser Name existiert bereits</string>
     <string name="import_file_screen_duplicate_vault">Der Tresor ist ein Duplikat</string>
+    <string name="import_file_screen_success_import">Der Tresor wurde erfolgreich importiert</string>
     <string name="verify_swap_consent_amount">Der Swapbetrag ist korrekt</string>
     <string name="successfully_scanned_barcode">Barcode erfolgreich gescannt: %1$s</string>
     <string name="scan_qr_screen_return_vault">Zurück zum Tresor</string>
@@ -482,8 +483,6 @@
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Token-Wert</string>
     <string name="token_fiat_toggle_fiat_label">Fiat-Wert</string>
-    <string name="remove_pool_title">Pool entfernen</string>
-    <string name="remove_pool_amount_label">Menge</string>
     <string name="cacaopool_only_cacao_supported">Nur das CACAO-Token wird für Poolvorgänge unterstützt</string>
     <string name="referral_create_info_title">Empfehlungsprogramm</string>
     <string name="referral_create_info_content">Das Empfehlungsprogramm gilt für THORChain-Swaps und erfolgt nach bestem Bemühen. Sie müssen einen THORName registrieren, um die Vultisig-Empfehlung zu nutzen. Die Registrierungsgebühr beträgt 10 RUNE und 1 RUNE für jedes Jahr, die an das THORChain-Netzwerk gezahlt wird.</string>
@@ -1036,6 +1035,9 @@
     <string name="password_choose_a_password">Wählen Sie ein Passwort</string>
     <string name="password_extra_layer">Wenn Sie eine zusätzliche Sicherheitsebene möchten, wählen Sie ein Passwort. Das Passwort kann nicht wiederhergestellt werden.</string>
     <string name="password_extra_layer_highlight">Das Passwort kann nicht wiederhergestellt werden.</string>
+    <string name="verify_existing_vault_email_description">Dies wird nur einmal verwendet, um Ihre Sicherungsdatei zu senden. Vultisig speichert keine Daten.</string>
+    <string name="verify_existing_vault_password_title">Tresor-Passwort eingeben</string>
+    <string name="verify_existing_vault_password_description">Geben Sie das Passwort Ihres Tresors ein.</string>
     <string name="backup_backups">Backups,</string>
     <string name="backup_your_new_recovery_method">Ihre neue Wiederherstellungsmethode</string>
     <string name="backup_backups_power_your_vault">Backups stärken Ihren Tresor. Jedes Gerät hat sein eigenes Backup. Ein Backup allein kann keine Gelder bewegen, es dient nur zur Wiederherstellung. Importieren und stellen Sie jedes verlorene Gerät wieder her.</string>

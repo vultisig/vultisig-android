@@ -172,8 +172,6 @@ internal data class DepositFormUiModel(
     val selectedPoolCacaoDepth: Long = 0L,
     val totalGas: UiText = UiText.Empty,
     val estimatedFee: UiText = UiText.Empty,
-    val removeLpPercent: Float = 1f,
-    val removeLpCacaoDisplay: String = "",
 )
 
 @HiltViewModel
@@ -505,46 +503,6 @@ constructor(
         }
     }
 
-    private fun loadRemoveLpData() {
-        val poolId = lpPoolId ?: return
-        state.update {
-            it.copy(
-                availableLpUnits = null,
-                selectedPoolTotalLpUnits = 0L,
-                selectedPoolCacaoDepth = 0L,
-            )
-        }
-        viewModelScope.safeLaunch {
-            val userAddress =
-                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
-                    ?.address
-                    ?: run {
-                        state.update {
-                            it.copy(
-                                errorText =
-                                    UiText.StringResource(R.string.dialog_default_error_body)
-                            )
-                        }
-                        return@safeLaunch
-                    }
-            val memberDetails =
-                withContext(Dispatchers.IO) {
-                    mayachainBondRepository.getMemberDetails(userAddress)
-                }
-            val userLpUnits =
-                memberDetails.pools.find { it.pool == poolId }?.liquidityUnits ?: return@safeLaunch
-            val poolStats = withContext(Dispatchers.IO) { mayachainBondRepository.getLpPoolStats() }
-            val pool = poolStats.find { it.asset == poolId } ?: return@safeLaunch
-            state.update {
-                it.copy(
-                    availableLpUnits = userLpUnits,
-                    selectedPoolTotalLpUnits = pool.units.toLongOrNull() ?: 0L,
-                    selectedPoolCacaoDepth = pool.cacaoDepth.toLongOrNull() ?: 0L,
-                )
-            }
-        }
-    }
-
     fun selectBondAsset(asset: String) {
         val pool = lpBondPoolMap[asset]
         state.update {
@@ -563,33 +521,6 @@ constructor(
     fun setMaxLpUnits() {
         val units = state.value.availableLpUnits ?: return
         lpUnitsFieldState.setTextAndPlaceCursorAtEnd(units)
-    }
-
-    fun setRemoveLpPercent(percent: Float) {
-        val s = state.value
-        val availableUnits = s.availableLpUnits?.toLongOrNull()
-        if (availableUnits == null) {
-            state.update { it.copy(removeLpPercent = percent) }
-            return
-        }
-        val selectedUnits = (percent * availableUnits).toLong().coerceAtLeast(0L)
-        val cacaoDisplay =
-            if (s.selectedPoolTotalLpUnits > 0L) {
-                val cacao =
-                    selectedUnits
-                        .toBigDecimal()
-                        .multiply(s.selectedPoolCacaoDepth.toBigDecimal())
-                        .divide(
-                            s.selectedPoolTotalLpUnits.toBigDecimal(),
-                            3,
-                            java.math.RoundingMode.DOWN,
-                        )
-                        .stripTrailingZeros()
-                        .toPlainString()
-                "$cacao CACAO"
-            } else ""
-        lpUnitsFieldState.setTextAndPlaceCursorAtEnd(selectedUnits.toString())
-        state.update { it.copy(removeLpPercent = percent, removeLpCacaoDisplay = cacaoDisplay) }
     }
 
     private suspend fun updateTokenAmount(
@@ -753,17 +684,11 @@ constructor(
                     handleRemoveCacaoOption()
                 }
 
-                DepositOption.AddLiquidity -> {
-                    state.update {
-                        it.copy(selectedToken = Coins.MayaChain.CACAO, unstakableAmount = null)
-                    }
-                }
-
+                DepositOption.AddLiquidity,
                 DepositOption.RemoveLiquidity -> {
                     state.update {
                         it.copy(selectedToken = Coins.MayaChain.CACAO, unstakableAmount = null)
                     }
-                    loadRemoveLpData()
                 }
 
                 DepositOption.WithdrawSecuredAsset -> {

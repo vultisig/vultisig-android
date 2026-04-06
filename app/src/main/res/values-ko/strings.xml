@@ -197,6 +197,7 @@
     <string name="vault_list_vaults_list">볼트</string>
     <string name="import_file_screen_title">가져오기</string>
     <string name="import_file_screen_duplicate_vault">중복된 볼트입니다</string>
+    <string name="import_file_screen_success_import">볼트를 성공적으로 가져왔습니다</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">안전한 암호화폐 볼트</string>
     <string name="generating_key_screen_keygen_failed">키 생성 실패</string>
@@ -664,8 +665,6 @@
     <string name="max">최대</string>
     <string name="token_fiat_toggle_token_label">토큰 가치</string>
     <string name="token_fiat_toggle_fiat_label">법정화폐 가치</string>
-    <string name="remove_pool_title">풀 제거</string>
-    <string name="remove_pool_amount_label">금액</string>
     <string name="cacaopool_only_cacao_supported">풀 작업에는 CACAO 토큰만 지원됩니다</string>
     <string name="referral_create_info_content">추천 프로그램은 THORChain 스왑에 적용되며 최선의 노력으로 제공됩니다. Vultisig 추천을 사용하려면 THORName을 등록해야 합니다. 등록비는 10 RUNE이며 매년 1 RUNE이 THORChain 네트워크에 지불됩니다.</string>
     <string name="referral_create_info_title">추천 프로그램</string>
@@ -1065,6 +1064,9 @@
     <string name="password_choose_a_password">비밀번호를 선택하세요</string>
     <string name="password_extra_layer">추가 보안 레이어를 원하시면 비밀번호를 선택하세요. 비밀번호는 복구할 수 없습니다.</string>
     <string name="password_extra_layer_highlight">비밀번호는 복구할 수 없습니다.</string>
+    <string name="verify_existing_vault_email_description">이 이메일은 백업 파일을 전송하는 데 한 번만 사용됩니다. Vultisig은 어떠한 데이터도 저장하지 않습니다.</string>
+    <string name="verify_existing_vault_password_title">볼트 비밀번호 입력</string>
+    <string name="verify_existing_vault_password_description">볼트의 비밀번호를 입력하세요.</string>
     <string name="backup_backups">백업,</string>
     <string name="backup_your_new_recovery_method">새로운 복구 방법</string>
     <string name="backup_backups_power_your_vault">백업이 볼트를 지원합니다. 각 기기에는 고유한 백업이 있습니다. 백업만으로는 자금을 이동할 수 없으며, 복구 전용입니다. 분실된 기기를 가져오기 및 복구하세요.</string>

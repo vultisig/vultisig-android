@@ -160,6 +160,7 @@
     <string name="token_logo">Logo tokena</string>
     <string name="vault_edit_this_name_already_exist">ovo ime već postoji</string>
     <string name="import_file_screen_duplicate_vault">Trezor je duplikat</string>
+    <string name="import_file_screen_success_import">Trezor je uspješno uvezen</string>
     <string name="verify_swap_consent_amount">Iznos zamjene je točan</string>
     <string name="successfully_scanned_barcode">Uspješno skeniran crtični kod: %1$s</string>
     <string name="scan_qr_screen_return_vault">Povratak u Trezor</string>
@@ -483,8 +484,6 @@
     <string name="max">Maks</string>
     <string name="token_fiat_toggle_token_label">Vrijednost tokena</string>
     <string name="token_fiat_toggle_fiat_label">Fiat vrijednost</string>
-    <string name="remove_pool_title">Ukloni Pool</string>
-    <string name="remove_pool_amount_label">Iznos</string>
     <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>
     <string name="referral_create_info_title">Program preporuka</string>
     <string name="referral_create_info_content">Program preporuka primjenjuje se na THORChain razmjene i provodi se po najboljoj mogućnosti. Morate registrirati THORName za korištenje Vultisig preporuke. Naknada za registraciju je 10 RUNE i 1 RUNE za svaku godinu, koja se plaća THORChain mreži.</string>
@@ -1044,6 +1043,9 @@
     <string name="password_choose_a_password">Odaberite lozinku</string>
     <string name="password_extra_layer">Ako želite dodatni sloj sigurnosti, odaberite lozinku. Lozinka se ne može oporaviti.</string>
     <string name="password_extra_layer_highlight">Lozinka se ne može oporaviti.</string>
+    <string name="verify_existing_vault_email_description">Ovo će se koristiti samo jednom za slanje vaše sigurnosne kopije. Vultisig ne pohranjuje nikakve podatke.</string>
+    <string name="verify_existing_vault_password_title">Unesite lozinku trezora</string>
+    <string name="verify_existing_vault_password_description">Unesite lozinku svog trezora.</string>
     <string name="backup_backups">Sigurnosne kopije,</string>
     <string name="backup_your_new_recovery_method">vaša nova metoda oporavka</string>
     <string name="backup_backups_power_your_vault">Sigurnosne kopije osnažuju vaš trezor. Svaki uređaj ima svoju vlastitu sigurnosnu kopiju. Sigurnosna kopija sama ne može premjestiti sredstva, služi samo za oporavak. Uvezite i oporavite bilo koji izgubljeni uređaj.</string>

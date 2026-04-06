@@ -138,6 +138,7 @@
     <string name="vault_list_vaults_list">Kluizen</string>
     <string name="import_file_screen_title">Importeren</string>
     <string name="import_file_screen_duplicate_vault">De kluis is dubbel</string>
+    <string name="import_file_screen_success_import">De kluis is succesvol geïmporteerd</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">VEILIGE CRYPTO KLUIS</string>
     <string name="generating_key_screen_keygen_failed">Sleutel genereren mislukt</string>
@@ -479,8 +480,6 @@
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Tokenwaarde</string>
     <string name="token_fiat_toggle_fiat_label">Fiatwaarde</string>
-    <string name="remove_pool_title">Pool verwijderen</string>
-    <string name="remove_pool_amount_label">Bedrag</string>
     <string name="cacaopool_only_cacao_supported">Alleen CACAO-tokens worden ondersteund voor pooloperaties</string>
     <string name="referral_create_info_title">Verwijzingsprogramma</string>
     <string name="referral_create_info_content">Het verwijzingsprogramma is van toepassing op THORChain-swaps en is op basis van best effort. Je moet een THORName registreren om de Vultisig-verwijzing te gebruiken. De registratiekosten zijn 10 RUNE en 1 RUNE voor elk jaar, die worden betaald aan het THORChain-netwerk.</string>
@@ -1031,6 +1030,9 @@
     <string name="password_choose_a_password">Kies een wachtwoord</string>
     <string name="password_extra_layer">Als u een extra beveiligingslaag wilt, kies dan een wachtwoord. Het wachtwoord kan niet worden hersteld.</string>
     <string name="password_extra_layer_highlight">Het wachtwoord kan niet worden hersteld.</string>
+    <string name="verify_existing_vault_email_description">Dit wordt slechts eenmalig gebruikt om uw back-upbestand te verzenden. Vultisig slaat geen gegevens op.</string>
+    <string name="verify_existing_vault_password_title">Voer het kluiswachtwoord in</string>
+    <string name="verify_existing_vault_password_description">Voer het wachtwoord van uw kluis in.</string>
     <string name="backup_backups">Back-ups,</string>
     <string name="backup_your_new_recovery_method">uw nieuwe herstelmethode</string>
     <string name="backup_backups_power_your_vault">Back-ups versterken uw kluis. Elk apparaat heeft zijn eigen back-up. Een back-up alleen kan geen fondsen verplaatsen, het is alleen voor herstel. Importeer en herstel elk verloren apparaat.</string>
