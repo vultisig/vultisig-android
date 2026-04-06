@@ -505,6 +505,46 @@ constructor(
         }
     }
 
+    private fun loadRemoveLpData() {
+        val poolId = lpPoolId ?: return
+        state.update {
+            it.copy(
+                availableLpUnits = null,
+                selectedPoolTotalLpUnits = 0L,
+                selectedPoolCacaoDepth = 0L,
+            )
+        }
+        viewModelScope.safeLaunch {
+            val userAddress =
+                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                    ?.address
+                    ?: run {
+                        state.update {
+                            it.copy(
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body)
+                            )
+                        }
+                        return@safeLaunch
+                    }
+            val memberDetails =
+                withContext(Dispatchers.IO) {
+                    mayachainBondRepository.getMemberDetails(userAddress)
+                }
+            val userLpUnits =
+                memberDetails.pools.find { it.pool == poolId }?.liquidityUnits ?: return@safeLaunch
+            val poolStats = withContext(Dispatchers.IO) { mayachainBondRepository.getLpPoolStats() }
+            val pool = poolStats.find { it.asset == poolId } ?: return@safeLaunch
+            state.update {
+                it.copy(
+                    availableLpUnits = userLpUnits,
+                    selectedPoolTotalLpUnits = pool.units.toLongOrNull() ?: 0L,
+                    selectedPoolCacaoDepth = pool.cacaoDepth.toLongOrNull() ?: 0L,
+                )
+            }
+        }
+    }
+
     fun selectBondAsset(asset: String) {
         val pool = lpBondPoolMap[asset]
         state.update {
@@ -713,11 +753,17 @@ constructor(
                     handleRemoveCacaoOption()
                 }
 
-                DepositOption.AddLiquidity,
+                DepositOption.AddLiquidity -> {
+                    state.update {
+                        it.copy(selectedToken = Coins.MayaChain.CACAO, unstakableAmount = null)
+                    }
+                }
+
                 DepositOption.RemoveLiquidity -> {
                     state.update {
                         it.copy(selectedToken = Coins.MayaChain.CACAO, unstakableAmount = null)
                     }
+                    loadRemoveLpData()
                 }
 
                 DepositOption.WithdrawSecuredAsset -> {
