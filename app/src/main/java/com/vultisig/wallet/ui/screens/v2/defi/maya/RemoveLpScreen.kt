@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -216,13 +215,13 @@ private fun RemoveLpSlider(
                         modifier =
                             Modifier.shadow(
                                     elevation = 13.dp,
-                                    spotColor = Color(0x1F000000),
-                                    ambientColor = Color(0x1F000000),
+                                    spotColor = Theme.v2.colors.shadow.low,
+                                    ambientColor = Theme.v2.colors.shadow.low,
                                 )
                                 .shadow(
                                     elevation = 4.dp,
-                                    spotColor = Color(0x1F000000),
-                                    ambientColor = Color(0x1F000000),
+                                    spotColor = Theme.v2.colors.shadow.low,
+                                    ambientColor = Theme.v2.colors.shadow.low,
                                 )
                                 .width(38.dp)
                                 .height(24.dp)
