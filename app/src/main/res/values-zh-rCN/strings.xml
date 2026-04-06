@@ -534,6 +534,9 @@
 
     <!-- Scan QR -->
     <string name="scan_qr_upload_from_gallery">上传二维码</string>
+    <string name="scan_qr_upload_qr_code">上传二维码</string>
+    <string name="scan_qr_hint_title">扫描遇到问题？</string>
+    <string name="scan_qr_hint_message">如果二维码没有立即扫描成功：\n• 将手机稍微靠近或远离屏幕\n• 确保屏幕光线充足且无眩光\n• 将两台设备保持稳定片刻</string>
 
     <!-- Reshare Start -->
     <string name="no_barcodes_found">未找到条形码</string>

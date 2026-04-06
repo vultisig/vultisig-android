@@ -38,8 +38,8 @@ internal fun ErrorView(
     title: String,
     description: String? = null,
     errorState: ErrorState = ErrorState.WARNING,
-    buttonText: String = stringResource(R.string.try_again),
-    onButtonClick: () -> Unit,
+    buttonText: String? = stringResource(R.string.try_again),
+    onButtonClick: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
 ) {
     Box(modifier = modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
@@ -52,13 +52,15 @@ internal fun ErrorView(
 
             ErrorWaves(title = title, description = description, errorState = errorState)
 
-            UiSpacer(30.dp)
-            VsButton(
-                variant = VsButtonVariant.Secondary,
-                label = buttonText,
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onButtonClick,
-            )
+            onButtonClick?.let {
+                UiSpacer(30.dp)
+                VsButton(
+                    variant = VsButtonVariant.Secondary,
+                    label = buttonText,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onButtonClick,
+                )
+            }
 
             UiSpacer(weight = 1f)
 
@@ -169,4 +171,14 @@ fun WarningErrorViewPreview() {
 @Composable
 fun WarningErrorViewPreview2() {
     ErrorView(title = "Something went wrong", errorState = ErrorState.CRITICAL, onButtonClick = {})
+}
+
+@Preview
+@Composable
+fun WarningErrorViewPreview3() {
+    ErrorView(
+        title = "Something went wrong",
+        errorState = ErrorState.CRITICAL,
+        onButtonClick = null,
+    )
 }

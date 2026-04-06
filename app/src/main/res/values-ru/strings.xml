@@ -294,6 +294,9 @@
     <string name="error_folder_must_have_at_least_one_vault">Папке необходимо выбрать хотя бы одно хранилище</string>
     <string name="import_file_password_hint_text">Подсказка: %s</string>
     <string name="scan_qr_upload_from_gallery">Загрузить из\n галереи</string>
+    <string name="scan_qr_upload_qr_code">Загрузить QR-код</string>
+    <string name="scan_qr_hint_title">Проблемы со сканированием?</string>
+    <string name="scan_qr_hint_message">Если QR-код не сканируется сразу:\n• Переместите телефон немного ближе или дальше от экрана\n• Убедитесь, что экран хорошо освещён и без бликов\n• Держите оба устройства неподвижно на мгновение</string>
     <string name="no_barcodes_found">Штрих-коды не найдены.</string>
     <string name="reshare_start_join_reshare_button">Присоединиться к перераспределению</string>
     <string name="deposit_error_invalid_lpunits">Единицы LP недействительны</string>

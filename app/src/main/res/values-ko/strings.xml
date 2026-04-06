@@ -368,6 +368,9 @@
     <string name="error_folder_must_have_at_least_one_vault">폴더에는 최소 하나의 볼트가 선택되어야 합니다</string>
     <string name="import_file_password_hint_text">힌트: %s</string>
     <string name="scan_qr_upload_from_gallery">QR 업로드</string>
+    <string name="scan_qr_upload_qr_code">QR 코드 업로드</string>
+    <string name="scan_qr_hint_title">스캔에 문제가 있나요?</string>
+    <string name="scan_qr_hint_message">QR 코드가 바로 스캔되지 않는 경우:\n• 화면에서 휴대폰을 약간 가까이 또는 멀리 이동하세요\n• 화면이 잘 밝혀져 있고 눈부심이 없는지 확인하세요\n• 두 기기를 잠시 고정하세요</string>
     <string name="no_barcodes_found">바코드를 찾을 수 없습니다</string>
     <string name="reshare_start_join_reshare_button">재공유 참여</string>
     <string name="deposit_error_invalid_lpunits">LP 유닛이 유효하지 않습니다</string>
