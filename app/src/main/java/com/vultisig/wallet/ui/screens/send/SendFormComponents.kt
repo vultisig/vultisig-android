@@ -158,9 +158,12 @@ internal fun FoldableSection(
         }
 
         AnimatedVisibility(visible = expanded) {
-            FadingHorizontalDivider(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp))
-
-            content()
+            Column {
+                FadingHorizontalDivider(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                )
+                content()
+            }
         }
     }
 }

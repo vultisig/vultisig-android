@@ -248,22 +248,24 @@ internal fun FoldableAmountWidget(
 
                 UiSpacer(12.dp)
 
+                val clipboardData = VsClipboardService.getClipboardData()
                 AnimatedVisibility(visible = isMemoExpanded) {
-                    val clipboardData = VsClipboardService.getClipboardData()
-                    VsTextInputField(
-                        textFieldState = memoFieldState,
-                        hint = stringResource(R.string.send_form_enter_memo),
-                        autoCorrectEnabled = false,
-                        trailingIcon = R.drawable.paste,
-                        onTrailingIconClick = {
-                            clipboardData.value
-                                ?.takeIf { it.isNotEmpty() }
-                                ?.let { memoFieldState.setTextAndPlaceCursorAtEnd(text = it) }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    Column {
+                        VsTextInputField(
+                            textFieldState = memoFieldState,
+                            hint = stringResource(R.string.send_form_enter_memo),
+                            autoCorrectEnabled = false,
+                            trailingIcon = R.drawable.paste,
+                            onTrailingIconClick = {
+                                clipboardData.value
+                                    ?.takeIf { it.isNotEmpty() }
+                                    ?.let { memoFieldState.setTextAndPlaceCursorAtEnd(text = it) }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
 
-                    UiSpacer(12.dp)
+                        UiSpacer(12.dp)
+                    }
                 }
             }
 
