@@ -198,6 +198,7 @@
     <string name="vault_list_vaults_list">Vaults</string>
     <string name="import_file_screen_title">Import</string>
     <string name="import_file_screen_duplicate_vault">The vault is duplicate</string>
+    <string name="import_file_screen_success_import">The vault imported successfully</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SECURE CRYPTO VAULT</string>
     <string name="generating_key_screen_keygen_failed">Keygen Failed</string>
@@ -1115,6 +1116,9 @@
     <string name="password_choose_a_password">Choose a password</string>
     <string name="password_extra_layer">If you want an extra layer of security, choose a password. Password cannot be recovered.</string>
     <string name="password_extra_layer_highlight">Password cannot be recovered.</string>
+    <string name="verify_existing_vault_email_description">This will only be used once to send your backup file, Vultisig doesn\'t store any data.</string>
+    <string name="verify_existing_vault_password_title">Enter Vault password</string>
+    <string name="verify_existing_vault_password_description">Enter your Vault\'s password.</string>
     <string name="backup_backups">Backups,</string>
     <string name="backup_your_new_recovery_method">your new recovery method</string>
     <string name="backup_backups_power_your_vault">Backups power your vault. Each device has its own backup. A backup alone can’t move funds, it’s only for recovery. Import and recover any lost device.</string>

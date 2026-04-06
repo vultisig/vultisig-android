@@ -428,9 +428,9 @@ constructor(
             }
             if (hasFastSign) {
                 navigator.route(
-                    Route.VaultInfo.Email(
+                    Route.VerifyExistingVault(
                         name = vault.name,
-                        action = TssAction.SingleKeygen,
+                        tssAction = TssAction.SingleKeygen,
                         vaultId = vaultId,
                     )
                 )

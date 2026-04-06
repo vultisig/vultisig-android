@@ -160,6 +160,7 @@
     <string name="token_logo">Logo del gettone</string>
     <string name="vault_edit_this_name_already_exist">questo nome esiste già</string>
     <string name="import_file_screen_duplicate_vault">Il caveau è duplicato</string>
+    <string name="import_file_screen_success_import">Il caveau è stato importato con successo</string>
     <string name="verify_swap_consent_amount">L\'importo dello swap è corretto</string>
     <string name="successfully_scanned_barcode">Codice a barre scansionato correttamente: %1$s</string>
     <string name="scan_qr_screen_return_vault">Torna al Caveau</string>
@@ -1039,6 +1040,9 @@
     <string name="password_choose_a_password">Scegli una password</string>
     <string name="password_extra_layer">Se vuoi un ulteriore livello di sicurezza, scegli una password. La password non può essere recuperata.</string>
     <string name="password_extra_layer_highlight">La password non può essere recuperata.</string>
+    <string name="verify_existing_vault_email_description">Questo verrà utilizzato solo una volta per inviare il file di backup. Vultisig non memorizza alcun dato.</string>
+    <string name="verify_existing_vault_password_title">Inserisci la password del Vault</string>
+    <string name="verify_existing_vault_password_description">Inserisci la password del tuo Vault.</string>
     <string name="backup_backups">Backup,</string>
     <string name="backup_your_new_recovery_method">il tuo nuovo metodo di recupero</string>
     <string name="backup_backups_power_your_vault">I backup potenziano il tuo vault. Ogni dispositivo ha il proprio backup. Un backup da solo non può spostare fondi, serve solo per il recupero. Importa e recupera qualsiasi dispositivo perso.</string>

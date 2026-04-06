@@ -227,6 +227,19 @@ object Coins {
                 isNativeToken = false,
             )
 
+        val USDS =
+            Coin(
+                chain = Chain.Arbitrum,
+                ticker = "USDS",
+                logo = "usds",
+                address = "",
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "usds",
+                contractAddress = "0x6491c05A82219b8D1479057361ff1654749b876b",
+                isNativeToken = false,
+            )
+
         val all =
             listOf(
                 ARB,
@@ -242,6 +255,7 @@ object Coins {
                 UNI,
                 USDC,
                 USDC_e,
+                USDS,
                 USDT,
                 WBTC,
                 ezETH,
@@ -582,7 +596,20 @@ object Coins {
                 isNativeToken = false,
             )
 
-        val all = listOf(AERO, DAI, ETH, OM, PYTH, SNX, USDC, W, cbETH, ezETH, rETH)
+        val USDS =
+            Coin(
+                chain = Chain.Base,
+                ticker = "USDS",
+                logo = "usds",
+                address = "",
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "usds",
+                contractAddress = "0x820C137fa70C8691f0e44dC420a5e53c168921Dc",
+                isNativeToken = false,
+            )
+
+        val all = listOf(AERO, DAI, ETH, OM, PYTH, SNX, USDC, USDS, W, cbETH, ezETH, rETH)
     }
 
     object Bitcoin {
@@ -1321,6 +1348,19 @@ object Coins {
                 isNativeToken = false,
             )
 
+        val USDS =
+            Coin(
+                chain = Chain.Ethereum,
+                ticker = "USDS",
+                logo = "usds",
+                address = "",
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "usds",
+                contractAddress = "0xdC035D45d973E3EC169d2276DDab16f1e407384F",
+                isNativeToken = false,
+            )
+
         val all =
             listOf(
                 AAVE,
@@ -1343,6 +1383,7 @@ object Coins {
                 TGT,
                 UNI,
                 USDC,
+                USDS,
                 USDT,
                 VULT,
                 WBTC,
@@ -2327,7 +2368,20 @@ object Coins {
                 isNativeToken = false,
             )
 
-        val all = listOf(JUP, KWEEN, PYTH, RAY, SOL, USDC, USDT, WIF)
+        val USDS =
+            Coin(
+                chain = Chain.Solana,
+                ticker = "USDS",
+                logo = "usds",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "usds",
+                contractAddress = "USDSwr9ApdHk5bvJKMjzff41FfuX8bSxdKcR81vTwcA",
+                isNativeToken = false,
+            )
+
+        val all = listOf(JUP, KWEEN, PYTH, RAY, SOL, USDC, USDS, USDT, WIF)
     }
 
     object Sei {
