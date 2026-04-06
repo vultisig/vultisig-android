@@ -581,9 +581,10 @@ constructor(
                         .multiply(s.selectedPoolCacaoDepth.toBigDecimal())
                         .divide(
                             s.selectedPoolTotalLpUnits.toBigDecimal(),
-                            3,
+                            18,
                             java.math.RoundingMode.DOWN,
                         )
+                        .divide(java.math.BigDecimal.TEN.pow(10), 3, java.math.RoundingMode.DOWN)
                         .stripTrailingZeros()
                         .toPlainString()
                 "$cacao CACAO"
