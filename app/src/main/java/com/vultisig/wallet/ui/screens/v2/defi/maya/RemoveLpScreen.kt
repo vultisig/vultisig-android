@@ -175,7 +175,7 @@ internal fun RemoveLpScreenContent(
             modifier = Modifier.fillMaxWidth(),
             onClick = onContinue,
             state =
-                if (state.removeLpPercent > 0f && state.availableLpUnits != null)
+                if (state.removeLpPercent > 0f && state.removeLpCacaoDisplay.isNotEmpty())
                     VsButtonState.Enabled
                 else VsButtonState.Disabled,
         )

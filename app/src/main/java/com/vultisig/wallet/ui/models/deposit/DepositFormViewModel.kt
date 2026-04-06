@@ -1591,11 +1591,28 @@ constructor(
         val srcAddress = selectedToken.address
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
 
-        val basisPoints = tokenAmountFieldState.text.toString().toIntOrNull()
+        val s = state.value
+        val basisPoints = (s.removeLpPercent * 100).toInt()
 
         validateBasisPoints(basisPoints)?.let { throw InvalidTransactionDataException(it) }
 
-        val memo = DepositMemo.RemoveLiquidity(poolId, basisPoints!! * 100)
+        val memo = DepositMemo.RemoveLiquidity(poolId, basisPoints * 100)
+
+        val cacaoBaseUnits =
+            s.availableLpUnits?.toLongOrNull()?.let { availableUnits ->
+                val selectedUnits = (s.removeLpPercent * availableUnits).toLong()
+                if (s.selectedPoolTotalLpUnits > 0L) {
+                    selectedUnits
+                        .toBigDecimal()
+                        .multiply(s.selectedPoolCacaoDepth.toBigDecimal())
+                        .divide(
+                            s.selectedPoolTotalLpUnits.toBigDecimal(),
+                            0,
+                            java.math.RoundingMode.DOWN,
+                        )
+                        .toBigInteger()
+                } else null
+            } ?: BigInteger.ZERO
 
         val specific =
             blockChainSpecificRepository.getSpecific(
@@ -1616,7 +1633,7 @@ constructor(
             srcAddress = srcAddress,
             dstAddress = "",
             memo = memo.toString(),
-            srcTokenValue = TokenValue(value = BigInteger.ZERO, token = selectedToken),
+            srcTokenValue = TokenValue(value = cacaoBaseUnits, token = selectedToken),
             estimatedFees = gasFee,
             blockChainSpecific = specific.blockChainSpecific,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
