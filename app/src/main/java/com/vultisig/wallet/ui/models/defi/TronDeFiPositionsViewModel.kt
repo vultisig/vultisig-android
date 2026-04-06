@@ -74,17 +74,22 @@ internal data class TronStakingUiModel(
 )
 
 @Immutable
-internal data class TronDeFiUiState(
-    val isLoading: Boolean = true,
-    val error: UiText? = null,
-    val isBalanceVisible: Boolean = true,
-    val selectedTab: DeFiTab = DeFiTab.STAKED,
-    val showPositionSelectionDialog: Boolean = false,
-    val stakePositionsDialog: List<PositionUiModelDialog> = TRON_STAKE_POSITIONS_DIALOG,
-    val selectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
-    val tempSelectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
-    val tronData: TronStakingUiModel? = null,
-)
+internal sealed interface TronDeFiUiState {
+    data object Loading : TronDeFiUiState
+
+    @Immutable data class Error(val error: UiText) : TronDeFiUiState
+
+    @Immutable
+    data class Success(
+        val tronData: TronStakingUiModel,
+        val isBalanceVisible: Boolean = true,
+        val selectedTab: DeFiTab = DeFiTab.STAKED,
+        val showPositionSelectionDialog: Boolean = false,
+        val stakePositionsDialog: List<PositionUiModelDialog> = TRON_STAKE_POSITIONS_DIALOG,
+        val selectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
+        val tempSelectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
+    ) : TronDeFiUiState
+}
 
 @Immutable data class TronPendingWithdrawalUiModel(val amountTrx: String, val expiryEpochMs: Long)
 
@@ -105,7 +110,7 @@ constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(TronDeFiUiState())
+    private val _state = MutableStateFlow<TronDeFiUiState>(TronDeFiUiState.Loading)
     val state: StateFlow<TronDeFiUiState> = _state.asStateFlow()
 
     private var vaultId: VaultId = ""
@@ -126,20 +131,20 @@ constructor(
             viewModelScope.safeLaunch(
                 onError = { e ->
                     Timber.e(e, "Failed to load Tron DeFi data")
-                    _state.update { it.copy(isLoading = false, error = e.message?.asUiText()) }
+                    _state.value =
+                        TronDeFiUiState.Error(
+                            e.message?.asUiText()
+                                ?: R.string.error_view_default_description.asUiText()
+                        )
                 }
             ) {
-                _state.update { it.copy(isLoading = true, error = null) }
+                _state.value = TronDeFiUiState.Loading
 
                 // Resolve the TRX coin for this vault
                 val trxCoin = findTrxCoin(vaultId)
                 if (trxCoin == null) {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = R.string.tron_defi_error_trx_not_in_vault.asUiText(),
-                        )
-                    }
+                    _state.value =
+                        TronDeFiUiState.Error(R.string.tron_defi_error_trx_not_in_vault.asUiText())
                     return@safeLaunch
                 }
 
@@ -162,13 +167,11 @@ constructor(
                         appCurrency = currency,
                     ) ?: BigDecimal.ZERO
 
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        isBalanceVisible = isBalanceVisible,
+                _state.value =
+                    TronDeFiUiState.Success(
                         tronData = buildStakingUiModel(account, resource, trxPrice, currencyFormat),
+                        isBalanceVisible = isBalanceVisible,
                     )
-                }
             }
     }
 
@@ -230,33 +233,41 @@ constructor(
         vaultRepository.get(vaultId)?.coins?.find { it.chain == Chain.Tron && it.isNativeToken }
 
     fun onTabSelected(tab: DeFiTab) {
-        _state.update { it.copy(selectedTab = tab) }
+        _state.update { current ->
+            if (current is TronDeFiUiState.Success) current.copy(selectedTab = tab) else current
+        }
     }
 
     fun setPositionSelectionDialogVisibility(visible: Boolean) {
-        _state.update {
-            it.copy(
-                showPositionSelectionDialog = visible,
-                tempSelectedPositions = it.selectedPositions,
-            )
+        _state.update { current ->
+            if (current is TronDeFiUiState.Success)
+                current.copy(
+                    showPositionSelectionDialog = visible,
+                    tempSelectedPositions = current.selectedPositions,
+                )
+            else current
         }
     }
 
     fun onPositionSelectionChange(ticker: String, selected: Boolean) {
         _state.update { current ->
-            val updated =
-                if (selected) current.tempSelectedPositions + ticker
-                else current.tempSelectedPositions - ticker
-            current.copy(tempSelectedPositions = updated)
+            if (current is TronDeFiUiState.Success) {
+                val updated =
+                    if (selected) current.tempSelectedPositions + ticker
+                    else current.tempSelectedPositions - ticker
+                current.copy(tempSelectedPositions = updated)
+            } else current
         }
     }
 
     fun onPositionSelectionDone() {
-        _state.update {
-            it.copy(
-                showPositionSelectionDialog = false,
-                selectedPositions = it.tempSelectedPositions,
-            )
+        _state.update { current ->
+            if (current is TronDeFiUiState.Success)
+                current.copy(
+                    showPositionSelectionDialog = false,
+                    selectedPositions = current.tempSelectedPositions,
+                )
+            else current
         }
     }
 
@@ -266,9 +277,8 @@ constructor(
         ) {
             val trxCoin = findTrxCoin(vaultId)
             if (trxCoin == null) {
-                _state.update {
-                    it.copy(error = R.string.tron_defi_error_trx_not_in_vault.asUiText())
-                }
+                _state.value =
+                    TronDeFiUiState.Error(R.string.tron_defi_error_trx_not_in_vault.asUiText())
                 return@safeLaunch
             }
             navigator.route(
