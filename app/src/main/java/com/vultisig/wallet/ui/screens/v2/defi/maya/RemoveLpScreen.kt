@@ -86,15 +86,16 @@ internal fun RemoveLpScreenContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // Amount card
+        val amountCardShape = RoundedCornerShape(12.dp)
         Column(
             modifier =
                 Modifier.fillMaxWidth()
                     .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(amountCardShape)
                     .border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.normal,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = amountCardShape,
                     )
                     .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
