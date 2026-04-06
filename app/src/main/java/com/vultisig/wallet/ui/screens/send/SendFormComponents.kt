@@ -30,6 +30,8 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.theme.Theme
 
+private val DividerAccentColor = Color(0xFF284570)
+
 @Composable
 internal fun EstimatedNetworkFee(
     tokenGas: String,
@@ -81,7 +83,7 @@ internal fun FadingHorizontalDivider(modifier: Modifier = Modifier) {
                             colors =
                                 listOf(
                                     Theme.v2.colors.backgrounds.secondary.copy(alpha = 0f),
-                                    Color(0xFF284570),
+                                    DividerAccentColor,
                                     Theme.v2.colors.backgrounds.secondary.copy(alpha = 0f),
                                 ),
                             startX = 0f,

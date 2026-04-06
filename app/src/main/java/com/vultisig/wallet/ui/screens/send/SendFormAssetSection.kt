@@ -46,7 +46,7 @@ internal fun FoldableAssetWidget(
     FoldableSection(
         expanded = state.expandedSection == SendSections.Asset,
         onToggle = { onExpandSection(SendSections.Asset) },
-        complete = true,
+        complete = state.selectedCoin != null,
         title = stringResource(R.string.form_token_selection_asset),
         completeTitleContent = {
             Row(modifier = Modifier.weight(1f)) {
