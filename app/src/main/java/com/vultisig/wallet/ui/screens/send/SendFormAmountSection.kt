@@ -46,6 +46,8 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 @Composable
 internal fun FoldableAmountWidget(
@@ -128,16 +130,12 @@ internal fun FoldableAmountWidget(
                     if (isCircleMode) {
                         val entered = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
                         val balance = state.selectedCoin?.balance?.toBigDecimalOrNull()
-                        if (
-                            entered != null &&
-                                balance != null &&
-                                balance > java.math.BigDecimal.ZERO
-                        ) {
+                        if (entered != null && balance != null && balance > BigDecimal.ZERO) {
                             val pct =
                                 entered
-                                    .multiply(java.math.BigDecimal(100))
-                                    .divide(balance, 1, java.math.RoundingMode.DOWN)
-                                    .coerceIn(java.math.BigDecimal.ZERO, java.math.BigDecimal(100))
+                                    .multiply(BigDecimal(100))
+                                    .divide(balance, 1, RoundingMode.DOWN)
+                                    .coerceIn(BigDecimal.ZERO, java.math.BigDecimal(100))
                             "%.1f%%".format(pct)
                         } else ""
                     } else {
