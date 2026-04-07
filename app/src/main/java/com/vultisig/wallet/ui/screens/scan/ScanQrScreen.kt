@@ -218,7 +218,7 @@ private fun ScanQrScreen(
             SideEffect(cameraPermissionState::launchPermissionRequest)
             ErrorView(
                 title = stringResource(R.string.camera_permission_denied),
-                onButtonClick = null,
+                buttonUiModel = null,
             )
         }
     }
