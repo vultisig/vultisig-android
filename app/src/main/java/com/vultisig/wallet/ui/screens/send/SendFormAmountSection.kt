@@ -135,7 +135,7 @@ internal fun FoldableAmountWidget(
                                 entered
                                     .multiply(BigDecimal(100))
                                     .divide(balance, 1, RoundingMode.DOWN)
-                                    .coerceIn(BigDecimal.ZERO, java.math.BigDecimal(100))
+                                    .coerceIn(BigDecimal.ZERO, BigDecimal(100))
                             "%.1f%%".format(pct)
                         } else ""
                     } else {
