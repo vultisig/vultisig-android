@@ -393,7 +393,9 @@ constructor(
                             }
                         }
 
-                    updateTokenAmount(account, chain, targetTicker, vaultId)
+                    if (depositOption != DepositOption.RemoveLiquidity) {
+                        updateTokenAmount(account, chain, targetTicker, vaultId)
+                    }
 
                     if (depositOption == DepositOption.SecuredAsset) {
                         collectSecuredAssetAddresses()
