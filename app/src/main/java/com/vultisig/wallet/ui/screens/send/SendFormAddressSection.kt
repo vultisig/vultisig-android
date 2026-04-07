@@ -141,21 +141,21 @@ internal fun FoldableDestinationAddressWidget(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PasteIcon(
-                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                     onPaste = onSetOutputAddress,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.camera,
                     size = 20.dp,
-                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                     onClick = onScanDstAddressRequest,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.ic_bookmark,
                     size = 20.dp,
-                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                     onClick = onAddressBookClick,
                 )
             }
@@ -234,21 +234,21 @@ internal fun FoldableBondDestinationAddress(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PasteIcon(
-                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                     onPaste = onSetOutputAddress,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.camera,
                     size = 20.dp,
-                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                     onClick = onScanDstAddressRequest,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.ic_bookmark,
                     size = 20.dp,
-                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                     onClick = onAddressBookClick,
                 )
             }
@@ -283,21 +283,21 @@ internal fun FoldableBondDestinationAddress(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PasteIcon(
-                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                     onPaste = onSetOutputProvider,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.camera,
                     size = 20.dp,
-                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                     onClick = onScanProviderRequest,
                 )
 
                 UiIcon(
                     drawableResId = R.drawable.ic_bookmark,
                     size = 20.dp,
-                    modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                     onClick = onAddressProviderBookClick,
                 )
             }

@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -29,8 +28,6 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.theme.Theme
-
-private val DividerAccentColor = Color(0xFF284570)
 
 @Composable
 internal fun EstimatedNetworkFee(
@@ -83,7 +80,7 @@ internal fun FadingHorizontalDivider(modifier: Modifier = Modifier) {
                             colors =
                                 listOf(
                                     Theme.v2.colors.backgrounds.secondary.copy(alpha = 0f),
-                                    DividerAccentColor,
+                                    Theme.v2.colors.backgrounds.gradientMid,
                                     Theme.v2.colors.backgrounds.secondary.copy(alpha = 0f),
                                 ),
                             startX = 0f,
@@ -95,7 +92,7 @@ internal fun FadingHorizontalDivider(modifier: Modifier = Modifier) {
 }
 
 @Composable
-internal fun Modifier.vsClickableBackground() =
+internal fun Modifier.vsStyledBackground() =
     border(
             border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
             shape = RoundedCornerShape(12.dp),
