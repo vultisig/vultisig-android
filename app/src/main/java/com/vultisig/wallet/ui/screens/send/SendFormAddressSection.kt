@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -63,7 +64,7 @@ private fun AddressActionRow(
 }
 
 @Composable
-private fun AddressCompleteTitleContent(fieldState: TextFieldState) {
+private fun RowScope.AddressCompleteTitleContent(fieldState: TextFieldState) {
     Text(
         text = fieldState.text.toString(),
         color = Theme.v2.colors.text.tertiary,
