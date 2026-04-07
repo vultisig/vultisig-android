@@ -26,16 +26,10 @@ constructor(
 
     override suspend fun invoke(vaultId: String) {
         withContext(dispatcher) {
-            val pendingTransactions = transactionHistoryRepository.getPendingTransactions(vaultId)
-
-            pendingTransactions
+            transactionHistoryRepository
+                .getPendingTransactions(vaultId)
                 .map { transaction ->
                     async {
-                        // CancellationException extends IllegalStateException -> RuntimeException
-                        // ->
-                        // Exception, so a bare catch (e: Exception) would swallow it and leak the
-                        // in-flight coroutine after viewModelScope cancellation. Explicitly
-                        // rethrow.
                         try {
                             val chain = Chain.fromRaw(transaction.chain)
                             val result =

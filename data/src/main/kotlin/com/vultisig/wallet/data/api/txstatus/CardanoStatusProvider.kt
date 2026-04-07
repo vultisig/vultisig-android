@@ -11,23 +11,18 @@ import timber.log.Timber
 class CardanoStatusProvider @Inject constructor(private val cardanoApi: CardanoApi) :
     TransactionStatusProvider {
 
-    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        // Transient HTTP / deserialization errors map to Pending so the poller retries.
-        // CancellationException always propagates.
-        return try {
+    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult =
+        try {
             val txStatus = cardanoApi.getTxStatus(txHash)
-
             when {
                 txStatus == null -> TransactionResult.NotFound
-                txStatus.numConfirmations == null -> TransactionResult.Pending
-                txStatus.numConfirmations == 0 -> TransactionResult.Pending
-                else -> TransactionResult.Confirmed
+                (txStatus.numConfirmations ?: 0) > 0 -> TransactionResult.Confirmed
+                else -> TransactionResult.Pending
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w(e, "Cardano tx status check failed for %s — treating as Pending", txHash)
+            Timber.w(e, "Cardano status check failed for %s", txHash)
             TransactionResult.Pending
         }
-    }
 }

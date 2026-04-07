@@ -12,12 +12,8 @@ import timber.log.Timber
 class UtxoStatusProvider @Inject constructor(private val blockChairApi: BlockChairApi) :
     TransactionStatusProvider {
 
-    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        // Transient HTTP / deserialization errors are mapped to Pending so the poller
-        // retries instead of persisting a bogus FAILED status — same treatment as EVM,
-        // Sui, Cosmos. CancellationException always propagates to preserve structured
-        // concurrency on viewModelScope teardown.
-        return try {
+    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult =
+        try {
             val response = blockChairApi.getTsStatus(chain, txHash)
             val (txData, context) =
                 when (response) {
@@ -25,7 +21,6 @@ class UtxoStatusProvider @Inject constructor(private val blockChairApi: BlockCha
                         response.data.data?.get(txHash) to response.data.context
                     else -> null to null
                 }
-
             when {
                 txData == null -> TransactionResult.Pending
                 txData.transaction == null -> TransactionResult.NotFound
@@ -41,13 +36,7 @@ class UtxoStatusProvider @Inject constructor(private val blockChairApi: BlockCha
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w(
-                e,
-                "UTXO tx status check failed for %s on %s — treating as Pending",
-                txHash,
-                chain,
-            )
+            Timber.w(e, "UTXO status check failed for %s on %s", txHash, chain)
             TransactionResult.Pending
         }
-    }
 }

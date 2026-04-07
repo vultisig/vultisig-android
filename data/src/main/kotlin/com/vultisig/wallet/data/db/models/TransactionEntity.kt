@@ -51,12 +51,8 @@ fun TransactionResult.toDbModel() =
         ],
 )
 data class TransactionHistoryEntity(
-    // Deterministic primary key derived from chain + txHash. Two devices that see the same
-    // on-chain transaction produce the same row id, which is required for cross-device dedup
-    // and for the backfill merge logic that will land in the history-2-schema PR.
+    /** Deterministic id `"$chain:$txHash"` so the same on-chain tx produces the same row. */
     @PrimaryKey @ColumnInfo("id") val id: String,
-
-    // Common fields
     @ColumnInfo("vaultId") val vaultId: String,
     @ColumnInfo("type") val type: TransactionType,
     @ColumnInfo("status") val status: TransactionStatus,
@@ -64,12 +60,8 @@ data class TransactionHistoryEntity(
     @ColumnInfo("timestamp") val timestamp: Long,
     @ColumnInfo("txHash") val txHash: String,
     @ColumnInfo("explorerUrl") val explorerUrl: String,
-
-    // Type-specific fields stored as JSON; decoded by TransactionHistoryDataConverter.
-    // Adding a new transaction type only requires a new @Serializable subclass — no schema change.
+    /** Type-specific JSON payload, decoded by [TransactionHistoryDataConverter]. */
     @ColumnInfo("payload") val payload: TransactionHistoryData,
-
-    // Status metadata
     @ColumnInfo("confirmedAt") val confirmedAt: Long?,
     @ColumnInfo("failureReason") val failureReason: String?,
     @ColumnInfo("lastCheckedAt") val lastCheckedAt: Long?,

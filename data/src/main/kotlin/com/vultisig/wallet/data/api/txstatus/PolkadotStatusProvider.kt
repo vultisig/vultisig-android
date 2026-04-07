@@ -10,21 +10,19 @@ import timber.log.Timber
 
 class PolkadotStatusProvider @Inject constructor(private val polkadotApi: PolkadotApi) :
     TransactionStatusProvider {
-    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        // Transient HTTP / deserialization errors map to Pending so the poller retries.
-        // CancellationException always propagates.
-        return try {
-            val tx = polkadotApi.getTxStatus(txHash) ?: return TransactionResult.NotFound
-            if (tx.message.lowercase() == "success") {
-                TransactionResult.Confirmed
-            } else {
-                TransactionResult.Failed(tx.data?.polkadotErrorData?.value ?: tx.message)
+
+    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult =
+        try {
+            val tx = polkadotApi.getTxStatus(txHash)
+            when {
+                tx == null -> TransactionResult.NotFound
+                tx.message.equals("success", ignoreCase = true) -> TransactionResult.Confirmed
+                else -> TransactionResult.Failed(tx.data?.polkadotErrorData?.value ?: tx.message)
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w(e, "Polkadot tx status check failed for %s — treating as Pending", txHash)
+            Timber.w(e, "Polkadot status check failed for %s", txHash)
             TransactionResult.Pending
         }
-    }
 }

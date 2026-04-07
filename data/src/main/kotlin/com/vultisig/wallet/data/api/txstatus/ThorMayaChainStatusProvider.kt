@@ -19,26 +19,15 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
         )
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        // Transient HTTP / deserialization errors map to Pending so the poller retries.
-        // CancellationException always propagates.
+        val baseUrl = apiUrls[chain] ?: return TransactionResult.Failed("Unknown chain")
         return try {
-            val baseUrl = apiUrls[chain] ?: return TransactionResult.Failed("Unknown chain")
             val response = httpClient.get("$baseUrl/$txHash")
-
-            if (response.status.value == 200) {
-                TransactionResult.Confirmed
-            } else {
-                TransactionResult.Pending
-            }
+            if (response.status.value == 200) TransactionResult.Confirmed
+            else TransactionResult.Pending
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w(
-                e,
-                "THOR/Maya tx status check failed for %s on %s — treating as Pending",
-                txHash,
-                chain,
-            )
+            Timber.w(e, "THOR/Maya status check failed for %s on %s", txHash, chain)
             TransactionResult.Pending
         }
     }

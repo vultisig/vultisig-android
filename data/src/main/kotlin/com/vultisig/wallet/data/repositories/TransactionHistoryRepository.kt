@@ -50,38 +50,28 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
 
     override suspend fun updateTransactionStatus(txHash: String, result: TransactionResult) {
         val now = System.currentTimeMillis()
-
         when (result) {
-            is TransactionResult.Confirmed -> {
+            is TransactionResult.Confirmed ->
                 dao.updateToConfirmed(txHash = txHash, confirmedAt = now, lastCheckedAt = now)
-            }
-            is TransactionResult.Failed -> {
+            is TransactionResult.Failed ->
                 dao.updateToFailed(
                     txHash = txHash,
                     failureReason = result.reason,
                     lastCheckedAt = now,
                 )
-            }
-            TransactionResult.Pending -> {
+            TransactionResult.Pending ->
                 dao.updateStatus(
                     txHash = txHash,
                     status = TransactionStatus.PENDING,
                     lastCheckedAt = now,
                 )
-            }
-            TransactionResult.NotFound -> {
-                // NotFound is a *transient* state (indexer lag, mempool propagation delay,
-                // RPC flakiness). Persisting it as FAILED — as we used to — caused recently
-                // broadcast transactions to flip to a hard-failed display on the first missed
-                // poll. Keep the row in its own dedicated NotFound state instead and let the
-                // poller retry. Terminal states (CONFIRMED, FAILED) are never overwritten by
-                // this path thanks to the DAO terminal-state guards.
+            // NotFound is transient (indexer lag, mempool delay) so keep the row pollable.
+            TransactionResult.NotFound ->
                 dao.updateStatus(
                     txHash = txHash,
                     status = TransactionStatus.NotFound,
                     lastCheckedAt = now,
                 )
-            }
         }
     }
 

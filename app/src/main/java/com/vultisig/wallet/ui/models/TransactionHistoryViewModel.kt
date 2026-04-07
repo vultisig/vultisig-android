@@ -231,10 +231,6 @@ constructor(
     }
 
     fun refresh() {
-        // Use safeLaunch so an unexpected exception from the refresh use case (network error,
-        // deserialization failure, etc.) is caught and logged instead of crashing the VM.
-        // The `finally` guarantees `isRefreshing = false` on every terminating path — including
-        // CancellationException, which safeLaunch re-throws after the finally runs.
         viewModelScope.safeLaunch(
             onError = { t -> Timber.w(t, "TransactionHistoryViewModel.refresh() failed") }
         ) {
@@ -366,10 +362,7 @@ constructor(
                 TransactionStatus.CONFIRMED -> TransactionStatusUiModel.Confirmed
                 TransactionStatus.FAILED ->
                     TransactionStatusUiModel.Failed(UiText.DynamicString(failureReason.orEmpty()))
-                // NotFound is a transient diagnostic state — the status provider looked but
-                // the chain doesn't have the tx yet (indexer lag, mempool propagation delay).
-                // Display it as Pending so the user isn't told a freshly broadcast transaction
-                // has "failed" just because the first poll raced the indexer.
+                // NotFound is transient — the indexer has not seen the tx yet. Render as Pending.
                 TransactionStatus.NotFound ->
                     TransactionStatusUiModel.Pending(elapsedTime = formatElapsed(now - timestamp))
             }
@@ -448,13 +441,8 @@ constructor(
     }
 
     private fun formatElapsed(elapsedMs: Long): UiText {
-        // Coerce negative elapsed to 0 — `elapsedMs = currentTime - timestamp` can go
-        // negative if the user's wall clock moved backward (NTP correction, DST transition,
-        // manual date change). A negative elapsed would otherwise fall through to every
-        // `> 0` branch and land on "just now", which is arguably correct but fragile: a
-        // future refactor that reverses the order of branches would display negative days.
-        val clamped = elapsedMs.coerceAtLeast(0L)
-        val minutes = clamped / 60_000
+        // Coerce against wall-clock skew (NTP correction, DST, manual date change).
+        val minutes = elapsedMs.coerceAtLeast(0L) / 60_000
         val hours = minutes / 60
         val days = hours / 24
         return when {

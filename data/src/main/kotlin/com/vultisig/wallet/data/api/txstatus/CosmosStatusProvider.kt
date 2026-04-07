@@ -12,39 +12,26 @@ class CosmosStatusProvider @Inject constructor(private val cosmosApiFactory: Cos
     TransactionStatusProvider {
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        // Previous implementation matched on the substring "tx not found" in the exception
-        // message to distinguish missing-tx from transient error, and mapped anything else to
-        // FAILED — meaning a single flaky RPC call would mark a broadcast transaction as a
-        // hard failure in the local DB. Replace with a conservative rule: any exception is
-        // treated as Pending, and only the chain's own `code != 0` response produces Failed.
-        // CancellationException always propagates.
         val txResponse =
             try {
                 cosmosApiFactory.createCosmosApi(chain).getTxStatus(txHash)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.w(
-                    e,
-                    "Cosmos tx status check failed for %s on %s — treating as Pending",
-                    txHash,
-                    chain,
-                )
+                Timber.w(e, "Cosmos status check failed for %s on %s", txHash, chain)
                 return TransactionResult.Pending
-            }
+            } ?: return TransactionResult.NotFound
 
-        if (txResponse == null) return TransactionResult.NotFound
-
-        val response = txResponse.txResponse
-        val height = response?.height?.toLongOrNull() ?: 0L
+        val response = txResponse.txResponse ?: return TransactionResult.Pending
+        val height = response.height?.toLongOrNull() ?: 0L
         if (height <= 0) return TransactionResult.Pending
 
-        return if (response.code == 0) {
-            TransactionResult.Confirmed
-        } else {
-            TransactionResult.Failed(
-                response.rawLog ?: "Transaction failed with code ${response.code}"
-            )
+        return when (response.code) {
+            0 -> TransactionResult.Confirmed
+            else ->
+                TransactionResult.Failed(
+                    response.rawLog ?: "Transaction failed with code ${response.code}"
+                )
         }
     }
 }
