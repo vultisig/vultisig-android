@@ -34,6 +34,34 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
+private fun AddressActionRow(
+    onPaste: (String) -> Unit,
+    onScan: () -> Unit,
+    onAddressBook: () -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        PasteIcon(
+            modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
+            onPaste = onPaste,
+        )
+
+        UiIcon(
+            drawableResId = R.drawable.camera,
+            size = 20.dp,
+            modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
+            onClick = onScan,
+        )
+
+        UiIcon(
+            drawableResId = R.drawable.ic_bookmark,
+            size = 20.dp,
+            modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
+            onClick = onAddressBook,
+        )
+    }
+}
+
+@Composable
 internal fun FoldableDestinationAddressWidget(
     state: SendFormUiModel,
     onExpandSection: (SendSections) -> Unit,
@@ -139,26 +167,11 @@ internal fun FoldableDestinationAddressWidget(
 
             UiSpacer(16.dp)
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PasteIcon(
-                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
-                    onPaste = onSetOutputAddress,
-                )
-
-                UiIcon(
-                    drawableResId = R.drawable.camera,
-                    size = 20.dp,
-                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
-                    onClick = onScanDstAddressRequest,
-                )
-
-                UiIcon(
-                    drawableResId = R.drawable.ic_bookmark,
-                    size = 20.dp,
-                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
-                    onClick = onAddressBookClick,
-                )
-            }
+            AddressActionRow(
+                onPaste = onSetOutputAddress,
+                onScan = onScanDstAddressRequest,
+                onAddressBook = onAddressBookClick,
+            )
         }
     }
 }
@@ -232,26 +245,11 @@ internal fun FoldableBondDestinationAddress(
 
             UiSpacer(16.dp)
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PasteIcon(
-                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
-                    onPaste = onSetOutputAddress,
-                )
-
-                UiIcon(
-                    drawableResId = R.drawable.camera,
-                    size = 20.dp,
-                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
-                    onClick = onScanDstAddressRequest,
-                )
-
-                UiIcon(
-                    drawableResId = R.drawable.ic_bookmark,
-                    size = 20.dp,
-                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
-                    onClick = onAddressBookClick,
-                )
-            }
+            AddressActionRow(
+                onPaste = onSetOutputAddress,
+                onScan = onScanDstAddressRequest,
+                onAddressBook = onAddressBookClick,
+            )
 
             UiSpacer(12.dp)
 
@@ -281,26 +279,11 @@ internal fun FoldableBondDestinationAddress(
 
             UiSpacer(16.dp)
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PasteIcon(
-                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
-                    onPaste = onSetOutputProvider,
-                )
-
-                UiIcon(
-                    drawableResId = R.drawable.camera,
-                    size = 20.dp,
-                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
-                    onClick = onScanProviderRequest,
-                )
-
-                UiIcon(
-                    drawableResId = R.drawable.ic_bookmark,
-                    size = 20.dp,
-                    modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
-                    onClick = onAddressProviderBookClick,
-                )
-            }
+            AddressActionRow(
+                onPaste = onSetOutputProvider,
+                onScan = onScanProviderRequest,
+                onAddressBook = onAddressProviderBookClick,
+            )
         }
     }
 }

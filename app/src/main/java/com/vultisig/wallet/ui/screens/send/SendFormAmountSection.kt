@@ -254,8 +254,8 @@ internal fun FoldableAmountWidget(
 
                 UiSpacer(12.dp)
 
-                val clipboardData = VsClipboardService.getClipboardData()
                 AnimatedVisibility(visible = isMemoExpanded) {
+                    val clipboardData = VsClipboardService.getClipboardData()
                     Column {
                         VsTextInputField(
                             textFieldState = memoFieldState,
