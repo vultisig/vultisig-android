@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -62,6 +63,51 @@ private fun AddressActionRow(
 }
 
 @Composable
+private fun AddressCompleteTitleContent(fieldState: TextFieldState) {
+    Text(
+        text = fieldState.text.toString(),
+        color = Theme.v2.colors.text.tertiary,
+        style = Theme.brockmann.body.s.medium,
+        maxLines = 1,
+        overflow = TextOverflow.MiddleEllipsis,
+        modifier = Modifier.weight(1f),
+    )
+}
+
+@Composable
+private fun AddressInputSection(
+    fieldState: TextFieldState,
+    error: UiText?,
+    onPaste: (String) -> Unit,
+    onScan: () -> Unit,
+    onAddressBook: () -> Unit,
+    focusRequester: FocusRequester? = null,
+    onFocusLost: (() -> Unit)? = null,
+    testTag: String? = null,
+) {
+    VsTextInputField(
+        textFieldState = fieldState,
+        hint = stringResource(R.string.send_to_address_hint),
+        focusRequester = focusRequester,
+        onFocusChanged = onFocusLost?.let { onLost -> { isFocused -> if (!isFocused) onLost() } },
+        keyboardType = KeyboardType.Text,
+        autoCorrectEnabled = false,
+        imeAction = ImeAction.Next,
+        innerState =
+            if (error != null) VsTextInputFieldInnerState.Error
+            else VsTextInputFieldInnerState.Default,
+        footNote = error?.asString(),
+        modifier =
+            if (testTag != null) Modifier.fillMaxWidth().testTag(testTag)
+            else Modifier.fillMaxWidth(),
+    )
+
+    UiSpacer(16.dp)
+
+    AddressActionRow(onPaste = onPaste, onScan = onScan, onAddressBook = onAddressBook)
+}
+
+@Composable
 internal fun FoldableDestinationAddressWidget(
     state: SendFormUiModel,
     onExpandSection: (SendSections) -> Unit,
@@ -77,16 +123,7 @@ internal fun FoldableDestinationAddressWidget(
         complete = state.isDstAddressComplete,
         title = stringResource(R.string.add_address_address_title),
         onToggle = { onExpandSection(SendSections.Address) },
-        completeTitleContent = {
-            Text(
-                text = addressFieldState.text.toString(),
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.body.s.medium,
-                maxLines = 1,
-                overflow = TextOverflow.MiddleEllipsis,
-                modifier = Modifier.weight(1f),
-            )
-        },
+        completeTitleContent = { AddressCompleteTitleContent(addressFieldState) },
     ) {
         Column(
             modifier = Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
@@ -146,28 +183,12 @@ internal fun FoldableDestinationAddressWidget(
 
             UiSpacer(12.dp)
 
-            VsTextInputField(
-                textFieldState = addressFieldState,
-                hint = stringResource(R.string.send_to_address_hint),
+            AddressInputSection(
+                fieldState = addressFieldState,
+                error = state.dstAddressError,
                 focusRequester = addressFocusRequester,
-                onFocusChanged = {
-                    if (!it) {
-                        onDstAddressLostFocus()
-                    }
-                },
-                keyboardType = KeyboardType.Text,
-                autoCorrectEnabled = false,
-                imeAction = ImeAction.Next,
-                innerState =
-                    if (state.dstAddressError != null) VsTextInputFieldInnerState.Error
-                    else VsTextInputFieldInnerState.Default,
-                footNote = state.dstAddressError?.asString(),
-                modifier = Modifier.fillMaxWidth().testTag("SendFormScreen.addressField"),
-            )
-
-            UiSpacer(16.dp)
-
-            AddressActionRow(
+                onFocusLost = onDstAddressLostFocus,
+                testTag = "SendFormScreen.addressField",
                 onPaste = onSetOutputAddress,
                 onScan = onScanDstAddressRequest,
                 onAddressBook = onAddressBookClick,
@@ -196,16 +217,7 @@ internal fun FoldableBondDestinationAddress(
         complete = state.isDstAddressComplete,
         title = stringResource(R.string.add_address_address_title),
         onToggle = { onExpandSection(SendSections.Address) },
-        completeTitleContent = {
-            Text(
-                text = addressFieldState.text.toString(),
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.body.s.medium,
-                maxLines = 1,
-                overflow = TextOverflow.MiddleEllipsis,
-                modifier = Modifier.weight(1f),
-            )
-        },
+        completeTitleContent = { AddressCompleteTitleContent(addressFieldState) },
     ) {
         Column(
             modifier = Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
@@ -224,28 +236,12 @@ internal fun FoldableBondDestinationAddress(
 
             UiSpacer(12.dp)
 
-            VsTextInputField(
-                textFieldState = addressFieldState,
-                hint = stringResource(R.string.send_to_address_hint),
+            AddressInputSection(
+                fieldState = addressFieldState,
+                error = state.dstAddressError,
                 focusRequester = addressFocusRequester,
-                onFocusChanged = {
-                    if (!it) {
-                        onDstAddressLostFocus()
-                    }
-                },
-                keyboardType = KeyboardType.Text,
-                autoCorrectEnabled = false,
-                imeAction = ImeAction.Next,
-                innerState =
-                    if (state.dstAddressError != null) VsTextInputFieldInnerState.Error
-                    else VsTextInputFieldInnerState.Default,
-                footNote = state.dstAddressError?.asString(),
-                modifier = Modifier.fillMaxWidth().testTag("SendFormScreen.addressField"),
-            )
-
-            UiSpacer(16.dp)
-
-            AddressActionRow(
+                onFocusLost = onDstAddressLostFocus,
+                testTag = "SendFormScreen.addressField",
                 onPaste = onSetOutputAddress,
                 onScan = onScanDstAddressRequest,
                 onAddressBook = onAddressBookClick,
@@ -261,25 +257,9 @@ internal fun FoldableBondDestinationAddress(
 
             UiSpacer(12.dp)
 
-            VsTextInputField(
-                textFieldState = providerFieldState,
-                hint = stringResource(R.string.send_to_address_hint),
-                keyboardType = KeyboardType.Text,
-                autoCorrectEnabled = false,
-                imeAction = ImeAction.Next,
-                innerState =
-                    if (state.bondProviderError != null) {
-                        VsTextInputFieldInnerState.Error
-                    } else {
-                        VsTextInputFieldInnerState.Default
-                    },
-                footNote = state.bondProviderError?.asString(),
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            UiSpacer(16.dp)
-
-            AddressActionRow(
+            AddressInputSection(
+                fieldState = providerFieldState,
+                error = state.bondProviderError,
                 onPaste = onSetOutputProvider,
                 onScan = onScanProviderRequest,
                 onAddressBook = onAddressProviderBookClick,
