@@ -506,7 +506,19 @@ constructor(
     }
 
     private fun loadRemoveLpData() {
-        val poolId = lpPoolId ?: return
+        val poolId =
+            lpPoolId
+                ?: run {
+                    state.update {
+                        it.copy(
+                            availableLpUnits = null,
+                            selectedPoolTotalLpUnits = 0L,
+                            selectedPoolCacaoDepth = 0L,
+                            errorText = UiText.StringResource(R.string.dialog_default_error_body),
+                        )
+                    }
+                    return
+                }
         state.update {
             it.copy(
                 availableLpUnits = null,
@@ -532,14 +544,59 @@ constructor(
                     mayachainBondRepository.getMemberDetails(userAddress)
                 }
             val userLpUnits =
-                memberDetails.pools.find { it.pool == poolId }?.liquidityUnits ?: return@safeLaunch
+                memberDetails.pools.find { it.pool == poolId }?.liquidityUnits
+                    ?: run {
+                        state.update {
+                            it.copy(
+                                availableLpUnits = null,
+                                selectedPoolTotalLpUnits = 0L,
+                                selectedPoolCacaoDepth = 0L,
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body),
+                            )
+                        }
+                        return@safeLaunch
+                    }
             val poolStats = withContext(Dispatchers.IO) { mayachainBondRepository.getLpPoolStats() }
-            val pool = poolStats.find { it.asset == poolId } ?: return@safeLaunch
+            val pool =
+                poolStats.find { it.asset == poolId }
+                    ?: run {
+                        state.update {
+                            it.copy(
+                                availableLpUnits = null,
+                                selectedPoolTotalLpUnits = 0L,
+                                selectedPoolCacaoDepth = 0L,
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body),
+                            )
+                        }
+                        return@safeLaunch
+                    }
+            val totalPoolUnits = pool.units.toLongOrNull() ?: 0L
+            val cacaoDepth = pool.cacaoDepth.toLongOrNull() ?: 0L
+            val userAvailableUnits = userLpUnits.toLongOrNull()
+            val balanceText =
+                if (userAvailableUnits != null && totalPoolUnits > 0L) {
+                    val userCacao =
+                        userAvailableUnits
+                            .toBigDecimal()
+                            .multiply(cacaoDepth.toBigDecimal())
+                            .divide(totalPoolUnits.toBigDecimal(), 18, java.math.RoundingMode.DOWN)
+                            .divide(
+                                java.math.BigDecimal.TEN.pow(10),
+                                3,
+                                java.math.RoundingMode.DOWN,
+                            )
+                            .stripTrailingZeros()
+                            .toPlainString()
+                    UiText.DynamicString("$userCacao CACAO")
+                } else UiText.Empty
             state.update {
                 it.copy(
                     availableLpUnits = userLpUnits,
-                    selectedPoolTotalLpUnits = pool.units.toLongOrNull() ?: 0L,
-                    selectedPoolCacaoDepth = pool.cacaoDepth.toLongOrNull() ?: 0L,
+                    selectedPoolTotalLpUnits = totalPoolUnits,
+                    selectedPoolCacaoDepth = cacaoDepth,
+                    balance = balanceText,
                 )
             }
             setRemoveLpPercent(state.value.removeLpPercent)

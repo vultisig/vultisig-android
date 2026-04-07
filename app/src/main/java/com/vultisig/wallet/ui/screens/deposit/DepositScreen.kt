@@ -62,12 +62,12 @@ internal fun DepositScreen(
 
     val title: String
 
-    val isAddLp = depositType == DeFiNavActions.ADD_LP.type
-    val isRemoveLp = depositType == DeFiNavActions.REMOVE_LP.type
     val defaultTitle =
-        if (isAddLp) stringResource(R.string.add_pool_title)
-        else if (isRemoveLp) stringResource(R.string.remove_pool_title)
-        else stringResource(R.string.deposit_screen_title)
+        when (depositType) {
+            DeFiNavActions.ADD_LP.type -> stringResource(R.string.add_pool_title)
+            DeFiNavActions.REMOVE_LP.type -> stringResource(R.string.remove_pool_title)
+            else -> stringResource(R.string.deposit_screen_title)
+        }
 
     when (route) {
         SendDst.Send.route -> {
@@ -133,6 +133,9 @@ private fun DepositScreen(
                     }
                     AddLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId)
                 } else if (depositType == DeFiNavActions.REMOVE_LP.type) {
+                    require(!poolId.isNullOrBlank()) {
+                        "poolId must be non-null and non-blank for REMOVE_LP flow"
+                    }
                     RemoveLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId)
                 } else {
                     DepositFormScreen(
