@@ -126,12 +126,20 @@ internal fun FoldableAmountWidget(
 
                 val secondaryText =
                     if (isCircleMode) {
-                        val entered = tokenAmountFieldState.text.toString().toDoubleOrNull() ?: 0.0
-                        val balance = state.selectedCoin?.balance?.toDoubleOrNull() ?: 0.0
-                        val pct =
-                            if (balance > 0.0) (entered / balance * 100).coerceIn(0.0, 100.0)
-                            else 0.0
-                        "%.1f%%".format(pct)
+                        val entered = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+                        val balance = state.selectedCoin?.balance?.toBigDecimalOrNull()
+                        if (
+                            entered != null &&
+                                balance != null &&
+                                balance > java.math.BigDecimal.ZERO
+                        ) {
+                            val pct =
+                                entered
+                                    .multiply(java.math.BigDecimal(100))
+                                    .divide(balance, 1, java.math.RoundingMode.DOWN)
+                                    .coerceIn(java.math.BigDecimal.ZERO, java.math.BigDecimal(100))
+                            "%.1f%%".format(pct)
+                        } else ""
                     } else {
                         "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText"
                     }
