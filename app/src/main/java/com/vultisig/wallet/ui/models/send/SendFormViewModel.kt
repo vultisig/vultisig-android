@@ -1353,6 +1353,7 @@ constructor(
                                 else BigInteger.valueOf(1),
                             gasFee =
                                 when {
+                                    chain == Chain.Cardano -> gasFee
                                     chain.standard == TokenStandard.UTXO -> {
                                         val plan =
                                             planFee.value
@@ -2680,6 +2681,7 @@ constructor(
                                     else BigInteger.valueOf(1),
                                 gasFee =
                                     when {
+                                        chain == Chain.Cardano -> gasFee
                                         chain.standard == TokenStandard.UTXO ->
                                             gasFee.copy(value = BigInteger.valueOf(planFee))
                                         evmGasSettings != null ->
