@@ -390,7 +390,7 @@ private fun SendFormContent(
             onChooseMaxTokenAmount = onChooseMaxTokenAmount,
             memoFieldState = memoFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
-            slippageTexFieldState = slippageFieldState,
+            slippageTextFieldState = slippageFieldState,
             onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
         )
 
@@ -439,7 +439,7 @@ private fun SendFormContent(
             onChooseMaxTokenAmount = onChooseMaxTokenAmount,
             memoFieldState = memoFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
-            slippageTexFieldState = slippageFieldState,
+            slippageTextFieldState = slippageFieldState,
             onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
         )
 
@@ -487,7 +487,7 @@ private fun SendFormContent(
             onChooseMaxTokenAmount = onChooseMaxTokenAmount,
             memoFieldState = memoFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
-            slippageTexFieldState = slippageFieldState,
+            slippageTextFieldState = slippageFieldState,
             onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
         )
     }

@@ -64,7 +64,7 @@ internal fun FoldableAmountWidget(
     onAutoCompoundCheckedChange: (Boolean) -> Unit,
     memoFieldState: TextFieldState,
     operatorFeeFieldState: TextFieldState,
-    slippageTexFieldState: TextFieldState,
+    slippageTextFieldState: TextFieldState,
 ) {
     val isCircleMode =
         state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
@@ -303,7 +303,7 @@ internal fun FoldableAmountWidget(
                     UiSpacer(12.dp)
 
                     VsTextInputField(
-                        textFieldState = slippageTexFieldState,
+                        textFieldState = slippageTextFieldState,
                         hint = stringResource(R.string.slippage_hint),
                         modifier = Modifier.fillMaxWidth(),
                     )
