@@ -524,6 +524,7 @@ constructor(
                 availableLpUnits = null,
                 selectedPoolTotalLpUnits = 0L,
                 selectedPoolCacaoDepth = 0L,
+                balance = R.string.share_balance_loading.asUiText(),
             )
         }
         viewModelScope.safeLaunch {
