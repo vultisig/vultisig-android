@@ -7,5 +7,5 @@ import wallet.core.jni.PublicKey
 object MayaChainHelper {
 
     fun getAddress(publicKey: PublicKey): String =
-        AnyAddress(publicKey, CoinType.THORCHAIN, "smaya").description()
+        AnyAddress(publicKey, CoinType.THORCHAIN, "maya").description()
 }
