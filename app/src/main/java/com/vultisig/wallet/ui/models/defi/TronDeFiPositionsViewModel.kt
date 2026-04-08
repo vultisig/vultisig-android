@@ -250,8 +250,7 @@ constructor(
         ) {
             val trxCoin = findTrxCoin(vaultId)
             if (trxCoin == null) {
-                _state.value =
-                    TronDeFiUiState.Error(R.string.tron_defi_error_trx_not_in_vault.asUiText())
+                Timber.w("TRX coin missing for vault when handling action %s", action)
                 return@safeLaunch
             }
             navigator.route(
