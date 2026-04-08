@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.models.TronAccountJson
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.calculateResourceStats
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -103,6 +104,7 @@ constructor(
     val state: StateFlow<TronDeFiUiState> = _state.asStateFlow()
 
     private var vaultId: VaultId = ""
+    private var cachedTrxCoin: Coin? = null
     private var loadJob: Job? = null
 
     fun setData(vaultId: VaultId) {
@@ -131,6 +133,7 @@ constructor(
 
                 // Resolve the TRX coin for this vault
                 val trxCoin = findTrxCoin(vaultId)
+                cachedTrxCoin = trxCoin
                 if (trxCoin == null) {
                     _state.value =
                         TronDeFiUiState.Error(R.string.tron_defi_error_trx_not_in_vault.asUiText())
@@ -248,9 +251,9 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e -> Timber.e(e, "Failed to navigate for action %s", action) }
         ) {
-            val trxCoin = findTrxCoin(vaultId)
+            val trxCoin = cachedTrxCoin
             if (trxCoin == null) {
-                Timber.w("TRX coin missing for vault when handling action %s", action)
+                Timber.w("TRX coin not cached when handling action %s", action)
                 return@safeLaunch
             }
             navigator.route(
