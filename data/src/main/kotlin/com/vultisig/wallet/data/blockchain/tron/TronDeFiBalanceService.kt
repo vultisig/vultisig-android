@@ -48,9 +48,6 @@ class TronDeFiBalanceService(
         } catch (e: IOException) {
             Timber.w(e, "TronDeFiBalanceService: Network error fetching frozen TRX balance")
             emptyList()
-        } catch (e: Exception) {
-            Timber.e(e, "TronDeFiBalanceService: Unexpected error fetching frozen TRX balance")
-            throw e
         }
     }
 
