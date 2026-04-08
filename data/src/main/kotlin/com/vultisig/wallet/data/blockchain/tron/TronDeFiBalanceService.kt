@@ -86,6 +86,8 @@ class TronDeFiBalanceService(
                 existing.stakeAmount != totalFrozen ->
                     stakingDetailsRepository.updateStakingDetails(vaultId, details)
             }
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "TronDeFiBalanceService: Failed to persist frozen TRX balance")
         }
