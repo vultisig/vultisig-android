@@ -345,6 +345,23 @@ private fun SendFormContent(
     // stake tcy
     onAutoCompoundCheckedChange: (Boolean) -> Unit,
 ) {
+    val amountInputs =
+        AmountInputs(
+            tokenAmountFieldState = tokenAmountFieldState,
+            fiatAmountFieldState = fiatAmountFieldState,
+            focusRequester = amountFocusRequester,
+            onToggleAmountInputType = onToggleAmountInputType,
+            onChoosePercentageAmount = onChoosePercentageAmount,
+            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+        )
+    val optionalInputs =
+        OptionalInputs(
+            memoFieldState = memoFieldState,
+            operatorFeeFieldState = operatorFeeFieldState,
+            slippageFieldState = slippageFieldState,
+            onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
+        )
+
     // send asset
     if (state.defiType == null) {
         FoldableAssetWidget(
@@ -382,22 +399,8 @@ private fun SendFormContent(
             onGasSettingsClick = onGasSettingsClick,
             focusManager = focusManager,
             onSend = onSend,
-            amountInputs =
-                AmountInputs(
-                    tokenAmountFieldState = tokenAmountFieldState,
-                    fiatAmountFieldState = fiatAmountFieldState,
-                    focusRequester = amountFocusRequester,
-                    onToggleAmountInputType = onToggleAmountInputType,
-                    onChoosePercentageAmount = onChoosePercentageAmount,
-                    onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-                ),
-            optionalInputs =
-                OptionalInputs(
-                    memoFieldState = memoFieldState,
-                    operatorFeeFieldState = operatorFeeFieldState,
-                    slippageFieldState = slippageFieldState,
-                    onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
-                ),
+            amountInputs = amountInputs,
+            optionalInputs = optionalInputs,
         )
 
         UiSpacer(24.dp)
@@ -437,22 +440,8 @@ private fun SendFormContent(
             onGasSettingsClick = onGasSettingsClick,
             focusManager = focusManager,
             onSend = onSend,
-            amountInputs =
-                AmountInputs(
-                    tokenAmountFieldState = tokenAmountFieldState,
-                    fiatAmountFieldState = fiatAmountFieldState,
-                    focusRequester = amountFocusRequester,
-                    onToggleAmountInputType = onToggleAmountInputType,
-                    onChoosePercentageAmount = onChoosePercentageAmount,
-                    onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-                ),
-            optionalInputs =
-                OptionalInputs(
-                    memoFieldState = memoFieldState,
-                    operatorFeeFieldState = operatorFeeFieldState,
-                    slippageFieldState = slippageFieldState,
-                    onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
-                ),
+            amountInputs = amountInputs,
+            optionalInputs = optionalInputs,
         )
 
         UiSpacer(24.dp)
@@ -491,22 +480,8 @@ private fun SendFormContent(
             onGasSettingsClick = onGasSettingsClick,
             focusManager = focusManager,
             onSend = onSend,
-            amountInputs =
-                AmountInputs(
-                    tokenAmountFieldState = tokenAmountFieldState,
-                    fiatAmountFieldState = fiatAmountFieldState,
-                    focusRequester = amountFocusRequester,
-                    onToggleAmountInputType = onToggleAmountInputType,
-                    onChoosePercentageAmount = onChoosePercentageAmount,
-                    onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-                ),
-            optionalInputs =
-                OptionalInputs(
-                    memoFieldState = memoFieldState,
-                    operatorFeeFieldState = operatorFeeFieldState,
-                    slippageFieldState = slippageFieldState,
-                    onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
-                ),
+            amountInputs = amountInputs,
+            optionalInputs = optionalInputs,
         )
     }
 }

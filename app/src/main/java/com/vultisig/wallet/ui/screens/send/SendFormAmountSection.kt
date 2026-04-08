@@ -156,7 +156,7 @@ internal fun FoldableAmountWidget(
                                 entered
                                     .multiply(BigDecimal(100))
                                     .divide(balance, 1, RoundingMode.DOWN)
-                                    .coerceIn(BigDecimal.ZERO, BigDecimal(100))
+                                    .coerceAtLeast(BigDecimal.ZERO)
                             "%.1f%%".format(pct)
                         } else ""
                     } else {
