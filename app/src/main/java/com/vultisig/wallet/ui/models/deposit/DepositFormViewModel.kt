@@ -594,7 +594,6 @@ constructor(
                                 CACAO_DISPLAY_SCALE,
                                 RoundingMode.DOWN,
                             )
-                            .stripTrailingZeros()
                             .toPlainString()
                     UiText.DynamicString("$userCacao CACAO")
                 } else UiText.Empty
@@ -654,7 +653,6 @@ constructor(
                             CACAO_DISPLAY_SCALE,
                             RoundingMode.DOWN,
                         )
-                        .stripTrailingZeros()
                         .toPlainString()
                 "$cacao CACAO"
             } else ""
