@@ -85,7 +85,9 @@ internal sealed interface TronDeFiUiState {
 
 enum class TronAction(val memo: String) {
     FREEZE_BANDWIDTH("FREEZE:BANDWIDTH"),
+    FREEZE_ENERGY("FREEZE:ENERGY"),
     UNFREEZE_BANDWIDTH("UNFREEZE:BANDWIDTH"),
+    UNFREEZE_ENERGY("UNFREEZE:ENERGY"),
 }
 
 @HiltViewModel
