@@ -49,25 +49,45 @@ import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
 import java.math.RoundingMode
 
+@androidx.compose.runtime.Immutable
+internal data class AmountInputs(
+    val tokenAmountFieldState: TextFieldState,
+    val fiatAmountFieldState: TextFieldState,
+    val focusRequester: FocusRequester,
+    val onToggleAmountInputType: (Boolean) -> Unit,
+    val onChoosePercentageAmount: (AmountFraction) -> Unit,
+    val onChooseMaxTokenAmount: () -> Unit,
+)
+
+@androidx.compose.runtime.Immutable
+internal data class OptionalInputs(
+    val memoFieldState: TextFieldState,
+    val operatorFeeFieldState: TextFieldState,
+    val slippageFieldState: TextFieldState,
+    val onAutoCompoundCheckedChange: (Boolean) -> Unit,
+)
+
 @Composable
 internal fun FoldableAmountWidget(
     state: SendFormUiModel,
     addressFieldState: TextFieldState,
-    amountFocusRequester: FocusRequester = remember { FocusRequester() },
     onExpandSection: (SendSections) -> Unit,
     onGasSettingsClick: () -> Unit,
-    tokenAmountFieldState: TextFieldState,
-    fiatAmountFieldState: TextFieldState,
     focusManager: FocusManager,
     onSend: () -> Unit,
-    onToogleAmountInputType: (Boolean) -> Unit,
-    onChoosePercentageAmount: (AmountFraction) -> Unit,
-    onChooseMaxTokenAmount: () -> Unit,
-    onAutoCompoundCheckedChange: (Boolean) -> Unit,
-    memoFieldState: TextFieldState,
-    operatorFeeFieldState: TextFieldState,
-    slippageTextFieldState: TextFieldState,
+    amountInputs: AmountInputs,
+    optionalInputs: OptionalInputs,
 ) {
+    val tokenAmountFieldState = amountInputs.tokenAmountFieldState
+    val fiatAmountFieldState = amountInputs.fiatAmountFieldState
+    val amountFocusRequester = amountInputs.focusRequester
+    val onToogleAmountInputType = amountInputs.onToggleAmountInputType
+    val onChoosePercentageAmount = amountInputs.onChoosePercentageAmount
+    val onChooseMaxTokenAmount = amountInputs.onChooseMaxTokenAmount
+    val memoFieldState = optionalInputs.memoFieldState
+    val operatorFeeFieldState = optionalInputs.operatorFeeFieldState
+    val slippageTextFieldState = optionalInputs.slippageFieldState
+    val onAutoCompoundCheckedChange = optionalInputs.onAutoCompoundCheckedChange
     val isCircleMode =
         state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
             state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE

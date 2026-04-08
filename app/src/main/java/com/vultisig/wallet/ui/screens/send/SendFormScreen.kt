@@ -378,20 +378,26 @@ private fun SendFormContent(
         FoldableAmountWidget(
             state = state,
             addressFieldState = addressFieldState,
-            amountFocusRequester = amountFocusRequester,
             onExpandSection = onExpandSection,
             onGasSettingsClick = onGasSettingsClick,
-            tokenAmountFieldState = tokenAmountFieldState,
-            fiatAmountFieldState = fiatAmountFieldState,
             focusManager = focusManager,
             onSend = onSend,
-            onToogleAmountInputType = onToogleAmountInputType,
-            onChoosePercentageAmount = onChoosePercentageAmount,
-            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-            memoFieldState = memoFieldState,
-            operatorFeeFieldState = operatorFeeFieldState,
-            slippageTextFieldState = slippageFieldState,
-            onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
+            amountInputs =
+                AmountInputs(
+                    tokenAmountFieldState = tokenAmountFieldState,
+                    fiatAmountFieldState = fiatAmountFieldState,
+                    focusRequester = amountFocusRequester,
+                    onToggleAmountInputType = onToogleAmountInputType,
+                    onChoosePercentageAmount = onChoosePercentageAmount,
+                    onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+                ),
+            optionalInputs =
+                OptionalInputs(
+                    memoFieldState = memoFieldState,
+                    operatorFeeFieldState = operatorFeeFieldState,
+                    slippageFieldState = slippageFieldState,
+                    onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
+                ),
         )
 
         UiSpacer(24.dp)
@@ -427,20 +433,26 @@ private fun SendFormContent(
         FoldableAmountWidget(
             state = state,
             addressFieldState = addressFieldState,
-            amountFocusRequester = amountFocusRequester,
             onExpandSection = onExpandSection,
             onGasSettingsClick = onGasSettingsClick,
-            tokenAmountFieldState = tokenAmountFieldState,
-            fiatAmountFieldState = fiatAmountFieldState,
             focusManager = focusManager,
             onSend = onSend,
-            onToogleAmountInputType = onToogleAmountInputType,
-            onChoosePercentageAmount = onChoosePercentageAmount,
-            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-            memoFieldState = memoFieldState,
-            operatorFeeFieldState = operatorFeeFieldState,
-            slippageTextFieldState = slippageFieldState,
-            onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
+            amountInputs =
+                AmountInputs(
+                    tokenAmountFieldState = tokenAmountFieldState,
+                    fiatAmountFieldState = fiatAmountFieldState,
+                    focusRequester = amountFocusRequester,
+                    onToggleAmountInputType = onToogleAmountInputType,
+                    onChoosePercentageAmount = onChoosePercentageAmount,
+                    onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+                ),
+            optionalInputs =
+                OptionalInputs(
+                    memoFieldState = memoFieldState,
+                    operatorFeeFieldState = operatorFeeFieldState,
+                    slippageFieldState = slippageFieldState,
+                    onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
+                ),
         )
 
         UiSpacer(24.dp)
@@ -475,20 +487,26 @@ private fun SendFormContent(
         FoldableAmountWidget(
             state = state,
             addressFieldState = addressFieldState,
-            amountFocusRequester = amountFocusRequester,
             onExpandSection = onExpandSection,
             onGasSettingsClick = onGasSettingsClick,
-            tokenAmountFieldState = tokenAmountFieldState,
-            fiatAmountFieldState = fiatAmountFieldState,
             focusManager = focusManager,
             onSend = onSend,
-            onToogleAmountInputType = onToogleAmountInputType,
-            onChoosePercentageAmount = onChoosePercentageAmount,
-            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-            memoFieldState = memoFieldState,
-            operatorFeeFieldState = operatorFeeFieldState,
-            slippageTextFieldState = slippageFieldState,
-            onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
+            amountInputs =
+                AmountInputs(
+                    tokenAmountFieldState = tokenAmountFieldState,
+                    fiatAmountFieldState = fiatAmountFieldState,
+                    focusRequester = amountFocusRequester,
+                    onToggleAmountInputType = onToogleAmountInputType,
+                    onChoosePercentageAmount = onChoosePercentageAmount,
+                    onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+                ),
+            optionalInputs =
+                OptionalInputs(
+                    memoFieldState = memoFieldState,
+                    operatorFeeFieldState = operatorFeeFieldState,
+                    slippageFieldState = slippageFieldState,
+                    onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
+                ),
         )
     }
 }
