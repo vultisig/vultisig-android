@@ -584,11 +584,15 @@ constructor(
                         userAvailableUnits
                             .toBigDecimal()
                             .multiply(cacaoDepth.toBigDecimal())
-                            .divide(totalPoolUnits.toBigDecimal(), 18, java.math.RoundingMode.DOWN)
                             .divide(
-                                java.math.BigDecimal.TEN.pow(10),
-                                3,
-                                java.math.RoundingMode.DOWN,
+                                totalPoolUnits.toBigDecimal(),
+                                LP_UNITS_SCALE,
+                                RoundingMode.DOWN,
+                            )
+                            .divide(
+                                BigDecimal.TEN.pow(CACAO_DECIMALS),
+                                CACAO_DISPLAY_SCALE,
+                                RoundingMode.DOWN,
                             )
                             .stripTrailingZeros()
                             .toPlainString()
@@ -642,10 +646,14 @@ constructor(
                         .multiply(s.selectedPoolCacaoDepth.toBigDecimal())
                         .divide(
                             s.selectedPoolTotalLpUnits.toBigDecimal(),
-                            18,
-                            java.math.RoundingMode.DOWN,
+                            LP_UNITS_SCALE,
+                            RoundingMode.DOWN,
                         )
-                        .divide(java.math.BigDecimal.TEN.pow(10), 3, java.math.RoundingMode.DOWN)
+                        .divide(
+                            BigDecimal.TEN.pow(CACAO_DECIMALS),
+                            CACAO_DISPLAY_SCALE,
+                            RoundingMode.DOWN,
+                        )
                         .stripTrailingZeros()
                         .toPlainString()
                 "$cacao CACAO"
@@ -1693,7 +1701,7 @@ constructor(
             srcAddress = srcAddress,
             dstAddress = "",
             memo = memo.toString(),
-            srcTokenValue = TokenValue(value = cacaoBaseUnits, token = selectedToken),
+            srcTokenValue = TokenValue(value = BigInteger.ZERO, token = selectedToken),
             estimatedFees = gasFee,
             blockChainSpecific = specific.blockChainSpecific,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
@@ -2751,6 +2759,9 @@ constructor(
 
     companion object {
         private const val ADDRESS_AWAIT_TIMEOUT_MS = 5_000L
+        private const val CACAO_DECIMALS = 10
+        private const val LP_UNITS_SCALE = 18
+        private const val CACAO_DISPLAY_SCALE = 3
     }
 }
 

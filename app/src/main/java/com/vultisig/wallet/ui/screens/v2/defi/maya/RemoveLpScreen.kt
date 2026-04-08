@@ -266,7 +266,7 @@ private fun RemoveLpScreenContentPreview() {
         RemoveLpScreenContent(
             state =
                 DepositFormUiModel(
-                    removeLpPercent = 1f,
+                    removeLpPercent = 0f,
                     removeLpCacaoDisplay = "5.000 CACAO",
                     availableLpUnits = "1000000",
                     balance = UiText.DynamicString("24,000 CACAO"),
