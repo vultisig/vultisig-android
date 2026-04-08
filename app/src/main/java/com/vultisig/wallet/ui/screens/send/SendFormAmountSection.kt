@@ -82,7 +82,7 @@ internal fun FoldableAmountWidget(
     val tokenAmountFieldState = amountInputs.tokenAmountFieldState
     val fiatAmountFieldState = amountInputs.fiatAmountFieldState
     val amountFocusRequester = amountInputs.focusRequester
-    val onToogleAmountInputType = amountInputs.onToggleAmountInputType
+    val onToggleAmountInputType = amountInputs.onToggleAmountInputType
     val onChoosePercentageAmount = amountInputs.onChoosePercentageAmount
     val onChooseMaxTokenAmount = amountInputs.onChooseMaxTokenAmount
     val memoFieldState = optionalInputs.memoFieldState
@@ -182,7 +182,7 @@ internal fun FoldableAmountWidget(
                 if (!isCircleMode) {
                     TokenFiatToggle(
                         isTokenSelected = state.usingTokenAmountInput,
-                        onTokenSelected = { onToogleAmountInputType(it) },
+                        onTokenSelected = { onToggleAmountInputType(it) },
                         modifier = Modifier.align(Alignment.CenterEnd),
                     )
                 }
@@ -339,25 +339,25 @@ internal fun FoldableAmountWidget(
                 }
             }
 
-            if (
-                state.defiType == DeFiNavActions.STAKE_TCY ||
-                    state.defiType == DeFiNavActions.STAKE_STCY
-            ) {
-                AutoCompoundToggle(
-                    title = stringResource(R.string.tcy_auto_compound_enable_title),
-                    subtitle = stringResource(R.string.tcy_auto_compound_enable_subtitle),
-                    isChecked = state.isAutocompound,
-                    onCheckedChange = onAutoCompoundCheckedChange,
-                )
-            }
+            val autoCompoundCopy =
+                when (state.defiType) {
+                    DeFiNavActions.STAKE_TCY,
+                    DeFiNavActions.STAKE_STCY -> {
+                        R.string.tcy_auto_compound_enable_title to
+                            R.string.tcy_auto_compound_enable_subtitle
+                    }
+                    DeFiNavActions.UNSTAKE_TCY,
+                    DeFiNavActions.UNSTAKE_STCY -> {
+                        R.string.tcy_auto_compound_unstake_title to
+                            R.string.tcy_auto_compound_unstake_subtitle
+                    }
+                    else -> null
+                }
 
-            if (
-                state.defiType == DeFiNavActions.UNSTAKE_TCY ||
-                    state.defiType == DeFiNavActions.UNSTAKE_STCY
-            ) {
+            autoCompoundCopy?.let { (titleRes, subtitleRes) ->
                 AutoCompoundToggle(
-                    title = stringResource(R.string.tcy_auto_compound_unstake_title),
-                    subtitle = stringResource(R.string.tcy_auto_compound_unstake_subtitle),
+                    title = stringResource(titleRes),
+                    subtitle = stringResource(subtitleRes),
                     isChecked = state.isAutocompound,
                     onCheckedChange = onAutoCompoundCheckedChange,
                 )

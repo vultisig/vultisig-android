@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun Modifier.vsStyledBackground() =
+internal fun Modifier.vsStyledBackground() =
     border(
             border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
             shape = RoundedCornerShape(12.dp),
