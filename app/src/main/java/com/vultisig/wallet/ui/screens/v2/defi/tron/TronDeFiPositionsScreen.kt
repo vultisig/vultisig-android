@@ -334,17 +334,11 @@ private fun TronDeFiPositionsScreenNoPositionsPreview() {
             TronDeFiUiState.Success(
                 tronData =
                     TronStakingUiModel(
-                        availableBalanceTrx = "1240.50",
                         totalAmountPrice = "$1240.05",
-                        frozenBandwidthTrx = "0.000000",
-                        frozenEnergyTrx = "0.000000",
-                        unfreezingTrx = "0.000000",
                         availableBandwidth = 1500L,
                         totalBandwidth = 2000L,
                         availableEnergy = 1L,
                         totalEnergy = 2L,
-                        bandwidthProgress = 0.75f,
-                        energyProgress = 0.5f,
                     )
             )
     )
@@ -358,19 +352,11 @@ private fun TronDeFiPositionsScreenPreview() {
             TronDeFiUiState.Success(
                 tronData =
                     TronStakingUiModel(
-                        availableBalanceTrx = "1240.50",
                         totalAmountPrice = "$1240.05",
-                        frozenBandwidthTrx = "100.000000",
-                        frozenEnergyTrx = "200.000000",
-                        frozenTotalTrx = "300.000000",
-                        frozenTotalPrice = "$30.00",
-                        unfreezingTrx = "50.000000",
                         availableBandwidth = 15000L,
                         totalBandwidth = 20000L,
                         availableEnergy = 50000L,
                         totalEnergy = 100000L,
-                        bandwidthProgress = 0.75f,
-                        energyProgress = 0.5f,
                         pendingWithdrawals =
                             listOf(
                                 TronPendingWithdrawalUiModel(

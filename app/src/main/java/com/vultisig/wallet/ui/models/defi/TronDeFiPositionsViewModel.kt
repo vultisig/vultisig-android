@@ -44,9 +44,6 @@ private const val SUN_PER_TRX = 1_000_000L
 private fun Long.sunToTrx(): BigDecimal =
     BigDecimal(this).divide(BigDecimal(SUN_PER_TRX)).setScale(6, RoundingMode.DOWN)
 
-private fun resourceProgress(available: Long, total: Long): Float =
-    if (total > 0) available.toFloat() / total.toFloat() else 0f
-
 private val TRON_STAKE_POSITIONS_DIALOG =
     listOf(
         PositionUiModelDialog(logo = getCoinLogo("tron"), ticker = "Tron", positionKey = TRON_KEY)
@@ -56,19 +53,11 @@ private val TRON_DEFAULT_SELECTED_POSITIONS = listOf(TRON_KEY)
 
 @Immutable
 internal data class TronStakingUiModel(
-    val availableBalanceTrx: String = "0",
     val totalAmountPrice: String = "",
-    val frozenTotalTrx: String = "0",
-    val frozenTotalPrice: String = "",
-    val frozenBandwidthTrx: String = "0",
-    val frozenEnergyTrx: String = "0",
-    val unfreezingTrx: String = "0",
     val availableBandwidth: Long = 0L,
     val totalBandwidth: Long = 0L,
     val availableEnergy: Long = 0L,
     val totalEnergy: Long = 0L,
-    val bandwidthProgress: Float = 0f,
-    val energyProgress: Float = 0f,
     val pendingWithdrawals: List<TronPendingWithdrawalUiModel> = emptyList(),
     val hasPositions: Boolean = false,
 )
@@ -181,35 +170,19 @@ constructor(
         trxPrice: BigDecimal,
         currencyFormat: NumberFormat,
     ): TronStakingUiModel {
-        // Convert sun amounts to TRX
         val availableBalanceTrx = (account.balance ?: 0L).sunToTrx()
-        val frozenBandwidthTrx = account.frozenBandwidthSun.sunToTrx()
-        val frozenEnergyTrx = account.frozenEnergySun.sunToTrx()
-        val unfreezingTrx = account.unfreezingTotalSun.sunToTrx()
-        val frozenTotal = frozenBandwidthTrx.add(frozenEnergyTrx)
+        val frozenTotal =
+            account.frozenBandwidthSun.sunToTrx().add(account.frozenEnergySun.sunToTrx())
 
-        // Compute resource utilisation ratios
         val stats = resource.calculateResourceStats()
-        val bandwidthProgress = resourceProgress(stats.availableBandwidth, stats.totalBandwidth)
-        val energyProgress = resourceProgress(stats.availableEnergy, stats.totalEnergy)
-
-        // Map pending unfreeze entries, sorted by expiry
         val pendingWithdrawals = mapPendingWithdrawals(account)
 
         return TronStakingUiModel(
-            availableBalanceTrx = availableBalanceTrx.toPlainString(),
             totalAmountPrice = currencyFormat.format(availableBalanceTrx.multiply(trxPrice)),
-            frozenTotalTrx = frozenTotal.toPlainString(),
-            frozenTotalPrice = currencyFormat.format(frozenTotal.multiply(trxPrice)),
-            frozenBandwidthTrx = frozenBandwidthTrx.toPlainString(),
-            frozenEnergyTrx = frozenEnergyTrx.toPlainString(),
-            unfreezingTrx = unfreezingTrx.toPlainString(),
             availableBandwidth = stats.availableBandwidth,
             totalBandwidth = stats.totalBandwidth,
             availableEnergy = stats.availableEnergy,
             totalEnergy = stats.totalEnergy,
-            bandwidthProgress = bandwidthProgress,
-            energyProgress = energyProgress,
             pendingWithdrawals = pendingWithdrawals,
             hasPositions = frozenTotal > BigDecimal.ZERO || pendingWithdrawals.isNotEmpty(),
         )
