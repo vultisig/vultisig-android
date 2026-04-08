@@ -586,7 +586,7 @@ constructor(
                             .multiply(cacaoDepth.toBigDecimal())
                             .divide(
                                 totalPoolUnits.toBigDecimal(),
-                                LP_UNITS_SCALE,
+                                LP_UNITS_INTERMEDIATE_SCALE,
                                 RoundingMode.DOWN,
                             )
                             .divide(
@@ -648,7 +648,7 @@ constructor(
                         .multiply(s.selectedPoolCacaoDepth.toBigDecimal())
                         .divide(
                             s.selectedPoolTotalLpUnits.toBigDecimal(),
-                            LP_UNITS_SCALE,
+                            LP_UNITS_INTERMEDIATE_SCALE,
                             RoundingMode.DOWN,
                         )
                         .divide(
@@ -2761,8 +2761,12 @@ constructor(
     companion object {
         private const val ADDRESS_AWAIT_TIMEOUT_MS = 5_000L
         private const val CACAO_DECIMALS = 10
-        private const val LP_UNITS_SCALE = 18
         private const val CACAO_DISPLAY_SCALE = 3
+        // Precision kept on `userUnits * cacaoDepth / totalUnits` before we shift by
+        // 10^CACAO_DECIMALS and round to CACAO_DISPLAY_SCALE. Must be >=
+        // CACAO_DECIMALS + CACAO_DISPLAY_SCALE (= 13) to avoid truncation; 18 matches
+        // the standard fixed-point scale and leaves headroom.
+        private const val LP_UNITS_INTERMEDIATE_SCALE = 18
     }
 }
 
