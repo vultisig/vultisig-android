@@ -80,7 +80,7 @@ internal fun TronDeFiPositionsScreen(
         onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = viewModel::onPositionSelectionDone,
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
-        // TODO(follow-up #4): TronFreezePositionCard will pass the specific TronAction per row
+        // TODO(#4014): TronFreezePositionCard will pass the specific TronAction per row
         //  once it exposes per-resource callbacks. Until then both default to BANDWIDTH.
         //  ENERGY freeze/unfreeze is intentionally unreachable from the UI in this PR.
         onClickFreeze = { viewModel.onTronAction(TronAction.FREEZE_BANDWIDTH) },
