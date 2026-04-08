@@ -243,7 +243,7 @@ internal fun FoldableBondDestinationAddress(
                 error = state.dstAddressError,
                 focusRequester = addressFocusRequester,
                 onFocusLost = onDstAddressLostFocus,
-                testTag = "SendFormScreen.addressField",
+                testTag = "SendFormScreen.bondAddressField",
                 onPaste = onSetOutputAddress,
                 onScan = onScanDstAddressRequest,
                 onAddressBook = onAddressBookClick,
