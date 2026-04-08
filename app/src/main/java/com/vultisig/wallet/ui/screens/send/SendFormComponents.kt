@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens.send
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -90,17 +89,6 @@ internal fun FadingHorizontalDivider(modifier: Modifier = Modifier) {
                 )
     )
 }
-
-@Composable
-internal fun Modifier.vsStyledBackground() =
-    border(
-            border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
-            shape = RoundedCornerShape(12.dp),
-        )
-        .background(
-            color = Theme.v2.colors.backgrounds.secondary,
-            shape = RoundedCornerShape(12.dp),
-        )
 
 @Composable
 internal fun FoldableSection(

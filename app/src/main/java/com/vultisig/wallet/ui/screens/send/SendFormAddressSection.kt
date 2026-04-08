@@ -28,6 +28,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.vsStyledBackground
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
