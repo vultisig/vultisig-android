@@ -595,7 +595,10 @@ constructor(
                                 RoundingMode.DOWN,
                             )
                             .toPlainString()
-                    UiText.DynamicString("$userCacao CACAO")
+                    UiText.FormattedText(
+                        R.string.remove_pool_cacao_amount_format,
+                        listOf(userCacao),
+                    )
                 } else UiText.Empty
             state.update {
                 it.copy(
@@ -654,7 +657,7 @@ constructor(
                             RoundingMode.DOWN,
                         )
                         .toPlainString()
-                "$cacao CACAO"
+                cacao
             } else ""
         lpUnitsFieldState.setTextAndPlaceCursorAtEnd(selectedUnits.toString())
         state.update { it.copy(removeLpPercent = percent, removeLpCacaoDisplay = cacaoDisplay) }
