@@ -578,23 +578,16 @@ constructor(
             val totalPoolUnits = pool.units.toLongOrNull() ?: 0L
             val cacaoDepth = pool.cacaoDepth.toLongOrNull() ?: 0L
             val userAvailableUnits = userLpUnits.toLongOrNull()
+            val userCacao =
+                if (userAvailableUnits != null) {
+                    RemoveLpCalculator.computeCacaoDisplay(
+                        selectedUnits = userAvailableUnits,
+                        cacaoDepth = cacaoDepth,
+                        totalPoolUnits = totalPoolUnits,
+                    )
+                } else null
             val balanceText =
-                if (userAvailableUnits != null && totalPoolUnits > 0L) {
-                    val userCacao =
-                        userAvailableUnits
-                            .toBigDecimal()
-                            .multiply(cacaoDepth.toBigDecimal())
-                            .divide(
-                                totalPoolUnits.toBigDecimal(),
-                                LP_UNITS_INTERMEDIATE_SCALE,
-                                RoundingMode.DOWN,
-                            )
-                            .divide(
-                                BigDecimal.TEN.pow(CACAO_DECIMALS),
-                                CACAO_DISPLAY_SCALE,
-                                RoundingMode.DOWN,
-                            )
-                            .toPlainString()
+                if (userCacao != null) {
                     UiText.FormattedText(
                         R.string.remove_pool_cacao_amount_format,
                         listOf(userCacao),
@@ -635,19 +628,13 @@ constructor(
     fun setRemoveLpPercent(percent: Float) {
         val s = state.value
         val availableUnits = s.availableLpUnits?.toLongOrNull() ?: return
-        if (s.selectedPoolTotalLpUnits <= 0L) return
         val selectedUnits = (percent * availableUnits).toLong().coerceAtLeast(0L)
         val cacaoDisplay =
-            selectedUnits
-                .toBigDecimal()
-                .multiply(s.selectedPoolCacaoDepth.toBigDecimal())
-                .divide(
-                    s.selectedPoolTotalLpUnits.toBigDecimal(),
-                    LP_UNITS_INTERMEDIATE_SCALE,
-                    RoundingMode.DOWN,
-                )
-                .divide(BigDecimal.TEN.pow(CACAO_DECIMALS), CACAO_DISPLAY_SCALE, RoundingMode.DOWN)
-                .toPlainString()
+            RemoveLpCalculator.computeCacaoDisplay(
+                selectedUnits = selectedUnits,
+                cacaoDepth = s.selectedPoolCacaoDepth,
+                totalPoolUnits = s.selectedPoolTotalLpUnits,
+            ) ?: return
         lpUnitsFieldState.setTextAndPlaceCursorAtEnd(selectedUnits.toString())
         state.update { it.copy(removeLpPercent = percent, removeLpCacaoDisplay = cacaoDisplay) }
     }
@@ -2749,13 +2736,6 @@ constructor(
 
     companion object {
         private const val ADDRESS_AWAIT_TIMEOUT_MS = 5_000L
-        private const val CACAO_DECIMALS = 10
-        private const val CACAO_DISPLAY_SCALE = 3
-        // Precision kept on `userUnits * cacaoDepth / totalUnits` before we shift by
-        // 10^CACAO_DECIMALS and round to CACAO_DISPLAY_SCALE. Must be >=
-        // CACAO_DECIMALS + CACAO_DISPLAY_SCALE (= 13) to avoid truncation; 18 matches
-        // the standard fixed-point scale and leaves headroom.
-        private const val LP_UNITS_INTERMEDIATE_SCALE = 18
     }
 }
 
