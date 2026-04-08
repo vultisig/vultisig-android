@@ -152,6 +152,7 @@ internal fun RemoveLpScreenContent(
             RemoveLpSlider(
                 percent = state.removeLpPercent,
                 onPercentChanged = onPercentChanged,
+                enabled = state.availableLpUnits != null && state.selectedPoolTotalLpUnits > 0L,
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -197,6 +198,7 @@ private fun RemoveLpSlider(
     percent: Float,
     onPercentChanged: (Float) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val tickColor = Theme.v2.colors.border.normal
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
@@ -210,6 +212,7 @@ private fun RemoveLpSlider(
             Slider(
                 value = percent,
                 onValueChange = onPercentChanged,
+                enabled = enabled,
                 valueRange = 0f..1f,
                 steps = 3,
                 thumb = {

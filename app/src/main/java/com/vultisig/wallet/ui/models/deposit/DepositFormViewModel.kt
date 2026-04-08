@@ -634,31 +634,20 @@ constructor(
 
     fun setRemoveLpPercent(percent: Float) {
         val s = state.value
-        val availableUnits = s.availableLpUnits?.toLongOrNull()
-        if (availableUnits == null) {
-            state.update { it.copy(removeLpPercent = percent) }
-            return
-        }
+        val availableUnits = s.availableLpUnits?.toLongOrNull() ?: return
+        if (s.selectedPoolTotalLpUnits <= 0L) return
         val selectedUnits = (percent * availableUnits).toLong().coerceAtLeast(0L)
         val cacaoDisplay =
-            if (s.selectedPoolTotalLpUnits > 0L) {
-                val cacao =
-                    selectedUnits
-                        .toBigDecimal()
-                        .multiply(s.selectedPoolCacaoDepth.toBigDecimal())
-                        .divide(
-                            s.selectedPoolTotalLpUnits.toBigDecimal(),
-                            LP_UNITS_INTERMEDIATE_SCALE,
-                            RoundingMode.DOWN,
-                        )
-                        .divide(
-                            BigDecimal.TEN.pow(CACAO_DECIMALS),
-                            CACAO_DISPLAY_SCALE,
-                            RoundingMode.DOWN,
-                        )
-                        .toPlainString()
-                cacao
-            } else ""
+            selectedUnits
+                .toBigDecimal()
+                .multiply(s.selectedPoolCacaoDepth.toBigDecimal())
+                .divide(
+                    s.selectedPoolTotalLpUnits.toBigDecimal(),
+                    LP_UNITS_INTERMEDIATE_SCALE,
+                    RoundingMode.DOWN,
+                )
+                .divide(BigDecimal.TEN.pow(CACAO_DECIMALS), CACAO_DISPLAY_SCALE, RoundingMode.DOWN)
+                .toPlainString()
         lpUnitsFieldState.setTextAndPlaceCursorAtEnd(selectedUnits.toString())
         state.update { it.copy(removeLpPercent = percent, removeLpCacaoDisplay = cacaoDisplay) }
     }
