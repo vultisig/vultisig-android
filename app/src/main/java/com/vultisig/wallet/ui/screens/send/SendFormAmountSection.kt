@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,7 +50,7 @@ import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-@androidx.compose.runtime.Immutable
+@Immutable
 internal data class AmountInputs(
     val tokenAmountFieldState: TextFieldState,
     val fiatAmountFieldState: TextFieldState,
@@ -59,7 +60,7 @@ internal data class AmountInputs(
     val onChooseMaxTokenAmount: () -> Unit,
 )
 
-@androidx.compose.runtime.Immutable
+@Immutable
 internal data class OptionalInputs(
     val memoFieldState: TextFieldState,
     val operatorFeeFieldState: TextFieldState,
