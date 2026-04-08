@@ -172,7 +172,7 @@ internal data class DepositFormUiModel(
     val selectedPoolCacaoDepth: Long = 0L,
     val totalGas: UiText = UiText.Empty,
     val estimatedFee: UiText = UiText.Empty,
-    val removeLpPercent: Float = 1f,
+    val removeLpPercent: Float = 0f,
     val removeLpCacaoDisplay: String = "",
 )
 
