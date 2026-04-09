@@ -169,18 +169,29 @@ private fun ScanQrScreen(
             coroutineScope.launch {
                 if (uri != null) {
                     try {
-                        val result = scanImage(InputImage.fromFilePath(context, uri), onError)
-                        val barcodes =
-                            result.ifEmpty {
-                                val bitmap =
-                                    requireNotNull(uriToBitmap(context.contentResolver, uri))
-                                        .addWhiteBorder(2F)
-                                val inputImage = InputImage.fromBitmap(bitmap, 0)
-                                val resultBarcodes = scanImage(inputImage, onError)
-                                bitmap.recycle()
-                                resultBarcodes
+                        val first = scanImage(InputImage.fromFilePath(context, uri))
+                        val firstBarcodes = (first as? ScanResult.Success)?.barcodes.orEmpty()
+                        if (firstBarcodes.isNotEmpty()) {
+                            onSuccess(firstBarcodes)
+                        } else {
+                            val bitmap =
+                                requireNotNull(uriToBitmap(context.contentResolver, uri))
+                                    .addWhiteBorder(2F)
+                            val retry = scanImage(InputImage.fromBitmap(bitmap, 0))
+                            bitmap.recycle()
+                            when (retry) {
+                                is ScanResult.Success ->
+                                    if (retry.barcodes.isNotEmpty()) {
+                                        onSuccess(retry.barcodes)
+                                    } else {
+                                        onError(context.getString(R.string.no_barcodes_found))
+                                    }
+                                is ScanResult.Failure ->
+                                    onError(
+                                        (first as? ScanResult.Failure)?.message ?: retry.message
+                                    )
                             }
-                        onSuccess(barcodes)
+                        }
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: Exception) {
@@ -504,12 +515,20 @@ fun createScanner() =
         BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
     )
 
-private suspend fun scanImage(inputImage: InputImage, onError: (String) -> Unit) =
+private sealed interface ScanResult {
+    data class Success(val barcodes: List<Barcode>) : ScanResult
+
+    data class Failure(val message: String) : ScanResult
+}
+
+private suspend fun scanImage(inputImage: InputImage): ScanResult =
     suspendCancellableCoroutine { continuation ->
         try {
             createScanner()
                 .process(inputImage)
-                .addOnSuccessListener { barcodes -> continuation.resume(barcodes) }
+                .addOnSuccessListener { barcodes ->
+                    continuation.resume(ScanResult.Success(barcodes))
+                }
                 .addOnFailureListener { error ->
                     Timber.e(error, "Failed to scan image for barcodes")
                     val errorMessage =
@@ -518,14 +537,12 @@ private suspend fun scanImage(inputImage: InputImage, onError: (String) -> Unit)
                             is IllegalStateException -> "ML Kit scanner not initialized"
                             else -> error.message ?: error.toString()
                         }
-                    onError(errorMessage)
-                    continuation.resume(emptyList())
+                    continuation.resume(ScanResult.Failure(errorMessage))
                 }
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            onError("Barcode scanner unavailable")
-            continuation.resume(emptyList())
+            continuation.resume(ScanResult.Failure("Barcode scanner unavailable"))
         }
     }
 
