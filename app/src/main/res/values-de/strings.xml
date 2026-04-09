@@ -196,6 +196,7 @@
     <string name="chain_token_screen_address_copied">%1$s in die Zwischenablage kopiert</string>
     <string name="s_of_s_vault">%1$s von %2$s Tresor</string>
     <string name="camera_permission_denied">Kameraberechtigung nicht erteilt. Bitte aktivieren Sie sie in den Einstellungen.</string>
+    <string name="camera_permission_open_settings">Einstellungen öffnen</string>
     <string name="verify_transaction_value">Wert</string>
     <string name="send_error_no_address">Adresse ist ungültig</string>
     <string name="vault_settings_error_backup_file">ein Fehler ist aufgetreten</string>

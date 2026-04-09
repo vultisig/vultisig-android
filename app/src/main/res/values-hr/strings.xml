@@ -196,6 +196,7 @@
     <string name="chain_token_screen_address_copied">%1$s kopirano u međuspremnik</string>
     <string name="s_of_s_vault">%1$s od %2$s trezora</string>
     <string name="camera_permission_denied">Dopuštenje za kameru nije odobreno. Omogućite ga u postavkama.</string>
+    <string name="camera_permission_open_settings">Otvori postavke</string>
     <string name="verify_transaction_value">Vrijednost</string>
     <string name="send_error_no_address">Adresa je nevažeća</string>
     <string name="vault_settings_error_backup_file">dogodila se pogreška</string>

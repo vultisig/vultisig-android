@@ -196,6 +196,7 @@
     <string name="chain_token_screen_address_copied">%1$s copiado para a área de transferência</string>
     <string name="s_of_s_vault">%1$s do cofre %2$s</string>
     <string name="camera_permission_denied">Permissão de câmera não concedida. Por favor, habilite-a nas configurações.</string>
+    <string name="camera_permission_open_settings">Abrir configurações</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">Endereço inválido</string>
     <string name="vault_settings_error_backup_file">um erro ocorreu</string>

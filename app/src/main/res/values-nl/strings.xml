@@ -130,6 +130,7 @@
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Controleer alle toestemmingen</string>
     <string name="camera_permission_denied">Cameratoestemming niet verleend. Schakel deze in de instellingen in.</string>
+    <string name="camera_permission_open_settings">Instellingen openen</string>
     <string name="join_keysign_discovering_session_id">Sessienummer ontdekken</string>
     <string name="transaction_done_title">Gedaan</string>
     <string name="transaction_done_overview">Overzicht</string>

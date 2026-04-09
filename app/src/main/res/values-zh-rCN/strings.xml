@@ -217,6 +217,7 @@
 
     <!-- Camera & QR -->
     <string name="camera_permission_denied">相机权限未授予。请在设置中启用。</string>
+    <string name="camera_permission_open_settings">打开设置</string>
     <string name="join_keysign_discovering_session_id">发现会话 ID</string>
 
     <!-- Transaction Done -->

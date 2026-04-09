@@ -3,8 +3,11 @@
 package com.vultisig.wallet.ui.screens.scan
 
 import android.Manifest
+import android.content.Intent
 import android.graphics.BlurMaskFilter
 import android.graphics.BlurMaskFilter.Blur
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
@@ -81,6 +84,7 @@ import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
@@ -232,7 +236,18 @@ private fun ScanQrScreen(
             LaunchedEffect(Unit) { cameraPermissionState.launchPermissionRequest() }
             ErrorView(
                 title = stringResource(R.string.camera_permission_denied),
-                buttonUiModel = null,
+                buttonUiModel =
+                    ErrorViewButtonUiModel(
+                        text = stringResource(R.string.camera_permission_open_settings),
+                        onClick = {
+                            context.startActivity(
+                                Intent(
+                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.fromParts("package", context.packageName, null),
+                                )
+                            )
+                        },
+                    ),
             )
         }
     }
@@ -553,7 +568,7 @@ private suspend fun scanImage(inputImage: InputImage): ScanResult =
 @Composable
 private fun ScanQrScreenPreview() {
     ScanQrLayout(
-        uiModel = ScanQrUiModel(),
+        uiModel = ScanQrUiModel(isTipVisible = true),
         showReturnButton = false,
         onDismiss = {},
         onUploadQr = {},

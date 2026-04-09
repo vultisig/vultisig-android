@@ -196,6 +196,7 @@
     <string name="chain_token_screen_address_copied">%1$s copiato negli appunti</string>
     <string name="s_of_s_vault">%1$s del caveau %2$s</string>
     <string name="camera_permission_denied">Autorizzazione della telecamera non concessa. Abilitala nelle impostazioni.</string>
+    <string name="camera_permission_open_settings">Apri impostazioni</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">L\'indirizzo non è valido</string>
     <string name="vault_settings_error_backup_file">si è verificato un errore</string>
