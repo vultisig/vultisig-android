@@ -35,34 +35,42 @@ internal class SwapValidator @Inject constructor() {
                 srcAmountValue + (estimatedNetworkFeeTokenValue?.value ?: BigInteger.ZERO)
             if (totalRequired > selectedSrcBalance) {
                 return SwapBalanceValidation(
-                    formError = UiText.FormattedText(
-                        R.string.swap_error_insufficient_balance_and_fees,
-                        listOf(srcToken.ticker),
-                    ),
+                    formError =
+                        UiText.FormattedText(
+                            R.string.swap_error_insufficient_balance_and_fees,
+                            listOf(srcToken.ticker),
+                        )
                 )
             }
         } else {
             if (srcAmountValue > selectedSrcBalance) {
                 return SwapBalanceValidation(
-                    formError = UiText.FormattedText(
-                        R.string.swap_error_insufficient_source_token,
-                        listOf(srcToken.ticker),
-                    ),
+                    formError =
+                        UiText.FormattedText(
+                            R.string.swap_error_insufficient_source_token,
+                            listOf(srcToken.ticker),
+                        )
                 )
             } else {
-                val nativeTokenAccount = src.address.accounts.find { it.token.isNativeToken }
-                val nativeTokenValue = nativeTokenAccount?.tokenValue?.value ?: return null
-                if (
-                    nativeTokenValue <
-                    (estimatedNetworkFeeTokenValue?.value ?: BigInteger.ZERO)
-                ) {
+                val nativeTokenAccount =
+                    src.address.accounts.find { it.token.isNativeToken }
+                        ?: return SwapBalanceValidation(
+                            formError = UiText.StringResource(R.string.send_error_no_token)
+                        )
+                val nativeTokenValue =
+                    nativeTokenAccount.tokenValue?.value
+                        ?: return SwapBalanceValidation(
+                            formError = UiText.StringResource(R.string.send_error_no_token)
+                        )
+                if (nativeTokenValue < (estimatedNetworkFeeTokenValue?.value ?: BigInteger.ZERO)) {
                     return SwapBalanceValidation(
-                        formError = UiText.FormattedText(
-                            R.string.swap_error_insufficient_gas_fees,
-                            listOf(
-                                "${nativeTokenAccount.token.ticker} (${nativeTokenAccount.token.chain.raw})"
-                            ),
-                        ),
+                        formError =
+                            UiText.FormattedText(
+                                R.string.swap_error_insufficient_gas_fees,
+                                listOf(
+                                    "${nativeTokenAccount.token.ticker} (${nativeTokenAccount.token.chain.raw})"
+                                ),
+                            )
                     )
                 }
             }
@@ -71,6 +79,4 @@ internal class SwapValidator @Inject constructor() {
     }
 }
 
-internal data class SwapBalanceValidation(
-    val formError: UiText,
-)
+internal data class SwapBalanceValidation(val formError: UiText)

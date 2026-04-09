@@ -31,12 +31,11 @@ import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
-internal data class GasCalculationResult(
-    val gasFee: TokenValue,
-    val estimated: EstimatedGasFee,
-)
+internal data class GasCalculationResult(val gasFee: TokenValue, val estimated: EstimatedGasFee)
 
-internal class SwapGasCalculator @Inject constructor(
+internal class SwapGasCalculator
+@Inject
+constructor(
     private val feeServiceComposite: FeeServiceComposite,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
@@ -49,64 +48,63 @@ internal class SwapGasCalculator @Inject constructor(
         val selectedToken = sendSrc.account.token
         val vault = vaultRepository.get(vaultId) ?: return null
 
-        val blockchainTransaction = Swap(
-            coin = selectedToken,
-            vault = VaultData(
-                vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                vaultHexChainCode = vault.hexChainCode,
-            ),
-            amount = BigInteger.ZERO,
-            to = sendSrc.address.address,
-            callData = "",
-            approvalData = null,
-            isMax = false,
-        )
+        val blockchainTransaction =
+            Swap(
+                coin = selectedToken,
+                vault =
+                    VaultData(
+                        vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                        vaultHexChainCode = vault.hexChainCode,
+                    ),
+                amount = BigInteger.ZERO,
+                to = sendSrc.address.address,
+                callData = "",
+                approvalData = null,
+                isMax = false,
+            )
 
-        val fee = withContext(Dispatchers.IO) {
-            feeServiceComposite.calculateFees(blockchainTransaction)
-        }
+        val fee =
+            withContext(Dispatchers.IO) { feeServiceComposite.calculateFees(blockchainTransaction) }
 
-        val nativeCoin = withContext(Dispatchers.IO) {
-            tokenRepository.getNativeToken(chain.id)
-        }
+        val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
 
         var gasFee = TokenValue(value = fee.amount, token = nativeCoin)
 
         if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-            val specific = blockChainSpecificRepository.getSpecific(
-                chain = selectedToken.chain,
-                address = selectedToken.address,
-                token = selectedToken,
-                gasFee = gasFee,
-                isSwap = true,
-                isMaxAmountEnabled = false,
-                isDeposit = false,
-            )
-            val plan = getBitcoinTransactionPlan(
-                vaultId,
-                selectedToken,
-                selectedToken.address,
-                chain.getDustThreshold.add(BigInteger.ONE),
-                BlockChainSpecificAndUtxo(
-                    blockChainSpecific = BlockChainSpecific.UTXO(
-                        byteFee = gasFee.value,
-                        true,
+            val specific =
+                blockChainSpecificRepository.getSpecific(
+                    chain = selectedToken.chain,
+                    address = selectedToken.address,
+                    token = selectedToken,
+                    gasFee = gasFee,
+                    isSwap = true,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                )
+            val plan =
+                getBitcoinTransactionPlan(
+                    vaultId,
+                    selectedToken,
+                    selectedToken.address,
+                    chain.getDustThreshold.add(BigInteger.ONE),
+                    BlockChainSpecificAndUtxo(
+                        blockChainSpecific = BlockChainSpecific.UTXO(byteFee = gasFee.value, true),
+                        utxos = specific.utxos,
                     ),
-                    utxos = specific.utxos,
-                ),
-                memo = null,
-            )
+                    memo = null,
+                )
             gasFee = gasFee.copy(value = plan.fee.toBigInteger())
         }
 
-        val estimated = gasFeeToEstimatedFee(
-            GasFeeParams(
-                gasLimit = BigInteger.valueOf(1),
-                gasFee = gasFee,
-                selectedToken = selectedToken,
-                perUnit = true,
+        val estimated =
+            gasFeeToEstimatedFee(
+                GasFeeParams(
+                    gasLimit = BigInteger.valueOf(1),
+                    gasFee = gasFee,
+                    selectedToken = selectedToken,
+                    perUnit = true,
+                )
             )
-        )
 
         return GasCalculationResult(gasFee = gasFee, estimated = estimated)
     }
@@ -120,18 +118,19 @@ internal class SwapGasCalculator @Inject constructor(
         memo: String?,
     ): Bitcoin.TransactionPlan {
         val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
-        val keysignPayload = KeysignPayload(
-            coin = selectedToken,
-            toAddress = dstAddress,
-            toAmount = tokenAmountInt,
-            blockChainSpecific = specific.blockChainSpecific,
-            memo = memo,
-            vaultPublicKeyECDSA = vault.pubKeyECDSA,
-            vaultLocalPartyID = vault.localPartyID,
-            utxos = specific.utxos,
-            libType = vault.libType,
-            wasmExecuteContractPayload = null,
-        )
+        val keysignPayload =
+            KeysignPayload(
+                coin = selectedToken,
+                toAddress = dstAddress,
+                toAmount = tokenAmountInt,
+                blockChainSpecific = specific.blockChainSpecific,
+                memo = memo,
+                vaultPublicKeyECDSA = vault.pubKeyECDSA,
+                vaultLocalPartyID = vault.localPartyID,
+                utxos = specific.utxos,
+                libType = vault.libType,
+                wasmExecuteContractPayload = null,
+            )
 
         val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
         val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
@@ -141,35 +140,29 @@ internal class SwapGasCalculator @Inject constructor(
         return plan
     }
 
-    suspend fun getSpecificAndUtxo(
-        srcToken: Coin,
-        srcAddress: String,
-        gasFee: TokenValue,
-    ) = try {
-        blockChainSpecificRepository.getSpecific(
-            chain = srcToken.chain,
-            address = srcAddress,
-            token = srcToken,
-            gasFee = gasFee,
-            isSwap = true,
-            isMaxAmountEnabled = false,
-            isDeposit = srcToken.chain == Chain.MayaChain,
-            gasLimit = getGasLimit(srcToken),
-        )
-    } catch (e: Exception) {
-        Timber.d(e)
-        throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.swap_screen_invalid_specific_and_utxo)
-        )
-    }
+    suspend fun getSpecificAndUtxo(srcToken: Coin, srcAddress: String, gasFee: TokenValue) =
+        try {
+            blockChainSpecificRepository.getSpecific(
+                chain = srcToken.chain,
+                address = srcAddress,
+                token = srcToken,
+                gasFee = gasFee,
+                isSwap = true,
+                isMaxAmountEnabled = false,
+                isDeposit = srcToken.chain == Chain.MayaChain,
+                gasLimit = getGasLimit(srcToken),
+            )
+        } catch (e: Exception) {
+            Timber.d(e)
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.swap_screen_invalid_specific_and_utxo)
+            )
+        }
 
     private fun getGasLimit(token: Coin): BigInteger? {
-        val isEVMSwap =
-            token.isNativeToken && token.chain in listOf(Chain.Ethereum, Chain.Arbitrum)
+        val isEVMSwap = token.isNativeToken && token.chain in listOf(Chain.Ethereum, Chain.Arbitrum)
         return if (isEVMSwap)
-            BigInteger.valueOf(
-                if (token.chain == Chain.Ethereum) ETH_GAS_LIMIT else ARB_GAS_LIMIT
-            )
+            BigInteger.valueOf(if (token.chain == Chain.Ethereum) ETH_GAS_LIMIT else ARB_GAS_LIMIT)
         else null
     }
 

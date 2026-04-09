@@ -20,6 +20,8 @@ import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
@@ -29,8 +31,6 @@ import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
@@ -317,7 +317,11 @@ constructor(
                         when (quote) {
                             is SwapQuote.ThorChain -> {
                                 val specificAndUtxo =
-                                    swapGasCalculator.getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken,
+                                        srcAddress,
+                                        gasFee,
+                                    )
 
                                 val dstAddress =
                                     quote.data.router ?: quote.data.inboundAddress ?: srcAddress
@@ -374,7 +378,11 @@ constructor(
 
                             is SwapQuote.MayaChain -> {
                                 val specificAndUtxo =
-                                    swapGasCalculator.getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken,
+                                        srcAddress,
+                                        gasFee,
+                                    )
 
                                 val dstAddress =
                                     if (
@@ -440,7 +448,11 @@ constructor(
                             is SwapQuote.OneInch -> {
                                 val dstAddress = quote.data.tx.to
                                 val specificAndUtxo =
-                                    swapGasCalculator.getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken,
+                                        srcAddress,
+                                        gasFee,
+                                    )
 
                                 val allowance =
                                     allowanceRepository.getAllowance(
@@ -658,7 +670,13 @@ constructor(
         val dstToken = selectedDst.value?.account?.token ?: return
         val currentAmount = srcAmount?.movePointRight(srcToken.decimal)?.toBigInteger() ?: return
 
-        swapQuoteManager.cacheQuote(currentQuote, currentProvider, srcToken.id, dstToken.id, currentAmount)
+        swapQuoteManager.cacheQuote(
+            currentQuote,
+            currentProvider,
+            srcToken.id,
+            dstToken.id,
+            currentAmount,
+        )
     }
 
     private fun resetQuoteState() {
@@ -724,10 +742,17 @@ constructor(
     }
 
     private fun collectSelectedTokens() {
-        selectTokensJob = swapTokenSelector.collectSelectedTokens(
-            addresses, selectedSrcId, selectedDstId,
-            selectedSrc, selectedDst, chain, selectTokensJob, viewModelScope,
-        )
+        selectTokensJob =
+            swapTokenSelector.collectSelectedTokens(
+                addresses,
+                selectedSrcId,
+                selectedDstId,
+                selectedSrc,
+                selectedDst,
+                chain,
+                selectTokensJob,
+                viewModelScope,
+            )
     }
 
     private fun calculateGas() {
@@ -828,21 +853,29 @@ constructor(
 
                         referral?.let { code ->
                             val tierType = vultBPSDiscount?.getTierType()
-                            val result = swapDiscountChecker.checkReferralBpsDiscount(
-                                tierType, srcToken, tokenValue, code,
-                            )
+                            val result =
+                                swapDiscountChecker.checkReferralBpsDiscount(
+                                    tierType,
+                                    srcToken,
+                                    tokenValue,
+                                    code,
+                                )
                             result.referralCode?.let { rc -> referralCode.update { rc } }
                             uiState.update {
                                 it.copy(
                                     referralBpsDiscount = result.referralBpsDiscount,
-                                    referralBpsDiscountFiatValue = result.referralBpsDiscountFiatValue,
+                                    referralBpsDiscountFiatValue =
+                                        result.referralBpsDiscountFiatValue,
                                 )
                             }
                         }
 
-                        val vultResult = swapDiscountChecker.checkVultBpsDiscount(
-                            srcToken, tokenValue, vultBPSDiscount,
-                        )
+                        val vultResult =
+                            swapDiscountChecker.checkVultBpsDiscount(
+                                srcToken,
+                                tokenValue,
+                                vultBPSDiscount,
+                            )
                         uiState.update {
                             it.copy(
                                 vultBpsDiscount = vultResult.vultBpsDiscount,
@@ -851,19 +884,20 @@ constructor(
                             )
                         }
 
-                        val quoteResult = swapQuoteManager.fetchQuote(
-                            provider = provider,
-                            src = src,
-                            dst = dst,
-                            srcToken = srcToken,
-                            dstToken = dstToken,
-                            srcTokenValue = srcTokenValue,
-                            tokenValue = tokenValue,
-                            currency = currency,
-                            vultBPSDiscount = vultBPSDiscount,
-                            referral = referral,
-                            amount = amount,
-                        )
+                        val quoteResult =
+                            swapQuoteManager.fetchQuote(
+                                provider = provider,
+                                src = src,
+                                dst = dst,
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                srcTokenValue = srcTokenValue,
+                                tokenValue = tokenValue,
+                                currency = currency,
+                                vultBPSDiscount = vultBPSDiscount,
+                                referral = referral,
+                                amount = amount,
+                            )
 
                         this@SwapFormViewModel.quote = quoteResult.quote
                         swapFeeFiat.value = quoteResult.swapFeeFiat
@@ -882,22 +916,25 @@ constructor(
                             )
                         }
 
-                        val balanceError = swapValidator.validateBalanceForSwap(
-                            src, srcTokenValue, estimatedNetworkFeeTokenValue.value,
-                        )
+                        val balanceError =
+                            swapValidator.validateBalanceForSwap(
+                                src,
+                                srcTokenValue,
+                                estimatedNetworkFeeTokenValue.value,
+                            )
                         if (balanceError != null) {
                             uiState.update {
-                                it.copy(
-                                    isSwapDisabled = true,
-                                    formError = balanceError.formError,
-                                )
+                                it.copy(isSwapDisabled = true, formError = balanceError.formError)
                             }
                         }
                     } catch (e: SwapException) {
                         this@SwapFormViewModel.quote = null
-                        val formError = swapQuoteManager.mapSwapExceptionToFormError(
-                            e, srcToken, uiState.value.selectedSrcToken?.title,
-                        )
+                        val formError =
+                            swapQuoteManager.mapSwapExceptionToFormError(
+                                e,
+                                srcToken,
+                                uiState.value.selectedSrcToken?.title,
+                            )
                         uiState.update {
                             it.copy(
                                 provider = UiText.Empty,

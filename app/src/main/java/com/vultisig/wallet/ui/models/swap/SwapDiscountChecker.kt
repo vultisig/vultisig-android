@@ -21,7 +21,9 @@ internal data class ReferralDiscountResult(
     val referralCode: String?,
 )
 
-internal class SwapDiscountChecker @Inject constructor(
+internal class SwapDiscountChecker
+@Inject
+constructor(
     private val convertBpsToFiat: ConvertBpsToFiatUseCase,
     private val fiatValueToString: FiatValueToStringMapper,
 ) {
@@ -63,11 +65,7 @@ internal class SwapDiscountChecker @Inject constructor(
                     referralCode = null,
                 )
         val referralBpsDiscountFiatValue =
-            convertBpsToFiat(
-                token = srcToken,
-                tokenValue = tokenValue,
-                bps = referralBpsDiscount,
-            )
+            convertBpsToFiat(token = srcToken, tokenValue = tokenValue, bps = referralBpsDiscount)
         val referralBpsDiscountFiat = fiatValueToString(referralBpsDiscountFiatValue)
         return ReferralDiscountResult(
             referralBpsDiscount = referralBpsDiscount,

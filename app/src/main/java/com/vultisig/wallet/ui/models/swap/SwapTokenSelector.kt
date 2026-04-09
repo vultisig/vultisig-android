@@ -20,6 +20,7 @@ import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -29,10 +30,11 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.CoroutineScope
 import timber.log.Timber
 
-internal class SwapTokenSelector @Inject constructor(
+internal class SwapTokenSelector
+@Inject
+constructor(
     private val navigator: Navigator<Destination>,
     private val accountsRepository: AccountsRepository,
     private val requestResultRepository: RequestResultRepository,
@@ -68,14 +70,14 @@ internal class SwapTokenSelector @Inject constructor(
     ): Job {
         selectTokensJob?.cancel()
         return scope.launch {
-            combine(
-                addresses.filter { it.isNotEmpty() },
-                selectedSrcId,
-                selectedDstId,
-            ) { addrs, srcTokenId, dstTokenId ->
-                selectedSrc.updateSrc(srcTokenId, addrs, chain)
-                selectedDst.updateSrc(dstTokenId, addrs, chain)
-            }.collect()
+            combine(addresses.filter { it.isNotEmpty() }, selectedSrcId, selectedDstId) {
+                    addrs,
+                    srcTokenId,
+                    dstTokenId ->
+                    selectedSrc.updateSrc(srcTokenId, addrs, chain)
+                    selectedDst.updateSrc(dstTokenId, addrs, chain)
+                }
+                .collect()
         }
     }
 
@@ -87,22 +89,27 @@ internal class SwapTokenSelector @Inject constructor(
     ) {
         scope.launch {
             combine(selectedSrc, selectedDst) { src, dst ->
-                val srcUiModel = src?.let { accountToTokenBalanceUiModelMapper(it) }
-                val dstUiModel = dst?.let { accountToTokenBalanceUiModelMapper(it) }
-                val isSrcNative = src?.account?.token?.isNativeToken ?: false
-                val isDstNative = dst?.account?.token?.isNativeToken ?: false
-                uiState.update {
-                    it.copy(
-                        selectedSrcToken = srcUiModel,
-                        selectedDstToken = dstUiModel,
-                        enableMaxAmount = (isSrcNative && isDstNative).not(),
-                    )
+                    val srcUiModel = src?.let { accountToTokenBalanceUiModelMapper(it) }
+                    val dstUiModel = dst?.let { accountToTokenBalanceUiModelMapper(it) }
+                    val isSrcNative = src?.account?.token?.isNativeToken ?: false
+                    val isDstNative = dst?.account?.token?.isNativeToken ?: false
+                    uiState.update {
+                        it.copy(
+                            selectedSrcToken = srcUiModel,
+                            selectedDstToken = dstUiModel,
+                            enableMaxAmount = (isSrcNative && isDstNative).not(),
+                        )
+                    }
                 }
-            }.collect()
+                .collect()
         }
     }
 
-    suspend fun selectNetwork(vaultId: VaultId, selectedChain: Chain, addresses: List<Address>): SendSrc? {
+    suspend fun selectNetwork(
+        vaultId: VaultId,
+        selectedChain: Chain,
+        addresses: List<Address>,
+    ): SendSrc? {
         val requestId = Uuid.random().toString()
         navigator.route(
             Route.SelectNetwork(
@@ -153,16 +160,23 @@ internal class SwapTokenSelector @Inject constructor(
             Route.SelectAsset(
                 vaultId = vaultId,
                 requestId = targetArg,
-                preselectedNetworkId = (when (targetArg) {
-                    ARG_SELECTED_SRC_TOKEN_ID -> selectedSrc?.address?.chain
-                    ARG_SELECTED_DST_TOKEN_ID -> selectedDst?.address?.chain
-                    else -> Chain.ThorChain
-                })?.id ?: Chain.ThorChain.id,
+                preselectedNetworkId =
+                    (when (targetArg) {
+                            ARG_SELECTED_SRC_TOKEN_ID -> selectedSrc?.address?.chain
+                            ARG_SELECTED_DST_TOKEN_ID -> selectedDst?.address?.chain
+                            else -> Chain.ThorChain
+                        })
+                        ?.id ?: Chain.ThorChain.id,
                 networkFilters = Route.SelectNetwork.Filters.SwapAvailable,
             )
         )
         checkTokenSelectionResponse(
-            targetArg, vaultId, selectedSrcId, selectedDstId, addresses, uiState,
+            targetArg,
+            vaultId,
+            selectedSrcId,
+            selectedDstId,
+            addresses,
+            uiState,
         )
     }
 
