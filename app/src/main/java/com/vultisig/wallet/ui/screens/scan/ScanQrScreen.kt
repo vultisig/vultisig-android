@@ -541,8 +541,11 @@ private suspend fun scanImage(inputImage: InputImage): ScanResult =
                 }
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
-            continuation.resume(ScanResult.Failure("Barcode scanner unavailable"))
+        } catch (e: Exception) {
+            Timber.e(e, "Barcode scanner unavailable")
+            continuation.resume(
+                ScanResult.Failure("Barcode scanner unavailable: ${e.message ?: e.toString()}")
+            )
         }
     }
 
