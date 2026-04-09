@@ -200,8 +200,9 @@ private fun ScanQrScreen(
                         }
                     } catch (e: CancellationException) {
                         throw e
-                    } catch (_: Exception) {
-                        Timber.e("Failed to scan image from gallery")
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to scan image from gallery")
+                        onError(context.getString(R.string.no_barcodes_found))
                     }
                 }
             }
