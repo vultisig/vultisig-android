@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -264,7 +265,8 @@ private fun ScanQrLayout(
 ) {
     var infoButtonBottomCenter by remember { mutableStateOf(Offset.Zero) }
     var containerPosition by remember { mutableStateOf(Offset.Zero) }
-    val hintBoxWidth = 336.dp
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp
+    val hintBoxWidth = minOf(336.dp, screenWidthDp - 32.dp)
     val space = 2.dp
 
     Box(
