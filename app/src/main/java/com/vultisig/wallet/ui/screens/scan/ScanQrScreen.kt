@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -442,11 +443,16 @@ private fun QrCameraScreen(
             when (event) {
                 Lifecycle.Event.ON_STOP -> {
                     viewKey++
-                    try {
-                        cameraProviderFuture.get().unbindAll()
-                    } catch (_: Exception) {
-                        Timber.e("Failed to unbind camera provider")
-                    }
+                    cameraProviderFuture.addListener(
+                        {
+                            try {
+                                cameraProviderFuture.get().unbindAll()
+                            } catch (_: Exception) {
+                                Timber.e("Failed to unbind camera provider")
+                            }
+                        },
+                        ContextCompat.getMainExecutor(localContext),
+                    )
                 }
                 else -> {}
             }
