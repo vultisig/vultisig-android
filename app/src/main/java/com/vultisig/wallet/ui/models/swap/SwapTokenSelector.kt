@@ -71,12 +71,11 @@ constructor(
     ): Job {
         selectTokensJob?.cancel()
         return scope.launch {
-            combine(
-                addresses.filter { it.isNotEmpty() },
-                selectedSrcId,
-                selectedDstId,
-                chain,
-            ) { addrs, srcTokenId, dstTokenId, currentChain ->
+            combine(addresses.filter { it.isNotEmpty() }, selectedSrcId, selectedDstId, chain) {
+                    addrs,
+                    srcTokenId,
+                    dstTokenId,
+                    currentChain ->
                     selectedSrc.updateSrc(srcTokenId, addrs, currentChain)
                     selectedDst.updateSrc(dstTokenId, addrs, currentChain)
                 }
