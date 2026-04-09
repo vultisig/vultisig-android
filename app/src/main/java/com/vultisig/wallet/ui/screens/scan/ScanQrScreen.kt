@@ -264,7 +264,7 @@ private fun ScanQrLayout(
     toggleMoreInfo: () -> Unit,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    var infoButtonBottomCenter by remember { mutableStateOf(Offset.Zero) }
+    var infoButtonBottomEnd by remember { mutableStateOf(Offset.Zero) }
     var containerPosition by remember { mutableStateOf(Offset.Zero) }
     val density = LocalDensity.current
     val containerWidth = LocalWindowInfo.current.containerSize.width
@@ -290,7 +290,7 @@ private fun ScanQrLayout(
                 ScanQrTopBar(
                     onBackClick = onDismiss,
                     onMoreInfo = toggleMoreInfo,
-                    onInfoButtonPositioned = { infoButtonBottomCenter = it },
+                    onInfoButtonPositioned = { infoButtonBottomEnd = it },
                 )
             },
         ) { contentPadding ->
@@ -322,8 +322,8 @@ private fun ScanQrLayout(
             isPointerTriangleOnTop = true,
             offset =
                 IntOffset(
-                    x = (infoButtonBottomCenter.x - containerPosition.x).toInt() - hintBoxWidthPx,
-                    y = (infoButtonBottomCenter.y - containerPosition.y).toInt() + spacePx,
+                    x = (infoButtonBottomEnd.x - containerPosition.x).toInt() - hintBoxWidthPx,
+                    y = (infoButtonBottomEnd.y - containerPosition.y).toInt() + spacePx,
                 ),
             pointerAlignment = Alignment.End,
             onDismissClick = toggleMoreInfo,
