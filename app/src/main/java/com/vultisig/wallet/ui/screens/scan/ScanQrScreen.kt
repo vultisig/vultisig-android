@@ -99,6 +99,7 @@ import com.vultisig.wallet.ui.utils.uriToBitmap
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -180,6 +181,8 @@ private fun ScanQrScreen(
                                 resultBarcodes
                             }
                         onSuccess(barcodes)
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (_: Exception) {
                         Timber.e("Failed to scan image from gallery")
                     }
@@ -518,6 +521,8 @@ private suspend fun scanImage(inputImage: InputImage, onError: (String) -> Unit)
                     onError(errorMessage)
                     continuation.resume(emptyList())
                 }
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             onError("Barcode scanner unavailable")
             continuation.resume(emptyList())
