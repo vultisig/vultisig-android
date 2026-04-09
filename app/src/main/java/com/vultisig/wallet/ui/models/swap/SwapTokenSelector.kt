@@ -220,7 +220,10 @@ constructor(
         addresses.update { listOfAddresses ->
             listOfAddresses.map { address ->
                 if (address.chain == loadedAccount.token.chain) {
-                    address.copy(accounts = address.accounts + listOf(loadedAccount))
+                    val alreadyExists =
+                        address.accounts.any { it.token.id == loadedAccount.token.id }
+                    if (alreadyExists) address
+                    else address.copy(accounts = address.accounts + loadedAccount)
                 } else {
                     address
                 }
