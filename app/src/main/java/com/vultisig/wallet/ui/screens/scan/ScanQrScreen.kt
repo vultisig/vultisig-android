@@ -43,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.RectangleShape
@@ -115,7 +114,7 @@ internal fun ScanQrScreen(viewModel: ScanQrViewModel = hiltViewModel()) {
         dragHandle = null,
         containerColor = Color.Transparent,
         shape = RectangleShape,
-        scrimColor = Color(0xFF02122B),
+        scrimColor = Theme.v2.colors.backgrounds.primary,
     ) {
         ScanQrScreen(
             uiModel = uiModel,
@@ -262,8 +261,8 @@ private fun ScanQrLayout(
         ) { contentPadding ->
             Box(
                 modifier =
-                    Modifier.background(Color(0xFF95AEE0))
-                        .background(brush = GradientBackground)
+                    Modifier.background(Theme.v2.colors.text.periwinkle)
+                        .background(brush = Theme.v2.colors.gradients.scanQrBackground)
                         .padding(contentPadding)
             ) {
                 content()
@@ -410,7 +409,7 @@ private fun ScanViewport(
                 .clip(RoundedCornerShape(size = cornerRadius))
                 .border(
                     width = 1.dp,
-                    brush = ViewportBorderGradient,
+                    brush = Theme.v2.colors.gradients.scanQrViewportBorder,
                     shape = RoundedCornerShape(size = cornerRadius),
                 )
     ) {
@@ -532,30 +531,3 @@ private fun ScanQrScreenPreview() {
         ScanViewport(isFrameHighlighted = false)
     }
 }
-
-private val GradientBackground =
-    Brush.verticalGradient(
-        colorStops =
-            arrayOf(
-                0.0000f to Color(0xFF02122B),
-                0.0043f to Color(0xFD02122B),
-                0.0178f to Color(0xF602122B),
-                0.0409f to Color(0xEB02122B),
-                0.0737f to Color(0xDA02122B),
-                0.1159f to Color(0xC402122B),
-                0.1660f to Color(0xAB02122B),
-                0.2214f to Color(0x8E02122B),
-                0.2786f to Color(0x7102122B),
-                0.3340f to Color(0x5502122B),
-                0.3841f to Color(0x3B02122B),
-                0.4263f to Color(0x2502122B),
-                0.4591f to Color(0x1502122B),
-                0.4822f to Color(0x0902122B),
-                0.4957f to Color(0x0202122B),
-                0.5000f to Color(0x0002122B),
-                1.0000f to Color(0x0002122B),
-            )
-    )
-
-private val ViewportBorderGradient =
-    Brush.verticalGradient(colors = listOf(Color(0xFF4879FD), Color(0xFF2B4897)))
