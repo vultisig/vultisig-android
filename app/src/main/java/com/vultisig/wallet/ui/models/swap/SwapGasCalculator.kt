@@ -93,7 +93,7 @@ constructor(
                     ),
                     memo = null,
                 )
-            gasFee = gasFee.copy(value = plan.fee.toBigInteger())
+            gasFee = gasFee.copy(value = (plan ?: return null).fee.toBigInteger())
         }
 
         val estimated =
@@ -116,7 +116,7 @@ constructor(
         tokenAmountInt: BigInteger,
         specific: BlockChainSpecificAndUtxo,
         memo: String?,
-    ): Bitcoin.TransactionPlan {
+    ): Bitcoin.TransactionPlan? {
         val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
         val keysignPayload =
             KeysignPayload(
@@ -136,6 +136,7 @@ constructor(
         val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
         if (plan.error != SigningError.OK) {
             Timber.e("UTXO plan error: %s", plan.error.name)
+            return null
         }
         return plan
     }

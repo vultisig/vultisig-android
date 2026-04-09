@@ -385,7 +385,7 @@ constructor(
             }
         } catch (t: Throwable) {
             Timber.e(t)
-            Pair(BigInteger.ZERO, srcNativeToken)
+            Pair(fallbackFee, srcNativeToken)
         }
 
     fun cacheQuote(

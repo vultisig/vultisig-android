@@ -23,6 +23,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
@@ -64,18 +65,20 @@ constructor(
         selectedDstId: MutableStateFlow<String?>,
         selectedSrc: MutableStateFlow<SendSrc?>,
         selectedDst: MutableStateFlow<SendSrc?>,
-        chain: Chain?,
+        chain: StateFlow<Chain?>,
         selectTokensJob: Job?,
         scope: CoroutineScope,
     ): Job {
         selectTokensJob?.cancel()
         return scope.launch {
-            combine(addresses.filter { it.isNotEmpty() }, selectedSrcId, selectedDstId) {
-                    addrs,
-                    srcTokenId,
-                    dstTokenId ->
-                    selectedSrc.updateSrc(srcTokenId, addrs, chain)
-                    selectedDst.updateSrc(dstTokenId, addrs, chain)
+            combine(
+                addresses.filter { it.isNotEmpty() },
+                selectedSrcId,
+                selectedDstId,
+                chain,
+            ) { addrs, srcTokenId, dstTokenId, currentChain ->
+                    selectedSrc.updateSrc(srcTokenId, addrs, currentChain)
+                    selectedDst.updateSrc(dstTokenId, addrs, currentChain)
                 }
                 .collect()
         }

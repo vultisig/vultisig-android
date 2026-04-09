@@ -126,7 +126,7 @@ constructor(
     val srcAmountState = TextFieldState()
 
     private var vaultId: String? = null
-    private var chain: Chain? = null
+    private val chain = MutableStateFlow<Chain?>(null)
 
     private var quote: SwapQuote? = null
 
@@ -720,7 +720,7 @@ constructor(
     }
 
     fun loadData(vaultId: String, chainId: String?, srcTokenId: String?, dstTokenId: String?) {
-        this.chain = chainId?.let(Chain::fromRaw)
+        this.chain.value = chainId?.let(Chain::fromRaw)
 
         if (!srcTokenId.isNullOrBlank() && this.selectedSrcId.value == null) {
             selectedSrcId.value = srcTokenId
