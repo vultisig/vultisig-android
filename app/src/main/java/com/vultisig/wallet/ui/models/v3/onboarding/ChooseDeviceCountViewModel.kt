@@ -45,7 +45,7 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
 
     private fun changeCount(index: Int) {
         // "Index" property of rive starts from 0
-        deviceCount.update { index + 1 }
+        deviceCount.update { (index + 1).coerceIn(1, 4) }
     }
 
     private fun next() {
