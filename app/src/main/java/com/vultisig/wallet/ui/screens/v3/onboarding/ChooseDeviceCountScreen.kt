@@ -16,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import app.rive.Alignment as RiveAlignment
 import app.rive.Fit
 import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
@@ -59,7 +60,7 @@ private fun ChooseDeviceCountScreen(onEvent: (ChooseDeviceCountUiEvent) -> Unit)
                     RiveAnimation(
                         file = riveFile,
                         viewModelInstance = vmi,
-                        fit = Fit.Contain(alignment = app.rive.Alignment.TopCenter),
+                        fit = Fit.Contain(alignment = RiveAlignment.TopCenter),
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Column(modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)) {
