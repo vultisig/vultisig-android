@@ -43,7 +43,7 @@ private fun ChooseDeviceCountScreen(onEvent: (ChooseDeviceCountUiEvent) -> Unit)
         applyGradientBackground = true,
         onBackClick = { onEvent(ChooseDeviceCountUiEvent.Back) },
         content = {
-            val riveFile = rememberRiveResourceFile(resId = R.raw.devices_component).value
+            val riveFile = rememberRiveResourceFile(resId = R.raw.riv_devices_component).value
 
             if (riveFile == null) {
                 VsCircularLoading(modifier = Modifier.fillMaxSize().wrapContentSize())
