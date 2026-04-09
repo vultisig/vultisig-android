@@ -10,7 +10,6 @@ import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -30,8 +29,7 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
 
     private val args = savedStateHandle.toRoute<Route.ChooseVaultCount>()
 
-    private val _deviceCount = MutableStateFlow(1)
-    val deviceCount = _deviceCount.asStateFlow()
+    private val deviceCount = MutableStateFlow(1)
 
     fun handleEvent(event: ChooseDeviceCountUiEvent) {
         when (event) {
@@ -47,7 +45,7 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
 
     private fun changeCount(index: Int) {
         // "Index" property of rive starts from 0
-        _deviceCount.update { index + 1 }
+        deviceCount.update { index + 1 }
     }
 
     private fun next() {
