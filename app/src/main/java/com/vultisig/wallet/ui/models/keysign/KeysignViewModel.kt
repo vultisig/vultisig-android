@@ -63,6 +63,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigInteger
 import java.util.Base64
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -379,7 +380,7 @@ constructor(
                 currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
             }
             isNavigateToHome = true
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Timber.e(e)
@@ -432,6 +433,9 @@ constructor(
             isNavigateToHome = true
 
             pullTssMessagesJob?.cancel()
+        } catch (e: CancellationException) {
+            pullTssMessagesJob?.cancel()
+            throw e
         } catch (e: Exception) {
             Timber.e(e)
             currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
@@ -509,6 +513,9 @@ constructor(
             pullTssMessagesJob?.cancel()
 
             delay(1.seconds)
+        } catch (e: CancellationException) {
+            pullTssMessagesJob?.cancel()
+            throw e
         } catch (e: Exception) {
             pullTssMessagesJob?.cancel()
             Timber.tag("KeysignViewModel")

@@ -1000,21 +1000,7 @@
     <string name="key_import_device_count_get_started">Começar</string>
     <string name="vault_count_recommended">Recomendada</string>
 
-    <string name="welcome_preference_devices_title">Quantos dispositivos tem?</string>
-    <string name="welcome_fast_and_easy">Rápido &amp; fácil</string>
-    <string name="welcome_fast_and_easy_desc">Assine com apenas 1 dispositivo. O nosso servidor seguro assina consigo para segurança multisig. Compatível com plugins.</string>
-    <string name="welcome_fast_and_easy_highlight">apenas 1 dispositivo.</string>
-    <string name="welcome_plugin_compatible">Compatível com Plugin Store</string>
     <string name="welcome_tip">Dica: Pode usar um browser como dispositivo</string>
-    <string name="welcome_only_your_devices">Apenas os seus dispositivos</string>
-    <string name="welcome_only_your_devices_desc">Apenas os seus dispositivos são signatários autorizados. Assinar transações requer 2 dispositivos. Custódia própria completa ao seu alcance.</string>
-    <string name="welcome_only_your_devices_highlight">requer 2 dispositivos.</string>
-    <string name="welcome_best_balance">Melhor equilíbrio</string>
-    <string name="welcome_best_balance_desc">A mistura perfeita entre conveniência e segurança. Assinar transações requer pelo menos 2 dispositivos. Um dispositivo de cópia de segurança.</string>
-    <string name="welcome_best_balance_highlight">pelo menos 2 dispositivos.</string>
-    <string name="welcome_maximum_security">Máxima segurança</string>
-    <string name="welcome_maximum_security_desc">A maior segurança, ideal para tesourarias ou DAOs. Assinar transações requer pelo menos 3 dispositivos.</string>
-    <string name="welcome_maximum_security_highlight">pelo menos 3 dispositivos.</string>
     <string name="vault_setup_your_vault_setup">A configuração do seu cofre</string>
     <string name="vault_setup_fast_vault">Cofre rápido</string>
     <string name="vault_setup_secure_vault">Cofre seguro</string>
