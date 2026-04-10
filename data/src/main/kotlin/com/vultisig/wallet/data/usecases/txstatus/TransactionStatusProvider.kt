@@ -5,11 +5,11 @@ import com.vultisig.wallet.data.models.TokenStandard
 import javax.inject.Inject
 
 sealed class TransactionResult {
-    object Confirmed : TransactionResult()
+    data object Confirmed : TransactionResult()
 
-    object Pending : TransactionResult()
+    data object Pending : TransactionResult()
 
-    object NotFound : TransactionResult()
+    data object NotFound : TransactionResult()
 
     data class Failed(val reason: String) : TransactionResult()
 }

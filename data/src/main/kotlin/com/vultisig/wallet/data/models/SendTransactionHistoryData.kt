@@ -69,6 +69,8 @@ internal fun TransactionHistoryData.toEntity(
 
 /** Deterministic id `"$chain:$txHash"`. The separator must not appear in either component. */
 internal fun buildTransactionHistoryId(chain: String, txHash: String): String {
+    require(chain.isNotEmpty()) { "chain must not be empty" }
+    require(txHash.isNotEmpty()) { "txHash must not be empty" }
     require(':' !in chain) { "chain must not contain ':' — got '$chain'" }
     require(':' !in txHash) { "txHash must not contain ':' — got '$txHash'" }
     return "$chain:$txHash"

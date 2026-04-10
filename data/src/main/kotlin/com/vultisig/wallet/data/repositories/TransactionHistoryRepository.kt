@@ -51,7 +51,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
     override suspend fun updateTransactionStatus(txHash: String, result: TransactionResult) {
         val now = System.currentTimeMillis()
         when (result) {
-            is TransactionResult.Confirmed ->
+            TransactionResult.Confirmed ->
                 dao.updateToConfirmed(txHash = txHash, confirmedAt = now, lastCheckedAt = now)
             is TransactionResult.Failed ->
                 dao.updateToFailed(

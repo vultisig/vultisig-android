@@ -24,7 +24,8 @@ class TronStatusProvider @Inject constructor(private val tronApi: TronApi) :
             }
         } catch (e: CancellationException) {
             throw e
-        } catch (_: ClientRequestException) {
+        } catch (e: ClientRequestException) {
+            Timber.w(e, "Tron status check got client error for %s", txHash)
             TransactionResult.Pending
         } catch (e: Exception) {
             Timber.w(e, "Tron status check failed for %s", txHash)

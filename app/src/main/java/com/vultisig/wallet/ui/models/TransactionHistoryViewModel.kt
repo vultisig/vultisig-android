@@ -197,8 +197,8 @@ constructor(
     }
 
     fun clearAllFilters() {
-        selectedAssetIds.value = emptySet()
-        selectedAssetsList.value = emptyList()
+        selectedAssetIds.update { emptySet() }
+        selectedAssetsList.update { emptyList() }
         _uiState.update { it.copy(selectedAssetIds = emptySet(), selectedAssets = emptyList()) }
     }
 
@@ -207,8 +207,8 @@ constructor(
     }
 
     fun closeSearch() {
-        selectedAssetIds.value = emptySet()
-        selectedAssetsList.value = emptyList()
+        selectedAssetIds.update { emptySet() }
+        selectedAssetsList.update { emptyList() }
         _uiState.update {
             it.copy(
                 isAssetSearchSheetVisible = false,
