@@ -6,7 +6,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.vultisig.wallet.data.models.TransactionHistoryData
-import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 
 enum class TransactionType {
     SEND,
@@ -20,14 +19,6 @@ enum class TransactionStatus {
     FAILED,
     NotFound,
 }
-
-fun TransactionResult.toDbModel() =
-    when (this) {
-        TransactionResult.Confirmed -> TransactionStatus.CONFIRMED
-        is TransactionResult.Failed -> TransactionStatus.FAILED
-        TransactionResult.NotFound -> TransactionStatus.NotFound
-        TransactionResult.Pending -> TransactionStatus.PENDING
-    }
 
 @Entity(
     tableName = "transaction_history",
