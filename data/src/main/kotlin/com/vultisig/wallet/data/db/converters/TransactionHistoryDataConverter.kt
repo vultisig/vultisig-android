@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.db.converters
 
 import androidx.room.TypeConverter
+import com.vultisig.wallet.data.models.SendTransactionHistoryData
+import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import kotlin.coroutines.cancellation.CancellationException
@@ -24,6 +26,8 @@ class TransactionHistoryDataConverter {
     fun toJson(data: TransactionHistoryData): String =
         when (data) {
             is UnknownTransactionHistoryData -> data.rawPayload
-            else -> json.encodeToString(TransactionHistoryData.serializer(), data)
+            is SendTransactionHistoryData,
+            is SwapTransactionHistoryData ->
+                json.encodeToString(TransactionHistoryData.serializer(), data)
         }
 }

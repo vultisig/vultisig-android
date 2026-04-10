@@ -8,8 +8,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable sealed interface TransactionHistoryData
 
-@Serializable
-@SerialName("unknown")
+/**
+ * Runtime-only wrapper for payloads the app cannot deserialize. Never serialized by Room —
+ * [TransactionHistoryDataConverter.toJson] writes [rawPayload] directly.
+ */
 data class UnknownTransactionHistoryData(val rawPayload: String = "") : TransactionHistoryData
 
 data class CommonTransactionHistoryData(
