@@ -34,6 +34,8 @@ interface TokenRepository {
 
     suspend fun getEVMTokenByContract(chainId: String, contractAddress: String): Coin?
 
+    suspend fun getBuiltInTokenByContract(chain: Chain, contractAddress: String): Coin?
+
     suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin>
 
     suspend fun getRefreshTokens(chain: Chain, vault: Vault): List<Coin>
@@ -59,6 +61,11 @@ constructor(
         builtInTokens
             .map { allTokens -> allTokens.firstOrNull { it.id.equals(tokenId, ignoreCase = true) } }
             .firstOrNull()
+
+    override suspend fun getBuiltInTokenByContract(chain: Chain, contractAddress: String): Coin? =
+        builtInTokens.firstOrNull()?.firstOrNull {
+            it.chain == chain && it.contractAddress.equals(contractAddress, ignoreCase = true)
+        }
 
     override suspend fun getNativeToken(chainId: String): Coin =
         nativeTokens.map { it -> it.first { it.chain.id == chainId } }.first()

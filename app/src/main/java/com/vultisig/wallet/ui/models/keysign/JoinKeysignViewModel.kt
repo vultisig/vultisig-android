@@ -1314,7 +1314,7 @@ constructor(
         return FunctionInfo(functionSignature, functionInputs, tokenDisplay)
     }
 
-    private fun resolveTokenDisplay(
+    private suspend fun resolveTokenDisplay(
         signature: String,
         argsJson: String,
         toAddress: String?,
@@ -1322,10 +1322,11 @@ constructor(
     ): String? {
         val pair = ContractCallExtractor.extract(signature, argsJson, toAddress) ?: return null
 
+        // Check vault first (user has added it), then the built-in tokens registry.
         val coin =
             _currentVault.coins.firstOrNull {
                 it.chain == chain && it.contractAddress.equals(pair.tokenAddress, ignoreCase = true)
-            } ?: return null
+            } ?: tokenRepository.getBuiltInTokenByContract(chain, pair.tokenAddress) ?: return null
 
         val raw = runCatching { java.math.BigInteger(pair.rawAmount) }.getOrNull() ?: return null
         val divisor = java.math.BigInteger.TEN.pow(coin.decimal)
