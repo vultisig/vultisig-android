@@ -236,6 +236,13 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                 value = transaction.memo,
             )
 
+        if (transaction.tokenDisplay != null) {
+            UiHorizontalDivider()
+            OtherField(
+                title = stringResource(R.string.verify_transaction_amount_title),
+                value = transaction.tokenDisplay,
+            )
+        }
         if (transaction.functionSignature != null) {
             UiHorizontalDivider()
             OtherField(

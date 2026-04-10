@@ -56,6 +56,7 @@ internal data class TransactionDetailsUiModel(
     val signSolana: String? = null,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
+    val tokenDisplay: String? = null,
 )
 
 @Immutable
@@ -67,6 +68,7 @@ internal data class VerifyTransactionUiModel(
     val hasFastSign: Boolean = false,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
+    val tokenDisplay: String? = null,
     val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
     val showScanningWarning: Boolean = false,
     val isLoadingFees: Boolean = false,

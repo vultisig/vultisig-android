@@ -43,6 +43,7 @@ import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.ContractCallExtractor
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -159,7 +160,11 @@ internal sealed class VerifyUiModel {
     data class SignMessage(val model: VerifySignMessageUiModel) : VerifyUiModel()
 }
 
-internal data class FunctionInfo(val signature: String, val inputs: String)
+internal data class FunctionInfo(
+    val signature: String,
+    val inputs: String,
+    val tokenDisplay: String? = null,
+)
 
 @HiltViewModel
 internal class JoinKeysignViewModel
@@ -926,7 +931,8 @@ constructor(
                                 selectedToken = payload.coin,
                             )
                         )
-                    val functionInfo = getTransactionFunctionInfo(payload.memo, chain)
+                    val functionInfo =
+                        getTransactionFunctionInfo(payload.memo, chain, payload.toAddress)
                     val normalizedSignAminoJson =
                         kotlinx.serialization.json.buildJsonArray {
                             payload.signAmino?.msgs?.forEach { cosmosMsg ->
@@ -1022,6 +1028,7 @@ constructor(
                             dstAddressBookTitle = dstAddressBookTitle,
                             functionSignature = functionInfo?.signature,
                             functionInputs = functionInfo?.inputs,
+                            tokenDisplay = functionInfo?.tokenDisplay,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)
@@ -1031,6 +1038,7 @@ constructor(
                                 transaction = namedTransactionUiModel,
                                 functionSignature = functionInfo?.signature,
                                 functionInputs = functionInfo?.inputs,
+                                tokenDisplay = functionInfo?.tokenDisplay,
                             )
                         )
                     val uiModel = verifyUiModel.value
@@ -1212,19 +1220,18 @@ constructor(
     }
 
     private fun waitForKeysignToStart() {
-        _jobWaitingForKeysignStart =
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    while (isActive) {
-                        if (checkKeygenStarted()) {
-                            currentState.value = JoinKeysignState.Keysign
-                            return@withContext
-                        }
-                        // backoff 1s
-                        delay(1000)
+        _jobWaitingForKeysignStart = viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                while (isActive) {
+                    if (checkKeygenStarted()) {
+                        currentState.value = JoinKeysignState.Keysign
+                        return@withContext
                     }
+                    // backoff 1s
+                    delay(1000)
                 }
             }
+        }
     }
 
     private suspend fun checkKeygenStarted(): Boolean {
@@ -1285,14 +1292,54 @@ constructor(
         super.onCleared()
     }
 
-    private suspend fun getTransactionFunctionInfo(memo: String?, chain: Chain): FunctionInfo? {
+    private suspend fun getTransactionFunctionInfo(
+        memo: String?,
+        chain: Chain,
+        toAddress: String?,
+    ): FunctionInfo? {
         if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty()) return null
 
-        val functionSignature = fourByteRepository.decodeFunction(memo)
+        val functionSignature = fourByteRepository.decodeFunction(memo) ?: return null
         val functionInputs =
-            if (functionSignature != null) {
-                fourByteRepository.decodeFunctionArgs(functionSignature, memo) ?: return null
-            } else return null
-        return FunctionInfo(functionSignature, functionInputs)
+            fourByteRepository.decodeFunctionArgs(functionSignature, memo) ?: return null
+
+        val tokenDisplay =
+            resolveTokenDisplay(
+                signature = functionSignature,
+                argsJson = functionInputs,
+                toAddress = toAddress,
+                chain = chain,
+            )
+
+        return FunctionInfo(functionSignature, functionInputs, tokenDisplay)
+    }
+
+    private fun resolveTokenDisplay(
+        signature: String,
+        argsJson: String,
+        toAddress: String?,
+        chain: Chain,
+    ): String? {
+        val pair = ContractCallExtractor.extract(signature, argsJson, toAddress) ?: return null
+
+        val coin =
+            _currentVault.coins.firstOrNull {
+                it.chain == chain && it.contractAddress.equals(pair.tokenAddress, ignoreCase = true)
+            } ?: return null
+
+        val raw = runCatching { java.math.BigInteger(pair.rawAmount) }.getOrNull() ?: return null
+        val divisor = java.math.BigInteger.TEN.pow(coin.decimal)
+        val whole = raw.divide(divisor)
+        val remainder = raw.mod(divisor)
+
+        val formatted =
+            if (remainder == java.math.BigInteger.ZERO) {
+                whole.toString()
+            } else {
+                val padded = remainder.toString().padStart(coin.decimal, '0')
+                val trimmed = padded.trimEnd('0')
+                if (trimmed.isEmpty()) whole.toString() else "$whole.$trimmed"
+            }
+        return "$formatted ${coin.ticker}"
     }
 }
