@@ -236,6 +236,21 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                 value = transaction.memo,
             )
 
+        if (transaction.functionSignature != null) {
+            UiHorizontalDivider()
+            OtherField(
+                title = stringResource(R.string.deposit_screen_title),
+                value = transaction.functionSignature,
+            )
+        }
+        if (transaction.functionInputs != null) {
+            UiHorizontalDivider()
+            OtherField(
+                title = stringResource(R.string.verify_transaction_function_inputs_title),
+                value = transaction.functionInputs,
+            )
+        }
+
         OtherField(
             title = stringResource(R.string.verify_transaction_amount_title),
             value = transaction.token.value,

@@ -1020,6 +1020,8 @@ constructor(
                             srcVaultName = srcVaultName,
                             dstVaultName = dstVaultName,
                             dstAddressBookTitle = dstAddressBookTitle,
+                            functionSignature = functionInfo?.signature,
+                            functionInputs = functionInfo?.inputs,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)

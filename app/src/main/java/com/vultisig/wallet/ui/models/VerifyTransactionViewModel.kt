@@ -54,6 +54,8 @@ internal data class TransactionDetailsUiModel(
     val signAmino: String? = null,
     val signDirect: String? = null,
     val signSolana: String? = null,
+    val functionSignature: String? = null,
+    val functionInputs: String? = null,
 )
 
 @Immutable
