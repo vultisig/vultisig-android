@@ -5,7 +5,6 @@ import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
-import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.json.Json
 
 private val json = Json { ignoreUnknownKeys = true }
@@ -16,8 +15,6 @@ class TransactionHistoryDataConverter {
     fun fromJson(value: String): TransactionHistoryData =
         try {
             json.decodeFromString(TransactionHistoryData.serializer(), value)
-        } catch (e: CancellationException) {
-            throw e
         } catch (_: Exception) {
             UnknownTransactionHistoryData(rawPayload = value)
         }
