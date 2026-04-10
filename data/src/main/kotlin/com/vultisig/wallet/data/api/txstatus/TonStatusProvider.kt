@@ -5,24 +5,25 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
+import timber.log.Timber
 
 class TonStatusProvider @Inject constructor(private val tonApi: TonApi) :
     TransactionStatusProvider {
-    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        return try {
-            var resp = tonApi.getTsStatus(txHash)
 
-            if (
-                resp.transactions.firstOrNull()?.finality != null &&
-                    resp.transactions.firstOrNull()?.finality?.lowercase()?.contains("unknown") ==
-                        true
-            ) {
-                return TransactionResult.Confirmed
-            } else {
-                TransactionResult.Pending
+    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult =
+        try {
+            val tx = tonApi.getTsStatus(txHash).transactions.firstOrNull()
+            when {
+                tx == null -> TransactionResult.NotFound
+                tx.description == null -> TransactionResult.Pending
+                tx.description.aborted == true -> TransactionResult.Failed("Transaction aborted")
+                else -> TransactionResult.Confirmed
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            TransactionResult.Failed(e.message.toString())
+            Timber.w(e, "TON status check failed for %s", txHash)
+            TransactionResult.Pending
         }
-    }
 }
