@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.db.models.TransactionStatus
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
+import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
@@ -270,7 +271,7 @@ constructor(
                     )
                 }
                 .combine(currentTime) { entities, now ->
-                    entities.map { it.toUiModel(now) }.groupByDate(now)
+                    entities.mapNotNull { it.toUiModel(now) }.groupByDate(now)
                 }
                 .combine(selectedAssetIds) { groups, ids ->
                     if (ids.isEmpty()) groups
@@ -327,6 +328,8 @@ constructor(
                                             )
                                         )
                                     }
+
+                                    is UnknownTransactionHistoryData -> Unit
                                 }
                             }
                         }
@@ -352,7 +355,7 @@ constructor(
             TransactionHistoryTab.SEND -> TransactionHistoryType.SEND
         }
 
-    private fun TransactionHistoryEntity.toUiModel(now: Long): TransactionHistoryItemUiModel {
+    private fun TransactionHistoryEntity.toUiModel(now: Long): TransactionHistoryItemUiModel? {
         val statusUiModel =
             when (status) {
                 TransactionStatus.BROADCASTED -> TransactionStatusUiModel.Broadcasted
@@ -409,6 +412,8 @@ constructor(
                     toAddress = null,
                     feeEstimate = null,
                 )
+
+            is UnknownTransactionHistoryData -> null
         }
     }
 

@@ -56,4 +56,9 @@ data class TransactionHistoryEntity(
     @ColumnInfo("confirmedAt") val confirmedAt: Long?,
     @ColumnInfo("failureReason") val failureReason: String?,
     @ColumnInfo("lastCheckedAt") val lastCheckedAt: Long?,
+    /**
+     * Consecutive poll failures — drives exponential backoff in
+     * [RefreshPendingTransactionsUseCase].
+     */
+    @ColumnInfo("retryCount", defaultValue = "0") val retryCount: Int = 0,
 )

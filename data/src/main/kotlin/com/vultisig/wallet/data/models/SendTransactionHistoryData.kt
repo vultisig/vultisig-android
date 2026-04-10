@@ -8,6 +8,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable sealed interface TransactionHistoryData
 
+@Serializable
+@SerialName("unknown")
+data class UnknownTransactionHistoryData(val rawPayload: String = "") : TransactionHistoryData
+
 data class CommonTransactionHistoryData(
     val confirmedAt: Long?,
     val failureReason: String?,
