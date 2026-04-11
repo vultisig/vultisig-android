@@ -316,7 +316,7 @@ class DKLSKeygen(
             attempt = attempt,
             retry = { nextAttempt, cause ->
                 Timber.d("Failed to generate key, error: ${cause.localizedMessage}")
-                Timber.d("keygen/reshare retry, attempt: $attempt")
+                Timber.d("keygen/reshare retry, attempt: %d", nextAttempt)
                 dklsKeygenWithRetry(nextAttempt, routing)
             },
         ) {
