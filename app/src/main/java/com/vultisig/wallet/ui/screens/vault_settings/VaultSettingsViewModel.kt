@@ -47,6 +47,7 @@ internal data class BiometricsEnableUiModel(
     val isPasswordVisible: Boolean = false,
     val passwordErrorMessage: UiText? = null,
     val passwordHint: UiText? = null,
+    val isLoading: Boolean = false,
 )
 
 internal data class VaultSettingsState(
@@ -515,12 +516,14 @@ constructor(
     fun onSaveEnableBiometricFastSign() =
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId exists")
+            setBiometricLoading(isLoading = true)
             val isPasswordValid =
                 vultiSignerRepository.isPasswordValid(
                     publicKeyEcdsa = vault.pubKeyECDSA,
                     password = passwordTextFieldState.text.toString(),
                 )
 
+            setBiometricLoading(isLoading = false)
             if (!isPasswordValid) {
                 val hint = getPasswordHint()
                 passwordTextFieldState.clearText()
@@ -550,6 +553,16 @@ constructor(
                 showSnackbarMessage()
             }
         }
+
+    private fun setBiometricLoading(isLoading: Boolean) {
+        uiModel.update {
+            it.copy(
+                biometricsEnableUiModel = it.biometricsEnableUiModel.copy(
+                    isLoading = isLoading,
+                )
+            )
+        }
+    }
 
     private fun hideBiometricFastVaultBottomSheet() {
         uiModel.update { it.copy(isBiometricFastSignBottomSheetVisible = false) }

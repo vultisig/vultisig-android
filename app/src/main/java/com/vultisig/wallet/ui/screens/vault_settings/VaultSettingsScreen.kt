@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VsCircularLoading
 import com.vultisig.wallet.ui.components.backup.BackupMethodBottomSheet
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -109,7 +111,7 @@ private fun VaultSettingsScreen(
                     biometricTextFieldState,
                     onToggleVisibilityClick,
                     onSaveBiometricsClick,
-                    uiModel,
+                    uiModel.biometricsEnableUiModel,
                 )
             }
         }
@@ -122,33 +124,24 @@ private fun BiometricFastSignBottomSheet(
     biometricTextFieldState: TextFieldState,
     onToggleVisibilityClick: () -> Unit,
     onSaveBiometricsClick: () -> Unit,
-    uiModel: VaultSettingsState,
+    biometricsEnableUiModel: BiometricsEnableUiModel,
 ) {
     VsModalBottomSheet(onDismissRequest = onDismissBiometricsBottomSheet) {
         BiometricFastSignBottomSheetContent(
+            uiModel = biometricsEnableUiModel,
             passwordTextFieldState = biometricTextFieldState,
             onToggleVisibilityClick = onToggleVisibilityClick,
             onSaveClick = onSaveBiometricsClick,
-            hint =
-                uiModel.biometricsEnableUiModel.passwordHint?.asString()
-                    ?: stringResource(R.string.import_file_screen_hint_password),
-            errorMessage = uiModel.biometricsEnableUiModel.passwordErrorMessage?.asString(),
-            isSaveEnabled = uiModel.biometricsEnableUiModel.isSaveEnabled,
-            isPasswordVisible = uiModel.biometricsEnableUiModel.isPasswordVisible,
         )
     }
 }
 
-@Preview
 @Composable
 private fun BiometricFastSignBottomSheetContent(
-    passwordTextFieldState: TextFieldState = rememberTextFieldState(),
-    onToggleVisibilityClick: () -> Unit = {},
-    onSaveClick: () -> Unit = {},
-    hint: String? = null,
-    errorMessage: String? = null,
-    isSaveEnabled: Boolean = true,
-    isPasswordVisible: Boolean = true,
+    uiModel: BiometricsEnableUiModel,
+    passwordTextFieldState: TextFieldState,
+    onToggleVisibilityClick: () -> Unit,
+    onSaveClick: () -> Unit,
 ) {
     Column(
         Modifier.padding(16.dp).verticalScroll(rememberScrollState()),
@@ -162,14 +155,15 @@ private fun BiometricFastSignBottomSheetContent(
 
         FadingHorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
 
+        val errorMessage = uiModel.passwordErrorMessage?.asString()
         VsTextInputField(
             textFieldState = passwordTextFieldState,
             type =
                 VsTextInputFieldType.Password(
-                    isVisible = isPasswordVisible,
+                    isVisible = uiModel.isPasswordVisible,
                     onVisibilityClick = onToggleVisibilityClick,
                 ),
-            hint = hint,
+            hint = uiModel.passwordHint?.asString() ?: stringResource(R.string.import_file_screen_hint_password),
             footNote = errorMessage,
             innerState =
                 if (errorMessage != null) VsTextInputFieldInnerState.Error
@@ -179,10 +173,36 @@ private fun BiometricFastSignBottomSheetContent(
         UiSpacer(14.dp)
 
         VsButton(
-            state = if (isSaveEnabled) VsButtonState.Enabled else VsButtonState.Disabled,
-            label = stringResource(R.string.add_vault_save),
+            state =
+                when {
+                    uiModel.isLoading -> VsButtonState.Disabled
+                    uiModel.isSaveEnabled -> VsButtonState.Enabled
+                    else -> VsButtonState.Disabled
+                },
             onClick = onSaveClick,
             modifier = Modifier.fillMaxWidth(),
-        )
+        ) {
+            if (uiModel.isLoading) {
+                VsCircularLoading(modifier = Modifier.size(20.dp))
+            } else {
+                Text(
+                    text = stringResource(R.string.add_vault_save),
+                    style = Theme.brockmann.button.semibold.medium,
+                    color = Theme.v2.colors.text.button.primary,
+                )
+            }
+        }
     }
+}
+
+
+@Preview
+@Composable
+private fun BiometricFastSignBottomSheetContentPreview() {
+    BiometricFastSignBottomSheetContent(
+        uiModel = BiometricsEnableUiModel(),
+        passwordTextFieldState = rememberTextFieldState(),
+        onToggleVisibilityClick = {},
+        onSaveClick = {},
+    )
 }
