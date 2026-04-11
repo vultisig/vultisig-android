@@ -167,11 +167,14 @@ constructor(
     private val isReshareMode: Boolean = action == TssAction.ReShare
 
     private companion object {
-        const val ROOT_ECDSA_MESSAGE_ID = "ecdsa"
-        const val ROOT_EDDSA_MESSAGE_ID = "eddsa"
+        // Relay message IDs must match the server batch keygen protocol prefixes.
+        // Server uses "p-ecdsa", "p-eddsa", "p-mldsa" in ProcessBatchKeygen.
+        const val ROOT_ECDSA_MESSAGE_ID = "p-ecdsa"
+        const val ROOT_EDDSA_MESSAGE_ID = "p-eddsa"
         const val ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID = "ecdsa_key_import"
         const val ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID = "eddsa_key_import"
-        const val MLDSA_MESSAGE_ID = "mldsa"
+        const val ROOT_MLDSA_EXCHANGE_MESSAGE_ID = "p-mldsa"
+        const val ROOT_MLDSA_SETUP_MESSAGE_ID = "p-mldsa-setup"
     }
 
     init {
@@ -186,7 +189,7 @@ constructor(
         shouldUseNewKeygenExecution(
             action = action,
             libType = libType,
-            isParallelKeygenFeatureEnabled = featureFlags.isParallelKeygenEnabled,
+            isParallelKeygenFeatureEnabled = featureFlags.isTssBatchEnabled,
         )
 
     private fun createDklsKeygen(localUi: String, action: TssAction = this.action): DKLSKeygen =
@@ -453,7 +456,10 @@ constructor(
         if (useNewKeygenPath) {
             mldsaKeygen.mldsaKeygenWithRetry(
                 0,
-                KeygenRouting.from(setupMessageId = MLDSA_MESSAGE_ID),
+                KeygenRouting.from(
+                    setupMessageId = ROOT_MLDSA_SETUP_MESSAGE_ID,
+                    exchangeMessageId = ROOT_MLDSA_EXCHANGE_MESSAGE_ID,
+                ),
             )
         } else {
             mldsaKeygen.mldsaKeygenWithRetry(0)

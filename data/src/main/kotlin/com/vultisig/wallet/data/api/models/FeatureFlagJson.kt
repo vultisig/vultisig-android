@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FeatureFlagJson(
     @SerialName("encrypt-gcm") val isEncryptGcmEnabled: Boolean = false,
-    @SerialName("parallel-keygen") val isParallelKeygenEnabled: Boolean = false,
+    @SerialName("tss-batch") val isTssBatchEnabled: Boolean = false,
 )

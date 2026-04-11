@@ -18,7 +18,7 @@ class FeatureFlagRepositoryTest {
                             Result.success(
                                 FeatureFlagJson(
                                     isEncryptGcmEnabled = true,
-                                    isParallelKeygenEnabled = true,
+                                    isTssBatchEnabled = true,
                                 )
                             )
                         )
@@ -28,7 +28,7 @@ class FeatureFlagRepositoryTest {
         val flags = repository.getFeatureFlags()
 
         assertEquals(true, flags.isEncryptGcmEnabled)
-        assertEquals(true, flags.isParallelKeygenEnabled)
+        assertEquals(true, flags.isTssBatchEnabled)
     }
 
     @Test
@@ -52,10 +52,10 @@ class FeatureFlagRepositoryTest {
             FakeFeatureFlagApi(
                 listOf(
                     Result.success(
-                        FeatureFlagJson(isEncryptGcmEnabled = true, isParallelKeygenEnabled = false)
+                        FeatureFlagJson(isEncryptGcmEnabled = true, isTssBatchEnabled = false)
                     ),
                     Result.success(
-                        FeatureFlagJson(isEncryptGcmEnabled = false, isParallelKeygenEnabled = true)
+                        FeatureFlagJson(isEncryptGcmEnabled = false, isTssBatchEnabled = true)
                     ),
                 )
             )
@@ -65,8 +65,8 @@ class FeatureFlagRepositoryTest {
         val second = repository.getFeatureFlags()
 
         assertEquals(2, api.calls)
-        assertEquals(false, first.isParallelKeygenEnabled)
-        assertEquals(true, second.isParallelKeygenEnabled)
+        assertEquals(false, first.isTssBatchEnabled)
+        assertEquals(true, second.isTssBatchEnabled)
     }
 
     @Test
@@ -75,7 +75,7 @@ class FeatureFlagRepositoryTest {
             FakeFeatureFlagApi(
                 listOf(
                     Result.failure(IllegalStateException("temporary failure")),
-                    Result.success(FeatureFlagJson(isParallelKeygenEnabled = true)),
+                    Result.success(FeatureFlagJson(isTssBatchEnabled = true)),
                 )
             )
         val repository = FeatureFlagRepositoryImpl(api)
@@ -84,7 +84,7 @@ class FeatureFlagRepositoryTest {
         val second = repository.getFeatureFlags()
 
         assertEquals(FeatureFlagJson(), first)
-        assertEquals(true, second.isParallelKeygenEnabled)
+        assertEquals(true, second.isTssBatchEnabled)
         assertEquals(2, api.calls)
     }
 
