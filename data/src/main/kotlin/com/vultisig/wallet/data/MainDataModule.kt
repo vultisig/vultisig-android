@@ -15,9 +15,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import java.io.File
+import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.KeyStore
-import java.security.KeyStoreException
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
@@ -67,10 +67,8 @@ internal interface MainDataModule {
                 )
             }
 
-            return try {
-                create()
-            } catch (e: GeneralSecurityException) {
-                Timber.e(e, "EncryptedSharedPrefs init failed, attempting recovery")
+            fun recoverAndRetry(cause: Exception): SharedPreferences {
+                Timber.e(cause, "EncryptedSharedPrefs init failed, attempting recovery")
                 val prefsFile =
                     File(context.filesDir.parent, "shared_prefs/token_encrypted_prefs.xml")
                 if (prefsFile.exists() && !prefsFile.delete()) {
@@ -83,10 +81,18 @@ internal interface MainDataModule {
                     val keyStore = KeyStore.getInstance("AndroidKeyStore")
                     keyStore.load(null)
                     keyStore.deleteEntry("_androidx_security_master_key_")
-                } catch (deleteException: KeyStoreException) {
+                } catch (deleteException: Exception) {
                     Timber.e(deleteException, "Failed to delete master key entry during recovery")
                 }
+                return create()
+            }
+
+            return try {
                 create()
+            } catch (e: GeneralSecurityException) {
+                recoverAndRetry(e)
+            } catch (e: IOException) {
+                recoverAndRetry(e)
             }
         }
     }
