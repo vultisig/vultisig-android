@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
@@ -18,6 +19,18 @@ fun V3Background(
     backgroundColor: Color = Theme.v2.colors.backgrounds.primary,
     shineSpotColor: Color = Theme.v2.colors.buttons.ctaPrimary,
 ) {
+    val radialBrush =
+        remember(shineSpotColor) {
+            Brush.radialGradient(
+                colors = listOf(shineSpotColor.copy(alpha = 0.75f), Color.Transparent)
+            )
+        }
+    val verticalBrush =
+        remember(backgroundColor) {
+            Brush.verticalGradient(
+                colors = listOf(backgroundColor.copy(alpha = 0.5f), Color.Transparent)
+            )
+        }
     Box(
         modifier =
             Modifier.fillMaxSize().background(backgroundColor).drawBehind {
@@ -29,25 +42,12 @@ fun V3Background(
                     scale(scaleX = scaleX, scaleY = scaleY, pivot = center.copy(y = height + 100f))
                 }) {
                     drawCircle(
-                        brush =
-                            Brush.radialGradient(
-                                colors =
-                                    listOf(shineSpotColor.copy(alpha = 0.75f), Color.Transparent),
-                                center = center,
-                                radius = minOf(width, height) / 2,
-                            ),
+                        brush = radialBrush,
                         radius = minOf(width, height) / 2,
                         center = center,
                     )
                 }
-                drawRect(
-                    brush =
-                        Brush.verticalGradient(
-                            colors = listOf(backgroundColor.copy(alpha = 0.5f), Color.Transparent),
-                            endY = height / 4,
-                        ),
-                    size = size.copy(height = height / 4),
-                )
+                drawRect(brush = verticalBrush, size = size.copy(height = height / 4))
             }
     )
 }

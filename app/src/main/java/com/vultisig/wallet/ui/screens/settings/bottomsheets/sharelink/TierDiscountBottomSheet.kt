@@ -15,6 +15,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -58,6 +59,9 @@ internal fun TierDiscountBottomSheet(
 @Composable
 internal fun TierDiscountBottomSheetContent(tier: TierType, onContinue: () -> Unit) {
     val tierStyle = getStyleByTier(tier)
+    val gradientBrush = remember {
+        Brush.linearGradient(colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76)))
+    }
 
     Box(
         modifier =
@@ -122,13 +126,7 @@ internal fun TierDiscountBottomSheetContent(tier: TierType, onContinue: () -> Un
                         if (tierStyle.tierBackgroundImage != null) {
                             pushStyle(
                                 Theme.brockmann.headings.title1
-                                    .copy(
-                                        brush =
-                                            Brush.linearGradient(
-                                                colors =
-                                                    listOf(Color(0xFFD8BA7B), Color(0xFF794D76))
-                                            )
-                                    )
+                                    .copy(brush = gradientBrush)
                                     .toSpanStyle()
                             )
                         } else {
@@ -183,23 +181,16 @@ internal fun TierDiscountBottomSheetContent(tier: TierType, onContinue: () -> Un
 
 @Composable
 private fun TierTitleWithBackgroundImage(tierStyle: BottomSheetTierStyle) {
-    val gradientBrush = Brush.linearGradient(colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76)))
+    val gradientBrush = remember {
+        Brush.linearGradient(colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76)))
+    }
 
     Text(
         text =
             buildAnnotatedString {
                 append(tierStyle.titlePart1 + " ")
 
-                pushStyle(
-                    Theme.brockmann.headings.title1
-                        .copy(
-                            brush =
-                                Brush.linearGradient(
-                                    colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76))
-                                )
-                        )
-                        .toSpanStyle()
-                )
+                pushStyle(Theme.brockmann.headings.title1.copy(brush = gradientBrush).toSpanStyle())
                 append(tierStyle.titlePart2)
                 pop()
 
