@@ -81,7 +81,9 @@ internal interface MainDataModule {
                     val keyStore = KeyStore.getInstance("AndroidKeyStore")
                     keyStore.load(null)
                     keyStore.deleteEntry("_androidx_security_master_key_")
-                } catch (deleteException: Exception) {
+                } catch (deleteException: GeneralSecurityException) {
+                    Timber.e(deleteException, "Failed to delete master key entry during recovery")
+                } catch (deleteException: IOException) {
                     Timber.e(deleteException, "Failed to delete master key entry during recovery")
                 }
                 return create()
