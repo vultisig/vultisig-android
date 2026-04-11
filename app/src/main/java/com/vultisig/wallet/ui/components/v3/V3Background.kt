@@ -39,7 +39,11 @@ fun V3Background(
                     val scaleX = 1.5f
                     val scaleY = 1.75f
                     withTransform({
-                        scale(scaleX = scaleX, scaleY = scaleY, pivot = center.copy(y = height + 100f))
+                        scale(
+                            scaleX = scaleX,
+                            scaleY = scaleY,
+                            pivot = center.copy(y = height + 100f),
+                        )
                     }) {
                         drawCircle(
                             brush = radialBrush,
