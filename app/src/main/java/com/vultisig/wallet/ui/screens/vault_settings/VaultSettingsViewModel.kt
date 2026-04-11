@@ -557,9 +557,7 @@ constructor(
     private fun setBiometricLoading(isLoading: Boolean) {
         uiModel.update {
             it.copy(
-                biometricsEnableUiModel = it.biometricsEnableUiModel.copy(
-                    isLoading = isLoading,
-                )
+                biometricsEnableUiModel = it.biometricsEnableUiModel.copy(isLoading = isLoading)
             )
         }
     }

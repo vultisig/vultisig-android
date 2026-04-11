@@ -163,7 +163,9 @@ private fun BiometricFastSignBottomSheetContent(
                     isVisible = uiModel.isPasswordVisible,
                     onVisibilityClick = onToggleVisibilityClick,
                 ),
-            hint = uiModel.passwordHint?.asString() ?: stringResource(R.string.import_file_screen_hint_password),
+            hint =
+                uiModel.passwordHint?.asString()
+                    ?: stringResource(R.string.import_file_screen_hint_password),
             footNote = errorMessage,
             innerState =
                 if (errorMessage != null) VsTextInputFieldInnerState.Error
@@ -194,7 +196,6 @@ private fun BiometricFastSignBottomSheetContent(
         }
     }
 }
-
 
 @Preview
 @Composable
