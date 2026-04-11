@@ -1283,8 +1283,7 @@ internal fun FadingHorizontalDivider(modifier: Modifier = Modifier) {
     )
 }
 
-@Composable
-private fun Modifier.vsClickableBackground() =
+private fun Modifier.vsClickableBackground() = composed {
     border(
             border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
             shape = RoundedCornerShape(12.dp),
@@ -1293,6 +1292,7 @@ private fun Modifier.vsClickableBackground() =
             color = Theme.v2.colors.backgrounds.secondary,
             shape = RoundedCornerShape(12.dp),
         )
+}
 
 @Composable
 private fun FoldableSection(
