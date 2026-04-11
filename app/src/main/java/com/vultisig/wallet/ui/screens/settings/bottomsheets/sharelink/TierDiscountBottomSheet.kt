@@ -15,14 +15,12 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -59,9 +57,7 @@ internal fun TierDiscountBottomSheet(
 @Composable
 internal fun TierDiscountBottomSheetContent(tier: TierType, onContinue: () -> Unit) {
     val tierStyle = getStyleByTier(tier)
-    val gradientBrush = remember {
-        Brush.linearGradient(colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76)))
-    }
+    val gradientBrush = Theme.v2.colors.gradients.ultimateTierTitle
 
     Box(
         modifier =
@@ -181,9 +177,7 @@ internal fun TierDiscountBottomSheetContent(tier: TierType, onContinue: () -> Un
 
 @Composable
 private fun TierTitleWithBackgroundImage(tierStyle: BottomSheetTierStyle) {
-    val gradientBrush = remember {
-        Brush.linearGradient(colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76)))
-    }
+    val gradientBrush = Theme.v2.colors.gradients.ultimateTierTitle
 
     Text(
         text =
