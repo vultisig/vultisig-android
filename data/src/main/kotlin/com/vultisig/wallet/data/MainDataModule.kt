@@ -14,12 +14,15 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.io.File
+import java.security.KeyStore
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.CompressorStreamProvider
+import timber.log.Timber
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -51,15 +54,31 @@ internal interface MainDataModule {
         @Singleton
         @Provides
         fun provideEncryptedSharedPrefs(@ApplicationContext context: Context): SharedPreferences {
-            val masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+            fun create(): SharedPreferences {
+                val masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+                return EncryptedSharedPreferences.create(
+                    "token_encrypted_prefs",
+                    masterKey,
+                    context,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+                )
+            }
 
-            return EncryptedSharedPreferences.create(
-                "token_encrypted_prefs",
-                masterKey,
-                context,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-            )
+            return try {
+                create()
+            } catch (e: Exception) {
+                Timber.e(e, "EncryptedSharedPrefs init failed, attempting recovery")
+                File(context.filesDir.parent, "shared_prefs/token_encrypted_prefs.xml").delete()
+                try {
+                    val keyStore = KeyStore.getInstance("AndroidKeyStore")
+                    keyStore.load(null)
+                    keyStore.deleteEntry("_androidx_security_master_key_")
+                } catch (deleteException: Exception) {
+                    Timber.e(deleteException, "Failed to delete master key entry during recovery")
+                }
+                create()
+            }
         }
     }
 
