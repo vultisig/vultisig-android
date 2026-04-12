@@ -11,15 +11,27 @@ class Pbkdf2AesEncryptionTest {
     private val legacyAes = AesEncryption()
     private val pbkdf2Aes = Pbkdf2AesEncryption(legacyAes)
 
+    private val noopLegacy =
+        object : Encryption {
+            override fun encrypt(data: ByteArray, password: ByteArray): ByteArray =
+                error("Not used in this test")
+
+            override fun decrypt(data: ByteArray, password: ByteArray): ByteArray? = null
+        }
+    private val pbkdf2AesNoLegacy = Pbkdf2AesEncryption(noopLegacy)
+
     private val originalInput = "Original Input 123"
     private val password = "password123"
 
     @Test
     fun `PBKDF2 encryption is reversible`() {
         val encrypted =
-            pbkdf2Aes.encrypt(originalInput.toByteArray(Charsets.UTF_8), password.toByteArray())
+            pbkdf2AesNoLegacy.encrypt(
+                originalInput.toByteArray(Charsets.UTF_8),
+                password.toByteArray(),
+            )
 
-        val decrypted = pbkdf2Aes.decrypt(encrypted, password.toByteArray())
+        val decrypted = pbkdf2AesNoLegacy.decrypt(encrypted, password.toByteArray())
         assertNotNull(decrypted)
         assertEquals(originalInput, decrypted.toString(Charsets.UTF_8))
     }
@@ -27,15 +39,13 @@ class Pbkdf2AesEncryptionTest {
     @Test
     fun `PBKDF2 decryption fails with wrong password`() {
         val encrypted =
-            pbkdf2Aes.encrypt(originalInput.toByteArray(Charsets.UTF_8), password.toByteArray())
+            pbkdf2AesNoLegacy.encrypt(
+                originalInput.toByteArray(Charsets.UTF_8),
+                password.toByteArray(),
+            )
 
-        try {
-            val decrypted = pbkdf2Aes.decrypt(encrypted, "wrongpassword".toByteArray())
-            // If legacy fallback is available (Android), it should return null
-            assertNull(decrypted)
-        } catch (_: Exception) {
-            // Legacy fallback may throw on JVM (PKCS7PADDING unavailable)
-        }
+        val decrypted = pbkdf2AesNoLegacy.decrypt(encrypted, "wrongpassword".toByteArray())
+        assertNull(decrypted)
     }
 
     @Test

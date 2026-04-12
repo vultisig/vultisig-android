@@ -38,14 +38,19 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
     }
 
     override fun decrypt(data: ByteArray, password: ByteArray): ByteArray? {
-        if (data.isNotEmpty() && data[0] == VERSION_PBKDF2 && data.size > PBKDF2_HEADER_SIZE) {
-            try {
-                return decryptPbkdf2(data, password)
-            } catch (e: Exception) {
-                Timber.e(e, "PBKDF2 decryption failed, trying legacy")
-            }
+        if (data.isEmpty() || data[0] != VERSION_PBKDF2) {
+            return legacyEncryption.decrypt(data, password)
         }
-        return legacyEncryption.decrypt(data, password)
+        if (data.size < PBKDF2_HEADER_SIZE + GCM_TAG_BYTES) {
+            Timber.e("Invalid PBKDF2 vault backup payload")
+            return null
+        }
+        return try {
+            decryptPbkdf2(data, password)
+        } catch (e: Exception) {
+            Timber.e(e, "PBKDF2 decryption failed")
+            null
+        }
     }
 
     private fun decryptPbkdf2(data: ByteArray, password: ByteArray): ByteArray {
@@ -78,6 +83,7 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
         private const val SALT_LENGTH = 16
         private const val IV_LENGTH = 12
         private const val GCM_TAG_BITS = 128
+        private const val GCM_TAG_BYTES = GCM_TAG_BITS / 8
         private const val KEY_LENGTH_BITS = 256
         private const val PBKDF2_ITERATIONS = 600_000
         private const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256"
