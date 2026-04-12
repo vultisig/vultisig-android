@@ -204,4 +204,13 @@ data class TonStatusResult(
     @SerialName("transactions") val transactions: List<TransactionJson> = emptyList()
 )
 
-@Serializable data class TransactionJson(@SerialName("finality") val finality: String? = null)
+@Serializable
+data class TransactionJson(
+    @SerialName("description") val description: TonTransactionDescriptionJson? = null
+)
+
+@Serializable
+data class TonTransactionDescriptionJson(
+    @SerialName("aborted") val aborted: Boolean? = null,
+    @SerialName("destroyed") val destroyed: Boolean? = null,
+)
