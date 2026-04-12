@@ -1003,21 +1003,7 @@
     <string name="key_import_device_count_get_started">Comenzar</string>
     <string name="vault_count_recommended">Recomendado</string>
 
-    <string name="welcome_preference_devices_title">¿Cuántos dispositivos tienes?</string>
-    <string name="welcome_fast_and_easy">Rápido &amp; fácil</string>
-    <string name="welcome_fast_and_easy_desc">Firma con solo 1 dispositivo. Nuestro servidor seguro firma contigo para seguridad multisig. Compatible con plugins.</string>
-    <string name="welcome_fast_and_easy_highlight">solo 1 dispositivo.</string>
-    <string name="welcome_plugin_compatible">Compatible con Plugin Store</string>
     <string name="welcome_tip">Consejo: Puedes usar un navegador como dispositivo</string>
-    <string name="welcome_only_your_devices">Solo tus dispositivos</string>
-    <string name="welcome_only_your_devices_desc">Solo tus dispositivos son firmantes autorizados. Firmar transacciones requiere 2 dispositivos. Autocustodia total al alcance de tu mano.</string>
-    <string name="welcome_only_your_devices_highlight">requiere 2 dispositivos.</string>
-    <string name="welcome_best_balance">Mejor equilibrio</string>
-    <string name="welcome_best_balance_desc">La mezcla perfecta entre comodidad y seguridad. Firmar transacciones requiere al menos 2 dispositivos. Un dispositivo de respaldo.</string>
-    <string name="welcome_best_balance_highlight">al menos 2 dispositivos.</string>
-    <string name="welcome_maximum_security">Máxima seguridad</string>
-    <string name="welcome_maximum_security_desc">La mayor seguridad, ideal para tesorerías o DAOs. Firmar transacciones requiere al menos 3 dispositivos.</string>
-    <string name="welcome_maximum_security_highlight">al menos 3 dispositivos.</string>
     <string name="vault_setup_your_vault_setup">Tu configuración de bóveda</string>
     <string name="vault_setup_fast_vault">Bóveda rápida</string>
     <string name="vault_setup_secure_vault">Bóveda segura</string>

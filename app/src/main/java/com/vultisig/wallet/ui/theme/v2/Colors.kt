@@ -22,6 +22,8 @@ data class Gradients(
         Brush.linearGradient(colors = listOf(Color(0xFF33E6BF), Color(0xFF0439C7))),
     val primaryReversed: Brush =
         Brush.linearGradient(colors = listOf(Color(0xFF0439C7), Color(0xFF33E6BF))),
+    val ultimateTierTitle: Brush =
+        Brush.linearGradient(colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76))),
     val scanQrBackground: Brush =
         Brush.verticalGradient(
             colorStops =

@@ -1013,21 +1013,7 @@
     <string name="key_import_device_count_get_started">Započni</string>
     <string name="vault_count_recommended">Preporučeno</string>
 
-    <string name="welcome_preference_devices_title">Koliko uređaja imate?</string>
-    <string name="welcome_fast_and_easy">Brzo &amp; jednostavno</string>
-    <string name="welcome_fast_and_easy_desc">Potpisujte s samo 1 uređajem. Naš sigurni poslužitelj potpisuje s vama za multisig sigurnost. Kompatibilno s dodacima.</string>
-    <string name="welcome_fast_and_easy_highlight">samo 1 uređajem.</string>
-    <string name="welcome_plugin_compatible">Kompatibilno s Plugin Store</string>
     <string name="welcome_tip">Savjet: Možete koristiti preglednik kao uređaj</string>
-    <string name="welcome_only_your_devices">Samo vaši uređaji</string>
-    <string name="welcome_only_your_devices_desc">Samo vaši uređaji su ovlašteni potpisnici. Potpisivanje transakcija zahtijeva 2 uređaja. Potpuna samopohrana na dohvat ruke.</string>
-    <string name="welcome_only_your_devices_highlight">zahtijeva 2 uređaja.</string>
-    <string name="welcome_best_balance">Najbolja ravnoteža</string>
-    <string name="welcome_best_balance_desc">Savršena mješavina praktičnosti i sigurnosti. Potpisivanje transakcija zahtijeva najmanje 2 uređaja. Jedan rezervni uređaj.</string>
-    <string name="welcome_best_balance_highlight">najmanje 2 uređaja.</string>
-    <string name="welcome_maximum_security">Maksimalna sigurnost</string>
-    <string name="welcome_maximum_security_desc">Najviša sigurnost, idealna za riznice ili DAO-ove. Potpisivanje transakcija zahtijeva najmanje 3 uređaja.</string>
-    <string name="welcome_maximum_security_highlight">najmanje 3 uređaja.</string>
     <string name="vault_setup_your_vault_setup">Postavljanje vašeg trezora</string>
     <string name="vault_setup_fast_vault">Brzi trezor</string>
     <string name="vault_setup_secure_vault">Sigurni trezor</string>

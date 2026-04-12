@@ -1000,21 +1000,7 @@
     <string name="key_import_device_count_get_started">Aan de slag</string>
     <string name="vault_count_recommended">Aanbevolen</string>
 
-    <string name="welcome_preference_devices_title">Hoeveel apparaten heeft u?</string>
-    <string name="welcome_fast_and_easy">Snel &amp; eenvoudig</string>
-    <string name="welcome_fast_and_easy_desc">Onderteken met slechts 1 apparaat. Onze beveiligde server ondertekent met u voor multisig-beveiliging. Plugin-compatibel.</string>
-    <string name="welcome_fast_and_easy_highlight">slechts 1 apparaat.</string>
-    <string name="welcome_plugin_compatible">Compatibel met Plugin Store</string>
     <string name="welcome_tip">Tip: U kunt een browser gebruiken als apparaat</string>
-    <string name="welcome_only_your_devices">Alleen uw apparaten</string>
-    <string name="welcome_only_your_devices_desc">Alleen uw apparaten zijn bevoegde ondertekenaars. Transacties ondertekenen vereist 2 apparaten. Volledige zelfbeheer binnen handbereik.</string>
-    <string name="welcome_only_your_devices_highlight">vereist 2 apparaten.</string>
-    <string name="welcome_best_balance">Beste balans</string>
-    <string name="welcome_best_balance_desc">De perfecte mix van gemak en veiligheid. Transacties ondertekenen vereist minimaal 2 apparaten. Één back-upapparaat.</string>
-    <string name="welcome_best_balance_highlight">minimaal 2 apparaten.</string>
-    <string name="welcome_maximum_security">Maximale beveiliging</string>
-    <string name="welcome_maximum_security_desc">Hoogste beveiliging, ideaal voor schatkamers of DAO\'s. Transacties ondertekenen vereist minimaal 3 apparaten.</string>
-    <string name="welcome_maximum_security_highlight">minimaal 3 apparaten.</string>
     <string name="vault_setup_your_vault_setup">Uw kluis-instelling</string>
     <string name="vault_setup_fast_vault">Snelle kluis</string>
     <string name="vault_setup_secure_vault">Beveiligde kluis</string>

@@ -1005,21 +1005,7 @@
     <string name="key_import_device_count_get_started">Loslegen</string>
     <string name="vault_count_recommended">Empfohlen</string>
 
-    <string name="welcome_preference_devices_title">Wie viele Geräte haben Sie?</string>
-    <string name="welcome_fast_and_easy">Schnell &amp; einfach</string>
-    <string name="welcome_fast_and_easy_desc">Signieren Sie mit nur 1 Gerät. Unser sicherer Server signiert mit Ihnen für Multisig-Sicherheit. Plugin-kompatibel.</string>
-    <string name="welcome_fast_and_easy_highlight">nur 1 Gerät.</string>
-    <string name="welcome_plugin_compatible">Plugin Store kompatibel</string>
     <string name="welcome_tip">Tipp: Sie können einen Browser als Gerät verwenden</string>
-    <string name="welcome_only_your_devices">Nur Ihre Geräte</string>
-    <string name="welcome_only_your_devices_desc">Nur Ihre Geräte sind autorisierte Unterzeichner. Das Signieren von Transaktionen erfordert 2 Geräte. Vollständige Selbstverwahrung auf Knopfdruck.</string>
-    <string name="welcome_only_your_devices_highlight">erfordert 2 Geräte.</string>
-    <string name="welcome_best_balance">Beste Balance</string>
-    <string name="welcome_best_balance_desc">Die perfekte Mischung aus Komfort und Sicherheit. Das Signieren von Transaktionen erfordert mindestens 2 Geräte. Ein Backup-Gerät.</string>
-    <string name="welcome_best_balance_highlight">mindestens 2 Geräte.</string>
-    <string name="welcome_maximum_security">Maximale Sicherheit</string>
-    <string name="welcome_maximum_security_desc">Höchste Sicherheit, ideal für Schatzkammern oder DAOs. Das Signieren von Transaktionen erfordert mindestens 3 Geräte.</string>
-    <string name="welcome_maximum_security_highlight">mindestens 3 Geräte.</string>
     <string name="vault_setup_your_vault_setup">Ihre Tresor-Einrichtung</string>
     <string name="vault_setup_fast_vault">Schneller Tresor</string>
     <string name="vault_setup_secure_vault">Sicherer Tresor</string>
