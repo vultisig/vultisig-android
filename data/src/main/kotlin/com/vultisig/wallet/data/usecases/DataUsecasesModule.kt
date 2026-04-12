@@ -30,6 +30,10 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindVaultBackupEncryption(impl: Pbkdf2AesEncryption): VaultBackupEncryption
+
+    @Binds
+    @Singleton
     fun bindDiscoverTokenUseCase(impl: DiscoverTokenUseCaseImpl): DiscoverTokenUseCase
 
     @Binds

@@ -17,7 +17,7 @@ internal interface CreateVaultBackupUseCase : (VaultProto, String?) -> String?
 
 internal class CreateVaultBackupUseCaseImpl
 @Inject
-constructor(private val encryption: Encryption, private val protoBuf: ProtoBuf) :
+constructor(private val encryption: VaultBackupEncryption, private val protoBuf: ProtoBuf) :
     CreateVaultBackupUseCase {
 
     override fun invoke(vault: VaultProto, password: String?): String? {
