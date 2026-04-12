@@ -132,11 +132,16 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             response.status(HttpStatusCode.BadRequest.value)
             return "hash is empty"
         }
-        val cached = cache[hash]
-        if (cached != null) {
+        val content = cache[hash] as? String
+        if (content != null) {
+            val contentHash = content.sha256()
+            if (contentHash != hash) {
+                response.status(HttpStatusCode.BadRequest.value)
+                return "hash mismatch"
+            }
             Timber.d("return hash: %s", hash)
             response.status(HttpStatusCode.OK.value)
-            return (cached as? String).toString()
+            return content
         }
         response.status(HttpStatusCode.NotFound.value)
         return ""
@@ -212,11 +217,11 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
                 return ""
             }
         val key = "keysign-${sessionID.trim()}-$messageID-complete"
-        val cached = cache[key]
-        if (cached != null) {
+        val completePayload = cache[key] as? String
+        if (completePayload != null) {
             response.type("application/json")
             response.status(HttpStatusCode.OK.value)
-            return cached as String
+            return completePayload
         }
         response.status(HttpStatusCode.NotFound.value)
         return ""
