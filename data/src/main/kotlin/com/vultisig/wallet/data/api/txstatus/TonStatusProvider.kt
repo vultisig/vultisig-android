@@ -13,9 +13,13 @@ class TonStatusProvider @Inject constructor(private val tonApi: TonApi) :
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult =
         try {
-            val finality = tonApi.getTsStatus(txHash).transactions.firstOrNull()?.finality
-            if (finality?.lowercase()?.contains("unknown") == true) TransactionResult.Confirmed
-            else TransactionResult.Pending
+            val tx = tonApi.getTsStatus(txHash).transactions.firstOrNull()
+            when {
+                tx == null -> TransactionResult.NotFound
+                tx.description == null -> TransactionResult.Pending
+                tx.description.aborted == true -> TransactionResult.Failed("Transaction aborted")
+                else -> TransactionResult.Confirmed
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
