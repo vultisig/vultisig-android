@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
@@ -1283,8 +1284,7 @@ internal fun FadingHorizontalDivider(modifier: Modifier = Modifier) {
     )
 }
 
-@Composable
-private fun Modifier.vsClickableBackground() =
+private fun Modifier.vsClickableBackground() = composed {
     border(
             border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
             shape = RoundedCornerShape(12.dp),
@@ -1293,6 +1293,7 @@ private fun Modifier.vsClickableBackground() =
             color = Theme.v2.colors.backgrounds.secondary,
             shape = RoundedCornerShape(12.dp),
         )
+}
 
 @Composable
 private fun FoldableSection(
