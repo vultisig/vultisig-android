@@ -12,8 +12,7 @@ import javax.inject.Inject
 class UtxoFeeService @Inject constructor(private val blockChairApi: BlockChairApi) : FeeService {
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
-        val amount = getDefaultGasFee(transaction.coin.chain)
-        return BasicFee(amount)
+        return calculateDefaultFees(transaction)
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
