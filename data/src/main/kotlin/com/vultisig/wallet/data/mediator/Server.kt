@@ -132,18 +132,18 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             response.status(HttpStatusCode.BadRequest.value)
             return "hash is empty"
         }
-        cache[hash]?.let {
-            val content = it as? String
-            val contentHash = content?.sha256()
+        val content = cache[hash] as? String
+        if (content != null) {
+            val contentHash = content.sha256()
             if (contentHash != hash) {
                 response.status(HttpStatusCode.BadRequest.value)
                 return "hash mismatch"
             }
-
             Timber.d("return hash: %s", hash)
             response.status(HttpStatusCode.OK.value)
             return content
-        } ?: run { response.status(HttpStatusCode.NotFound.value) }
+        }
+        response.status(HttpStatusCode.NotFound.value)
         return ""
     }
 
@@ -191,14 +191,13 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
                 return ""
             }
         val key = "session-$sessionID-start"
-        cache[key]?.let {
-            val session = it as? Session
-            session?.let {
-                response.type("application/json")
-                response.status(HttpStatusCode.OK.value)
-                return Json.encodeToString(session.participants)
-            } ?: response.status(HttpStatusCode.NotFound.value)
-        } ?: response.status(HttpStatusCode.NotFound.value)
+        val session = cache[key] as? Session
+        if (session != null) {
+            response.type("application/json")
+            response.status(HttpStatusCode.OK.value)
+            return Json.encodeToString(session.participants)
+        }
+        response.status(HttpStatusCode.NotFound.value)
         return ""
     }
 
@@ -218,11 +217,13 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
                 return ""
             }
         val key = "keysign-${sessionID.trim()}-$messageID-complete"
-        cache[key]?.let {
+        val completePayload = cache[key] as? String
+        if (completePayload != null) {
             response.type("application/json")
             response.status(HttpStatusCode.OK.value)
-            return it as String
-        } ?: run { response.status(HttpStatusCode.NotFound.value) }
+            return completePayload
+        }
+        response.status(HttpStatusCode.NotFound.value)
         return ""
     }
 
@@ -388,14 +389,13 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
                 "session-$cleanSessionID"
             }
         Timber.tag("server").d("get session %s", key)
-        cache[key]?.let {
-            val session = it as? Session
-            session?.let {
-                response.status(HttpStatusCode.OK.value)
-                response.type("application/json")
-                return Json.encodeToString(session.participants)
-            } ?: response.status(HttpStatusCode.NotFound.value)
-        } ?: response.status(HttpStatusCode.NotFound.value)
+        val session = cache[key] as? Session
+        if (session != null) {
+            response.status(HttpStatusCode.OK.value)
+            response.type("application/json")
+            return Json.encodeToString(session.participants)
+        }
+        response.status(HttpStatusCode.NotFound.value)
         return ""
     }
 

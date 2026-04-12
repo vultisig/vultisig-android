@@ -21,7 +21,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -58,6 +57,7 @@ internal fun TierDiscountBottomSheet(
 @Composable
 internal fun TierDiscountBottomSheetContent(tier: TierType, onContinue: () -> Unit) {
     val tierStyle = getStyleByTier(tier)
+    val gradientBrush = Theme.v2.colors.gradients.ultimateTierTitle
 
     Box(
         modifier =
@@ -122,13 +122,7 @@ internal fun TierDiscountBottomSheetContent(tier: TierType, onContinue: () -> Un
                         if (tierStyle.tierBackgroundImage != null) {
                             pushStyle(
                                 Theme.brockmann.headings.title1
-                                    .copy(
-                                        brush =
-                                            Brush.linearGradient(
-                                                colors =
-                                                    listOf(Color(0xFFD8BA7B), Color(0xFF794D76))
-                                            )
-                                    )
+                                    .copy(brush = gradientBrush)
                                     .toSpanStyle()
                             )
                         } else {
@@ -183,23 +177,14 @@ internal fun TierDiscountBottomSheetContent(tier: TierType, onContinue: () -> Un
 
 @Composable
 private fun TierTitleWithBackgroundImage(tierStyle: BottomSheetTierStyle) {
-    val gradientBrush = Brush.linearGradient(colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76)))
+    val gradientBrush = Theme.v2.colors.gradients.ultimateTierTitle
 
     Text(
         text =
             buildAnnotatedString {
                 append(tierStyle.titlePart1 + " ")
 
-                pushStyle(
-                    Theme.brockmann.headings.title1
-                        .copy(
-                            brush =
-                                Brush.linearGradient(
-                                    colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76))
-                                )
-                        )
-                        .toSpanStyle()
-                )
+                pushStyle(Theme.brockmann.headings.title1.copy(brush = gradientBrush).toSpanStyle())
                 append(tierStyle.titlePart2)
                 pop()
 
