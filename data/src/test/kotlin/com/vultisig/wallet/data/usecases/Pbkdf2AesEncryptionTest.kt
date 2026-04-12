@@ -5,6 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class Pbkdf2AesEncryptionTest {
 
@@ -71,6 +72,6 @@ class Pbkdf2AesEncryptionTest {
             pbkdf2Aes.encrypt(originalInput.toByteArray(Charsets.UTF_8), password.toByteArray())
 
         // version(1) + salt(16) + iv(12) + ciphertext(at least 1 byte + 16 tag)
-        assert(encrypted.size >= 29 + 17)
+        assertTrue(encrypted.size >= 29 + 17)
     }
 }

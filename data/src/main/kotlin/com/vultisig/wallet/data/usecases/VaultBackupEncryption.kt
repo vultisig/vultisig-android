@@ -74,8 +74,12 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
                 PBKDF2_ITERATIONS,
                 KEY_LENGTH_BITS,
             )
-        val factory = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
-        return factory.generateSecret(keySpec).encoded
+        return try {
+            val factory = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
+            factory.generateSecret(keySpec).encoded
+        } finally {
+            keySpec.clearPassword()
+        }
     }
 
     companion object {
