@@ -50,6 +50,8 @@ constructor(
 
     val uiState = MutableStateFlow(SortAccountsUiModel())
 
+    private var isLoaded = false
+
     init {
         loadAccounts()
     }
@@ -88,6 +90,7 @@ constructor(
                     .sortedBy { orderMap[it.chainId]?.order ?: Float.MAX_VALUE }
 
             uiState.update { it.copy(pinnedAccounts = pinned, unpinnedAccounts = unpinned) }
+            isLoaded = true
         }
     }
 
@@ -129,6 +132,11 @@ constructor(
 
     fun save() {
         viewModelScope.launch {
+            if (!isLoaded) {
+                Timber.w("Cannot save account order: data not loaded yet")
+                return@launch
+            }
+
             val state = uiState.value
             val orders = mutableListOf<AccountOrderEntity>()
 
@@ -156,10 +164,10 @@ constructor(
 
             try {
                 accountOrderRepository.saveOrders(vaultId, orders)
+                navigator.back()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to save account order")
             }
-            navigator.back()
         }
     }
 

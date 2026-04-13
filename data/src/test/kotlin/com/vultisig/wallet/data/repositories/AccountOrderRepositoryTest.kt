@@ -4,7 +4,6 @@ import com.vultisig.wallet.data.db.dao.AccountOrderDao
 import com.vultisig.wallet.data.db.models.AccountOrderEntity
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -54,7 +53,7 @@ internal class AccountOrderRepositoryTest {
     }
 
     @Test
-    fun `saveOrders deletes then inserts`() = runTest {
+    fun `saveOrders delegates to dao replaceAll`() = runTest {
         val orders =
             listOf(
                 AccountOrderEntity(
@@ -67,18 +66,14 @@ internal class AccountOrderRepositoryTest {
 
         repository.saveOrders(vaultId, orders)
 
-        coVerifyOrder {
-            dao.deleteAll(vaultId)
-            dao.insertAll(orders)
-        }
+        coVerify { dao.replaceAll(vaultId, orders) }
     }
 
     @Test
-    fun `saveOrders with empty list still deletes old data`() = runTest {
+    fun `saveOrders with empty list delegates to dao replaceAll`() = runTest {
         repository.saveOrders(vaultId, emptyList())
 
-        coVerify { dao.deleteAll(vaultId) }
-        coVerify { dao.insertAll(emptyList()) }
+        coVerify { dao.replaceAll(vaultId, emptyList()) }
     }
 
     @Test

@@ -13,7 +13,6 @@ class AccountOrderRepository @Inject constructor(private val accountOrderDao: Ac
         accountOrderDao.loadOrders(vaultId)
 
     suspend fun saveOrders(vaultId: String, orders: List<AccountOrderEntity>) {
-        accountOrderDao.deleteAll(vaultId)
-        accountOrderDao.insertAll(orders)
+        accountOrderDao.replaceAll(vaultId, orders)
     }
 }

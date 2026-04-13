@@ -298,7 +298,7 @@ internal class SortAccountsViewModelTest {
         }
 
     @Test
-    fun `save navigates back even if repository throws`() =
+    fun `save does not navigate back if repository throws`() =
         runTest(testDispatcher) {
             coEvery { accountsRepository.loadAddresses(vaultId, false) } returns flowOf(emptyList())
             coEvery { accountOrderRepository.loadOrders(vaultId) } returns flowOf(emptyList())
@@ -309,7 +309,7 @@ internal class SortAccountsViewModelTest {
 
             vm.save()
 
-            coVerify { navigator.navigate(Destination.Back) }
+            coVerify(exactly = 0) { navigator.navigate(Destination.Back) }
         }
 
     @Test

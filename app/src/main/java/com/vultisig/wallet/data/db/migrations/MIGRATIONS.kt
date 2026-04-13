@@ -771,7 +771,8 @@ internal val MIGRATION_32_33 =
                 chain TEXT NOT NULL,
                 `order` REAL NOT NULL,
                 isPinned INTEGER NOT NULL DEFAULT 0,
-                PRIMARY KEY(vaultId, chain)
+                PRIMARY KEY(vaultId, chain),
+                FOREIGN KEY(vaultId) REFERENCES vault(id) ON DELETE CASCADE ON UPDATE CASCADE
             )
             """
                     .trimIndent()
