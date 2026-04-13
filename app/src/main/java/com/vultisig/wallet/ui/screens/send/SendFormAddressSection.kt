@@ -13,7 +13,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
@@ -87,11 +90,22 @@ private fun AddressInputSection(
     onFocusLost: (() -> Unit)? = null,
     testTag: String? = null,
 ) {
+    var wasFocused by remember { mutableStateOf(false) }
+
     VsTextInputField(
         textFieldState = fieldState,
         hint = stringResource(R.string.send_to_address_hint),
         focusRequester = focusRequester,
-        onFocusChanged = onFocusLost?.let { onLost -> { isFocused -> if (!isFocused) onLost() } },
+        onFocusChanged =
+            onFocusLost?.let { onLost ->
+                { isFocused ->
+                    if (isFocused) {
+                        wasFocused = true
+                    } else if (wasFocused) {
+                        onLost()
+                    }
+                }
+            },
         keyboardType = KeyboardType.Text,
         autoCorrectEnabled = false,
         imeAction = ImeAction.Next,

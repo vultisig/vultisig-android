@@ -58,6 +58,7 @@ internal data class AmountInputs(
     val onToggleAmountInputType: (Boolean) -> Unit,
     val onChoosePercentageAmount: (AmountFraction) -> Unit,
     val onChooseMaxTokenAmount: () -> Unit,
+    val onTokenAmountLostFocus: () -> Unit = {},
 )
 
 @Immutable
@@ -85,6 +86,7 @@ internal fun FoldableAmountWidget(
     val onToggleAmountInputType = amountInputs.onToggleAmountInputType
     val onChoosePercentageAmount = amountInputs.onChoosePercentageAmount
     val onChooseMaxTokenAmount = amountInputs.onChooseMaxTokenAmount
+    val onTokenAmountLostFocus = amountInputs.onTokenAmountLostFocus
     val memoFieldState = optionalInputs.memoFieldState
     val operatorFeeFieldState = optionalInputs.operatorFeeFieldState
     val slippageTextFieldState = optionalInputs.slippageFieldState
@@ -169,6 +171,7 @@ internal fun FoldableAmountWidget(
                     secondaryText = secondaryText,
                     maxBalance = maxBalance,
                     focusRequester = amountFocusRequester,
+                    onLostFocus = onTokenAmountLostFocus,
                     onKeyboardAction = {
                         focusManager.clearFocus()
                         onSend()

@@ -280,6 +280,7 @@ private fun SendFormScreen(
                         onToggleAmountInputType = onToggleAmountInputType,
                         onChoosePercentageAmount = onChoosePercentageAmount,
                         onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+                        onTokenAmountLostFocus = onTokenAmountLostFocus,
                         memoFieldState = memoFieldState,
 
                         // Bond
@@ -330,6 +331,7 @@ private fun SendFormContent(
     onToggleAmountInputType: (Boolean) -> Unit,
     onChoosePercentageAmount: (AmountFraction) -> Unit,
     onChooseMaxTokenAmount: () -> Unit,
+    onTokenAmountLostFocus: () -> Unit = {},
     memoFieldState: TextFieldState,
 
     // Bond
@@ -353,6 +355,7 @@ private fun SendFormContent(
             onToggleAmountInputType = onToggleAmountInputType,
             onChoosePercentageAmount = onChoosePercentageAmount,
             onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+            onTokenAmountLostFocus = onTokenAmountLostFocus,
         )
     val optionalInputs =
         OptionalInputs(
