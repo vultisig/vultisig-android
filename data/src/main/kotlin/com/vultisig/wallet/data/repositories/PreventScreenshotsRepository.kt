@@ -15,8 +15,7 @@ internal class PreventScreenshotsRepositoryImpl
 @Inject
 constructor(private val dataStore: AppDataStore) : PreventScreenshotsRepository {
 
-    override val isEnabled: Flow<Boolean> =
-        dataStore.readData(KEY_PREVENT_SCREENSHOTS, false)
+    override val isEnabled: Flow<Boolean> = dataStore.readData(KEY_PREVENT_SCREENSHOTS, false)
 
     override suspend fun setEnabled(enabled: Boolean) {
         dataStore.set(KEY_PREVENT_SCREENSHOTS, enabled)

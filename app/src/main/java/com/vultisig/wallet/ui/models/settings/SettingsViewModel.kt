@@ -368,16 +368,19 @@ constructor(
             preventScreenshotsRepository.isEnabled.collect { isEnabled ->
                 state.update { current ->
                     current.copy(
-                        items = current.items.map { group ->
-                            group.copy(
-                                items = group.items.map { item ->
-                                    when (item) {
-                                        is PreventScreenshots -> item.copy(isEnabled = isEnabled)
-                                        else -> item
-                                    }
-                                }
-                            )
-                        }
+                        items =
+                            current.items.map { group ->
+                                group.copy(
+                                    items =
+                                        group.items.map { item ->
+                                            when (item) {
+                                                is PreventScreenshots ->
+                                                    item.copy(isEnabled = isEnabled)
+                                                else -> item
+                                            }
+                                        }
+                                )
+                            }
                     )
                 }
             }
