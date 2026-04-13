@@ -73,15 +73,19 @@ internal fun SendTxOverviewScreen(
             )
         },
         tokenContent = {
-            val tokenTitle =
-                if (tx.type == UiTransactionInfoType.Send) {
-                    stringResource(R.string.tx_overview_screen_tx_send)
-                } else {
-                    stringResource(R.string.tx_overview_screen_tx_deposit)
-                }
+            // Decoded EVM contract call: show the function name + resolved token
+            // instead of the misleading "Send 0 ETH" native hero.
+            val heroHeader =
+                tx.functionName
+                    ?: if (tx.type == UiTransactionInfoType.Send) {
+                        stringResource(R.string.tx_overview_screen_tx_send)
+                    } else {
+                        stringResource(R.string.tx_overview_screen_tx_deposit)
+                    }
+            val heroToken = tx.resolvedToken ?: tx.token
             VsOverviewToken(
-                header = tokenTitle,
-                valuedToken = tx.token,
+                header = heroHeader,
+                valuedToken = heroToken,
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -130,8 +134,12 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
+                // Skip the native "Amount" row when the hero already renders a resolved
+                // contract-call token. Otherwise we'd duplicate the information AND show
+                // a misleading "0 ETH" for the native value that wasn't actually sent.
                 if (
-                    tx.token.value.isNotEmpty() &&
+                    tx.resolvedToken == null &&
+                        tx.token.value.isNotEmpty() &&
                         try {
                             tx.token.value.toBigInteger() > BigInteger.ZERO
                         } catch (_: Exception) {
@@ -293,6 +301,10 @@ internal data class UiTransactionInfo(
     val networkFeeTokenValue: String,
     val networkFeeFiatValue: String,
     val signMethod: String = "",
+    val functionName: String? = null,
+    val resolvedToken: ValuedToken? = null,
+    val functionSignature: String? = null,
+    val functionInputs: String? = null,
 )
 
 internal enum class UiTransactionInfoType {

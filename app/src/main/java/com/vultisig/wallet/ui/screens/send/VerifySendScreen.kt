@@ -182,15 +182,21 @@ internal fun VerifySendScreen(
                             )
                             .padding(all = 24.dp)
                 ) {
+                    // Decoded EVM contract call: function name + resolved token replace
+                    // the misleading "0 ETH" native hero.
+                    val heroToken = tx.resolvedToken ?: tx.token
+                    val heroHeader =
+                        tx.functionName ?: stringResource(R.string.verify_deposit_sending)
+
                     Text(
-                        text = stringResource(R.string.verify_deposit_sending),
+                        text = heroHeader,
                         style = Theme.brockmann.headings.subtitle,
                         color = Theme.v2.colors.text.secondary,
                     )
 
                     UiSpacer(24.dp)
 
-                    SwapToken(valuedToken = tx.token)
+                    SwapToken(valuedToken = heroToken)
 
                     UiSpacer(12.dp)
 
@@ -250,29 +256,31 @@ internal fun VerifySendScreen(
                             )
                         }
 
-                    if (state.tokenDisplay != null) {
+                    // Only show the "Amount" row if the hero hasn't already rendered the
+                    // resolved token — otherwise it's duplicated information.
+                    if (tx.tokenDisplay != null && tx.resolvedToken == null) {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_amount_title),
-                            subtitle = state.tokenDisplay,
+                            subtitle = tx.tokenDisplay,
                         )
                     }
-                    if (state.functionSignature != null) {
+                    if (tx.functionSignature != null) {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardJsonDetails(
                             title = stringResource(R.string.deposit_screen_title),
-                            subtitle = state.functionSignature,
+                            subtitle = tx.functionSignature,
                         )
                     }
-                    if (state.functionInputs != null) {
+                    if (tx.functionInputs != null) {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardJsonDetails(
                             title =
                                 stringResource(R.string.verify_transaction_function_inputs_title),
-                            subtitle = state.functionInputs,
+                            subtitle = tx.functionInputs,
                         )
                     }
 

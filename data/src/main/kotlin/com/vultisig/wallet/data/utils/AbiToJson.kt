@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.utils
 
-import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.collections.map
 import kotlin.collections.orEmpty
@@ -62,7 +61,7 @@ private fun convertSimpleValue(type: String, value: JsonElement): JsonElement {
         type.equals("string", true) -> JsonPrimitive(text)
 
         type.startsWith("uint") || type.startsWith("int") -> {
-            parseBigIntAsJsonNumber(text)
+            parseBigIntAsJsonString(text)
         }
 
         type.matches(Regex("bytes\\d+", RegexOption.IGNORE_CASE)) ->
@@ -72,10 +71,17 @@ private fun convertSimpleValue(type: String, value: JsonElement): JsonElement {
     }
 }
 
-private fun parseBigIntAsJsonNumber(value: String): JsonElement {
+/**
+ * Serialize a big integer ABI value as a JSON *string* so precision is preserved end-to-end.
+ * Emitting it as a JSON number forces kotlinx.serialization to round-trip through a Number, which
+ * for values like MAX_UINT256 (2^256 - 1) gets rendered in scientific notation
+ * (`1.157920892373162E77`) — that both looks wrong in the raw function-inputs box AND breaks
+ * downstream parsers that assume plain decimal digits (see ContractCallExtractor.extract).
+ */
+private fun parseBigIntAsJsonString(value: String): JsonElement {
     return try {
         val big = BigInteger(value)
-        JsonPrimitive(BigDecimal(big))
+        JsonPrimitive(big.toString())
     } catch (_: Exception) {
         JsonPrimitive(value)
     }
