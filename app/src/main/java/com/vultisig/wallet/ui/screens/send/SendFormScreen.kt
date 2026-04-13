@@ -510,7 +510,9 @@ private fun SendFormContent(
             state.defiType == DeFiNavActions.REDEEM_YTCY ||
             state.defiType == DeFiNavActions.WITHDRAW_RUJI ||
             state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE ||
-            state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE
+            state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
+            state.defiType == DeFiNavActions.FREEZE_TRX ||
+            state.defiType == DeFiNavActions.UNFREEZE_TRX
     ) {
         FoldableAmountWidget(
             state = state,

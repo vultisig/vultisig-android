@@ -21,6 +21,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
@@ -83,11 +84,11 @@ internal sealed interface TronDeFiUiState {
 
 @Immutable data class TronPendingWithdrawalUiModel(val amountTrx: String, val expiryEpochMs: Long)
 
-enum class TronAction(val memo: String) {
-    FREEZE_BANDWIDTH("FREEZE:BANDWIDTH"),
-    FREEZE_ENERGY("FREEZE:ENERGY"),
-    UNFREEZE_BANDWIDTH("UNFREEZE:BANDWIDTH"),
-    UNFREEZE_ENERGY("UNFREEZE:ENERGY"),
+internal enum class TronAction(val memo: String, val defiType: DeFiNavActions) {
+    FREEZE_BANDWIDTH("FREEZE:BANDWIDTH", DeFiNavActions.FREEZE_TRX),
+    FREEZE_ENERGY("FREEZE:ENERGY", DeFiNavActions.FREEZE_TRX),
+    UNFREEZE_BANDWIDTH("UNFREEZE:BANDWIDTH", DeFiNavActions.UNFREEZE_TRX),
+    UNFREEZE_ENERGY("UNFREEZE:ENERGY", DeFiNavActions.UNFREEZE_TRX),
 }
 
 @HiltViewModel
@@ -266,6 +267,7 @@ constructor(
                     tokenId = trxCoin.id,
                     address = trxCoin.address,
                     memo = action.memo,
+                    type = action.defiType.type,
                 )
             )
         }

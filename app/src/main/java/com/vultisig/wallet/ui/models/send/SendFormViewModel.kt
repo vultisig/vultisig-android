@@ -899,7 +899,9 @@ constructor(
                 defiType != DeFiNavActions.UNSTAKE_STCY &&
                 defiType != DeFiNavActions.REDEEM_YRUNE &&
                 defiType != DeFiNavActions.MINT_YTCY &&
-                defiType != DeFiNavActions.REDEEM_YTCY
+                defiType != DeFiNavActions.REDEEM_YTCY &&
+                defiType != DeFiNavActions.FREEZE_TRX &&
+                defiType != DeFiNavActions.UNFREEZE_TRX
         ) {
             return amount
         }
@@ -959,7 +961,9 @@ constructor(
                     defiType == DeFiNavActions.MINT_YRUNE ||
                     defiType == DeFiNavActions.REDEEM_YRUNE ||
                     defiType == DeFiNavActions.MINT_YTCY ||
-                    defiType == DeFiNavActions.REDEEM_YTCY
+                    defiType == DeFiNavActions.REDEEM_YTCY ||
+                    defiType == DeFiNavActions.FREEZE_TRX ||
+                    defiType == DeFiNavActions.UNFREEZE_TRX
             ) {
                 getAvailableTokenBalance(selectedAccount, currentGasFee.value)
             } else {
@@ -2497,6 +2501,8 @@ constructor(
                 DeFiNavActions.UNSTAKE_CACAO,
                 DeFiNavActions.ADD_LP,
                 DeFiNavActions.REMOVE_LP -> Coins.MayaChain.CACAO
+                DeFiNavActions.FREEZE_TRX,
+                DeFiNavActions.UNFREEZE_TRX -> Coins.Tron.TRX
                 null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
             }
 
