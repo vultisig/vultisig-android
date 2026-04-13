@@ -27,7 +27,7 @@ constructor(private val thorChainRepository: ThorChainRepository) :
                 "THORChain network id initialized with: ${ThorChainHelper.THORCHAIN_NETWORK_ID}"
             )
         } catch (e: Exception) {
-            Timber.e("Failed to fetch network chain id", e)
+            Timber.e(e, "Failed to fetch network chain id")
         }
     }
 }

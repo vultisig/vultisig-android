@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
+import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
@@ -604,6 +605,7 @@ constructor(
                             when (it) {
                                 is SendTransactionHistoryData -> TransactionType.SEND
                                 is SwapTransactionHistoryData -> TransactionType.SWAP
+                                is UnknownTransactionHistoryData -> return@runCatching
                             },
                         confirmedAt = null,
                         failureReason = null,
