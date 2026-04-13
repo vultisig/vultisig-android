@@ -250,6 +250,8 @@
     <string name="add_address_address_title">Morada</string>
     <string name="add_address_type_hint">Digite aqui</string>
     <string name="join_keysign_invalid_qr">Conteúdo de código QR inválido</string>
+    <string name="settings_screen_privacy">Privacidade</string>
+    <string name="settings_screen_prevent_screenshots">Impedir capturas de tela</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">política de Privacidade</string>
     <string name="settings_screen_tos">Termos de Serviço</string>

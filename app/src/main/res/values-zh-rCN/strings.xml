@@ -437,6 +437,8 @@
     <string name="join_keysign_invalid_qr">无效的二维码内容</string>
 
     <!-- Settings Screen -->
+    <string name="settings_screen_privacy">隐私</string>
+    <string name="settings_screen_prevent_screenshots">防止截图</string>
     <string name="settings_screen_legal">法律</string>
     <string name="settings_screen_privacy_policy">隐私政策</string>
     <string name="settings_screen_tos">服务条款</string>

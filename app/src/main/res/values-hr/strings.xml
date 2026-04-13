@@ -249,6 +249,8 @@
     <string name="add_address_address_title">Adresa</string>
     <string name="add_address_type_hint">Upišite ovdje</string>
     <string name="join_keysign_invalid_qr">Nevažeći sadržaj QR koda</string>
+    <string name="settings_screen_privacy">Privatnost</string>
+    <string name="settings_screen_prevent_screenshots">Spriječi snimke zaslona</string>
     <string name="settings_screen_legal">Pravno</string>
     <string name="settings_screen_privacy_policy">Politika privatnosti</string>
     <string name="settings_screen_tos">Uvjeti usluge</string>

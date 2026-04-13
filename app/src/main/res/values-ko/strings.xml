@@ -316,6 +316,8 @@
     <string name="add_address_address_title">주소</string>
     <string name="add_address_type_hint">여기에 입력하세요</string>
     <string name="join_keysign_invalid_qr">유효하지 않은 QR 코드 내용</string>
+    <string name="settings_screen_privacy">개인정보</string>
+    <string name="settings_screen_prevent_screenshots">스크린샷 방지</string>
     <string name="settings_screen_legal">법적 고지</string>
     <string name="settings_screen_privacy_policy">개인정보 처리방침</string>
     <string name="settings_screen_tos">서비스 이용약관</string>

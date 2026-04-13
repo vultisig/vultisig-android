@@ -248,6 +248,8 @@
     <string name="add_address_address_title">Adres</string>
     <string name="add_address_type_hint">Typ hier</string>
     <string name="join_keysign_invalid_qr">Ongeldige QR-code-inhoud</string>
+    <string name="settings_screen_privacy">Privacy</string>
+    <string name="settings_screen_prevent_screenshots">Screenshots voorkomen</string>
     <string name="settings_screen_legal">Juridisch</string>
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>

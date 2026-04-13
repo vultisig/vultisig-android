@@ -323,6 +323,8 @@
     <string name="add_address_address_title">Address</string>
     <string name="add_address_type_hint">Type here</string>
     <string name="join_keysign_invalid_qr">Invalid QR code content</string>
+    <string name="settings_screen_privacy">Privacy</string>
+    <string name="settings_screen_prevent_screenshots">Prevent Screenshots</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
     <string name="settings_screen_tos">Terms of Service</string>
