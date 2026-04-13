@@ -135,6 +135,8 @@ private fun SortAccountItem(item: SortAccountItemUiModel, onTogglePin: () -> Uni
             tint =
                 if (item.isPinned) Theme.v2.colors.primary.accent4
                 else Theme.v2.colors.text.tertiary,
+            contentDescription =
+                if (item.isPinned) "Unpin ${item.chainName}" else "Pin ${item.chainName}",
             modifier = Modifier.clickOnce(onClick = onTogglePin),
         )
     }
