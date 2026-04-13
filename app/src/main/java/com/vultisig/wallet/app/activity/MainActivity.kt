@@ -164,7 +164,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun observePreventScreenshots() {
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.CREATED) {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
                 preventScreenshotsRepository.isEnabled.collect { isEnabled ->
                     if (isEnabled) {
                         window.setFlags(
