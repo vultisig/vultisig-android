@@ -256,6 +256,7 @@ constructor(
             val trxCoin = cachedTrxCoin
             if (trxCoin == null) {
                 Timber.w("TRX coin not cached when handling action %s", action)
+                refresh()
                 return@safeLaunch
             }
             navigator.route(
