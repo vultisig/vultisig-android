@@ -526,6 +526,8 @@ constructor(
                 availableLpUnits = null,
                 selectedPoolTotalLpUnits = 0L,
                 selectedPoolCacaoDepth = 0L,
+                removeLpPercent = 0f,
+                removeLpCacaoDisplay = "",
                 balance = R.string.share_balance_loading.asUiText(),
             )
         }
@@ -1642,22 +1644,6 @@ constructor(
         validateBasisPoints(basisPoints)?.let { throw InvalidTransactionDataException(it) }
 
         val memo = DepositMemo.RemoveLiquidity(poolId, basisPoints * 100)
-
-        val cacaoBaseUnits =
-            s.availableLpUnits?.toLongOrNull()?.let { availableUnits ->
-                val selectedUnits = (s.removeLpPercent * availableUnits).toLong()
-                if (s.selectedPoolTotalLpUnits > 0L) {
-                    selectedUnits
-                        .toBigDecimal()
-                        .multiply(s.selectedPoolCacaoDepth.toBigDecimal())
-                        .divide(
-                            s.selectedPoolTotalLpUnits.toBigDecimal(),
-                            0,
-                            java.math.RoundingMode.DOWN,
-                        )
-                        .toBigInteger()
-                } else null
-            } ?: BigInteger.ZERO
 
         val specific =
             blockChainSpecificRepository.getSpecific(
