@@ -222,7 +222,9 @@ private fun TronPendingWithdrawalsCard(
     val nowMs by
         produceState(initialValue = System.currentTimeMillis(), key1 = latestExpiry) {
             while (value < latestExpiry) {
-                delay(1_000L)
+                val delta = latestExpiry - value
+                val interval = if (delta > 60 * 60 * 1_000L) 60_000L else 1_000L
+                delay(interval)
                 value = System.currentTimeMillis()
             }
         }
