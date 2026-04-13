@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.settings.AppLanguage
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
+import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.ui.models.settings.SettingsItem.AddressBook
 import com.vultisig.wallet.ui.models.settings.SettingsItem.CheckForUpdates
@@ -20,6 +21,7 @@ import com.vultisig.wallet.ui.models.settings.SettingsItem.Faq
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Github
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Language
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Notifications
+import com.vultisig.wallet.ui.models.settings.SettingsItem.PreventScreenshots
 import com.vultisig.wallet.ui.models.settings.SettingsItem.PrivacyPolicy
 import com.vultisig.wallet.ui.models.settings.SettingsItem.ReferralCode
 import com.vultisig.wallet.ui.models.settings.SettingsItem.ShareTheApp
@@ -207,6 +209,15 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                 trailingIcon = R.drawable.ic_small_caret_right,
             )
         )
+
+    data class PreventScreenshots(val isEnabled: Boolean = false) :
+        SettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.settings_screen_prevent_screenshots),
+                leadingIcon = R.drawable.security,
+                trailingSwitch = isEnabled,
+            )
+        )
 }
 
 internal data class SettingsItemUiModel(
@@ -234,6 +245,7 @@ constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val appLocaleRepository: AppLocaleRepository,
     private val referralRepository: ReferralCodeSettingsRepositoryContract,
+    private val preventScreenshotsRepository: PreventScreenshotsRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _uiEvents = Channel<SettingsUiEvent>()
@@ -257,6 +269,10 @@ constructor(
                                 AddressBook,
                                 ReferralCode,
                             ),
+                    ),
+                    SettingsGroupUiModel(
+                        title = UiText.StringResource(R.string.settings_screen_privacy),
+                        items = listOf(PreventScreenshots()),
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.support),
@@ -320,6 +336,13 @@ constructor(
             }
 
             VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_WEBSITE))
+
+            is PreventScreenshots -> {
+                viewModelScope.launch {
+                    val newValue = !item.isEnabled
+                    preventScreenshotsRepository.setEnabled(newValue)
+                }
+            }
         }
     }
 
@@ -331,12 +354,34 @@ constructor(
         viewModelScope.launch {
             loadCurrency()
             loadAppLocale()
+            loadPreventScreenshots()
             loadWasReferralUsed()
         }
     }
 
     private fun loadWasReferralUsed() {
         viewModelScope.launch { hasUsedReferral = referralRepository.hasVisitReferralCode() }
+    }
+
+    private fun loadPreventScreenshots() {
+        viewModelScope.launch {
+            preventScreenshotsRepository.isEnabled.collect { isEnabled ->
+                state.update { current ->
+                    current.copy(
+                        items = current.items.map { group ->
+                            group.copy(
+                                items = group.items.map { item ->
+                                    when (item) {
+                                        is PreventScreenshots -> item.copy(isEnabled = isEnabled)
+                                        else -> item
+                                    }
+                                }
+                            )
+                        }
+                    )
+                }
+            }
+        }
     }
 
     private fun loadAppLocale() {

@@ -249,6 +249,8 @@
     <string name="add_address_address_title">Adresse</string>
     <string name="add_address_type_hint">Geben Sie hier ein</string>
     <string name="join_keysign_invalid_qr">Ungültiger QR-Code-Inhalt</string>
+    <string name="settings_screen_privacy">Datenschutz</string>
+    <string name="settings_screen_prevent_screenshots">Screenshots verhindern</string>
     <string name="settings_screen_legal">Rechtliches</string>
     <string name="settings_screen_privacy_policy">Datenschutzrichtlinie</string>
     <string name="settings_screen_tos">Servicebedingungen</string>

@@ -247,6 +247,8 @@
     <string name="add_address_address_title">Адрес</string>
     <string name="add_address_type_hint">Введите здесь</string>
     <string name="join_keysign_invalid_qr">Недействительное содержимое QR-кода</string>
+    <string name="settings_screen_privacy">Конфиденциальность</string>
+    <string name="settings_screen_prevent_screenshots">Запретить снимки экрана</string>
     <string name="settings_screen_legal">Юридический</string>
     <string name="settings_screen_privacy_policy">политика конфиденциальности</string>
     <string name="settings_screen_tos">Условия обслуживания</string>
