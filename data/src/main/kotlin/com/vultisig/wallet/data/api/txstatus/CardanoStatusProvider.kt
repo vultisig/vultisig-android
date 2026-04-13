@@ -5,33 +5,24 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
+import timber.log.Timber
 
 class CardanoStatusProvider @Inject constructor(private val cardanoApi: CardanoApi) :
     TransactionStatusProvider {
 
-    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
-        return try {
+    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult =
+        try {
             val txStatus = cardanoApi.getTxStatus(txHash)
-
             when {
-                txStatus == null -> {
-                    TransactionResult.NotFound
-                }
-
-                txStatus.numConfirmations == null -> {
-                    TransactionResult.Pending
-                }
-
-                txStatus.numConfirmations == 0 -> {
-                    TransactionResult.Pending
-                }
-
-                else -> {
-                    TransactionResult.Confirmed
-                }
+                txStatus == null -> TransactionResult.NotFound
+                (txStatus.numConfirmations ?: 0) > 0 -> TransactionResult.Confirmed
+                else -> TransactionResult.Pending
             }
-        } catch (_: Exception) {
-            TransactionResult.NotFound
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Cardano status check failed for %s", txHash)
+            TransactionResult.Pending
         }
-    }
 }

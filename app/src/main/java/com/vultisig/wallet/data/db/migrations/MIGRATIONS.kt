@@ -728,3 +728,35 @@ internal val MIGRATION_30_31 =
             )
         }
     }
+
+// Adds retryCount for exponential backoff and migrates legacy UUID-based ids to
+// deterministic "chain:txHash" format.
+internal val MIGRATION_31_32 =
+    object : Migration(31, 32) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE transaction_history ADD COLUMN retryCount INTEGER NOT NULL DEFAULT 0"
+            )
+
+            // Migrate legacy UUID ids → deterministic "chain:txHash".
+            // We query rows whose id does not contain ':' (the separator),
+            // then update each row's id in-place to the new format.
+            val cursor =
+                db.query(
+                    "SELECT id, chain, txHash FROM transaction_history WHERE id NOT LIKE '%:%'"
+                )
+            cursor.use {
+                while (it.moveToNext()) {
+                    val oldId = it.getString(0)
+                    val chain = it.getString(1)
+                    val txHash = it.getString(2)
+                    val newId = "$chain:$txHash"
+
+                    db.execSQL(
+                        "UPDATE transaction_history SET id = ? WHERE id = ?",
+                        arrayOf(newId, oldId),
+                    )
+                }
+            }
+        }
+    }

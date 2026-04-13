@@ -8,6 +8,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable sealed interface TransactionHistoryData
 
+/**
+ * Runtime-only wrapper for payloads the app cannot deserialize. Never serialized by Room —
+ * [TransactionHistoryDataConverter.toJson] writes [rawPayload] directly.
+ */
+data class UnknownTransactionHistoryData(val rawPayload: String = "") : TransactionHistoryData
+
 data class CommonTransactionHistoryData(
     val confirmedAt: Long?,
     val failureReason: String?,
@@ -53,6 +59,7 @@ internal fun TransactionHistoryData.toEntity(
     genericData: CommonTransactionHistoryData
 ): TransactionHistoryEntity =
     TransactionHistoryEntity(
+        id = buildTransactionHistoryId(genericData.chain, genericData.txHash),
         vaultId = genericData.vaultId,
         type = genericData.type,
         status = genericData.status,
@@ -65,3 +72,12 @@ internal fun TransactionHistoryData.toEntity(
         lastCheckedAt = genericData.lastCheckedAt,
         payload = this,
     )
+
+/** Deterministic id `"$chain:$txHash"`. The separator must not appear in either component. */
+internal fun buildTransactionHistoryId(chain: String, txHash: String): String {
+    require(chain.isNotEmpty()) { "chain must not be empty" }
+    require(txHash.isNotEmpty()) { "txHash must not be empty" }
+    require(':' !in chain) { "chain must not contain ':' — got '$chain'" }
+    require(':' !in txHash) { "txHash must not contain ':' — got '$txHash'" }
+    return "$chain:$txHash"
+}
