@@ -7,15 +7,16 @@ import androidx.room.ForeignKey
 @Entity(
     tableName = "accountOrder",
     primaryKeys = ["vaultId", "chain"],
-    foreignKeys = [
-        ForeignKey(
-            entity = VaultEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["vaultId"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.CASCADE,
-        )
-    ],
+    foreignKeys =
+        [
+            ForeignKey(
+                entity = VaultEntity::class,
+                parentColumns = ["id"],
+                childColumns = ["vaultId"],
+                onDelete = ForeignKey.CASCADE,
+                onUpdate = ForeignKey.CASCADE,
+            )
+        ],
 )
 data class AccountOrderEntity(
     @ColumnInfo(name = "vaultId") val vaultId: String,
