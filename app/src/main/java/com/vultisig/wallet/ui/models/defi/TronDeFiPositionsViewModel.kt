@@ -77,6 +77,7 @@ internal sealed interface TronDeFiUiState {
         val selectedTab: DeFiTab = DeFiTab.STAKED,
         val showPositionSelectionDialog: Boolean = false,
         val stakePositionsDialog: List<PositionUiModelDialog> = TRON_STAKE_POSITIONS_DIALOG,
+        // TODO(#4014): gate rendered cards by selectedPositions
         val selectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
         val tempSelectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
     ) : TronDeFiUiState
