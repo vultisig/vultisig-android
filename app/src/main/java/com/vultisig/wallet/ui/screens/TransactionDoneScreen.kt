@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
@@ -65,6 +67,21 @@ internal fun TransactionDoneView(
                     modifier = Modifier.padding(all = 12.dp).fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
+                    if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
+                        val transaction = transactionTypeUiModel.tx
+                        val heroHeader =
+                            transaction.functionName
+                                ?: stringResource(R.string.tx_overview_screen_tx_send)
+                        val heroToken = transaction.resolvedToken ?: transaction.token
+
+                        VsOverviewToken(
+                            header = heroHeader,
+                            valuedToken = heroToken,
+                            shape = RoundedCornerShape(24.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+
                     if (transactionTypeUiModel !is TransactionTypeUiModel.SignMessage) {
                         if (approveTransactionHash.isNotEmpty()) {
                             TxLinkAndHash(
@@ -236,7 +253,7 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                 value = transaction.memo,
             )
 
-        if (transaction.tokenDisplay != null) {
+        if (transaction.tokenDisplay != null && transaction.resolvedToken == null) {
             UiHorizontalDivider()
             OtherField(
                 title = stringResource(R.string.verify_transaction_amount_title),
@@ -258,15 +275,17 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
             )
         }
 
-        OtherField(
-            title = stringResource(R.string.verify_transaction_amount_title),
-            value = transaction.token.value,
-        )
+        if (transaction.resolvedToken == null) {
+            OtherField(
+                title = stringResource(R.string.verify_transaction_amount_title),
+                value = transaction.token.value,
+            )
 
-        OtherField(
-            title = stringResource(R.string.verify_transaction_value),
-            value = transaction.token.fiatValue,
-        )
+            OtherField(
+                title = stringResource(R.string.verify_transaction_value),
+                value = transaction.token.fiatValue,
+            )
+        }
 
         FormDetails(
             modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth(),

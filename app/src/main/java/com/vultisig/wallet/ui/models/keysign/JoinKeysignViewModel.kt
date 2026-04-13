@@ -1347,13 +1347,14 @@ constructor(
 
         val raw = runCatching { BigInteger(pair.rawAmount) }.getOrNull() ?: return null
 
-        // MAX_UINT256 is a sentinel whose meaning depends on the function:
-        // "Unlimited" for approvals, "Max" (all available balance) for withdraw/repay.
-        val amount =
-            if (raw == MAX_UINT256) sentinelLabelFor(funcName)
-            else mapTokenValueToDecimalUiString(TokenValue(raw, coin))
+        // MAX_UINT256 is a sentinel. For approvals → "Unlimited". For withdraw/repay
+        // the exact amount depends on on-chain state, so return null (skip display).
+        if (raw == MAX_UINT256) {
+            val label = sentinelLabelFor(funcName) ?: return null
+            return ValuedToken(token = coin, value = label, fiatValue = "")
+        }
 
-        // fiatValue omitted — we'd need a price query, and for sentinels it's meaningless.
+        val amount = mapTokenValueToDecimalUiString(TokenValue(raw, coin))
         return ValuedToken(token = coin, value = amount, fiatValue = "")
     }
 }

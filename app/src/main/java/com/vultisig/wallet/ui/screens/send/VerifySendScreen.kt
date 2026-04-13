@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.send
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -7,18 +8,25 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -32,6 +40,7 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.SignSolanaDisplayView
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -41,11 +50,11 @@ import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
-import com.vultisig.wallet.ui.screens.swap.SwapToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
@@ -188,15 +197,15 @@ internal fun VerifySendScreen(
                     val heroHeader =
                         tx.functionName ?: stringResource(R.string.verify_deposit_sending)
 
-                    Text(
-                        text = heroHeader,
-                        style = Theme.brockmann.headings.subtitle,
-                        color = Theme.v2.colors.text.secondary,
+                    UiSpacer(12.dp)
+
+                    VsOverviewToken(
+                        header = heroHeader,
+                        valuedToken = heroToken,
+                        shape = RoundedCornerShape(0.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        withContainer = false,
                     )
-
-                    UiSpacer(24.dp)
-
-                    SwapToken(valuedToken = heroToken)
 
                     UiSpacer(12.dp)
 
@@ -266,21 +275,11 @@ internal fun VerifySendScreen(
                             subtitle = tx.tokenDisplay,
                         )
                     }
-                    if (tx.functionSignature != null) {
+                    if (tx.functionSignature != null || tx.functionInputs != null) {
                         VerifyCardDivider(0.dp)
-
-                        VerifyCardJsonDetails(
-                            title = stringResource(R.string.deposit_screen_title),
-                            subtitle = tx.functionSignature,
-                        )
-                    }
-                    if (tx.functionInputs != null) {
-                        VerifyCardDivider(0.dp)
-
-                        VerifyCardJsonDetails(
-                            title =
-                                stringResource(R.string.verify_transaction_function_inputs_title),
-                            subtitle = tx.functionInputs,
+                        TransactionDetailsSection(
+                            functionSignature = tx.functionSignature,
+                            functionInputs = tx.functionInputs,
                         )
                     }
 
@@ -373,6 +372,69 @@ internal fun AddressField(title: String, address: String, divider: Boolean = tru
             UiSpacer(size = 12.dp)
 
             UiHorizontalDivider()
+        }
+    }
+}
+
+@Composable
+private fun TransactionDetailsSection(
+    functionSignature: String?,
+    functionInputs: String?,
+) {
+    var isExpanded by rememberSaveable { mutableStateOf(false) }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Absolute.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                text = stringResource(R.string.tx_done_transaction_details),
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.tertiary,
+            )
+
+            IconButton(onClick = { isExpanded = !isExpanded }, modifier = Modifier.size(16.dp)) {
+                UiIcon(
+                    drawableResId = R.drawable.chevron,
+                    tint = Theme.v2.colors.text.tertiary,
+                    size = 8.dp,
+                    modifier = Modifier.graphicsLayer(rotationZ = if (isExpanded) 180f else 0f),
+                )
+            }
+        }
+
+        AnimatedVisibility(visible = isExpanded) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .heightIn(max = 300.dp)
+                        .background(
+                            color = Theme.v2.colors.variables.bordersLight,
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .padding(12.dp)
+                        .verticalScroll(rememberScrollState()),
+            ) {
+                functionSignature?.let {
+                    VerifyCardJsonDetails(
+                        title = stringResource(R.string.deposit_screen_title),
+                        subtitle = it,
+                    )
+                }
+
+                functionInputs?.let {
+                    VerifyCardJsonDetails(
+                        title = stringResource(R.string.verify_transaction_function_inputs_title),
+                        subtitle = it,
+                    )
+                }
+            }
         }
     }
 }

@@ -10,37 +10,24 @@ data class TokenAndAmount(val tokenAddress: String, val rawAmount: String)
 /** 2^256 - 1 — the standard max-value sentinel used across DeFi. */
 val MAX_UINT256: BigInteger = BigInteger.ONE.shiftLeft(256).subtract(BigInteger.ONE)
 
-/**
- * Contextual meaning of MAX_UINT256 in a contract call:
- * - [Unlimited] for approvals and permits (infinite allowance)
- * - [Max] for withdrawals/redeems/repays (use all available balance)
- */
-enum class SentinelMeaning(val label: String) {
-    Unlimited("Unlimited"),
-    Max("Max"),
-}
-
 /** Extract the function name from an ABI signature like `"withdraw(address,uint256,address)"`. */
 fun String.evmFunctionName(): String? =
     substringBefore('(').trim().takeIf { it.isNotEmpty() && it.length < this.length }
 
-private val sentinelMeaningByFunction: Map<String, SentinelMeaning> =
-    mapOf(
-        // Unlimited approvals
-        "approve" to SentinelMeaning.Unlimited,
-        "increaseAllowance" to SentinelMeaning.Unlimited,
-        "decreaseAllowance" to SentinelMeaning.Unlimited,
-        // "All available" amounts on Aave-style pools
-        "withdraw" to SentinelMeaning.Max,
-        "withdrawTo" to SentinelMeaning.Max,
-        "repay" to SentinelMeaning.Max,
-        "repayWithPermit" to SentinelMeaning.Max,
-        "repayWithATokens" to SentinelMeaning.Max,
-    )
+// Functions where MAX_UINT256 means "unlimited approval" — the only case where
+// a sentinel label makes sense. For withdraw/repay MAX_UINT256 means "all
+// available" but the exact amount depends on on-chain state, so we return null
+// and let the caller skip the amount display rather than show a misleading label.
+private val UNLIMITED_APPROVAL_FUNCTIONS =
+    setOf("approve", "increaseAllowance", "decreaseAllowance")
 
-/** Returns the human-readable label for a MAX_UINT256 sentinel in [funcName]'s context. */
-fun sentinelLabelFor(funcName: String): String =
-    (sentinelMeaningByFunction[funcName] ?: SentinelMeaning.Unlimited).label
+/**
+ * If [funcName] uses MAX_UINT256 as an "unlimited approval" sentinel, returns
+ * `"Unlimited"`. For all other functions (withdraw, repay, etc.) returns `null`
+ * — the caller should omit the amount rather than display a vague label.
+ */
+fun sentinelLabelFor(funcName: String): String? =
+    if (funcName in UNLIMITED_APPROVAL_FUNCTIONS) "Unlimited" else null
 
 sealed interface ExtractionStrategy {
     /**

@@ -43,6 +43,7 @@ internal fun VsOverviewToken(
     valuedToken: ValuedToken,
     shape: Shape,
     modifier: Modifier = Modifier,
+    withContainer: Boolean = true,
 ) {
     val token: Coin = valuedToken.token
     val chainLogo = token.chain.monoToneLogo
@@ -51,10 +52,14 @@ internal fun VsOverviewToken(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
-            modifier
-                .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
-                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
-                .padding(horizontal = 16.dp, vertical = 24.dp),
+            if (withContainer) {
+                modifier
+                    .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
+                    .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
+                    .padding(horizontal = 16.dp, vertical = 24.dp)
+            } else {
+                modifier
+            },
     ) {
         Text(
             text = header,
