@@ -19,6 +19,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -61,6 +62,8 @@ constructor(
             val addresses =
                 try {
                     accountsRepository.loadAddresses(vaultId, false).first()
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to load addresses for sorting")
                     return@launch
@@ -165,6 +168,8 @@ constructor(
             try {
                 accountOrderRepository.saveOrders(vaultId, orders)
                 navigator.back()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to save account order")
             }
