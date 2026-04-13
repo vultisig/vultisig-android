@@ -64,12 +64,12 @@ constructor(
                     referralBpsDiscountFiatValue = null,
                     referralCode = null,
                 )
-        val referralBpsDiscountFiatValue =
+        val referralBpsDiscountFiat =
             convertBpsToFiat(token = srcToken, tokenValue = tokenValue, bps = referralBpsDiscount)
-        val referralBpsDiscountFiat = fiatValueToString(referralBpsDiscountFiatValue)
+        val referralBpsDiscountFiatFormatted = fiatValueToString(referralBpsDiscountFiat)
         return ReferralDiscountResult(
             referralBpsDiscount = referralBpsDiscount,
-            referralBpsDiscountFiatValue = referralBpsDiscountFiat,
+            referralBpsDiscountFiatValue = referralBpsDiscountFiatFormatted,
             referralCode = code,
         )
     }

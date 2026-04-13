@@ -475,7 +475,7 @@ constructor(
         }
 
     companion object {
-        const val KYBER_AFFILIATE_FEE_BPS = 50
+        private const val KYBER_AFFILIATE_FEE_BPS = 50
     }
 }
 
@@ -488,6 +488,7 @@ private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         val provider: SwapProvider,
     )
 
+    private val lock = Any()
     private val entries = linkedMapOf<Key, SwapQuote>()
 
     fun get(
@@ -495,10 +496,10 @@ private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         dstTokenId: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
-    ): SwapQuote? {
+    ): SwapQuote? = synchronized(lock) {
         val key = Key(srcTokenId, dstTokenId, srcAmount, provider)
         val quote = entries[key] ?: return null
-        return if (Clock.System.now() < quote.expiredAt) {
+        if (Clock.System.now() < quote.expiredAt) {
             quote
         } else {
             entries.remove(key)
@@ -512,7 +513,7 @@ private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         srcAmount: BigInteger,
         provider: SwapProvider,
         quote: SwapQuote,
-    ) {
+    ) = synchronized(lock) {
         entries[Key(srcTokenId, dstTokenId, srcAmount, provider)] = quote
         evict()
     }

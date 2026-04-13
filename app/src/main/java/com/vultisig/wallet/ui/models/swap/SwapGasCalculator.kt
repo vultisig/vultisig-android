@@ -154,6 +154,7 @@ constructor(
                 gasLimit = getGasLimit(srcToken),
             )
         } catch (e: Exception) {
+            if (e is kotlin.coroutines.cancellation.CancellationException) throw e
             Timber.d(e)
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.swap_screen_invalid_specific_and_utxo)
