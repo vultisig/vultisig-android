@@ -1343,21 +1343,7 @@
     <string name="key_import_device_count_get_started">开始</string>
     <string name="vault_count_recommended">推荐</string>
 
-    <string name="welcome_preference_devices_title">您有多少台设备？</string>
-    <string name="welcome_fast_and_easy">快速 &amp; 简便</string>
-    <string name="welcome_fast_and_easy_desc">仅用1台设备签署。我们的安全服务器与您共同签署以实现多签安全。兼容插件。</string>
-    <string name="welcome_fast_and_easy_highlight">仅用1台设备签署。</string>
-    <string name="welcome_plugin_compatible">兼容 Plugin Store</string>
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>
-    <string name="welcome_only_your_devices">仅您的设备</string>
-    <string name="welcome_only_your_devices_desc">只有您的设备是授权签署方。签署交易需要2台设备。完全自我托管触手可及。</string>
-    <string name="welcome_only_your_devices_highlight">需要2台设备。</string>
-    <string name="welcome_best_balance">最佳平衡</string>
-    <string name="welcome_best_balance_desc">便利性与安全性的完美结合。签署交易至少需要2台设备。一台备份设备。</string>
-    <string name="welcome_best_balance_highlight">至少需要2台设备。</string>
-    <string name="welcome_maximum_security">最高安全性</string>
-    <string name="welcome_maximum_security_desc">最高安全级别，非常适合国库或DAO。签署交易至少需要3台设备。</string>
-    <string name="welcome_maximum_security_highlight">至少需要3台设备。</string>
     <string name="vault_setup_your_vault_setup">您的保险库设置</string>
     <string name="vault_setup_fast_vault">快速保险库</string>
     <string name="vault_setup_secure_vault">安全保险库</string>

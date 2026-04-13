@@ -1361,22 +1361,12 @@ constructor(
                                 if (evmGasSettings != null) evmGasSettings.gasLimit
                                 else BigInteger.valueOf(1),
                             gasFee =
-                                when {
-                                    chain.standard == TokenStandard.UTXO -> {
-                                        val plan =
-                                            planFee.value
-                                                ?: throw InvalidTransactionDataException(
-                                                    UiText.StringResource(
-                                                        R.string.send_error_invalid_plan_fee
-                                                    )
-                                                )
-                                        if (plan > 0) gasFee.copy(value = BigInteger.valueOf(plan))
-                                        else gasFee
-                                    }
-                                    evmGasSettings != null ->
-                                        gasFee.copy(value = evmGasSettings.baseFee)
-                                    else -> gasFee
-                                },
+                                selectGasFeeForFeeEstimation(
+                                    chain = chain,
+                                    gasFee = gasFee,
+                                    planFee = planFee.value,
+                                    evmGasSettings = evmGasSettings,
+                                ),
                             selectedToken = selectedToken,
                         )
                     )
@@ -2690,13 +2680,12 @@ constructor(
                                     if (evmGasSettings != null) evmGasSettings.gasLimit
                                     else BigInteger.valueOf(1),
                                 gasFee =
-                                    when {
-                                        chain.standard == TokenStandard.UTXO ->
-                                            gasFee.copy(value = BigInteger.valueOf(planFee))
-                                        evmGasSettings != null ->
-                                            gasFee.copy(value = evmGasSettings.baseFee)
-                                        else -> gasFee
-                                    },
+                                    selectGasFeeForFeeEstimation(
+                                        chain = chain,
+                                        gasFee = gasFee,
+                                        planFee = planFee,
+                                        evmGasSettings = evmGasSettings,
+                                    ),
                                 selectedToken = token,
                                 perUnit = true,
                             )

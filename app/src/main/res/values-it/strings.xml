@@ -1018,21 +1018,7 @@
     <string name="key_import_device_count_get_started">Inizia</string>
     <string name="vault_count_recommended">Consigliata</string>
 
-    <string name="welcome_preference_devices_title">Quanti dispositivi hai?</string>
-    <string name="welcome_fast_and_easy">Veloce &amp; facile</string>
-    <string name="welcome_fast_and_easy_desc">Firma con solo 1 dispositivo. Il nostro server sicuro firma con te per la sicurezza multisig. Compatibile con i plugin.</string>
-    <string name="welcome_fast_and_easy_highlight">solo 1 dispositivo.</string>
-    <string name="welcome_plugin_compatible">Compatibile con Plugin Store</string>
     <string name="welcome_tip">Suggerimento: Puoi usare un browser come dispositivo</string>
-    <string name="welcome_only_your_devices">Solo i tuoi dispositivi</string>
-    <string name="welcome_only_your_devices_desc">Solo i tuoi dispositivi sono firmatari autorizzati. Firmare le transazioni richiede 2 dispositivi. Custodia autonoma completa a portata di mano.</string>
-    <string name="welcome_only_your_devices_highlight">richiede 2 dispositivi.</string>
-    <string name="welcome_best_balance">Miglior equilibrio</string>
-    <string name="welcome_best_balance_desc">Il mix perfetto tra comodità e sicurezza. Firmare le transazioni richiede almeno 2 dispositivi. Un dispositivo di backup.</string>
-    <string name="welcome_best_balance_highlight">almeno 2 dispositivi.</string>
-    <string name="welcome_maximum_security">Massima sicurezza</string>
-    <string name="welcome_maximum_security_desc">La massima sicurezza, ideale per tesorerie o DAO. Firmare le transazioni richiede almeno 3 dispositivi.</string>
-    <string name="welcome_maximum_security_highlight">almeno 3 dispositivi.</string>
     <string name="vault_setup_your_vault_setup">La configurazione del tuo vault</string>
     <string name="vault_setup_fast_vault">Vault veloce</string>
     <string name="vault_setup_secure_vault">Vault sicuro</string>

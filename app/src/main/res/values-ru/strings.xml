@@ -1030,21 +1030,7 @@
     <string name="key_import_device_count_get_started">Начать</string>
     <string name="vault_count_recommended">Рекомендуется</string>
 
-    <string name="welcome_preference_devices_title">Сколько устройств у вас есть?</string>
-    <string name="welcome_fast_and_easy">Быстро &amp; просто</string>
-    <string name="welcome_fast_and_easy_desc">Подписывайте всего с 1 устройством. Наш защищённый сервер подписывает вместе с вами для мультисиг-безопасности. Совместим с плагинами.</string>
-    <string name="welcome_fast_and_easy_highlight">всего с 1 устройством.</string>
-    <string name="welcome_plugin_compatible">Совместимо с Plugin Store</string>
     <string name="welcome_tip">Совет: Вы можете использовать браузер как устройство</string>
-    <string name="welcome_only_your_devices">Только ваши устройства</string>
-    <string name="welcome_only_your_devices_desc">Только ваши устройства являются авторизованными подписантами. Для подписания транзакций требуется 2 устройства. Полное самостоятельное хранение в ваших руках.</string>
-    <string name="welcome_only_your_devices_highlight">требуется 2 устройства.</string>
-    <string name="welcome_best_balance">Лучший баланс</string>
-    <string name="welcome_best_balance_desc">Идеальное сочетание удобства и безопасности. Для подписания транзакций требуется не менее 2 устройств. Одно резервное устройство.</string>
-    <string name="welcome_best_balance_highlight">не менее 2 устройств.</string>
-    <string name="welcome_maximum_security">Максимальная безопасность</string>
-    <string name="welcome_maximum_security_desc">Наивысшая безопасность, идеально для казначейств или DAO. Для подписания транзакций требуется не менее 3 устройств.</string>
-    <string name="welcome_maximum_security_highlight">не менее 3 устройств.</string>
     <string name="vault_setup_your_vault_setup">Настройка вашего хранилища</string>
     <string name="vault_setup_fast_vault">Быстрое хранилище</string>
     <string name="vault_setup_secure_vault">Безопасное хранилище</string>
