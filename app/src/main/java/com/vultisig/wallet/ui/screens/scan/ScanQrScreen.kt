@@ -149,6 +149,7 @@ private fun ScanQrScreen(
     val coroutineScope = rememberCoroutineScope()
 
     var isScanned by remember { mutableStateOf(false) }
+    var isPickerLaunched by remember { mutableStateOf(false) }
 
     val onSuccess: (List<Barcode>) -> Unit = { barcodes ->
         if (barcodes.isNotEmpty()) {
@@ -172,6 +173,7 @@ private fun ScanQrScreen(
 
     val pickMedia =
         rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+            isPickerLaunched = false
             coroutineScope.launch {
                 if (uri != null) {
                     try {
@@ -215,7 +217,12 @@ private fun ScanQrScreen(
         showReturnButton = isCameraGranted.not(),
         showBottomBar = isCameraGranted,
         onDismiss = onDismiss,
-        onUploadQr = { pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly)) },
+        onUploadQr = {
+            if (!isPickerLaunched) {
+                isPickerLaunched = true
+                pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+            }
+        },
         toggleMoreInfo = onMoreInfo,
     ) {
         if (isCameraGranted) {
