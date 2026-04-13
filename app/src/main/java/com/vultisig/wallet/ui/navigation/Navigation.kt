@@ -390,6 +390,8 @@ internal sealed class Route {
 
     @Serializable data class AddDeFiChainAccount(val vaultId: String)
 
+    @Serializable data class SortAccounts(val vaultId: String)
+
     @Serializable
     data class VaultList(val openType: OpenType) {
         @Serializable

@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
+import com.vultisig.wallet.data.db.models.AccountOrderEntity
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
@@ -21,6 +22,7 @@ import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.toDefi
+import com.vultisig.wallet.data.repositories.AccountOrderRepository
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
@@ -140,6 +142,7 @@ constructor(
     private val remoteNFTService: TierRemoteNFTService,
     private val pushNotificationManager: PushNotificationManager,
     private val snackbarFlow: SnackbarFlow,
+    private val accountOrderRepository: AccountOrderRepository,
 ) : ViewModel() {
 
     private var requestedVaultId: String? = savedStateHandle.toRoute<Route.Home>().openVaultId
@@ -364,17 +367,16 @@ constructor(
         loadAccountsJob =
             viewModelScope.launch {
                 combine(
-                        accountsRepository
-                            .loadAddresses(vaultId, isRefresh)
-                            .map { it.sortByAccountsTotalFiatValue() }
-                            .catch {
-                                updateRefreshing(false)
-                                Timber.e(it)
-                            },
+                        accountsRepository.loadAddresses(vaultId, isRefresh).catch {
+                            updateRefreshing(false)
+                            Timber.e(it)
+                        },
+                        accountOrderRepository.loadOrders(vaultId),
                         uiState.value.searchTextFieldState.textAsFlow(),
                         uiState.map { it.cryptoConnectionType }.distinctUntilChanged(),
-                    ) { accounts, searchQuery, cryptoConnectionType ->
+                    ) { accounts, orders, searchQuery, cryptoConnectionType ->
                         accounts
+                            .sortByCustomOrder(orders.associateBy { it.chain })
                             .filter {
                                 when (cryptoConnectionType) {
                                     CryptoConnectionType.Wallet -> true
@@ -423,6 +425,24 @@ constructor(
                     }
                     .launchIn(this)
             }
+    }
+
+    private fun List<Address>.sortByCustomOrder(
+        orderMap: Map<String, AccountOrderEntity>
+    ): List<Address> {
+        if (orderMap.isEmpty()) return sortByAccountsTotalFiatValue()
+
+        val (ordered, unordered) = partition { orderMap.containsKey(it.chain.raw) }
+
+        val sortedOrdered =
+            ordered.sortedWith(
+                compareBy<Address> { !(orderMap[it.chain.raw]?.isPinned ?: false) }
+                    .thenBy { orderMap[it.chain.raw]?.order ?: Float.MAX_VALUE }
+            )
+
+        val sortedUnordered = unordered.sortByAccountsTotalFiatValue()
+
+        return sortedOrdered + sortedUnordered
     }
 
     private fun List<Address>.sortByAccountsTotalFiatValue() =
@@ -530,6 +550,12 @@ constructor(
                 Timber.d("openSettings($vaultId)")
                 navigator.route(Route.Settings(vaultId = vaultId))
             }
+        }
+    }
+
+    fun openSortAccounts() {
+        vaultId?.let { vaultId ->
+            viewModelScope.launch { navigator.route(Route.SortAccounts(vaultId = vaultId)) }
         }
     }
 

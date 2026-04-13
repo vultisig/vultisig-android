@@ -34,6 +34,7 @@ internal fun HomePageTabMenu(
     modifier: Modifier = Modifier,
     onPortfolioClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
+    onSortClick: () -> Unit = {},
     isEditVisible: Boolean = true,
     onSearchClick: () -> Unit = {},
 ) {
@@ -71,6 +72,20 @@ internal fun HomePageTabMenu(
             ) {
                 UiIcon(
                     drawableResId = R.drawable.ic_search,
+                    size = 16.dp,
+                    tint = Theme.v2.colors.text.primary,
+                    modifier = Modifier.padding(12.dp),
+                )
+            }
+
+            V2Container(
+                modifier = Modifier.clickOnce(onClick = onSortClick),
+                cornerType = CornerType.Circular,
+                type = ContainerType.SECONDARY,
+                borderType = ContainerBorderType.Borderless,
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.ic_sort,
                     size = 16.dp,
                     tint = Theme.v2.colors.text.primary,
                     modifier = Modifier.padding(12.dp),

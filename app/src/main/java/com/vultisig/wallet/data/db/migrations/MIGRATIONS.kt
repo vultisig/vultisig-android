@@ -760,3 +760,21 @@ internal val MIGRATION_31_32 =
             }
         }
     }
+
+internal val MIGRATION_32_33 =
+    object : Migration(32, 33) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            CREATE TABLE IF NOT EXISTS accountOrder (
+                vaultId TEXT NOT NULL,
+                chain TEXT NOT NULL,
+                `order` REAL NOT NULL,
+                isPinned INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY(vaultId, chain)
+            )
+            """
+                    .trimIndent()
+            )
+        }
+    }

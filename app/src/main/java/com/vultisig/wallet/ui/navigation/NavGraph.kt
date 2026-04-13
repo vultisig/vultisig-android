@@ -66,6 +66,7 @@ import com.vultisig.wallet.ui.screens.deposit.BondFormScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.home.FastVaultPasswordReminderDialog
+import com.vultisig.wallet.ui.screens.home.SortAccountsScreen
 import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.ChooseVaultScreen
@@ -164,6 +165,7 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
 
         dialog<AddChainAccount> { ChainSelectionScreen() }
         dialog<Route.AddDeFiChainAccount> { DeFiChainSelectionScreen() }
+        composable<Route.SortAccounts> { SortAccountsScreen() }
         composable<Route.VaultSettings> { VaultSettingsScreen() }
         composable<Route.Details> { VaultDetailScreen(navController) }
 

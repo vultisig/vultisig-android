@@ -593,6 +593,9 @@
     <string name="vault_settings_migration_title">Migreren</string>
     <string name="transaction_buy">Kopen</string>
     <string name="search_bar_portfolio">Portfolio</string>
+    <string name="sort_accounts_title">Blockchains sorteren</string>
+    <string name="sort_accounts_pinned">Vastgepind</string>
+    <string name="sort_accounts_unpinned">Overige</string>
     <string name="search_bar_soon">Binnenkort</string>
     <string name="upgrade_banner_sign_faster">Teken sneller dan ooit tevoren</string>
     <string name="upgrade_banner_upgrade_your">Upgrade nu uw kluis</string>

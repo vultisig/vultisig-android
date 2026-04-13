@@ -127,6 +127,7 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
         onOpenSettingsClick = viewModel::openSettings,
         onToggleVaultListClick = viewModel::openVaultList,
         onChooseChains = viewModel::openAddChainAccount,
+        onSortClick = viewModel::openSortAccounts,
         onMigrateClick = viewModel::migrate,
         onDismissBanner = viewModel::tempRemoveBanner,
         onCryptoConnectionTypeClick = viewModel::setCryptoConnectionType,
@@ -150,6 +151,7 @@ internal fun VaultAccountsScreen(
     onOpenHistoryClick: () -> Unit = {},
     onOpenSettingsClick: () -> Unit = {},
     onChooseChains: () -> Unit = {},
+    onSortClick: () -> Unit = {},
     onDismissBanner: () -> Unit = {},
     onCryptoConnectionTypeClick: (CryptoConnectionType) -> Unit = {},
 ) {
@@ -298,6 +300,7 @@ internal fun VaultAccountsScreen(
                                     .padding(horizontal = 16.dp)
                                     .padding(bottom = 16.dp),
                             onEditClick = onChooseChains,
+                            onSortClick = onSortClick,
                             isTabMenu = isTabMenu,
                             onSearchClick = { isTabMenu = false },
                             onCancelSearchClick = { isTabMenu = true },

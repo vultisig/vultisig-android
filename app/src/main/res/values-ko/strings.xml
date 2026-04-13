@@ -775,6 +775,9 @@
 
     <string name="transaction_buy">구매</string>
     <string name="search_bar_portfolio">포트폴리오</string>
+    <string name="sort_accounts_title">체인 정렬</string>
+    <string name="sort_accounts_pinned">고정됨</string>
+    <string name="sort_accounts_unpinned">기타</string>
     <string name="search_bar_soon">곧 출시</string>
     <string name="upgrade_banner_sign_faster">그 어느 때보다 빠르게 서명</string>
     <string name="upgrade_banner_upgrade_your">지금 볼트를 업그레이드하세요</string>

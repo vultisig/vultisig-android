@@ -596,6 +596,9 @@
     <string name="vault_settings_migration_title">Migrare</string>
     <string name="transaction_buy">Acquista</string>
     <string name="search_bar_portfolio">Portafoglio</string>
+    <string name="sort_accounts_title">Ordina catene</string>
+    <string name="sort_accounts_pinned">Fissate</string>
+    <string name="sort_accounts_unpinned">Altre</string>
     <string name="search_bar_soon">Presto</string>
     <string name="upgrade_banner_sign_faster">Firma più velocemente che mai</string>
     <string name="upgrade_banner_upgrade_your">Aggiorna il tuo vault ora</string>

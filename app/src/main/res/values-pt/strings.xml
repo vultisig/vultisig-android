@@ -595,6 +595,9 @@
     <string name="vault_settings_migration_title">Migrar</string>
     <string name="transaction_buy">Comprar</string>
     <string name="search_bar_portfolio">Carteira</string>
+    <string name="sort_accounts_title">Ordenar cadeias</string>
+    <string name="sort_accounts_pinned">Fixadas</string>
+    <string name="sort_accounts_unpinned">Outras</string>
     <string name="search_bar_soon">Em breve</string>
     <string name="upgrade_banner_sign_faster">Assine mais rápido do que nunca</string>
     <string name="upgrade_banner_upgrade_your">Atualize o seu cofre agora</string>

@@ -792,6 +792,9 @@
 
     <string name="transaction_buy">Buy</string>
     <string name="search_bar_portfolio">Portfolio</string>
+    <string name="sort_accounts_title">Sort Chains</string>
+    <string name="sort_accounts_pinned">Pinned</string>
+    <string name="sort_accounts_unpinned">Other</string>
     <string name="search_bar_soon">Soon</string>
     <string name="upgrade_banner_sign_faster">Sign faster than ever before</string>
     <string name="upgrade_banner_upgrade_your">Upgrade your vault now</string>

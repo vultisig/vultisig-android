@@ -599,6 +599,9 @@
     <string name="vault_settings_migration_title">Migrirati</string>
     <string name="transaction_buy">Kupi</string>
     <string name="search_bar_portfolio">Portfelj</string>
+    <string name="sort_accounts_title">Sortiraj lance</string>
+    <string name="sort_accounts_pinned">Prikvačeno</string>
+    <string name="sort_accounts_unpinned">Ostalo</string>
     <string name="search_bar_soon">Uskoro</string>
     <string name="upgrade_banner_sign_faster">Potpišite brže nego ikad prije</string>
     <string name="upgrade_banner_upgrade_your">Nadogradite svoj trezor sada</string>

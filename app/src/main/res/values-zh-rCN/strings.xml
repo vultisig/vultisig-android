@@ -966,6 +966,9 @@
 
     <!-- Search Bar -->
     <string name="search_bar_portfolio">投资组合</string>
+    <string name="sort_accounts_title">排序链</string>
+    <string name="sort_accounts_pinned">已置顶</string>
+    <string name="sort_accounts_unpinned">其他</string>
     <string name="search_bar_soon">即将推出</string>
 
     <!-- Upgrade Banner -->

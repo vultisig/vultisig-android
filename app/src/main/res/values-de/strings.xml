@@ -598,6 +598,9 @@
     <string name="vault_settings_migration_title">Migrieren</string>
     <string name="transaction_buy">Kaufen</string>
     <string name="search_bar_portfolio">Portfolio</string>
+    <string name="sort_accounts_title">Blockchains sortieren</string>
+    <string name="sort_accounts_pinned">Angepinnt</string>
+    <string name="sort_accounts_unpinned">Andere</string>
     <string name="search_bar_soon">Bald</string>
     <string name="upgrade_banner_sign_faster">Unterschreiben Sie schneller als je zuvor</string>
     <string name="upgrade_banner_upgrade_your">Jetzt Ihren Tresor upgraden</string>

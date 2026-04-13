@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.db
 
 import android.content.Context
 import androidx.room.Room
+import com.vultisig.wallet.data.db.dao.AccountOrderDao
 import com.vultisig.wallet.data.db.dao.ActiveBondedNodeDao
 import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
@@ -39,6 +40,7 @@ import com.vultisig.wallet.data.db.migrations.MIGRATION_29_30
 import com.vultisig.wallet.data.db.migrations.MIGRATION_2_3
 import com.vultisig.wallet.data.db.migrations.MIGRATION_30_31
 import com.vultisig.wallet.data.db.migrations.MIGRATION_31_32
+import com.vultisig.wallet.data.db.migrations.MIGRATION_32_33
 import com.vultisig.wallet.data.db.migrations.MIGRATION_3_4
 import com.vultisig.wallet.data.db.migrations.MIGRATION_4_5
 import com.vultisig.wallet.data.db.migrations.MIGRATION_5_6
@@ -100,10 +102,16 @@ internal interface DatabaseModule {
                     MIGRATION_29_30,
                     MIGRATION_30_31,
                     MIGRATION_31_32,
+                    MIGRATION_32_33,
                 )
                 .build()
 
         private const val DB_NAME = "vultisig_db"
+
+        @Provides
+        @Singleton
+        fun provideAccountOrderDao(appDatabase: AppDatabase): AccountOrderDao =
+            appDatabase.accountOrderDao()
 
         @Provides
         @Singleton

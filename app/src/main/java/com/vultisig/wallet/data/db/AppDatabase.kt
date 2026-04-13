@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.db.converters.DateConverter
 import com.vultisig.wallet.data.db.converters.LocalDateTypeConverter
 import com.vultisig.wallet.data.db.converters.SigningLibTypeTypeConverter
 import com.vultisig.wallet.data.db.converters.TransactionHistoryDataConverter
+import com.vultisig.wallet.data.db.dao.AccountOrderDao
 import com.vultisig.wallet.data.db.dao.ActiveBondedNodeDao
 import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
@@ -20,6 +21,7 @@ import com.vultisig.wallet.data.db.dao.VaultDao
 import com.vultisig.wallet.data.db.dao.VaultMetadataDao
 import com.vultisig.wallet.data.db.dao.VaultNotificationSettingsDao
 import com.vultisig.wallet.data.db.dao.VaultOrderDao
+import com.vultisig.wallet.data.db.models.AccountOrderEntity
 import com.vultisig.wallet.data.db.models.ActiveBondedNodeEntity
 import com.vultisig.wallet.data.db.models.AddressBookEntryEntity
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
@@ -42,6 +44,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
 @Database(
     entities =
         [
+            AccountOrderEntity::class,
             VaultEntity::class,
             KeyShareEntity::class,
             SignerEntity::class,
@@ -61,7 +64,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
             VaultNotificationSettingsEntity::class,
             TransactionHistoryEntity::class,
         ],
-    version = 32,
+    version = 33,
     exportSchema = false,
 )
 @TypeConverters(
@@ -71,6 +74,8 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
     TransactionHistoryDataConverter::class,
 )
 abstract class AppDatabase : RoomDatabase() {
+
+    abstract fun accountOrderDao(): AccountOrderDao
 
     abstract fun vaultDao(): VaultDao
 

@@ -599,6 +599,9 @@
     <string name="vault_settings_migration_title">Мигрировать</string>
     <string name="transaction_buy">Купить</string>
     <string name="search_bar_portfolio">Портфель</string>
+    <string name="sort_accounts_title">Сортировка сетей</string>
+    <string name="sort_accounts_pinned">Закреплённые</string>
+    <string name="sort_accounts_unpinned">Остальные</string>
     <string name="search_bar_soon">Скоро</string>
     <string name="upgrade_banner_sign_faster">Подписывайте быстрее, чем когда-либо прежде</string>
     <string name="upgrade_banner_upgrade_your">Обновите хранилище прямо сейчас</string>

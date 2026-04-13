@@ -598,6 +598,9 @@
     <string name="vault_settings_migration_title">Migrar</string>
     <string name="transaction_buy">Comprar</string>
     <string name="search_bar_portfolio">Portafolio</string>
+    <string name="sort_accounts_title">Ordenar cadenas</string>
+    <string name="sort_accounts_pinned">Fijadas</string>
+    <string name="sort_accounts_unpinned">Otras</string>
     <string name="search_bar_soon">Próximamente</string>
     <string name="upgrade_banner_sign_faster">Firma más rápido que nunca</string>
     <string name="upgrade_banner_upgrade_your">Actualiza tu bóveda ahora</string>
