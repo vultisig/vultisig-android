@@ -213,6 +213,7 @@ private fun ScanQrScreen(
     ScanQrLayout(
         uiModel = uiModel,
         showReturnButton = isCameraGranted.not(),
+        showBottomBar = isCameraGranted,
         onDismiss = onDismiss,
         onUploadQr = { pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly)) },
         toggleMoreInfo = onMoreInfo,
@@ -236,7 +237,9 @@ private fun ScanQrScreen(
             cameraPermissionState.status.shouldShowRationale ||
                 cameraPermissionState.status.isGranted.not()
         ) {
-            LaunchedEffect(Unit) { cameraPermissionState.launchPermissionRequest() }
+            if (!cameraPermissionState.status.shouldShowRationale) {
+                LaunchedEffect(Unit) { cameraPermissionState.launchPermissionRequest() }
+            }
             ErrorView(
                 title = stringResource(R.string.camera_permission_denied),
                 buttonUiModel =
@@ -260,6 +263,7 @@ private fun ScanQrScreen(
 private fun ScanQrLayout(
     uiModel: ScanQrUiModel,
     showReturnButton: Boolean,
+    showBottomBar: Boolean = true,
     onDismiss: () -> Unit,
     onUploadQr: () -> Unit,
     toggleMoreInfo: () -> Unit,
@@ -281,11 +285,13 @@ private fun ScanQrLayout(
     ) {
         Scaffold(
             bottomBar = {
-                ScanQrBottomBar(
-                    showReturnButton = showReturnButton,
-                    onDismiss = onDismiss,
-                    onUploadQr = onUploadQr,
-                )
+                if (showBottomBar) {
+                    ScanQrBottomBar(
+                        showReturnButton = showReturnButton,
+                        onDismiss = onDismiss,
+                        onUploadQr = onUploadQr,
+                    )
+                }
             },
             topBar = {
                 ScanQrTopBar(

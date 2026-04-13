@@ -295,7 +295,6 @@
     <string name="qr_title_join_keysign_swap_description">Tresor: %1$s\n Von: %2$s\n An: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Für den Ordner ist mindestens ein ausgewählter Tresor erforderlich</string>
     <string name="import_file_password_hint_text">Hinweis: %s</string>
-    <string name="scan_qr_upload_from_gallery">Hochladen von\nGalerie</string>
     <string name="scan_qr_upload_qr_code">QR-Code hochladen</string>
     <string name="scan_qr_hint_title">Probleme beim Scannen?</string>
     <string name="scan_qr_hint_message">Wenn der QR-Code nicht sofort gescannt wird:\n• Bewegen Sie das Telefon etwas näher oder weiter weg vom Bildschirm\n• Stellen Sie sicher, dass der Bildschirm gut beleuchtet und blendfrei ist\n• Halten Sie beide Geräte einen Moment ruhig</string>

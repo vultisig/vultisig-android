@@ -294,7 +294,6 @@
     <string name="qr_title_join_keysign_swap_description">Kluis: %1$s\nVan: %2$s\nAan: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Map heeft minimaal één geselecteerde kluis nodig</string>
     <string name="import_file_password_hint_text">Hint: %s</string>
-    <string name="scan_qr_upload_from_gallery">Uploaden van\nGalerij</string>
     <string name="scan_qr_upload_qr_code">QR-code uploaden</string>
     <string name="scan_qr_hint_title">Problemen met scannen?</string>
     <string name="scan_qr_hint_message">Als de QR-code niet meteen scant:\n• Beweeg de telefoon iets dichterbij of verder van het scherm\n• Zorg dat het scherm goed verlicht is en vrij van schittering\n• Houd beide apparaten even stil</string>

@@ -295,7 +295,6 @@
     <string name="qr_title_join_keysign_swap_description">Cofre: %1$s De: %2$s\n Para: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">A pasta necessita de pelo menos um cofre selecionado</string>
     <string name="import_file_password_hint_text">Dica: %s</string>
-    <string name="scan_qr_upload_from_gallery">fazer upload de\nGaleria</string>
     <string name="scan_qr_upload_qr_code">Enviar código QR</string>
     <string name="scan_qr_hint_title">Problemas ao escanear?</string>
     <string name="scan_qr_hint_message">Se o código QR não escanear imediatamente:\n• Mova o telefone um pouco mais perto ou mais longe da tela\n• Certifique-se de que a tela esteja bem iluminada e sem reflexos\n• Mantenha ambos os dispositivos parados por um momento</string>

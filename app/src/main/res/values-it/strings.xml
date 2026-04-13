@@ -295,7 +295,6 @@
     <string name="qr_title_join_keysign_swap_description">Cassaforte: %1$s\n Da: %2$s\n A: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">La cartella necessita di almeno un vault selezionato</string>
     <string name="import_file_password_hint_text">Suggerimento: %s</string>
-    <string name="scan_qr_upload_from_gallery">Carica dalla \nGalleria</string>
     <string name="scan_qr_upload_qr_code">Carica codice QR</string>
     <string name="scan_qr_hint_title">Problemi con la scansione?</string>
     <string name="scan_qr_hint_message">Se il codice QR non viene scansionato subito:\n• Avvicina o allontana leggermente il telefono dallo schermo\n• Assicurati che lo schermo sia ben illuminato e senza riflessi\n• Tieni entrambi i dispositivi fermi per un momento</string>

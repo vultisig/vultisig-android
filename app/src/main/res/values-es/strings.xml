@@ -295,7 +295,6 @@
     <string name="qr_title_join_keysign_swap_description">Bóveda: %1$s\n Desde: %2$s\n Hasta: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">La carpeta necesita al menos una bóveda seleccionada</string>
     <string name="import_file_password_hint_text">Pista: %s</string>
-    <string name="scan_qr_upload_from_gallery">Subir desde la\n galería</string>
     <string name="scan_qr_upload_qr_code">Subir código QR</string>
     <string name="scan_qr_hint_title">¿Problemas para escanear?</string>
     <string name="scan_qr_hint_message">Si el código QR no se escanea de inmediato:\n• Mueva el teléfono un poco más cerca o más lejos de la pantalla\n• Asegúrese de que la pantalla esté bien iluminada y sin reflejos\n• Mantenga ambos dispositivos quietos por un momento</string>

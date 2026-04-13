@@ -295,7 +295,6 @@
     <string name="qr_title_join_keysign_swap_description">Trezor: %1$s\nOd: %2$s\n Do: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Za mapu je potreban barem jedan odabrani trezor</string>
     <string name="import_file_password_hint_text">Savjet: %s</string>
-    <string name="scan_qr_upload_from_gallery">Prijenos iz\nGalerija</string>
     <string name="scan_qr_upload_qr_code">Učitaj QR kod</string>
     <string name="scan_qr_hint_title">Problemi sa skeniranjem?</string>
     <string name="scan_qr_hint_message">Ako se QR kod ne skenira odmah:\n• Pomaknite telefon malo bliže ili dalje od zaslona\n• Provjerite je li zaslon dobro osvijetljen i bez odsjaja\n• Držite oba uređaja mirno na trenutak</string>
