@@ -50,6 +50,10 @@ class TronHelper(
                 TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) &&
                 keysignPayload.memo.startsWith("UNFREEZE:") ->
                 buildUnfreezeBalanceV2(keysignPayload, tronSpecific)
+            keysignPayload.coin.isNativeToken &&
+                keysignPayload.memo != null &&
+                TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) ->
+                error("Staking memo requires destination address to match sender address")
             keysignPayload.coin.isNativeToken -> buildCoinTransfer(keysignPayload, tronSpecific)
             else -> buildTokenTransfer(keysignPayload, tronSpecific)
         }
