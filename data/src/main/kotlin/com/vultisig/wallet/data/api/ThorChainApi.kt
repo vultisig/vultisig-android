@@ -630,7 +630,7 @@ constructor(
         ) {
             TcyStakeResponse(address = address, amount = "0")
         } else if (!httpResponse.status.isSuccess()) {
-            Timber.e("FetchTcyStakedAmount", "${httpResponse.status}")
+            Timber.e("FetchTcyStakedAmount %s", "${httpResponse.status}")
             error("Error Fetching Tcy Staked: ")
         } else {
             httpResponse.bodyOrThrow<TcyStakeResponse>()
