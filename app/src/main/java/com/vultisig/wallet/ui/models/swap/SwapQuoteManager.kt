@@ -496,16 +496,17 @@ private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         dstTokenId: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
-    ): SwapQuote? = synchronized(lock) {
-        val key = Key(srcTokenId, dstTokenId, srcAmount, provider)
-        val quote = entries[key] ?: return null
-        if (Clock.System.now() < quote.expiredAt) {
-            quote
-        } else {
-            entries.remove(key)
-            null
+    ): SwapQuote? =
+        synchronized(lock) {
+            val key = Key(srcTokenId, dstTokenId, srcAmount, provider)
+            val quote = entries[key] ?: return null
+            if (Clock.System.now() < quote.expiredAt) {
+                quote
+            } else {
+                entries.remove(key)
+                null
+            }
         }
-    }
 
     fun put(
         srcTokenId: String,
@@ -513,10 +514,11 @@ private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         srcAmount: BigInteger,
         provider: SwapProvider,
         quote: SwapQuote,
-    ) = synchronized(lock) {
-        entries[Key(srcTokenId, dstTokenId, srcAmount, provider)] = quote
-        evict()
-    }
+    ) =
+        synchronized(lock) {
+            entries[Key(srcTokenId, dstTokenId, srcAmount, provider)] = quote
+            evict()
+        }
 
     private fun evict() {
         val now = Clock.System.now()
