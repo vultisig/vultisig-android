@@ -324,6 +324,8 @@
     <string name="add_address_address_title">Address</string>
     <string name="add_address_type_hint">Type here</string>
     <string name="join_keysign_invalid_qr">Invalid QR code content</string>
+    <string name="settings_screen_privacy">Privacy</string>
+    <string name="settings_screen_prevent_screenshots">Prevent Screenshots</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
     <string name="settings_screen_tos">Terms of Service</string>
@@ -676,6 +678,11 @@
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Token value</string>
     <string name="token_fiat_toggle_fiat_label">Fiat value</string>
+    <string name="remove_pool_title">Remove Pool</string>
+    <string name="remove_pool_amount_label">Amount</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_cacao_amount_format" translatable="false">%1$s CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">Only CACAO token is supported for pool operations</string>
     <string name="referral_create_info_content">The referral program is applied for THORChain swaps and is on a best effort basis. You need to register a THORName to use the Vultisig referral. The registration fee is 10 RUNE and 1 RUNE for each year, which is paid to the THORChain network.</string>
     <string name="referral_create_info_title">Referral Program</string>

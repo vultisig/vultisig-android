@@ -248,6 +248,8 @@
     <string name="add_address_address_title">Адрес</string>
     <string name="add_address_type_hint">Введите здесь</string>
     <string name="join_keysign_invalid_qr">Недействительное содержимое QR-кода</string>
+    <string name="settings_screen_privacy">Конфиденциальность</string>
+    <string name="settings_screen_prevent_screenshots">Запретить снимки экрана</string>
     <string name="settings_screen_legal">Юридический</string>
     <string name="settings_screen_privacy_policy">политика конфиденциальности</string>
     <string name="settings_screen_tos">Условия обслуживания</string>
@@ -485,6 +487,10 @@
     <string name="max">Макс</string>
     <string name="token_fiat_toggle_token_label">Стоимость токена</string>
     <string name="token_fiat_toggle_fiat_label">Фиатная стоимость</string>
+    <string name="remove_pool_title">Удалить пул</string>
+    <string name="remove_pool_amount_label">Сумма</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">Для операций пула поддерживается только токен CACAO.</string>
     <string name="referral_create_info_title">Реферальная программа</string>
     <string name="referral_create_info_content">Реферальная программа применяется к обменам THORChain и работает на основе максимальных усилий. Вам необходимо зарегистрировать THORName для использования реферальной программы Vultisig. Плата за регистрацию составляет 10 RUNE и 1 RUNE за каждый год, которая выплачивается сети THORChain.</string>
