@@ -215,7 +215,6 @@ private fun ScanQrScreen(
     ScanQrLayout(
         uiModel = uiModel,
         showReturnButton = isCameraGranted.not(),
-        showBottomBar = isCameraGranted,
         onDismiss = onDismiss,
         onUploadQr = {
             if (!isPickerLaunched) {
@@ -270,7 +269,6 @@ private fun ScanQrScreen(
 private fun ScanQrLayout(
     uiModel: ScanQrUiModel,
     showReturnButton: Boolean,
-    showBottomBar: Boolean = true,
     onDismiss: () -> Unit,
     onUploadQr: () -> Unit,
     toggleMoreInfo: () -> Unit,
@@ -292,13 +290,11 @@ private fun ScanQrLayout(
     ) {
         Scaffold(
             bottomBar = {
-                if (showBottomBar) {
-                    ScanQrBottomBar(
-                        showReturnButton = showReturnButton,
-                        onDismiss = onDismiss,
-                        onUploadQr = onUploadQr,
-                    )
-                }
+                ScanQrBottomBar(
+                    showReturnButton = showReturnButton,
+                    onDismiss = onDismiss,
+                    onUploadQr = onUploadQr,
+                )
             },
             topBar = {
                 ScanQrTopBar(
