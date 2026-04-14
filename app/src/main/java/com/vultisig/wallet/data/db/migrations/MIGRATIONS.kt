@@ -965,7 +965,7 @@ internal val MIGRATION_16_15 =
         }
     }
 
-/** Rebuilds `signer` without the `index`/`publicKeyecdsa` columns added in version 17. */
+/** Rebuilds `signer` without the `index` column added in version 17. */
 internal val MIGRATION_17_16 =
     object : Migration(17, 16) {
         override fun migrate(db: SupportSQLiteDatabase) {
