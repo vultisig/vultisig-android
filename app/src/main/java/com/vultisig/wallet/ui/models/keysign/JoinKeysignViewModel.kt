@@ -1227,18 +1227,19 @@ constructor(
     }
 
     private fun waitForKeysignToStart() {
-        _jobWaitingForKeysignStart = viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                while (isActive) {
-                    if (checkKeygenStarted()) {
-                        currentState.value = JoinKeysignState.Keysign
-                        return@withContext
+        _jobWaitingForKeysignStart =
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    while (isActive) {
+                        if (checkKeygenStarted()) {
+                            currentState.value = JoinKeysignState.Keysign
+                            return@withContext
+                        }
+                        // backoff 1s
+                        delay(1000)
                     }
-                    // backoff 1s
-                    delay(1000)
                 }
             }
-        }
     }
 
     private suspend fun checkKeygenStarted(): Boolean {
@@ -1311,15 +1312,16 @@ constructor(
             fourByteRepository.decodeFunctionArgs(functionSignature, memo) ?: return null
 
         val funcName = functionSignature.evmFunctionName()
-        val resolvedToken = funcName?.let { name ->
-            resolveContractCall(
-                funcName = name,
-                argsJson = functionInputs,
-                signature = functionSignature,
-                toAddress = toAddress,
-                chain = chain,
-            )
-        }
+        val resolvedToken =
+            funcName?.let { name ->
+                resolveContractCall(
+                    funcName = name,
+                    argsJson = functionInputs,
+                    signature = functionSignature,
+                    toAddress = toAddress,
+                    chain = chain,
+                )
+            }
 
         return FunctionInfo(
             signature = functionSignature,

@@ -22,9 +22,9 @@ private val UNLIMITED_APPROVAL_FUNCTIONS =
     setOf("approve", "increaseAllowance", "decreaseAllowance")
 
 /**
- * If [funcName] uses MAX_UINT256 as an "unlimited approval" sentinel, returns
- * `"Unlimited"`. For all other functions (withdraw, repay, etc.) returns `null`
- * — the caller should omit the amount rather than display a vague label.
+ * If [funcName] uses MAX_UINT256 as an "unlimited approval" sentinel, returns `"Unlimited"`. For
+ * all other functions (withdraw, repay, etc.) returns `null` — the caller should omit the amount
+ * rather than display a vague label.
  */
 fun sentinelLabelFor(funcName: String): String? =
     if (funcName in UNLIMITED_APPROVAL_FUNCTIONS) "Unlimited" else null

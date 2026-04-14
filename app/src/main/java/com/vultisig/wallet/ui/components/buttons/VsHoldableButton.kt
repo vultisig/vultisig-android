@@ -64,14 +64,16 @@ fun VsHoldableButton(
         interactionSource.interactions.collect { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> {
-                    animJob = scope.launch {
-                        progress.animateTo(
-                            1f,
-                            tween(holdDuration.toInt(), easing = LinearEasing),
-                        )
-                    }
+                    animJob =
+                        scope.launch {
+                            progress.animateTo(
+                                1f,
+                                tween(holdDuration.toInt(), easing = LinearEasing),
+                            )
+                        }
                 }
-                is PressInteraction.Release, is PressInteraction.Cancel -> {
+                is PressInteraction.Release,
+                is PressInteraction.Cancel -> {
                     animJob?.cancel()
                     scope.launch { progress.snapTo(0f) }
                 }
