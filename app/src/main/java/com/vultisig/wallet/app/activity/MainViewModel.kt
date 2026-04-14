@@ -28,6 +28,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
 internal data class ForegroundNotificationState(
@@ -93,16 +95,14 @@ constructor(
         VSSnackbarState(duration = 1.seconds, coroutineScope = CoroutineScope(Dispatchers.Default))
 
     init {
-        viewModelScope.launch {
-            if (vaultRepository.hasVaults()) _startDestination.value = Route.Home()
-            else _startDestination.value = Route.AddVault
-
+        viewModelScope.safeLaunch {
+            _startDestination.value = resolveStartDestination()
             _isLoading.value = false
 
             snackbarFlow.collectMessage { (message, type) -> snakeBarHostState.show(message, type) }
         }
 
-        viewModelScope.launch { initializeThorChainNetworkId() }
+        viewModelScope.safeLaunch { initializeThorChainNetworkId() }
 
         networkUtils
             .observeConnectivityAsFlow()
@@ -207,4 +207,25 @@ constructor(
                 _startUpdateEvent.tryEmit(Unit)
         }
     }
+
+    private suspend fun resolveStartDestination(): Any =
+        if (hasAnyVault()) Route.Home() else Route.AddVault
+
+    private suspend fun hasAnyVault(): Boolean =
+        try {
+            withTimeoutOrNull(SPLASH_VAULT_QUERY_TIMEOUT) { vaultRepository.hasVaults() }
+                ?: false.also {
+                    Timber.w(
+                        "hasVaults() timed out after %ds; assuming no vaults",
+                        SPLASH_VAULT_QUERY_TIMEOUT.inWholeSeconds,
+                    )
+                }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            Timber.e(e, "hasVaults() failed; assuming no vaults")
+            false
+        }
 }
+
+private val SPLASH_VAULT_QUERY_TIMEOUT = 5.seconds
