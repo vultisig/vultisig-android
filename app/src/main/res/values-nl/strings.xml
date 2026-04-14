@@ -248,6 +248,8 @@
     <string name="add_address_address_title">Adres</string>
     <string name="add_address_type_hint">Typ hier</string>
     <string name="join_keysign_invalid_qr">Ongeldige QR-code-inhoud</string>
+    <string name="settings_screen_privacy">Privacy</string>
+    <string name="settings_screen_prevent_screenshots">Screenshots voorkomen</string>
     <string name="settings_screen_legal">Juridisch</string>
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>
@@ -496,6 +498,10 @@
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Tokenwaarde</string>
     <string name="token_fiat_toggle_fiat_label">Fiatwaarde</string>
+    <string name="remove_pool_title">Pool verwijderen</string>
+    <string name="remove_pool_amount_label">Bedrag</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">Alleen CACAO-tokens worden ondersteund voor pooloperaties</string>
     <string name="referral_create_info_title">Verwijzingsprogramma</string>
     <string name="referral_create_info_content">Het verwijzingsprogramma is van toepassing op THORChain-swaps en is op basis van best effort. Je moet een THORName registreren om de Vultisig-verwijzing te gebruiken. De registratiekosten zijn 10 RUNE en 1 RUNE voor elk jaar, die worden betaald aan het THORChain-netwerk.</string>

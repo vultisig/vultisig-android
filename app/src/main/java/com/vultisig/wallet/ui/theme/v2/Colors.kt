@@ -15,6 +15,7 @@ data class Colors(
     val variables: Variables = Variables(),
     val fills: FillsColors = FillsColors(),
     val vibrant: Vibrant = Vibrant(),
+    val shadow: Shadow = Shadow(),
 )
 
 data class Gradients(
@@ -128,6 +129,8 @@ data class Variables(
     val bordersExtraLight: Color = Color(0x08FFFFFF),
     val textButtonSecondaryLightDark: Color = Color(0xFFF0F4FC),
 )
+
+data class Shadow(val low: Color = Color(0x1F000000))
 
 data class FillsColors(val primary: Color = Color(0x1F787880))
 

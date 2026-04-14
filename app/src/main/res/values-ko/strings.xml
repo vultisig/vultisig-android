@@ -332,6 +332,8 @@
     <string name="add_address_address_title">주소</string>
     <string name="add_address_type_hint">여기에 입력하세요</string>
     <string name="join_keysign_invalid_qr">유효하지 않은 QR 코드 내용</string>
+    <string name="settings_screen_privacy">개인정보</string>
+    <string name="settings_screen_prevent_screenshots">스크린샷 방지</string>
     <string name="settings_screen_legal">법적 고지</string>
     <string name="settings_screen_privacy_policy">개인정보 처리방침</string>
     <string name="settings_screen_tos">서비스 이용약관</string>
@@ -681,6 +683,10 @@
     <string name="max">최대</string>
     <string name="token_fiat_toggle_token_label">토큰 가치</string>
     <string name="token_fiat_toggle_fiat_label">법정화폐 가치</string>
+    <string name="remove_pool_title">풀 제거</string>
+    <string name="remove_pool_amount_label">금액</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">풀 작업에는 CACAO 토큰만 지원됩니다</string>
     <string name="referral_create_info_content">추천 프로그램은 THORChain 스왑에 적용되며 최선의 노력으로 제공됩니다. Vultisig 추천을 사용하려면 THORName을 등록해야 합니다. 등록비는 10 RUNE이며 매년 1 RUNE이 THORChain 네트워크에 지불됩니다.</string>
     <string name="referral_create_info_title">추천 프로그램</string>

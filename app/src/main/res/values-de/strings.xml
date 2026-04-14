@@ -249,6 +249,8 @@
     <string name="add_address_address_title">Adresse</string>
     <string name="add_address_type_hint">Geben Sie hier ein</string>
     <string name="join_keysign_invalid_qr">Ungültiger QR-Code-Inhalt</string>
+    <string name="settings_screen_privacy">Datenschutz</string>
+    <string name="settings_screen_prevent_screenshots">Screenshots verhindern</string>
     <string name="settings_screen_legal">Rechtliches</string>
     <string name="settings_screen_privacy_policy">Datenschutzrichtlinie</string>
     <string name="settings_screen_tos">Servicebedingungen</string>
@@ -499,6 +501,10 @@
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Token-Wert</string>
     <string name="token_fiat_toggle_fiat_label">Fiat-Wert</string>
+    <string name="remove_pool_title">Pool entfernen</string>
+    <string name="remove_pool_amount_label">Menge</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">Nur das CACAO-Token wird für Poolvorgänge unterstützt</string>
     <string name="referral_create_info_title">Empfehlungsprogramm</string>
     <string name="referral_create_info_content">Das Empfehlungsprogramm gilt für THORChain-Swaps und erfolgt nach bestem Bemühen. Sie müssen einen THORName registrieren, um die Vultisig-Empfehlung zu nutzen. Die Registrierungsgebühr beträgt 10 RUNE und 1 RUNE für jedes Jahr, die an das THORChain-Netzwerk gezahlt wird.</string>

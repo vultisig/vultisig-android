@@ -250,6 +250,8 @@
     <string name="add_address_address_title">Morada</string>
     <string name="add_address_type_hint">Digite aqui</string>
     <string name="join_keysign_invalid_qr">Conteúdo de código QR inválido</string>
+    <string name="settings_screen_privacy">Privacidade</string>
+    <string name="settings_screen_prevent_screenshots">Impedir capturas de tela</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">política de Privacidade</string>
     <string name="settings_screen_tos">Termos de Serviço</string>
@@ -497,6 +499,10 @@
     <string name="max">Máx</string>
     <string name="token_fiat_toggle_token_label">Valor do token</string>
     <string name="token_fiat_toggle_fiat_label">Valor fiat</string>
+    <string name="remove_pool_title">Remover Pool</string>
+    <string name="remove_pool_amount_label">Montante</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">Apenas o token CACAO é suportado neste pool</string>
     <string name="referral_create_info_title">Programa de referência</string>
     <string name="referral_create_info_content">O programa de referência aplica-se a trocas THORChain e é feito com base no melhor esforço. Você precisa registrar um THORName para usar a referência Vultisig. A taxa de registro é de 10 RUNE e 1 RUNE por cada ano, que é paga à rede THORChain.</string>
