@@ -874,11 +874,34 @@ val MIGRATION_9_8 =
         }
     }
 
-/** No-op: the `bitcoincash:` address prefix stripped in 9→10 cannot be safely re-added. */
+/** Restores the `bitcoincash:` address prefix for Bitcoin Cash addresses stripped in 9→10. */
 val MIGRATION_10_9 =
     object : Migration(10, 9) {
         override fun migrate(db: SupportSQLiteDatabase) {
-            // No-op: the bitcoincash: prefix removed in 9→10 cannot be safely re-added.
+            db.execSQL(
+                """
+                UPDATE coin
+                SET address = 'bitcoincash:' || address
+                WHERE chain = 'Bitcoin-Cash' AND address NOT LIKE 'bitcoincash:%'
+                """
+                    .trimIndent()
+            )
+            db.execSQL(
+                """
+                UPDATE tokenValue
+                SET address = 'bitcoincash:' || address
+                WHERE chain = 'Bitcoin-Cash' AND address NOT LIKE 'bitcoincash:%'
+                """
+                    .trimIndent()
+            )
+            db.execSQL(
+                """
+                UPDATE address_book_entry
+                SET address = 'bitcoincash:' || address
+                WHERE chainId = 'Bitcoin-Cash' AND address NOT LIKE 'bitcoincash:%'
+                """
+                    .trimIndent()
+            )
         }
     }
 
@@ -1124,18 +1147,15 @@ internal val MIGRATION_30_29 =
         }
     }
 
-// Recreates transaction_history with the v30 wide-column schema.
-// transaction_history holds only display data; DROP+RECREATE is safe.
 /**
- * Drops and recreates `transaction_history` with the v30 wide-column schema (without the `payload`
- * column).
+ * Migrates `transaction_history` from v31 (payload JSON) to v30 wide-column schema, preserving
+ * common columns; type-specific columns (fiatValue, addresses, etc.) default to NULL.
  */
 internal val MIGRATION_31_30 =
     object : Migration(31, 30) {
         override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("DROP TABLE IF EXISTS `transaction_history`")
             db.execSQL(
-                """CREATE TABLE IF NOT EXISTS `transaction_history` (
+                """CREATE TABLE IF NOT EXISTS `transaction_history_new` (
                 `id` TEXT PRIMARY KEY NOT NULL,
                 `vaultId` TEXT NOT NULL,
                 `type` TEXT NOT NULL,
@@ -1169,6 +1189,21 @@ internal val MIGRATION_31_30 =
                     .trimIndent()
             )
             db.execSQL(
+                """
+                INSERT INTO `transaction_history_new` (
+                    `id`, `vaultId`, `type`, `status`, `chain`, `timestamp`,
+                    `txHash`, `explorerUrl`, `confirmedAt`, `failureReason`, `lastCheckedAt`
+                )
+                SELECT
+                    `id`, `vaultId`, `type`, `status`, `chain`, `timestamp`,
+                    `txHash`, `explorerUrl`, `confirmedAt`, `failureReason`, `lastCheckedAt`
+                FROM `transaction_history`
+                """
+                    .trimIndent()
+            )
+            db.execSQL("DROP TABLE `transaction_history`")
+            db.execSQL("ALTER TABLE `transaction_history_new` RENAME TO `transaction_history`")
+            db.execSQL(
                 "CREATE INDEX `index_transaction_history_vaultId` ON `transaction_history`(`vaultId`)"
             )
             db.execSQL(
@@ -1189,18 +1224,15 @@ internal val MIGRATION_31_30 =
         }
     }
 
-// Rebuilds transaction_history without the retryCount column added in 31→32.
-// transaction_history holds only display data; DROP+RECREATE is safe.
 /**
- * Rebuilds `transaction_history` with the v31 schema (without the `retryCount` column added in
- * version 32).
+ * Rebuilds `transaction_history` without the `retryCount` column added in version 32, preserving
+ * all existing rows.
  */
 internal val MIGRATION_32_31 =
     object : Migration(32, 31) {
         override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("DROP TABLE IF EXISTS `transaction_history`")
             db.execSQL(
-                """CREATE TABLE IF NOT EXISTS `transaction_history` (
+                """CREATE TABLE IF NOT EXISTS `transaction_history_new` (
                 `id` TEXT PRIMARY KEY NOT NULL,
                 `vaultId` TEXT NOT NULL,
                 `type` TEXT NOT NULL,
@@ -1216,6 +1248,23 @@ internal val MIGRATION_32_31 =
                 FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON DELETE CASCADE)"""
                     .trimIndent()
             )
+            db.execSQL(
+                """
+                INSERT INTO `transaction_history_new` (
+                    `id`, `vaultId`, `type`, `status`, `chain`, `timestamp`,
+                    `txHash`, `explorerUrl`, `payload`, `confirmedAt`, `failureReason`,
+                    `lastCheckedAt`
+                )
+                SELECT
+                    `id`, `vaultId`, `type`, `status`, `chain`, `timestamp`,
+                    `txHash`, `explorerUrl`, `payload`, `confirmedAt`, `failureReason`,
+                    `lastCheckedAt`
+                FROM `transaction_history`
+                """
+                    .trimIndent()
+            )
+            db.execSQL("DROP TABLE `transaction_history`")
+            db.execSQL("ALTER TABLE `transaction_history_new` RENAME TO `transaction_history`")
             db.execSQL(
                 "CREATE INDEX `index_transaction_history_vaultId` ON `transaction_history`(`vaultId`)"
             )
