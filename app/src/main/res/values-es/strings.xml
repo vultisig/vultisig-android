@@ -159,7 +159,6 @@
     <string name="vault_settings_delete_vault_caution3">He hecho una copia de seguridad de la bóveda</string>
     <string name="confirm_delete_permanent_delete_message">Estás eliminando permanentemente tu bóveda</string>
     <string name="confirm_delete_delete_vault">Eliminar Bóveda</string>
-    <string name="scan_qr_screen_return_vault">Regresar a la Bóveda</string>
     <string name="rename_vault_screen_vault_name">Nombre de la Bóveda</string>
     <string name="faq_settings_q1">¿Qué es Vultisig?</string>
     <string name="faq_settings_q2">¿Cuáles son los beneficios de utilizar Vultisig?</string>

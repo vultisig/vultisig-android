@@ -215,7 +215,6 @@ private fun ScanQrScreen(
 
     ScanQrLayout(
         uiModel = uiModel,
-        showReturnButton = isCameraGranted.not(),
         onDismiss = onDismiss,
         onUploadQr = {
             if (!isPickerLaunched) {
@@ -270,7 +269,6 @@ private fun ScanQrScreen(
 @Composable
 private fun ScanQrLayout(
     uiModel: ScanQrUiModel,
-    showReturnButton: Boolean,
     onDismiss: () -> Unit,
     onUploadQr: () -> Unit,
     toggleMoreInfo: () -> Unit,
@@ -291,13 +289,7 @@ private fun ScanQrLayout(
             }
     ) {
         Scaffold(
-            bottomBar = {
-                ScanQrBottomBar(
-                    showReturnButton = showReturnButton,
-                    onDismiss = onDismiss,
-                    onUploadQr = onUploadQr,
-                )
-            },
+            bottomBar = { ScanQrBottomBar(onUploadQr = onUploadQr) },
             topBar = {
                 ScanQrTopBar(
                     onBackClick = onDismiss,
@@ -392,25 +384,11 @@ private fun ScanQrTopBar(
 }
 
 @Composable
-private fun ScanQrBottomBar(
-    showReturnButton: Boolean,
-    onDismiss: () -> Unit,
-    onUploadQr: () -> Unit,
-) {
+private fun ScanQrBottomBar(onUploadQr: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(bottom = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (showReturnButton) {
-            VsButton(
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 14.dp),
-                label = stringResource(id = R.string.scan_qr_screen_return_vault),
-                onClick = onDismiss,
-                variant = VsButtonVariant.CTA,
-            )
-            UiSpacer(size = 12.dp)
-        }
-
         VsButton(
             modifier = Modifier.padding(horizontal = 32.dp, vertical = 14.dp),
             onClick = onUploadQr,
@@ -592,7 +570,6 @@ private suspend fun scanImage(inputImage: InputImage): ScanResult =
 private fun ScanQrScreenPreview() {
     ScanQrLayout(
         uiModel = ScanQrUiModel(isTipVisible = false),
-        showReturnButton = true,
         onDismiss = {},
         onUploadQr = {},
         toggleMoreInfo = {},

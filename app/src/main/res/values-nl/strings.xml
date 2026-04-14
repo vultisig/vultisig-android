@@ -167,7 +167,6 @@
     <string name="confirm_delete_delete_vault">Kluis verwijderen</string>
     <string name="vault_accounts_account_assets">%1$s activa</string>
     <string name="s_of_s_vault">%1$s van %2$s kluis</string>
-    <string name="scan_qr_screen_return_vault">Terug naar de Kluis</string>
     <string name="rename_vault_screen_vault_name">Kluisnaam</string>
     <string name="faq_settings_q1">Wat is Vultisig?</string>
     <string name="faq_settings_q2">Wat zijn de voordelen van het gebruik van Vultisig?</string>

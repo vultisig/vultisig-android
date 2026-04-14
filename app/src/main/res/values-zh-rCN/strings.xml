@@ -280,7 +280,6 @@
     <!-- Vault Accounts -->
     <string name="vault_accounts_account_assets">%1$s 资产</string>
     <string name="s_of_s_vault">%1$s/%2$s 保险库设置</string>
-    <string name="scan_qr_screen_return_vault">返回保险库</string>
 
     <!-- Rename Vault -->
     <string name="rename_vault_screen_vault_name">保险库名称</string>

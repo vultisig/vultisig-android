@@ -163,7 +163,6 @@
     <string name="import_file_screen_success_import">Trezor je uspješno uvezen</string>
     <string name="verify_swap_consent_amount">Iznos zamjene je točan</string>
     <string name="successfully_scanned_barcode">Uspješno skeniran crtični kod: %1$s</string>
-    <string name="scan_qr_screen_return_vault">Povratak u Trezor</string>
     <string name="verify_transaction_error_not_enough_consent">Provjerite sve suglasnosti</string>
     <string name="send_error_no_token">Nije odabran token</string>
     <string name="send_error_no_gas_fee">Nema naknade za plin</string>

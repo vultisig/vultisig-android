@@ -167,7 +167,6 @@
     <string name="confirm_delete_delete_vault">Удалить хранилище</string>
     <string name="vault_accounts_account_assets">%1$s активы</string>
     <string name="s_of_s_vault">%1$s из %2$s хранилища</string>
-    <string name="scan_qr_screen_return_vault">Вернуться в Хранилище</string>
     <string name="rename_vault_screen_vault_name">Имя хранилища</string>
     <string name="faq_settings_q1">Что такое Вультисиг?</string>
     <string name="faq_settings_q2">Каковы преимущества использования Vultisig?</string>
