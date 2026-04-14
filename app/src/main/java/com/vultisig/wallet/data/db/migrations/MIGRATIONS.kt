@@ -760,3 +760,437 @@ internal val MIGRATION_31_32 =
             }
         }
     }
+
+// Convention: every upward migration N→N+1 must be accompanied by a downgrade migration N+1→N.
+// Future PRs that bump the database version must include both directions.
+
+val MIGRATION_2_1 =
+    object : Migration(2, 1) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `chainOrder`")
+        }
+    }
+
+val MIGRATION_3_2 =
+    object : Migration(3, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `vaultOrder`")
+            db.execSQL("DROP TABLE IF EXISTS `chainOrder`")
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `chainOrder` (
+                `value` TEXT PRIMARY KEY NOT NULL,
+                `order` REAL NOT NULL)"""
+                    .trimIndent()
+            )
+        }
+    }
+
+val MIGRATION_4_3 =
+    object : Migration(4, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `tokenValue`")
+            db.execSQL("DROP TABLE IF EXISTS `tokenPrice`")
+        }
+    }
+
+val MIGRATION_5_4 =
+    object : Migration(5, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `chainOrder` (
+                `value` TEXT NOT NULL,
+                `order` REAL NOT NULL,
+                `parentId` TEXT NOT NULL,
+                PRIMARY KEY(`value`, `parentId`))"""
+                    .trimIndent()
+            )
+        }
+    }
+
+val MIGRATION_6_5 =
+    object : Migration(6, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `coin_new` (
+                `id` TEXT NOT NULL,
+                `vaultId` TEXT NOT NULL,
+                `chain` TEXT NOT NULL,
+                `ticker` TEXT NOT NULL,
+                `decimals` INTEGER NOT NULL,
+                `priceProviderId` TEXT NOT NULL,
+                `contractAddress` TEXT NOT NULL,
+                `address` TEXT NOT NULL,
+                `hexPublicKey` TEXT NOT NULL,
+                PRIMARY KEY(`id`, `vaultId`),
+                FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON DELETE CASCADE ON UPDATE CASCADE)"""
+                    .trimIndent()
+            )
+            db.execSQL(
+                "INSERT INTO `coin_new` (`id`,`vaultId`,`chain`,`ticker`,`decimals`,`priceProviderId`,`contractAddress`,`address`,`hexPublicKey`) SELECT `id`,`vaultId`,`chain`,`ticker`,`decimals`,`priceProviderId`,`contractAddress`,`address`,`hexPublicKey` FROM `coin`"
+            )
+            db.execSQL("DROP TABLE `coin`")
+            db.execSQL("ALTER TABLE `coin_new` RENAME TO `coin`")
+            db.execSQL("DROP TABLE IF EXISTS `tokenPrice`")
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `tokenPrice` (
+                `priceProviderId` TEXT NOT NULL,
+                `currency` TEXT NOT NULL,
+                `price` TEXT NOT NULL,
+                PRIMARY KEY(`priceProviderId`, `currency`))"""
+                    .trimIndent()
+            )
+        }
+    }
+
+val MIGRATION_7_6 =
+    object : Migration(7, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `address_book_entry`")
+        }
+    }
+
+val MIGRATION_8_7 =
+    object : Migration(8, 7) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.updateChainNameValue("MayaChain", "Maya Chain")
+            db.updateChainNameValue("CronosChain", "Cronos Chain")
+            db.updateChainNameValue("Bitcoin-Cash", "Bitcoin Cash")
+            db.updateChainNameValue("Gaia", "Gaia Chain")
+        }
+    }
+
+val MIGRATION_9_8 =
+    object : Migration(9, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `addressBookOrder`")
+        }
+    }
+
+val MIGRATION_10_9 =
+    object : Migration(10, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No-op: the bitcoincash: prefix removed in 9→10 cannot be safely re-added.
+        }
+    }
+
+val MIGRATION_11_10 =
+    object : Migration(11, 10) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.updateChainNameValue("Cosmos", "Gaia")
+        }
+    }
+
+val MIGRATION_12_11 =
+    object : Migration(12, 11) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("UPDATE coin SET logo = 'matic' WHERE logo = 'polygon'")
+        }
+    }
+
+val MIGRATION_13_12 =
+    object : Migration(13, 12) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No-op: original coin decimal values before 12→13 are unknown and cannot be restored.
+        }
+    }
+
+val MIGRATION_14_13 =
+    object : Migration(14, 13) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP INDEX IF EXISTS `index_coin_vaultId`")
+        }
+    }
+
+val MIGRATION_15_14 =
+    object : Migration(15, 14) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `vaultFolder`")
+            db.execSQL("DROP TABLE IF EXISTS `folderOrder`")
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `vaultOrder_new` (
+                `value` TEXT PRIMARY KEY NOT NULL,
+                `order` REAL NOT NULL)"""
+                    .trimIndent()
+            )
+            db.execSQL(
+                "INSERT INTO `vaultOrder_new` (`value`, `order`) SELECT `value`, `order` FROM `vaultOrder`"
+            )
+            db.execSQL("DROP TABLE `vaultOrder`")
+            db.execSQL("ALTER TABLE `vaultOrder_new` RENAME TO `vaultOrder`")
+        }
+    }
+
+val MIGRATION_16_15 =
+    object : Migration(16, 15) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No-op: the WETH-BSC rows deleted in 15→16 cannot be restored.
+        }
+    }
+
+val MIGRATION_17_16 =
+    object : Migration(17, 16) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `signer_new` (
+                `vaultId` TEXT NOT NULL,
+                `title` TEXT NOT NULL,
+                PRIMARY KEY(`vaultId`, `title`),
+                FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON DELETE CASCADE ON UPDATE CASCADE)"""
+                    .trimIndent()
+            )
+            db.execSQL(
+                "INSERT INTO `signer_new` (`vaultId`, `title`) SELECT `vaultId`, `title` FROM `signer`"
+            )
+            db.execSQL("DROP TABLE `signer`")
+            db.execSQL("ALTER TABLE `signer_new` RENAME TO `signer`")
+        }
+    }
+
+val MIGRATION_18_17 =
+    object : Migration(18, 17) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "UPDATE coin SET ticker = 'MATIC', logo = 'matic' WHERE chain = 'Polygon' AND ticker = 'POL'"
+            )
+            db.execSQL(
+                "UPDATE coin SET ticker = 'MATIC', logo = 'matic' WHERE chain = 'Ethereum' AND ticker = 'POL'"
+            )
+        }
+    }
+
+internal val MIGRATION_19_18 =
+    object : Migration(19, 18) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `vaultMetadata`")
+        }
+    }
+
+internal val MIGRATION_20_19 =
+    object : Migration(20, 19) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `vault_new` (
+                `id` TEXT PRIMARY KEY NOT NULL,
+                `name` TEXT NOT NULL,
+                `localPartyId` TEXT NOT NULL,
+                `pubKeyEcdsa` TEXT NOT NULL,
+                `pubKeyEddsa` TEXT NOT NULL,
+                `hexChainCode` TEXT NOT NULL,
+                `resharePrefix` TEXT NOT NULL)"""
+                    .trimIndent()
+            )
+            db.execSQL(
+                "INSERT INTO `vault_new` (`id`,`name`,`localPartyId`,`pubKeyEcdsa`,`pubKeyEddsa`,`hexChainCode`,`resharePrefix`) SELECT `id`,`name`,`localPartyId`,`pubKeyEcdsa`,`pubKeyEddsa`,`hexChainCode`,`resharePrefix` FROM `vault`"
+            )
+            db.execSQL("DROP TABLE `vault`")
+            db.execSQL("ALTER TABLE `vault_new` RENAME TO `vault`")
+        }
+    }
+
+internal val MIGRATION_21_20 =
+    object : Migration(21, 20) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No-op: original priceProviderId values for Arbitrum USDT/USDC before 20→21 are
+            // unknown.
+        }
+    }
+
+internal val MIGRATION_22_21 =
+    object : Migration(22, 21) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `vaultMetadata_new` (
+                `vaultId` TEXT NOT NULL,
+                `isServerBackupVerified` INTEGER DEFAULT NULL,
+                PRIMARY KEY(`vaultId`),
+                FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON DELETE CASCADE ON UPDATE CASCADE)"""
+                    .trimIndent()
+            )
+            db.execSQL(
+                "INSERT INTO `vaultMetadata_new` (`vaultId`) SELECT `vaultId` FROM `vaultMetadata`"
+            )
+            db.execSQL("DROP TABLE `vaultMetadata`")
+            db.execSQL("ALTER TABLE `vaultMetadata_new` RENAME TO `vaultMetadata`")
+        }
+    }
+
+internal val MIGRATION_23_22 =
+    object : Migration(23, 22) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `disabledCoin`")
+        }
+    }
+
+internal val MIGRATION_24_23 =
+    object : Migration(24, 23) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `active_bonded_nodes`")
+            db.execSQL("DROP TABLE IF EXISTS `staking_details`")
+        }
+    }
+
+internal val MIGRATION_25_24 =
+    object : Migration(25, 24) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "UPDATE coin SET priceProviderId = 'matic-network' WHERE priceProviderId = 'polygon-ecosystem-token'"
+            )
+        }
+    }
+
+internal val MIGRATION_26_25 =
+    object : Migration(26, 25) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `chainPublicKey`")
+        }
+    }
+
+internal val MIGRATION_27_26 =
+    object : Migration(27, 26) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `vault_new` (
+                `id` TEXT PRIMARY KEY NOT NULL,
+                `name` TEXT NOT NULL,
+                `localPartyId` TEXT NOT NULL,
+                `pubKeyEcdsa` TEXT NOT NULL,
+                `pubKeyEddsa` TEXT NOT NULL,
+                `hexChainCode` TEXT NOT NULL,
+                `resharePrefix` TEXT NOT NULL,
+                `libType` TEXT NOT NULL DEFAULT 'GG20')"""
+                    .trimIndent()
+            )
+            db.execSQL(
+                "INSERT INTO `vault_new` (`id`,`name`,`localPartyId`,`pubKeyEcdsa`,`pubKeyEddsa`,`hexChainCode`,`resharePrefix`,`libType`) SELECT `id`,`name`,`localPartyId`,`pubKeyEcdsa`,`pubKeyEddsa`,`hexChainCode`,`resharePrefix`,`libType` FROM `vault`"
+            )
+            db.execSQL("DROP TABLE `vault`")
+            db.execSQL("ALTER TABLE `vault_new` RENAME TO `vault`")
+        }
+    }
+
+internal val MIGRATION_28_27 =
+    object : Migration(28, 27) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `vault_notification_settings`")
+        }
+    }
+
+internal val MIGRATION_29_28 =
+    object : Migration(29, 28) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP INDEX IF EXISTS `index_disabledCoin_vaultId`")
+        }
+    }
+
+// transaction_history holds only display data (no vault keys or funds); DROP is safe.
+internal val MIGRATION_30_29 =
+    object : Migration(30, 29) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `transaction_history`")
+        }
+    }
+
+// Recreates transaction_history with the v30 wide-column schema.
+// transaction_history holds only display data; DROP+RECREATE is safe.
+internal val MIGRATION_31_30 =
+    object : Migration(31, 30) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `transaction_history`")
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `transaction_history` (
+                `id` TEXT PRIMARY KEY NOT NULL,
+                `vaultId` TEXT NOT NULL,
+                `type` TEXT NOT NULL,
+                `status` TEXT NOT NULL,
+                `chain` TEXT NOT NULL,
+                `timestamp` INTEGER NOT NULL,
+                `txHash` TEXT NOT NULL,
+                `explorerUrl` TEXT NOT NULL,
+                `fiatValue` TEXT,
+                `fromAddress` TEXT,
+                `toAddress` TEXT,
+                `amount` TEXT,
+                `token` TEXT,
+                `tokenLogo` TEXT,
+                `feeEstimate` TEXT,
+                `memo` TEXT,
+                `fromToken` TEXT,
+                `fromAmount` TEXT,
+                `fromChain` TEXT,
+                `fromTokenLogo` TEXT,
+                `toToken` TEXT,
+                `toAmount` TEXT,
+                `toChain` TEXT,
+                `toTokenLogo` TEXT,
+                `provider` TEXT,
+                `route` TEXT,
+                `confirmedAt` INTEGER,
+                `failureReason` TEXT,
+                `lastCheckedAt` INTEGER,
+                FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON DELETE CASCADE)"""
+                    .trimIndent()
+            )
+            db.execSQL(
+                "CREATE INDEX `index_transaction_history_vaultId` ON `transaction_history`(`vaultId`)"
+            )
+            db.execSQL(
+                "CREATE UNIQUE INDEX `index_transaction_history_txHash` ON `transaction_history`(`txHash`)"
+            )
+            db.execSQL(
+                "CREATE INDEX `index_transaction_history_status` ON `transaction_history`(`status`)"
+            )
+            db.execSQL(
+                "CREATE INDEX `index_transaction_history_type` ON `transaction_history`(`type`)"
+            )
+            db.execSQL(
+                "CREATE INDEX `index_transaction_history_chain` ON `transaction_history`(`chain`)"
+            )
+            db.execSQL(
+                "CREATE INDEX `index_transaction_history_timestamp` ON `transaction_history`(`timestamp`)"
+            )
+        }
+    }
+
+// Rebuilds transaction_history without the retryCount column added in 31→32.
+// transaction_history holds only display data; DROP+RECREATE is safe.
+internal val MIGRATION_32_31 =
+    object : Migration(32, 31) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `transaction_history`")
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `transaction_history` (
+                `id` TEXT PRIMARY KEY NOT NULL,
+                `vaultId` TEXT NOT NULL,
+                `type` TEXT NOT NULL,
+                `status` TEXT NOT NULL,
+                `chain` TEXT NOT NULL,
+                `timestamp` INTEGER NOT NULL,
+                `txHash` TEXT NOT NULL,
+                `explorerUrl` TEXT NOT NULL,
+                `payload` TEXT NOT NULL,
+                `confirmedAt` INTEGER,
+                `failureReason` TEXT,
+                `lastCheckedAt` INTEGER,
+                FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON DELETE CASCADE)"""
+                    .trimIndent()
+            )
+            db.execSQL(
+                "CREATE INDEX `index_transaction_history_vaultId` ON `transaction_history`(`vaultId`)"
+            )
+            db.execSQL(
+                "CREATE UNIQUE INDEX `index_transaction_history_txHash` ON `transaction_history`(`txHash`)"
+            )
+            db.execSQL(
+                "CREATE INDEX `index_transaction_history_status` ON `transaction_history`(`status`)"
+            )
+            db.execSQL(
+                "CREATE INDEX `index_transaction_history_type` ON `transaction_history`(`type`)"
+            )
+            db.execSQL(
+                "CREATE INDEX `index_transaction_history_chain` ON `transaction_history`(`chain`)"
+            )
+            db.execSQL(
+                "CREATE INDEX `index_transaction_history_timestamp` ON `transaction_history`(`timestamp`)"
+            )
+        }
+    }
