@@ -764,6 +764,7 @@ internal val MIGRATION_31_32 =
 // Convention: every upward migration N→N+1 must be accompanied by a downgrade migration N+1→N.
 // Future PRs that bump the database version must include both directions.
 
+/** Drops the `chainOrder` table introduced in version 2. */
 val MIGRATION_2_1 =
     object : Migration(2, 1) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -771,6 +772,7 @@ val MIGRATION_2_1 =
         }
     }
 
+/** Drops `vaultOrder` and recreates `chainOrder` with the v2 single-column schema. */
 val MIGRATION_3_2 =
     object : Migration(3, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -785,6 +787,7 @@ val MIGRATION_3_2 =
         }
     }
 
+/** Drops the `tokenValue` and `tokenPrice` tables introduced in version 4. */
 val MIGRATION_4_3 =
     object : Migration(4, 3) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -793,6 +796,7 @@ val MIGRATION_4_3 =
         }
     }
 
+/** Recreates `chainOrder` with the composite `(value, parentId)` primary key used in version 4. */
 val MIGRATION_5_4 =
     object : Migration(5, 4) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -807,6 +811,7 @@ val MIGRATION_5_4 =
         }
     }
 
+/** Rebuilds `coin` without the `logo` column and recreates `tokenPrice` with the v5 schema. */
 val MIGRATION_6_5 =
     object : Migration(6, 5) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -842,6 +847,7 @@ val MIGRATION_6_5 =
         }
     }
 
+/** Drops the `address_book_entry` table introduced in version 7. */
 val MIGRATION_7_6 =
     object : Migration(7, 6) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -849,6 +855,7 @@ val MIGRATION_7_6 =
         }
     }
 
+/** Reverts chain display-name renames introduced in version 8 (MayaChain, CronosChain, etc.). */
 val MIGRATION_8_7 =
     object : Migration(8, 7) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -859,6 +866,7 @@ val MIGRATION_8_7 =
         }
     }
 
+/** Drops the `addressBookOrder` table introduced in version 9. */
 val MIGRATION_9_8 =
     object : Migration(9, 8) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -866,6 +874,7 @@ val MIGRATION_9_8 =
         }
     }
 
+/** No-op: the `bitcoincash:` address prefix stripped in 9→10 cannot be safely re-added. */
 val MIGRATION_10_9 =
     object : Migration(10, 9) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -873,6 +882,7 @@ val MIGRATION_10_9 =
         }
     }
 
+/** Reverts the Cosmos chain name from "Cosmos" back to "Gaia". */
 val MIGRATION_11_10 =
     object : Migration(11, 10) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -880,6 +890,7 @@ val MIGRATION_11_10 =
         }
     }
 
+/** Reverts the Polygon coin logo from "polygon" back to "matic". */
 val MIGRATION_12_11 =
     object : Migration(12, 11) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -887,6 +898,7 @@ val MIGRATION_12_11 =
         }
     }
 
+/** No-op: original coin decimal values before version 13 cannot be restored. */
 val MIGRATION_13_12 =
     object : Migration(13, 12) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -894,6 +906,7 @@ val MIGRATION_13_12 =
         }
     }
 
+/** Drops the `index_coin_vaultId` index introduced in version 14. */
 val MIGRATION_14_13 =
     object : Migration(14, 13) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -901,6 +914,7 @@ val MIGRATION_14_13 =
         }
     }
 
+/** Drops `vaultFolder`/`folderOrder` and strips the `parentId` column from `vaultOrder`. */
 val MIGRATION_15_14 =
     object : Migration(15, 14) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -920,6 +934,7 @@ val MIGRATION_15_14 =
         }
     }
 
+/** No-op: WETH-BSC rows deleted in 15→16 cannot be restored. */
 val MIGRATION_16_15 =
     object : Migration(16, 15) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -927,6 +942,7 @@ val MIGRATION_16_15 =
         }
     }
 
+/** Rebuilds `signer` without the `index`/`publicKeyecdsa` columns added in version 17. */
 val MIGRATION_17_16 =
     object : Migration(17, 16) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -946,6 +962,7 @@ val MIGRATION_17_16 =
         }
     }
 
+/** Reverts the POL ticker/logo back to MATIC for Polygon and Ethereum chains. */
 val MIGRATION_18_17 =
     object : Migration(18, 17) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -958,6 +975,7 @@ val MIGRATION_18_17 =
         }
     }
 
+/** Drops the `vaultMetadata` table introduced in version 19. */
 internal val MIGRATION_19_18 =
     object : Migration(19, 18) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -965,6 +983,7 @@ internal val MIGRATION_19_18 =
         }
     }
 
+/** Rebuilds `vault` without the `libType` column added in version 20. */
 internal val MIGRATION_20_19 =
     object : Migration(20, 19) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -987,6 +1006,9 @@ internal val MIGRATION_20_19 =
         }
     }
 
+/**
+ * No-op: original `priceProviderId` values for Arbitrum USDT/USDC before version 21 are unknown.
+ */
 internal val MIGRATION_21_20 =
     object : Migration(21, 20) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -995,6 +1017,10 @@ internal val MIGRATION_21_20 =
         }
     }
 
+/**
+ * Rebuilds `vaultMetadata` with the v21 schema (restores `isServerBackupVerified`, drops
+ * `fastVaultPasswordReminderShownDate`).
+ */
 internal val MIGRATION_22_21 =
     object : Migration(22, 21) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -1014,6 +1040,7 @@ internal val MIGRATION_22_21 =
         }
     }
 
+/** Drops the `disabledCoin` table introduced in version 23. */
 internal val MIGRATION_23_22 =
     object : Migration(23, 22) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -1021,6 +1048,7 @@ internal val MIGRATION_23_22 =
         }
     }
 
+/** Drops `active_bonded_nodes` and `staking_details` tables introduced in version 24. */
 internal val MIGRATION_24_23 =
     object : Migration(24, 23) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -1029,6 +1057,7 @@ internal val MIGRATION_24_23 =
         }
     }
 
+/** Reverts the Polygon `priceProviderId` from "polygon-ecosystem-token" back to "matic-network". */
 internal val MIGRATION_25_24 =
     object : Migration(25, 24) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -1038,6 +1067,7 @@ internal val MIGRATION_25_24 =
         }
     }
 
+/** Drops the `chainPublicKey` table introduced in version 26. */
 internal val MIGRATION_26_25 =
     object : Migration(26, 25) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -1045,6 +1075,7 @@ internal val MIGRATION_26_25 =
         }
     }
 
+/** Rebuilds `vault` without the `pubKeyMldsa` column added in version 27. */
 internal val MIGRATION_27_26 =
     object : Migration(27, 26) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -1068,6 +1099,7 @@ internal val MIGRATION_27_26 =
         }
     }
 
+/** Drops the `vault_notification_settings` table introduced in version 28. */
 internal val MIGRATION_28_27 =
     object : Migration(28, 27) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -1075,6 +1107,7 @@ internal val MIGRATION_28_27 =
         }
     }
 
+/** Drops the `index_disabledCoin_vaultId` index added in version 29. */
 internal val MIGRATION_29_28 =
     object : Migration(29, 28) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -1083,6 +1116,7 @@ internal val MIGRATION_29_28 =
     }
 
 // transaction_history holds only display data (no vault keys or funds); DROP is safe.
+/** Drops the `transaction_history` table added in version 30; data cannot be recovered. */
 internal val MIGRATION_30_29 =
     object : Migration(30, 29) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -1092,6 +1126,10 @@ internal val MIGRATION_30_29 =
 
 // Recreates transaction_history with the v30 wide-column schema.
 // transaction_history holds only display data; DROP+RECREATE is safe.
+/**
+ * Drops and recreates `transaction_history` with the v30 wide-column schema (without the `payload`
+ * column).
+ */
 internal val MIGRATION_31_30 =
     object : Migration(31, 30) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -1153,6 +1191,10 @@ internal val MIGRATION_31_30 =
 
 // Rebuilds transaction_history without the retryCount column added in 31→32.
 // transaction_history holds only display data; DROP+RECREATE is safe.
+/**
+ * Rebuilds `transaction_history` with the v31 schema (without the `retryCount` column added in
+ * version 32).
+ */
 internal val MIGRATION_32_31 =
     object : Migration(32, 31) {
         override fun migrate(db: SupportSQLiteDatabase) {
