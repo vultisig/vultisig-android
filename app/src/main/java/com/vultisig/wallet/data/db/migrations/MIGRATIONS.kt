@@ -765,7 +765,7 @@ internal val MIGRATION_31_32 =
 // Future PRs that bump the database version must include both directions.
 
 /** Drops the `chainOrder` table introduced in version 2. */
-val MIGRATION_2_1 =
+internal val MIGRATION_2_1 =
     object : Migration(2, 1) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("DROP TABLE IF EXISTS `chainOrder`")
@@ -773,7 +773,7 @@ val MIGRATION_2_1 =
     }
 
 /** Drops `vaultOrder` and recreates `chainOrder` with the v2 single-column schema. */
-val MIGRATION_3_2 =
+internal val MIGRATION_3_2 =
     object : Migration(3, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("DROP TABLE IF EXISTS `vaultOrder`")
@@ -788,7 +788,7 @@ val MIGRATION_3_2 =
     }
 
 /** Drops the `tokenValue` and `tokenPrice` tables introduced in version 4. */
-val MIGRATION_4_3 =
+internal val MIGRATION_4_3 =
     object : Migration(4, 3) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("DROP TABLE IF EXISTS `tokenValue`")
@@ -797,7 +797,7 @@ val MIGRATION_4_3 =
     }
 
 /** Recreates `chainOrder` with the composite `(value, parentId)` primary key used in version 4. */
-val MIGRATION_5_4 =
+internal val MIGRATION_5_4 =
     object : Migration(5, 4) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
@@ -812,7 +812,7 @@ val MIGRATION_5_4 =
     }
 
 /** Rebuilds `coin` without the `logo` column and recreates `tokenPrice` with the v5 schema. */
-val MIGRATION_6_5 =
+internal val MIGRATION_6_5 =
     object : Migration(6, 5) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
@@ -848,7 +848,7 @@ val MIGRATION_6_5 =
     }
 
 /** Drops the `address_book_entry` table introduced in version 7. */
-val MIGRATION_7_6 =
+internal val MIGRATION_7_6 =
     object : Migration(7, 6) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("DROP TABLE IF EXISTS `address_book_entry`")
@@ -856,7 +856,7 @@ val MIGRATION_7_6 =
     }
 
 /** Reverts chain display-name renames introduced in version 8 (MayaChain, CronosChain, etc.). */
-val MIGRATION_8_7 =
+internal val MIGRATION_8_7 =
     object : Migration(8, 7) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.updateChainNameValue("MayaChain", "Maya Chain")
@@ -867,7 +867,7 @@ val MIGRATION_8_7 =
     }
 
 /** Drops the `addressBookOrder` table introduced in version 9. */
-val MIGRATION_9_8 =
+internal val MIGRATION_9_8 =
     object : Migration(9, 8) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("DROP TABLE IF EXISTS `addressBookOrder`")
@@ -875,7 +875,7 @@ val MIGRATION_9_8 =
     }
 
 /** Restores the `bitcoincash:` address prefix for Bitcoin Cash addresses stripped in 9→10. */
-val MIGRATION_10_9 =
+internal val MIGRATION_10_9 =
     object : Migration(10, 9) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
@@ -906,7 +906,7 @@ val MIGRATION_10_9 =
     }
 
 /** Reverts the Cosmos chain name from "Cosmos" back to "Gaia". */
-val MIGRATION_11_10 =
+internal val MIGRATION_11_10 =
     object : Migration(11, 10) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.updateChainNameValue("Cosmos", "Gaia")
@@ -914,7 +914,7 @@ val MIGRATION_11_10 =
     }
 
 /** Reverts the Polygon coin logo from "polygon" back to "matic". */
-val MIGRATION_12_11 =
+internal val MIGRATION_12_11 =
     object : Migration(12, 11) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("UPDATE coin SET logo = 'matic' WHERE logo = 'polygon'")
@@ -922,7 +922,7 @@ val MIGRATION_12_11 =
     }
 
 /** No-op: original coin decimal values before version 13 cannot be restored. */
-val MIGRATION_13_12 =
+internal val MIGRATION_13_12 =
     object : Migration(13, 12) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // No-op: original coin decimal values before 12→13 are unknown and cannot be restored.
@@ -930,7 +930,7 @@ val MIGRATION_13_12 =
     }
 
 /** Drops the `index_coin_vaultId` index introduced in version 14. */
-val MIGRATION_14_13 =
+internal val MIGRATION_14_13 =
     object : Migration(14, 13) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("DROP INDEX IF EXISTS `index_coin_vaultId`")
@@ -938,7 +938,7 @@ val MIGRATION_14_13 =
     }
 
 /** Drops `vaultFolder`/`folderOrder` and strips the `parentId` column from `vaultOrder`. */
-val MIGRATION_15_14 =
+internal val MIGRATION_15_14 =
     object : Migration(15, 14) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("DROP TABLE IF EXISTS `vaultFolder`")
@@ -958,7 +958,7 @@ val MIGRATION_15_14 =
     }
 
 /** No-op: WETH-BSC rows deleted in 15→16 cannot be restored. */
-val MIGRATION_16_15 =
+internal val MIGRATION_16_15 =
     object : Migration(16, 15) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // No-op: the WETH-BSC rows deleted in 15→16 cannot be restored.
@@ -966,7 +966,7 @@ val MIGRATION_16_15 =
     }
 
 /** Rebuilds `signer` without the `index`/`publicKeyecdsa` columns added in version 17. */
-val MIGRATION_17_16 =
+internal val MIGRATION_17_16 =
     object : Migration(17, 16) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
@@ -986,7 +986,7 @@ val MIGRATION_17_16 =
     }
 
 /** Reverts the POL ticker/logo back to MATIC for Polygon and Ethereum chains. */
-val MIGRATION_18_17 =
+internal val MIGRATION_18_17 =
     object : Migration(18, 17) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
