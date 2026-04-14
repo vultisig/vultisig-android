@@ -150,6 +150,7 @@ private fun ScanQrScreen(
 
     var isScanned by remember { mutableStateOf(false) }
     var isPickerLaunched by remember { mutableStateOf(false) }
+    var hasRequestedPermission by remember { mutableStateOf(false) }
 
     val onSuccess: (List<Barcode>) -> Unit = { barcodes ->
         if (barcodes.isNotEmpty()) {
@@ -239,28 +240,29 @@ private fun ScanQrScreen(
                     },
                 )
             }
-        } else if (
-            cameraPermissionState.status.shouldShowRationale ||
-                cameraPermissionState.status.isGranted.not()
-        ) {
-            if (!cameraPermissionState.status.shouldShowRationale) {
-                LaunchedEffect(Unit) { cameraPermissionState.launchPermissionRequest() }
-            }
-            ErrorView(
-                title = stringResource(R.string.camera_permission_denied),
-                buttonUiModel =
-                    ErrorViewButtonUiModel(
-                        text = stringResource(R.string.camera_permission_open_settings),
-                        onClick = {
-                            context.startActivity(
-                                Intent(
-                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                    Uri.fromParts("package", context.packageName, null),
+        } else {
+            if (!hasRequestedPermission && !cameraPermissionState.status.shouldShowRationale) {
+                LaunchedEffect(Unit) {
+                    hasRequestedPermission = true
+                    cameraPermissionState.launchPermissionRequest()
+                }
+            } else {
+                ErrorView(
+                    title = stringResource(R.string.camera_permission_denied),
+                    buttonUiModel =
+                        ErrorViewButtonUiModel(
+                            text = stringResource(R.string.camera_permission_open_settings),
+                            onClick = {
+                                context.startActivity(
+                                    Intent(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                        Uri.fromParts("package", context.packageName, null),
+                                    )
                                 )
-                            )
-                        },
-                    ),
-            )
+                            },
+                        ),
+                )
+            }
         }
     }
 }
@@ -401,6 +403,7 @@ private fun ScanQrBottomBar(
     ) {
         if (showReturnButton) {
             VsButton(
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 14.dp),
                 label = stringResource(id = R.string.scan_qr_screen_return_vault),
                 onClick = onDismiss,
                 variant = VsButtonVariant.CTA,
@@ -409,6 +412,7 @@ private fun ScanQrBottomBar(
         }
 
         VsButton(
+            modifier = Modifier.padding(horizontal = 32.dp, vertical = 14.dp),
             onClick = onUploadQr,
             label = stringResource(R.string.scan_qr_upload_qr_code),
             variant = VsButtonVariant.CTA,
@@ -553,8 +557,9 @@ private sealed interface ScanResult {
 
 private suspend fun scanImage(inputImage: InputImage): ScanResult =
     suspendCancellableCoroutine { continuation ->
+        val scanner = createScanner()
         try {
-            createScanner()
+            scanner
                 .process(inputImage)
                 .addOnSuccessListener { barcodes ->
                     continuation.resume(ScanResult.Success(barcodes))
@@ -569,9 +574,12 @@ private suspend fun scanImage(inputImage: InputImage): ScanResult =
                         }
                     continuation.resume(ScanResult.Failure(errorMessage))
                 }
+                .addOnCompleteListener { scanner.close() }
         } catch (e: CancellationException) {
+            scanner.close()
             throw e
         } catch (e: Exception) {
+            scanner.close()
             Timber.e(e, "Barcode scanner unavailable")
             continuation.resume(
                 ScanResult.Failure("Barcode scanner unavailable: ${e.message ?: e.toString()}")
@@ -583,8 +591,8 @@ private suspend fun scanImage(inputImage: InputImage): ScanResult =
 @Composable
 private fun ScanQrScreenPreview() {
     ScanQrLayout(
-        uiModel = ScanQrUiModel(isTipVisible = true),
-        showReturnButton = false,
+        uiModel = ScanQrUiModel(isTipVisible = false),
+        showReturnButton = true,
         onDismiss = {},
         onUploadQr = {},
         toggleMoreInfo = {},
