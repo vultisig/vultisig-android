@@ -93,7 +93,7 @@ internal interface DatabaseModule {
         @Provides
         @Singleton
         fun provideAppDatabase(@ApplicationContext appContext: Context): AppDatabase =
-            /* never enable destructive migrations in production */
+            /* never enable fallbackToDestructiveMigration() — upgrade data loss is unacceptable */
             Room.databaseBuilder(
                     context = appContext,
                     klass = AppDatabase::class.java,
@@ -163,6 +163,7 @@ internal interface DatabaseModule {
                     MIGRATION_31_30,
                     MIGRATION_32_31,
                 )
+                .fallbackToDestructiveMigrationOnDowngrade()
                 .build()
 
         private const val DB_NAME = "vultisig_db"
