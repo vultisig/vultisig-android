@@ -195,10 +195,13 @@ private fun ScanQrScreen(
                                     } else {
                                         onError(context.getString(R.string.no_barcodes_found))
                                     }
-                                is ScanResult.Failure ->
-                                    onError(
-                                        (first as? ScanResult.Failure)?.message ?: retry.message
+                                is ScanResult.Failure -> {
+                                    Timber.e(
+                                        "Scan failed: %s",
+                                        (first as? ScanResult.Failure)?.message ?: retry.message,
                                     )
+                                    onError(context.getString(R.string.no_barcodes_found))
+                                }
                             }
                         }
                     } catch (e: CancellationException) {
