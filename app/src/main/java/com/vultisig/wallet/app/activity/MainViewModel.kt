@@ -43,7 +43,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
@@ -172,11 +171,11 @@ constructor(
     }
 
     fun openUri(uri: Uri) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             _navigationReady.await()
             val deepLinkHelper = DeepLinkHelper(uri)
             if (deepLinkHelper.isSendDeeplink()) {
-                if (vaultRepository.hasVaults()) {
+                if (hasAnyVault()) {
                     navigator.route(
                         Route.VaultList(
                             openType =
