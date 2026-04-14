@@ -192,20 +192,33 @@ internal fun VerifySendScreen(
                             .padding(all = 24.dp)
                 ) {
                     // Decoded EVM contract call: function name + resolved token replace
-                    // the misleading "0 ETH" native hero.
-                    val heroToken = tx.resolvedToken ?: tx.token
-                    val heroHeader =
-                        tx.functionName ?: stringResource(R.string.verify_deposit_sending)
-
+                    // the misleading "0 ETH" native hero. When the function is decoded
+                    // but the token is not (MAX withdraw/repay sentinel), render only
+                    // the function name as a header — any token fallback would mislead
+                    // because the on-chain amount isn't known until execution.
                     UiSpacer(12.dp)
 
-                    VsOverviewToken(
-                        header = heroHeader,
-                        valuedToken = heroToken,
-                        shape = RoundedCornerShape(0.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        withContainer = false,
-                    )
+                    if (tx.functionName != null && tx.resolvedToken == null) {
+                        Text(
+                            text = tx.functionName,
+                            style = Theme.brockmann.headings.title3,
+                            color = Theme.v2.colors.text.primary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    } else {
+                        val heroHeader =
+                            tx.functionName ?: stringResource(R.string.verify_deposit_sending)
+                        val heroToken = tx.resolvedToken ?: tx.token
+
+                        VsOverviewToken(
+                            header = heroHeader,
+                            valuedToken = heroToken,
+                            shape = RoundedCornerShape(0.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            withContainer = false,
+                        )
+                    }
 
                     UiSpacer(12.dp)
 

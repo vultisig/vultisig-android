@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,28 +53,28 @@ fun VsHoldableButton(
             Theme.v2.colors.primary.accent5.copy(alpha = 0.5f)
         }
 
-    val scope = rememberCoroutineScope()
     val progress = remember { Animatable(0f) }
     val interactionSource = remember { MutableInteractionSource() }
 
-    // Animate progress bar on press/release
+    // Animate progress bar on press/release. Launching in the LaunchedEffect's own
+    // scope (instead of a separate rememberCoroutineScope) guarantees the animation
+    // job is cancelled when this composable leaves composition, and lets us cancel
+    // the previous job on each new Press without racing a second scope.
     LaunchedEffect(interactionSource) {
         var animJob: Job? = null
         interactionSource.interactions.collect { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> {
-                    animJob =
-                        scope.launch {
-                            progress.animateTo(
-                                1f,
-                                tween(holdDuration.toInt(), easing = LinearEasing),
-                            )
-                        }
+                    animJob?.cancel()
+                    animJob = launch {
+                        progress.animateTo(1f, tween(holdDuration.toInt(), easing = LinearEasing))
+                    }
                 }
                 is PressInteraction.Release,
                 is PressInteraction.Cancel -> {
                     animJob?.cancel()
-                    scope.launch { progress.snapTo(0f) }
+                    animJob = null
+                    progress.snapTo(0f)
                 }
             }
         }

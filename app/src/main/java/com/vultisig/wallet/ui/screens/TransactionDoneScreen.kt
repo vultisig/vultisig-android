@@ -275,7 +275,11 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
             )
         }
 
-        if (transaction.resolvedToken == null) {
+        // Native amount fallback. Suppressed when a resolved contract-call token was
+        // rendered upstream OR when the decoded call already provided its own display
+        // (e.g. "Unlimited USDC" for an approve MAX) — otherwise the screen shows the
+        // same amount twice, with the native row being the misleading one.
+        if (transaction.resolvedToken == null && transaction.tokenDisplay == null) {
             OtherField(
                 title = stringResource(R.string.verify_transaction_amount_title),
                 value = transaction.token.value,

@@ -14,17 +14,17 @@ val MAX_UINT256: BigInteger = BigInteger.ONE.shiftLeft(256).subtract(BigInteger.
 fun String.evmFunctionName(): String? =
     substringBefore('(').trim().takeIf { it.isNotEmpty() && it.length < this.length }
 
-// Functions where MAX_UINT256 means "unlimited approval" — the only case where
-// a sentinel label makes sense. For withdraw/repay MAX_UINT256 means "all
-// available" but the exact amount depends on on-chain state, so we return null
-// and let the caller skip the amount display rather than show a misleading label.
-private val UNLIMITED_APPROVAL_FUNCTIONS =
-    setOf("approve", "increaseAllowance", "decreaseAllowance")
+// `approve(spender, MAX_UINT256)` is the only ERC-20 call where MAX_UINT256 sets an
+// absolute unlimited allowance. `increaseAllowance`/`decreaseAllowance` apply a delta
+// to the existing allowance, so MAX_UINT256 there is either an overflow (increase) or
+// the opposite operation (decrease) — not "unlimited". Withdraw/repay use MAX as
+// "all available", whose exact value depends on on-chain state, so we also return null.
+private val UNLIMITED_APPROVAL_FUNCTIONS = setOf("approve")
 
 /**
  * If [funcName] uses MAX_UINT256 as an "unlimited approval" sentinel, returns `"Unlimited"`. For
- * all other functions (withdraw, repay, etc.) returns `null` — the caller should omit the amount
- * rather than display a vague label.
+ * all other functions (withdraw, repay, increaseAllowance, decreaseAllowance, etc.) returns `null`
+ * — the caller should omit the amount rather than display a misleading label.
  */
 fun sentinelLabelFor(funcName: String): String? =
     if (funcName in UNLIMITED_APPROVAL_FUNCTIONS) "Unlimited" else null

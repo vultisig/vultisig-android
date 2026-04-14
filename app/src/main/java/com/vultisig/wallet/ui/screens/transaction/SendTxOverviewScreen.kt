@@ -74,21 +74,34 @@ internal fun SendTxOverviewScreen(
         },
         tokenContent = {
             // Decoded EVM contract call: show the function name + resolved token
-            // instead of the misleading "Send 0 ETH" native hero.
-            val heroHeader =
-                tx.functionName
-                    ?: if (tx.type == UiTransactionInfoType.Send) {
-                        stringResource(R.string.tx_overview_screen_tx_send)
-                    } else {
-                        stringResource(R.string.tx_overview_screen_tx_deposit)
-                    }
-            val heroToken = tx.resolvedToken ?: tx.token
-            VsOverviewToken(
-                header = heroHeader,
-                valuedToken = heroToken,
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth(),
-            )
+            // instead of the misleading "Send 0 ETH" native hero. When the function
+            // is decoded but the token is not (MAX withdraw/repay sentinel), render
+            // only the function name — any native fallback would mislead because the
+            // on-chain amount isn't known until execution.
+            if (tx.functionName != null && tx.resolvedToken == null) {
+                Text(
+                    text = tx.functionName,
+                    style = Theme.brockmann.headings.title2,
+                    color = Theme.v2.colors.text.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                val heroHeader =
+                    tx.functionName
+                        ?: if (tx.type == UiTransactionInfoType.Send) {
+                            stringResource(R.string.tx_overview_screen_tx_send)
+                        } else {
+                            stringResource(R.string.tx_overview_screen_tx_deposit)
+                        }
+                val heroToken = tx.resolvedToken ?: tx.token
+                VsOverviewToken(
+                    header = heroHeader,
+                    valuedToken = heroToken,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         },
         detailContent = {
             Column {
@@ -134,11 +147,24 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
-                // Skip the native "Amount" row when the hero already renders a resolved
-                // contract-call token. Otherwise we'd duplicate the information AND show
-                // a misleading "0 ETH" for the native value that wasn't actually sent.
+                // Decoded contract-call amount (e.g. "Unlimited USDC" for an approve MAX):
+                // shown only when the hero itself did not already render a resolved token.
+                if (tx.tokenDisplay != null && tx.resolvedToken == null) {
+                    VerifyCardDivider(size = 1.dp)
+
+                    TextDetails(
+                        title = stringResource(R.string.deposit_screen_amount_title),
+                        subtitle = tx.tokenDisplay,
+                    )
+                }
+
+                // Native "Amount" row. Skip when the hero already rendered a resolved
+                // token OR when the decoded contract call provided its own display —
+                // otherwise we'd duplicate the information AND show a misleading "0 ETH"
+                // for a native value that wasn't actually sent.
                 if (
                     tx.resolvedToken == null &&
+                        tx.tokenDisplay == null &&
                         tx.token.value.isNotEmpty() &&
                         try {
                             tx.token.value.toBigInteger() > BigInteger.ZERO
@@ -303,6 +329,7 @@ internal data class UiTransactionInfo(
     val signMethod: String = "",
     val functionName: String? = null,
     val resolvedToken: ValuedToken? = null,
+    val tokenDisplay: String? = null,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
 )
