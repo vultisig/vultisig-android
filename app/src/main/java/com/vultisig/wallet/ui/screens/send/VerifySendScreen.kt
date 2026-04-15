@@ -191,14 +191,13 @@ internal fun VerifySendScreen(
                             )
                             .padding(all = 24.dp)
                 ) {
-                    // Decoded EVM contract call: function name + resolved token replace
-                    // the misleading "0 ETH" native hero. When the function is decoded
-                    // but the token is not (MAX withdraw/repay sentinel), render only
-                    // the function name as a header — any token fallback would mislead
-                    // because the on-chain amount isn't known until execution.
+                    // Decoded EVM contract calls stay title-first in the hero. The
+                    // extracted token/amount can still appear in details, but we avoid
+                    // promoting decode-derived value into the primary card on mobile
+                    // until Blockaid simulation data is available here.
                     UiSpacer(12.dp)
 
-                    if (tx.functionName != null && tx.resolvedToken == null) {
+                    if (tx.functionName != null) {
                         Text(
                             text = tx.functionName,
                             style = Theme.brockmann.headings.title3,
@@ -207,13 +206,9 @@ internal fun VerifySendScreen(
                             modifier = Modifier.fillMaxWidth(),
                         )
                     } else {
-                        val heroHeader =
-                            tx.functionName ?: stringResource(R.string.verify_deposit_sending)
-                        val heroToken = tx.resolvedToken ?: tx.token
-
                         VsOverviewToken(
-                            header = heroHeader,
-                            valuedToken = heroToken,
+                            header = stringResource(R.string.verify_deposit_sending),
+                            valuedToken = tx.token,
                             shape = RoundedCornerShape(0.dp),
                             modifier = Modifier.fillMaxWidth(),
                             withContainer = false,
@@ -278,9 +273,7 @@ internal fun VerifySendScreen(
                             )
                         }
 
-                    // Only show the "Amount" row if the hero hasn't already rendered the
-                    // resolved token — otherwise it's duplicated information.
-                    if (tx.tokenDisplay != null && tx.resolvedToken == null) {
+                    if (tx.tokenDisplay != null) {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardDetails(

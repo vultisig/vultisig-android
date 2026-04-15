@@ -75,6 +75,8 @@ private fun splitTopLevel(params: String): List<String> {
     return parts
 }
 
+private fun String.baseAbiType(): String = trim().substringBefore(' ')
+
 object ContractCallExtractor {
 
     private val registry: Map<String, ExtractionStrategy> =
@@ -109,12 +111,13 @@ object ContractCallExtractor {
     fun extract(signature: String, argsJson: String, toAddress: String?): TokenAndAmount? {
         val parenStart = signature.indexOf('(')
         val parenEnd = signature.lastIndexOf(')')
-        if (parenStart == -1 || parenEnd == -1) return null
+        if (parenStart == -1 || parenEnd == -1 || parenEnd <= parenStart) return null
 
         val funcName = signature.substring(0, parenStart).trim()
         val strategy = registry[funcName] ?: return null
 
-        val paramTypes = splitTopLevel(signature.substring(parenStart + 1, parenEnd))
+        val paramTypes =
+            splitTopLevel(signature.substring(parenStart + 1, parenEnd)).map(String::baseAbiType)
 
         val args =
             runCatching {

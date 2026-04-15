@@ -69,17 +69,21 @@ internal fun TransactionDoneView(
                 ) {
                     if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
                         val transaction = transactionTypeUiModel.tx
-                        val heroHeader =
-                            transaction.functionName
-                                ?: stringResource(R.string.tx_overview_screen_tx_send)
-                        val heroToken = transaction.resolvedToken ?: transaction.token
-
-                        VsOverviewToken(
-                            header = heroHeader,
-                            valuedToken = heroToken,
-                            shape = RoundedCornerShape(24.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        if (transaction.functionName != null) {
+                            Text(
+                                text = transaction.functionName,
+                                style = Theme.brockmann.headings.title3,
+                                color = Theme.v2.colors.text.primary,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        } else {
+                            VsOverviewToken(
+                                header = stringResource(R.string.tx_overview_screen_tx_send),
+                                valuedToken = transaction.token,
+                                shape = RoundedCornerShape(24.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                     }
 
                     if (transactionTypeUiModel !is TransactionTypeUiModel.SignMessage) {
@@ -253,7 +257,7 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                 value = transaction.memo,
             )
 
-        if (transaction.tokenDisplay != null && transaction.resolvedToken == null) {
+        if (transaction.tokenDisplay != null) {
             UiHorizontalDivider()
             OtherField(
                 title = stringResource(R.string.verify_transaction_amount_title),
@@ -279,7 +283,10 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
         // rendered upstream OR when the decoded call already provided its own display
         // (e.g. "Unlimited USDC" for an approve MAX) — otherwise the screen shows the
         // same amount twice, with the native row being the misleading one.
-        if (transaction.resolvedToken == null && transaction.tokenDisplay == null) {
+        if (transaction.functionName == null &&
+            transaction.resolvedToken == null &&
+            transaction.tokenDisplay == null
+        ) {
             OtherField(
                 title = stringResource(R.string.verify_transaction_amount_title),
                 value = transaction.token.value,

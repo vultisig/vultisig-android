@@ -73,12 +73,9 @@ internal fun SendTxOverviewScreen(
             )
         },
         tokenContent = {
-            // Decoded EVM contract call: show the function name + resolved token
-            // instead of the misleading "Send 0 ETH" native hero. When the function
-            // is decoded but the token is not (MAX withdraw/repay sentinel), render
-            // only the function name — any native fallback would mislead because the
-            // on-chain amount isn't known until execution.
-            if (tx.functionName != null && tx.resolvedToken == null) {
+            // Decoded EVM contract calls stay title-first in the hero. The decoded
+            // amount stays in details until this flow has simulation-backed values.
+            if (tx.functionName != null) {
                 Text(
                     text = tx.functionName,
                     style = Theme.brockmann.headings.title2,
@@ -87,17 +84,14 @@ internal fun SendTxOverviewScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
             } else {
-                val heroHeader =
-                    tx.functionName
-                        ?: if (tx.type == UiTransactionInfoType.Send) {
+                VsOverviewToken(
+                    header =
+                        if (tx.type == UiTransactionInfoType.Send) {
                             stringResource(R.string.tx_overview_screen_tx_send)
                         } else {
                             stringResource(R.string.tx_overview_screen_tx_deposit)
-                        }
-                val heroToken = tx.resolvedToken ?: tx.token
-                VsOverviewToken(
-                    header = heroHeader,
-                    valuedToken = heroToken,
+                        },
+                    valuedToken = tx.token,
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -147,9 +141,7 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
-                // Decoded contract-call amount (e.g. "Unlimited USDC" for an approve MAX):
-                // shown only when the hero itself did not already render a resolved token.
-                if (tx.tokenDisplay != null && tx.resolvedToken == null) {
+                if (tx.tokenDisplay != null) {
                     VerifyCardDivider(size = 1.dp)
 
                     TextDetails(
@@ -163,7 +155,8 @@ internal fun SendTxOverviewScreen(
                 // otherwise we'd duplicate the information AND show a misleading "0 ETH"
                 // for a native value that wasn't actually sent.
                 if (
-                    tx.resolvedToken == null &&
+                    tx.functionName == null &&
+                        tx.resolvedToken == null &&
                         tx.tokenDisplay == null &&
                         tx.token.value.isNotEmpty() &&
                         try {

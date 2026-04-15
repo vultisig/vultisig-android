@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -22,19 +23,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun VsHoldableButton(
     modifier: Modifier = Modifier,
     label: String? = null,
-    holdDuration: Long = 800,
+    holdDuration: Long = ViewConfiguration.getLongPressTimeout().toLong(),
     enabled: VsButtonState = VsButtonState.Enabled,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -56,24 +57,17 @@ fun VsHoldableButton(
     val progress = remember { Animatable(0f) }
     val interactionSource = remember { MutableInteractionSource() }
 
-    // Animate progress bar on press/release. Launching in the LaunchedEffect's own
-    // scope (instead of a separate rememberCoroutineScope) guarantees the animation
-    // job is cancelled when this composable leaves composition, and lets us cancel
-    // the previous job on each new Press without racing a second scope.
-    LaunchedEffect(interactionSource) {
-        var animJob: Job? = null
-        interactionSource.interactions.collect { interaction ->
+    // Keep the progress fill aligned with the platform long-press timeout so the
+    // visual confirmation completes when onLongClick actually fires.
+    LaunchedEffect(interactionSource, holdDuration) {
+        interactionSource.interactions.collectLatest { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> {
-                    animJob?.cancel()
-                    animJob = launch {
-                        progress.animateTo(1f, tween(holdDuration.toInt(), easing = LinearEasing))
-                    }
+                    progress.snapTo(0f)
+                    progress.animateTo(1f, tween(holdDuration.toInt(), easing = LinearEasing))
                 }
                 is PressInteraction.Release,
                 is PressInteraction.Cancel -> {
-                    animJob?.cancel()
-                    animJob = null
                     progress.snapTo(0f)
                 }
             }
