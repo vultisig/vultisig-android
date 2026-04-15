@@ -88,10 +88,8 @@ internal class CircleDeFiPositionsViewModelTest {
 
     @Test
     fun `onCreateAccount surfaces failures with an Error snackbar, not Success`() = runTest {
-        val vm = createViewModel()
-        vm.setData(VAULT_ID)
-        clearMocks(snackbarFlow, scaCircleAccountRepository, answers = false, childMocks = false)
-        coEvery { scaCircleAccountRepository.getAccount(VAULT_ID) } returns null
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        givenNoExistingAccount()
         coEvery { circleApi.createScAccount(OWNER_ADDRESS) } throws
             NetworkException(500, "Entity needs to setup paymaster policy")
 
@@ -104,15 +102,8 @@ internal class CircleDeFiPositionsViewModelTest {
     @Test
     fun `onCreateAccount shows a Success snackbar and saves the new address on success`() =
         runTest {
-            val vm = createViewModel()
-            vm.setData(VAULT_ID)
-            clearMocks(
-                snackbarFlow,
-                scaCircleAccountRepository,
-                answers = false,
-                childMocks = false,
-            )
-            coEvery { scaCircleAccountRepository.getAccount(VAULT_ID) } returns null
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            givenNoExistingAccount()
             coEvery { scaCircleAccountRepository.saveAccount(VAULT_ID, MSCA_ADDRESS) } just Runs
             coEvery { circleApi.createScAccount(OWNER_ADDRESS) } returns MSCA_ADDRESS
 
@@ -124,9 +115,11 @@ internal class CircleDeFiPositionsViewModelTest {
 
     @Test
     fun `onCreateAccount reports an Error when the vault cannot be resolved`() = runTest {
-        val vm = createViewModel()
-        vm.setData(VAULT_ID)
-        clearMocks(snackbarFlow, scaCircleAccountRepository, answers = false, childMocks = false)
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        givenNoExistingAccount()
+        // `getEvmVaultAddress()` calls `error(...)` when the vault lookup returns null;
+        // the resulting IllegalStateException must be caught by `runCatching` inside
+        // `onCreateAccount` and surfaced as a user-visible error, never reach the API.
         coEvery { vaultRepository.get(VAULT_ID) } returns null
 
         val type = awaitSnackbarAfter { vm.onCreateAccount() }
@@ -134,6 +127,16 @@ internal class CircleDeFiPositionsViewModelTest {
         assertEquals(SnackbarType.Error, type)
         coVerify(exactly = 0) { circleApi.createScAccount(any()) }
         coVerify(exactly = 0) { scaCircleAccountRepository.saveAccount(any(), any()) }
+    }
+
+    /**
+     * Resets recorded calls on the snackbar and account-repository mocks after `setData(...)` has
+     * populated the initial state, and re-asserts "no account persisted yet" so `onCreateAccount`
+     * takes the create path. Keeps each test focused on the action under test.
+     */
+    private fun givenNoExistingAccount() {
+        clearMocks(snackbarFlow, scaCircleAccountRepository, answers = false, childMocks = false)
+        coEvery { scaCircleAccountRepository.getAccount(VAULT_ID) } returns null
     }
 
     /**
