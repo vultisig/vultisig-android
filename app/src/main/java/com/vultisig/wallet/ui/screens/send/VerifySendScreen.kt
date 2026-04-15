@@ -191,10 +191,8 @@ internal fun VerifySendScreen(
                             )
                             .padding(all = 24.dp)
                 ) {
-                    // Decoded EVM contract calls stay title-first in the hero. The
-                    // extracted token/amount can still appear in details, but we avoid
-                    // promoting decode-derived value into the primary card on mobile
-                    // until Blockaid simulation data is available here.
+                    // Title-only hero until Blockaid simulation is wired into mobile;
+                    // decode-derived amounts can mislead without a simulation backing them.
                     UiSpacer(12.dp)
 
                     if (tx.functionName != null) {

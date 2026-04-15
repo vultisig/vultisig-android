@@ -73,8 +73,7 @@ internal fun SendTxOverviewScreen(
             )
         },
         tokenContent = {
-            // Decoded EVM contract calls stay title-first in the hero. The decoded
-            // amount stays in details until this flow has simulation-backed values.
+            // Title-only hero until Blockaid simulation is wired into mobile.
             if (tx.functionName != null) {
                 Text(
                     text = tx.functionName,
@@ -150,10 +149,9 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
-                // Native "Amount" row. Skip when the hero already rendered a resolved
-                // token OR when the decoded contract call provided its own display —
-                // otherwise we'd duplicate the information AND show a misleading "0 ETH"
-                // for a native value that wasn't actually sent.
+                // Skip the native "Amount" row when a decoded function/token/display
+                // already represents the intent — otherwise a misleading "0 ETH" surfaces
+                // for contract calls that send no native value.
                 if (
                     tx.functionName == null &&
                         tx.resolvedToken == null &&
