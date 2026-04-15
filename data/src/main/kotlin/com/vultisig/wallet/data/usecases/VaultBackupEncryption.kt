@@ -34,11 +34,11 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
         cipher.init(Cipher.ENCRYPT_MODE, keySpec, GCMParameterSpec(GCM_TAG_BITS, iv))
         val encryptedData = cipher.doFinal(data)
 
-        return byteArrayOf(VERSION_PBKDF2) + salt + iv + encryptedData
+        return PBKDF2_MAGIC + salt + iv + encryptedData
     }
 
     override fun decrypt(data: ByteArray, password: ByteArray): ByteArray? {
-        if (data.isEmpty() || data[0] != VERSION_PBKDF2) {
+        if (!isPbkdf2(data)) {
             return legacyEncryption.decrypt(data, password)
         }
         if (data.size < PBKDF2_HEADER_SIZE + GCM_TAG_BYTES) {
@@ -53,9 +53,13 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
         }
     }
 
+    private fun isPbkdf2(data: ByteArray): Boolean =
+        data.size >= PBKDF2_MAGIC_SIZE &&
+            data.copyOfRange(0, PBKDF2_MAGIC_SIZE).contentEquals(PBKDF2_MAGIC)
+
     private fun decryptPbkdf2(data: ByteArray, password: ByteArray): ByteArray {
-        val salt = data.copyOfRange(1, 1 + SALT_LENGTH)
-        val iv = data.copyOfRange(1 + SALT_LENGTH, PBKDF2_HEADER_SIZE)
+        val salt = data.copyOfRange(PBKDF2_MAGIC_SIZE, PBKDF2_MAGIC_SIZE + SALT_LENGTH)
+        val iv = data.copyOfRange(PBKDF2_MAGIC_SIZE + SALT_LENGTH, PBKDF2_HEADER_SIZE)
         val encryptedData = data.copyOfRange(PBKDF2_HEADER_SIZE, data.size)
 
         val keyBytes = deriveKey(password, salt)
@@ -83,7 +87,9 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
     }
 
     companion object {
-        private const val VERSION_PBKDF2: Byte = 0x02
+        // "VLT\x02" — 4-byte magic prefix distinguishable from random GCM IV bytes
+        private val PBKDF2_MAGIC = byteArrayOf(0x56, 0x4C, 0x54, 0x02)
+        private const val PBKDF2_MAGIC_SIZE = 4
         private const val SALT_LENGTH = 16
         private const val IV_LENGTH = 12
         private const val GCM_TAG_BITS = 128
@@ -94,6 +100,7 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
         private const val AES = "AES"
         private const val AES_GCM_NO_PADDING = "AES/GCM/NoPadding"
 
-        private const val PBKDF2_HEADER_SIZE = 1 + SALT_LENGTH + IV_LENGTH // 29 bytes
+        private const val PBKDF2_HEADER_SIZE =
+            PBKDF2_MAGIC_SIZE + SALT_LENGTH + IV_LENGTH // 32 bytes
     }
 }

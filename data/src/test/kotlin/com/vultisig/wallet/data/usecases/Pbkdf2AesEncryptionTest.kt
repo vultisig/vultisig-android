@@ -59,11 +59,12 @@ class Pbkdf2AesEncryptionTest {
     }
 
     @Test
-    fun `encrypted output starts with version byte`() {
+    fun `encrypted output starts with magic prefix`() {
         val encrypted =
             pbkdf2Aes.encrypt(originalInput.toByteArray(Charsets.UTF_8), password.toByteArray())
 
-        assertEquals(0x02.toByte(), encrypted[0])
+        val magic = byteArrayOf(0x56, 0x4C, 0x54, 0x02) // "VLT\x02"
+        assertTrue(encrypted.copyOfRange(0, 4).contentEquals(magic))
     }
 
     @Test
@@ -71,7 +72,20 @@ class Pbkdf2AesEncryptionTest {
         val encrypted =
             pbkdf2Aes.encrypt(originalInput.toByteArray(Charsets.UTF_8), password.toByteArray())
 
-        // version(1) + salt(16) + iv(12) + ciphertext(at least 1 byte + 16 tag)
-        assertTrue(encrypted.size >= 29 + 17)
+        // magic(4) + salt(16) + iv(12) + ciphertext(at least 1 byte + 16 tag)
+        assertTrue(encrypted.size >= 32 + 17)
+    }
+
+    @Test
+    fun `decrypts legacy GCM backup whose first IV byte is 0x02`() {
+        var legacyCiphertext: ByteArray
+        do {
+            legacyCiphertext =
+                legacyAes.encrypt(originalInput.toByteArray(Charsets.UTF_8), password.toByteArray())
+        } while (legacyCiphertext[0] != 0x02.toByte())
+
+        val decrypted = pbkdf2Aes.decrypt(legacyCiphertext, password.toByteArray())
+        assertNotNull(decrypted)
+        assertEquals(originalInput, decrypted.toString(Charsets.UTF_8))
     }
 }
