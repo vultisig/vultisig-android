@@ -182,7 +182,8 @@ private fun TronDeFiPositionsScreenContent(
                         )
                     }
 
-                    if (state.selectedPositions.isNotEmpty() && tronData.hasPositions) {
+                    val isTronSelected = state.selectedPositions.contains("TRON")
+                    if (isTronSelected && tronData.hasPositions) {
                         item {
                             TronFreezePositionCard(
                                 frozenTotalPrice = tronData.frozenTotalPrice,
