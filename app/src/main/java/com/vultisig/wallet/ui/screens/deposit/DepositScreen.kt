@@ -22,6 +22,8 @@ import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.v2.defi.maya.AddLpScreen
 import com.vultisig.wallet.ui.screens.v2.defi.maya.RemoveLpScreen
+import com.vultisig.wallet.ui.screens.v2.defi.maya.StakeCacaoScreen
+import com.vultisig.wallet.ui.screens.v2.defi.maya.UnstakeCacaoScreen
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
@@ -66,6 +68,8 @@ internal fun DepositScreen(
         when (depositType) {
             DeFiNavActions.ADD_LP.type -> stringResource(R.string.add_pool_title)
             DeFiNavActions.REMOVE_LP.type -> stringResource(R.string.remove_pool_title)
+            DeFiNavActions.STAKE_CACAO.type -> stringResource(R.string.stake_cacao_title)
+            DeFiNavActions.UNSTAKE_CACAO.type -> stringResource(R.string.unstake_cacao_title)
             else -> stringResource(R.string.deposit_screen_title)
         }
 
@@ -127,24 +131,34 @@ private fun DepositScreen(
             popExitTransition = slideOutToEndExitTransition(),
         ) {
             composable(route = SendDst.Send.route) {
-                if (depositType == DeFiNavActions.ADD_LP.type) {
-                    require(!poolId.isNullOrBlank()) {
-                        "poolId must be non-null and non-blank for ADD_LP flow"
+                when (depositType) {
+                    DeFiNavActions.ADD_LP.type -> {
+                        require(!poolId.isNullOrBlank()) {
+                            "poolId must be non-null and non-blank for ADD_LP flow"
+                        }
+                        AddLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId)
                     }
-                    AddLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId)
-                } else if (depositType == DeFiNavActions.REMOVE_LP.type) {
-                    require(!poolId.isNullOrBlank()) {
-                        "poolId must be non-null and non-blank for REMOVE_LP flow"
+                    DeFiNavActions.REMOVE_LP.type -> {
+                        require(!poolId.isNullOrBlank()) {
+                            "poolId must be non-null and non-blank for REMOVE_LP flow"
+                        }
+                        RemoveLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId)
                     }
-                    RemoveLpScreen(vaultId = vaultId, chainId = chainId, poolId = poolId)
-                } else {
-                    DepositFormScreen(
-                        vaultId = vaultId,
-                        chainId = chainId,
-                        depositType = depositType,
-                        bondAddress = bondAddress,
-                        poolId = poolId,
-                    )
+                    DeFiNavActions.STAKE_CACAO.type -> {
+                        StakeCacaoScreen(vaultId = vaultId, chainId = chainId)
+                    }
+                    DeFiNavActions.UNSTAKE_CACAO.type -> {
+                        UnstakeCacaoScreen(vaultId = vaultId, chainId = chainId)
+                    }
+                    else -> {
+                        DepositFormScreen(
+                            vaultId = vaultId,
+                            chainId = chainId,
+                            depositType = depositType,
+                            bondAddress = bondAddress,
+                            poolId = poolId,
+                        )
+                    }
                 }
             }
             composable(
