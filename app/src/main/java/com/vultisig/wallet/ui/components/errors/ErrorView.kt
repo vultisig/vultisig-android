@@ -41,6 +41,7 @@ internal fun ErrorView(
     description: String? = null,
     errorState: ErrorState = ErrorState.WARNING,
     buttonUiModel: ErrorViewButtonUiModel?,
+    secondaryButtonUiModel: ErrorViewButtonUiModel? = null,
     onBack: (() -> Unit)? = null,
 ) {
     Box(modifier = modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
@@ -57,6 +58,16 @@ internal fun ErrorView(
                 UiSpacer(30.dp)
                 VsButton(
                     variant = VsButtonVariant.Secondary,
+                    label = it.text,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = it.onClick,
+                )
+            }
+
+            secondaryButtonUiModel?.let {
+                UiSpacer(if (buttonUiModel != null) 12.dp else 30.dp)
+                VsButton(
+                    variant = VsButtonVariant.CTA,
                     label = it.text,
                     modifier = Modifier.fillMaxWidth(),
                     onClick = it.onClick,
@@ -93,7 +104,7 @@ internal fun ErrorWaves(
 
     val waveCircleColor = Theme.v2.colors.border.light
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(bottom = 56.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
