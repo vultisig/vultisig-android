@@ -50,6 +50,7 @@ import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -253,7 +254,19 @@ constructor(
 
     fun next() {
         discoverParticipantsJob?.cancel()
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                state.update {
+                    it.copy(
+                        warning =
+                            ErrorUiModel(
+                                title = UiText.StringResource(R.string.error_view_default_title),
+                                description = UiText.DynamicString(e.message ?: e.toString()),
+                            )
+                    )
+                }
+            }
+        ) {
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
             val keygenCommittee = listOf(localPartyId) + state.value.selectedDevices
             sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
