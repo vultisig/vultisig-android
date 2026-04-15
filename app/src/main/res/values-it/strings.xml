@@ -696,6 +696,7 @@
     <string name="migration_password_enter_your_password_to_unlock">Inserisci la tua password per sbloccare la tua condivisione server e avviare l\'aggiornamento</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Esiste un Vault con nome duplicato</string>
     <string name="join_key_gen_unknown_tssaction">TssAction sconosciuta</string>
+    <string name="join_key_gen_mediator_discovery_timeout">Impossibile trovare l\'altro dispositivo sulla rete</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">In attesa che altri dispositivi si uniscano</string>
     <string name="join_key_gen_your_vault_will_start_generating">Il vault inizierà a generare dati dal momento in cui finalizzi la configurazione del vault sul tuo dispositivo principale</string>
     <string name="join_key_sign_wrong_signing_library_type">Tipo di libreria di firma errato</string>

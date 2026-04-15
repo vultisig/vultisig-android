@@ -873,6 +873,7 @@
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Supported file types: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Vault with duplicate name exists</string>
     <string name="join_key_gen_unknown_tssaction">Unknown TssAction</string>
+    <string name="join_key_gen_mediator_discovery_timeout">Could not find the other device on your network</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Waiting for other devices to join</string>
     <string name="join_key_gen_your_vault_will_start_generating">Your vault will start generating from the moment you finalize setting up your vault on your main device</string>
     <string name="join_key_sign_wrong_signing_library_type">Wrong signing library type</string>

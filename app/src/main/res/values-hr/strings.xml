@@ -700,6 +700,7 @@
     <string name="migration_password_enter_your_password_to_unlock">Unesite svoju lozinku za otključavanje dijeljenog poslužitelja i početak nadogradnje</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Trezor s dupliciranim nazivom postoji</string>
     <string name="join_key_gen_unknown_tssaction">Nepoznata TssAction</string>
+    <string name="join_key_gen_mediator_discovery_timeout">Drugi uređaj nije pronađen na mreži</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Čekanje da se drugi uređaji pridruže</string>
     <string name="join_key_gen_your_vault_will_start_generating">Vaš trezor će početi generirati od trenutka kada završite s postavljanjem trezora na glavnom uređaju</string>
     <string name="join_key_sign_wrong_signing_library_type">Pogrešna vrsta biblioteke za potpisivanje</string>
