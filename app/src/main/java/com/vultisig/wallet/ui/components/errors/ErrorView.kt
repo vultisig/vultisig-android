@@ -104,7 +104,7 @@ internal fun ErrorWaves(
 
     val waveCircleColor = Theme.v2.colors.border.light
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(bottom = 56.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
