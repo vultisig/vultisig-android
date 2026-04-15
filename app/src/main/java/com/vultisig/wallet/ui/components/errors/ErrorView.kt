@@ -32,14 +32,15 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.theme.Theme
 
+internal data class ErrorViewButtonUiModel(val text: String, val onClick: () -> Unit)
+
 @Composable
 internal fun ErrorView(
     modifier: Modifier = Modifier,
     title: String,
     description: String? = null,
     errorState: ErrorState = ErrorState.WARNING,
-    buttonText: String = stringResource(R.string.try_again),
-    onButtonClick: () -> Unit,
+    buttonUiModel: ErrorViewButtonUiModel?,
     onBack: (() -> Unit)? = null,
 ) {
     Box(modifier = modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
@@ -52,13 +53,15 @@ internal fun ErrorView(
 
             ErrorWaves(title = title, description = description, errorState = errorState)
 
-            UiSpacer(30.dp)
-            VsButton(
-                variant = VsButtonVariant.Secondary,
-                label = buttonText,
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onButtonClick,
-            )
+            buttonUiModel?.let {
+                UiSpacer(30.dp)
+                VsButton(
+                    variant = VsButtonVariant.Secondary,
+                    label = it.text,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = it.onClick,
+                )
+            }
 
             UiSpacer(weight = 1f)
 
@@ -161,12 +164,28 @@ fun WarningErrorViewPreview() {
         title = "Something went wrong",
         description = "Please try again later",
         errorState = ErrorState.WARNING,
-        onButtonClick = {},
+        buttonUiModel =
+            ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
     )
 }
 
 @Preview
 @Composable
 fun WarningErrorViewPreview2() {
-    ErrorView(title = "Something went wrong", errorState = ErrorState.CRITICAL, onButtonClick = {})
+    ErrorView(
+        title = "Something went wrong",
+        errorState = ErrorState.CRITICAL,
+        buttonUiModel =
+            ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
+    )
+}
+
+@Preview
+@Composable
+fun WarningErrorViewPreview3() {
+    ErrorView(
+        title = "Something went wrong",
+        errorState = ErrorState.CRITICAL,
+        buttonUiModel = null,
+    )
 }

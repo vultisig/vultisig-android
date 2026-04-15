@@ -130,6 +130,7 @@
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Controleer alle toestemmingen</string>
     <string name="camera_permission_denied">Cameratoestemming niet verleend. Schakel deze in de instellingen in.</string>
+    <string name="camera_permission_open_settings">Instellingen openen</string>
     <string name="join_keysign_discovering_session_id">Sessienummer ontdekken</string>
     <string name="transaction_done_title">Gedaan</string>
     <string name="transaction_done_overview">Overzicht</string>
@@ -166,7 +167,6 @@
     <string name="confirm_delete_delete_vault">Kluis verwijderen</string>
     <string name="vault_accounts_account_assets">%1$s activa</string>
     <string name="s_of_s_vault">%1$s van %2$s kluis</string>
-    <string name="scan_qr_screen_return_vault">Terug naar de Kluis</string>
     <string name="rename_vault_screen_vault_name">Kluisnaam</string>
     <string name="faq_settings_q1">Wat is Vultisig?</string>
     <string name="faq_settings_q2">Wat zijn de voordelen van het gebruik van Vultisig?</string>
@@ -295,7 +295,9 @@
     <string name="qr_title_join_keysign_swap_description">Kluis: %1$s\nVan: %2$s\nAan: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Map heeft minimaal één geselecteerde kluis nodig</string>
     <string name="import_file_password_hint_text">Hint: %s</string>
-    <string name="scan_qr_upload_from_gallery">Uploaden van\nGalerij</string>
+    <string name="scan_qr_upload_qr_code">QR-code uploaden</string>
+    <string name="scan_qr_hint_title">Problemen met scannen?</string>
+    <string name="scan_qr_hint_message">Als de QR-code niet meteen scant:\n• Beweeg de telefoon iets dichterbij of verder van het scherm\n• Zorg dat het scherm goed verlicht is en vrij van schittering\n• Houd beide apparaten even stil</string>
     <string name="no_barcodes_found">Geen barcodes gevonden</string>
     <string name="reshare_start_join_reshare_button">Word lid van Reshare</string>
     <string name="deposit_error_invalid_lpunits">LP-eenheden zijn ongeldig</string>

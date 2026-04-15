@@ -74,6 +74,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
@@ -111,7 +112,11 @@ internal fun KeygenPeerDiscoveryScreen(model: KeygenPeerDiscoveryViewModel = hil
             ErrorView(
                 title = warning.title.asString(),
                 description = warning.description.asString(),
-                onButtonClick = model::tryAgain,
+                buttonUiModel =
+                    ErrorViewButtonUiModel(
+                        text = stringResource(R.string.try_again),
+                        onClick = model::tryAgain,
+                    ),
             )
         }
 
@@ -758,8 +763,12 @@ private fun Error(state: ErrorUiModel, onTryAgainClick: () -> Unit) {
         ErrorView(
             title = state.title.asString(),
             description = state.description.asString(),
-            onButtonClick = onTryAgainClick,
             modifier = Modifier.fillMaxWidth(),
+            buttonUiModel =
+                ErrorViewButtonUiModel(
+                    text = stringResource(R.string.try_again),
+                    onClick = onTryAgainClick,
+                ),
         )
     }
 }

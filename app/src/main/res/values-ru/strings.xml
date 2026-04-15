@@ -130,6 +130,7 @@
     <string name="verify_transaction_consent_amount">Сумма верна</string>
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
     <string name="camera_permission_denied">Разрешение на камеру не предоставлено. Пожалуйста, включите его в настройках.</string>
+    <string name="camera_permission_open_settings">Открыть настройки</string>
     <string name="join_keysign_discovering_session_id">Обнаружение ID сессии</string>
     <string name="transaction_done_title">Готово</string>
     <string name="transaction_done_overview">Обзор</string>
@@ -166,7 +167,6 @@
     <string name="confirm_delete_delete_vault">Удалить хранилище</string>
     <string name="vault_accounts_account_assets">%1$s активы</string>
     <string name="s_of_s_vault">%1$s из %2$s хранилища</string>
-    <string name="scan_qr_screen_return_vault">Вернуться в Хранилище</string>
     <string name="rename_vault_screen_vault_name">Имя хранилища</string>
     <string name="faq_settings_q1">Что такое Вультисиг?</string>
     <string name="faq_settings_q2">Каковы преимущества использования Vultisig?</string>
@@ -295,7 +295,9 @@
     <string name="qr_title_join_keysign_swap_description">Хранилище: %1$s\nОт: %2$s\nКуда: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Папке необходимо выбрать хотя бы одно хранилище</string>
     <string name="import_file_password_hint_text">Подсказка: %s</string>
-    <string name="scan_qr_upload_from_gallery">Загрузить из\n галереи</string>
+    <string name="scan_qr_upload_qr_code">Загрузить QR-код</string>
+    <string name="scan_qr_hint_title">Проблемы со сканированием?</string>
+    <string name="scan_qr_hint_message">Если QR-код не сканируется сразу:\n• Переместите телефон немного ближе или дальше от экрана\n• Убедитесь, что экран хорошо освещён и без бликов\n• Держите оба устройства неподвижно на мгновение</string>
     <string name="no_barcodes_found">Штрих-коды не найдены.</string>
     <string name="reshare_start_join_reshare_button">Присоединиться к перераспределению</string>
     <string name="deposit_error_invalid_lpunits">Единицы LP недействительны</string>

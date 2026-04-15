@@ -206,6 +206,7 @@
     <string name="verify_transaction_consent_amount">The amount is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
     <string name="camera_permission_denied">Camera permission not granted. Please, enable it in the settings.</string>
+    <string name="camera_permission_open_settings">Open Settings</string>
     <string name="join_keysign_discovering_session_id">Discovering Session ID</string>
     <string name="transaction_done_title">Done</string>
     <string name="transaction_done_overview">Overview</string>
@@ -243,7 +244,6 @@
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s Assets</string>
     <string name="s_of_s_vault">%1$s-of-%2$s Vault Setup</string>
-    <string name="scan_qr_screen_return_vault">Return to Vault</string>
     <string name="rename_vault_screen_vault_name">Vault Name</string>
     <string name="faq_settings_q1">What is Vultisig?</string>
     <string name="faq_settings_q2">What are the benefits of using Vultisig?</string>
@@ -394,7 +394,9 @@
     <string name="share_vault_qr_uid" translatable="false">UID: %1$s</string>
     <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
     <string name="import_file_password_hint_text">Hint: %s</string>
-    <string name="scan_qr_upload_from_gallery">Upload QR</string>
+    <string name="scan_qr_upload_qr_code">Upload QR Code</string>
+    <string name="scan_qr_hint_title">Having trouble scanning?</string>
+    <string name="scan_qr_hint_message">If the QR code isn\'t scanning right away:\n• Move the phone slightly closer or farther from the screen\n• Make sure the screen is well lit and free of glare\n• Keep both devices steady for a moment</string>
     <string name="no_barcodes_found">No barcodes found</string>
     <string name="reshare_start_join_reshare_button">Join Reshare</string>
     <string name="deposit_error_invalid_lpunits">LP units are invalid</string>

@@ -163,7 +163,6 @@
     <string name="import_file_screen_success_import">Il caveau è stato importato con successo</string>
     <string name="verify_swap_consent_amount">L\'importo dello swap è corretto</string>
     <string name="successfully_scanned_barcode">Codice a barre scansionato correttamente: %1$s</string>
-    <string name="scan_qr_screen_return_vault">Torna al Caveau</string>
     <string name="verify_transaction_error_not_enough_consent">Si prega di controllare tutti i consensi</string>
     <string name="send_error_no_token">Nessun token selezionato</string>
     <string name="send_error_no_gas_fee">Nessuna commissione per il gas</string>
@@ -196,6 +195,7 @@
     <string name="chain_token_screen_address_copied">%1$s copiato negli appunti</string>
     <string name="s_of_s_vault">%1$s del caveau %2$s</string>
     <string name="camera_permission_denied">Autorizzazione della telecamera non concessa. Abilitala nelle impostazioni.</string>
+    <string name="camera_permission_open_settings">Apri impostazioni</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">L\'indirizzo non è valido</string>
     <string name="vault_settings_error_backup_file">si è verificato un errore</string>
@@ -296,7 +296,9 @@
     <string name="qr_title_join_keysign_swap_description">Cassaforte: %1$s\n Da: %2$s\n A: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">La cartella necessita di almeno un vault selezionato</string>
     <string name="import_file_password_hint_text">Suggerimento: %s</string>
-    <string name="scan_qr_upload_from_gallery">Carica dalla \nGalleria</string>
+    <string name="scan_qr_upload_qr_code">Carica codice QR</string>
+    <string name="scan_qr_hint_title">Problemi con la scansione?</string>
+    <string name="scan_qr_hint_message">Se il codice QR non viene scansionato subito:\n• Avvicina o allontana leggermente il telefono dallo schermo\n• Assicurati che lo schermo sia ben illuminato e senza riflessi\n• Tieni entrambi i dispositivi fermi per un momento</string>
     <string name="no_barcodes_found">Nessun codice a barre trovato</string>
     <string name="reshare_start_join_reshare_button">Unisciti a Reshare</string>
     <string name="deposit_error_invalid_lpunits">Le unità LP non sono valide</string>

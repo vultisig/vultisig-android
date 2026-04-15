@@ -163,7 +163,6 @@
     <string name="import_file_screen_success_import">Trezor je uspješno uvezen</string>
     <string name="verify_swap_consent_amount">Iznos zamjene je točan</string>
     <string name="successfully_scanned_barcode">Uspješno skeniran crtični kod: %1$s</string>
-    <string name="scan_qr_screen_return_vault">Povratak u Trezor</string>
     <string name="verify_transaction_error_not_enough_consent">Provjerite sve suglasnosti</string>
     <string name="send_error_no_token">Nije odabran token</string>
     <string name="send_error_no_gas_fee">Nema naknade za plin</string>
@@ -196,6 +195,7 @@
     <string name="chain_token_screen_address_copied">%1$s kopirano u međuspremnik</string>
     <string name="s_of_s_vault">%1$s od %2$s trezora</string>
     <string name="camera_permission_denied">Dopuštenje za kameru nije odobreno. Omogućite ga u postavkama.</string>
+    <string name="camera_permission_open_settings">Otvori postavke</string>
     <string name="verify_transaction_value">Vrijednost</string>
     <string name="send_error_no_address">Adresa je nevažeća</string>
     <string name="vault_settings_error_backup_file">dogodila se pogreška</string>
@@ -296,7 +296,9 @@
     <string name="qr_title_join_keysign_swap_description">Trezor: %1$s\nOd: %2$s\n Do: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Za mapu je potreban barem jedan odabrani trezor</string>
     <string name="import_file_password_hint_text">Savjet: %s</string>
-    <string name="scan_qr_upload_from_gallery">Prijenos iz\nGalerija</string>
+    <string name="scan_qr_upload_qr_code">Učitaj QR kod</string>
+    <string name="scan_qr_hint_title">Problemi sa skeniranjem?</string>
+    <string name="scan_qr_hint_message">Ako se QR kod ne skenira odmah:\n• Pomaknite telefon malo bliže ili dalje od zaslona\n• Provjerite je li zaslon dobro osvijetljen i bez odsjaja\n• Držite oba uređaja mirno na trenutak</string>
     <string name="no_barcodes_found">Nisu pronađeni barkodovi</string>
     <string name="reshare_start_join_reshare_button">Pridružite se ponovnom dijeljenju</string>
     <string name="deposit_error_invalid_lpunits">LP jedinice nisu važeće</string>
