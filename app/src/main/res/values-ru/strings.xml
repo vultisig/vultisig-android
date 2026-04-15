@@ -699,6 +699,7 @@
     <string name="migration_password_enter_your_password_to_unlock">Введите пароль, чтобы разблокировать общий сервер и начать обновление.</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Существует хранилище с дублирующимся именем</string>
     <string name="join_key_gen_unknown_tssaction">Неизвестное действие TssAction</string>
+    <string name="join_key_gen_mediator_discovery_timeout">Не удалось найти другое устройство в сети</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Ожидание подключения других устройств</string>
     <string name="join_key_gen_your_vault_will_start_generating">Генерация вашего хранилища начнётся с момента завершения настройки хранилища на основном устройстве</string>
     <string name="join_key_sign_wrong_signing_library_type">Неверный тип библиотеки подписи</string>
