@@ -2,13 +2,13 @@ package com.vultisig.wallet.ui.models
 
 import android.content.Context
 import android.net.Uri
-import android.provider.DocumentsContract
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.AppZipEntry
+import com.vultisig.wallet.data.common.deleteDocument
 import com.vultisig.wallet.data.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.models.Vault
@@ -243,7 +243,7 @@ constructor(
                     }
                 completeBackupVault(isSuccess)
             } else {
-                DocumentsContract.deleteDocument(context.contentResolver, uri)
+                context.deleteDocument(uri)
 
                 state.update {
                     it.copy(
@@ -276,13 +276,12 @@ constructor(
     }
 
     private suspend fun backupAllVaults(password: String, uri: Uri): Boolean {
-        val content =
-            vaults.map { vault ->
-                val vaultBackupData =
-                    createVaultBackup(mapVaultToProto(vault), password) ?: return false
-                val fileName = createVaultBackupFileName(vault)
-                AppZipEntry(fileName, vaultBackupData)
-            }
+        val content = vaults.map { vault ->
+            val vaultBackupData =
+                createVaultBackup(mapVaultToProto(vault), password) ?: return false
+            val fileName = createVaultBackupFileName(vault)
+            AppZipEntry(fileName, vaultBackupData)
+        }
 
         return context.saveContentToUri(uri, content)
     }

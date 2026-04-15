@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns.DISPLAY_NAME
 import androidx.annotation.RequiresApi
@@ -211,6 +212,10 @@ suspend fun Uri.isValidZipFile(context: Context) = doFileOperation {
     } catch (_: Exception) {
         false
     }
+}
+
+suspend fun Context.deleteDocument(uri: Uri) = doFileOperation {
+    DocumentsContract.deleteDocument(contentResolver, uri)
 }
 
 private suspend fun <T> doFileOperation(block: suspend CoroutineScope.() -> T) =
