@@ -5,9 +5,10 @@ import android.content.SharedPreferences
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
+import androidx.security.crypto.MasterKey
 import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.data.sources.AppDataStoreImpl
+import com.vultisig.wallet.data.utils.buildMasterKey
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -56,36 +57,31 @@ internal interface MainDataModule {
         @Singleton
         @Provides
         fun provideEncryptedSharedPrefs(@ApplicationContext context: Context): SharedPreferences {
-            fun create(): SharedPreferences {
-                val masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
-                return EncryptedSharedPreferences.create(
-                    "token_encrypted_prefs",
-                    masterKey,
+            fun create(): SharedPreferences =
+                EncryptedSharedPreferences.create(
                     context,
+                    ENCRYPTED_PREFS_FILE,
+                    buildMasterKey(context),
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
                 )
-            }
 
             fun recoverAndRetry(cause: Exception): SharedPreferences {
                 Timber.e(cause, "EncryptedSharedPrefs init failed, attempting recovery")
                 val prefsFile =
-                    File(context.filesDir.parent, "shared_prefs/token_encrypted_prefs.xml")
+                    File(context.filesDir.parent, "shared_prefs/$ENCRYPTED_PREFS_FILE.xml")
                 if (prefsFile.exists() && !prefsFile.delete()) {
                     Timber.w(
                         "Failed to delete corrupted encrypted prefs file at %s",
                         prefsFile.absolutePath,
                     )
                 }
-                try {
-                    val keyStore = KeyStore.getInstance("AndroidKeyStore")
-                    keyStore.load(null)
-                    keyStore.deleteEntry("_androidx_security_master_key_")
-                } catch (deleteException: GeneralSecurityException) {
-                    Timber.e(deleteException, "Failed to delete master key entry during recovery")
-                } catch (deleteException: IOException) {
-                    Timber.e(deleteException, "Failed to delete master key entry during recovery")
-                }
+                runCatching {
+                        val keyStore = KeyStore.getInstance("AndroidKeyStore")
+                        keyStore.load(null)
+                        keyStore.deleteEntry(MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+                    }
+                    .onFailure { Timber.e(it, "Failed to delete master key entry during recovery") }
                 return create()
             }
 
@@ -101,6 +97,8 @@ internal interface MainDataModule {
 
     @Singleton @Binds fun bindAppDataStore(impl: AppDataStoreImpl): AppDataStore
 }
+
+private const val ENCRYPTED_PREFS_FILE = "token_encrypted_prefs"
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class IoDispatcher
 
