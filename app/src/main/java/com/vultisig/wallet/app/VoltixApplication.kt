@@ -7,6 +7,9 @@ import com.vultisig.wallet.data.utils.SharedPrefsMasterKeyInitializer
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
+internal var isRiveInitialized: Boolean = false
+    private set
+
 internal open class VsBaseApplication : Application() {
     override fun onCreate() {
         super.onCreate()
@@ -17,7 +20,12 @@ internal open class VsBaseApplication : Application() {
             Timber.plant(Timber.DebugTree())
         }
 
-        Rive.init(this)
+        try {
+            Rive.init(this)
+            isRiveInitialized = true
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to initialize Rive SDK, animations will be disabled")
+        }
     }
 }
 

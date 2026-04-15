@@ -22,6 +22,7 @@ import app.rive.rememberRiveFile
 import app.rive.rememberRiveWorkerOrNull
 import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.Alignment
+import com.vultisig.wallet.app.isRiveInitialized
 
 @Composable
 fun RiveAnimation(
@@ -33,8 +34,7 @@ fun RiveAnimation(
     autoPlay: Boolean = true,
     onInit: (RiveAnimationView) -> Unit = {},
 ) {
-    if (LocalInspectionMode.current) {
-        // rive doesn't work in preview
+    if (LocalInspectionMode.current || !isRiveInitialized) {
         Spacer(modifier)
     } else {
         key(animation) {
@@ -66,8 +66,7 @@ fun RiveAnimation(
     viewModelInstance: ViewModelInstance? = null,
     fit: Fit = Fit.Contain(),
 ) {
-    if (LocalInspectionMode.current) {
-        // rive doesn't work in preview
+    if (LocalInspectionMode.current || !isRiveInitialized) {
         Spacer(modifier)
     } else {
         Rive(
@@ -83,6 +82,10 @@ fun RiveAnimation(
 
 @Composable
 fun rememberRiveResourceFile(@RawRes resId: Int): State<RiveFile?> {
+    if (!isRiveInitialized) {
+        return remember { derivedStateOf { null } }
+    }
+
     val riveWorker = rememberRiveWorkerOrNull()
 
     val riveFileResult =
