@@ -163,7 +163,6 @@
     <string name="import_file_screen_success_import">Il caveau è stato importato con successo</string>
     <string name="verify_swap_consent_amount">L\'importo dello swap è corretto</string>
     <string name="successfully_scanned_barcode">Codice a barre scansionato correttamente: %1$s</string>
-    <string name="scan_qr_screen_return_vault">Torna al Caveau</string>
     <string name="verify_transaction_error_not_enough_consent">Si prega di controllare tutti i consensi</string>
     <string name="send_error_no_token">Nessun token selezionato</string>
     <string name="send_error_no_gas_fee">Nessuna commissione per il gas</string>
@@ -196,6 +195,7 @@
     <string name="chain_token_screen_address_copied">%1$s copiato negli appunti</string>
     <string name="s_of_s_vault">%1$s del caveau %2$s</string>
     <string name="camera_permission_denied">Autorizzazione della telecamera non concessa. Abilitala nelle impostazioni.</string>
+    <string name="camera_permission_open_settings">Apri impostazioni</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">L\'indirizzo non è valido</string>
     <string name="vault_settings_error_backup_file">si è verificato un errore</string>
@@ -249,6 +249,8 @@
     <string name="add_address_address_title">Indirizzo</string>
     <string name="add_address_type_hint">Scrivi qui</string>
     <string name="join_keysign_invalid_qr">Contenuto del codice QR non valido</string>
+    <string name="settings_screen_privacy">Privacy</string>
+    <string name="settings_screen_prevent_screenshots">Impedisci screenshot</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Informativa sulla privacy</string>
     <string name="settings_screen_tos">Termini di servizio</string>
@@ -294,7 +296,9 @@
     <string name="qr_title_join_keysign_swap_description">Cassaforte: %1$s\n Da: %2$s\n A: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">La cartella necessita di almeno un vault selezionato</string>
     <string name="import_file_password_hint_text">Suggerimento: %s</string>
-    <string name="scan_qr_upload_from_gallery">Carica dalla \nGalleria</string>
+    <string name="scan_qr_upload_qr_code">Carica codice QR</string>
+    <string name="scan_qr_hint_title">Problemi con la scansione?</string>
+    <string name="scan_qr_hint_message">Se il codice QR non viene scansionato subito:\n• Avvicina o allontana leggermente il telefono dallo schermo\n• Assicurati che lo schermo sia ben illuminato e senza riflessi\n• Tieni entrambi i dispositivi fermi per un momento</string>
     <string name="no_barcodes_found">Nessun codice a barre trovato</string>
     <string name="reshare_start_join_reshare_button">Unisciti a Reshare</string>
     <string name="deposit_error_invalid_lpunits">Le unità LP non sono valide</string>
@@ -440,6 +444,22 @@
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Pool di liquidità</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">Saldo Disponibile</string>
+    <string name="tron_defi_staking">Staking</string>
+    <string name="tron_defi_bandwidth">Larghezza di Banda</string>
+    <string name="tron_defi_energy">Energia</string>
+    <string name="tron_defi_freeze">Congela</string>
+    <string name="tron_defi_unfreeze">Scongela</string>
+    <string name="tron_defi_tron_freeze">TRON Congela</string>
+    <string name="tron_defi_frozen">Congelato</string>
+    <string name="tron_defi_unfreezing">Scongelamento</string>
+    <string name="tron_defi_resources">Risorse</string>
+    <string name="tron_defi_pending_withdrawals">Prelievi in Sospeso</string>
+    <string name="tron_defi_ready_to_claim">Pronto per il prelievo</string>
+    <string name="tron_defi_countdown_days">%1$d giorni, %2$d h</string>
+    <string name="tron_defi_countdown_hours">%1$d h, %2$d min</string>
+    <string name="tron_defi_error_trx_not_in_vault">Moneta TRX non trovata nel vault</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Lo slippage è obbligatorio</string>
     <string name="slippage_invalid_error">Lo slippage deve essere compreso tra 1 e 100</string>
@@ -483,6 +503,10 @@
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Valore token</string>
     <string name="token_fiat_toggle_fiat_label">Valore fiat</string>
+    <string name="remove_pool_title">Rimuovi Pool</string>
+    <string name="remove_pool_amount_label">Quantità</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">Per le operazioni del pool è supportato solo il token CACAO</string>
     <string name="referral_create_info_title">Programma referral</string>
     <string name="referral_create_info_content">Il programma referral si applica agli scambi THORChain ed è su base best effort. Devi registrare un THORName per utilizzare il referral Vultisig. La tassa di registrazione è di 10 RUNE e 1 RUNE per ogni anno, che viene pagata alla rete THORChain.</string>
@@ -1002,21 +1026,7 @@
     <string name="key_import_device_count_get_started">Inizia</string>
     <string name="vault_count_recommended">Consigliata</string>
 
-    <string name="welcome_preference_devices_title">Quanti dispositivi hai?</string>
-    <string name="welcome_fast_and_easy">Veloce &amp; facile</string>
-    <string name="welcome_fast_and_easy_desc">Firma con solo 1 dispositivo. Il nostro server sicuro firma con te per la sicurezza multisig. Compatibile con i plugin.</string>
-    <string name="welcome_fast_and_easy_highlight">solo 1 dispositivo.</string>
-    <string name="welcome_plugin_compatible">Compatibile con Plugin Store</string>
     <string name="welcome_tip">Suggerimento: Puoi usare un browser come dispositivo</string>
-    <string name="welcome_only_your_devices">Solo i tuoi dispositivi</string>
-    <string name="welcome_only_your_devices_desc">Solo i tuoi dispositivi sono firmatari autorizzati. Firmare le transazioni richiede 2 dispositivi. Custodia autonoma completa a portata di mano.</string>
-    <string name="welcome_only_your_devices_highlight">richiede 2 dispositivi.</string>
-    <string name="welcome_best_balance">Miglior equilibrio</string>
-    <string name="welcome_best_balance_desc">Il mix perfetto tra comodità e sicurezza. Firmare le transazioni richiede almeno 2 dispositivi. Un dispositivo di backup.</string>
-    <string name="welcome_best_balance_highlight">almeno 2 dispositivi.</string>
-    <string name="welcome_maximum_security">Massima sicurezza</string>
-    <string name="welcome_maximum_security_desc">La massima sicurezza, ideale per tesorerie o DAO. Firmare le transazioni richiede almeno 3 dispositivi.</string>
-    <string name="welcome_maximum_security_highlight">almeno 3 dispositivi.</string>
     <string name="vault_setup_your_vault_setup">La configurazione del tuo vault</string>
     <string name="vault_setup_fast_vault">Vault veloce</string>
     <string name="vault_setup_secure_vault">Vault sicuro</string>

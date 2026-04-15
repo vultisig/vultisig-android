@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.db.models.TransactionStatus
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
+import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
@@ -42,6 +43,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 enum class TransactionHistoryTab {
     OVERVIEW,
@@ -196,8 +198,8 @@ constructor(
     }
 
     fun clearAllFilters() {
-        selectedAssetIds.value = emptySet()
-        selectedAssetsList.value = emptyList()
+        selectedAssetIds.update { emptySet() }
+        selectedAssetsList.update { emptyList() }
         _uiState.update { it.copy(selectedAssetIds = emptySet(), selectedAssets = emptyList()) }
     }
 
@@ -206,8 +208,8 @@ constructor(
     }
 
     fun closeSearch() {
-        selectedAssetIds.value = emptySet()
-        selectedAssetsList.value = emptyList()
+        selectedAssetIds.update { emptySet() }
+        selectedAssetsList.update { emptyList() }
         _uiState.update {
             it.copy(
                 isAssetSearchSheetVisible = false,
@@ -230,7 +232,9 @@ constructor(
     }
 
     fun refresh() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { t -> Timber.w(t, "TransactionHistoryViewModel.refresh() failed") }
+        ) {
             _uiState.update { it.copy(isRefreshing = true) }
             try {
                 refreshPendingTransactions(vaultId)
@@ -267,7 +271,7 @@ constructor(
                     )
                 }
                 .combine(currentTime) { entities, now ->
-                    entities.map { it.toUiModel(now) }.groupByDate(now)
+                    entities.mapNotNull { it.toUiModel(now) }.groupByDate(now)
                 }
                 .combine(selectedAssetIds) { groups, ids ->
                     if (ids.isEmpty()) groups
@@ -324,6 +328,8 @@ constructor(
                                             )
                                         )
                                     }
+
+                                    is UnknownTransactionHistoryData -> Unit
                                 }
                             }
                         }
@@ -349,7 +355,7 @@ constructor(
             TransactionHistoryTab.SEND -> TransactionHistoryType.SEND
         }
 
-    private fun TransactionHistoryEntity.toUiModel(now: Long): TransactionHistoryItemUiModel {
+    private fun TransactionHistoryEntity.toUiModel(now: Long): TransactionHistoryItemUiModel? {
         val statusUiModel =
             when (status) {
                 TransactionStatus.BROADCASTED -> TransactionStatusUiModel.Broadcasted
@@ -359,8 +365,9 @@ constructor(
                 TransactionStatus.CONFIRMED -> TransactionStatusUiModel.Confirmed
                 TransactionStatus.FAILED ->
                     TransactionStatusUiModel.Failed(UiText.DynamicString(failureReason.orEmpty()))
+                // NotFound is transient — the indexer has not seen the tx yet. Render as Pending.
                 TransactionStatus.NotFound ->
-                    TransactionStatusUiModel.Failed(UiText.DynamicString(failureReason.orEmpty()))
+                    TransactionStatusUiModel.Pending(elapsedTime = formatElapsed(now - timestamp))
             }
 
         return when (val p = payload) {
@@ -405,6 +412,8 @@ constructor(
                     toAddress = null,
                     feeEstimate = null,
                 )
+
+            is UnknownTransactionHistoryData -> null
         }
     }
 
@@ -437,7 +446,8 @@ constructor(
     }
 
     private fun formatElapsed(elapsedMs: Long): UiText {
-        val minutes = elapsedMs / 60_000
+        // Coerce against wall-clock skew (NTP correction, DST, manual date change).
+        val minutes = elapsedMs.coerceAtLeast(0L) / 60_000
         val hours = minutes / 60
         val days = hours / 24
         return when {

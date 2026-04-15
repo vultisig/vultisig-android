@@ -21,6 +21,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenUiModel
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenViewModel
@@ -38,8 +39,11 @@ internal fun JoinKeygenScreen(model: JoinKeygenViewModel = hiltViewModel()) {
     } else {
         ErrorView(
             title = error.message.asString(),
-            buttonText = stringResource(R.string.scan_qr_code_error_button),
-            onButtonClick = model::navigateBack,
+            buttonUiModel =
+                ErrorViewButtonUiModel(
+                    text = stringResource(R.string.scan_qr_code_error_button),
+                    onClick = model::navigateBack,
+                ),
         )
     }
 }

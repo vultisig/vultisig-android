@@ -130,6 +130,7 @@
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Controleer alle toestemmingen</string>
     <string name="camera_permission_denied">Cameratoestemming niet verleend. Schakel deze in de instellingen in.</string>
+    <string name="camera_permission_open_settings">Instellingen openen</string>
     <string name="join_keysign_discovering_session_id">Sessienummer ontdekken</string>
     <string name="transaction_done_title">Gedaan</string>
     <string name="transaction_done_overview">Overzicht</string>
@@ -166,7 +167,6 @@
     <string name="confirm_delete_delete_vault">Kluis verwijderen</string>
     <string name="vault_accounts_account_assets">%1$s activa</string>
     <string name="s_of_s_vault">%1$s van %2$s kluis</string>
-    <string name="scan_qr_screen_return_vault">Terug naar de Kluis</string>
     <string name="rename_vault_screen_vault_name">Kluisnaam</string>
     <string name="faq_settings_q1">Wat is Vultisig?</string>
     <string name="faq_settings_q2">Wat zijn de voordelen van het gebruik van Vultisig?</string>
@@ -248,6 +248,8 @@
     <string name="add_address_address_title">Adres</string>
     <string name="add_address_type_hint">Typ hier</string>
     <string name="join_keysign_invalid_qr">Ongeldige QR-code-inhoud</string>
+    <string name="settings_screen_privacy">Privacy</string>
+    <string name="settings_screen_prevent_screenshots">Screenshots voorkomen</string>
     <string name="settings_screen_legal">Juridisch</string>
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>
@@ -293,7 +295,9 @@
     <string name="qr_title_join_keysign_swap_description">Kluis: %1$s\nVan: %2$s\nAan: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Map heeft minimaal één geselecteerde kluis nodig</string>
     <string name="import_file_password_hint_text">Hint: %s</string>
-    <string name="scan_qr_upload_from_gallery">Uploaden van\nGalerij</string>
+    <string name="scan_qr_upload_qr_code">QR-code uploaden</string>
+    <string name="scan_qr_hint_title">Problemen met scannen?</string>
+    <string name="scan_qr_hint_message">Als de QR-code niet meteen scant:\n• Beweeg de telefoon iets dichterbij of verder van het scherm\n• Zorg dat het scherm goed verlicht is en vrij van schittering\n• Houd beide apparaten even stil</string>
     <string name="no_barcodes_found">Geen barcodes gevonden</string>
     <string name="reshare_start_join_reshare_button">Word lid van Reshare</string>
     <string name="deposit_error_invalid_lpunits">LP-eenheden zijn ongeldig</string>
@@ -437,6 +441,22 @@
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquiditeitspool</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">Beschikbaar Saldo</string>
+    <string name="tron_defi_staking">Staking</string>
+    <string name="tron_defi_bandwidth">Bandbreedte</string>
+    <string name="tron_defi_energy">Energie</string>
+    <string name="tron_defi_freeze">Bevriezen</string>
+    <string name="tron_defi_unfreeze">Ontdooien</string>
+    <string name="tron_defi_tron_freeze">TRON Bevriezen</string>
+    <string name="tron_defi_frozen">Bevroren</string>
+    <string name="tron_defi_unfreezing">Wordt ontdooid</string>
+    <string name="tron_defi_resources">Bronnen</string>
+    <string name="tron_defi_pending_withdrawals">Uitstaande Opnames</string>
+    <string name="tron_defi_ready_to_claim">Klaar om te claimen</string>
+    <string name="tron_defi_countdown_days">%1$d dagen, %2$d uur</string>
+    <string name="tron_defi_countdown_hours">%1$d uur, %2$d min</string>
+    <string name="tron_defi_error_trx_not_in_vault">TRX-coin niet gevonden in kluis</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Slippage is vereist</string>
     <string name="slippage_invalid_error">Slippage moet tussen 1 en 100 liggen</string>
@@ -480,6 +500,10 @@
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Tokenwaarde</string>
     <string name="token_fiat_toggle_fiat_label">Fiatwaarde</string>
+    <string name="remove_pool_title">Pool verwijderen</string>
+    <string name="remove_pool_amount_label">Bedrag</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">Alleen CACAO-tokens worden ondersteund voor pooloperaties</string>
     <string name="referral_create_info_title">Verwijzingsprogramma</string>
     <string name="referral_create_info_content">Het verwijzingsprogramma is van toepassing op THORChain-swaps en is op basis van best effort. Je moet een THORName registreren om de Vultisig-verwijzing te gebruiken. De registratiekosten zijn 10 RUNE en 1 RUNE voor elk jaar, die worden betaald aan het THORChain-netwerk.</string>
@@ -996,21 +1020,7 @@
     <string name="key_import_device_count_get_started">Aan de slag</string>
     <string name="vault_count_recommended">Aanbevolen</string>
 
-    <string name="welcome_preference_devices_title">Hoeveel apparaten heeft u?</string>
-    <string name="welcome_fast_and_easy">Snel &amp; eenvoudig</string>
-    <string name="welcome_fast_and_easy_desc">Onderteken met slechts 1 apparaat. Onze beveiligde server ondertekent met u voor multisig-beveiliging. Plugin-compatibel.</string>
-    <string name="welcome_fast_and_easy_highlight">slechts 1 apparaat.</string>
-    <string name="welcome_plugin_compatible">Compatibel met Plugin Store</string>
     <string name="welcome_tip">Tip: U kunt een browser gebruiken als apparaat</string>
-    <string name="welcome_only_your_devices">Alleen uw apparaten</string>
-    <string name="welcome_only_your_devices_desc">Alleen uw apparaten zijn bevoegde ondertekenaars. Transacties ondertekenen vereist 2 apparaten. Volledige zelfbeheer binnen handbereik.</string>
-    <string name="welcome_only_your_devices_highlight">vereist 2 apparaten.</string>
-    <string name="welcome_best_balance">Beste balans</string>
-    <string name="welcome_best_balance_desc">De perfecte mix van gemak en veiligheid. Transacties ondertekenen vereist minimaal 2 apparaten. Één back-upapparaat.</string>
-    <string name="welcome_best_balance_highlight">minimaal 2 apparaten.</string>
-    <string name="welcome_maximum_security">Maximale beveiliging</string>
-    <string name="welcome_maximum_security_desc">Hoogste beveiliging, ideaal voor schatkamers of DAO\'s. Transacties ondertekenen vereist minimaal 3 apparaten.</string>
-    <string name="welcome_maximum_security_highlight">minimaal 3 apparaten.</string>
     <string name="vault_setup_your_vault_setup">Uw kluis-instelling</string>
     <string name="vault_setup_fast_vault">Snelle kluis</string>
     <string name="vault_setup_secure_vault">Beveiligde kluis</string>

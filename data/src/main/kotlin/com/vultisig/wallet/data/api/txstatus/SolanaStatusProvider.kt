@@ -5,25 +5,27 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
 
 internal class SolanaStatusProvider @Inject constructor(private val solanaApi: SolanaApi) :
     TransactionStatusProvider {
 
-    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
+    override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult =
         try {
             val confirmationStatus =
                 solanaApi.checkStatus(txHash)?.result?.value?.firstOrNull()?.confirmationStatus
-            return when (confirmationStatus) {
+            when (confirmationStatus) {
                 "finalized" -> TransactionResult.Confirmed
                 "confirmed",
-                "processed" -> TransactionResult.Pending
+                "processed",
                 null -> TransactionResult.Pending
                 else -> TransactionResult.NotFound
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Timber.tag("SolanaStatusProvider").e(e, "Failed to check status for $txHash")
-            return TransactionResult.Failed(e.message.toString())
+            Timber.w(e, "Solana status check failed for %s", txHash)
+            TransactionResult.Pending
         }
-    }
 }

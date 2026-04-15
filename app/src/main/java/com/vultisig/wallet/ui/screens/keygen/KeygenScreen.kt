@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
@@ -139,8 +140,12 @@ private fun KeygenScreen(state: KeygenUiModel, onTryAgainClick: () -> Unit) {
                     ErrorView(
                         title = error.title.asString(),
                         description = error.description.asString(),
-                        onButtonClick = onTryAgainClick,
                         modifier = Modifier.fillMaxWidth(),
+                        buttonUiModel =
+                            ErrorViewButtonUiModel(
+                                text = stringResource(R.string.try_again),
+                                onClick = onTryAgainClick,
+                            ),
                     )
                 }
             }

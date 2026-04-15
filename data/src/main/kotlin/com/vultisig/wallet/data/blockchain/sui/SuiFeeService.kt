@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.blockchain.sui
 
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.blockchain.FeeService
-import com.vultisig.wallet.data.blockchain.model.BasicFee
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.GasFees
@@ -115,7 +114,6 @@ class SuiFeeService @Inject constructor(private val suiApi: SuiApi) : FeeService
         val estimatedFees = SUI_DEFAULT_GAS_BUDGET.increaseByPercent(15)
 
         return GasFees(price = gasPrice, limit = estimatedFees, amount = estimatedFees)
-        return BasicFee(amount = estimatedFees)
     }
 
     internal companion object {
