@@ -940,6 +940,10 @@
 
     <!-- Address Book -->
     <string name="address_book_title_edit">编辑地址簿</string>
+    <string name="address_book_delete_entry_title">删除此地址吗？</string>
+    <string name="address_book_delete_entry_message">%1$s 将从您的地址簿中移除</string>
+    <string name="address_book_delete_entry_confirm">删除</string>
+    <string name="address_book_delete_entry_cancel">取消</string>
 
     <!-- Backup Password Request -->
     <string name="backup_password_request_title">您想用密码加密您的备份吗？</string>

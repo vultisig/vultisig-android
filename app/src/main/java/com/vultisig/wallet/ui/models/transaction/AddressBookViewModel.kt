@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 internal data class AddressBookUiModel(
     val isEditModeEnabled: Boolean = false,
     val entries: List<AddressBookEntryUiModel> = emptyList(),
+    val pendingDeletion: AddressBookEntryUiModel? = null,
 )
 
 internal data class AddressBookEntryUiModel(
@@ -135,10 +136,20 @@ constructor(
         )
     }
 
-    fun deleteAddress(model: AddressBookEntryUiModel) {
+    fun requestDeleteAddress(model: AddressBookEntryUiModel) {
+        state.update { it.copy(pendingDeletion = model) }
+    }
+
+    fun cancelDeleteAddress() {
+        state.update { it.copy(pendingDeletion = null) }
+    }
+
+    fun confirmDeleteAddress() {
+        val target = state.value.pendingDeletion ?: return
+        state.update { it.copy(pendingDeletion = null) }
         viewModelScope.launch {
-            addressBookRepository.delete(model.model.chain.id, model.model.address)
-            orderRepository.delete(null, model.model.id)
+            addressBookRepository.delete(target.model.chain.id, target.model.address)
+            orderRepository.delete(null, target.model.id)
             loadData()
         }
     }

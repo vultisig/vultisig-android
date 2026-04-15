@@ -581,6 +581,10 @@
     <string name="share_vault_qr_info">Este código QR permite-lhe partilhar uma versão apenas de leitura do seu cofre</string>
     <string name="add_address_title_label">Etiqueta</string>
     <string name="address_book_title_edit">Editar Catálogo de Endereços</string>
+    <string name="address_book_delete_entry_title">Deletar endereço?</string>
+    <string name="address_book_delete_entry_message">%1$s será removido do seu catálogo de endereços</string>
+    <string name="address_book_delete_entry_confirm">Deletar</string>
+    <string name="address_book_delete_entry_cancel">Cancelar</string>
     <string name="backup_password_request_title">Quer encriptar o seu backup com uma palavra‑passe?</string>
     <string name="backup_password_request_caution_encrypt_desc">Se optar por adicionar uma palavra-passe, esta será utilizada para encriptar o ficheiro de backup.</string>
     <string name="backup_password_request_highlight_encrypt">encriptar</string>

@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -64,7 +66,9 @@ internal fun AddressBookScreen(model: AddressBookViewModel = hiltViewModel()) {
         state = state,
         onBackClick = model::back,
         onAddressClick = model::clickAddress,
-        onDeleteAddressClick = model::deleteAddress,
+        onDeleteAddressClick = model::requestDeleteAddress,
+        onConfirmDeleteAddress = model::confirmDeleteAddress,
+        onCancelDeleteAddress = model::cancelDeleteAddress,
         onToggleEditMode = model::toggleEditMode,
         onAddAddressClick = model::addAddress,
         onMove = model::move,
@@ -77,11 +81,21 @@ internal fun AddressBookScreen(
     onBackClick: () -> Unit,
     onAddressClick: (AddressBookEntryUiModel) -> Unit = {},
     onDeleteAddressClick: (AddressBookEntryUiModel) -> Unit = {},
+    onConfirmDeleteAddress: () -> Unit = {},
+    onCancelDeleteAddress: () -> Unit = {},
     onToggleEditMode: () -> Unit = {},
     onAddAddressClick: () -> Unit = {},
     onMove: (from: Int, to: Int) -> Unit,
 ) {
     val isEditModeEnabled = state.isEditModeEnabled
+
+    state.pendingDeletion?.let { pending ->
+        DeleteAddressDialog(
+            entry = pending,
+            onConfirm = onConfirmDeleteAddress,
+            onDismiss = onCancelDeleteAddress,
+        )
+    }
 
     V2Scaffold(
         actions = {
@@ -146,6 +160,50 @@ internal fun AddressBookScreen(
             NoAddressView(onAddAddressClick = onAddAddressClick)
         }
     }
+}
+
+@Composable
+private fun DeleteAddressDialog(
+    entry: AddressBookEntryUiModel,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        containerColor = Theme.v2.colors.backgrounds.secondary,
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.address_book_delete_entry_title),
+                color = Theme.v2.colors.neutrals.n100,
+                style = Theme.montserrat.heading5,
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.address_book_delete_entry_message, entry.name),
+                color = Theme.v2.colors.neutrals.n100,
+                style = Theme.montserrat.body2,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = stringResource(R.string.address_book_delete_entry_confirm),
+                    color = Theme.v2.colors.alerts.error,
+                    style = Theme.montserrat.body3,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = stringResource(R.string.address_book_delete_entry_cancel),
+                    color = Theme.v2.colors.neutrals.n100,
+                    style = Theme.montserrat.body3,
+                )
+            }
+        },
+    )
 }
 
 @Composable
