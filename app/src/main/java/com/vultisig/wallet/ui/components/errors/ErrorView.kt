@@ -41,6 +41,7 @@ internal fun ErrorView(
     description: String? = null,
     errorState: ErrorState = ErrorState.WARNING,
     buttonUiModel: ErrorViewButtonUiModel?,
+    secondaryButtonUiModel: ErrorViewButtonUiModel? = null,
     onBack: (() -> Unit)? = null,
 ) {
     Box(modifier = modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
@@ -57,6 +58,16 @@ internal fun ErrorView(
                 UiSpacer(30.dp)
                 VsButton(
                     variant = VsButtonVariant.Secondary,
+                    label = it.text,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = it.onClick,
+                )
+            }
+
+            secondaryButtonUiModel?.let {
+                UiSpacer(12.dp)
+                VsButton(
+                    variant = VsButtonVariant.CTA,
                     label = it.text,
                     modifier = Modifier.fillMaxWidth(),
                     onClick = it.onClick,
